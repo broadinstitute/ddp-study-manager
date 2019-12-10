@@ -1,11 +1,39 @@
-.idea
-logs
-*.log
-*.iml
-*.pem
-*.env
-*.jks
+# See http://help.github.com/ignore-files/ for more about ignoring files.
 
+# compiled output
+/client/dist
+/client/tmp
+/dist
+/tmp
+
+# dependencies
+/node_modules
+/bower_components
+
+# IDEs and editors
+.idea
+.project
+.classpath
+*.launch
+.settings/
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage/*
+/libpeerconnection.log
+npm-debug.log
+testem.log
+/typings
+
+# e2e
+/e2e
+
+#System Files
+.DS_Store
+Thumbs.db
+
+# DO NOT COMMIT RENDERED SECRETS INTO SOURCE CONTROL
 server/config/test-config.conf
 server/config/vault.conf
 server/config/dev-keystore
@@ -18,3 +46,14 @@ server/config/staging-gcloud-creds.json
 server/config/prod-gcloud-creds.json
 
 server/src/test/resources/output
+
+client/src/assets/js/ddp_config.js
+
+
+logs
+*.log
+*.iml
+*.pem
+*.env
+*.jks
+
