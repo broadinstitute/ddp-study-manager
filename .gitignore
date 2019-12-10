@@ -7,6 +7,9 @@
 /client/tmp
 /client/node_modules
 
+# server
+/server/target
+
 # IDEs and editors
 .idea
 .project
