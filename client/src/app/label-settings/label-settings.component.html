@@ -1,0 +1,140 @@
+<h1> Label Settings </h1>
+
+<div *ngIf="errorMessage != null">
+  <h3 class="Color--warn Line--Break">{{errorMessage}}</h3>
+  <br/>
+</div>
+<div *ngIf="additionalMessage != null">
+  <h3 class="Color--primary Line--Break">{{additionalMessage}}</h3>
+  <br/>
+</div>
+
+<br/>
+<b>No need to select a realm!</b>
+<br/>
+<br/>
+
+<div *ngIf="errorMessage == null">
+
+  <span [hidden]="!loading" class="Width--100">
+    <div align="center" class="Width--100 Height--100">
+      <i class="fas fa-spinner fa-spin fa-5x Color--primary"></i>
+    </div>
+  </span>
+  <br/>
+
+
+  <div *ngIf="pageSettings != null">
+    <table class="table table-striped"
+           [mfData]="pageSettings" #mf="mfDataTable" [mfRowsOnPage]="10">
+      <thead>
+      <tr>
+        <th>
+          Display Name
+        </th>
+        <th>
+          Description
+        </th>
+        <th>
+          Default Page
+        </th>
+        <th>
+          #Labels/Page
+        </th>
+        <th>
+          Label Height [inch]
+        </th>
+        <th>
+          Label Width [inch]
+        </th>
+        <th>
+          Top Margin [inch]
+        </th>
+        <th>
+          Left Margin [inch]
+        </th>
+        <th>
+          Bottom Margin [inch]
+        </th>
+        <th>
+          Left Margin [inch]
+        </th>
+        <th>
+        </th>
+      </tr>
+      </thead>
+      <tbody>
+      <ng-container *ngFor="let setting of mf.data; let i = index">
+        <tr>
+          <td>
+            <md-input-container class="Input">
+              <input mdInput class="Input--Min-WIDTH" maxlength="45"
+                     [(ngModel)]="setting.name" (change)="checkName(i); onChange(i)">
+              <md-hint class="ErrorMessageForm" *ngIf="setting.notUniqueError">Name not unique</md-hint>
+            </md-input-container>
+          </td>
+          <td>
+            <md-input-container>
+              <input mdInput type="text" [(ngModel)]="setting.description" (change)="onChange(i)" class="Input--Bigger-WIDTH" maxlength="500">
+            </md-input-container>
+          </td>
+          <td>
+            <md-checkbox color="primary" [checked]="setting.defaultPage" (change)="setting.defaultPage = $event.checked; check(i)" disableRipple></md-checkbox>
+          </td>
+          <td>
+            <md-input-container>
+              <input mdInput type="text" [(ngModel)]="setting.labelOnPage" (change)="onChange(i)" class="Width--100" maxlength="100">
+            </md-input-container>
+          </td>
+          <td>
+            <md-input-container>
+              <input mdInput type="text" [(ngModel)]="setting.labelHeight" (change)="onChange(i)" class="Width--100" maxlength="100">
+            </md-input-container>
+          </td>
+          <td>
+            <md-input-container>
+              <input mdInput type="text" [(ngModel)]="setting.labelWidth" (change)="onChange(i)" class="Width--100" maxlength="100">
+            </md-input-container>
+          </td>
+          <td>
+            <md-input-container>
+              <input mdInput type="text" [(ngModel)]="setting.topMargin" (change)="onChange(i)" class="Width--100" maxlength="100">
+            </md-input-container>
+          </td>
+          <td>
+            <md-input-container>
+              <input mdInput type="text" [(ngModel)]="setting.rightMargin" (change)="onChange(i)" class="Width--100" maxlength="100">
+            </md-input-container>
+          </td>
+          <td>
+            <md-input-container>
+              <input mdInput type="text" [(ngModel)]="setting.bottomMargin" (change)="onChange(i)" class="Width--100" maxlength="100">
+            </md-input-container>
+          </td>
+          <td>
+            <md-input-container>
+              <input mdInput type="text" [(ngModel)]="setting.leftMargin" (change)="onChange(i)" class="Width--100" maxlength="100">
+            </md-input-container>
+          </td>
+          <td>
+            <button md-mini-fab color="warn"
+                    *ngIf="i < pageSettings.length-1"
+                    (click)="deletePageSetting(i)">
+              <i class="fas fa-trash-alt fa-lg"></i>
+            </button>
+          </td>
+        </tr>
+      </ng-container>
+      </tbody>
+      <tfoot>
+      <tr>
+        <td colspan="13">
+          <mfBootstrapPaginator [rowsOnPageSet]="[10, 15, 20]"></mfBootstrapPaginator>
+        </td>
+      </tr>
+      </tfoot>
+    </table>
+    <br/>
+    <button type="button" class="btn btn-primary" (click)="saveSettings()">Save Settings</button>
+  </div>
+</div>

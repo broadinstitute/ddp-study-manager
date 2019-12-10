@@ -1,0 +1,148 @@
+@import '~@angular/material/theming';
+// Plus imports for other components in your app.
+// Include the common styles for Angular Material. We include this here so that you only
+// have to load a single css file for Angular Material in your app.
+// Be sure that you only ever include this mixin once!
+@include mat-core();
+// Define the palettes for your theme using the Material Design palettes available in palette.scss
+// (imported above). For each palette, you can optionally specify a default, lighter, and darker
+// hue.
+$md-dsm-blue: (
+  50 : #eceff4,
+  100 : #cfd8e4,
+  200 : #afbed2,
+  300 : #8ea4bf,
+  400 : #7691b2,
+  500 : #5e7da4,
+  600 : #56759c,
+  700 : #4c6a92,
+  800 : #426089,
+  900 : #314d78,
+  A100 : #c3daff,
+  A200 : #90baff,
+  A400 : #5d9aff,
+  A700 : #438bff,
+  contrast: (
+    50 : #000000,
+    100 : #000000,
+    200 : #000000,
+    300 : #000000,
+    400 : #000000,
+    500 : #ffffff,
+    600 : #ffffff,
+    700 : #ffffff,
+    800 : #ffffff,
+    900 : #ffffff,
+    A100 : #000000,
+    A200 : #000000,
+    A400 : #000000,
+    A700 : #000000,
+  )
+);
+$md-dsm-red: (
+  50 : #f6e6e6,
+  100 : #e9c0c0,
+  200 : #db9696,
+  300 : #cd6b6b,
+  400 : #c24c4c,
+  500 : #b72c2c,
+  600 : #b02727,
+  700 : #a72121,
+  800 : #9f1b1b,
+  900 : #901010,
+  A100 : #ffc2c2,
+  A200 : #ff8f8f,
+  A400 : #ff5c5c,
+  A700 : #ff4242,
+  contrast: (
+    50 : #000000,
+    100 : #000000,
+    200 : #000000,
+    300 : #000000,
+    400 : #ffffff,
+    500 : #ffffff,
+    600 : #ffffff,
+    700 : #ffffff,
+    800 : #ffffff,
+    900 : #ffffff,
+    A100 : #000000,
+    A200 : #000000,
+    A400 : #000000,
+    A700 : #ffffff,
+  )
+);
+$md-dsm-green: (
+  50 : #edf3eb,
+  100 : #d3e2cc,
+  200 : #b6cfab,
+  300 : #99bc89,
+  400 : #83ad6f,
+  500 : #6d9f56,
+  600 : #65974f,
+  700 : #5a8d45,
+  800 : #50833c,
+  900 : #3e722b,
+  A100 : #caffb9,
+  A200 : #a4ff86,
+  A400 : #7dff53,
+  A700 : #6aff3a,
+  contrast: (
+    50 : #000000,
+    100 : #000000,
+    200 : #000000,
+    300 : #000000,
+    400 : #ffffff,
+    500 : #ffffff,
+    600 : #ffffff,
+    700 : #ffffff,
+    800 : #ffffff,
+    900 : #ffffff,
+    A100 : #000000,
+    A200 : #000000,
+    A400 : #000000,
+    A700 : #ffffff,
+  )
+);
+$md-dsm-accent: (
+  50 : #f9ebe6,
+  100 : #f0cec1,
+  200 : #e7ae98,
+  300 : #dd8d6e,
+  400 : #d5744f,
+  500 : #ce5c30,
+  600 : #c9542b,
+  700 : #c24a24,
+  800 : #bc411e,
+  900 : #b03013,
+  A100 : #ffe6e1,
+  A200 : #ffbbae,
+  A400 : #ff8f7b,
+  A700 : #ff7a62,
+  contrast: (
+    50 : #000000,
+    100 : #000000,
+    200 : #000000,
+    300 : #000000,
+    400 : #000000,
+    500 : #ffffff,
+    600 : #ffffff,
+    700 : #ffffff,
+    800 : #ffffff,
+    900 : #ffffff,
+    A100 : #000000,
+    A200 : #000000,
+    A400 : #000000,
+    A700 : #000000,
+  )
+);
+
+$dsm-app-primary: mat-palette($md-dsm-blue);
+$dsm-app-accent: mat-palette($md-dsm-green);
+// The warn palette is optional (defaults to red).
+$dsm-app-warn: mat-palette($md-dsm-red);
+// Create the theme object (a Sass map containing all of the palettes).
+$dsm-app-theme: mat-light-theme($dsm-app-primary, $dsm-app-accent, $dsm-app-warn);
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+@include angular-material-theme($dsm-app-theme);

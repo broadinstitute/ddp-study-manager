@@ -1,0 +1,586 @@
+<h1> Medical Records - Request Page </h1>
+
+<div *ngIf="errorMessage != null">
+  <h3 class="Color--warn Line--Break">{{errorMessage}}</h3>
+  <br/>
+</div>
+
+<div *ngIf="additionalMessage != null">
+  <h3 class="Color--warn Line--Break">{{additionalMessage}}</h3>
+  <br/>
+</div>
+
+<!--Information added by participant-->
+<div *ngIf="errorMessage == null">
+  <br/>
+  <a href="#" (click)="backToParticipants()"><b> << back to 'Participant List' </b></a>
+  <br/><br/>
+  <a href="#" (click)="leavePage()"><b> << back to previous page </b></a>
+  <br/><br/><br/>
+
+  <div *ngIf="participantExited">
+    <h3 class="Color--warn Line--Break">Participant was withdrawn from the study!</h3>
+    <br/>
+  </div>
+
+  <div class="Display--block">
+    <div class="Float--left Width--60">
+      <table class="table table-condensed">
+        <tbody>
+        <tr *ngIf="participant.participant != null">
+          <td>DDP</td>
+          <td>{{participant.participant.realm}}</td>
+        </tr>
+        <tr *ngIf="participant.participant != null">
+          <td>Assignee</td>
+          <td>{{participant.participant.assigneeMr}}</td>
+        </tr>
+        <tr>
+          <td>Current Status</td>
+          <td>
+            {{medicalRecord.getMRStatus()}}
+          </td>
+        </tr>
+        <tr>
+          <td>Short ID</td>
+          <td>{{participant.data.profile['hruid']}}</td>
+        </tr>
+        <tr *ngIf="participant.data.profile['legacyShortId'] != null && participant.data.profile['legacyShortId'] !== ''">
+          <td>Legacy Short ID</td>
+          <td>{{participant.data.profile['legacyShortId']}}</td>
+        </tr>
+        <tr>
+          <td>Full Name</td>
+          <td>{{participant.data.profile['firstName']}} {{participant.data.profile['lastName']}}</td>
+        </tr>
+        <tr>
+          <td>DOB</td>
+          <td>{{getUtil().getDateFormatted(participant.data.dsm['dateOfBirth'])}}</td>
+        </tr>
+        <tr>
+          <td>Date Of Diagnosis</td>
+          <td>
+            {{participant.data.dsm['diagnosisMonth']}}/{{participant.data.dsm['diagnosisYear']}}
+          </td>
+        </tr>
+        <tr>
+          <td>Consent Blood</td>
+          <td>
+            <ng-container *ngIf="participant.data.dsm['hasConsentedToBloodDraw'] != null && participant.data.dsm['hasConsentedToBloodDraw'] !== ''">
+              {{getUtil().getYesNo(participant.data.dsm['hasConsentedToBloodDraw'])}}
+            </ng-container>
+          </td>
+        </tr>
+        <tr>
+          <td>Consent Tissue</td>
+          <td>
+            <ng-container *ngIf="participant.data.dsm['hasConsentedToTissueSample'] != null && participant.data.dsm['hasConsentedToTissueSample'] !== ''">
+              {{getUtil().getYesNo(participant.data.dsm['hasConsentedToTissueSample'])}}
+            </ng-container>
+          </td>
+        </tr>
+        <tr>
+          <td>Institution Info</td>
+          <td class="Line--Break">
+            <ng-container>{{getParticipantEnteredAddress(medicalRecord.ddpInstitutionId)}}</ng-container>
+            <ng-container>{{getMedicalRecord().getParticipantEnteredAddress()}}</ng-container>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="Float--left Width--10">
+      <br/>
+      <br/>
+    </div>
+    <div class="Float--left Width--30" *ngIf="participant.participant != null && !participantExited">
+      <button md-raised-button color="primary"
+              [disabled]="isCoverDownloadDisabled()"
+              (click)="downloadCoverPDFs()">Download cover pdf
+      </button>
+      <a href="#" (click)="doNothing()" *ngIf="!isCoverDownloadDisabled()" class="Router--Outlet"><b> Change request
+        settings </b></a>
+      <div *ngIf="isCoverDownloadDisabled()"><b>* Institution name is needed for download</b></div>
+      <br/>
+      <br/>
+      <div *ngIf="!hideDownloadButtons">
+        <ng-container *ngIf="pdfs != null && pdfs.length != 0">
+          <md-select placeholder="Select PDF" class="Input--Abstraction" [(ngModel)]="selectedPDF">
+            <md-option *ngFor="let e of pdfs" [value]="e.configName">
+              {{e.displayName}}
+            </md-option>
+          </md-select>
+          <br/>
+          <br/>
+          <button md-raised-button color="primary"
+                  [disabled]="selectedPDF == null || selectedPDF === ''"
+                  (click)="downloadPDFs(selectedPDF)">Download selected PDF
+          </button>
+        </ng-container>
+        <ng-container *ngIf="participant.data.dsm['pdfs'] == null">
+          <button md-raised-button color="primary"
+                  [disabled]="disableDownloadConsent"
+                  (click)="downloadConsentPDFs()">Download consent pdf
+          </button>
+          <br/>
+          <br/>
+          <button md-raised-button color="primary"
+                  [disabled]="disableDownloadRelease"
+                  (click)="downloadReleasePDFs()">Download release pdf
+          </button>
+        </ng-container>
+      </div>
+      <div *ngIf="hideDownloadButtons">
+        <b>DSM can’t provide the consent/release pdf download for {{getCompService().getRealm()}}.</b>
+      </div>
+    </div>
+  </div>
+
+  <!--Log/review information-->
+  <div *ngIf="(logsHistory.length > 0 || currentLog != null) && !participantExited" class="Display--block">
+    <div class="Width--70 Display--inline">
+
+      <table class="table table-condensed">
+        <tbody>
+        <tr>
+          <td class="Width--30"><b>Requires Review</b></td>
+          <td class="Width--70">
+            <small *ngIf="currentLog != null">(Date and Comment required)</small>
+          </td>
+        </tr>
+        <tr *ngIf="currentLog != null">
+          <td>Date</td>
+          <td>
+            <app-field-datepicker [dateString]="currentLog.date" (dateChanged)="logDateChanged($event)"></app-field-datepicker>
+          </td>
+        </tr>
+        <tr *ngIf="currentLog != null">
+          <td>Comment</td>
+          <td>
+            <textarea class="Width--100" maxlength="1000"
+                      [(ngModel)]="currentLog.comments" (change)="onReviewChange()"></textarea>
+          </td>
+        </tr>
+        <tr *ngFor="let log of logsHistory | medicalRecordLogSort">
+          <td>{{log.date}}</td>
+          <td>{{log.comments}}</td>
+        </tr>
+        <tr *ngIf="currentLog != null">
+          <td></td>
+          <td>
+            <button md-raised-button color="primary"
+                    (click)="saveLog()">Save Review Information
+            </button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+
+  <!--information added by assigneeMr-->
+  <div class="Display--block">
+    <table class="Width--100">
+      <tr>
+        <td class="Width--20">Confirmed Institution Name</td>
+        <td class="Width--80" colspan="3">
+          <app-lookup [lookupValue]="medicalRecord.name" [lookupType]="'mrContact'" [largeInputField]="true"
+                      (lookupResponse)="setContact($event)" [fieldName]="'name'" [disabled]="participantExited"
+                      [colorDuringPatch]="isPatchedCurrently('name')"></app-lookup>
+        </td>
+      </tr>
+      <tr>
+        <td>Contact Person</td>
+        <td class="Width--20" colspan="3">
+          <md-input-container
+            [ngClass]="{'Input': true, 'Input--Bigger-WIDTH': true, 'Color--Field--Patched': isPatchedCurrently('contact')}">
+            <input mdInput maxlength="200" [disabled]="participantExited"
+                   [(ngModel)]="medicalRecord.contact" (change)="valueChanged($event, 'contact')"
+                   (blur)="currentField(null)" (focus)="currentField('contact')">
+          </md-input-container>
+        </td>
+      </tr>
+      <tr>
+        <td>Confirmed Phone</td>
+        <td>
+          <md-input-container
+            [ngClass]="{'Input': true, 'Input--Phone-Number': true, 'Color--Field--Patched': isPatchedCurrently('phone')}">
+            <input mdInput maxlength="14" [disabled]="participantExited"
+                   [(ngModel)]="medicalRecord.phone" (change)="valueChanged($event, 'phone')"
+                   [errorStateMatcher]="getUtil().phoneNumberValidator"
+                   (blur)="currentField(null)" (focus)="currentField('phone')">
+            <md-error>xxx-xxx-xxxx</md-error>
+          </md-input-container>
+        </td>
+        <td class="Width--60" rowspan="2" colspan="2">
+          <table class="Width--100">
+            <tr>
+              <td class="Width--10">
+                <md-checkbox [(ngModel)]="medicalRecord.mrProblem" [disabled]="participantExited"
+                             (change)="mrProblem(); valueChanged($event, 'mrProblem')"
+                             [color]="isCheckboxPatchedCurrently('mrProblem')" (blur)="currentField(null)"
+                             (focus)="currentField('mrProblem')"></md-checkbox>
+              </td>
+              <td class="Width--90">MR Problem</td>
+            </tr>
+            <tr *ngIf="medicalRecord.mrProblem">
+              <td colspan="2">
+                <textarea
+                  [ngClass]="{'Width--100': true, 'Color--Field--Patched': isPatchedCurrently('mrProblemText')}"
+                  maxlength="1000" [disabled]="participantExited"
+                  [(ngModel)]="medicalRecord.mrProblemText" (change)="valueChanged($event, 'mrProblemText')"
+                  (blur)="currentField(null)" (focus)="currentField('mrProblemText')"></textarea>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <md-checkbox [(ngModel)]="medicalRecord.unableObtain"
+                             (change)="valueChanged($event, 'unableObtain')" [disabled]="participantExited"
+                             [color]="isCheckboxPatchedCurrently('unableObtain')" (blur)="currentField(null)"
+                             (focus)="currentField('unableObtain')"></md-checkbox>
+              </td>
+              <td>Unable to obtain</td>
+            </tr>
+            <tr *ngIf="medicalRecord.unableObtain">
+              <td colspan="2">
+                <textarea
+                  [ngClass]="{'Width--100': true, 'Color--Field--Patched': isPatchedCurrently('mrUnableToObtainText')}"
+                  maxlength="1000" [disabled]="participantExited"
+                  [(ngModel)]="medicalRecord.mrUnableToObtainText"
+                  (change)="valueChanged($event, 'mrUnableToObtainText')"
+                  (blur)="currentField(null)" (focus)="currentField('mrUnableToObtainText')"></textarea>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <md-checkbox [(ngModel)]="medicalRecord.duplicate" (change)="valueChanged($event, 'duplicate')"
+                             [color]="isCheckboxPatchedCurrently('duplicate')" (blur)="currentField(null)"
+                             (focus)="currentField('duplicate')" [disabled]="participantExited"></md-checkbox>
+              </td>
+              <td>Duplicate</td>
+            </tr>
+            <tr>
+              <td>
+                <md-checkbox [(ngModel)]="medicalRecord.international"
+                             (change)="valueChanged($event, 'international')"
+                             [color]="isCheckboxPatchedCurrently('international')" (blur)="currentField(null)"
+                             (focus)="currentField('international')" [disabled]="participantExited"></md-checkbox>
+              </td>
+              <td>International</td>
+            </tr>
+            <tr>
+              <td>
+                <md-checkbox [(ngModel)]="medicalRecord.crRequired" (change)="valueChanged($event, 'crRequired')"
+                             [color]="isCheckboxPatchedCurrently('crRequired')" (blur)="currentField(null)"
+                             (focus)="currentField('crRequired')" [disabled]="participantExited"></md-checkbox>
+              </td>
+              <td>Paper C/R required</td>
+            </tr>
+            <tr>
+              <td>
+                <md-checkbox [(ngModel)]="medicalRecord.followUpRequired"
+                             (change)="valueChanged($event, 'followUpRequired')"
+                             [color]="isCheckboxPatchedCurrently('followUpRequired')" (blur)="currentField(null)"
+                             (focus)="currentField('followUpRequired')" [disabled]="participantExited"></md-checkbox>
+              </td>
+              <td>Follow-Up required</td>
+            </tr>
+            <tr *ngIf="medicalRecord.followUpRequired">
+              <td colspan="2">
+                <textarea
+                  [ngClass]="{'Width--100': true, 'Color--Field--Patched': isPatchedCurrently('followUpRequiredText')}"
+                  maxlength="1000" [disabled]="participantExited"
+                  [(ngModel)]="medicalRecord.followUpRequiredText"
+                  (change)="valueChanged($event, 'followUpRequiredText')"
+                  (blur)="currentField(null)" (focus)="currentField('followUpRequiredText')"></textarea>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td>Confirmed Fax</td>
+        <td colspan="3">
+          <md-input-container
+            [ngClass]="{'Input': true, 'Input--Phone-Number': true, 'Color--Field--Patched': isPatchedCurrently('fax')}">
+            <input mdInput maxlength="14" [disabled]="participantExited"
+                   [(ngModel)]="medicalRecord.fax" (change)="valueChanged($event, 'fax')"
+                   [errorStateMatcher]="getUtil().phoneNumberValidator"
+                   (blur)="currentField(null)" (focus)="currentField('fax')">
+            <md-error>xxx-xxx-xxxx</md-error>
+          </md-input-container>
+        </td>
+      </tr>
+      <tr>
+        <td>Fax Sent</td>
+        <td>
+          <app-field-datepicker [colorDuringPatch]="isPatchedCurrently('faxSent')" [disabled]="participantExited"
+                                [dateString]="medicalRecord.faxSent" (dateChanged)="valueChanged($event, 'faxSent')"></app-field-datepicker>
+        </td>
+        <td>
+          <app-field-datepicker
+            *ngIf="((medicalRecord.faxSent != null && medicalRecord.faxSent !== '') && (medicalRecord.mrReceived == null || medicalRecord.mrReceived === '')) || (medicalRecord.faxSent2 != null && medicalRecord.faxSent2 !== '')"
+            [dateString]="medicalRecord.faxSent2" (dateChanged)="valueChanged($event, 'faxSent2')" [disabled]="participantExited"
+            [colorDuringPatch]="isPatchedCurrently('faxSent2')"></app-field-datepicker>
+        </td>
+        <td>
+          <app-field-datepicker
+            *ngIf="((medicalRecord.faxSent2 != null && medicalRecord.faxSent2 !== '') && (medicalRecord.mrReceived == null || medicalRecord.mrReceived === '')) || (medicalRecord.faxSent3 != null && medicalRecord.faxSent3 !== '')"
+            [dateString]="medicalRecord.faxSent3" (dateChanged)="valueChanged($event, 'faxSent3')" [disabled]="participantExited"
+            [colorDuringPatch]="isPatchedCurrently('faxSent3')"></app-field-datepicker>
+        </td>
+      </tr>
+      <tr [hidden]="true">
+        <td>Fax Confirmed</td>
+        <td>
+          <app-field-datepicker [dateString]="medicalRecord.faxConfirmed" (dateChanged)="valueChanged($event, 'faxConfirmed')"
+                                [colorDuringPatch]="isPatchedCurrently('faxConfirmed')" [disabled]="participantExited"></app-field-datepicker>
+        </td>
+        <td>
+          <app-field-datepicker [dateString]="medicalRecord.faxConfirmed2" (dateChanged)="valueChanged($event, 'faxConfirmed2')"
+                                [colorDuringPatch]="isPatchedCurrently('faxConfirmed2')" [disabled]="participantExited"></app-field-datepicker>
+        </td>
+        <td>
+          <app-field-datepicker [dateString]="medicalRecord.faxConfirmed3" (dateChanged)="valueChanged($event, 'faxConfirmed3')"
+                                [colorDuringPatch]="isPatchedCurrently('faxConfirmed3')" [disabled]="participantExited"></app-field-datepicker>
+        </td>
+      </tr>
+      <tr *ngIf="medicalRecord.faxSent != null">
+        <td>MR Received</td>
+        <td colspan="3">
+          <app-field-datepicker [dateString]="medicalRecord.mrReceived" (dateChanged)="valueChanged($event, 'mrReceived')"
+                                [colorDuringPatch]="isPatchedCurrently('mrReceived')" [disabled]="participantExited"></app-field-datepicker>
+        </td>
+      </tr>
+      <ng-container *ngFor="let followup of medicalRecord.followUps; let i = index;">
+        <tr>
+          <td class="Width--20">Follow-Up {{i + 1}} Requested</td>
+          <td>
+            <app-field-datepicker [colorDuringPatch]="isPatchedCurrently('fRequest1' + i)"
+                                  [dateString]="followup.fRequest1" [disabled]="participantExited"
+                                  (dateChanged)="followUpValueChanged($event, 'fRequest1', i)"></app-field-datepicker>
+          </td>
+          <td>
+            <ng-container
+              *ngIf="((medicalRecord.followUps[i].fRequest1 != null && medicalRecord.followUps[i].fRequest1  !== '') && (medicalRecord.followUps[i].fReceived == null || medicalRecord.followUps[i].fReceived === '')) || (medicalRecord.followUps[i].fRequest2 != null && medicalRecord.followUps[i].fRequest2  !== '')">
+              <app-field-datepicker [colorDuringPatch]="isPatchedCurrently('fRequest2'+ i)" [disabled]="participantExited"
+                                    [dateString]="medicalRecord.followUps[i].fRequest2"
+                                    (dateChanged)="followUpValueChanged($event, 'fRequest2', i)"></app-field-datepicker>
+            </ng-container>
+            <ng-container *ngIf="medicalRecord.followUps[i].isEmpty()">
+              <button md-mini-fab color="warn" [disabled]="!medicalRecord.followUps[i].isEmpty() || participantExited"
+                      (click)="deleteFollowUp(i)">
+                <i class="fas fa-trash-alt fa-lg"></i>
+              </button>
+            </ng-container>
+          </td>
+          <td
+            *ngIf="((medicalRecord.followUps[i].fRequest2 != null && medicalRecord.followUps[i].fRequest2 !== '') && (medicalRecord.followUps[i].fReceived == null || medicalRecord.followUps[i].fReceived === '')) || (medicalRecord.followUps[i].fRequest3 != null && medicalRecord.followUps[i].fRequest3 !== '')">
+            <app-field-datepicker [colorDuringPatch]="isPatchedCurrently('fRequest3'+ i)" [disabled]="participantExited"
+                                  [dateString]="medicalRecord.followUps[i].fRequest3"
+                                  (dateChanged)="followUpValueChanged($event, 'fRequest3', i)"></app-field-datepicker>
+          </td>
+        </tr>
+        <tr
+          *ngIf="(medicalRecord.followUps[i].fRequest1 != null && medicalRecord.followUps[i].fRequest1 !== '')">
+          <td class="Width--20">Follow-Up {{i + 1}} Received</td>
+          <td colspan="3">
+            <app-field-datepicker [colorDuringPatch]="isPatchedCurrently('fReceived'+i)" [disabled]="participantExited"
+                                  [dateString]="medicalRecord.getFollowUpValue('fReceived',i)"
+                                  (dateChanged)="followUpValueChanged($event, 'fReceived', i)"></app-field-datepicker>
+          </td>
+        </tr>
+      </ng-container>
+      <tr *ngIf="medicalRecord.mrReceived != null">
+        <td colspan="4">
+          <button md-mini-fab color="primary"
+                  (click)="addNewEmptyFollowUp()">
+            <i class="fas fa-plus fa-lg"></i>
+          </button>
+          <span>  New Follow-Up request</span>
+        </td>
+      </tr>
+      <tr *ngIf="medicalRecord.mrReceived != null">
+        <td class="Width--20">MR Document</td>
+        <td>
+          <br/>
+          <md-select placeholder="MR Document" [ngClass]="{'Color--Field--Patched': isPatchedCurrently('mrDocument')}"
+                     [(ngModel)]="medicalRecord.mrDocument" [disabled]="participantExited"
+                     (change)="valueChanged($event, 'mrDocument')"
+                     (blur)="currentField(null)" (focus)="currentField('mrDocument')">
+            <md-option value="Full">Full</md-option>
+            <md-option value="Partial">Partial</md-option>
+          </md-select>
+        </td>
+        <td colspan="2">
+          <md-input-container [ngClass]="{'Input': true, 'Input--Bigger-WIDTH': true, 'Color--Field--Patched': isPatchedCurrently('mrDocumentFileNames')}">
+            <input mdInput maxlength="500" placeholder="MR Document File Names" [disabled]="participantExited"
+                   [(ngModel)]="medicalRecord.mrDocumentFileNames" (change)="valueChanged($event, 'mrDocumentFileNames')"
+                   (blur)="currentField(null)" (focus)="currentField('mrDocumentFileNames')">
+          </md-input-container>
+        </td>
+      </tr>
+      <tr
+        *ngIf="medicalRecord.mrReceived != null && (participant.data.dsm['hasConsentedToTissueSample'] == null || participant.data.dsm['hasConsentedToTissueSample'])">
+        <td>Pathology present</td>
+        <td colspan="3">
+          <br/>
+          <md-select placeholder="Pathology present"
+                     [ngClass]="{'Color--Field--Patched': isPatchedCurrently('pathologyPresent')}"
+                     [(ngModel)]="medicalRecord.pathologyPresent" [disabled]="participantExited"
+                     (change)="valueChanged($event, 'pathologyPresent')" (blur)="currentField(null)"
+                     (focus)="currentField('pathologyPresent')">
+            <md-option value="yes">Yes</md-option>
+            <md-option value="no">No</md-option>
+          </md-select>
+          <br/><br/>
+        </td>
+      </tr>
+      <tr>
+        <td>Notes</td>
+        <td colspan="3">
+          <textarea maxlength="1000" [disabled]="participantExited"
+                    [ngClass]="{'Width--100': true, 'Color--Field--Patched': isPatchedCurrently('mrNotes')}"
+                    [(ngModel)]="medicalRecord.mrNotes" (change)="valueChanged($event, 'mrNotes')"
+                    (blur)="currentField(null)" (focus)="currentField('mrNotes')"></textarea>
+        </td>
+      </tr>
+      <tr *ngFor="let fieldSetting of settings['m']">
+        <td>{{fieldSetting.columnDisplay}}</td>
+        <td colspan="3">
+          <br/>
+          <md-input-container *ngIf="fieldSetting.displayType === 'TEXT' || fieldSetting.displayType === ''|| fieldSetting.displayType == null"
+                              [ngClass]="{'Width--100': true, 'Input--Min-WIDTH': true, 'Color--Field--Patched': isPatchedCurrently(col.columnName)}">
+            <input mdInput maxlength="200" [disabled]="participantExited"
+                   value="{{getAdditionalValue(fieldSetting.columnName)}}" placeholder="{{fieldSetting.columnDisplay}}"
+                   (change)="onAdditionalValueChange($event, fieldSetting.columnName)"
+                   (blur)="currentField(null)" (focus)="currentField(fieldSetting.columnName)">
+          </md-input-container>
+          <md-input-container *ngIf="fieldSetting.displayType === 'NUMBER'"
+                              [ngClass]="{'Input': true, 'Color--Field--Patched': isPatchedCurrently(fieldSetting.columnName)}">
+            <input mdInput maxlength="200" type="number" [disabled]="participantExited"
+                   value="{{getAdditionalValue(fieldSetting.columnName)}}"
+                   (change)="onAdditionalValueChange($event, fieldSetting.columnName)"
+                   (blur)="currentField(null)" (focus)="currentField(fieldSetting.columnName)">
+          </md-input-container>
+          <textarea maxlength="1000" *ngIf="fieldSetting.displayType === 'TEXTAREA'"
+                    [ngClass]="{'Width--100': true, 'Color--Field--Patched': isPatchedCurrently(fieldSetting.columnName)}"
+                    (blur)="currentField(null)" (focus)="currentField(fieldSetting.columnName)" [disabled]="participantExited"
+                    value="{{getAdditionalValue(fieldSetting.columnName)}}" (change)="onAdditionalValueChange($event, fieldSetting.columnName)"></textarea>
+          <md-select *ngIf="fieldSetting.displayType === 'OPTIONS'" placeholder="{{fieldSetting.columnDisplay}}"
+                     [ngModel]="getAdditionalValue(fieldSetting.columnName)"
+                     (change)="onAdditionalValueChange($event, fieldSetting.columnName)" [disabled]="participantExited"
+                     [ngClass]="{'Color--Field--Patched': isPatchedCurrently(fieldSetting.columnName)}">
+            <md-option *ngFor="let op of fieldSetting.possibleValues" [value]="op.value">{{op.value}}</md-option>
+          </md-select>
+          <md-checkbox *ngIf="fieldSetting.displayType === 'CHECKBOX'" color="primary" disableRipple
+                       [ngModel]="getAdditionalValue(fieldSetting.columnName)"
+                       (change)="onAdditionalValueChange($event, fieldSetting.columnName)" [disabled]="participantExited">
+          </md-checkbox>
+          <app-field-datepicker *ngIf="fieldSetting.displayType === 'DATE'" [colorDuringPatch]="isPatchedCurrently(fieldSetting.columnName)"
+                                [disabled]="participantExited"
+                                [dateString]="getAdditionalValue(fieldSetting.columnName)"
+                                (dateChanged)="onAdditionalValueChange($event, fieldSetting.columnName)"></app-field-datepicker>
+        </td>
+      </tr>
+    </table>
+
+  </div>
+</div>
+<br/>
+
+
+<app-modal>
+  <div class="app-modal-header">
+    Change default settings in cover pdf
+  </div>
+  <div class="app-modal-body">
+
+    <table class="table table-condensed">
+      <tbody>
+      <tr>
+        <td class="Width--20">
+          Start date
+        </td>
+        <td class="Width--80">
+          <app-field-datepicker [dateString]="startDate" [allowUnknownDay]="true" (dateChanged)="startDateChanged($event)"></app-field-datepicker>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          End date
+        </td>
+        <td>
+          <app-field-datepicker [dateString]="endDate" (dateChanged)="endDateChanged($event)"></app-field-datepicker>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <md-checkbox [(ngModel)]="notesCb" color="primary"></md-checkbox>
+        </td>
+        <td>
+          All clinic notes from treating providers, including medical oncologists, residents, fellows, radiation oncologists, surgeons, nurse practitioners,
+          etc.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <md-checkbox [(ngModel)]="treatmentCb" color="primary"></md-checkbox>
+        </td>
+        <td>
+          Cancer treatment data (including radiation, chemotherapy and hormonal therapy).
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <md-checkbox [(ngModel)]="pathologyCb" color="primary"></md-checkbox>
+        </td>
+        <td>
+          Pathology reports
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <md-checkbox [(ngModel)]="operativeCb" color="primary"></md-checkbox>
+        </td>
+        <td>
+          Operative reports
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <md-checkbox [(ngModel)]="referralsCb" color="primary"></md-checkbox>
+        </td>
+        <td>
+          Referrals
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <md-checkbox [(ngModel)]="exchangeCb" color="primary"></md-checkbox>
+        </td>
+        <td>
+          MD to MD exchange
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <md-checkbox [(ngModel)]="geneticCb" color="primary"></md-checkbox>
+        </td>
+        <td>
+          Genetic testing reports
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="app-modal-footer">
+    <button type="button" class="btn btn-default"
+            (click)="modal.hide()">Close
+    </button>
+    <button type="button" class="btn btn-primary" [disabled]="participantExited"
+            (click)="downloadCoverPDFs()">Download Cover PDF
+    </button>
+  </div>
+</app-modal>

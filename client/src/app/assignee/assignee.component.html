@@ -1,0 +1,21 @@
+<table class="table">
+  <thead>
+  <tr>
+    <th></th>
+    <th colspan="2">Assignee</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr *ngFor="let assignee of assignees">
+    <td >
+      <input type="radio" value="{{assignee.email}}" name="assignee" (click)="selectAssignee(assignee)"/>
+    </td>
+    <td >
+      {{assignee.name}}
+    </td>
+    <td >
+      {{assignee.email}}
+    </td>
+  </tr>
+  </tbody>
+</table>

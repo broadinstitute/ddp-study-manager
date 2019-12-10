@@ -1,0 +1,20 @@
+{{with $environment := env "ENVIRONMENT"}}
+{{with $vaultFile := env "FILE"}}
+{{with $conf := vault (printf "secret/pepper/%s/v1/dsm/%s" $environment $vaultFile )}}
+{{with $ui := index $conf.Data "ui"}}
+{{with $auth0 := index $conf.Data "auth0"}}
+
+var DDP_ENV = {
+  'baseUrl': '{{$ui.baseUrl}}',
+  'auth0ClientKey': '{{$auth0.clientKey}}',
+  'auth0Domain':'{{$auth0.domain}}',
+  'production': {{$ui.production}},
+  'environment': '{{$environment}}'
+};
+
+
+{{end}}
+{{end}}
+{{end}}
+{{end}}
+{{end}}

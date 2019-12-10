@@ -1,0 +1,283 @@
+<h1> Tissue Request </h1>
+
+<div *ngIf="errorMessage != null">
+  <h3 class="Color--warn">{{errorMessage}}</h3>
+  <br/>
+</div>
+
+<div *ngIf="additionalMessage != null">
+  <h3 class="Color--warn Line--Break">{{additionalMessage}}</h3>
+  <br/>
+</div>
+
+<!--Information added by participant-->
+<div *ngIf="errorMessage == null && participant != null">
+
+  <span [hidden]="!loading" class="Width--100">
+    <div align="center" class="Width--100 Height--100">
+      <i class="fas fa-spinner fa-spin fa-5x Color--primary"></i>
+    </div>
+  </span>
+
+  <br/>
+  <a href="#" (click)="backToList()"><b> << back to List </b></a>
+  <br/><br/>
+  <a href="#" (click)="leavePage()"><b> << back to Participant Page </b></a>
+  <br/><br/><br/>
+
+  <div *ngIf="participantExited">
+    <h3 class="Color--warn Line--Break">Participant was withdrawn from the study!</h3>
+    <br/>
+  </div>
+
+  <div class="Display--block">
+    <div class="Float--left Width--70">
+      <table class="table table-condensed">
+        <tbody>
+        <!--<tr>-->
+        <!--<td>DDP</td>-->
+        <!--<td>{{getParticipant().realm}}</td>-->
+        <!--</tr>-->
+        <tr *ngIf="participant.data.profile != null && participant.data.profile['realm'] != null">
+          <td>DDP</td>
+          <td>{{participant.data.profile['realm']}}</td>
+        </tr>
+        <tr *ngIf="participant.participant != null">
+          <td>Assignee</td>
+          <td>{{participant.participant.assigneeTissue}}</td>
+        </tr>
+        <tr>
+          <td>Request Status</td>
+          <td>{{oncHistoryDetail.request === 'unableToObtain' ? 'Unable To Obtain' : oncHistoryDetail.request | titlecase}}</td>
+        </tr>
+        <tr>
+          <td>Short ID</td>
+          <td>{{participant.data.profile['hruid']}}</td>
+        </tr>
+        <tr *ngIf="participant.data.profile['legacyShortId'] != null && participant.data.profile['legacyShortId'] !== ''">
+          <td>Legacy Short ID</td>
+          <td>{{participant.data.profile['legacyShortId']}}</td>
+        </tr>
+        <tr>
+          <td>Full Name</td>
+          <td>{{participant.data.profile['lastName']}} {{participant.data.profile['lastName']}}</td>
+        </tr>
+        <tr *ngIf="participant.data.dsm != null">
+          <td>DOB</td>
+          <td>{{getUtil().getDateFormatted(participant.data.dsm['dateOfBirth'])}}</td>
+        </tr>
+        <tr *ngIf="participant.data.dsm != null">
+          <td>Date Of Diagnosis</td>
+          <td>
+              {{participant.data.dsm['diagnosisMonth']}}/{{participant.data.dsm['diagnosisYear']}}
+          </td>
+        </tr>
+        <tr>
+          <td>Date of PX</td>
+          <td>{{getUtil().getDateFormatted(oncHistoryDetail.datePX)}}</td>
+        </tr>
+        <tr>
+          <td>Type of PX</td>
+          <td>{{oncHistoryDetail.typePX}}</td>
+        </tr>
+        <tr>
+          <td>Histology</td>
+          <td>{{oncHistoryDetail.histology}}</td>
+        </tr>
+        <tr>
+          <td>Accession Number</td>
+          <td>{{oncHistoryDetail.accessionNumber}}</td>
+        </tr>
+        <tr *ngFor="let fs of this.settings['oD']">
+          <td> {{fs.columnDisplay}}</td>
+          <td>{{this.oncHistoryDetail.additionalValues[fs.columnName]}}</td>
+        </tr>
+        <tr>
+          <td>Facility</td>
+          <td>{{oncHistoryDetail.facility}}</td>
+        </tr>
+        <tr>
+          <td>Phone</td>
+          <td>{{oncHistoryDetail.fPhone}}</td>
+        </tr>
+        <tr>
+          <td>Fax</td>
+          <td>
+            {{oncHistoryDetail.fFax}}
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!--information added by assigneeMr-->
+  <div class="Display--block">
+    <table class="Width--100">
+      <tr>
+        <td class="Width--20">Fax Sent</td>
+        <td colspan="2">
+          <app-field-datepicker [colorDuringPatch]="isPatchedCurrently('tFaxSent')" [disabled]="!editable || participantExited"
+                                [dateString]="oncHistoryDetail.tFaxSent" (dateChanged)="valueChanged($event, 'tFaxSent')"></app-field-datepicker>
+          <app-field-datepicker
+            *ngIf="((oncHistoryDetail.tFaxSent != null && oncHistoryDetail.tFaxSent !== '') && (oncHistoryDetail.tissueReceived == null || oncHistoryDetail.tissueReceived === '')) || (oncHistoryDetail.tFaxSent2 != null && oncHistoryDetail.tFaxSent2 !== '')"
+            [disabled]="!editable || participantExited" [dateString]="oncHistoryDetail.tFaxSent2" (dateChanged)="valueChanged($event, 'tFaxSent2')"
+            [colorDuringPatch]="isPatchedCurrently('tFaxSent2')"></app-field-datepicker>
+          <app-field-datepicker
+            *ngIf="((oncHistoryDetail.tFaxSent2 != null && oncHistoryDetail.tFaxSent2 !== '') && (oncHistoryDetail.tissueReceived == null || oncHistoryDetail.tissueReceived === '')) || (oncHistoryDetail.tFaxSent3 != null && oncHistoryDetail.tFaxSent3 !== '')"
+            [disabled]="!editable || participantExited" [dateString]="oncHistoryDetail.tFaxSent3" (dateChanged)="valueChanged($event, 'tFaxSent3')"
+            [colorDuringPatch]="isPatchedCurrently('tFaxSent3')"></app-field-datepicker>
+        </td>
+      </tr>
+      <tr [hidden]="true">
+        <td>Fax Confirmed</td>
+        <td colspan="2">
+          <app-field-datepicker [dateString]="oncHistoryDetail.tFaxConfirmed" (dateChanged)="valueChanged($event, 'tFaxConfirmed')" [disabled]="!editable || participantExited"
+                                [colorDuringPatch]="isPatchedCurrently('tFaxConfirmed')"></app-field-datepicker>
+        </td>
+      </tr>
+      <tr *ngIf="oncHistoryDetail.tFaxSent != null">
+        <td>Tissue Received</td>
+        <td colspan="2">
+          <app-field-datepicker [dateString]="oncHistoryDetail.tissueReceived" (dateChanged)="valueChanged($event, 'tissueReceived')" [disabled]="!editable || participantExited"
+                                [colorDuringPatch]="isPatchedCurrently('tissueReceived')"></app-field-datepicker>
+        </td>
+      </tr>
+      <tr>
+        <td>Problem with Tissue?</td>
+        <td style="padding-bottom: 15px;" class="Width--40">
+          <md-select [ngClass]="{ 'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently('tissueProblemOption')}"
+                     placeholder="Tissue problems" [(ngModel)]="oncHistoryDetail.tissueProblemOption"
+                     [disabled]="!editable || participantExited"
+                     (change)="valueChanged($event, 'tissueProblemOption')"
+                     (blur)="currentField(null)" (focus)="currentField('tissueProblemOption')">
+            <md-option value="insufficientPath">Insufficient material per path</md-option>
+            <md-option value="insufficientSHL">Insufficient material per SHL</md-option>
+            <md-option value="noESign">No e signatures</md-option>
+            <md-option value="pathPolicy">Path department policy</md-option>
+            <md-option value="pathNoLocate">Path department unable to locate</md-option>
+            <md-option value="destroyed">Tissue destroyed</md-option>
+            <md-option value="other">Other</md-option>
+            <md-option value="{{null}}">No Problem</md-option>
+          </md-select>
+
+        </td>
+        <td>
+          <md-checkbox [(ngModel)]="oncHistoryDetail.unableToObtain" (change)="valueChanged($event, 'unableToObtain')"
+                       [disabled]="!editable || participantExited"
+                       [color]="isCheckboxPatchedCurrently('unableToObtain')" (blur)="currentField(null)"
+                       (focus)="currentField('unableToObtain')"></md-checkbox>
+          Unable to Obtain
+        </td>
+      </tr>
+      <tr>
+        <td>Notes</td>
+        <td colspan="2">
+          <textarea [ngClass]="{'Width--100': true, 'Color--Field--Patched': isPatchedCurrently('oncHisNotes')}"
+                    maxlength="1000"
+                    [(ngModel)]="oncHistoryDetail.oncHisNotes" (change)="valueChanged($event, 'oncHisNotes')"
+                    [disabled]="!editable || participantExited"
+                    (blur)="currentField(null)" (focus)="currentField('oncHisNotes')"></textarea>
+        </td>
+      </tr>
+      <tr>
+        <td>Destruction Policy (years)</td>
+        <td colspan="2">
+          <md-input-container
+            [ngClass]="{'Input': true, 'Color--Field--Patched': isPatchedCurrently('destructionPolicy')}">
+            <input mdInput type="number" min="0" max="10"
+                   [disabled]="!editable || participantExited || indefinitely"
+                   (blur)="currentField(null)" (focus)="currentField('destructionPolicy')"
+                   [(ngModel)]="oncHistoryDetail.destructionPolicy"
+                   (change)="valueChanged($event, 'destructionPolicy')">
+          </md-input-container>
+          <span [ngClass]="{'Width--30': true, 'Color--Field--Patched':isPatchedCurrently('destructionPolicy')}">
+            <md-checkbox [checked]="oncHistoryDetail.destructionPolicy === 'indefinitely'? true : false"
+                         [(ngModel)]="indefinitely"
+                         [disabled]="!editable || participantExited"
+                         (change)="valueChanged($event, 'indefinitely')"
+                         [color]="isCheckboxPatchedCurrently('destructionPolicy')" (blur)="currentField(null)"
+                         (focus)="currentField('destructionPolicy')"></md-checkbox>
+          kept indefinitely
+          </span>
+          <button
+            [disabled]="!editable || participantExited"
+            [ngClass]="{'btn':true, 'btn-xs':true, 'Button--Background--Color':true}"
+            (click)="applyToAll()">
+            APPLY TO ALL
+          </button>
+        </td>
+      </tr>
+
+      <tr>
+        <td>Gender</td>
+        <td style="padding-bottom: 15px;" colspan="2">
+          <br/>
+          <md-select placeholder="Gender"
+                     [ngClass]="{'Input--Min-WIDTH': true, 'Color--Field--Patched': isPatchedCurrently('gender')}"
+                     [(ngModel)]="oncHistoryDetail.gender" [disabled]="!editable || participantExited"
+                     (change)="valueChanged($event, 'gender')"
+                     (blur)="currentField(null)" (focus)="currentField('gender')">
+            <md-option value="male">Male</md-option>
+            <md-option value="female">Female</md-option>
+          </md-select>
+        </td>
+      </tr>
+      <ng-container *ngFor="let tis of oncHistoryDetail.tissues">
+        <tr>
+          <td colspan="3">
+            <app-tissue [participant]="participant" [oncHistoryDetail]="oncHistoryDetail" [tissueId]="tissueId"
+                        [tissue]="tis" [editable]="editable && !participantExited" [additionalColumns]="settings['t']">
+
+            </app-tissue>
+          </td>
+        </tr>
+      </ng-container>
+      <tr>
+        <td class="TD--Padding" colspan="3">
+          <button md-mini-fab color="primary" [disabled]="!editable || participantExited"
+                  (click)="addTissue()">
+            <i class="fas fa-plus fa-lg"></i>
+          </button>
+          <span><b>  Add another Block or set of Slides</b></span>
+        </td>
+      </tr>
+    </table>
+
+  </div>
+</div>
+
+<app-modal>
+  <div class="app-modal-header">
+    <ng-container *ngIf="_showWarningModal">
+      Warning! Changing destruction policy.
+    </ng-container>
+    <ng-container *ngIf="!_showWarningModal">
+      Successful!
+    </ng-container>
+
+  </div>
+  <div class="app-modal-body">
+    <ng-container *ngIf="_showWarningModal">
+      {{_warningMessage}}
+    </ng-container>
+    <ng-container *ngIf="!_showWarningModal">
+      Successfully updated the destruction policy of this facility.
+    </ng-container>
+  </div>
+  <div class="app-modal-footer">
+    <ng-container *ngIf="_showWarningModal && _warningMessage === _warningChangeMessage">
+      <button type="button" class="btn btn-default"
+              (click)="applyToAllModal.hide()">Cancel
+      </button>
+      <button type="button" class="btn btn-default" [disabled]="participantExited"
+              (click)="this.applyToAllModal.hide(); doRequest(oncHistoryDetail.destructionPolicy)">Yes
+      </button>
+    </ng-container>
+    <ng-container *ngIf="!_showWarningModal || _warningMessage === _warningUnsuccessfulMessage">
+      <button type="button" class="btn btn-default" [disabled]="participantExited"
+              (click)="applyToAllModal.hide();">Ok
+      </button>
+    </ng-container>
+  </div>
+</app-modal>

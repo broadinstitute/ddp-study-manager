@@ -1,0 +1,496 @@
+<ng-container *ngIf="showParticipantInformation">
+  <app-participant-page [participant]="participant" [activeTab]="selectedTab" [drugs]="drugs"
+                        [parentList]="parent" [settings]="settings"
+                        [oncHistoryId]="oncHistoryId"
+                        (leaveParticipant)="showParticipantInformation=false">
+  </app-participant-page>
+</ng-container>
+
+<ng-container *ngIf="showTissue">
+  <app-tissue-page [participant]="participant" [oncHistoryDetail]="oncHistoryDetail"
+                   (leaveTissue)="showTissue=false; showParticipantInformation=true"
+                   [settings]="settings"
+                   [tissueId]="tissueId"
+                   (leaveParticipant)="showTissue=false"></app-tissue-page>
+</ng-container>
+<span *ngIf="loading" class="Width--100">
+        <div align="center" class="Width--100 Height--100">
+          <i class="fas fa-spinner fa-spin fa-5x Color--primary"></i>
+        </div>
+      </span>
+<ng-container
+  *ngIf="!showParticipantInformation && !showTissue && !loading">
+  <h1> Tissue List </h1>
+  <ng-container *ngIf="loadedTimeStamp != null">Last loaded: {{loadedTimeStamp}}</ng-container>
+  <br/>
+  <br>
+  <div class="" *ngIf="errorMessage !== null && errorMessage !== ''">
+    <h3 class="Color--warn Line--Break">{{errorMessage}}</h3>
+  </div>
+  <div class="" *ngIf="additionalMessage !== null && additionalMessage !== ''">
+    <h3 class="Color--primary Line--Break">{{additionalMessage}}</h3>
+    <br>
+  </div>
+  <ng-container *ngIf="!(errorMessage !== null && errorMessage !== '') && tissueListWrappers!=undefined">
+    <div id="leftPanel" *ngIf="!(errorMessage !== null && errorMessage !== '')">
+      <div class="Width--15" style="float: left">
+        <div>
+          <button md-mini-fab color="Color--primary"
+                  (click)="showFiltersTable()" [color]="getButtonColorStyle(showFilters)">
+            <!--<i class="fas fa-dataFilter"></i>-->
+            <i class="fas fa-search"></i>
+          </button>
+          Search
+        </div>
+        <div *ngIf="(errorMessage === null || errorMessage === '') ">
+          <br>
+          <div id="searchTable" *ngIf="this.showFilters" class="table">
+            <form>
+              <div>
+                <!--<button md-raised-button color="primary" (click)="doFilter()">Search</button>-->
+                <button md-raised-button color="primary" (click)="doFilter()">Search</button>
+                <button md-raised-button color="primary" (click)="clearFilters()">Clear</button>
+              </div>
+              <ng-container *ngFor="let source of dataSources">
+                <br>
+                <table *ngFor="let filter of selectedColumns[source]" style="border: none">
+                  <app-filter-column [dataFilter]="filter" *ngIf="filter.participantColumn.name !== 'ddp'"
+                                     [editable]="allColumns[source].includes(filter)? true: edit"></app-filter-column>
+                </table>
+              </ng-container>
+              <button md-raised-button color="primary" (click)="doFilter()">Search</button>
+              <button md-raised-button color="primary" (click)="clearFilters()">Clear</button>
+            </form>
+          </div>
+        </div>
+        <!--<div>-->
+        <!--<button md-mini-fab color="Color&#45;&#45;primary"-->
+        <!--(click)="reload(false)">-->
+        <!--<i class="fas fa-sync-alt"></i>-->
+        <!--</button>-->
+        <!--Clear Filter-->
+        <!--</div>-->
+        <!--<br>-->
+        <div>
+          <button md-mini-fab color="Color--primary"
+                  (click)="reload(true)">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+          Reload With Default Filter
+        </div>
+        <br>
+        <div>
+          <button md-mini-fab color="Color--primary"
+                  (click)="showCustomizeView()" [color]="getButtonColorStyle(showCustomizeViewTable)">
+            <i class="fas fa-server"></i>
+          </button>
+          Customize View
+        </div>
+        <div *ngIf="showCustomizeViewTable">
+          <br>
+          <ng-container *ngFor="let source of dataSources">
+            <div class="btn-group">
+              <button type="button" class="btn btn-primary dropdown-toggle Width--100" data-toggle="dropdown"
+                      aria-haspopup="true">
+                {{dataSourceNames[source]}} Columns
+                <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="dropdownMenu2" id="oncDropDown"
+                  (click)="onclickDropDown($event)">
+                <li *ngFor="let oncColumn of allColumns[source]">
+                  <ng-container *ngIf="oncColumn.participantColumn.display !== null">
+                    <md-checkbox
+                      color="primary"
+                      (change)="addOrRemoveColumn(oncColumn, source)"
+                      [checked]="selectedColumns[source]!= undefined && selectedColumns[source].includes(oncColumn)">{{oncColumn.participantColumn.display}}</md-checkbox>
+                  </ng-container>
+                </li>
+              </ul>
+            </div>
+            <br>
+          </ng-container>
+        </div>
+        <br>
+        <div>
+          <button md-mini-fab color="Color--primary"
+                  (click)="showSavedModal()" [color]="getButtonColorStyle(showModal)">
+            <i class="fas fa-tv"></i>
+          </button>
+          Save Current View
+        </div>
+        <br>
+        <div>
+          <button md-mini-fab color="Color--primary"
+                  (click)="showSavedFiltersPanel()" [color]="getButtonColorStyle(showSavedFilters)">
+            <i class="fas fa-filter"></i>
+          </button>
+          Saved Filters
+        </div>
+        <div *ngIf="this.showSavedFilters" id="savedFiltersPanel">
+          <br>
+
+          <span style="font-size: 25px; color: Dodgerblue;">
+        <i class="fas fa-user-circle fa-sm Color--primary"></i>
+    </span>
+          My Views
+          <table>
+            <ng-container *ngFor="let savedFilter of this.savedFilters; let i=index">
+              <tr *ngIf="role.userID() == savedFilter.userId">
+                <td>
+          <span style="font-size: 15px; padding-right: 30px;">
+            {{savedFilter.filterName}}
+          </span>
+                  <button class="float-right" color="warn"
+                          md-icon-button (click)="deleteView(savedFilter)">
+                    <md-icon>
+                      <i class="fas fa-trash-alt fa-sm"></i>
+                    </md-icon>
+                  </button>
+                  <button class="float-right"
+                          md-icon-button [color]="savedFilter.shared == true ? 'accent' : 'black'"
+                          (click)="shareFilter(savedFilter, i)">
+                    <md-icon>
+                      <i class="fas fa-share-square"></i>
+                    </md-icon>
+                  </button>
+                  <button class="float-right"
+                          md-icon-button [color]="selectedFilterName === savedFilter.filterName ? 'accent' :'black'"
+                          (click)="selectFilter(savedFilter)">
+                    <md-icon>
+                      <i class="fas fa-filter fa-sm"></i>
+                    </md-icon>
+                  </button>
+
+
+                </td>
+              </tr>
+            </ng-container>
+          </table>
+          <br>
+          <span style="font-size: 25px; color: Dodgerblue;">
+        <i class="fas fa-users fa-sm Color--primary"></i>
+    </span>
+          Shared Views
+          <table>
+            <ng-container *ngFor="let savedFilter of this.savedFilters">
+              <tr *ngIf="role.userID() != savedFilter.userId">
+                <td>
+            <span style="font-size: 15px; padding-right: 30px;">
+            {{savedFilter.filterName}}
+              </span>
+                  <button class="float-right"
+                          md-icon-button [color]="selectedFilterName === savedFilter.filterName ? 'accent' :'black'"
+                          (click)="selectFilter(savedFilter)">
+          <span style="font-size: 15px;">
+            <i class="fas fa-filter fa-sm"></i>
+          </span>
+                  </button>
+                </td>
+              </tr>
+            </ng-container>
+          </table>
+        </div>
+        <br>
+      </div>
+    </div>
+    <div if="quickFilters">
+    <span>
+      <button md-mini-fab color="Color--primary"
+              (click)="getDestroyingQueue('destruction')"
+              [color]="isCurrentFilter('destruction')">
+        <span tooltip="Destruction in 6 Months (destruction queue)">
+        <i class="fas fa-bomb fa-lg"></i>
+        </span>
+      </button>
+      <span *ngFor="let qFilter of quickFilters; let i=index">
+      <button md-mini-fab
+              [color]="isCurrentFilter(qFilter.filterName)"
+              (click)="doQuickFilter(qFilter)">
+        <span tooltip="{{qFilter.filterName}}">
+        <i [ngClass]="qFilter.icon"></i>
+        </span>
+      </button>
+      </span>
+    </span>
+      <span class="Float--right">
+        <button md-mini-fab color="Color--primary"
+                (click)="downloadCurrentData()">
+        <span tooltip="Download current view in an Excel sheet">
+        <i class="fas fa-file-download fa-lg"></i>
+        </span>
+        </button>
+      </span>
+      <span class="Float--right" style="padding-right: 10px">
+      <button md-mini-fab color="Color--primary"
+              (click)="showHelp = !showHelp" [color]="getButtonColorStyle(showHelp)">
+      <span tooltip="Search Help">
+      <i class="fas fa-info"></i>
+      </span>
+      </button>
+    </span>
+    </div>
+    <br>
+    <br>
+    <div>
+      <div class="Width--85 Float--right" id="searchBar">
+        <br>
+        <app-search-bar [textQuery]="filterQuery" [allFieldNames]="this.allFieldNames"
+                        (queryText)="doFilterByQuery($event)"
+                        [showHelp]="this.showHelp" [filters]="allColumns">
+
+
+        </app-search-bar>
+      </div>
+      <span *ngIf="loading" class="Width--100">
+        <div align="center" class="Width--100 Height--100">
+          <i class="fas fa-spinner fa-spin fa-5x Color--primary"></i>
+        </div>
+      </span>
+      <table id="mainTable" class="table table-striped Table--Hover Table--Foot Width--85" style="float: right;"
+             *ngIf="!loading">
+        <thead>
+        <th *ngFor="let col of selectedColumns['data']" (click)="sortByColumnName(col, 'data')"
+            [ngClass]="{'Table--Sticky': true, 'Color--blue': isSortField(col.participantColumn.name)}"
+            tooltip="{{col.participantColumn.tableAlias}}.{{col.participantColumn.name}}">
+          {{col.participantColumn.display}}
+          <span *ngIf="isSortField(col.participantColumn.name)">
+            <span *ngIf="sortDir === 'asc'">
+              <i class="fas fa-sort-alpha-down"></i>
+            </span>
+            <span *ngIf="sortDir === 'desc'">
+              <i class="fas fa-sort-alpha-up"></i>
+            </span>
+            </span>
+        </th>
+        <th *ngFor="let col of selectedColumns['oD']" (click)="sortByColumnName(col, 'oD')"
+            [ngClass]="{'Table--Sticky': true, 'Color--blue': isSortField(col.participantColumn.name)}"
+            tooltip="{{col.participantColumn.tableAlias}}.{{col.participantColumn.name}}">
+          {{col.participantColumn.display}}
+          <span *ngIf="isSortField(col.participantColumn.name)">
+            <span *ngIf="sortDir === 'asc'">
+              <i class="fas fa-sort-alpha-down"></i>
+            </span>
+            <span *ngIf="sortDir === 'desc'">
+              <i class="fas fa-sort-alpha-up"></i>
+            </span>
+            </span>
+        </th>
+        <th *ngFor="let col of selectedColumns['t']" (click)="sortByColumnName(col, 't')"
+            [ngClass]="{'Table--Sticky': true, 'Color--blue': isSortField(col.participantColumn.name)}"
+            tooltip="{{col.participantColumn.tableAlias}}.{{col.participantColumn.name}}">
+          {{col.participantColumn.display}}
+          <span *ngIf="isSortField(col.participantColumn.name)">
+            <span *ngIf="sortDir === 'asc'">
+              <i class="fas fa-sort-alpha-down"></i>
+            </span>
+            <span *ngIf="sortDir === 'desc'">
+              <i class="fas fa-sort-alpha-up"></i>
+            </span>
+            </span>
+        </th>
+        </thead>
+        <tbody>
+        <ng-container *ngIf="this.selectedColumns['t'] != undefined && selectedColumns['t'].length > 0">
+          <ng-container
+            *ngFor="let value of tissueListWrappers| paginate: { itemsPerPage: hasRole().getUserSetting().getRowsPerPage(), currentPage: activePage }; let i=index">
+            <!--<tr [ngClass]="'class'+i%2">-->
+            <tr>
+              <ng-container>
+                <td *ngFor="let col of selectedColumns['data']" [height]="40" (click)="getParticipant(value, 'oD')">
+                  <!--<span *ngIf="col.participantColumn.name === 'country'">-->
+                  <!--<span *ngIf="value.data.address != undefined">-->
+                  <!--{{value.data.address[col.participantColumn.name]}}-->
+                  <!--</span>-->
+                  <!--</span>-->
+                  <!--<span-->
+                  <!--*ngIf="col.participantColumn.name === 'firstName' || col.participantColumn.name === 'lastName' || col.participantColumn.name === 'hruid' ">-->
+                  <!--{{value.data.profile[col.participantColumn.name]}}-->
+                  <!--</span>-->
+                  <span *ngIf="col.participantColumn.object === null || col.participantColumn.object === undefined">
+                    {{value.data[col.participantColumn.name]}}
+                  </span>
+                  <span
+                    *ngIf="col.participantColumn.object !== null && col.participantColumn.object !== undefined && value.data[col.participantColumn.object] === undefined">
+                    <!--*ngIf="col.participantColumn.name !== 'firstName' && col.participantColumn.name !== 'lastName' && col.participantColumn.name !== 'hruid' && col.participantColumn.name !== 'country'">-->
+                  </span>
+                  <span
+                    *ngIf="col.participantColumn.object !== null && col.participantColumn.object !== undefined && value.data[col.participantColumn.object] !== undefined">
+                    <!--*ngIf="col.participantColumn.name !== 'firstName' && col.participantColumn.name !== 'lastName' && col.participantColumn.name !== 'hruid' && col.participantColumn.name !== 'country'">-->
+                    {{value.data[col.participantColumn.object][col.participantColumn.name]}}
+                  </span>
+                </td>
+              </ng-container>
+              <ng-container>
+                <td *ngFor="let col of selectedColumns['oD']"
+                    [height]="40"
+                    (click)="stopIfRequest($event, value, col.participantColumn.name);">
+                <span
+                  *ngIf="col.participantColumn.name !== 'request' && (allAdditionalColumns['oD'] == undefined || !allAdditionalColumns['oD'].includes(col) ) && col.participantColumn.name !== 'tissueProblemOption'
+                && col.type !== 'DATE' && col.type != 'OPTIONS'">
+                {{value.tissueList.oncHistoryDetails[col.participantColumn.name]}}
+                </span>
+                  <span *ngIf="col.type === 'DATE'">
+                {{value.tissueList.oncHistoryDetails[col.participantColumn.name] | dateFormatPipe}}
+                </span>
+                  <span *ngIf="isASettingsFilter('oD', col.participantColumn.name)">
+                {{getOncHisAdditionalValue(i, col.participantColumn.name)}}
+                </span>
+                  <span *ngIf="col.participantColumn.name === 'request'  ">
+                <div class="btn-group">
+                <md-select [(ngModel)]="value.tissueList.oncHistoryDetails[col.participantColumn.name]"
+                           (change)="onRequestChange(i)">
+                <md-option value="review">Needs Review</md-option>
+                <md-option value="no">Don't Request</md-option>
+                <md-option value="hold">On Hold</md-option>
+                <md-option value="request">Request</md-option>
+                <md-option value="sent" disabled>Sent</md-option>
+                <md-option value="received" disabled>Received</md-option>
+                <md-option value="returned" disabled>Returned</md-option>
+                <md-option value="unableToObtain" disabled>Unable to Obtain</md-option>
+                </md-select>
+                </div>
+                </span>
+                  <span *ngIf="col.type === 'OPTIONS' && col.participantColumn.name !== 'request' ">
+                {{getDisplayValueForFilter(col, value.tissueList.oncHistoryDetails[col.participantColumn.name])}}
+                </span>
+                </td>
+                <td *ngIf="value.tissueList.tissue == undefined ">
+                  No tissues!
+                </td>
+              </ng-container>
+              <ng-container *ngIf="value.tissueList.tissue != undefined">
+                <td *ngFor="let col of selectedColumns['t']" [height]="40"
+                    (click)="getParticipant(value, 't', value.tissueList.tissue.tissueId)">
+                <span
+                  *ngIf="allAdditionalColumns['t'] == undefined || !allAdditionalColumns['t'].includes(col) && col.type !== 'DATE' && col.type !== 'OPTIONS'">
+                {{value.tissueList.tissue[col.participantColumn.name]}}
+                </span>
+                  <span *ngIf="col.type === 'DATE'">
+                {{value.tissueList.tissue[col.participantColumn.name] | dateFormatPipe}}
+                </span>
+                  <span *ngIf="isASettingsFilter('t', col.participantColumn.name)">
+                {{getTissueAdditionalValue(i, col.participantColumn.name)}}
+                </span>
+                  <span *ngIf="col.type === 'OPTIONS'">
+                  {{this.getDisplayValueForFilter(col, value.tissueList.tissue[col.participantColumn.name])}}
+                </span>
+                </td>
+              </ng-container>
+            </tr>
+          </ng-container>
+        </ng-container>
+        <ng-container *ngIf="selectedColumns['t'] == undefined || selectedColumns['t'].length == 0">
+          <ng-container
+            *ngFor="let value of tissueListOncHistories| paginate: { itemsPerPage: hasRole().getUserSetting().getRowsPerPage(), currentPage: activePage }; let i=index">
+            <!--<ng-container *ngFor="let value of this.tissueListOncHistories; let i=index;">-->
+            <tr (click)="getParticipant(value, 'oD')">
+              <td *ngFor="let col of selectedColumns['data']" [height]="40" (click)="getParticipant(value, 'oD')">
+                  <span *ngIf="col.participantColumn.object === null || col.participantColumn.object === undefined">
+                    {{value.data[col.participantColumn.name]}}
+                  </span>
+                <span
+                  *ngIf="col.participantColumn.object !== null && col.participantColumn.object !== undefined && value.data[col.participantColumn.object] === undefined">
+                  </span>
+                <span
+                  *ngIf="col.participantColumn.object !== null && col.participantColumn.object !== undefined && value.data[col.participantColumn.object] !== undefined">
+                  {{value.data[col.participantColumn.object][col.participantColumn.name]}}
+                  </span>
+              </td>
+              <td *ngFor="let col of selectedColumns['oD']"
+                  [height]="40"
+                  (click)="stopIfRequest($event,value, col.participantColumn.name);">
+        <span
+          *ngIf="col.participantColumn.name !== 'request' && !allAdditionalColumns['oD'].includes(col) && col.participantColumn.name !== 'tissueProblemOption'
+        && col.type !== 'DATE' && col.type !== 'OPTIONS'">
+        {{value.tissueList.oncHistoryDetails[col.participantColumn.name]}}
+        </span>
+                <span *ngIf="col.type === 'DATE'">
+        {{value.tissueList.oncHistoryDetails[col.participantColumn.name] | dateFormatPipe}}
+        </span>
+                <span *ngIf="isASettingsFilter('oD', col.participantColumn.name)">
+        {{getOncHisAdditionalValue(i, col.participantColumn.name)}}
+        </span>
+                <span *ngIf="col.participantColumn.name === 'request'  ">
+        <div class="btn-group">
+        <md-select [(ngModel)]="value.tissueList.oncHistoryDetails[col.participantColumn.name]"
+                   (change)="onRequestChange(i)">
+        <md-option value="review">Needs Review</md-option>
+        <md-option value="no">Don't Request</md-option>
+        <md-option value="hold">On Hold</md-option>
+        <md-option value="request">Request</md-option>
+        <md-option value="sent" disabled>Sent</md-option>
+        <md-option value="received" disabled>Received</md-option>
+        <md-option value="returned" disabled>Returned</md-option>
+        <md-option value="unableToObtain" disabled>Unable to Obtain</md-option>
+        </md-select>
+        </div>
+        </span>
+                <span *ngIf="col.type === 'OPTIONS' && col.participantColumn.name !== 'request'  ">
+          {{this.getDisplayValueForFilter(col, value.tissueList.oncHistoryDetails[col.participantColumn.name])}}
+        </span>
+              </td>
+            </tr>
+          </ng-container>
+        </ng-container>
+        </tbody>
+        <tfoot *ngIf="tissueListWrappers != null">
+        <tr>
+          <td [attr.colspan]="selectedColumns['data'].length+selectedColumns['oD'].length+selectedColumns['t'].length">
+            <pagination-controls class="custom-pagination" (pageChange)="activePage = $event"></pagination-controls>
+          </td>
+        </tr>
+        <tr *ngIf="selectedColumns['t'] != undefined && selectedColumns['t'].length > 0">
+          <td
+            [attr.colspan]="(selectedColumns['data'] == undefined? 0: selectedColumns['data'].length)+(selectedColumns['oD']== undefined? 0 : selectedColumns['oD'].length)+selectedColumns['t'].length">
+            <b># of Tissues: {{tissueListWrappers.length}}</b>
+          </td>
+        </tr>
+        <tr *ngIf="selectedColumns['t'] == undefined || selectedColumns['t'].length == 0">
+          <td [attr.colspan]="selectedColumns['data'].length+selectedColumns['oD'].length">
+            <b># of Procedures: {{tissueListOncHistories.length}}</b>
+          </td>
+        </tr>
+        </tfoot>
+      </table>
+    </div>
+  </ng-container>
+</ng-container>
+
+<app-modal>
+  <div class="app-modal-header" *ngIf="newFilterModal">New Filter's Name</div>
+  <div class="app-modal-header" *ngIf="openTissueModal">Opening tissue page...</div>
+  <div class="app-modal-body">
+    <ng-container *ngIf="newFilterModal">
+      Please enter a name for this set of filters to be saved for you <br>
+      <ng-container>
+        <md-input-container class="Input">
+          <input mdInput class="Width--100" maxlength="100" autocomplete="off"
+                 [(ngModel)]="newFilterName">
+          <md-hint class="ErrorMessageForm" *ngIf="dup">Name not unique</md-hint>
+        </md-input-container>
+      </ng-container>
+    </ng-container>
+    <ng-container *ngIf="openTissueModal">
+      This tissue's status is {{selectedTissueStatus}}.<br> The tissue page cannot be opened.
+    </ng-container>
+  </div>
+  <div class="app-modal-footer">
+    <ng-container *ngIf="newFilterModal">
+      <button md-raised-button color="primary"
+              (click)="modal.hide(); dup=false; showModal=false; openTissueModal=false; newFilterModal=false;">
+        CANCEL
+      </button>
+      <button md-raised-button color="primary"
+              (click)="saveCurrentFilter();">SAVE
+      </button>
+    </ng-container>
+    <ng-container *ngIf="openTissueModal">
+      <button md-raised-button color="primary"
+              (click)="modal.hide(); showModal=false; openTissueModal=false; newFilterModal=false; selectedTissueStatus=null;">
+        OK
+      </button>
+
+    </ng-container>
+  </div>
+</app-modal>
+

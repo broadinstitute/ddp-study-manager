@@ -1,0 +1,12 @@
+<span *ngIf="!auth.authenticated() && !notAllowedToLogin">
+  <h1>Please login</h1>
+</span>
+
+<span *ngIf="notAllowedToLogin">
+  <h1>You are not allowed to login</h1>
+  <h3>Please contact someone =)</h3>
+</span>
+
+<span *ngIf="auth.authenticated()">
+  <h1>Welcome to the DDP Study Management System</h1>
+</span>

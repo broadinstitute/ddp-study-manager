@@ -1,0 +1,108 @@
+<h1> Discard Sample List </h1>
+
+
+<div *ngIf="errorMessage != null">
+  <h3 class="Color--warn Line--Break">{{errorMessage}}</h3>
+  <br/>
+</div>
+<div *ngIf="additionalMessage != null">
+  <h3 class="Color--primary Line--Break">{{additionalMessage}}</h3>
+  <br/>
+</div>
+
+<span [hidden]="!loading" class="Width--100">
+    <div align="center" class="Width--100 Height--100">
+      <i class="fas fa-spinner fa-spin fa-5x Color--primary"></i>
+    </div>
+  </span>
+
+<div *ngIf="allowedToSeeInformation">
+
+  <div *ngIf="realm != null" class="Float--left Width--80">
+    <div *ngIf="samples.length === 0">
+      <h4>There are no samples for exited participants</h4>
+    </div>
+
+    <div *ngIf="samples.length > 0">
+
+      <table class="table table-striped Width--100" [mfData]="samples" #mf="mfDataTable" [mfRowsOnPage]="10">
+        <thead>
+        <tr>
+          <th>
+            <mfDefaultSorter by="realm">DDP-Realm</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="ddpParticipantId">Participant ID</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="collaboratorParticipantId">Short ID</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="user">User Exited</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="exitDate">Date Exited</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="kitType">Kit Type</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="scanDate">Date Sent</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="receivedDate">Date Received</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="scanDate">MF code</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="action">Action</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="discardDate">Date Destroyed</mfDefaultSorter>
+          </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let s of mf.data; let i = index">
+          <td (click)="openSample(s)">{{s.realm}}</td>
+          <td (click)="openSample(s)">{{s.ddpParticipantId}}</td>
+          <td (click)="openSample(s)">{{s.getID()}}</td>
+          <td (click)="openSample(s)">{{s.user}}</td>
+          <td (click)="openSample(s)">
+            <ng-container *ngIf="s.exitDate !== 0">{{s.exitDate | date:'medium'}}</ng-container>
+          </td>
+          <td (click)="openSample(s)">{{s.kitType}}</td>
+          <td (click)="openSample(s)">
+            <ng-container *ngIf="s.scanDate !== 0">{{s.scanDate | date:'medium'}}</ng-container>
+          </td>
+          <td (click)="openSample(s)">
+            <ng-container *ngIf="s.receivedDate !== 0">{{s.receivedDate | date:'medium'}}</ng-container>
+          </td>
+          <td (click)="openSample(s)">{{s.kitLabel}}</td>
+          <td>
+            <ng-container *ngIf="!hasRole().allowedToExitParticipant() || !s.isActionStillChangeable()">
+              {{s.getAction()}}
+            </ng-container>
+            <ng-container *ngIf="hasRole().allowedToExitParticipant() && s.isActionStillChangeable()">
+              <md-select class="Input--Min-WIDTH"
+                         [(ngModel)]="s.action" (change)="triggerAction(i)">
+                <md-option value="hold">Hold</md-option>
+                <md-option value="discard">Discard</md-option>
+              </md-select>
+            </ng-container>
+          </td>
+          <td (click)="openSample(s)">{{s.discardDate}}</td>
+        </tr>
+        <tbody>
+        <tfoot>
+        <tr>
+          <td colspan="11">
+            <mfBootstrapPaginator [rowsOnPageSet]="[10,25,50]"></mfBootstrapPaginator>
+          </td>
+        </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>

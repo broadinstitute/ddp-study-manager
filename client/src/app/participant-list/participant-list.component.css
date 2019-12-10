@@ -1,0 +1,21 @@
+.LIST-SEPARATOR:not(:last-child) {
+  border-bottom:1px solid lightgrey;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+.BIT-OF-MARGIN {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  min-height: 20px;
+}
+
+.NO-PADDING-START{
+  padding-inline-start: 0px;
+  list-style-type:none;
+}
+
+.button.md-icon-button,
+.mat-icon-button {
+  width: auto;
+}

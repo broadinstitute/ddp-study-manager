@@ -1,0 +1,8 @@
+.mat-mini-fab {
+  width: 24px;
+  height: 24px;
+}
+
+.mat-button, .mat-fab, .mat-icon-button, .mat-mini-fab, .mat-raised-button {
+  line-height: 24px;
+}

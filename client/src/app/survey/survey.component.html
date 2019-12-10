@@ -1,0 +1,225 @@
+<h1> Follow-Up Survey </h1>
+
+<div *ngIf="errorMessage != null">
+  <h3 class="Color--warn Line--Break">{{errorMessage}}</h3>
+  <br/>
+</div>
+<div *ngIf="additionalMessage != null">
+  <h3 class="Color--primary Line--Break">{{additionalMessage}}</h3>
+  <br/>
+</div>
+
+
+  <span [hidden]="!loading" class="Width--100">
+    <div align="center" class="Width--100 Height--100">
+      <i class="fas fa-spinner fa-spin fa-5x Color--primary"></i>
+    </div>
+  </span>
+
+<div *ngIf="allowedToSeeInformation">
+  <br/>
+  <div *ngIf="realm != null" class="Width--100">
+    <div *ngIf="possibleSurveys.length === 0">
+      <h4>There are no followup surveys</h4>
+    </div>
+
+    <div *ngIf="possibleSurveys.length > 0">
+    <md-select placeholder="Survey" class="Input--Bigger-WIDTH"
+               [(ngModel)]="survey" (change)="getListOfSurveyStatus()">
+      <md-option *ngFor="let surveys of possibleSurveys"
+                 [value]="surveys">
+        {{surveys.name}}  ({{surveys.type}})
+      </md-option>
+    </md-select>
+  </div>
+
+    <br/>
+
+    <div *ngIf="survey != null" class="Width--100">
+      <div>
+        <table class="Width--100">
+          <tr>
+            <td class="Width--50" *ngIf="realm.toLowerCase() !== 'mbc'">
+              <md-input-container>
+                <input maxlength="200" style="width: 10cm" mdInput type="text"  placeholder="Participant ID"
+                       [(ngModel)]="participantId">
+              </md-input-container>
+            </td>
+            <td class="Width--50">
+              <app-filepicker [id]="'surveyUploadFile'" [fileFormat]="'txt'" (fileSelected)="fileSelected($event)"></app-filepicker>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div *ngIf="!noSurveyStatus">
+        <md-input-container>
+          <input maxlength="200" style="width: 10cm" mdInput type="text"  placeholder="Reason for Follow-Up Survey"
+                 [(ngModel)]="reason">
+        </md-input-container>
+      </div>
+      <button md-raised-button type="button" color="primary"
+              (click)="triggerSurvey()"
+              [disabled]="disableButton()">Create Survey</button>
+    </div>
+
+    <div class="Float--left Width--80">
+      <b>
+        <br/>
+        <br/>
+        <br/>
+        Upload instructions:
+        <ul>
+          <li><b>If your participant is a migrated one and has a altPID please use that ID to trigger a survey, otherwise use the GUID</b></li>
+          <li>Tab delimited ".txt" file</li>
+          <li>Following columns are required
+            <table *ngIf="realm.toLowerCase() !== 'mbc'" class="table-bordered">
+              <tr>
+                <td style="padding: 5px; padding-right: 50px">participantId</td>
+              </tr>
+            </table>
+            <table *ngIf="realm.toLowerCase() === 'mbc'" class="table table-bordered">
+              <tr>
+                <td>shortId</td>
+                <td>firstName</td>
+                <td>lastName</td>
+                <td>email</td>
+              </tr>
+            </table>
+          </li>
+        </ul>
+      </b>
+    </div>
+    <br/>
+    <br/>
+
+    <div *ngIf="survey != null" class="Float--left Width--100">
+      <br/>
+      <br/>
+      <div *ngIf="noSurveyStatus">
+        <h4>Selected DDP does not show survey status</h4>
+      </div>
+      <div *ngIf="!noSurveyStatus">
+        <div *ngIf="surveyStatus.length === 0">
+          <h4>There are no previous triggered surveys</h4>
+        </div>
+
+        <div *ngIf="surveyStatus.length > 0">
+          <h4>List of previous triggered surveys</h4>
+          <button class="Float--right" md-raised-button type="button" color="primary"
+                  (click)="getListOfSurveyStatus()">Reload</button>
+
+          <table class="table table-striped Width--100"
+                 [mfData]="surveyStatus | surveySort | surveyFilter:filterParticipantId:filterShortId:filterReason:filterUser"
+                 #mf="mfDataTable" [mfRowsOnPage]="hasRole().getUserSetting().getRowsPerPage()">
+            <thead>
+              <tr>
+                <th>
+                  <mfDefaultSorter by="surveyInfo.participantId">Participant ID</mfDefaultSorter>
+                </th>
+                <th>
+                  <mfDefaultSorter by="surveyInfo.shortId">Short ID</mfDefaultSorter>
+                </th>
+                <th>
+                  <mfDefaultSorter by="surveyInfo.followUpInstance">Instance</mfDefaultSorter>
+                </th>
+                <th>
+                  <mfDefaultSorter by="surveyInfo.surveyQueued">Queued</mfDefaultSorter>
+                </th>
+                <th>
+                  <mfDefaultSorter by="surveyInfo.surveyStatus">Status</mfDefaultSorter>
+                </th>
+                <th>
+                  <mfDefaultSorter by="reason">Reason</mfDefaultSorter>
+                </th>
+                <th>
+                  <mfDefaultSorter by="user">User</mfDefaultSorter>
+                </th>
+                <th>
+                  <mfDefaultSorter by="triggeredDate">Date</mfDefaultSorter>
+                </th>
+              </tr>
+              <tr>
+                <th>
+                  <input class="form-control" [(ngModel)]="filterParticipantId"/>
+                </th>
+                <th>
+                  <input class="form-control" [(ngModel)]="filterShortId"/>
+                </th>
+                <th></th>
+                <th></th>
+                <th>
+                  <input class="form-control" [(ngModel)]="filterReason"/>
+                </th>
+                <th>
+                  <input class="form-control" [(ngModel)]="filterUser"/>
+                </th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let surveyStatus of mf.data">
+              <td>{{surveyStatus.surveyInfo.participantId}}</td>
+              <td>{{surveyStatus.surveyInfo.shortId}}
+                <div *ngIf="surveyStatus.surveyInfo.legacyShortId != null">
+                  <!--legacy shortId -->
+                  {{surveyStatus.surveyInfo.legacyShortId}}
+                </div>
+              </td>
+              <td>{{surveyStatus.surveyInfo.followUpInstance}}</td>
+              <td>{{surveyStatus.surveyInfo.surveyQueued * 1000 | date:'medium'}}</td>
+              <td>{{surveyStatus.surveyInfo.surveyStatus}}</td>
+              <td>
+                <span *ngIf="surveyStatus.surveyInfo.triggerId < 0" class="Color--primary--light">{{surveyStatus.reason}}</span>
+                <span *ngIf="surveyStatus.surveyInfo.triggerId >= 0">{{surveyStatus.reason}}</span>
+              </td>
+              <td>{{surveyStatus.user}}</td>
+              <td *ngIf="surveyStatus.triggeredDate != 0">{{surveyStatus.triggeredDate | date:'medium'}}</td>
+              <td *ngIf="surveyStatus.triggeredDate == 0"></td>
+            </tr>
+            <tbody>
+            <tfoot>
+            <tr>
+              <td colspan="14">
+                <mfBootstrapPaginator [rowsOnPageSet]="[hasRole().getUserSetting().getRowSet0(), hasRole().getUserSetting().getRowSet1(), hasRole().getUserSetting().getRowSet2()]"></mfBootstrapPaginator>
+              </td>
+            </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<app-modal>
+  <div class="app-modal-header">
+    Survey was already triggered for following participants.
+    <div *ngIf="survey != null && survey.type !== 'NONREPEATING'">
+      Please select the participant for which you want to trigger a new survey.
+    </div>
+    <div *ngIf="survey != null && survey.type === 'NONREPEATING'">
+      Selected survey was of type 'NONREPEATING' therefore DSM won't trigger again.
+    </div>
+  </div>
+  <div class="app-modal-body">
+    <div *ngFor="let pt of alreadyTriggered">
+      <div *ngIf="survey != null && survey.type !== 'NONREPEATING'">
+        <md-checkbox color="primary" [checked]="pt.selected" (change)="pt.selected = $event.checked" disableRipple>
+          {{pt.ddpParticipantId}} {{pt.shortId}} {{pt.firstName}} {{pt.lastName}}
+        </md-checkbox>
+      </div>
+      <div *ngIf="survey != null && survey.type === 'NONREPEATING'">
+        {{pt.ddpParticipantId}} {{pt.shortId}} {{pt.firstName}} {{pt.lastName}}
+      </div>
+    </div>
+  </div>
+  <div class="app-modal-footer">
+    <div>
+      <button type="button" class="btn btn-default" (click)="forgetParticipants()">Close</button>
+    </div>
+    <div *ngIf="survey != null && survey.type !== 'NONREPEATING'">
+      <button type="button" class="btn btn-primary" (click)="triggerAgain()">Trigger New Surveys</button>
+    </div>
+  </div>
+</app-modal>

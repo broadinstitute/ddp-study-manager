@@ -1,0 +1,17 @@
+<md-input-container *ngIf="dataSource != undefined" [ngClass]="{'Input--Abstraction': true}">
+  <input mdInput autocomplete="off" [disabled]="disabled"
+         [(ngModel)]="drug"
+         (change)="selectDrug($event)"
+         [typeahead]="dataSource"
+         [typeaheadMinLength]="0"
+         [typeaheadScrollable]="true"
+         [typeaheadOptionsInScrollableView]="6"
+         (typeaheadOnSelect)="selectDrug($event)"
+         placeholder="Start typing a {{fieldName}}...">
+</md-input-container>
+
+<md-input-container *ngIf="dataSource == undefined" [ngClass]="{'Input--Abstraction': true}">
+  <input mdInput [disabled]="disabled"
+         [(ngModel)]="drug"
+         placeholder="Medication">
+</md-input-container>

@@ -1,0 +1,57 @@
+<h1> Mailing List </h1>
+
+<div *ngIf="errorMessage != null">
+  <h3 class="Color--warn Line--Break">{{errorMessage}}</h3>
+  <br/>
+</div>
+<div *ngIf="additionalMessage != null">
+  <h3 class="Color--primary Line--Break">{{additionalMessage}}</h3>
+  <br/>
+</div>
+
+<span [hidden]="!loadingContacts" class="Width--100">
+    <div align="center" class="Width--100 Height--100">
+      <i class="fas fa-spinner fa-spin fa-5x Color--primary"></i>
+  </div>
+</span>
+
+<div *ngIf="contactList.length > 0">
+  <div align="right" style="width: 100%; height: 100%;">
+    <button md-raised-button (click)="downloadMailingList()" color="primary" [disabled]="realm == null">Download mailing list</button>
+  </div>
+  <table class="table table-striped Width--100"
+         [mfData]="contactList"
+         #mf="mfDataTable" [mfRowsOnPage]="hasRole().getUserSetting().getRowsPerPage()">
+    <thead>
+    <tr>
+      <th>
+        <mfDefaultSorter by="firstName">First Name</mfDefaultSorter>
+      </th>
+      <th>
+        <mfDefaultSorter by="lastName">Last Name</mfDefaultSorter>
+      </th>
+      <th>
+        <mfDefaultSorter by="email">Email</mfDefaultSorter>
+      </th>
+      <th>
+        <mfDefaultSorter by="dateCreated">Date signed up</mfDefaultSorter>
+      </th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let item of mf.data">
+      <td>{{item.firstName}}</td>
+      <td>{{item.lastName}}</td>
+      <td>{{item.email}}</td>
+      <td>{{item.getDate() | date:'medium'}}</td>
+    </tr>
+    </tbody>
+    <tfoot>
+    <tr>
+      <td colspan="10">
+        <mfBootstrapPaginator [rowsOnPageSet]="[hasRole().getUserSetting().getRowSet0(), hasRole().getUserSetting().getRowSet1(), hasRole().getUserSetting().getRowSet2()]"></mfBootstrapPaginator>
+      </td>
+    </tr>
+    </tfoot>
+  </table>
+</div>

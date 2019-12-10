@@ -1,0 +1,27 @@
+.FilePicker--Button,
+.FilePicker--Text {
+}
+.FilePicker--Button label {
+  float: left;
+  background-color: #5e7ca3;
+  font-weight: 400;
+  padding: 5px 15px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 2px;
+  color: white;
+}
+.FilePicker--Button label:active {
+  background-color: #afbed2;
+}
+/*input:disabled + label {*/
+  /*cursor: not-allowed;*/
+  /*opacity: .65;*/
+  /*background-color: #265a88*/
+/*}*/
+.FilePicker--Text {
+  width: 360px;
+  padding: 5px 0 0 10px;
+  float: left;
+}

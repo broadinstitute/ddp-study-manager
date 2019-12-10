@@ -1,0 +1,75 @@
+<h1> Email Settings </h1>
+
+<div *ngIf="errorMessage != null">
+  <h3 class="Color--warn Line--Break">{{errorMessage}}</h3>
+  <br/>
+</div>
+
+<div *ngIf="additionalMessage != null">
+  <h3 class="Color--primary Line--Break">{{additionalMessage}}</h3>
+  <br/>
+</div>
+
+  <span [hidden]="!loading" class="Width--100">
+    <div align="center" class="Width--100 Height--100">
+      <i class="fas fa-spinner fa-spin fa-5x Color--primary"></i>
+    </div>
+  </span>
+  <div *ngIf="realm != null && allowedToSeeInformation">
+
+    <div *ngIf="emailSettings == null">
+      <div class="Float--left Width--80">
+      <h4> There is no data available for the selected realm </h4>
+      </div>
+    </div>
+
+    <div *ngIf="emailSettings != null">
+      <table class="table table-striped"
+             [mfData]="emailSettings" #mf="mfDataTable">
+        <thead>
+          <tr>
+            <th class="Width--30">
+              Template
+            </th>
+            <th class="Width--50">
+              Description
+            </th>
+            <th class="Width--10">
+              Workflow
+            </th>
+            <th class="Width--10">
+              WaitTime [d]
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let setting of mf.data | emailSettingSort">
+            <tr>
+              <td>
+                {{setting.templateId}}
+              </td>
+              <td>
+                <md-input-container class="Width--100">
+                  <input mdInput type="text" [(ngModel)]="setting.name" maxlength="200">
+                </md-input-container>
+              </td>
+              <td>
+                <select [(ngModel)]="setting.workflowId" class="SelectText">
+                  <option value="-" selected>-</option>
+                  <option *ngFor="let workIndex of emailSettings; let i = index;" [value]="i">{{i}}</option>
+                </select>
+              </td>
+              <td>
+                <select [(ngModel)]="setting.responseDays" class="SelectText">
+                  <option value="-" selected>-</option>
+                  <option *ngFor="let i of range" [value]="i">{{i}}</option>
+                </select>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+      <br/>
+      <button type="button" class="btn btn-primary" (click)="saveSettings()">Save Settings</button>
+    </div>
+  </div>

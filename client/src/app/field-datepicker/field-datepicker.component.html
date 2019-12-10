@@ -1,0 +1,43 @@
+<span class="Display--Inline-Block">
+  <b *ngIf="fieldName != null">{{fieldName}}</b>
+  <md-input-container class="DatePicker--Input">
+    <input mdInput maxlength="10" [ngClass]="{'Input': true, 'Color--Field--Patched': colorDuringPatch}"
+           placeholder="{{getDateFormatPlaceholder(dateFormat)}}"
+           [(ngModel)]="_dateString" (change)="check()"
+           [disabled]="disabled" autocomplete="off"
+           (blur)="colorDuringPatch = false" (focus)="colorDuringPatch = true">
+    <md-hint class="ErrorMessageForm" *ngIf="error !== null">{{error}}</md-hint>
+  </md-input-container>
+  <ng-container *ngIf="allowUnknownDay">*</ng-container>
+  <div class="Calendar--Popup"
+       *ngIf="showDatePicker">
+    <ng-container *ngIf="allowFutureDate">
+        <datepicker [ngModel]="datePicker" [showWeeks]="false"
+                    (selectionDone)="selectDate($event)"></datepicker>
+    </ng-container>
+    <ng-container *ngIf="!allowFutureDate">
+        <datepicker [ngModel]="datePicker" [showWeeks]="false" [maxDate]="getUtil().maxDate()"
+                    (selectionDone)="selectDate($event)"></datepicker>
+    </ng-container>
+  </div>
+  <button class="btn btn-xs Button--Background--Color" *ngIf="showCalendarButton"
+          (click)="closeCalendar()"
+          [disabled]="disabled">
+    <i class="fas fa-calendar-alt fa-lg"></i>
+  </button>
+  <button class="btn btn-xs Button--Background--Color"
+          *ngIf="showTodayButton"
+          (click)="setToday()"
+          [disabled]="disabled">Today</button>
+  <md-checkbox color="primary" [checked]="estimated" [disabled]="disabled" *ngIf="addCheckboxEstimated"
+               (change)="estimated = $event.checked; estimatedChanged()"
+               disableRipple>Estimated
+  </md-checkbox>
+
+  <button *ngIf="showNAButton"
+    [ngClass]="{'btn':true, 'btn-xs':true, 'Button--Background--Color':true}"
+    (click)="setNA()" [disabled]="disabled">N/A</button>
+  <button *ngIf="showNotFoundButton"
+    [ngClass]="{'btn':true, 'btn-xs':true, 'Button--Background--Color':true}"
+    (click)="setNotFound()" [disabled]="disabled">Not Found</button>
+</span>

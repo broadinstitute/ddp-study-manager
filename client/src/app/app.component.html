@@ -1,0 +1,92 @@
+<app-banner></app-banner>
+
+<nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <ul class="nav navbar-nav">
+      <li class="Float--left" *ngIf="getAuth().authenticated() && shouldSeeRealmSelection()">
+        <div class="Float--left">
+          <p class="Menu--Select"><b>Select realm: </b>
+            <select [ngModel]="getAuth().selectedRealm" class="SelectText"
+                    (click)="getAuth().getRealmList()" (ngModelChange)="getAuth().selectRealm($event)">
+              <option value="" selected>Please Select</option>
+              <option *ngFor="let realmName of getAuth().realmList" [value]="realmName">{{realmName}}</option>
+            </select>
+          </p>
+        </div>
+      </li>
+      <li class="dropdown" *ngIf="getAuth().authenticated()
+        && (hasRole().allowToViewSampleLists() || hasRole().allowedToHandleSamples() || hasRole().allowedToViewReceivingPage() || hasRole().allowedToDiscardSamples() || hasRole().allowedToExitParticipant())">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#" (click)="doNothing()"><b>Samples</b>
+          <span class="caret"></span></a>
+        <ul class="dropdown-menu">
+          <!-- Summary and report pages, only if you have right to handle samples or view sample lists -->
+          <li *ngIf="hasRole().allowToViewSampleLists() || hasRole().allowedToHandleSamples()"><a href="#" [routerLink]="['/unsentOverview']"> Unsent Kits Overview </a></li>
+          <li *ngIf="hasRole().allowToViewSampleLists() || hasRole().allowedToHandleSamples()"><a href="#" [routerLink]="['/shippingReport']"> Report </a></li>
+          <li *ngIf="hasRole().allowToViewSampleLists() || hasRole().allowedToHandleSamples()"><a href="#" [routerLink]="['/shippingDashboard']"> Summary </a></li>
+          <hr *ngIf="hasRole().allowToViewSampleLists() || hasRole().allowedToHandleSamples()">
+          <li *ngIf="hasRole().allowToViewSampleLists() || hasRole().allowedToHandleSamples()"><a [routerLink]="['/shippingUploaded']"> Kits without Labels </a></li>
+          <li *ngIf="hasRole().allowToViewSampleLists() || hasRole().allowedToHandleSamples()"><a [routerLink]="['/shippingQueue']"> Queue </a></li>
+          <li *ngIf="hasRole().allowToViewSampleLists() || hasRole().allowedToHandleSamples()"><a [routerLink]="['/shippingError']"> Error </a></li>
+          <!-- Scan pages, only if you have right to handle samples or to receive samples -->
+          <li *ngIf="hasRole().allowedToHandleSamples()"><a [routerLink]="['/scan']" [queryParams]="{scanTracking: true}"> Tracking Scan </a></li>
+          <li *ngIf="hasRole().allowedToHandleSamples()"><a [routerLink]="['/scan']"> Final Scan </a></li>
+          <li *ngIf="hasRole().allowedToViewReceivingPage()"><a [routerLink]="['/scan']" [queryParams]="{scanReceived: true}"> Receiving Scan </a></li>
+          <!-- Discard sample, only if you have right to discard samples or you are allowed to exit a participant -->
+          <li *ngIf="hasRole().allowedToDiscardSamples() || hasRole().allowedToExitParticipant()"><a [routerLink]="['/discardList']"> Discard Sample </a></li>
+          <!-- Lists of samples, only if you have right to handle samples or view sample lists -->
+          <hr *ngIf="hasRole().allowToViewSampleLists() || hasRole().allowedToHandleSamples()">
+          <!--<li *ngIf="hasRole().allowToViewSampleLists() || hasRole().allowedToHandleSamples()"><a [routerLink]="['/shippingTriggered']"> Kits Label triggered </a></li>-->
+          <li *ngIf="hasRole().allowToViewSampleLists() || hasRole().allowedToHandleSamples()"><a [routerLink]="['/shippingSent']"> Sent </a></li>
+          <li *ngIf="hasRole().allowToViewSampleLists() || hasRole().allowedToHandleSamples()"><a [routerLink]="['/shippingReceived']"> Received </a></li>
+          <li *ngIf="hasRole().allowToViewSampleLists() || hasRole().allowedToHandleSamples()"><a [routerLink]="['/shippingOverview']"> Sent/Received Overview </a></li>
+          <li *ngIf="hasRole().allowedToDeactivateKits()"><a [routerLink]="['/shippingDeactivated']"> Deactivated </a></li>
+          <!-- Search for a kit, only if you have right to handle samples -->
+          <hr *ngIf="hasRole().allowedToHandleSamples()">
+          <li *ngIf="hasRole().allowedToHandleSamples()"><a [routerLink]="['/shippingSearch']"> Search </a></li>
+          <!-- Upload of kits, only if you have right to upload -->
+          <hr *ngIf="hasRole().allowedToUploadKits()">
+          <li *ngIf="hasRole().allowedToUploadKits()"><a href="#" [routerLink]="['/upload']"> Kit Upload </a></li>
+          <!-- Setup label dimensions, only if you have the right to handle samples -->
+          <hr *ngIf="hasRole().allowedToHandleSamples()">
+          <li *ngIf="hasRole().allowedToHandleSamples()"><a [routerLink]="['/labelSettings']"> Label Settings </a></li>
+        </ul>
+      </li>
+      <li class="dropdown" *ngIf="(getAuth().authenticated() && hasRole().allowedToViewMedicalRecords())">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#" (click)="doNothing()"><b>Study</b>
+          <span class="caret"></span></a>
+        <ul class="dropdown-menu">
+          <li><a href="#" [routerLink]="['/medicalRecordDashboard']"> Dashboard </a></li>
+          <hr>
+          <li><a href="#" [routerLink]="['/participantList']"> Participant List </a></li>
+          <li><a href="#" [routerLink]="['/tissueList']"> Tissue List </a></li>
+          <li *ngIf="hasRole().allowedToChangeFieldSettings()"><a href="#" [routerLink]="['/fieldSettings']">Field Settings</a></li>
+          <li><a *ngIf="hasRole().isAbstractionAdmin()" href="#" [routerLink]="['/medicalRecordAbstractionSettings']"> MR Abstraction Settings </a></li>
+        </ul>
+      </li>
+      <li class="dropdown" *ngIf="getAuth().authenticated() && (hasRole().allowedToViewMailingList() || hasRole().allowedToExitParticipant() || hasRole().allowedToCreateSurveys() || hasRole().allowedToDownloadPDF() || hasRole().allowedToSkipParticipantEvents())">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#" (click)="doNothing()"><b> Miscellaneous </b>
+          <span class="caret"></span></a>
+        <ul class="dropdown-menu">
+          <li *ngIf="hasRole().allowedToViewMailingList()"><a href="#" [routerLink]="['/mailingList']"> Mailing List </a></li>
+          <li *ngIf="hasRole().allowedToExitParticipant()"><a href="#" [routerLink]="['/participantExit']"> Participant Withdrawal </a></li>
+          <li *ngIf="hasRole().allowedToSkipParticipantEvents()"><a href="#" [routerLink]="['/participantEvent']"> Participant Event </a></li>
+          <li *ngIf="hasRole().allowedToCreateSurveys()"><a href="#" [routerLink]="['/survey']"> Follow-Up Survey </a></li>
+          <li *ngIf="hasRole().allowedToDownloadPDF()"><a href="#" [routerLink]="['/downloadPDF']"> Download PDF </a></li>
+          <li *ngIf="hasRole().allowedToDownloadNDI()"><a href="#" [routerLink]="['/ndi']"> NDI Download </a></li>
+        </ul>
+      </li>
+    </ul>
+    <ul class="nav navbar-nav navbar-right">
+      <li class="Float--left" *ngIf="getAuth().authenticated() && (hasRole().allowToViewSampleLists() || hasRole().allowedToHandleSamples() || hasRole().allowedToViewMedicalRecords())">
+        <a href="#" [routerLink]="['/userSettings']"><b> User Settings </b></a>
+      </li>
+      <li class="Float--right"><a href="#" (click)="doLogin()" *ngIf="!getAuth().authenticated()"><b>Log In</b></a></li>
+      <li class="Float--right"><a href="#" (click)="doLogin()" *ngIf="getAuth().authenticated()"><b>Log Out</b></a></li>
+    </ul>
+  </div>
+</nav>
+<br/>
+
+<div class="Router--Outlet">
+  <router-outlet></router-outlet>
+</div>

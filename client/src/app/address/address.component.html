@@ -1,0 +1,7 @@
+<ng-container *ngIf="addressForLabel != null">
+<h2>{{addressForLabel.firstName}} {{addressForLabel.lastName}}<br/>
+{{addressForLabel.street1}}<br/>
+<span *ngIf="addressForLabel.street2 != null">{{addressForLabel.street2}}<br/></span>
+{{addressForLabel.city}}, {{addressForLabel.state}} {{addressForLabel.postalCode}}<br/>
+{{addressForLabel.country}}</h2>
+</ng-container>
