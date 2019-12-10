@@ -1,0 +1,34 @@
+<span class="Display--Inline-Block">
+  <div class="Width--100" *ngIf="question.status !== 'sent' && question.status !== 'done'">
+    <md-input-container class="Input--Abstraction">
+      <input mdInput maxlength="500" placeholder="Recipient email" type="email"
+             [(ngModel)]="question.email" (change)="questionChanged($event, 'email')">
+    </md-input-container>
+    <textarea maxlength="200" placeholder="Question"
+              [ngClass]="{'Width--100': true, 'Input--Bigger-WIDTH': true}"
+              [(ngModel)]="question.question" [disabled]="disabled"
+              (change)="questionChanged($event, 'question')"></textarea>
+    <button md-mini-fab color="warn" [disabled]="disabled" tooltip="Delete Question" *ngIf="isQuestionArray && question.status !== 'done'"
+            (click)="deleteQuestion()">
+      <i class="fas fa-trash-alt fa-lg"></i>
+    </button>
+  </div>
+
+  <div *ngIf="question.status === 'sent' || question.status === 'done'">
+    {{question.qUser}}: {{question.qDate | date:'medium' }} <br/>
+    {{question.email}}<br/>
+    <b style="color: #727272">Question: </b><b>{{question.question}}</b>
+  </div>
+
+  <div class="Width--100" *ngIf="!resolved && question.status === 'done'">
+    <textarea maxlength="200" placeholder="Answer"
+              [ngClass]="{'Width--100': true, 'Input--Bigger-WIDTH': true}"
+              [(ngModel)]="question.answer" [disabled]="disabled"
+              (change)="questionChanged($event, 'answer')"></textarea>
+  </div>
+
+  <div *ngIf="resolved">
+    {{question.aDate | date:'medium' }} <br/>
+    <b style="color: #727272">Answer: </b><b>{{question.answer}}</b>
+  </div>
+</span>

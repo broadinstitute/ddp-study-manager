@@ -1,0 +1,450 @@
+<table class="Width--100">
+  <tr>
+    <td *ngIf="activityOfField !== 'final'"
+        [ngClass]="{'Width--5': true, 'TD--Padding': true, 'Abstraction-Background-Oki': field.qcWrapper.equals && (type === 'abstraction' || type === 'review'), 'Abstraction-Background-Warning': !field.qcWrapper.equals && (type === 'abstraction' || type === 'review'),
+          'Abstraction-Background-Check': field.qcWrapper.check && (type === 'abstraction' || type === 'review')}">
+      <ng-container *ngIf="viewValue != null">
+        <button md-mini-fab [color]="getNoteButtonColorStyle(viewValue.note)" placement="right" tooltip='{{viewValue.note}}'
+                (click)="openNoteModal(viewValue.note, 'note', true); noteModal.show()">
+          <i class="fas fa-sticky-note fa-lg"></i>
+        </button>
+      </ng-container>
+      <ng-container *ngIf="viewValue == null">
+        <button md-mini-fab [color]="getNoteButtonColorStyle(field.fieldValue.note)" placement="right" tooltip='{{field.fieldValue.note}}'
+                (click)="openNoteModal(field.fieldValue.note, 'note', false); noteModal.show()">
+          <i class="fas fa-sticky-note fa-lg"></i>
+        </button>
+      </ng-container>
+    </td>
+
+    <td *ngIf="activityOfField !== 'final'"
+        [ngClass]="{'Width--5': true, 'TD--Padding': true, 'Abstraction-Background-Oki': field.qcWrapper.equals && (type === 'abstraction' || type === 'review'), 'Abstraction-Background-Warning': !field.qcWrapper.equals && (type === 'abstraction' || type === 'review'),
+          'Abstraction-Background-Check': field.qcWrapper.check && (type === 'abstraction' || type === 'review')}">
+      <ng-container *ngIf="viewValue != null">
+        <button md-mini-fab [color]="getQuestionButtonColorStyle(viewValue.question)" placement="right" tooltip='{{getQuestionTooltip(viewValue.question)}}'
+                (click)="openNoteModal(viewValue.question, 'question', true); noteModal.show()">
+          <i class="fas fa-comments fa-lg"></i>
+        </button>
+      </ng-container>
+      <ng-container *ngIf="viewValue == null">
+        <button md-mini-fab [color]="getQuestionButtonColorStyle(field.fieldValue.question)" placement="right"
+                tooltip='{{getQuestionTooltip(field.fieldValue.question)}}'
+                (click)="openNoteModal(field.fieldValue.question, 'question', false); noteModal.show()">
+          <i class="fas fa-comments fa-lg"></i>
+        </button>
+      </ng-container>
+    </td>
+
+    <td [ngClass]="{'Width--15': true, 'TD--Padding': true, 'Abstraction-Background-Oki': field.qcWrapper.equals && (type === 'abstraction' || type === 'review'), 'Abstraction-Background-Warning': !field.qcWrapper.equals && (type === 'abstraction' || type === 'review'),
+          'Abstraction-Background-Check': field.qcWrapper.check && (type === 'abstraction' || type === 'review'), 'Cell--Bottom-Border': field.type === 'medication' || field.type === 'recurrence'}">
+      <b>{{field.displayName}}</b>
+      <div *ngIf="participant[activityOfField].colorNotFinished && (!field.fieldValue.noData
+      && (field.fieldValue.value === ''|| field.fieldValue.value === null || field.fieldValue.value == undefined))"
+            class="Color--warn"><b>Field not completed</b></div>
+      <a href="#" *ngIf="field.helpText != null && field.helpText !== '' && (type !== 'abstraction' && type !== 'review')"
+         [attr.aria-expanded]="field.viewHelpText" [attr.aria-controls]="field.displayName+'_Help'"
+         (click)="field.viewHelpText = !field.viewHelpText; doNothing()">
+        <i class="fas fa-question fa-xs"></i>
+      </a>
+    </td>
+
+    <td [ngClass]="{'Width--40': true, 'TD--Padding': true, 'Abstraction-Background-Oki': field.qcWrapper.equals && (type === 'abstraction' || type === 'review'), 'Abstraction-Background-Warning': !field.qcWrapper.equals && (type === 'abstraction' || type === 'review'),
+          'Abstraction-Background-Check': field.qcWrapper.check && (type === 'abstraction' || type === 'review'), 'Cell--Bottom-Border': field.type === 'medication' || field.type === 'recurrence'}">
+
+      <ng-container *ngIf="field.type === 'date'">
+        <ng-container *ngIf="viewValue != null">
+          <app-field-datepicker [dateString]="viewValue.value" [disabled]="readonly" [addCheckboxEstimated]="true"></app-field-datepicker>
+        </ng-container>
+        <ng-container *ngIf="viewValue == null">
+          <app-field-datepicker [dateString]="field.fieldValue.value" (dateChanged)="abstractionValueChanged($event, field, 'value')"
+                                [addCheckboxEstimated]="true"
+                                [colorDuringPatch]="isPatchedCurrently(field.displayName, 'value')"
+                                [disabled]="field.fieldValue.noData || readonly"></app-field-datepicker>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="field.type === 'drugs'">
+        <ng-container *ngIf="viewValue != null">
+          <app-field-typeahead *ngIf="field.additionalType === 'text'" [dataSource]="availableDrugs" [drug]="viewValue.value" [disabled]="readonly" [fieldName]="field.displayName"></app-field-typeahead>
+
+          <md-select placeholder="{{field.displayName}}" *ngIf="field.additionalType === 'options'"
+                     [(ngModel)]="viewValue.value" [disabled]="readonly">
+            <md-option *ngFor="let drug of availableDrugs" [value]="drug">
+              {{drug}}
+            </md-option>
+            <md-option value="other"> Other</md-option>
+          </md-select>
+
+          <md-select placeholder="{{field.displayName}}" *ngIf="field.additionalType === 'multi_options'"
+                     [(ngModel)]="viewValue.value" [disabled]="readonly" multiple>
+            <md-option *ngFor="let drug of availableDrugs" [value]="drug">
+              {{drug}}
+            </md-option>
+            <md-option value="other"> Other</md-option>
+          </md-select>
+          <md-input-container *ngIf="_other != null || _other === ''"
+                              [ngClass]="{'Width--100': true, 'Input--Abstraction': true}">
+            <input mdInput maxlength="200" [disabled]="readonly" placeholder="Other" autocomplete="off"
+                   [(ngModel)]="_other">
+          </md-input-container>
+        </ng-container>
+        <ng-container *ngIf="viewValue == null">
+          <md-select placeholder="{{field.displayName}}" *ngIf="field.additionalType === 'options'"
+                     [(ngModel)]="field.fieldValue.value" [disabled]="field.fieldValue.noData || readonly"
+                     (change)="abstractionValueChanged($event, field, 'value')">
+            <md-option *ngFor="let drug of availableDrugs" [value]="drug">
+              {{drug}}
+            </md-option>
+            <md-option value="other"> Other</md-option>
+          </md-select>
+
+          <md-select placeholder="{{field.displayName}}" *ngIf="field.additionalType === 'multi_options'"
+                     [(ngModel)]="field.fieldValue.value" [disabled]="field.fieldValue.noData || readonly"
+                     (change)="abstractionValueChanged($event, field, 'value')" multiple>
+            <md-option *ngFor="let drug of availableDrugs" [value]="drug" [disabled]="!patchFinished">
+              {{drug}}
+            </md-option>
+            <md-option value="other"> Other</md-option>
+          </md-select>
+          <md-input-container *ngIf="_other != null"
+                              [ngClass]="{'Width--100': true, 'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(field.displayName, 'value')}">
+            <input mdInput maxlength="200" [disabled]="field.fieldValue.noData || readonly" autocomplete="off"
+                   [(ngModel)]="_other" placeholder="Other"
+                   (change)="abstractionValueChanged($event, field, 'other')"
+                   (blur)="currentField(null, null)" (focus)="currentField(field.displayName, 'value')">
+          </md-input-container>
+
+          <app-field-typeahead *ngIf="field.additionalType === 'text'"
+                               [dataSource]="availableDrugs" [drug]="field.fieldValue.value" [disabled]="field.fieldValue.noData || readonly"
+                               [fieldName]="field.displayName"
+                               (drugSelected)="abstractionValueChanged($event, field, 'value')"></app-field-typeahead>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="field.type === 'cancers'">
+        <ng-container *ngIf="viewValue != null">
+          <app-field-typeahead *ngIf="field.additionalType === 'text'" [dataSource]="availableCancers" [drug]="viewValue.value" [disabled]="readonly" [fieldName]="field.displayName"></app-field-typeahead>
+
+          <md-select placeholder="{{field.displayName}}" *ngIf="field.additionalType === 'options'"
+                     [(ngModel)]="viewValue.value" [disabled]="readonly">
+            <md-option *ngFor="let cancer of availableCancers" [value]="cancer">
+              {{cancer}}
+            </md-option>
+            <md-option value="other"> Other</md-option>
+          </md-select>
+
+          <md-select placeholder="{{field.displayName}}" *ngIf="field.additionalType === 'multi_options'"
+                     [(ngModel)]="viewValue.value" [disabled]="readonly" multiple>
+            <md-option *ngFor="let cancer of availableCancers" [value]="cancer">
+              {{cancer}}
+            </md-option>
+            <md-option value="other"> Other</md-option>
+          </md-select>
+          <md-input-container *ngIf="_other != null"
+                              [ngClass]="{'Width--100': true, 'Input--Abstraction': true}">
+            <input mdInput maxlength="200" [disabled]="readonly" placeholder="Other" autocomplete="off"
+                   [(ngModel)]="_other">
+          </md-input-container>
+        </ng-container>
+        <ng-container *ngIf="viewValue == null">
+          <md-select placeholder="{{field.displayName}}" *ngIf="field.additionalType === 'options'"
+                     [(ngModel)]="field.fieldValue.value" [disabled]="field.fieldValue.noData || readonly"
+                     (change)="abstractionValueChanged($event, field, 'value')">
+            <md-option *ngFor="let cancer of availableCancers" [value]="cancer">
+              {{cancer}}
+            </md-option>
+            <md-option value="other"> Other</md-option>
+          </md-select>
+
+          <md-select placeholder="{{field.displayName}}" *ngIf="field.additionalType === 'multi_options'"
+                     [(ngModel)]="field.fieldValue.value" [disabled]="field.fieldValue.noData || readonly"
+                     (change)="abstractionValueChanged($event, field, 'value')" multiple>
+            <md-option *ngFor="let cancer of availableCancers" [value]="cancer" [disabled]="!patchFinished">
+              {{cancer}}
+            </md-option>
+            <md-option value="other"> Other</md-option>
+          </md-select>
+          <md-input-container *ngIf="_other != null"
+                              [ngClass]="{'Width--100': true, 'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(field.displayName, 'value')}">
+            <input mdInput maxlength="200" [disabled]="field.fieldValue.noData || readonly" autocomplete="off"
+                   [(ngModel)]="_other" placeholder="Other"
+                   (change)="abstractionValueChanged($event, field, 'other')"
+                   (blur)="currentField(null, null)" (focus)="currentField(field.displayName, 'value')">
+          </md-input-container>
+
+          <app-field-typeahead *ngIf="field.additionalType === 'text'"
+                               [dataSource]="availableCancers" [drug]="field.fieldValue.value" [disabled]="field.fieldValue.noData || readonly"
+                               [fieldName]="field.displayName"
+                               (drugSelected)="abstractionValueChanged($event, field, 'value')"></app-field-typeahead>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="field.type === 'multi_type_array'">
+        <ng-container *ngIf="viewValue != null">
+          <app-field-multi-type-array [possibleValues]="field.possibleValues" [jsonArray]="viewValue.value" [fieldName]="field.displayName"
+                                      [disabled]="readonly" [drugs]="availableDrugs" [cancers]="availableCancers"></app-field-multi-type-array>
+        </ng-container>
+        <ng-container *ngIf="viewValue == null">
+          <app-field-multi-type-array [possibleValues]="field.possibleValues" [jsonArray]="field.fieldValue.value" [fieldName]="field.displayName"
+                                      [disabled]="field.fieldValue.noData || readonly" [drugs]="availableDrugs" [cancers]="availableCancers"
+                                      [finished]="patchFinished"
+                                      (changes)="abstractionValueChanged($event, field, 'value')"></app-field-multi-type-array>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="field.type === 'multi_type'">
+        <ng-container *ngIf="viewValue != null">
+          <app-field-multi-type [values]="field.possibleValues" [json]="viewValue.value" [fieldName]="field.displayName"
+                                [disabled]="readonly"></app-field-multi-type>
+        </ng-container>
+        <ng-container *ngIf="viewValue == null">
+          <app-field-multi-type [values]="field.possibleValues" [json]="field.fieldValue.value" [fieldName]="field.displayName"
+                                [disabled]="field.fieldValue.noData || readonly" [patchFinished]="patchFinished"
+                                (multiTypeChanged)="abstractionValueChanged($event, field, 'value')"></app-field-multi-type>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="field.type === 'number'">
+        <ng-container *ngIf="viewValue != null">
+          <md-input-container>
+            <input mdInput type="number" [disabled]="readonly" placeholder="{{field.displayName}}"
+                   [(ngModel)]="viewValue.value">
+          </md-input-container>
+        </ng-container>
+        <ng-container *ngIf="viewValue == null">
+          <md-input-container [ngClass]="{'Color--Field--Patched': isPatchedCurrently(field.displayName, 'value')}">
+            <input mdInput type="number" [disabled]="field.fieldValue.noData || readonly"
+                   [(ngModel)]="field.fieldValue.value" placeholder="{{field.displayName}}"
+                   (change)="abstractionValueChanged($event, field, 'value')"
+                   (blur)="currentField(null, null)" (focus)="currentField(field.displayName, 'value')">
+          </md-input-container>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="field.type === 'text'">
+        <ng-container *ngIf="viewValue != null">
+          <md-input-container [ngClass]="{'Width--100': true, 'Input--Abstraction': true}">
+            <input mdInput maxlength="200" [disabled]="readonly" placeholder="{{field.displayName}}" autocomplete="off"
+                   [(ngModel)]="viewValue.value">
+          </md-input-container>
+        </ng-container>
+        <ng-container *ngIf="viewValue == null">
+          <md-input-container
+            [ngClass]="{'Width--100': true, 'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(field.displayName, 'value')}">
+            <input mdInput maxlength="200" [disabled]="field.fieldValue.noData || readonly" autocomplete="off"
+                   [(ngModel)]="field.fieldValue.value" placeholder="{{field.displayName}}"
+                   (change)="abstractionValueChanged($event, field, 'value')"
+                   (blur)="currentField(null, null)" (focus)="currentField(field.displayName, 'value')">
+          </md-input-container>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="field.type === 'checkbox'">
+        <ng-container *ngIf="viewValue != null">
+          <md-checkbox color="primary" disableRipple
+                       [ngModel]="viewValue.value" [disabled]="readonly">
+          </md-checkbox>
+        </ng-container>
+        <ng-container *ngIf="viewValue == null">
+          <md-checkbox color="primary" disableRipple
+                       [ngModel]="field.fieldValue.value" [disabled]="field.fieldValue.noData || readonly"
+                       (change)="abstractionValueChanged($event, field, 'value')"
+                       (blur)="currentField(null, null)" (focus)="currentField(field.displayName, 'value')">
+          </md-checkbox>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="field.type === 'textarea'">
+        <ng-container *ngIf="viewValue != null">
+          <textarea maxlength="1000" placeholder="{{field.displayName}}"
+                    [ngClass]="{'Width--100': true}"
+                    [(ngModel)]="viewValue.value" [disabled]="readonly"></textarea>
+        </ng-container>
+        <ng-container *ngIf="viewValue == null">
+          <textarea maxlength="1000" placeholder="{{field.displayName}}"
+                    [ngClass]="{'Width--100': true, 'Color--Field--Patched': isPatchedCurrently(field.displayName, 'value')}"
+                    [(ngModel)]="field.fieldValue.value" [disabled]="field.fieldValue.noData || readonly"
+                    (change)="abstractionValueChanged($event, field, 'value')"
+                    (blur)="currentField(null, null)" (focus)="currentField(field.displayName, 'value')"></textarea>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="field.type === 'button_select'">
+        <ng-container *ngIf="viewValue != null">
+          <md-button-toggle-group [disabled]="readonly" [(ngModel)]="viewValue.value">
+            <md-button-toggle *ngFor="let value of field.possibleValues" [value]="value.value">
+              {{value.value}}
+            </md-button-toggle>
+          </md-button-toggle-group>
+        </ng-container>
+        <ng-container *ngIf="viewValue == null">
+          <md-button-toggle-group [ngClass]="{'Color--Button-Select--Patched': isPatchedCurrently(field.displayName, 'value')}"
+                                  [disabled]="field.fieldValue.noData || readonly" [(ngModel)]="field.fieldValue.value">
+            <md-button-toggle *ngFor="let value of field.possibleValues" [value]="value.value"
+                              (change)="abstractionValueChanged($event, field, 'value')">
+              {{value.value}}
+            </md-button-toggle>
+          </md-button-toggle-group>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="field.type === 'options'">
+        <ng-container *ngIf="viewValue != null">
+          <md-select [ngClass]="{'Input--Abstraction': true}" placeholder="{{field.displayName}}"
+                     [(ngModel)]="viewValue.value" [disabled]="readonly">
+            <md-option *ngFor="let value of field.possibleValues" [value]="value.value">
+              {{value.value}}
+            </md-option>
+            <md-option value="other"> Other</md-option>
+          </md-select>
+          <md-input-container *ngIf="viewValue.value != null && (viewValue.value['other'] != null || viewValue.value === 'other')" [ngClass]="{'Width--100': true, 'Input--Abstraction': true}">
+            <input mdInput maxlength="200" [disabled]="readonly" placeholder="Other" autocomplete="off"
+                   [(ngModel)]="_other">
+          </md-input-container>
+        </ng-container>
+        <ng-container *ngIf="viewValue == null">
+          <md-select [ngClass]="{'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(field.displayName, 'value')}"
+                     placeholder="{{field.displayName}}"
+                     [(ngModel)]="field.fieldValue.value" [disabled]="field.fieldValue.noData || readonly"
+                     (change)="abstractionValueChanged($event, field, 'value')">
+            <md-option *ngFor="let value of field.possibleValues" [value]="value.value">
+              {{value.value}}
+            </md-option>
+            <md-option value="other"> Other</md-option>
+          </md-select>
+          <md-input-container *ngIf="field.fieldValue.value != null && (field.fieldValue.value['other'] != null || field.fieldValue.value === 'other')"
+            [ngClass]="{'Width--100': true, 'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(field.displayName, 'value')}">
+            <input mdInput maxlength="200" [disabled]="field.fieldValue.noData || readonly" autocomplete="off"
+                   [(ngModel)]="_other" placeholder="Other"
+                   (change)="abstractionValueChanged($event, field, 'other')"
+                   (blur)="currentField(null, null)" (focus)="currentField(field.displayName, 'value')">
+          </md-input-container>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="field.type === 'multi_options'">
+        <ng-container *ngIf="viewValue != null">
+          <md-select [ngClass]="{'Input--Abstraction': true}"
+                     [(ngModel)]="viewValue.value" [disabled]="readonly" multiple>
+            <md-option *ngFor="let value of field.possibleValues" [value]="value.value">
+              {{value.value}}
+            </md-option>
+            <md-option value="other"> Other</md-option>
+          </md-select>
+          <md-input-container *ngIf="viewValue.value != null && (viewValue.value['other'] != null || viewValue.value === 'other')"
+                              [ngClass]="{'Width--100': true, 'Input--Abstraction': true}">
+            <input mdInput maxlength="200" [disabled]="readonly" placeholder="Other" autocomplete="off"
+                   [(ngModel)]="_other">
+          </md-input-container>
+        </ng-container>
+        <ng-container *ngIf="viewValue == null">
+          <md-select [ngClass]="{'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(field.displayName, 'value')}"
+                     placeholder="{{field.displayName}}"
+                     [(ngModel)]="field.fieldValue.value" [disabled]="field.fieldValue.noData || readonly"
+                     (change)="abstractionValueChanged($event, field, 'value')" multiple>
+            <md-option *ngFor="let value of field.possibleValues" [value]="value.value" [disabled]="!patchFinished">
+              {{value.value}}
+            </md-option>
+            <md-option value="other"> Other</md-option>
+          </md-select>
+          <md-input-container *ngIf="_other != null"
+                              [ngClass]="{'Width--100': true, 'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(field.displayName, 'value')}">
+            <input mdInput maxlength="200" [disabled]="field.fieldValue.noData || readonly" autocomplete="off"
+                   [(ngModel)]="_other" placeholder="Other"
+                   (change)="abstractionValueChanged($event, field, 'other')"
+                   (blur)="currentField(null, null)" (focus)="currentField(field.displayName, 'value')">
+          </md-input-container>
+        </ng-container>
+      </ng-container>
+    </td>
+
+    <td *ngIf="activityOfField !== 'final'"
+        [ngClass]="{'Width--20': true, 'TD--Padding': true, 'Abstraction-Background-Oki': field.qcWrapper.equals && (type === 'abstraction' || type === 'review'), 'Abstraction-Background-Warning': !field.qcWrapper.equals && (type === 'abstraction' || type === 'review'),
+          'Abstraction-Background-Check': field.qcWrapper.check && (type === 'abstraction' || type === 'review')}">
+      <ng-container *ngIf="viewValue != null">
+        <md-input-container class="Input--Min-WIDTH">
+          <input type="text" [ngClass]="{'Color--Field--Patched': isPatchedCurrently(field.displayName, 'fileName')}" placeholder="MR File Name" mdInput
+                 [(ngModel)]="viewValue.fileName" [disabled]="readonly">
+        </md-input-container>
+        <md-input-container class="Input--Page-WIDTH">
+          <input type="text" [ngClass]="{'Color--Field--Patched': isPatchedCurrently(field.displayName, 'filePage')}" placeholder="Page" mdInput
+                 [(ngModel)]="viewValue.filePage" [disabled]="readonly">
+        </md-input-container>
+      </ng-container>
+      <ng-container *ngIf="viewValue == null">
+        <md-input-container class="Input--Min-WIDTH">
+          <input type="text" [ngClass]="{'Color--Field--Patched': isPatchedCurrently(field.displayName, 'fileName')}" placeholder="MR File Name"
+                 aria-label="Number" mdInput
+                 [(ngModel)]="field.fieldValue.fileName" [mdAutocomplete]="auto"
+                 (change)="abstractionValueChanged($event, field, 'fileName')" [disabled]="readonly">
+          <md-autocomplete #auto="mdAutocomplete">
+            <md-option *ngFor="let file of availableFileNames" [value]="file" (onSelectionChange)="abstractionValueChanged($event, field, 'fileName')">
+              {{ file }}
+            </md-option>
+          </md-autocomplete>
+        </md-input-container>
+        <md-input-container class="Input--Page-WIDTH">
+          <input type="text" [ngClass]="{'Color--Field--Patched': isPatchedCurrently(field.displayName, 'filePage')}" placeholder="Page" aria-label="Number"
+                 mdInput autocomplete="off"
+                 [(ngModel)]="field.fieldValue.filePage"
+                 (change)="abstractionValueChanged($event, field, 'filePage')" [disabled]="readonly">
+        </md-input-container>
+      </ng-container>
+    </td>
+
+    <td [ngClass]="{'Width--15': true, 'TD--Padding': true, 'Abstraction-Background-Oki': field.qcWrapper.equals && (type === 'abstraction' || type === 'review'), 'Abstraction-Background-Warning': !field.qcWrapper.equals && (type === 'abstraction' || type === 'review'),
+          'Abstraction-Background-Check': field.qcWrapper.check && (type === 'abstraction' || type === 'review')}">
+      <ng-container *ngIf="viewValue != null">
+        <md-checkbox color="primary" [checked]="viewValue.noData" [disabled]="readonly"
+                     disableRipple>Not mentioned
+        </md-checkbox>
+        <md-checkbox *ngIf="!hideDoubleCheck"
+                     color="primary" [checked]="viewValue.doubleCheck" [disabled]="readonly"
+                     disableRipple>Double Check
+        </md-checkbox>
+      </ng-container>
+      <ng-container *ngIf="viewValue == null">
+        <md-checkbox color="primary" [checked]="field.fieldValue.noData"
+                     (change)="field.fieldValue.noData = $event.checked; abstractionValueChanged($event, field, 'noData')" [disabled]="readonly"
+                     disableRipple>Not mentioned
+        </md-checkbox>
+        <md-checkbox color="primary" [checked]="field.fieldValue.doubleCheck"
+                     (change)="field.fieldValue.doubleCheck = $event.checked; abstractionValueChanged($event, field, 'doubleCheck')" [disabled]="readonly"
+                     *ngIf="!hideDoubleCheck && activityOfField !== 'final'"
+                     disableRipple>Double Check
+        </md-checkbox>
+      </ng-container>
+    </td>
+  </tr>
+</table>
+
+
+<app-modal>
+  <div class="app-modal-header">
+    {{modalFieldName | buttonSelect }} about {{field.displayName}}:
+  </div>
+  <div class="app-modal-body">
+    <ng-container *ngIf="modalFieldName !== 'question'">
+      <textarea class="Width--100" maxlength="1000" *ngIf="!modalReadOnly"
+                [(ngModel)]="field.fieldValue[modalFieldName]" [disabled]="readonly"
+                (change)="abstractionValueChanged(field.fieldValue[modalFieldName], field, modalFieldName)"></textarea>
+      <textarea class="Width--100" maxlength="1000" *ngIf="modalReadOnly"
+                [(ngModel)]="tmpValue" [disabled]="modalReadOnly"></textarea>
+    </ng-container>
+    <ng-container *ngIf="modalFieldName === 'question'">
+      <app-field-question-array [questionJsonArray]="field.fieldValue[modalFieldName]" [disabled]="readonly"
+                                (quesChanged)="updateQuestion($event)"></app-field-question-array>
+    </ng-container>
+  </div>
+  <div class="app-modal-footer">
+    <ng-container>
+      <button type="button" class="btn btn-primary"
+              (click)="noteModal.hide()">Close
+      </button>
+      <button *ngIf="modalFieldName === 'question'" type="button" class="btn btn-primary" [disabled]="emailAddress(field.fieldValue[modalFieldName])"
+              (click)="setQuestionToSent(field.fieldValue[modalFieldName]); abstractionValueChanged(field.fieldValue[modalFieldName], field, modalFieldName); noteModal.hide()">
+        Send Question
+      </button>
+    </ng-container>
+  </div>
+</app-modal>

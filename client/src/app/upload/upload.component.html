@@ -1,0 +1,138 @@
+<h1> Kit Upload </h1>
+
+<div *ngIf="errorMessage != null">
+  <h3 class="Color--warn Line--Break">{{errorMessage}}</h3>
+  <br/>
+</div>
+
+
+<div *ngIf="additionalMessage != null">
+  <h3 class="Color--primary Line--Break">{{additionalMessage}}</h3>
+  <br/>
+</div>
+
+  <span [hidden]="!loading" class="Width--100">
+    <div align="center" class="Width--100 Height--100">
+      <i class="fas fa-spinner fa-spin fa-5x Color--primary"></i>
+      <br/>
+      <br/>
+    </div>
+  </span>
+
+<div *ngIf="allowedToSeeInformation">
+  <br/>
+  <br/>
+  <div class="Width--60">
+    <div *ngIf="kitTypes != null && kitTypes.length > 0">
+      <div *ngFor="let type of kitTypes">
+        <md-checkbox color="primary" [checked]="type.selected" (change)="type.selected = $event.checked; typeChecked(type)" disableRipple>{{type.displayName}}</md-checkbox>
+      </div>
+    </div>
+  </div>
+  <br/>
+  <div *ngIf="kitType != null" class="Width--80">
+    <app-filepicker [id]="'kitUploadFile'" [fileFormat]="'txt'" (fileSelected)="fileSelected($event)"></app-filepicker>
+    <button type="button" md-raised-button color="primary"
+            (click)="upload()"
+            [disabled]="!(uploadPossible && file != null) || loading">Upload Kits</button>
+  </div>
+
+  <div *ngIf="failedParticipants != null && failedParticipants.length > 0">
+    <div class="Float--left Width--80">
+      <br/>
+      <h4>The address of following participants was not valid:</h4>
+      <div *ngFor="let errorParticipant of failedParticipants">
+        <p>{{errorParticipant.participantId}}</p>
+      </div>
+    </div>
+    <div class="Float--left Width--20">
+      <button type="button" md-raised-button (click)="downloadFailed()" color="primary">Download list of failed</button>
+    </div>
+</div>
+
+  <div class="Float--left Width--80">
+    <b>
+    <br/>
+    <br/>
+    <br/>
+    Upload instructions:
+    <ul>
+      <li>Tab delimited ".txt" file</li>
+      <li>Following columns are required
+        <table class="table table-bordered"
+               *ngIf="getCompService().getRealm().toLowerCase() !== 'mbc' && getCompService().getRealm().toLowerCase() !== 'promise'">
+          <tr>
+            <td>participantId</td>
+            <td>shortId</td>
+            <td>firstName</td>
+            <td>lastName</td>
+            <td>street1</td>
+            <td>street2</td>
+            <td>city</td>
+            <td>postalCode</td>
+            <td>state</td>
+            <td>country</td>
+          </tr>
+        </table>
+        <table class="table table-bordered" *ngIf="getCompService().getRealm().toLowerCase() === 'mbc'">
+          <tr>
+            <td>participantId</td>
+            <td>signature</td>
+            <td>street1</td>
+            <td>street2</td>
+            <td>city</td>
+            <td>postalCode</td>
+            <td>state</td>
+            <td>country</td>
+          </tr>
+        </table>
+        <table class="table table-bordered" *ngIf="getCompService().getRealm().toLowerCase() === 'promise'">
+          <tr>
+            <td>orderNumber</td>
+            <td>participantId</td>
+            <td>name</td>
+            <td>street1</td>
+            <td>street2</td>
+            <td>city</td>
+            <td>postalCode</td>
+            <td>state</td>
+            <td>country</td>
+          </tr>
+        </table>
+      </li>
+      <li *ngIf="getCompService().getRealm().toLowerCase() === 'mbc'">signature = first and last name</li>
+      <li
+        *ngIf="getCompService().getRealm().toLowerCase() !== 'promise' && getCompService().getRealm().toLowerCase() !== 'mmrf'">
+        participantId = altPID for Gen2 DDPs and participantId = participant_guid for Gen3 (Pepper) DDPs <br/>
+        <b>If your participant is a migrated one and has a altPID please use that ID for the upload, otherwise use the GUID</b></li>
+      <li
+        *ngIf="getCompService().getRealm().toLowerCase() !== 'promise' && getCompService().getRealm().toLowerCase() !== 'mmrf'">
+        shortId = shortId for Gen2 DDPs and shortId = legacy_shortid for Gen3 (Pepper) DDPs
+      </li>
+      <li *ngIf="getCompService().getRealm().toLowerCase() === 'promise'">orderNumber = Mayo order number AND
+        participantId = redCap participant ID
+      </li>
+      <li>Afterwards kits can be found under <u>'Kits without Labels'</u>. GP will trigger label creation.</li>
+    </ul>
+    </b>
+  </div>
+
+
+  <app-modal>
+    <div class="app-modal-header">
+      Kit already exists in DSM.
+      Please select the participant for which you want to upload a new one.<br>
+    </div>
+    <div class="app-modal-body">
+          <div *ngFor="let duplicateParticipant of duplicateParticipants">
+            <md-checkbox color="primary" [checked]="duplicateParticipant.selected" (change)="duplicateParticipant.selected = $event.checked" disableRipple>
+              {{duplicateParticipant.participantId}} {{duplicateParticipant.shortId}} {{duplicateParticipant.firstName}} {{duplicateParticipant.lastName}}
+            </md-checkbox>
+          </div>
+    </div>
+    <div class="app-modal-footer">
+      <button type="button" class="btn btn-default" (click)="forgetDuplicate()">Close</button>
+      <button type="button" class="btn btn-primary" (click)="uploadDuplicate()">Upload New One</button>
+    </div>
+  </app-modal>
+</div>

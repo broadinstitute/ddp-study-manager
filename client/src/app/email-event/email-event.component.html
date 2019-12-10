@@ -1,0 +1,223 @@
+<h1 *ngIf="page !== FOLLOW_UP"> All Events </h1>
+<h1 *ngIf="page === FOLLOW_UP"> Followup Events </h1>
+
+<div *ngIf="errorMessage != null">
+  <h3 class="Color--warn Line--Break">{{errorMessage}}</h3>
+  <br/>
+</div>
+
+<div *ngIf="additionalMessage != null">
+  <h3 class="Color--primary Line--Break">{{additionalMessage}}</h3>
+  <br/>
+</div>
+
+<div *ngIf="errorMessage == null && allowedToSeeInformation">
+
+  <span [hidden]="!loading" class="Width--100">
+    <div align="center" class="Width--100 Height--100">
+      <i class="fas fa-spinner fa-spin fa-5x Color--primary"></i>
+    </div>
+  </span>
+
+  <p>
+    <b>All email events which were send per SendGrid. <span (mouseover)="showPopUp = true" (mouseleave)="showPopUp = false"> (*) </span></b>
+  </p>
+  <span *ngIf="showPopUp">
+    <img src="/assets/images/sendgrid_event.jpg" class="Image--Big">
+  </span>
+
+  <br/>
+  <div *ngIf="realm != null">
+
+    <span [hidden]="!noEmailData">
+      <div class="Float--left Width--80">
+      <h4> There is no data available for the selected realm </h4>
+      </div>
+    </span>
+
+    <span [hidden]="noEmailData">
+      <table class="table table-striped Width--100"
+             [mfData]="emailEvents"
+             #mf="mfDataTable" [mfRowsOnPage]="hasRole().getUserSetting().getRowsPerPage()">
+        <thead>
+          <tr>
+            <th>
+            </th>
+            <th>
+              <ng-container *ngIf="page !== FOLLOW_UP">Template</ng-container>
+              <ng-container *ngIf="page === FOLLOW_UP">Email</ng-container>
+            </th>
+            <th>
+              <ng-container *ngIf="page !== FOLLOW_UP">Description</ng-container>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let eel of mf.data;">
+            <tr>
+              <td>
+                <button type="button" class="btn btn-xs Button--Background--Color" *ngIf="eel.expanded" (click)="eel.expanded = false">-</button>
+                <button type="button" class="btn btn-xs Button--Background--Color" *ngIf="!eel.expanded" (click)="eel.expanded = true">+</button>
+              </td>
+              <td>
+                <ng-container *ngIf="page !== FOLLOW_UP">{{eel.templateId}}</ng-container>
+                <ng-container *ngIf="page === FOLLOW_UP">{{eel.email}}</ng-container>
+              </td>
+              <td>
+                <ng-container *ngIf="page !== FOLLOW_UP">{{eel.name}}</ng-container>
+                <ng-container *ngIf="page === FOLLOW_UP && eel.needsAttention">
+                <div class="Image--Flag">
+                  <i class="fa-inverse fas fa-envelope fa-lg" title="Kit with express label" data-fa-transform="down-8 right-6"></i>
+                </div>
+                </ng-container>
+              </td>
+            </tr>
+            <tr *ngIf="eel.expanded">
+              <td></td>
+              <td colspan="2">
+                <div>
+                  <!--table for all events-->
+                  <ng-container *ngIf="page !== FOLLOW_UP">
+                  <table class="table table-striped Width--100"
+                         [mfData]="eel.emails"
+                         #mf="mfDataTable">
+                    <thead>
+                      <tr>
+                        <th>
+                        </th>
+                        <th>
+                          Email
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <ng-container *ngFor="let eelEmail of mf.data">
+                          <tr>
+                            <td>
+                              <button type="button" class="btn btn-xs Button--Background--Color" *ngIf="eelEmail.emailExpanded" (click)="eelEmail.emailExpanded = false">-</button>
+                              <button type="button" class="btn btn-xs Button--Background--Color" *ngIf="!eelEmail.emailExpanded" (click)="eelEmail.emailExpanded = true">+</button>
+                            </td>
+                            <td>{{eelEmail.email}}</td>
+                          </tr>
+                          <tr *ngIf="eelEmail.emailExpanded">
+                            <td></td>
+                            <td colspan="2">
+                              <div>
+                                <table class="table table-striped Width--100">
+                                  <thead>
+                                    <tr>
+                                      <th>
+                                        Event
+                                      </th>
+                                      <th>
+                                        Timestamp
+                                      </th>
+                                      <th>
+                                        URL (optional)
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr *ngFor="let eelEvent of eelEmail.events">
+                                      <td>{{eelEvent.event}}</td>
+                                      <td>{{eelEvent.timestamp * 1000 | date:'medium'}}</td>
+                                      <td>{{eelEvent.url}}</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </td>
+                          </tr>
+                      </ng-container>
+                    </tbody>
+                  </table>
+                  </ng-container>
+
+                  <!--table for follow-up events-->
+                  <ng-container *ngIf="page === FOLLOW_UP">
+                  <table class="table table-striped Width--100"
+                         [mfData]="eel.templates | emailTemplateSort"
+                         #mf="mfDataTable">
+                    <thead>
+                      <tr>
+                        <th>
+                        </th>
+                        <th>
+                          Template
+                        </th>
+                        <th>
+                          Follow-up
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <ng-container *ngFor="let eelTemplate of mf.data; let iTemplate = index;">
+                          <tr>
+                            <td>
+                              <button type="button" class="btn btn-xs Button--Background--Color" *ngIf="eelTemplate.templateExpanded" (click)="eelTemplate.templateExpanded = false">-</button>
+                              <button type="button" class="btn btn-xs Button--Background--Color" *ngIf="!eelTemplate.templateExpanded" (click)="eelTemplate.templateExpanded = true">+</button>
+                            </td>
+                            <td>
+                              {{eelTemplate.name}}
+                            </td>
+                            <td>
+                              <ng-container *ngIf="eelTemplate.followUpDateString != null || iTemplate === mf.data.length-1">
+                                <app-field-datepicker [dateString]="eelTemplate.followUpDateString" (dateChanged)="followUpChanged($event, eel, iTemplate)"></app-field-datepicker>
+                              </ng-container>
+                            </td>
+                          </tr>
+                          <tr *ngIf="eelTemplate.templateExpanded">
+                            <td></td>
+                            <td colspan="2">
+                              <div>
+                                <table class="table table-striped Width--100">
+                                  <thead>
+                                    <tr>
+                                      <th>
+                                        Event
+                                      </th>
+                                      <th>
+                                        Timestamp
+                                      </th>
+                                      <th>
+                                        URL (optional)
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr *ngFor="let eelEvent of eelTemplate.events">
+                                      <td>{{eelEvent.event}}</td>
+                                      <td>{{eelEvent.timestamp * 1000 | date:'medium'}}</td>
+                                      <td>{{eelEvent.url}}</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </td>
+                          </tr>
+                      </ng-container>
+                    </tbody>
+                  </table>
+                  </ng-container>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+        <tfoot>
+        <tr>
+          <td colspan="10">
+            <mfBootstrapPaginator [rowsOnPageSet]="[hasRole().getUserSetting().getRowSet0(), hasRole().getUserSetting().getRowSet1(), hasRole().getUserSetting().getRowSet2()]"></mfBootstrapPaginator>
+          </td>
+        </tr>
+        </tfoot>
+      </table>
+
+      <br/>
+
+      <button *ngIf="page !== FOLLOW_UP" md-raised-button color="primary" (click)="csvDownload()">Download All Event Data</button>
+      <button *ngIf="page === FOLLOW_UP" md-raised-button color="primary" (click)="csvFollowUpDownload()">Download Follow-up Event Data</button>
+      <button *ngIf="page === FOLLOW_UP" md-raised-button color="primary" (click)="saveFollowUp()">Save Follow-up Dates</button>
+    </span>
+  </div>
+</div>

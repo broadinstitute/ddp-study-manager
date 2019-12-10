@@ -1,0 +1,33 @@
+<!--little margin on top of label, so that label is not placed exactly at the edges-->
+<div [ngStyle]="{'width': getLabelWidth(), 'height': '0.1in'}" class="DIV--Without-Border"></div>
+
+<!--margin left of label-->
+<div [ngStyle]="{'float': 'left', 'width': getLeftMargin(), 'height': getLabelHeight()}" class="DIV--Without-Border"></div>
+
+<!--label-->
+<div style="position: relative;"
+  [ngStyle]="{'float': 'left', 'width': getLabelWidth(), 'height': getLabelHeight()}" class="DIV--Without-Border">
+  <div style="position: absolute; transform: rotate(270deg)" [ngStyle]="{'height': getLabelWidth(), 'width': getLabelWidth()}">
+    <div style="position: absolute; bottom: 0; left: 0">
+      <svg id="{{shippingId}}" [ngStyle]="{'width': getLabelWidth()}"
+           jsbarcode-format="CODE128"
+           [attr.jsbarcode-value]='shippingId'
+           jsbarcode-textmargin="0">
+      </svg>
+    </div>
+  </div>
+
+  <img *ngIf="urlTo != null" style="position: absolute; top: 0; left: 0; image-resolution: 600dpi" [src]='urlTo' [ngStyle]="{'height': getHeightWithSpaceForBarcode()}"/>
+</div>
+
+<!--return label-->
+<ng-container *ngIf="urlReturn != null">
+  <!--margin between labels-->
+  <div [ngStyle]="{'float': 'left', 'width': getMarginBetweenLeftRight(), 'height': getFullLabelHeight()}" class="DIV--Without-Border"></div>
+
+  <!--return label-->
+  <div style="position: relative;"
+       [ngStyle]="{'float': 'left', 'width': getFullLabelWidth(), 'height': getFullLabelHeight()}" class="DIV--Without-Border">
+    <img style="position: absolute; top: 0; left: 0" [src]='urlReturn' [ngStyle]="{'height': getFullLabelHeight()}"/>
+  </div>
+</ng-container>

@@ -1,0 +1,48 @@
+<h1>
+  <ng-container *ngIf="!scanTracking && !scanReceived"> Final Scan </ng-container>
+  <ng-container *ngIf="scanTracking"> Tracking Scan </ng-container>
+  <ng-container *ngIf="scanReceived"> Receiving Scan </ng-container>
+</h1>
+
+<br/>
+<b>No need to select a realm!</b>
+<br/>
+<br/>
+
+<ng-container *ngIf="scanReceived">
+  For migrated kits which have only a SM-ID and no manufacturer barcode on the tube
+<br/>
+<br/>
+</ng-container>
+
+<div *ngIf="additionalMessage != null">
+  <h3 class="Color--warn">{{additionalMessage}}</h3>
+  <br/>
+</div>
+<form>
+  <ng-container *ngIf="!scanReceived">
+    <div *ngFor="let row of scanPairs; let i = index">
+      <app-scan-pair [leftInputPlaceholder]="leftPlaceholder" [rightInputPlaceholder]="rightPlaceholder"
+                     (pairScanned)="scanDone($event)" (removeScanPair)="removeScanPair($event)"
+                     (leftLabelAdded)="setLeftValue($event)" [isLeftValueDuplicate]="validateLeftValue(i)"
+                     [isRightValueDuplicate]="validateRightValue(i)" [hadErrorSending]="checkSendStatus(i)"
+                     [positionScanPair]="i" [countScanPair]="scanPairs.length" [errorMessage]="getError(i)"
+      ></app-scan-pair>
+    </div>
+  </ng-container>
+  <ng-container *ngIf="scanReceived">
+    <div *ngFor="let row of scanValues; let i = index">
+      <app-scan-value [scanValuePlaceholder]="leftPlaceholder"
+                     (valueScanned)="singleValueScanDone($event)" (removeScanValue)="removeScanValue($event)"
+                     [isScanValueDuplicate]="validateSingleScan(i)" [hadErrorSending]="checkSingleScanSendStatus(i)"
+                     [positionScanValue]="i" [countScanValue]="scanValues.length" [errorMessage]="getSingleError(i)"
+      ></app-scan-value>
+    </div>
+  </ng-container>
+  <br/>
+  <div *ngIf="duplicateDetected">
+    <h3 class="Color--warn">Please fix duplicate label before saving the scan pairs</h3>
+  </div>
+  <button *ngIf="!scanReceived" md-raised-button type="button" (click)="savePairs()" color="primary" [disabled]="scanPairs.length < 2">Save Scan Pairs</button>
+  <button *ngIf="scanReceived" md-raised-button type="button" (click)="saveValues()" color="primary" [disabled]="scanValues.length < 2">Save SM-IDs</button>
+</form>

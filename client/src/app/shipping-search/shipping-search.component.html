@@ -1,0 +1,129 @@
+<h1> Kit Search </h1>
+
+<div *ngIf="errorMessage != null">
+  <h3 class="Color--warn Line--Break">{{errorMessage}}</h3>
+  <br/>
+</div>
+<div *ngIf="additionalMessage != null">
+  <h3 class="Color--primary Line--Break">{{additionalMessage}}</h3>
+  <br/>
+</div>
+
+
+
+<span [hidden]="!searching" class="Width--100">
+    <div align="center" class="Width--100 Height--100">
+      <i class="fas fa-spinner fa-spin fa-5x Color--primary"></i>
+    </div>
+</span>
+
+<div class="Width--100">
+  <br/>
+    <div>
+        <md-select placeholder="Search by Field" class="Input--Bigger-WIDTH"
+                   [(ngModel)]="searchField">
+          <md-option value="SHORT_ID">Short ID</md-option>
+          <md-option value="TRACKING_NUMBER">Tracking Number (Blood kit return)</md-option>
+          <md-option value="MF_BAR">Manufacturer Barcode</md-option>
+        </md-select>
+    </div>
+
+    <div class="Width--80">
+      <br/>
+      <md-input-container>
+        <input maxlength="200" style="width: 10cm" mdInput type="text"  placeholder="Value"
+               [(ngModel)]="searchValue">
+      </md-input-container>
+      <button md-raised-button type="button" color="primary"
+              (click)="searchKit()"
+              [disabled]="!((searchValue != null && searchValue !== '') && searchField != null)">Search Kit</button>
+    </div>
+    <br/>
+
+  <ng-container *ngIf="kit != null && kit.length > 0">
+    <table class="table table-striped Width--100" [mfData]="kit" #mf="mfDataTable"
+           [mfRowsOnPage]="getRole().getUserSetting().getRowsPerPage()">
+      <thead>
+        <tr>
+          <th>
+            <mfDefaultSorter by="collaboratorParticipantId">Short ID</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="shippingId">Shipping ID</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="message">Error</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="trackingNumberTo">Tracking Number</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="scannedTrackingNumber">Tracking Return</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="scanDate">Sent</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="receiveDate">Received</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="deactivatedDate">Deactivated</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="deactivationReason">Reason</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="kitLabel">MF barcode</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="realm">DDP-Realm</mfDefaultSorter>
+          </th>
+          <th>
+            <mfDefaultSorter by="kitType">Type</mfDefaultSorter>
+          </th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let kitRequest of mf.data">
+        <td>{{kitRequest.getID()}}</td>
+        <td>{{kitRequest.shippingId}}</td>
+        <td>{{kitRequest.getError()}}</td>
+        <td>
+          <ng-container *ngIf="kitRequest.trackingUrlTo != null"><a href="{{kitRequest.trackingUrlTo}}" target="_blank">{{kitRequest.trackingNumberTo}}</a></ng-container>
+          <ng-container *ngIf="kitRequest.trackingUrlTo == null">{{kitRequest.trackingNumberTo}}</ng-container>
+        </td>
+        <td>
+          <ng-container *ngIf="kitRequest.trackingUrlReturn != null"><a href="{{kitRequest.trackingUrlReturn}}" target="_blank">{{kitRequest.trackingNumberReturn}}</a></ng-container>
+          <ng-container *ngIf="kitRequest.trackingUrlReturn == null">{{kitRequest.trackingNumberReturn}}</ng-container>
+          <ng-container *ngIf="kitRequest.scannedTrackingNumber != null"><a href="{{kitRequest.getScannedTrackingUrl()}}" target="_blank">{{kitRequest.scannedTrackingNumber}}</a></ng-container>
+        </td>
+        <td>
+          <ng-container *ngIf="kitRequest.scanDate === 0"> - </ng-container>
+          <ng-container *ngIf="kitRequest.scanDate !== 0">{{kitRequest.scanDate | date:'medium'}}</ng-container>
+        </td>
+        <td>
+          <ng-container *ngIf="kitRequest.receiveDate === 0"> - </ng-container>
+          <ng-container *ngIf="kitRequest.receiveDate !== 0">{{kitRequest.receiveDate | date:'medium'}}</ng-container>
+        </td>
+        <td>
+          <ng-container *ngIf="kitRequest.deactivatedDate === 0"> - </ng-container>
+          <ng-container *ngIf="kitRequest.deactivatedDate !== 0">{{kitRequest.deactivatedDate | date:'medium'}}</ng-container>
+        </td>
+        <td>{{kitRequest.deactivationReason}}</td>
+        <td>
+          {{kitRequest.kitLabel}}
+        </td>
+        <td>{{kitRequest.realm}}</td>
+        <td>{{kitRequest.kitType}}</td>
+      </tr>
+      <tbody>
+      <tfoot>
+      <tr>
+        <td colspan="11">
+          <mfBootstrapPaginator [rowsOnPageSet]="[getRole().getUserSetting().getRowSet0(), getRole().getUserSetting().getRowSet1(), getRole().getUserSetting().getRowSet2()]"></mfBootstrapPaginator>
+        </td>
+      </tr>
+      </tfoot>
+    </table>
+  </ng-container>
+</div>

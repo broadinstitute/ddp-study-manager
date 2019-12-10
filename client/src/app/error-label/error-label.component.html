@@ -1,0 +1,23 @@
+<!--little margin on top of label, so that label is not placed exactly at the edges-->
+<div [ngStyle]="{'width': getLabelWidth(), 'height': '0.1in'}" class="DIV--Without-Border"></div>
+
+<!--margin left of label-->
+<div [ngStyle]="{'float': 'left', 'width': getLeftMargin(), 'height': getLabelHeight()}" class="DIV--Without-Border"></div>
+
+<!--label-->
+<div style="position: relative;"
+     [ngStyle]="{'float': 'left', 'width': getLabelWidth(), 'height': getLabelHeight()}" class="DIV--Without-Border">
+  <div style="position: absolute; transform: rotate(270deg)" [ngStyle]="{'height': getLabelWidth(), 'width': getLabelWidth()}">
+    <div style="position: absolute; bottom: 0; left: 0">
+      <svg id="{{shippingId}}" [ngStyle]="{'height': '2.5cm', 'width': getLabelWidth()}"
+           jsbarcode-format="CODE128"
+           [attr.jsbarcode-value]='shippingId'
+           jsbarcode-textmargin="0">
+      </svg>
+    </div>
+  </div>
+
+  <div style="position: absolute; transform: rotate(270deg)" [ngStyle]="{'height': getLabelWidth(), 'width': getLabelWidth()}">
+    <app-address [addressForLabel]="address"></app-address>
+  </div>
+</div>

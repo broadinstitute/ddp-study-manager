@@ -1,0 +1,8 @@
+<div class="FilePicker--Button Float--left">
+  <input type="file" id="{{id}}" (change)="userFile($event)" style="display: none;"/>
+  <label class="label-button" for="{{id}}">Browse...</label>
+</div>
+
+<md-hint class="ErrorMessageForm" *ngIf="error !== null">{{error}}</md-hint>
+<p *ngIf="file != null" class="FilePicker--Text">{{file.name}}</p>
+<p *ngIf="file == null" class="FilePicker--Text">No File selected</p>
