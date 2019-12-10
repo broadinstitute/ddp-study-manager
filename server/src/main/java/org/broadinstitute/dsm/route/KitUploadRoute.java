@@ -1,0 +1,414 @@
+package org.broadinstitute.dsm.route;
+
+import com.easypost.exception.EasyPostException;
+import com.easypost.model.Address;
+import com.google.gson.Gson;
+import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.ddp.handlers.util.Result;
+import org.broadinstitute.ddp.util.DeliveryAddress;
+import org.broadinstitute.dsm.DSMServer;
+import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.exception.FileColumnMissing;
+import org.broadinstitute.dsm.exception.UploadLineException;
+import org.broadinstitute.dsm.exception.FileWrongSeparator;
+import org.broadinstitute.dsm.model.*;
+import org.broadinstitute.dsm.security.RequestHandler;
+import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.RoutePath;
+import org.broadinstitute.dsm.statics.UserErrorMessages;
+import org.broadinstitute.dsm.util.EasyPostUtil;
+import org.broadinstitute.dsm.util.SystemUtil;
+import org.broadinstitute.dsm.util.UserUtil;
+import org.broadinstitute.dsm.util.externalShipper.ExternalShipper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import spark.QueryParamsMap;
+import spark.Request;
+import spark.Response;
+
+import javax.servlet.http.HttpServletRequest;
+import java.sql.*;
+import java.util.*;
+
+import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
+
+public class KitUploadRoute extends RequestHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(KitUploadRoute.class);
+
+    private static final String SQL_SELECT_CHECK_KIT_ALREADY_EXISTS = "SELECT count(*) as found FROM ddp_kit_request request LEFT JOIN ddp_kit kit on (request.dsm_kit_request_id = kit.dsm_kit_request_id) " +
+            "LEFT JOIN ddp_participant_exit ex on (ex.ddp_instance_id = request.ddp_instance_id AND ex.ddp_participant_id = request.ddp_participant_id) WHERE ex.ddp_participant_exit_id is null " +
+            "AND kit.deactivated_date is null AND request.ddp_instance_id = ? AND request.kit_type_id = ? AND request.ddp_participant_id = ?";
+
+    public static final String UPLOADED_KIT_REQUEST = "UPLOADED_";
+
+    private static final String PARTICIPANT_ID = "participantId";
+    private static final String ORDER_NUMBER = "orderNumber";
+    private static final String SHORT_ID = "shortId";
+    private static final String SIGNATURE = "signature";
+    private static final String FIRST_NAME = "firstName";
+    private static final String LAST_NAME = "lastName";
+    private static final String NAME = "name";
+    private static final String STREET1 = "street1";
+    private static final String STREET2 = "street2";
+    private static final String CITY = "city";
+    private static final String STATE = "state";
+    private static final String POSTAL_CODE = "postalCode";
+    private static final String COUNTRY = "country";
+
+    @Override
+    public Object processRequest(Request request, Response response, String userId) throws Exception {
+        QueryParamsMap queryParams = request.queryMap();
+        String realm;
+        if (queryParams.value(RoutePath.REALM) != null) {
+            realm = queryParams.get(RoutePath.REALM).value();
+        }
+        else {
+            throw new RuntimeException("No realm query param was sent");
+        }
+        if (UserUtil.checkUserAccess(realm, userId, "kit_upload")) {
+            String kitTypeName;
+            if (queryParams.value(RoutePath.KIT_TYPE) != null) {
+                kitTypeName = queryParams.get(RoutePath.KIT_TYPE).value();
+            }
+            else {
+                throw new RuntimeException("No kitType query param was sent");
+            }
+
+            boolean uploadDuplicateQueryParam = false;
+            if (queryParams.value("uploadDuplicate") != null) {
+                uploadDuplicateQueryParam = queryParams.get("uploadDuplicate").booleanValue();
+            }
+            final boolean uploadDuplicate = uploadDuplicateQueryParam;
+
+            String userIdRequest = UserUtil.getUserId(request);
+            if (!userId.equals(userIdRequest)) {
+                throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
+            }
+            HttpServletRequest rawRequest = request.raw();
+            String content = SystemUtil.getBody(rawRequest);
+            try {
+                List<KitRequest> kitUploadContent = null;
+                if (uploadDuplicate) { //already participants and no file
+                    String requestBody = request.body();
+                    kitUploadContent = Arrays.asList(new Gson().fromJson(requestBody, KitUploadObject[].class));
+                }
+                else {
+                    kitUploadContent = isFileValid(content);
+                }
+                final List<KitRequest> kitUploadObjects = kitUploadContent;
+                if (kitUploadObjects == null || kitUploadObjects.isEmpty()) {
+                    return "Text file was empty or couldn't be parsed to the agreed format";
+                }
+
+                DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
+
+                HashMap<String, KitType> kitTypes = KitType.getKitLookup();
+                String key = kitTypeName + "_" + ddpInstance.getDdpInstanceId();
+                KitType kitType = kitTypes.get(key);
+                if (kitType == null) {
+                    throw new RuntimeException("KitType unknown");
+                }
+
+                Map<Integer, KitRequestSettings> kitRequestSettingsMap = KitRequestSettings.getKitRequestSettings(ddpInstance.getDdpInstanceId());
+                KitRequestSettings kitRequestSettings = kitRequestSettingsMap.get(kitType.getKitTypeId());
+                // if the kit type has sub kits > like for promise
+                boolean kitHasSubKits = kitRequestSettings.getHasSubKits() != 0;
+
+                logger.info("Setup EasyPost...");
+                EasyPostUtil easyPostUtil = new EasyPostUtil(ddpInstance.getName());
+
+                Map<String, KitRequest> invalidAddressList = checkAddress(kitUploadObjects, kitRequestSettings.getPhone());
+                List<KitRequest> duplicateKitList = new ArrayList<>();
+
+                ArrayList<KitRequest> orderKits = new ArrayList<>();
+
+                inTransaction((conn) -> {
+                    for (KitRequest kit : kitUploadObjects) {
+                        if (invalidAddressList.get(kit.getParticipantId()) == null) { //kit is not in the noValid list, so enter into db
+                            String errorMessage = "";
+                            String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(ddpInstance.getBaseUrl(), ddpInstance.getDdpInstanceId(), ddpInstance.isMigratedDDP(),
+                                    ddpInstance.getCollaboratorIdPrefix(), kit.getParticipantId(), kit.getShortId(),
+                                    kitRequestSettings.getCollaboratorParticipantLengthOverwrite());
+                            if (kitHasSubKits) {
+                                List<KitSubKits> subKits = kitRequestSettings.getSubKits();
+                                boolean alreadyExists = false;
+                                for (KitSubKits subKit : subKits) {
+                                    //check with ddp_participant_id if participant already has a kit in DSM db
+                                    if (checkIfKitAlreadyExists(conn, kit.getParticipantId(), ddpInstance.getDdpInstanceId(), subKit.getKitTypeId()) && !uploadDuplicate) {
+                                        alreadyExists = true;
+                                    }
+                                    else {
+                                        for (int i = 0; i < subKit.getKitCount(); i++) {
+                                            addKitRequest(conn, subKit.getKitName(), kitRequestSettings, ddpInstance, subKit.getKitTypeId(),
+                                                    collaboratorParticipantId, errorMessage, userIdRequest, easyPostUtil, kit);
+                                        }
+                                    }
+                                }
+                                if (alreadyExists) {
+                                    duplicateKitList.add(kit);
+                                }
+                                else {
+                                    orderKits.add(kit);
+                                }
+                            }
+                            else {
+                                if (checkIfKitAlreadyExists(conn, kit.getParticipantId(), ddpInstance.getDdpInstanceId(), kitType.getKitTypeId()) && !uploadDuplicate) {
+                                    duplicateKitList.add(kit);
+                                }
+                                else {
+                                    addKitRequest(conn, kitTypeName, kitRequestSettings, ddpInstance, kitType.getKitTypeId(),
+                                            collaboratorParticipantId, errorMessage, userIdRequest, easyPostUtil, kit);
+                                    orderKits.add(kit);
+                                }
+                            }
+                        }
+                    }
+                    return null;
+                });
+
+                //only order if external shipper name is set for that kit request
+                if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
+                    try {
+                        ExternalShipper shipper = (ExternalShipper) Class.forName(DSMServer.getClassName(kitRequestSettings.getExternalShipper())).newInstance();
+                        shipper.orderKitRequests(orderKits, easyPostUtil, kitRequestSettings);
+                    }
+                    catch (RuntimeException e) {
+                        logger.error("Failed to sent kit request order to " + kitRequestSettings.getExternalShipper(), e);
+                        response.status(500);
+                        return new Result(500, "Failed to sent kit request order to " + kitRequestSettings.getExternalShipper());
+                    }
+                }
+
+                //send not valid address back to client
+                logger.info(invalidAddressList.size() + " uploaded addresses were not valid and " + duplicateKitList.size() + " are already in DSM");
+                return new KitUploadResponse(invalidAddressList.values(), duplicateKitList);
+            }
+            catch (UploadLineException e) {
+                return e.getMessage();
+            }
+            catch (FileWrongSeparator e) {
+                return e.getMessage();
+            }
+            catch (FileColumnMissing e) {
+                return e.getMessage();
+            }
+        }
+        else {
+            response.status(500);
+            return new Result(500, UserErrorMessages.NO_RIGHTS);
+        }
+    }
+
+    private void addKitRequest(Connection conn, String kitTypeName, KitRequestSettings kitRequestSettings, DDPInstance ddpInstance,
+                               int kitTypeId, String collaboratorParticipantId, String errorMessage, String userId, EasyPostUtil easyPostUtil,
+                               KitRequest kit) {
+        String collaboratorSampleId = null;
+        String bspCollaboratorSampleType = kitTypeName;
+        if (kitRequestSettings.getCollaboratorSampleTypeOverwrite() != null) {
+            bspCollaboratorSampleType = kitRequestSettings.getCollaboratorSampleTypeOverwrite();
+        }
+        if (StringUtils.isNotBlank(collaboratorParticipantId)) {
+            collaboratorSampleId = KitRequestShipping.generateBspSampleID(conn, collaboratorParticipantId, bspCollaboratorSampleType, kitTypeId);
+            if (collaboratorParticipantId == null) {
+                errorMessage += "collaboratorParticipantId was too long ";
+            }
+            if (collaboratorSampleId == null) {
+                errorMessage += "collaboratorSampleId was too long ";
+            }
+        }
+        try {
+            String shippingId = UPLOADED_KIT_REQUEST + KitRequestShipping.createRandom(20);
+            Address address = easyPostUtil.getAddress(((KitUploadObject) kit).getEasyPostAddressId());
+            String addressId = null;
+            if (address != null) {
+                addressId = address.getId();
+            }
+            KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), shippingId,
+                    kitTypeId, kit.getParticipantId().trim(), collaboratorParticipantId,
+                    collaboratorSampleId, userId, addressId,
+                    errorMessage, kit.getExternalOrderNumber());
+            kit.setShippingId(shippingId);
+        }
+        catch (EasyPostException e) {
+            throw new RuntimeException("EasyPost addressId could not be received ", e);
+        }
+    }
+
+    public List<KitRequest> isFileValid(String fileContent) {
+        if (fileContent != null) {
+            String linebreak = SystemUtil.lineBreak(fileContent);
+            String[] rows = fileContent.split(linebreak);
+            if (rows.length > 1) {
+                String firstRow = rows[0];
+                if (firstRow.contains(SystemUtil.SEPARATOR)) {
+                    List<String> fieldNames = new ArrayList<>(Arrays.asList(firstRow.trim().split(SystemUtil.SEPARATOR)));
+                    String missingFieldName = fieldNameMissing(fieldNames);
+                    if (missingFieldName == null) {
+                        boolean nameInOneColumn = fieldNames.contains(SIGNATURE);
+                        boolean containsOrderNumber = fieldNames.contains(ORDER_NUMBER);
+                        List<KitRequest> uploadObjects = new ArrayList<>();
+                        for (int rowIndex = 1; rowIndex < rows.length; rowIndex++) {
+                            Map<String, String> obj = new LinkedHashMap<>();
+                            String[] row = rows[rowIndex].trim().split(SystemUtil.SEPARATOR);
+                            if (row.length == fieldNames.size()) {
+                                for (int columnIndex = 0; columnIndex < fieldNames.size(); columnIndex++) {
+                                    obj.put(fieldNames.get(columnIndex), row[columnIndex]);
+                                }
+                                try {
+                                    String shortId = obj.get(SHORT_ID);
+                                    if (StringUtils.isBlank(shortId)) {
+                                        shortId = obj.get(PARTICIPANT_ID);
+                                    }
+
+                                    KitUploadObject object;
+                                    if (nameInOneColumn) {
+                                        object = new KitUploadObject(null, obj.get(PARTICIPANT_ID), shortId,
+                                                null, obj.get(SIGNATURE),
+                                                obj.get(STREET1), obj.get(STREET2), obj.get(CITY),
+                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY));
+                                    }
+                                    else if (containsOrderNumber) {
+                                        object = new KitUploadObject(obj.get(ORDER_NUMBER), obj.get(PARTICIPANT_ID), null,
+                                                null, obj.get(NAME),
+                                                obj.get(STREET1), obj.get(STREET2), obj.get(CITY),
+                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY));
+                                    }
+                                    else {
+                                        object = new KitUploadObject(null, obj.get(PARTICIPANT_ID), shortId,
+                                                obj.get(FIRST_NAME), obj.get(LAST_NAME),
+                                                obj.get(STREET1), obj.get(STREET2), obj.get(CITY),
+                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY));
+                                    }
+                                    uploadObjects.add(object);
+                                }
+                                catch (Exception e) {
+                                    throw new RuntimeException("Text file is not valid. Couldn't be parsed to upload object ", e);
+                                }
+                            }
+                            else {
+                                throw new UploadLineException("Error in line " + (rowIndex + 1));
+                            }
+                        }
+                        logger.info(uploadObjects.size() + " participants were uploaded for manual kits ");
+                        return uploadObjects;
+                    }
+                    else {
+                        throw new FileColumnMissing("File is missing column " + missingFieldName);
+                    }
+                }
+                else {
+                    throw new FileWrongSeparator("Please use tab as separator in the text file");
+                }
+            }
+        }
+        return null;
+    }
+
+    public Map<String, KitRequest> checkAddress(List<KitRequest> kitUploadObjects, String phone) {
+        Map<String, KitRequest> noValidAddress = new HashMap<>();
+        for (KitRequest o : kitUploadObjects) {
+            KitUploadObject object = (KitUploadObject) o;
+            //only if participant has shortId, first- and lastName
+            if ((StringUtils.isNotBlank(object.getShortId()) || StringUtils.isNotBlank(object.getExternalOrderNumber())) && StringUtils.isNotBlank(object.getLastName())) {
+                //let's validate the participant's address
+                String name = "";
+                if (StringUtils.isNotBlank(object.getFirstName())) {
+                    name += object.getFirstName() + " ";
+                }
+                name += object.getLastName();
+                DeliveryAddress deliveryAddress = new DeliveryAddress(object.getStreet1(), object.getStreet2(),
+                        object.getCity(), object.getState(), object.getPostalCode(), object.getCountry(),
+                        name, phone);
+                deliveryAddress.validate();
+
+                if (deliveryAddress.isValid()) {
+                    //store the address back
+                    object.setEasyPostAddressId(deliveryAddress.getId());
+                }
+                else {
+                    logger.info("Address is not valid " + object.getParticipantId());
+                    noValidAddress.put(object.getParticipantId(), object);
+                }
+            }
+            else {
+                noValidAddress.put(object.getParticipantId(), object);
+            }
+        }
+        return noValidAddress;
+    }
+
+    public String fieldNameMissing(List<String> fieldName) {
+        if (fieldName.contains(ORDER_NUMBER)) {
+            //Promise file upload
+            if (!fieldName.contains(ORDER_NUMBER)) {
+                return ORDER_NUMBER;
+            }
+            if (!fieldName.contains(NAME)) {
+                return NAME;
+            }
+        }
+        else {
+            //file upload for other ddps
+            if (!fieldName.contains(SIGNATURE)) {
+                if (!fieldName.contains(SHORT_ID)) {
+                    return SHORT_ID;
+                }
+                if (!fieldName.contains(FIRST_NAME)) {
+                    return FIRST_NAME + " or " + SIGNATURE;
+                }
+                if (!fieldName.contains(LAST_NAME)) {
+                    return LAST_NAME + " or " + SIGNATURE;
+                }
+            }
+        }
+        if (!fieldName.contains(PARTICIPANT_ID)) {
+            return PARTICIPANT_ID;
+        }
+        if (!fieldName.contains(STREET1)) {
+            return STREET1;
+        }
+        if (!fieldName.contains(STATE)) {
+            return STATE;
+        }
+        if (!fieldName.contains(CITY)) {
+            return CITY;
+        }
+        if (!fieldName.contains(POSTAL_CODE)) {
+            return POSTAL_CODE;
+        }
+        if (!fieldName.contains(COUNTRY)) {
+            return COUNTRY;
+        }
+        return null;
+    }
+
+    public boolean checkIfKitAlreadyExists(@NonNull Connection conn, @NonNull String ddpParticipantId,
+                                           @NonNull String instanceId, @NonNull int kitTypeId) {
+        SimpleResult dbVals = new SimpleResult(0);
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_CHECK_KIT_ALREADY_EXISTS)) {
+            stmt.setString(1, instanceId);
+            stmt.setInt(2, kitTypeId);
+            stmt.setString(3, ddpParticipantId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    dbVals.resultValue = rs.getInt(DBConstants.FOUND);
+                }
+            }
+        }
+        catch (SQLException ex) {
+            dbVals.resultException = ex;
+        }
+        if (dbVals.resultException != null) {
+            throw new RuntimeException("Error getting id of new kit request ", dbVals.resultException);
+        }
+        if (dbVals.resultValue == null) {
+            throw new RuntimeException("Error getting id of new kit request ");
+        }
+        logger.info("Found " + dbVals.resultValue + " kit requests for bsp_collaborator_participant_id " + ddpParticipantId);
+        return (int) dbVals.resultValue > 0;
+    }
+}
