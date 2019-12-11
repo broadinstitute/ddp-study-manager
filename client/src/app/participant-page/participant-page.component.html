@@ -109,7 +109,7 @@
         <h5 class="Line--Break">{{participant.getSampleStatus()}}</h5>
       </div>
       <div class="Float--left TD--Padding">
-        <div *ngIf="participant['receivedMedicalRecord'] > 0 && parentList === 'participantList'">
+        <div *ngIf="counterReceived > 0 && parentList === 'participantList'">
           <div class="Float--left TD--Padding">
             <div class="Float--left Width--100">
               <b>First Abstraction</b> <b *ngIf="participant.abstraction.status === 'not_started'"> not started yet</b>
