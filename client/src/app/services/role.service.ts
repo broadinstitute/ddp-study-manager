@@ -26,6 +26,7 @@ export class RoleService {
   private _isAbstracter: boolean = false;
   private _isQC: boolean = false;
   private _isAbstractionAdmin: boolean = false;
+  private _canEditDrugList: boolean = false;
 
   private _userId: string;
   private _user: string;
@@ -107,6 +108,9 @@ export class RoleService {
           }
           else if (entry === "mr_abstraction_admin") {
             this._isAbstractionAdmin = true;
+          }
+          else if (entry === 'drug_list_edit') {
+            this._canEditDrugList = true;
           }
         }
       }
@@ -220,5 +224,9 @@ export class RoleService {
 
   public setUserSetting(userSettings: UserSetting) {
     this._userSetting = userSettings;
+  }
+
+  public allowedToEditDrugList() {
+    return this._canEditDrugList;
   }
 }

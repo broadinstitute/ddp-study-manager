@@ -24,6 +24,8 @@
   </span>
   <br/>
 
+  <div class="Float--left" *ngIf="hasRole().allowedToEditDrugList()">This user IS allowed to edit drug list</div>
+  <div class="Float--left" *ngIf="!hasRole().allowedToEditDrugList()">This user is NOT allowed to edit drug list</div>
 
   <div *ngIf="drugList != null">
     <table class="table table-striped"

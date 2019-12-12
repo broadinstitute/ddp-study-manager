@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { DrugList } from './drug-list.model';
 import { Auth } from '../services/auth.service';
 import { DSMService } from '../services/dsm.service';
+import {RoleService} from '../services/role.service';
 
 @Component({
   selector: 'app-drug-list',
@@ -17,7 +18,7 @@ export class DrugListComponent implements OnInit {
 
   drugList: DrugList[];
 
-  constructor(private auth: Auth, private dsmService: DSMService) { }
+  constructor(private auth: Auth, private dsmService: DSMService, private role: RoleService) { }
 
   ngOnInit() {
     this.getListOfDrugObjects();
@@ -46,6 +47,10 @@ export class DrugListComponent implements OnInit {
         this.errorMessage = 'Error - Loading Drug List\nPlease contact your DSM developer';
       }
     );
+  }
+
+  hasRole(): RoleService {
+    return this.role;
   }
 
   // @TODO: Come back to this when we get to inline edit
