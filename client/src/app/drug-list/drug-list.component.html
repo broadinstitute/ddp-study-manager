@@ -110,9 +110,7 @@
             </md-input-container>
           </td>
           <td>
-            <md-input-container>
-              <input mdInput type="text" [(ngModel)]="drug.dateAdded" readonly class="Width--100" maxlength="100">
-            </md-input-container>
+              {{ drug.dateAdded*1000 | date }}
           </td>
           <td>
             <md-checkbox color="primary" [checked]="drug.active" (change)="drug.active = $event.checked; check(i)" disableRipple></md-checkbox>
