@@ -1323,12 +1323,21 @@ public class RouteTest extends TestHelper {
         assertEquals(200, response.getStatusLine().getStatusCode());
     }
 
-    @Test
+    @Test    // (for endpoint that returns list of display names)
     public void drugListEndpoint() throws Exception {
         String jwtDdpSecret = cfg.hasPath("portal.jwtDdpSecret") ? cfg.getString("portal.jwtDdpSecret") : null;
         Assert.assertTrue(StringUtils.isNotBlank(jwtDdpSecret));
 
         HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/app/drugs", testUtil.buildHeaders(cfg.getString("portal.jwtDdpSecret"))).returnResponse();
+        assertEquals(200, response.getStatusLine().getStatusCode());
+    }
+    // (for endpoint that returns list of full drug objects)
+    @Test
+    public void drugListEntriesEndpoint() throws Exception {
+        String jwtDdpSecret = cfg.hasPath("portal.jwtDdpSecret") ? cfg.getString("portal.jwtDdpSecret") : null;
+        Assert.assertTrue(StringUtils.isNotBlank(jwtDdpSecret));
+
+        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/app/drugListEntries", testUtil.buildHeaders(cfg.getString("portal.jwtDdpSecret"))).returnResponse();
         assertEquals(200, response.getStatusLine().getStatusCode());
     }
 

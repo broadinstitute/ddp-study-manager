@@ -30,8 +30,10 @@ public class RoutePath {
     public static final String BSP_KIT_QUERY_PATH = "/Kits/:label";
     public static final String BSP_KIT_REGISTERED = "/KitsRegistered";
 
-    //Drug list route
-    public static final String DRUG_LIST_REQUEST = "/drugs";
+    //Drug list routes
+    public static final String DRUG_LIST_REQUEST = "/drugs"; // display names only (for survey display)
+    public static final String FULL_DRUG_LIST_REQUEST = "/drugListEntries"; // all fields (for DSM)
+
     public static final String CANCER_LIST_REQUEST = "/cancers";
 
     public static final String PARTICIPANT_STATUS_REQUEST = "/participantstatus/" + RequestParameter.REALM + "/" + RequestParameter.PARTICIPANTID;

@@ -583,7 +583,7 @@ public class DirectMethodTest extends TestHelper {
     }
 
 
-
+    //  (for endpoint that returns list of display names)
     @Test
     public void drugListEndpoint() {
 
@@ -601,6 +601,23 @@ public class DirectMethodTest extends TestHelper {
         Assert.assertFalse("Checking for later removal: AFLIBERCEPT (EYLEA)", drugList.contains("AFLIBERCEPT (EYLEA)"));
         Assert.assertTrue("Checking for alphabetical order", isSorted(drugList));
         Assert.assertEquals("Checking for duplicate entries", drugList_size, set_length);
+    }
+
+    //  (for endpoint that returns list of full drug objects)
+    @Test
+    public void drugListEntriesEndpoint() {
+
+        List<Drug> drugList = Drug.getFullDrugData();
+        int drugList_size = drugList.size();
+
+        Set druglist_without_dupes = new HashSet(drugList);
+        int set_length = druglist_without_dupes.size();
+
+        Assert.assertFalse(drugList.isEmpty());
+        Assert.assertEquals("Checking for size 551", 551, drugList_size);
+
+        // Will update this as we go
+        // DSM will need a dupe-checking method anyway for edits/additions, so this test will use it too
     }
 
 

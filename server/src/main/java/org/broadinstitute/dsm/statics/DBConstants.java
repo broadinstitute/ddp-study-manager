@@ -333,6 +333,18 @@ public class DBConstants {
     public static final String DISPLAY_NAME = "display_name";
     public static final String GENERIC_NAME = "generic_name";
 
+    // DSM druglist view/edit wants the other fields as well:
+    public static final String DRUG_ID = "drug_id";
+    public static final String BRAND_NAME = "brand_name";
+    public static final String CHEMOCAT = "chemocat2";
+    public static final String CHEMO_TYPE = "chemo_type";
+    public static final String STUDY_DRUG = "study_drug";
+
+    public static final String TREATMENT_TYPE = "treatment_type";
+    public static final String CHEMOTHERAPY = "chemotherapy";
+    public static final String DATE_ADDED = "date_created";
+    public static final String ACTIVE = "active";
+
     // survey trigger
     public static final String SURVEY_TRIGGER_ID = "survey_trigger_id";
     public static final String NOTE = "note";

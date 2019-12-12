@@ -152,8 +152,15 @@ export class DSMService {
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
+  // returns a comma-separated list of drug display names
   public getDrugs(): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "drugs";
+    return this.http.get( url, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
+  }
+
+  // returns drug list entries with all fields
+  public getFullDrugData(): Observable<any> {
+    let url = this.baseUrl + DSMService.UI + 'drugListEntries';
     return this.http.get( url, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 

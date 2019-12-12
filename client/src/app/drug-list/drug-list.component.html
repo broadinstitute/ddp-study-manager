@@ -1,0 +1,141 @@
+<h1> Drug List </h1>
+
+<div *ngIf="errorMessage != null">
+  <h3 class="Color--warn Line--Break">{{errorMessage}}</h3>
+  <br/>
+</div>
+<div *ngIf="additionalMessage != null">
+  <h3 class="Color--primary Line--Break">{{additionalMessage}}</h3>
+  <br/>
+</div>
+
+<br/>
+<!--<b>No need to select a realm!</b>-->
+<!--Why does Label Settings page show the above message? Is there value here also?-->
+<!--<br/>-->
+<br/>
+
+<div *ngIf="errorMessage == null">
+
+  <span [hidden]="!loading" class="Width--100">
+    <div align="center" class="Width--100 Height--100">
+      <i class="fas fa-spinner fa-spin fa-5x Color--primary"></i>
+    </div>
+  </span>
+  <br/>
+
+
+  <div *ngIf="drugList != null">
+    <table class="table table-striped"
+           [mfData]="drugList" #mf="mfDataTable" [mfRowsOnPage]="10">
+      <thead>
+      <tr>
+        <th>
+          Display Name
+        </th>
+        <th>
+          Generic Name
+        </th>
+        <th>
+          Brand Name
+        </th>
+        <th>
+          Chemo category
+        </th>
+        <th>
+          Chemo Type
+        </th>
+        <th>
+          Study drug
+        </th>
+        <th>
+          Treatment Type
+        </th>
+        <th>
+          Chemotherapy
+        </th>
+        <th>
+          Date Added
+        </th>
+        <th>
+          Active
+        </th>
+        <th>
+        </th>
+      </tr>
+      </thead>
+      <tbody>
+      <ng-container *ngFor="let drug of mf.data; let i = index">
+        <tr>
+          <td>
+            <md-input-container class="Input">
+              <input mdInput class="Input--Min-WIDTH" maxlength="45"
+                     [(ngModel)]="drug.displayName" (change)="checkDisplayName(i); onChange(i)">
+              <md-hint class="ErrorMessageForm" *ngIf="drug.notUniqueError">Name not unique</md-hint>
+            </md-input-container>
+          </td>
+          <td>
+            <md-input-container>
+              <input mdInput type="text" [(ngModel)]="drug.genericName" (change)="onChange(i)" class="Width--100" maxlength="100">
+            </md-input-container>
+          </td>
+          <td>
+            <md-input-container>
+              <input mdInput type="text" [(ngModel)]="drug.brandName" (change)="onChange(i)" class="Width--100" maxlength="100">
+            </md-input-container>
+          </td>
+          <td>
+            <md-input-container>
+              <input mdInput type="text" [(ngModel)]="drug.chemocat2" (change)="onChange(i)" class="Width--100" maxlength="100">
+            </md-input-container>
+          </td>
+          <td>
+            <md-input-container>
+              <input mdInput type="text" [(ngModel)]="drug.chemoType" (change)="onChange(i)" class="Width--100" maxlength="100">
+            </md-input-container>
+          </td>
+          <td>
+            <md-input-container>
+              <input mdInput type="text" [(ngModel)]="drug.studyDrug" (change)="onChange(i)" class="Width--100" maxlength="100">
+            </md-input-container>
+          </td>
+          <td>
+            <md-input-container>
+              <input mdInput type="text" [(ngModel)]="drug.treatmentType" (change)="onChange(i)" class="Width--100" maxlength="100">
+            </md-input-container>
+          </td>
+          <td>
+            <md-input-container>
+              <input mdInput type="text" [(ngModel)]="drug.chemotherapy" (change)="onChange(i)" class="Width--100" maxlength="100">
+            </md-input-container>
+          </td>
+          <td>
+            <md-input-container>
+              <input mdInput type="text" [(ngModel)]="drug.dateAdded" readonly class="Width--100" maxlength="100">
+            </md-input-container>
+          </td>
+          <td>
+            <md-checkbox color="primary" [checked]="drug.active" (change)="drug.active = $event.checked; check(i)" disableRipple></md-checkbox>
+          </td>
+          <td>
+            <button md-mini-fab color="warn"
+                    *ngIf="i < drugList.length-1"
+                    (click)="updateActiveFlag(i)">
+              <i class="fas fa-trash-alt fa-lg"></i>
+            </button>
+          </td>
+        </tr>
+      </ng-container>
+      </tbody>
+      <tfoot>
+      <tr>
+        <td colspan="13">
+          <mfBootstrapPaginator [rowsOnPageSet]="[10, 15, 20]"></mfBootstrapPaginator>
+        </td>
+      </tr>
+      </tfoot>
+    </table>
+    <br/>
+    <button type="button" class="btn btn-primary" (click)="saveDrugs()">Save Drugs</button>
+  </div>
+</div>

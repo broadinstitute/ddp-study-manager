@@ -151,9 +151,14 @@ public class DSMServer extends BasicServer {
         String cookieName = cfg.getString(ApplicationConfigConstants.BROWSER_COOKIE_NAME);
         new SecurityUtil(jwtSecret);
 
-        // path will be: /app/drugs
+        // path will be: /app/drugs (this gets the list of display names)
         get(appRoute + RoutePath.DRUG_LIST_REQUEST, new DrugRoute(), new JsonTransformer());
         get(UI_ROOT + RoutePath.DRUG_LIST_REQUEST, new DrugRoute(), new JsonTransformer());
+
+        // path will be: /app/drugListEntries (this gets the full data in our drug list (all fields))
+        get(appRoute + RoutePath.FULL_DRUG_LIST_REQUEST, new DrugEntryRoute(), new JsonTransformer());
+        get(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, new DrugEntryRoute(), new JsonTransformer());
+
 
         get(appRoute + RoutePath.CANCER_LIST_REQUEST, new CancerRoute(), new JsonTransformer());
         get(UI_ROOT + RoutePath.CANCER_LIST_REQUEST, new CancerRoute(), new JsonTransformer());
