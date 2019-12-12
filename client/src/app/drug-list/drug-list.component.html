@@ -13,6 +13,8 @@
 <!--<b>No need to select a realm!</b>-->
 <!--Why does Label Settings page show the above message? Is there value here also?-->
 <!--<br/>-->
+<div class="Float--left" *ngIf="hasRole().allowedToEditDrugList()">(This user IS allowed to edit drug list)</div>
+<div class="Float--left" *ngIf="!hasRole().allowedToEditDrugList()">(This user is NOT allowed to edit drug list)</div>
 <br/>
 
 <div *ngIf="errorMessage == null">
@@ -24,8 +26,6 @@
   </span>
   <br/>
 
-  <div class="Float--left" *ngIf="hasRole().allowedToEditDrugList()">This user IS allowed to edit drug list</div>
-  <div class="Float--left" *ngIf="!hasRole().allowedToEditDrugList()">This user is NOT allowed to edit drug list</div>
 
   <div *ngIf="drugList != null">
     <table class="table table-striped"
@@ -59,7 +59,7 @@
         <th>
           Date Added
         </th>
-        <th>
+        <th  *ngIf="hasRole().allowedToEditDrugList()">
           Active
         </th>
         <th>
@@ -68,58 +68,67 @@
       </thead>
       <tbody>
       <ng-container *ngFor="let drug of mf.data; let i = index">
-        <tr>
+        <tr> <!-- For all columns, show as editable if user has permission, otherwise read only -->
           <td>
-            <md-input-container class="Input">
+            <md-input-container class="Input" *ngIf="hasRole().allowedToEditDrugList()">
               <input mdInput class="Input--Min-WIDTH" maxlength="45"
                      [(ngModel)]="drug.displayName" (change)="checkDisplayName(i); onChange(i)">
               <md-hint class="ErrorMessageForm" *ngIf="drug.notUniqueError">Name not unique</md-hint>
             </md-input-container>
+            <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.displayName}}</div>
           </td>
+
           <td>
-            <md-input-container>
+            <md-input-container  *ngIf="hasRole().allowedToEditDrugList()">
               <input mdInput type="text" [(ngModel)]="drug.genericName" (change)="onChange(i)" class="Width--100" maxlength="100">
             </md-input-container>
+            <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.genericName}}</div>
           </td>
           <td>
-            <md-input-container>
+            <md-input-container  *ngIf="hasRole().allowedToEditDrugList()">
               <input mdInput type="text" [(ngModel)]="drug.brandName" (change)="onChange(i)" class="Width--100" maxlength="100">
             </md-input-container>
+            <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.brandName}}</div>
           </td>
           <td>
-            <md-input-container>
+            <md-input-container  *ngIf="hasRole().allowedToEditDrugList()">
               <input mdInput type="text" [(ngModel)]="drug.chemocat2" (change)="onChange(i)" class="Width--100" maxlength="100">
             </md-input-container>
+            <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.chemocat2}}</div>
           </td>
           <td>
-            <md-input-container>
+            <md-input-container  *ngIf="hasRole().allowedToEditDrugList()">
               <input mdInput type="text" [(ngModel)]="drug.chemoType" (change)="onChange(i)" class="Width--100" maxlength="100">
             </md-input-container>
+            <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.chemoType}}</div>
           </td>
           <td>
-            <md-input-container>
+            <md-input-container  *ngIf="hasRole().allowedToEditDrugList()">
               <input mdInput type="text" [(ngModel)]="drug.studyDrug" (change)="onChange(i)" class="Width--100" maxlength="100">
             </md-input-container>
+            <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.studyDrug}}</div>
           </td>
           <td>
-            <md-input-container>
+            <md-input-container  *ngIf="hasRole().allowedToEditDrugList()">
               <input mdInput type="text" [(ngModel)]="drug.treatmentType" (change)="onChange(i)" class="Width--100" maxlength="100">
             </md-input-container>
+            <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.treatmentType}}</div>
           </td>
           <td>
-            <md-input-container>
+            <md-input-container  *ngIf="hasRole().allowedToEditDrugList()">
               <input mdInput type="text" [(ngModel)]="drug.chemotherapy" (change)="onChange(i)" class="Width--100" maxlength="100">
             </md-input-container>
+            <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.chemotherapy}}</div>
           </td>
           <td>
               {{ drug.dateAdded*1000 | date }}
           </td>
           <td>
-            <md-checkbox color="primary" [checked]="drug.active" (change)="drug.active = $event.checked; check(i)" disableRipple></md-checkbox>
+            <md-checkbox color="primary" *ngIf="hasRole().allowedToEditDrugList()" [checked]="drug.active" (change)="drug.active = $event.checked; check(i)" disableRipple></md-checkbox>
           </td>
           <td>
             <button md-mini-fab color="warn"
-                    *ngIf="i < drugList.length-1"
+                    *ngIf="hasRole().allowedToEditDrugList()"
                     (click)="updateActiveFlag(i)">
               <i class="fas fa-trash-alt fa-lg"></i>
             </button>
