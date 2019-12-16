@@ -1,3 +1,5 @@
+import {DrugListComponent} from './drug-list.component';
+
 export class DrugList {
 
   addedNew = false;
@@ -25,5 +27,21 @@ export class DrugList {
   static parse(json): DrugList {
     return new DrugList(json.drugId, json.genericName, json.brandName, json.displayName, json.chemocat2, json.chemoType,
       json.studyDrug, json.treatmentType, json.chemotherapy, json.active, json.dateAdded);
+  }
+
+  // Submit button gives the full list of drugs from the page, so we want to trim down to only the subset that user updated
+  // cleanedDrugList will be an array of DrugList components -- @TODO: consider whether you should rename DrugList to DrugListing instead
+  static removeUnchangedDruglistEntries(array: Array<DrugList>): Array<DrugList> {
+    let cleanedDrugList: Array<DrugList> = [];
+    for (let drug of array) {
+      if (drug.changed) {
+        if (drug.displayName == null || drug.displayName === '') {
+          // @TODO: also will need a dupe check here
+          drug.displayName = drug.displayName;
+        }
+        cleanedDrugList.push(drug);
+      }
+    }
+    return cleanedDrugList;
   }
 }

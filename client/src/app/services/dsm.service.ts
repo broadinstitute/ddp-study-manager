@@ -154,7 +154,7 @@ export class DSMService {
 
   // returns a comma-separated list of drug display names
   public getDrugs(): Observable<any> {
-    let url = this.baseUrl + DSMService.UI + "drugs";
+    let url = this.baseUrl + DSMService.UI + 'drugs';
     return this.http.get( url, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
@@ -162,6 +162,11 @@ export class DSMService {
   public getFullDrugData(): Observable<any> {
     let url = this.baseUrl + DSMService.UI + 'drugListEntries';
     return this.http.get( url, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
+  }
+
+  public saveDruglistEntries( json: string ): Observable<any> {
+    let url = this.baseUrl + DSMService.UI + 'drugListEntries';
+    return this.http.patch( url, json, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public getMedicalRecordData( realm: string, ddpParticipantId: string ): Observable<any> {
