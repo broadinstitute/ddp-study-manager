@@ -28,7 +28,7 @@ export class DrugListComponent implements OnInit {
     this.drugList = [];
     this.loading = true;
     let jsonData: any[];
-    this.dsmService.getFullDrugData().subscribe(
+    this.dsmService.getDruglistEntries().subscribe(
       data => {
         jsonData = data;
         // console.info(`received: ${JSON.stringify(data, null, 2)}`);
