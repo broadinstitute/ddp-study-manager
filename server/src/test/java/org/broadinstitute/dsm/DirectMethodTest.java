@@ -607,7 +607,7 @@ public class DirectMethodTest extends TestHelper {
     @Test
     public void drugListEntriesEndpoint() {
 
-        List<Drug> drugList = Drug.getFullDrugData();
+        List<Drug> drugList = Drug.getDruglistEntries();
         int drugList_size = drugList.size();
 
         Set druglist_without_dupes = new HashSet(drugList);
