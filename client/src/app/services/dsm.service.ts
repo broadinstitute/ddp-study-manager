@@ -160,12 +160,12 @@ export class DSMService {
 
   // returns drug list entries with all fields
   public getFullDrugData(): Observable<any> {
-    let url = this.baseUrl + DSMService.UI + 'drugListEntries';
+    let url = this.baseUrl + DSMService.UI + 'druglistEntries';
     return this.http.get( url, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public saveDruglistEntries( json: string ): Observable<any> {
-    let url = this.baseUrl + DSMService.UI + 'drugListEntries';
+    let url = this.baseUrl + DSMService.UI + 'druglistEntries';
     return this.http.patch( url, json, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 

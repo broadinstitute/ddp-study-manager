@@ -155,7 +155,7 @@ public class DSMServer extends BasicServer {
         get(appRoute + RoutePath.DRUG_LIST_REQUEST, new DrugRoute(), new JsonTransformer());
         get(UI_ROOT + RoutePath.DRUG_LIST_REQUEST, new DrugRoute(), new JsonTransformer());
 
-        // path will be: /app/drugListEntries (this gets the full data in our drug list (all fields))
+        // path will be: /app/druglistEntries (this gets the full data in our drug list (all fields))
         get(appRoute + RoutePath.FULL_DRUG_LIST_REQUEST, new DruglistEntryRoute(), new JsonTransformer());
         get(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, new DruglistEntryRoute(), new JsonTransformer());
 

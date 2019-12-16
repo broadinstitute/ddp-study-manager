@@ -32,7 +32,7 @@ public class RoutePath {
 
     //Drug list routes
     public static final String DRUG_LIST_REQUEST = "/drugs"; // display names only (for survey display)
-    public static final String FULL_DRUG_LIST_REQUEST = "/drugListEntries"; // all fields (for DSM)
+    public static final String FULL_DRUG_LIST_REQUEST = "/druglistEntries"; // all fields (for DSM)
 
     public static final String CANCER_LIST_REQUEST = "/cancers";
 
