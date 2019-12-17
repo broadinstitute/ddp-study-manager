@@ -50,10 +50,6 @@ public class Drug {
         this.active = active;
     }
 
-
-    private static final String SQL_SELECT_DRUG_LIST = "SELECT drug_id, display_name FROM drug_list ORDER BY display_name asc";
-    private static final String SQL_SELECT_DRUG_DATA = "SELECT * FROM drug_list ORDER BY display_name asc";
-
     // Display names only (original method to show in MBC followup survey)
     public static List<String> getDrugList() {
         List<String> drugList = new ArrayList<>();
@@ -61,7 +57,7 @@ public class Drug {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
 
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_DRUG_LIST)) {
+            try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_DRUG_LIST))) {
                 if (stmt != null) {
                     try (ResultSet rs = stmt.executeQuery()) {
                         while (rs.next()) {
@@ -98,7 +94,7 @@ public class Drug {
 
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_DRUG_DATA)) {
+            try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_DRUG_DATA))) {
                 if (stmt != null) {
                     try (ResultSet rs = stmt.executeQuery()) {
                         while (rs.next()) {
