@@ -34,9 +34,10 @@ public class Drug {
     private String chemotherapy;
     private long dateAdded;
     private long active;
+    private long dateUpdated;
 
     public Drug(int drugId, String displayName, String genericName, String brandName, String chemocat, String chemoType,
-                int studyDrug, String treatmentType, String chemotherapy, long dateAdded, long active) {
+                int studyDrug, String treatmentType, String chemotherapy, long dateAdded, long active, long dateUpdated) {
         this.drugId = drugId;
         this.displayName = displayName;
         this.genericName = genericName;
@@ -48,6 +49,7 @@ public class Drug {
         this.chemotherapy = chemotherapy;
         this.dateAdded = dateAdded;
         this.active = active;
+        this.dateUpdated = dateUpdated;
     }
 
     // Display names only (original method to show in MBC followup survey)
@@ -111,9 +113,10 @@ public class Drug {
                             String thisChemotherapy= rs.getString(DBConstants.CHEMOTHERAPY);
                             long thisDateAdded= rs.getInt(DBConstants.DATE_ADDED);
                             int thisActive= rs.getInt(DBConstants.ACTIVE);
+                            long thisDateUpdated= rs.getInt(DBConstants.DATE_UPDATED);
 
                             Drug thisDrug = new Drug(thisDrugId,thisDisplayName,thisGenericName,thisBrandName, thisChemocat,
-                                    thisChemoType, thisStudyDrug, thisTreatmentType, thisChemotherapy, thisDateAdded, thisActive);
+                                    thisChemoType, thisStudyDrug, thisTreatmentType, thisChemotherapy, thisDateAdded, thisActive, thisDateUpdated);
 
                             drugList.add(thisDrug);
                         }
@@ -167,6 +170,7 @@ public class Drug {
                     stmt.setString(9, updatedDrugValues.getChemotherapy());
                     stmt.setLong(10, updatedDrugValues.getDateAdded());
                     stmt.setLong(11, updatedDrugValues.getActive());
+                    stmt.setLong(12, updatedDrugValues.getDateUpdated());
                     int result = stmt.executeUpdate();
                     if (result == 1) {
                         logger.info("Updated drug entry w/ id " + updatedDrugValues.getDrugId());
@@ -180,7 +184,7 @@ public class Drug {
             });
 
             if (results.resultException != null) {
-                throw new RuntimeException("Error saving labelSetting w/ id " + updatedDrugValues.getDrugId(), results.resultException);
+                throw new RuntimeException("Error saving drug Listing w/ id " + updatedDrugValues.getDrugId(), results.resultException);
             }
     }
 

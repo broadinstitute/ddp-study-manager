@@ -3,6 +3,8 @@ package org.broadinstitute.dsm;
 import com.google.gson.JsonObject;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.fluent.Request;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.util.GoogleBucket;
 import org.broadinstitute.dsm.db.*;
@@ -27,6 +29,7 @@ import java.io.FileInputStream;
 import java.util.*;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
+import static org.junit.Assert.assertEquals;
 
 public class DirectMethodTest extends TestHelper {
 
@@ -611,7 +614,6 @@ public class DirectMethodTest extends TestHelper {
         int drugList_size = drugList.size();
 
         Set druglist_without_dupes = new HashSet(drugList);
-        int set_length = druglist_without_dupes.size();
 
         Assert.assertFalse(drugList.isEmpty());
         Assert.assertEquals("Checking for size 551", 551, drugList_size);
@@ -619,6 +621,19 @@ public class DirectMethodTest extends TestHelper {
         // Will update this as we go
         // DSM will need a dupe-checking method anyway for edits/additions, so this test will use it too
     }
+
+
+    @Test
+    public void drugListingsPATCH() throws Exception {
+        String jwtDdpSecret = cfg.hasPath("portal.jwtDdpSecret") ? cfg.getString("portal.jwtDdpSecret") : null;
+        Assert.assertTrue(StringUtils.isNotBlank(jwtDdpSecret));
+        Drug sampleDrug = new Drug (3000, "testDRUG", "ibuprophen", "Motrin", "A", "Y", 1, "T", "C", 1528119063, 1, 1528119063);
+
+        Drug.updateDrugListing(sampleDrug);
+
+        // @TODO: in progress, error so far
+    }
+
 
 
     @Test
