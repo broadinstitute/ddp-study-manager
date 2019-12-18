@@ -1,4 +1,4 @@
-import {DrugListComponent} from './drug-list.component';
+import {DrugListingComponent} from './drug-listing.component';
 
 export class DrugList {
 
@@ -31,7 +31,7 @@ export class DrugList {
 
   // Submit button gives the full list of drugs from the page, so we want to trim down to only the subset that user updated
   // cleanedDrugList will be an array of DrugList components -- @TODO: consider whether you should rename DrugList to DrugListing instead
-  static removeUnchangedDruglistEntries(array: Array<DrugList>): Array<DrugList> {
+  static removeUnchangedDrugListings(array: Array<DrugList>): Array<DrugList> {
     let cleanedDrugList: Array<DrugList> = [];
     for (let drug of array) {
       if (drug.changed) {

@@ -1,15 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { DrugList } from './drug-list.model';
+import { DrugList } from './drug-listing.model';
 import { Auth } from '../services/auth.service';
 import { DSMService } from '../services/dsm.service';
 import {RoleService} from '../services/role.service';
 
 @Component({
-  selector: 'app-drug-list',
-  templateUrl: './drug-list.component.html',
-  styleUrls: ['./drug-list.component.css']
+  selector: 'app-drug-listing',
+  templateUrl: './drug-listing.component.html',
+  styleUrls: ['./drug-listing.component.css']
 })
-export class DrugListComponent implements OnInit {
+export class DrugListingComponent implements OnInit {
 
   errorMessage: string;
   additionalMessage: string;
@@ -28,7 +28,7 @@ export class DrugListComponent implements OnInit {
     this.drugList = [];
     this.loading = true;
     let jsonData: any[];
-    this.dsmService.getDruglistEntries().subscribe(
+    this.dsmService.getDrugListings().subscribe(
       data => {
         jsonData = data;
         // console.info(`received: ${JSON.stringify(data, null, 2)}`);
@@ -36,7 +36,7 @@ export class DrugListComponent implements OnInit {
           let event = DrugList.parse(val);
           this.drugList.push(event);
         });
-        this.addDrugListEntry();
+        this.addDrugListing();
         this.loading = false;
       },
       err => {
@@ -71,11 +71,11 @@ export class DrugListComponent implements OnInit {
   onChange(index: number) {
     this.drugList[index].changed = true;
     if (index === this.drugList.length - 1) {
-      this.addDrugListEntry()
+      this.addDrugListing()
     }
   }
 
-  addDrugListEntry() {
+  addDrugListing() {
     let labelSetting: DrugList = new DrugList(null, null, null, null,
       null, null, 0, null, null, 0, 0);
     labelSetting.addedNew = true;
@@ -85,12 +85,12 @@ export class DrugListComponent implements OnInit {
   updateActiveFlag(index: number) {
     this.drugList[index].deleted = true;
     this.onChange(index);
-    this.saveDruglistEntries();
+    this.saveDrugListings();
   }
 
-  saveDruglistEntries() {
+  saveDrugListings() {
     let foundError = false;
-    let cleanedDrugs: Array<DrugList> = DrugList.removeUnchangedDruglistEntries(this.drugList);
+    let cleanedDrugs: Array<DrugList> = DrugList.removeUnchangedDrugListings(this.drugList);
     for (let drug of cleanedDrugs) {
       if (drug.notUniqueError) {
         foundError = true;
@@ -101,7 +101,7 @@ export class DrugListComponent implements OnInit {
     }
     else {
       this.loading = true;
-      this.dsmService.saveDruglistEntries(JSON.stringify(cleanedDrugs)).subscribe(
+      this.dsmService.saveDrugListings(JSON.stringify(cleanedDrugs)).subscribe(
         data => {
           this.getListOfDrugObjects();
           this.loading = false;
