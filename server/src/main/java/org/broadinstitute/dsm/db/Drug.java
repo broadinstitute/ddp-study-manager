@@ -146,7 +146,7 @@ public class Drug {
         for (Drug updatedDrug : updatedDrugValues) {
             SimpleResult results = inTransaction((conn) -> {
                 SimpleResult dbVals = new SimpleResult();
-                try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.UPDATE_DRUGLIST_ENTRY))) {
+                try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.UPDATE_DRUG_LISTING))) {
                     stmt.setInt(1, updatedDrug.getDrugId());
                     stmt.setString(2, updatedDrug.getDisplayName());
                     stmt.setString(3, updatedDrug.getGenericName());

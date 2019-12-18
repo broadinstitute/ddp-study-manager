@@ -11,8 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
+import spark.Route;
 
-public class DrugListingRoute extends RequestHandler {
+public class DrugListingRoute extends RequestHandler implements Route {
 
     private static final Logger logger = LoggerFactory.getLogger(DrugListingRoute.class);
 
