@@ -1,6 +1,6 @@
 import {DrugListingComponent} from './drug-listing.component';
 
-export class DrugList {
+export class DrugListing {
 
   addedNew = false;
   changed = false;
@@ -24,15 +24,15 @@ export class DrugList {
     this.dateAdded = dateAdded;
   }
 
-  static parse(json): DrugList {
-    return new DrugList(json.drugId, json.genericName, json.brandName, json.displayName, json.chemocat2, json.chemoType,
+  static parse(json): DrugListing {
+    return new DrugListing(json.drugId, json.genericName, json.brandName, json.displayName, json.chemocat2, json.chemoType,
       json.studyDrug, json.treatmentType, json.chemotherapy, json.active, json.dateAdded);
   }
 
   // Submit button gives the full list of drugs from the page, so we want to trim down to only the subset that user updated
   // cleanedDrugList will be an array of DrugList components -- @TODO: consider whether you should rename DrugList to DrugListing instead
-  static removeUnchangedDrugListings(array: Array<DrugList>): Array<DrugList> {
-    let cleanedDrugList: Array<DrugList> = [];
+  static removeUnchangedDrugListings(array: Array<DrugListing>): Array<DrugListing> {
+    let cleanedDrugList: Array<DrugListing> = [];
     for (let drug of array) {
       if (drug.changed) {
         if (drug.displayName == null || drug.displayName === '') {

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { DrugList } from './drug-listing.model';
+import { DrugListing } from './drug-listing.model';
 import { Auth } from '../services/auth.service';
 import { DSMService } from '../services/dsm.service';
 import {RoleService} from '../services/role.service';
@@ -16,7 +16,7 @@ export class DrugListingComponent implements OnInit {
 
   loading = false;
 
-  drugList: DrugList[];
+  drugList: DrugListing[];
 
   constructor(private auth: Auth, private dsmService: DSMService, private role: RoleService) { }
 
@@ -33,7 +33,7 @@ export class DrugListingComponent implements OnInit {
         jsonData = data;
         // console.info(`received: ${JSON.stringify(data, null, 2)}`);
         jsonData.forEach((val) => {
-          let event = DrugList.parse(val);
+          let event = DrugListing.parse(val);
           this.drugList.push(event);
         });
         this.addDrugListing();
@@ -76,7 +76,7 @@ export class DrugListingComponent implements OnInit {
   }
 
   addDrugListing() {
-    let labelSetting: DrugList = new DrugList(null, null, null, null,
+    let labelSetting: DrugListing = new DrugListing(null, null, null, null,
       null, null, 0, null, null, 0, 0);
     labelSetting.addedNew = true;
     this.drugList.push(labelSetting);
@@ -90,7 +90,7 @@ export class DrugListingComponent implements OnInit {
 
   saveDrugListings() {
     let foundError = false;
-    let cleanedDrugs: Array<DrugList> = DrugList.removeUnchangedDrugListings(this.drugList);
+    let cleanedDrugs: Array<DrugListing> = DrugListing.removeUnchangedDrugListings(this.drugList);
     for (let drug of cleanedDrugs) {
       if (drug.notUniqueError) {
         foundError = true;
