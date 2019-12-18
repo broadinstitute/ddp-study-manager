@@ -139,30 +139,39 @@ public class Drug {
 
     //
 
-
-    public static void updateDrugListing(@NonNull Drug[] updatedDrugValues) {
+    // loop through a bunch of changed drugs and call updateDrugListing for each one
+    public static void updateDrugListings(@NonNull Drug[] updatedDrugs) {
 
         // We'll attempt to update each changed value one at a time
-        for (Drug updatedDrug : updatedDrugValues) {
+        // @TODO: placeholder for now, will need to come back and add validation, error handling, etc
+        for (Drug updatedDrug : updatedDrugs) {
+            SimpleResult dbVals = new SimpleResult();
+            updateDrugListing(updatedDrug);
+        }
+    }
+
+    // For one updated drug listing, update its values if valid
+    // @TODO: placeholder for now, will need to come back and add validation, error handling, etc
+    public static void updateDrugListing(@NonNull Drug updatedDrugValues) {
             SimpleResult results = inTransaction((conn) -> {
                 SimpleResult dbVals = new SimpleResult();
                 try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.UPDATE_DRUG_LISTING))) {
-                    stmt.setInt(1, updatedDrug.getDrugId());
-                    stmt.setString(2, updatedDrug.getDisplayName());
-                    stmt.setString(3, updatedDrug.getGenericName());
-                    stmt.setString(4, updatedDrug.getBrandName());
-                    stmt.setString(5, updatedDrug.getChemocat());
-                    stmt.setString(6, updatedDrug.getChemoType());
-                    stmt.setInt(7, updatedDrug.getStudyDrug());
-                    stmt.setString(8, updatedDrug.getTreatmentType());
-                    stmt.setString(9, updatedDrug.getChemotherapy());
-                    stmt.setLong(10, updatedDrug.getDateAdded());
-                    stmt.setLong(11, updatedDrug.getActive());
+                    stmt.setInt(1, updatedDrugValues.getDrugId());
+                    stmt.setString(2, updatedDrugValues.getDisplayName());
+                    stmt.setString(3, updatedDrugValues.getGenericName());
+                    stmt.setString(4, updatedDrugValues.getBrandName());
+                    stmt.setString(5, updatedDrugValues.getChemocat());
+                    stmt.setString(6, updatedDrugValues.getChemoType());
+                    stmt.setInt(7, updatedDrugValues.getStudyDrug());
+                    stmt.setString(8, updatedDrugValues.getTreatmentType());
+                    stmt.setString(9, updatedDrugValues.getChemotherapy());
+                    stmt.setLong(10, updatedDrugValues.getDateAdded());
+                    stmt.setLong(11, updatedDrugValues.getActive());
                     int result = stmt.executeUpdate();
                     if (result == 1) {
-                        logger.info("Updated drug entry w/ id " + updatedDrug.getDrugId());
+                        logger.info("Updated drug entry w/ id " + updatedDrugValues.getDrugId());
                     } else {
-                        throw new RuntimeException("Error updating drug entry w/ id " + updatedDrug.getDrugId() + " it was updating " + result + " rows");
+                        throw new RuntimeException("Error updating drug entry w/ id " + updatedDrugValues.getDrugId() + " it was updating " + result + " rows");
                     }
                 } catch (SQLException ex) {
                     dbVals.resultException = ex;
@@ -171,13 +180,11 @@ public class Drug {
             });
 
             if (results.resultException != null) {
-                throw new RuntimeException("Error saving labelSetting w/ id " + updatedDrug.getDrugId(), results.resultException);
+                throw new RuntimeException("Error saving labelSetting w/ id " + updatedDrugValues.getDrugId(), results.resultException);
             }
-        }
-
-
-
     }
+
+
 
     // @TODO: will add this once we get to csv upload
     // May want one method to loop through and keep track, and one to do the individual saving for each valid row
