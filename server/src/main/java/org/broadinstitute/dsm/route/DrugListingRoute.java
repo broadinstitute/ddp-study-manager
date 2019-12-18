@@ -26,7 +26,7 @@ public class DrugListingRoute extends RequestHandler implements Route {
             if (UserUtil.checkUserAccess(null, userId, "drug_list_edit")) {
                 String requestBody = request.body();
                 Drug[] drugUpdateValues = new Gson().fromJson(requestBody, Drug[].class);
-                Drug.updateDrugListing(drugUpdateValues);
+                Drug.updateDrugListings(drugUpdateValues);
                 return new Result(200);
             }
             else {
