@@ -12,20 +12,20 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
-public class DruglistEntryRoute extends RequestHandler {
+public class DrugListingRoute extends RequestHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(DruglistEntryRoute.class);
+    private static final Logger logger = LoggerFactory.getLogger(DrugListingRoute.class);
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         if (RoutePath.RequestMethod.GET.toString().equals(request.requestMethod())) {
-                return Drug.getDruglistEntries();
+                return Drug.getDrugListings();
         }
         if (RoutePath.RequestMethod.PATCH.toString().equals(request.requestMethod())) {
             if (UserUtil.checkUserAccess(null, userId, "drug_list_edit")) {
                 String requestBody = request.body();
                 Drug[] drugUpdateValues = new Gson().fromJson(requestBody, Drug[].class);
-                Drug.updateDruglistEntries(drugUpdateValues);
+                Drug.updateDrugListing(drugUpdateValues);
                 return new Result(200);
             }
             else {
