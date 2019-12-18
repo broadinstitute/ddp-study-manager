@@ -89,7 +89,7 @@ public class Drug {
      * @return List<Drug>
      * @throws Exception
      */
-    public static List<Drug> getDruglistEntries() {
+    public static List<Drug> getDrugListings() {
         List<Drug> drugList = new ArrayList<>();
 
         SimpleResult results = inTransaction((conn) -> {
@@ -140,7 +140,7 @@ public class Drug {
     //
 
 
-    public static void updateDruglistEntries(@NonNull Drug[] updatedDrugValues) {
+    public static void updateDrugListing(@NonNull Drug[] updatedDrugValues) {
 
         // We'll attempt to update each changed value one at a time
         for (Drug updatedDrug : updatedDrugValues) {
@@ -181,7 +181,7 @@ public class Drug {
 
     // @TODO: will add this once we get to csv upload
     // May want one method to loop through and keep track, and one to do the individual saving for each valid row
-    public static void addDruglistEntry(@NonNull Drug[] importedDrugs) {
+    public static void addDrugListing(@NonNull Drug[] importedDrugs) {
 //        for (Drug importedDrug : importedDrugs) {
 ////            if (StringUtils.isNotBlank(importedDrug.drugId)) {
 //            if (StringUtils.isNotBlank(importedDrug.drugId)) {
