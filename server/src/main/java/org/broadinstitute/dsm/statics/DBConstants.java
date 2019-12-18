@@ -344,6 +344,8 @@ public class DBConstants {
     public static final String CHEMOTHERAPY = "chemotherapy";
     public static final String DATE_ADDED = "date_created";
     public static final String ACTIVE = "active";
+    public static final String DATE_UPDATED = "date_updated";
+
 
     // survey trigger
     public static final String SURVEY_TRIGGER_ID = "survey_trigger_id";

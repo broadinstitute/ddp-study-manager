@@ -1347,7 +1347,7 @@ public class RouteTest extends TestHelper {
     public void drugListingsPATCH() throws Exception {
         String jwtDdpSecret = cfg.hasPath("portal.jwtDdpSecret") ? cfg.getString("portal.jwtDdpSecret") : null;
         Assert.assertTrue(StringUtils.isNotBlank(jwtDdpSecret));
-        Drug sampleDrug = new Drug (0, "testDRUG", "ibuprophen", "Motrin", "A", "Y", 1, "T", "C", 1528119063, 1);
+        Drug sampleDrug = new Drug (0, "testDRUG", "ibuprophen", "Motrin", "A", "Y", 1, "T", "C", 1528119063, 1, 1528119063);
 
         HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/druglistEntries"), sampleDrug, testUtil.buildAuthHeaders()).returnResponse();
         assertEquals(200, response.getStatusLine().getStatusCode());
