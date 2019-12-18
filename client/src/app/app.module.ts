@@ -80,7 +80,7 @@ import {KitRequestFilterPipe} from "./pipe/kit-request-filter.pipe";
 import {ShippingReportComponent} from "./shipping-report/shipping-report.component";
 import {OncHistoryDetailSortPipe} from "./pipe/onc-history-detail-sort.pipe";
 import {LabelSettingsComponent} from "./label-settings/label-settings.component";
-import {DrugListComponent} from "./drug-list/drug-list.component";
+import {DrugListingComponent} from "./drug-listing/drug-listing.component";
 import {ParticipantEventComponent} from "./participant-event/participant-event.component";
 import {FieldFilepickerComponent} from "./field-filepicker/field-filepicker.component";
 import {ShippingSearchComponent} from "./shipping-search/shipping-search.component";
@@ -157,7 +157,7 @@ import {FieldSettingsComponent} from "./field-settings/field-settings.component"
     ButtonSelectTitleCasePipe,
     OrdinalPipe,
     LabelSettingsComponent,
-    DrugListComponent,
+    DrugListingComponent,
     ParticipantEventComponent,
     ShippingSearchComponent,
     FieldFilepickerComponent,
