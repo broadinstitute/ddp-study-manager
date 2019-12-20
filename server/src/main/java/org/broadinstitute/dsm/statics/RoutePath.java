@@ -30,9 +30,8 @@ public class RoutePath {
     public static final String BSP_KIT_QUERY_PATH = "/Kits/:label";
     public static final String BSP_KIT_REGISTERED = "/KitsRegistered";
 
-    //Drug list routes
+    //Drug list endpoint route
     public static final String DRUG_LIST_REQUEST = "/drugs"; // display names only (for survey display)
-    public static final String FULL_DRUG_LIST_REQUEST = "/druglistEntries"; // all fields (for DSM)
 
     public static final String CANCER_LIST_REQUEST = "/cancers";
 
@@ -73,6 +72,7 @@ public class RoutePath {
     public static final String EXPRESS_KIT_REQUEST = "expressKit/" + RequestParameter.KITREQUESTID;
     public static final String TRIGGER_SURVEY = "triggerSurvey";
     public static final String LABEL_SETTING_REQUEST = "labelSettings";
+    public static final String FULL_DRUG_LIST_REQUEST = "druglistEntries";
     public static final String EVENT_TYPES = "eventTypes";
     public static final String PARTICIPANT_EVENTS = "participantEvents";
     public static final String SKIP_PARTICIPANT_EVENTS = "skipEvent";
