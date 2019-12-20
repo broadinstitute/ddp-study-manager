@@ -26,18 +26,19 @@ public class Drug {
     private final int drugId;
     private String displayName;
     private String genericName;
-    private String brandName;
+    private String brandName = null;
     private String chemocat;
     private String chemoType;
     private int studyDrug;
     private String treatmentType;
     private String chemotherapy;
-    private long dateAdded;
+    private long dateCreated; // note: Postgres bigint (in database) is the same as java long
     private long active;
-    private long dateUpdated;
+    private Long dateUpdated = null; // regular long can't be null
+
 
     public Drug(int drugId, String displayName, String genericName, String brandName, String chemocat, String chemoType,
-                int studyDrug, String treatmentType, String chemotherapy, long dateAdded, long active, long dateUpdated) {
+                int studyDrug, String treatmentType, String chemotherapy, long dateCreated, long active, Long dateUpdated) {
         this.drugId = drugId;
         this.displayName = displayName;
         this.genericName = genericName;
@@ -47,7 +48,7 @@ public class Drug {
         this.studyDrug = studyDrug;
         this.treatmentType = treatmentType;
         this.chemotherapy = chemotherapy;
-        this.dateAdded = dateAdded;
+        this.dateCreated = dateCreated;
         this.active = active;
         this.dateUpdated = dateUpdated;
     }
@@ -111,12 +112,12 @@ public class Drug {
                             int thisStudyDrug= rs.getInt(DBConstants.STUDY_DRUG);
                             String thisTreatmentType= rs.getString(DBConstants.TREATMENT_TYPE);
                             String thisChemotherapy= rs.getString(DBConstants.CHEMOTHERAPY);
-                            long thisDateAdded= rs.getInt(DBConstants.DATE_ADDED);
+                            long thisDateCreated= (rs.getInt(DBConstants.DATE_CREATED));
                             int thisActive= rs.getInt(DBConstants.ACTIVE);
-                            long thisDateUpdated= rs.getInt(DBConstants.DATE_UPDATED);
+                            long thisDateUpdated= (rs.getInt(DBConstants.DATE_UPDATED));
 
                             Drug thisDrug = new Drug(thisDrugId,thisDisplayName,thisGenericName,thisBrandName, thisChemocat,
-                                    thisChemoType, thisStudyDrug, thisTreatmentType, thisChemotherapy, thisDateAdded, thisActive, thisDateUpdated);
+                                    thisChemoType, thisStudyDrug, thisTreatmentType, thisChemotherapy, thisDateCreated, thisActive, thisDateUpdated);
 
                             drugList.add(thisDrug);
                         }
@@ -156,21 +157,24 @@ public class Drug {
     // For one updated drug listing, update its values if valid
     // @TODO: placeholder for now, will need to come back and add validation, error handling, etc
     public static void updateDrugListing(@NonNull Drug updatedDrugValues) {
+            Long nowValue = System.currentTimeMillis()/1000; //(divide by 1000 to match epoch)
+
             SimpleResult results = inTransaction((conn) -> {
                 SimpleResult dbVals = new SimpleResult();
                 try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.UPDATE_DRUG_LISTING))) {
-                    stmt.setInt(1, updatedDrugValues.getDrugId());
-                    stmt.setString(2, updatedDrugValues.getDisplayName());
-                    stmt.setString(3, updatedDrugValues.getGenericName());
-                    stmt.setString(4, updatedDrugValues.getBrandName());
-                    stmt.setString(5, updatedDrugValues.getChemocat());
-                    stmt.setString(6, updatedDrugValues.getChemoType());
-                    stmt.setInt(7, updatedDrugValues.getStudyDrug());
-                    stmt.setString(8, updatedDrugValues.getTreatmentType());
-                    stmt.setString(9, updatedDrugValues.getChemotherapy());
-                    stmt.setLong(10, updatedDrugValues.getDateAdded());
-                    stmt.setLong(11, updatedDrugValues.getActive());
-                    stmt.setLong(12, updatedDrugValues.getDateUpdated());
+                    stmt.setString(1, updatedDrugValues.getDisplayName());
+                    stmt.setString(2, updatedDrugValues.getGenericName());
+                    stmt.setString(3, updatedDrugValues.getBrandName());
+                    stmt.setString(4, updatedDrugValues.getChemocat());
+                    stmt.setString(5, updatedDrugValues.getChemoType());
+                    stmt.setInt(6, updatedDrugValues.getStudyDrug());
+                    stmt.setString(7, updatedDrugValues.getTreatmentType());
+                    stmt.setString(8, updatedDrugValues.getChemotherapy());
+                    stmt.setLong(9, updatedDrugValues.getDateCreated());
+                    stmt.setLong(10, updatedDrugValues.getActive());
+                    stmt.setLong(11, nowValue);
+                    stmt.setInt(12, updatedDrugValues.getDrugId());
+
                     int result = stmt.executeUpdate();
                     if (result == 1) {
                         logger.info("Updated drug entry w/ id " + updatedDrugValues.getDrugId());

@@ -342,7 +342,7 @@ public class DBConstants {
 
     public static final String TREATMENT_TYPE = "treatment_type";
     public static final String CHEMOTHERAPY = "chemotherapy";
-    public static final String DATE_ADDED = "date_created";
+    public static final String DATE_CREATED = "date_created";
     public static final String ACTIVE = "active";
     public static final String DATE_UPDATED = "date_updated";
 
