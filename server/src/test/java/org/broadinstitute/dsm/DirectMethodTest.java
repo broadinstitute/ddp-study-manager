@@ -622,7 +622,6 @@ public class DirectMethodTest extends TestHelper {
         // DSM will need a dupe-checking method anyway for edits/additions, so this test will use it too
     }
 
-
     @Test
     public void drugListingsPATCH() throws Exception {
         String jwtDdpSecret = cfg.hasPath("portal.jwtDdpSecret") ? cfg.getString("portal.jwtDdpSecret") : null;
@@ -630,9 +629,11 @@ public class DirectMethodTest extends TestHelper {
         Drug sampleDrug = new Drug(9, "ABARELIX (PLENAXIS)","ABARELIX", "PLENAXIS",	"ABARELIX", "R",0,"H","N",528119063, 1, null);
         Drug.updateDrugListing(sampleDrug);
 
-        // @TODO: grab the record from the database (can we do that from here?) to check that the date_updated matches 'nowValue' above
+        // @TODO: come back and add specific field check, then put the field back
+        // check that 'date_updated' value for this drug is now
+        Long nowValue = System.currentTimeMillis()/1000; //(divide by 1000 to match epoch)
+        Assert.assertEquals(nowValue.toString(), DBTestUtil.getStringFromQuery("select date_updated from drug_list where drug_id = 9", null, "date_updated"));
     }
-
 
 
     @Test
