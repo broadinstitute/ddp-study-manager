@@ -608,7 +608,7 @@ public class DirectMethodTest extends TestHelper {
 
     //  (for endpoint that returns list of full drug objects)
     @Test
-    public void drugListEntriesEndpoint() {
+    public void drugListEntriesGET() {
 
         List<Drug> drugList = Drug.getDrugListings();
         int drugList_size = drugList.size();
@@ -627,11 +627,10 @@ public class DirectMethodTest extends TestHelper {
     public void drugListingsPATCH() throws Exception {
         String jwtDdpSecret = cfg.hasPath("portal.jwtDdpSecret") ? cfg.getString("portal.jwtDdpSecret") : null;
         Assert.assertTrue(StringUtils.isNotBlank(jwtDdpSecret));
-        Drug sampleDrug = new Drug (3000, "testDRUG", "ibuprophen", "Motrin", "A", "Y", 1, "T", "C", 1528119063, 1, 1528119063);
-
+        Drug sampleDrug = new Drug(9, "ABARELIX (PLENAXIS)","ABARELIX", "PLENAXIS",	"ABARELIX", "R",0,"H","N",528119063, 1, null);
         Drug.updateDrugListing(sampleDrug);
 
-        // @TODO: in progress, error so far
+        // @TODO: grab the record from the database (can we do that from here?) to check that the date_updated matches 'nowValue' above
     }
 
 
