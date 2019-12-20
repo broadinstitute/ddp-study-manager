@@ -3,8 +3,6 @@ package org.broadinstitute.dsm;
 import com.google.gson.JsonObject;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.util.GoogleBucket;
 import org.broadinstitute.dsm.db.*;
@@ -29,7 +27,6 @@ import java.io.FileInputStream;
 import java.util.*;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
-import static org.junit.Assert.assertEquals;
 
 public class DirectMethodTest extends TestHelper {
 
@@ -638,7 +635,7 @@ public class DirectMethodTest extends TestHelper {
         String databaseValueString  = DBTestUtil.getStringFromQuery("select date_updated from drug_list where drug_id = 9", null, "date_updated");
         Long databaseValueLong = Long.valueOf(databaseValueString)/10;
         Assert.assertEquals(nowValueShortened, databaseValueLong);
-        
+
         // Then put the value back to original value
         DBTestUtil.executeQuery("UPDATE drug_list set chemo_type = 'R' where drug_id = 9");
     }
