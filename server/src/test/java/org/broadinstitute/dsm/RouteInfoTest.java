@@ -122,7 +122,7 @@ public class RouteInfoTest extends TestHelper {
     private String constructEscapedAdditionalValues(@NonNull List<String> names, @NonNull List<String> values) {
         String additionalValues = constructValueForAdditionalValues(names, values);
         String escapedPart1 = additionalValues.replaceAll("\\\"", "\\\\\"");
-        return "\"nameValue\":{\"name\":\"additionalValues\",\"value\":\"" + escapedPart1 + "\"}";
+        return "\"nameValue\":{\"name\":\"oD.additionalValues\",\"value\":\"" + escapedPart1 + "\"}";
     }
 
     @Test
@@ -263,7 +263,7 @@ public class RouteInfoTest extends TestHelper {
         String oncHistoryId = addOncHistoryDetails(participantId);
         String testReceivedDate = "2019-03-11";
 
-        changeOncHistoryValue(oncHistoryId, participantId, "t.tissueReceived", testReceivedDate, "tissue_received");
+        changeOncHistoryValue(oncHistoryId, participantId, "oD.tissueReceived", testReceivedDate, "tissue_received");
         String request = getTestOncHistoryInfo("request", oncHistoryId);
         Assert.assertNotNull(request);
         Assert.assertEquals(request, "received");
@@ -294,7 +294,7 @@ public class RouteInfoTest extends TestHelper {
         String testValue = "21";
 
         String json =
-                "{\"id\":\"" + tissueId + "\",\"parentId\":\"" + oncHistoryId + "\",\"parent\":\"oncHistoryDetailId\",\"user\":\"ptaheri@broadinstitute.org\",\"nameValue\":{\"name\":\"additionalValues\",\"value\":\"{\\\"" + name.get(0) + "\\\":\\\"" + testValue + "\\\"}\"}}";
+                "{\"id\":\"" + tissueId + "\",\"parentId\":\"" + oncHistoryId + "\",\"parent\":\"oncHistoryDetailId\",\"user\":\"ptaheri@broadinstitute.org\",\"nameValue\":{\"name\":\"t.additionalValues\",\"value\":\"{\\\"" + name.get(0) + "\\\":\\\"" + testValue + "\\\"}\"}}";
         HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/" + "patch"), json, testUtil.buildAuthHeaders()).returnResponse();
 
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
