@@ -15,6 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
@@ -142,6 +143,12 @@ public class DDPRequestRouteTest extends TestHelper {
 
                             logger.info("result of ddp_kit_request with name and address of participants:");
                             int x = 0;
+                            kitRequestList.sort(new Comparator<KitRequestShipping>() {
+                                @Override
+                                public int compare(KitRequestShipping o1, KitRequestShipping o2) {
+                                    return Integer.parseInt(o1.getDsmKitId()) - Integer.parseInt(o2.getDsmKitId());
+                                }
+                            });
                             for (KitRequestShipping kit : kitRequestList) {
                                 Assert.assertEquals(kit.getParticipantId(), kitRequestTestList.get(x).getParticipantId());
                                 x++;

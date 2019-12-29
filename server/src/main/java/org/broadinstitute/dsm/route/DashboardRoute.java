@@ -102,8 +102,7 @@ public class DashboardRoute extends RequestHandler {
                 return new Result(500, UserErrorMessages.NO_RIGHTS);
             }
         }
-        catch (
-                Exception e) {
+        catch (Exception e) {
             logger.error("Couldn't get dashboard information ", e);
             return new Result(500, UserErrorMessages.CONTACT_DEVELOPER);
         }

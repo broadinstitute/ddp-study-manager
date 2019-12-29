@@ -339,6 +339,7 @@ public class KitRequestShipping extends KitRequest {
                         wholeList.addAll(kitRequestList);
                     }
                 }
+
                 return wholeList;
             }
         }
@@ -347,6 +348,7 @@ public class KitRequestShipping extends KitRequest {
         for (List<KitRequestShipping> kitRequestList : kits) {
             wholeList.addAll(kitRequestList);
         }
+
         return wholeList;
     }
 
