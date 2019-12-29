@@ -53,6 +53,7 @@ export class ViewFilter {
       }
       parsedColumns = p;
     }
+    console.log(currentFilter);
 
     return new ViewFilter( currentFilter, json.filterName, parsedColumns, json.shared === "1" ? true : false, json.fDeleted, json.userId, json.id,
       json.parent, json.icon, json.quickFilterName, json.queryItems);

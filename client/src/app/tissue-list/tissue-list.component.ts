@@ -544,9 +544,10 @@ export class TissueListComponent implements OnInit {
         let filterText = Filter.getFilterText(filter, array, this.allAdditionalColumns);
         if (filterText != null && array === Statics.ES_ALIAS) {
           filterText["exactMatch"] = true;
-          filterText["parentName"] = "profile";
+          filterText["parentName"] = filter.participantColumn.object;
         }
         if (filterText != null) {
+          console.log(filterText);
           json.push(filterText);
         }
 
@@ -693,6 +694,7 @@ export class TissueListComponent implements OnInit {
         this.savedFilters = [];
         this.quickFilters = [];
         let jsonData = data;
+        console.log(jsonData);
         jsonData.forEach((val) => {
           let view: ViewFilter;
           view = ViewFilter.parseFilter(val, this.allColumns);

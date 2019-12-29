@@ -296,14 +296,17 @@ export class ParticipantListComponent implements OnInit {
           this.dataSources.delete("a");
         }
         if (jsonData.filters != null) {
+          console.log("299");
+          console.log(jsonData.filters);
           jsonData.filters.forEach((val) => {
             let view: ViewFilter = ViewFilter.parseFilter(val, this.sourceColumns);
+            console.log(view);
             if (val.userId.includes("System")) {
-              view = ViewFilter.parseFilter(val, this.sourceColumns);
+              // view = ViewFilter.parseFilter(val, this.sourceColumns);
               this.quickFilters.push(view);
             }
             else {
-              view = ViewFilter.parseFilter(val, this.sourceColumns);
+              // view = ViewFilter.parseFilter(val, this.sourceColumns);
               this.savedFilters.push(view);
             }
           });
@@ -356,6 +359,10 @@ export class ParticipantListComponent implements OnInit {
           return filter.filterName === this.role.getUserSetting().defaultParticipantFilter;
         });
       }
+      console.log(this.savedFilters);
+      console.log(defaultFilter);
+      console.log(this.role.getUserSetting().defaultParticipantFilter);
+
       if (defaultFilter != null && defaultFilter != undefined) {
         this.selectFilter(defaultFilter);
       }
@@ -396,6 +403,7 @@ export class ParticipantListComponent implements OnInit {
   }
 
   public selectFilter(viewFilter: ViewFilter) {
+    console.log(viewFilter.filters);
     this.loadingParticipants = localStorage.getItem(ComponentService.MENU_SELECTED_REALM);
     this.currentView = JSON.stringify(viewFilter);
     let filterName = null;
@@ -476,6 +484,7 @@ export class ParticipantListComponent implements OnInit {
       data => {
         this.savedFilters = [];
         let jsonData = data;
+        console.log(jsonData);
         jsonData.forEach((val) => {
           let view: ViewFilter;
           if (!val.userId.includes("System")) {
