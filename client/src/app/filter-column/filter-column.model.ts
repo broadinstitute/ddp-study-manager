@@ -2,6 +2,7 @@ import {ParticipantColumn} from "./models/column.model";
 import {NameValue} from "../utils/name-value.model";
 import {FieldSettings} from "../field-settings/field-settings.model";
 import {Value} from "../utils/value.model";
+import {Statics} from "../utils/statics";
 
 export class Filter {
 
@@ -215,7 +216,7 @@ export class Filter {
   constructor(public participantColumn: ParticipantColumn, public type: string, public options?: NameValue[], public filter2?: NameValue,
               public range?: boolean, public exactMatch?: boolean, public filter1?: NameValue,
               public selectedOptions?: any, public value1?: any, public value2?: any, public sortAsc?: boolean, public alwaysExact?: boolean,
-              public empty?: boolean, public notEmpty?: boolean, public singleOption?: boolean, public additionalType?: string) {
+              public empty?: boolean, public notEmpty?: boolean, public singleOption?: boolean, public additionalType?: string, public parentName?: string) {
     this.participantColumn = participantColumn;
     this.type = type;
     if (options != null) {
@@ -242,6 +243,7 @@ export class Filter {
     this.notEmpty = notEmpty;
     this.singleOption = singleOption;
     this.additionalType = additionalType;
+    this.parentName = parentName;
   }
 
   public getSelectedOptionsName(): Array<string> {
@@ -341,6 +343,7 @@ export class Filter {
     if (json.filters == undefined) {
       return null;
     }
+    console.log(json);
     let filters: Filter[] = [];
     for (let filter of json.filters) {
       if (allColumns[filter.participantColumn.tableAlias] != undefined) {
@@ -348,8 +351,10 @@ export class Filter {
           return f.participantColumn.tableAlias === filter.participantColumn.tableAlias && f.participantColumn.name === filter.participantColumn.name;
         });
         if (f != undefined) {
+          console.log(f);
           filter.type = f.type;
           filter.participantColumn = f.participantColumn;
+
           let selectedOptions = new Array();
           if (filter.selectedOptions != null && f.options != undefined) {
             for (let o of f.options) {
@@ -361,13 +366,14 @@ export class Filter {
             selectedOptions, (filter.filter1 == null || filter.filter1 == undefined) ? null : filter.filter1.value,
             (filter.filter2 == null || filter.filter2 == undefined) ? null : filter.filter2.value, null, f.alwaysExact, filter.empty,
             filter.notEmpty, f.singleOption, f.additionalType);
+          console.log(newFilter);
           filters.push(newFilter);
         }
         else {
           s = s + "" + filter.participantColumn.name + ", ";
         }
       }
-      else {//ES
+      else {
         for (let source of Object.keys(allColumns)) {
           let f = allColumns[source].find(f => {
             return f.participantColumn.object === filter.participantColumn.tableAlias && f.participantColumn.name === filter.participantColumn.name;
@@ -375,6 +381,7 @@ export class Filter {
           if (f != undefined) {
             filter.type = f.type;
             filter.participantColumn = f.participantColumn;
+            filter.parentName = f.participantColumn.object;
             let selectedOptions = new Array();
             if (filter.selectedOptions != null && f.options != undefined) {
               for (let o of f.options) {
@@ -398,6 +405,12 @@ export class Filter {
     if (s.length > 0) {
       s = "The following columns does not exist in this realm: " + s;
     }
+    for(let filter of filters){
+      if(filter.participantColumn.object !== undefined && filter.participantColumn.object !== null && filter.participantColumn.object !== ''){
+        filter.parentName = filter.participantColumn.object;
+      }
+    }
+    console.log(filters);
     return filters;
   }
 
@@ -497,6 +510,10 @@ export class Filter {
       else {
         return null;
       }
+    }
+    if (filterText != null && filter.participantColumn.tableAlias === Statics.ES_ALIAS) {
+      filterText["exactMatch"] = true;
+      filterText["parentName"] = filter.participantColumn.object;
     }
     return filterText;
   }

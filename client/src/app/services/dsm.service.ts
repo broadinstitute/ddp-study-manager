@@ -94,6 +94,8 @@ export class DSMService {
     map.push( {name: "userId", value: this.role.userID()} );
     map.push( {name: "userMail", value: this.role.userMail()} );
     map.push( {name: "defaultFilter", value: defaultFilter == true ? "1" : defaultFilter != null ? "0" : ""} );
+    console.log(map);
+    console.log(url);
     return this.http.patch( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
