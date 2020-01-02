@@ -53,18 +53,17 @@ export class DrugListingComponent implements OnInit {
     return this.role;
   }
 
-  // @TODO: Come back to this when we get to inline edit
   check(index: number) {
-    // if (this.drugList[index].defaultPage) {
-    //   for (var i = 0; i < this.drugList.length; i++) {
-    //     if (i != index) {
-    //       if (this.drugList[i].defaultPage) {
-    //         this.drugList[i].defaultPage = false;
-    //         this.drugList[i].changed = true;
-    //       }
-    //     }
-    //   }
-    // }
+    this.drugList[index].changed = true;
+
+    // change from inactive to active (check updated value and set object value)
+    if (this.drugList[index].active) {
+            this.drugList[index].active = 1;
+    }
+    // change from active to inactive
+    if (!this.drugList[index].active) {
+      this.drugList[index].active = 0;
+    }
     this.onChange(index);
   }
 
@@ -80,12 +79,6 @@ export class DrugListingComponent implements OnInit {
       null, null, 0, null, null, 0, 0);
     labelSetting.addedNew = true;
     this.drugList.push(labelSetting);
-  }
-
-  updateActiveFlag(index: number) {
-    this.drugList[index].deleted = true;
-    this.onChange(index);
-    this.saveDrugListings();
   }
 
   saveDrugListings() {

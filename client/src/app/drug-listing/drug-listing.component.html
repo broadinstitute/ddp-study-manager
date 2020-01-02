@@ -123,15 +123,16 @@
           <td>
               {{ drug.dateAdded*1000 | date }}
           </td>
+
+          <!--<td>-->
+            <!--<md-input-container  *ngIf="hasRole().allowedToEditDrugList()">-->
+              <!--<input mdInput type="text" [(ngModel)]="drug.active" (change)="onChange(i)" class="Width&#45;&#45;100" maxlength="100">-->
+            <!--</md-input-container>-->
+            <!--<div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.active}}</div>-->
+          <!--</td>-->
+
           <td>
             <md-checkbox color="primary" *ngIf="hasRole().allowedToEditDrugList()" [checked]="drug.active" (change)="drug.active = $event.checked; check(i)" disableRipple></md-checkbox>
-          </td>
-          <td>
-            <button md-mini-fab color="warn"
-                    *ngIf="hasRole().allowedToEditDrugList()"
-                    (click)="updateActiveFlag(i)">
-              <i class="fas fa-trash-alt fa-lg"></i>
-            </button>
           </td>
         </tr>
       </ng-container>
