@@ -92,9 +92,9 @@
           </td>
           <td>
             <md-input-container  *ngIf="hasRole().allowedToEditDrugList()">
-              <input mdInput type="text" [(ngModel)]="drug.chemocat2" (change)="onChange(i)" class="Width--100" maxlength="100">
+              <input mdInput type="text" [(ngModel)]="drug.chemocat" (change)="onChange(i)" class="Width--100" maxlength="100">
             </md-input-container>
-            <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.chemocat2}}</div>
+            <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.chemocat}}</div>
           </td>
           <td>
             <md-input-container  *ngIf="hasRole().allowedToEditDrugList()">

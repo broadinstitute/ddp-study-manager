@@ -9,13 +9,13 @@ export class DrugListing {
   notUniqueError = false;
 
   constructor(public drugId: string, public genericName: string, public brandName: string, public displayName: string,
-              public chemocat2: string, public chemoType: string, public studyDrug: number, public treatmentType: string,
+              public chemocat: string, public chemoType: string, public studyDrug: number, public treatmentType: string,
               public chemotherapy: string, public active: number, public dateAdded: number) {
     this.drugId = drugId;
     this.genericName = genericName;
     this.brandName = brandName;
     this.displayName = displayName;
-    this.chemocat2 = chemocat2;
+    this.chemocat = chemocat;
     this.chemoType = chemoType;
     this.studyDrug = studyDrug;
     this.treatmentType = treatmentType;
@@ -25,7 +25,7 @@ export class DrugListing {
   }
 
   static parse(json): DrugListing {
-    return new DrugListing(json.drugId, json.genericName, json.brandName, json.displayName, json.chemocat2, json.chemoType,
+    return new DrugListing(json.drugId, json.genericName, json.brandName, json.displayName, json.chemocat, json.chemoType,
       json.studyDrug, json.treatmentType, json.chemotherapy, json.active, json.dateAdded);
   }
 
