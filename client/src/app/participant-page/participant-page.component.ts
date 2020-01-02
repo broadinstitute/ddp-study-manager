@@ -195,7 +195,7 @@ export class ParticipantPageComponent implements OnInit {
               this.auth.logout();
             }
             this.loadingParticipantPage = false;
-            this.additionalMessage = "Error - Saving loading participant information\nPlease contact your DSM developer";
+            this.additionalMessage = "Error - Loading participant institution information\nPlease contact your DSM developer";
           }
         );
       }
