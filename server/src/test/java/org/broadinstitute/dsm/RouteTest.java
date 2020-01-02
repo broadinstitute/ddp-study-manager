@@ -1332,7 +1332,7 @@ public class RouteTest extends TestHelper {
         assertEquals(200, response.getStatusLine().getStatusCode());
     }
 
-    // (for url showing list of FULL DRUG OBJECTS)
+    // (GET request for list of FULL DRUG OBJECTS)
     @Test
     public void drugListingsGET() throws Exception {
         String jwtDdpSecret = cfg.hasPath("portal.jwtDdpSecret") ? cfg.getString("portal.jwtDdpSecret") : null;
@@ -1342,15 +1342,18 @@ public class RouteTest extends TestHelper {
         assertEquals(200, response.getStatusLine().getStatusCode());
     }
 
-    // (for url showing list of FULL DRUG OBJECTS)
+    // (PATCH request list of FULL DRUG OBJECTS)
     @Test
     public void drugListingsPATCH() throws Exception {
         String jwtDdpSecret = cfg.hasPath("portal.jwtDdpSecret") ? cfg.getString("portal.jwtDdpSecret") : null;
         Assert.assertTrue(StringUtils.isNotBlank(jwtDdpSecret));
+
+        // @TODO: decide which approach to use (send Drug object, or json)
         Drug sampleDrug = new Drug(9, "ABARELIX (PLENAXIS)","ABARELIX", "PLENAXIS",	"ABARELIX", "R",0,"H","N",528119063, 1, null);
+        String json = "[\"drugId\": 9, \"displayName\": \"ABARELIX (PLENAXIS)\", \"brandName\": \"PLENAXIS\", \"chemocat\": \"ABARELIX\", \"chemoType\": \"R\", \"studyDrug\": 0, \"treatmentType\": \"H\", \"chemotherapy\": \"N\", \"dateCreated\": 528119063, \"active\": 1, \"dateUpdated\": null}]";
 
         HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/druglistEntries"), sampleDrug, testUtil.buildAuthHeaders()).returnResponse();
-        //assertEquals(200, response.getStatusLine().getStatusCode()); // So far this fails: gets a 404, and it's not doing the update
+        assertEquals(200, response.getStatusLine().getStatusCode()); // So far this fails: 500
     }
 
     @Test
