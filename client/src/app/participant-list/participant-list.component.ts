@@ -574,7 +574,7 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  openParticipant(participant: Participant, colSource: string, id?) {
+  openParticipant(participant: Participant, colSource: string) {
     if (participant != null) {
       let tabAnchor = "Survey Data";
       if (colSource === "m" || participant.data.activities == null) {
