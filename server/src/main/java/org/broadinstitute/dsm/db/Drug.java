@@ -33,12 +33,12 @@ public class Drug {
     private String treatmentType;
     private String chemotherapy;
     private long dateCreated; // note: Postgres bigint (in database) is the same as java long
-    private long active;
+    private int active;
     private Long dateUpdated = null; // regular long can't be null
 
 
     public Drug(int drugId, String displayName, String genericName, String brandName, String chemocat, String chemoType,
-                int studyDrug, String treatmentType, String chemotherapy, long dateCreated, long active, Long dateUpdated) {
+                int studyDrug, String treatmentType, String chemotherapy, long dateCreated, int active, Long dateUpdated) {
         this.drugId = drugId;
         this.displayName = displayName;
         this.genericName = genericName;
