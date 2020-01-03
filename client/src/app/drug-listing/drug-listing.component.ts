@@ -74,6 +74,7 @@ export class DrugListingComponent implements OnInit {
     }
   }
 
+  // @TODO: will come back here when we add new drugs
   addDrugListing() {
     let labelSetting: DrugListing = new DrugListing(null, null, null, null,
       null, null, 0, null, null, 0, 0);
@@ -85,14 +86,15 @@ export class DrugListingComponent implements OnInit {
     let foundError = false;
     let cleanedDrugs: Array<DrugListing> = DrugListing.removeUnchangedDrugListings(this.drugList);
     for (let drug of cleanedDrugs) {
+      let capitalizedDisplayName = drug.displayName.toUpperCase();
+      drug.displayName = capitalizedDisplayName;
       if (drug.notUniqueError || drug.chemoTypeLengthError || drug.treatmentTypeLengthError || drug.chemotherapyLengthError || drug.notCorrectTypeError) {
         foundError = true;
       }
     }
     if (foundError) {
       this.additionalMessage = 'Please fix errors first!';
-    }
-    else {
+    } else {
       this.loading = true;
       this.dsmService.saveDrugListings(JSON.stringify(cleanedDrugs)).subscribe(
         data => {
