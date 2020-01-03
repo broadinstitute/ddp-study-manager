@@ -85,7 +85,7 @@ export class DrugListingComponent implements OnInit {
     let foundError = false;
     let cleanedDrugs: Array<DrugListing> = DrugListing.removeUnchangedDrugListings(this.drugList);
     for (let drug of cleanedDrugs) {
-      if (drug.notUniqueError || drug.chemoTypeLengthError || drug.treatmentTypeLengthError || drug.chemotherapyLengthError) {
+      if (drug.notUniqueError || drug.chemoTypeLengthError || drug.treatmentTypeLengthError || drug.chemotherapyLengthError || drug.notCorrectTypeError) {
         foundError = true;
       }
     }
@@ -124,15 +124,16 @@ export class DrugListingComponent implements OnInit {
     return null;
   }
 
+  // Validate Study Drug field (should be numeric)
   checkValueType(index: number) {
     this.drugList[index].notCorrectTypeError = false;
-    if (this.drugList[index].displayName.length){
+    if (isNaN(Number(this.drugList[index].studyDrug))) {
       this.drugList[index].notCorrectTypeError = true;
     }
     return null;
   }
 
-  // for use with single-character field: Chemo Type, Treatment Type, Chemotherapy
+  // Validate single-character fields: Chemo Type, Treatment Type, Chemotherapy
   checkValueLength(index: number) {
     this.drugList[index].chemoTypeLengthError = false;
     this.drugList[index].treatmentTypeLengthError = false;
