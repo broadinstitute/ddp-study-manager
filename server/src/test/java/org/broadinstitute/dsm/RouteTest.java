@@ -1350,7 +1350,7 @@ public class RouteTest extends TestHelper {
 
         // @TODO: decide which approach to use (send Drug object, or json)
         Drug sampleDrug = new Drug(9, "ABARELIX (PLENAXIS)","ABARELIX", "PLENAXIS",	"ABARELIX", "R",0,"H","N",528119063, 1, null);
-        String json = "[\"drugId\": 9, \"displayName\": \"ABARELIX (PLENAXIS)\", \"brandName\": \"PLENAXIS\", \"chemocat\": \"ABARELIX\", \"chemoType\": \"R\", \"studyDrug\": 0, \"treatmentType\": \"H\", \"chemotherapy\": \"N\", \"dateCreated\": 528119063, \"active\": 1, \"dateUpdated\": null}]";
+        //String json = "[\"drugId\": 9, \"displayName\": \"ABARELIX (PLENAXIS)\", \"brandName\": \"PLENAXIS\", \"chemocat\": \"ABARELIX\", \"chemoType\": \"R\", \"studyDrug\": 0, \"treatmentType\": \"H\", \"chemotherapy\": \"N\", \"dateCreated\": 528119063, \"active\": 1, \"dateUpdated\": null}]";
 
         HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/druglistEntries"), sampleDrug, testUtil.buildAuthHeaders()).returnResponse();
         assertEquals(200, response.getStatusLine().getStatusCode()); // So far this fails: 500
