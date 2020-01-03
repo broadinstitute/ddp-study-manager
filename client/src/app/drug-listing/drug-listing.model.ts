@@ -7,6 +7,11 @@ export class DrugListing {
   deleted = false;
 
   notUniqueError = false;
+  notCorrectTypeError = false;
+  chemoTypeLengthError = false;
+  treatmentTypeLengthError = false;
+  chemotherapyLengthError = false;
+
 
   constructor(public drugId: string, public genericName: string, public brandName: string, public displayName: string,
               public chemocat: string, public chemoType: string, public studyDrug: number, public treatmentType: string,

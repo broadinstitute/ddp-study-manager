@@ -85,7 +85,7 @@ export class DrugListingComponent implements OnInit {
     let foundError = false;
     let cleanedDrugs: Array<DrugListing> = DrugListing.removeUnchangedDrugListings(this.drugList);
     for (let drug of cleanedDrugs) {
-      if (drug.notUniqueError) {
+      if (drug.notUniqueError || drug.chemoTypeLengthError || drug.treatmentTypeLengthError || drug.chemotherapyLengthError) {
         foundError = true;
       }
     }
@@ -120,6 +120,32 @@ export class DrugListingComponent implements OnInit {
           this.drugList[index].notUniqueError = true;
         }
       }
+    }
+    return null;
+  }
+
+  checkValueType(index: number) {
+    this.drugList[index].notCorrectTypeError = false;
+    if (this.drugList[index].displayName.length){
+      this.drugList[index].notCorrectTypeError = true;
+    }
+    return null;
+  }
+
+  // for use with single-character field: Chemo Type, Treatment Type, Chemotherapy
+  checkValueLength(index: number) {
+    this.drugList[index].chemoTypeLengthError = false;
+    this.drugList[index].treatmentTypeLengthError = false;
+    this.drugList[index].chemotherapyLengthError = false;
+
+    if (this.drugList[index].chemoType.length > 1 ) {
+      this.drugList[index].chemoTypeLengthError = true;
+    }
+    if (this.drugList[index].treatmentType.length > 1 ) {
+      this.drugList[index].treatmentTypeLengthError = true;
+    }
+    if (this.drugList[index].chemotherapy.length > 1 ) {
+      this.drugList[index].chemotherapyLengthError = true;
     }
     return null;
   }

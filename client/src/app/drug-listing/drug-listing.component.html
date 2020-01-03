@@ -72,7 +72,7 @@
           <td>
             <md-input-container class="Input" *ngIf="hasRole().allowedToEditDrugList()">
               <input mdInput class="Input--Min-WIDTH" maxlength="45"
-                     [(ngModel)]="drug.displayName" (change)="checkDisplayName(i); onChange(i)">
+                     [(ngModel)]="drug.displayName" (change)="checkDisplayName(i); checkValueType(i); onChange(i)">
               <md-hint class="ErrorMessageForm" *ngIf="drug.notUniqueError">Name not unique</md-hint>
             </md-input-container>
             <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.displayName}}</div>
@@ -98,7 +98,8 @@
           </td>
           <td>
             <md-input-container  *ngIf="hasRole().allowedToEditDrugList()">
-              <input mdInput type="text" [(ngModel)]="drug.chemoType" (change)="onChange(i)" class="Width--100" maxlength="100">
+              <input mdInput type="text" [(ngModel)]="drug.chemoType" (change)="onChange(i); checkValueLength(i)" class="Width--100" maxlength="100">
+              <md-hint class="ErrorMessageForm" *ngIf="drug.chemoTypeLengthError">Value too long</md-hint>
             </md-input-container>
             <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.chemoType}}</div>
           </td>
@@ -110,13 +111,15 @@
           </td>
           <td>
             <md-input-container  *ngIf="hasRole().allowedToEditDrugList()">
-              <input mdInput type="text" [(ngModel)]="drug.treatmentType" (change)="onChange(i)" class="Width--100" maxlength="100">
+              <input mdInput type="text" [(ngModel)]="drug.treatmentType" (change)="onChange(i); checkValueLength(i)" class="Width--100" maxlength="100">
+              <md-hint class="ErrorMessageForm" *ngIf="drug.treatmentTypeLengthError">Value too long</md-hint>
             </md-input-container>
             <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.treatmentType}}</div>
           </td>
           <td>
             <md-input-container  *ngIf="hasRole().allowedToEditDrugList()">
-              <input mdInput type="text" [(ngModel)]="drug.chemotherapy" (change)="onChange(i)" class="Width--100" maxlength="100">
+              <input mdInput type="text" [(ngModel)]="drug.chemotherapy" (change)="onChange(i); checkValueLength(i)" class="Width--100" maxlength="100">
+              <md-hint class="ErrorMessageForm" *ngIf="drug.chemotherapyLengthError">Value too long</md-hint>
             </md-input-container>
             <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.chemotherapy}}</div>
           </td>
