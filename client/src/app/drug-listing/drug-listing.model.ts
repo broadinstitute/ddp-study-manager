@@ -30,7 +30,7 @@ export class DrugListing {
   }
 
   // Submit button gives the full list of drugs from the page, so we want to trim down to only the subset that user updated
-  // cleanedDrugList will be an array of DrugList components -- @TODO: consider whether you should rename DrugList to DrugListing instead
+  // cleanedDrugList will be an array of DrugList components
   static removeUnchangedDrugListings(array: Array<DrugListing>): Array<DrugListing> {
     let cleanedDrugList: Array<DrugListing> = [];
     for (let drug of array) {
