@@ -349,7 +349,7 @@ export class TissueListComponent implements OnInit {
 
       this.dsmService.applyFilter(this.defaultFilter, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, null).subscribe(
         data => {
-          if (this.defaultFilter.filters != null)
+          if (this.defaultFilter != null && this.defaultFilter!= undefined && this.defaultFilter.filters != null)
           for (let filter of this.defaultFilter.filters){
             for ( let f of this.allColumns[filter.participantColumn.tableAlias]) {
               if (f.participantColumn.name === filter.participantColumn.name) {
@@ -811,7 +811,7 @@ export class TissueListComponent implements OnInit {
     let filters: Filter[];
     this.dsmService.applyFilter(savedFilter, this.realm, this.parent, null).subscribe(
       data => {
-        if(savedFilter.filters != null)
+        if (savedFilter != null && savedFilter.filters != null)
         for (let filter of savedFilter.filters){
           for ( let f of this.allColumns[filter.participantColumn.tableAlias]) {
             if (f.participantColumn.name === filter.participantColumn.name) {
@@ -883,7 +883,7 @@ export class TissueListComponent implements OnInit {
     this.dsmService.applyFilter(quickFilter, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, null).subscribe(
       data => {
         console.log(quickFilter);
-        if (quickFilter.filters != null)
+        if (quickFilter!= null && quickFilter.filters != null)
         for (let filter of quickFilter.filters){
           for ( let f of this.allColumns[filter.participantColumn.tableAlias]) {
             if (f.participantColumn.name === filter.participantColumn.name) {
@@ -1414,7 +1414,6 @@ export class TissueListComponent implements OnInit {
   }
 
   private filterProfileForNoESRelams(viewFilter: ViewFilter) {
-    //TODO - can be changed later to all using the same - after all studies are migrated!
     //check if it was a tableAlias data filter -> filter client side
     console.log(viewFilter);
     if (viewFilter != null && viewFilter.filters != null && viewFilter.filters.length != 0) {

@@ -418,7 +418,7 @@ export class ParticipantListComponent implements OnInit {
     this.dsmService.applyFilter(viewFilter, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, null).subscribe(
       data => {
         if (data != null) {
-          if (viewFilter.filters != null){
+          if (viewFilter!= null && viewFilter.filters != null){
           for (let filter of viewFilter.filters){
             for ( let f of this.sourceColumns[filter.participantColumn.tableAlias]) {
               if (f.participantColumn.name === filter.participantColumn.name) {
@@ -440,7 +440,9 @@ export class ParticipantListComponent implements OnInit {
             this.participantList.push(participant);
           });
           this.copyParticipantList = this.participantList;
-          this.filterQuery = viewFilter.queryItems;
+          if (viewFilter != null) {
+            this.filterQuery = viewFilter.queryItems;
+          }
           console.log(this.participantList);
           if (viewFilter != null) {
             viewFilter.selected = true;
