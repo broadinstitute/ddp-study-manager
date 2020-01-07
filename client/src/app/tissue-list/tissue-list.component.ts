@@ -158,7 +158,7 @@ export class TissueListComponent implements OnInit {
     this.textQuery = "";
   }
 
-  private setAllColumns() { //TODO Pegah-addressed - think about how often you load the additional columns...
+  private setAllColumns() {
     for (let source of this.dataSources) {
       this.allColumns[source] = new Array<Filter>();
       this.selectedColumns[source] = new Array<Filter>();
@@ -594,7 +594,6 @@ export class TissueListComponent implements OnInit {
 
         });
         if (!this.hasESData) {
-          //todo pegahPegah here
           //check if it was a tableAlias data filter -> filter client side
           this.filterProfileForNoESRelams(null);
         }
@@ -613,7 +612,6 @@ export class TissueListComponent implements OnInit {
     );
 
     if (!this.hasESData) {
-      //todo pegahPegah
       //check if it was a tableAlias data filter -> filter client side
       this.filterProfileForNoESRelams(null);
     }
