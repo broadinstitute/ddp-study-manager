@@ -128,13 +128,7 @@
 
     </dependencies>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>broad.artifactory</id>
-            <name>artifactory-snapshots</name>
-            <url>http://artifactory.broadinstitute.org/artifactory/libs-release-local</url>
-        </snapshotRepository>
-    </distributionManagement>
+
 
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>
