@@ -10,12 +10,10 @@ export class TissueList {
   }
 
   static parse(json): TissueList {
-    //    console.log(json);
     let oncHistory: OncHistoryDetail = OncHistoryDetail.parse(json.oncHistoryDetails);
     let tissue: Tissue;
     if (json.tissue != null && json.tissue != undefined) {
       tissue = Tissue.parse(json.tissue);
-      //      console.log(tissue.additionalValues);
     }
     return new TissueList(oncHistory, tissue, json.ddpParticipantId);
   }

@@ -21,7 +21,7 @@ import {FieldSettings} from "../field-settings/field-settings.model";
 @Component({
   selector: "app-tissue-view-page",
   templateUrl: "./tissue-list.component.html",
-  styleUrls: ["./tissue-list.component.css"]
+  styleUrls: ["./tissue-list.component.css"],
 })
 export class TissueListComponent implements OnInit {
 
@@ -79,7 +79,7 @@ export class TissueListComponent implements OnInit {
   dataSourceNames = {
     "data": "Participant",
     "oD": "Onc History",
-    "t": "Tissue"
+    "t": "Tissue",
   };
 
   selectedFilterName = "";
@@ -89,7 +89,7 @@ export class TissueListComponent implements OnInit {
   destructionPolicyColumns = {
     "data": [Filter.SHORT_ID, Filter.FIRST_NAME, Filter.LAST_NAME, Filter.FACILITY_PHONE, Filter.FACILITY_FAX],
     "oD": this.defaultOncHistoryColumns.concat([Filter.FACILITY_PHONE, Filter.FACILITY_FAX]),
-    "t": []
+    "t": [],
   };
   savedFilters: ViewFilter[] = [];
   quickFilters: ViewFilter[] = [];
@@ -171,7 +171,6 @@ export class TissueListComponent implements OnInit {
     for (let col of this.allColumns[Statics.ONCDETAIL_ALIAS]) {
       this.allFieldNames.add(col.participantColumn.tableAlias + Statics.DELIMITER_ALIAS + col.participantColumn.name);
     }
-    console.log(this.allColumns);
   }
 
   private checkRight(defaultFilter: boolean) {
@@ -186,7 +185,6 @@ export class TissueListComponent implements OnInit {
           if (localStorage.getItem(ComponentService.MENU_SELECTED_REALM) === val) {
             allowedToSeeInformation = true;
             this.defaultFilterName = this.role.getUserSetting().defaultTissueFilter;
-            console.log(this.defaultFilterName);
             this.clearFilters();
             this.setAllColumns();
             this.getDefaultFilterName();
@@ -200,7 +198,7 @@ export class TissueListComponent implements OnInit {
       },
       err => {
         return null;
-      }
+      },
     );
   }
 
@@ -237,14 +235,12 @@ export class TissueListComponent implements OnInit {
   private getFieldSettings() {
     this.dsmService.getFieldSettings(localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(
       data => {
-        console.log(data);
         this.allAdditionalColumns = {};
         this.settings = {};
         for (let source of this.dataSources) {
           this.allColumns[source] = [];
         }
         Object.keys(this.dataSourceNames).forEach((key) => {
-          console.log(key);
           if (data[key] != undefined) {
             for (let fieldSetting of data[key]) {
               if (this.settings[key] == undefined || this.settings[key] == null) {
@@ -279,7 +275,8 @@ export class TissueListComponent implements OnInit {
         }
       },
       err => {
-      }
+        this.errorMessage = "Could not getting the field settings for this realm. Please contact your DSM developer\n " + err;
+      },
     );
   }
 
@@ -307,7 +304,7 @@ export class TissueListComponent implements OnInit {
       return false;
     }
     for (let c of this.allAdditionalColumns[tableAlias]) {
-      if (c.participantColumn.name == columnName) {
+      if (c.participantColumn.name === columnName) {
         return true;
       }
     }
@@ -320,7 +317,6 @@ export class TissueListComponent implements OnInit {
       this.selectedColumns[Statics.TISSUE_ALIAS] = new Array().concat(this.defaultTissueColumns);
       this.selectedColumns[Statics.ONCDETAIL_ALIAS] = new Array().concat(this.defaultOncHistoryColumns);
       this.selectedColumns[Statics.ES_ALIAS] = new Array().concat(this.defaultESColumns);
-      //      console.log(this.selectedColumns);
     }
     else {
       if (this.defaultFilter == undefined) {
@@ -331,10 +327,6 @@ export class TissueListComponent implements OnInit {
   }
 
   private getTissueListData(defaultFilter: boolean) {
-    console.log(defaultFilter);
-    console.log(this.defaultFilter);
-    console.log(this.defaultFilterName);
-    console.log(this.quickFilters);
     this.loading = true;
     if (this.defaultFilter == undefined && this.defaultFilterName !== undefined && this.defaultFilterName !== "") {
       this.defaultFilter = this.savedFilters.find(filter => filter.filterName === this.defaultFilterName);
@@ -342,27 +334,23 @@ export class TissueListComponent implements OnInit {
         this.defaultFilter = this.quickFilters.find(filter => filter.filterName === this.defaultFilterName);
       }
     }
-    console.log(this.defaultFilter);
     if (defaultFilter && this.defaultFilter != undefined) {
-      console.log(this.defaultFilter);
-      console.log(this.defaultFilterName);
-
       this.dsmService.applyFilter(this.defaultFilter, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, null).subscribe(
         data => {
-          if (this.defaultFilter != null && this.defaultFilter!= undefined && this.defaultFilter.filters != null)
-          for (let filter of this.defaultFilter.filters){
-            for ( let f of this.allColumns[filter.participantColumn.tableAlias]) {
-              if (f.participantColumn.name === filter.participantColumn.name) {
-                let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
-                if (index !== -1) {
-                  this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
-                  this.allColumns[filter.participantColumn.tableAlias].push(filter);
+          if (this.defaultFilter != null && this.defaultFilter != undefined && this.defaultFilter.filters != null) {
+            for (let filter of this.defaultFilter.filters) {
+              for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
+                if (f.participantColumn.name === filter.participantColumn.name) {
+                  let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
+                  if (index !== -1) {
+                    this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
+                    this.allColumns[filter.participantColumn.tableAlias].push(filter);
+                  }
                 }
               }
             }
           }
           let date = new Date();
-          //        console.log(data);
           this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
           let jsonData: any[];
           this.tissueListWrappers = [];
@@ -374,7 +362,6 @@ export class TissueListComponent implements OnInit {
             this.tissueListWrappers.push(tissueListWrapper);
           });
           this.currentFilter = this.defaultFilter.filters;
-          console.log(this.defaultFilter);
           this.selectedFilterName = this.defaultFilter.filterName;
           this.selectedColumns = this.defaultFilter.columns;
           if (this.defaultFilter != null && this.defaultFilter.filters != null) {
@@ -389,11 +376,7 @@ export class TissueListComponent implements OnInit {
               this.selectedColumns[dataSource] = [];
             }
           }
-          console.log(this.tissueListWrappers);
           if (!this.hasESData) {
-            //TODO - can be changed later to all using the same - after all studies are migrated!
-            //check if it was a tableAlias data filter -> filter client side
-            console.log(this.defaultFilter);
             this.filterProfileForNoESRelams(this.defaultFilter);
           }
           for (let tissueList of this.tissueListWrappers) {
@@ -411,14 +394,13 @@ export class TissueListComponent implements OnInit {
           }
         },
         err => {
-
-        }
+          this.errorMessage = "Error getting tissue list. Please contact your DSM developer\n " + err;
+        },
       );
     }
     else {
       this.dsmService.filterData(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), null, this.parent, defaultFilter).subscribe(
         data => {
-          console.log(data);
           let date = new Date();
           this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
           let jsonData: any[];
@@ -441,7 +423,6 @@ export class TissueListComponent implements OnInit {
           }
 
 
-          //        console.log(this.oncHistories);
           if (!this.isDefaultFilter || this.defaultFilterName === undefined || this.defaultFilterName === null || this.defaultFilterName === "") {
             this.setDefaultColumns(false);
           }
@@ -451,12 +432,7 @@ export class TissueListComponent implements OnInit {
             }
             else {
               this.selectedColumns = this.defaultFilter.columns;
-              console.log(this.selectedColumns);
-              console.log(this.defaultFilter);
               if (!this.hasESData) {
-                //TODO - can be changed later to all using the same - after all studies are migrated!
-                //check if it was a tableAlias data filter -> filter client side
-                console.log(this.defaultFilter);
                 this.filterProfileForNoESRelams(this.defaultFilter);
               }
               for (let tissueList of this.tissueListWrappers) {
@@ -465,7 +441,6 @@ export class TissueListComponent implements OnInit {
               for (let key of Object.keys(this.tissueListsMap)) {
                 this.tissueListOncHistories.push(this.tissueListsMap[key]);
               }
-              console.log(this.tissueListOncHistories.length);
 
             }
           }
@@ -477,7 +452,7 @@ export class TissueListComponent implements OnInit {
             this.auth.logout();
           }
           this.errorMessage = "Error - Loading Tissues for tissue view, Please contact your DSM developer\n " + err;
-        }
+        },
       );
     }
   }
@@ -559,7 +534,6 @@ export class TissueListComponent implements OnInit {
           filterText["parentName"] = filter.participantColumn.object;
         }
         if (filterText != null) {
-          console.log(filterText);
           json.push(filterText);
         }
 
@@ -570,9 +544,8 @@ export class TissueListComponent implements OnInit {
     let data = {
       "filters": json,
       "parent": this.parent,
-      "quickFilterName": this.currentQuickFilterName
+      "quickFilterName": this.currentQuickFilterName,
     };
-    console.log(json);
     let jsonPatch = JSON.stringify(data);
     this.currentFilter = json;
     this.currentView = jsonPatch;
@@ -580,7 +553,6 @@ export class TissueListComponent implements OnInit {
       data => {
         this.loading = false;
         window.scrollTo(0, 0);
-        console.log(data);
         let date = new Date();
         this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
         let jsonData: any[];
@@ -603,12 +575,11 @@ export class TissueListComponent implements OnInit {
         for (let key of Object.keys(this.tissueListsMap)) {
           this.tissueListOncHistories.push(this.tissueListsMap[key]);
         }
-        //        console.log(this.tissueListOncHistories.length);
       },
       err => {
         this.loading = null;
         this.errorMessage = "Error - Loading Tissue List, Please contact your DSM developer\n " + err;
-      }
+      },
     );
 
     if (!this.hasESData) {
@@ -629,7 +600,6 @@ export class TissueListComponent implements OnInit {
     this.participant = participant;
     this.showTissue = true;
     this.tissueId = tissueId;
-    console.log(tissueId);
     let tissuesArray = [];
     for (let o of this.tissueListWrappers) {
       if (o.tissueList.oncHistoryDetails.oncHistoryDetailId === oncHis.oncHistoryDetailId) {
@@ -670,11 +640,12 @@ export class TissueListComponent implements OnInit {
       //      "sortParent": this.sortParent,
       "parent": this.parent,
       "quickFilterName": this.currentQuickFilterName,
-      "queryItems": this.filterQuery
+      "queryItems": this.filterQuery,
     };
     let jsonPatch = JSON.stringify(jsonData);
     this.currentView = jsonPatch;
-    this.dsmService.saveCurrentFilter(jsonPatch, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent).subscribe(data => {
+    this.dsmService.saveCurrentFilter(jsonPatch, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent).subscribe(
+      data => {
         let result = Result.parse(data);
         if (result.code === 500 && result.body != null) {
           this.newFilterModal = true;
@@ -691,7 +662,7 @@ export class TissueListComponent implements OnInit {
         }
       },
       err => {
-        //todo
+        this.errorMessage = "Error saving the filter. Please contact your DSM developer\n " + err;
       });
     this.showModal = false;
     this.newFilterModal = false;
@@ -700,15 +671,13 @@ export class TissueListComponent implements OnInit {
 
   getAllFilters(applyDefault: boolean) {
     this.dsmService.getFiltersForUserForRealm(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent).subscribe(data => {
-        //        console.log("**" + JSON.stringify(data, null, 2));
+        //        console.log("received: " + JSON.stringify(data, null, 2));
         this.savedFilters = [];
         this.quickFilters = [];
         let jsonData = data;
-        console.log(jsonData);
         jsonData.forEach((val) => {
           let view: ViewFilter;
           view = ViewFilter.parseFilter(val, this.allColumns);
-          //          console.log(view);
 
           if (val.userId.includes("System")) {
             this.quickFilters.push(view);
@@ -718,7 +687,6 @@ export class TissueListComponent implements OnInit {
           }
         });
         if (this.isDefaultFilter && applyDefault) {
-          //          console.log(this.defaultFilterName);
           this.selectedFilterName = this.defaultFilterName;
           this.defaultFilter = this.savedFilters.find(f => {
             return f.filterName === this.defaultFilterName;
@@ -728,12 +696,9 @@ export class TissueListComponent implements OnInit {
               return f.filterName === this.defaultFilterName;
             });
           }
-          console.log(this.defaultFilter);
           if (this.defaultFilter != undefined) {
             this.currentFilter = this.defaultFilter.filters;
             this.selectedColumns = this.defaultFilter.columns;
-            console.log(this.currentFilter);
-            //            console.log(this.defaultFilter.columns);
             for (let dataSource of this.dataSources) {
               if (this.selectedColumns[dataSource] == undefined) {
                 this.selectedColumns[dataSource] = [];
@@ -757,7 +722,7 @@ export class TissueListComponent implements OnInit {
 
       },
       err => {
-        //todo
+        this.errorMessage = "Error getting all the filters. Please contact your DSM developer\n " + err;
       });
   }
 
@@ -782,7 +747,6 @@ export class TissueListComponent implements OnInit {
     let patch = patch1.getPatch();
     this.dsmService.patchParticipantRecord(JSON.stringify(patch)).subscribe(data => {
       let result = Result.parse(data);
-      //      console.log(data);
       if (result.code == 200) {
         this.getAllFilters(false);
       }
@@ -809,20 +773,20 @@ export class TissueListComponent implements OnInit {
     let filters: Filter[];
     this.dsmService.applyFilter(savedFilter, this.realm, this.parent, null).subscribe(
       data => {
-        if (savedFilter != null && savedFilter.filters != null)
-        for (let filter of savedFilter.filters){
-          for ( let f of this.allColumns[filter.participantColumn.tableAlias]) {
-            if (f.participantColumn.name === filter.participantColumn.name) {
-              let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
-              if (index !== -1) {
-                this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
-                this.allColumns[filter.participantColumn.tableAlias].push(filter);
+        if (savedFilter != null && savedFilter.filters != null) {
+          for (let filter of savedFilter.filters) {
+            for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
+              if (f.participantColumn.name === filter.participantColumn.name) {
+                let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
+                if (index !== -1) {
+                  this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
+                  this.allColumns[filter.participantColumn.tableAlias].push(filter);
+                }
               }
             }
           }
         }
         let date = new Date();
-        //        console.log(data);
         this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
         let jsonData: any[];
         this.tissueListWrappers = [];
@@ -848,10 +812,8 @@ export class TissueListComponent implements OnInit {
             this.selectedColumns[dataSource] = [];
           }
         }
-        console.log(this.tissueListWrappers);
         if (!this.hasESData) {
           //check if it was a tableAlias data filter -> filter client side
-          //          console.log(savedFilter);
           this.filterProfileForNoESRelams(savedFilter);
         }
         for (let tissueList of this.tissueListWrappers) {
@@ -869,8 +831,8 @@ export class TissueListComponent implements OnInit {
         }
       },
       err => {
-
-      }
+        this.errorMessage = "Error applying the selected filter. Please contact your DSM developer\n " + err;
+      },
     );
   }
 
@@ -880,15 +842,15 @@ export class TissueListComponent implements OnInit {
     this.currentView = JSON.stringify(quickFilter);
     this.dsmService.applyFilter(quickFilter, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, null).subscribe(
       data => {
-        console.log(quickFilter);
-        if (quickFilter!= null && quickFilter.filters != null)
-        for (let filter of quickFilter.filters){
-          for ( let f of this.allColumns[filter.participantColumn.tableAlias]) {
-            if (f.participantColumn.name === filter.participantColumn.name) {
-              let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
-              if (index !== -1) {
-                this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
-                this.allColumns[filter.participantColumn.tableAlias].push(filter);
+        if (quickFilter != null && quickFilter.filters != null) {
+          for (let filter of quickFilter.filters) {
+            for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
+              if (f.participantColumn.name === filter.participantColumn.name) {
+                let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
+                if (index !== -1) {
+                  this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
+                  this.allColumns[filter.participantColumn.tableAlias].push(filter);
+                }
               }
             }
           }
@@ -909,8 +871,6 @@ export class TissueListComponent implements OnInit {
         for (let key of Object.keys(this.tissueListsMap)) {
           this.tissueListOncHistories.push(this.tissueListsMap[key]);
         }
-        console.log(this.tissueListOncHistories.length);
-        //        console.log(this.tissueListWrappers);
         if (quickFilter != null && quickFilter.filters != null) {
           for (let filter of quickFilter.filters) {
             if (filter.type === Filter.OPTION_TYPE) {
@@ -934,8 +894,8 @@ export class TissueListComponent implements OnInit {
         this.loading = false;
       },
       err => {
-
-      }
+        this.errorMessage = "Error applying the quick filter. Please contact your DSM developer\n " + err;
+      },
     );
   }
 
@@ -948,15 +908,15 @@ export class TissueListComponent implements OnInit {
       null, null, this.parent, null, null, null);
     this.dsmService.applyFilter(destroyingViewFilter, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, null).subscribe(
       data => {
-        //        console.log(data);
-        if(destroyingViewFilter.filters != null)
-        for (let filter of destroyingViewFilter.filters){
-          for ( let f of this.allColumns[filter.participantColumn.tableAlias]) {
-            if (f.participantColumn.name === filter.participantColumn.name) {
-              let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
-              if (index !== -1) {
-                this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
-                this.allColumns[filter.participantColumn.tableAlias].push(filter);
+        if (destroyingViewFilter.filters != null) {
+          for (let filter of destroyingViewFilter.filters) {
+            for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
+              if (f.participantColumn.name === filter.participantColumn.name) {
+                let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
+                if (index !== -1) {
+                  this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
+                  this.allColumns[filter.participantColumn.tableAlias].push(filter);
+                }
               }
             }
           }
@@ -976,7 +936,6 @@ export class TissueListComponent implements OnInit {
         for (let key of Object.keys(this.tissueListsMap)) {
           this.tissueListOncHistories.push(this.tissueListsMap[key]);
         }
-        console.log(this.tissueListOncHistories.length);
         this.loading = false;
         //        this.setDefaultColumns();
         this.selectedColumns = this.destructionPolicyColumns;
@@ -989,18 +948,11 @@ export class TissueListComponent implements OnInit {
 
       },
       err => {
-
-      }
+        this.errorMessage = "Error applying the quick filter. Please contact your DSM developer\n " + err;
+      },
     );
 
   }
-
-  //  public isSelectedFilter(filterName): boolean {
-  //    //    console.log(this.selectedFilterName);
-  //    //    console.log(filterName);
-  //    return this.selectedFilterName === filterName;
-  //  }
-
 
   public setSelectedFilterName(filterName) {
     this.selectedFilterName === filterName;
@@ -1034,7 +986,7 @@ export class TissueListComponent implements OnInit {
       let patch1 = new PatchUtil(this.tissueListWrappers[index].tissueList.oncHistoryDetails.oncHistoryDetailId, this.role.userMail(),
         {
           name: parameterName,
-          value: v
+          value: v,
         }, null, "participantId", this.tissueListWrappers[index].tissueList.oncHistoryDetails.participantId,
         Statics.ONCDETAIL_ALIAS);
       let patch = patch1.getPatch();
@@ -1082,7 +1034,7 @@ export class TissueListComponent implements OnInit {
         if (err._body === Auth.AUTHENTICATION_ERROR) {
           this.router.navigate([Statics.HOME_URL]);
         }
-      }
+      },
     );
   }
 
@@ -1093,13 +1045,11 @@ export class TissueListComponent implements OnInit {
       this.selectedTab = "Onc History";
       this.showParticipantInformation = true;
       this.oncHistoryId = oncHistoryId;
-      console.log(this.oncHistoryId);
     }
     this.loading = false;
   }
 
   public getParticipant(tissueListWrapper: TissueListWrapper, name, tissueId?) {
-    console.log(tissueListWrapper);
     this.loading = true;
     if (name === "t" && (tissueListWrapper.tissueList.oncHistoryDetails == null || (tissueListWrapper.tissueList.oncHistoryDetails.request !== "sent"
       && tissueListWrapper.tissueList.oncHistoryDetails.request !== "received" && tissueListWrapper.tissueList.oncHistoryDetails.request !== "returned"))) {
@@ -1117,7 +1067,6 @@ export class TissueListComponent implements OnInit {
             this.errorMessage = "Participant  not found";
           }
           if (name === "t") {
-            console.log(participant);
             this.openTissue(tissueListWrapper.tissueList.oncHistoryDetails, participant, tissueId);
           }
           else if (name === "oD") {
@@ -1126,8 +1075,8 @@ export class TissueListComponent implements OnInit {
           }
         },
         err => {
-          //todo
-        }
+          this.errorMessage = "Could not get participant. Please contact your DSM developer\n " + err;
+        },
       );
     }
   }
@@ -1147,8 +1096,6 @@ export class TissueListComponent implements OnInit {
     this.sortField = col.participantColumn.name;
     this.sortParent = sortParent;
     this.sortColumn = col;
-    console.log(this.sortParent + " : " + this.sortField);
-    console.log(this.sortColumn);
     this.doSort();
   }
 
@@ -1172,26 +1119,25 @@ export class TissueListComponent implements OnInit {
   }
 
   downloadCurrentData() {
-    let m = {a: 4, b: 5};
-    let m2 = {a: 6, b: 7};
-    let m3 = {a: 8, b: 9};
-    let m4 = {a: 10, b: 11};
-    let o = {
-      mr: [m, m2, m3, m4],
-      f: {c: 3, d: [{i: 1}, {i: 2}]},
-      g: 0
-    };
-    let columns = {
-      e: ["a", "b"], f: [], d: ["i"]
-    };
-    let columns2 = {
-      a1: [], a2: ["a", "b"]
-    };
-    let paths2 = [["mr", "e"], ["f", "f"]];
-    let paths = [["mr", "a2"]];
+    // let m = {a: 4, b: 5};
+    // let m2 = {a: 6, b: 7};
+    // let m3 = {a: 8, b: 9};
+    // let m4 = {a: 10, b: 11};
+    // let o = {
+    //   mr: [m, m2, m3, m4],
+    //   f: {c: 3, d: [{i: 1}, {i: 2}]},
+    //   g: 0,
+    // };
+    // let columns = {
+    //   e: ["a", "b"], f: [], d: ["i"],
+    // };
+    // let columns2 = {
+    //   a1: [], a2: ["a", "b"],
+    // };
+    // let paths2 = [["mr", "e"], ["f", "f"]];
+    // let paths = [["mr", "a2"]];
 
     let date = new Date();
-    console.log(this.selectedColumns);
     let fileName = "Tissue_" + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION;
     if (this.selectedColumns["t"] != null && this.selectedColumns["t"].length > 0) {
       Utils.downloadCurrentData(this.tissueListWrappers, [["data", Statics.ES_ALIAS], ["tissueList", "", "oncHistoryDetails", "oD"], ["tissueList", "", "tissue", "t"]], this.selectedColumns, fileName);
@@ -1226,11 +1172,10 @@ export class TissueListComponent implements OnInit {
       for (let key of Object.keys(this.tissueListsMap)) {
         this.tissueListOncHistories.push(this.tissueListsMap[key]);
       }
-      console.log(this.tissueListOncHistories.length);
-      //      this.setDefaultColumns(false);
       this.textQuery = queryText;
       this.filterQuery = this.textQuery;
     }, err => {
+      this.errorMessage = "Error searching. Please contact your DSM developer\n " + err;
     });
   }
 
@@ -1254,38 +1199,38 @@ export class TissueListComponent implements OnInit {
     if (this.sortParent === Statics.ES_ALIAS) {
       if (this.selectedColumns["t"] != undefined && this.selectedColumns["t"].length > 0) {
         this.tissueListWrappers.sort((a, b) => {
-          if (a.data[this.sortColumn.participantColumn.object] === null || a.data[this.sortColumn.participantColumn.object] === undefined || a.data[this.sortColumn.participantColumn.object][this.sortField] == undefined) {
+            if (a.data[this.sortColumn.participantColumn.object] === null || a.data[this.sortColumn.participantColumn.object] === undefined || a.data[this.sortColumn.participantColumn.object][this.sortField] == undefined) {
               return 1;
             }
-          if (b.data[this.sortColumn.participantColumn.object] === null || b.data[this.sortColumn.participantColumn.object] === undefined || b.data[this.sortColumn.participantColumn.object][this.sortField] == undefined) {
+            if (b.data[this.sortColumn.participantColumn.object] === null || b.data[this.sortColumn.participantColumn.object] === undefined || b.data[this.sortColumn.participantColumn.object][this.sortField] == undefined) {
               return -1;
             }
 
-          if (this.sortColumn.type !== "NUMBER" && !(this.sortColumn.type === "ADDITIONALVALUE" && this.sortColumn.additionalType === "NUMBER")) {
-            return (order * a.data[this.sortColumn.participantColumn.object][this.sortField].localeCompare(b.data[this.sortColumn.participantColumn.object][this.sortField]));
+            if (this.sortColumn.type !== "NUMBER" && !(this.sortColumn.type === "ADDITIONALVALUE" && this.sortColumn.additionalType === "NUMBER")) {
+              return (order * a.data[this.sortColumn.participantColumn.object][this.sortField].localeCompare(b.data[this.sortColumn.participantColumn.object][this.sortField]));
             }
             else {
-            return (order * a.data[this.sortColumn.participantColumn.object][this.sortField] - b.data[this.sortColumn.participantColumn.object][this.sortField]);
+              return (order * a.data[this.sortColumn.participantColumn.object][this.sortField] - b.data[this.sortColumn.participantColumn.object][this.sortField]);
             }
-          }
+          },
         );
       }
       else {
         this.tissueListOncHistories.sort((a, b) => {
-          if (a.data[this.sortColumn.participantColumn.object][this.sortField] == undefined) {
+            if (a.data[this.sortColumn.participantColumn.object][this.sortField] == undefined) {
               return 1;
             }
-          if (b.data[this.sortColumn.participantColumn.object][this.sortField] == undefined) {
+            if (b.data[this.sortColumn.participantColumn.object][this.sortField] == undefined) {
               return -1;
             }
 
-          if (typeof a.data[this.sortColumn.participantColumn.object][this.sortField] === "string") {
-            return (order * a.data[this.sortColumn.participantColumn.object][this.sortField].localeCompare(b.data[this.sortColumn.participantColumn.object][this.sortField]));
+            if (typeof a.data[this.sortColumn.participantColumn.object][this.sortField] === "string") {
+              return (order * a.data[this.sortColumn.participantColumn.object][this.sortField].localeCompare(b.data[this.sortColumn.participantColumn.object][this.sortField]));
             }
             else {
-            return (order * a.data[this.sortColumn.participantColumn.object][this.sortField] - a.data[this.sortColumn.participantColumn.object][this.sortField]);
+              return (order * a.data[this.sortColumn.participantColumn.object][this.sortField] - a.data[this.sortColumn.participantColumn.object][this.sortField]);
             }
-          }
+          },
         );
       }
     }
@@ -1305,7 +1250,7 @@ export class TissueListComponent implements OnInit {
             else {
               return (order * a.tissueList.oncHistoryDetails[this.sortField] - b.tissueList.oncHistoryDetails[this.sortField]);
             }
-          }
+          },
         );
       }
       else {
@@ -1323,7 +1268,7 @@ export class TissueListComponent implements OnInit {
             else {
               return (order * a.tissueList.oncHistoryDetails[this.sortField] - b.tissueList.oncHistoryDetails[this.sortField]);
             }
-          }
+          },
         );
       }
     }
@@ -1342,7 +1287,7 @@ export class TissueListComponent implements OnInit {
           else {
             return (order * a.tissueList.tissue[this.sortField] - b.tissueList.tissue[this.sortField]);
           }
-        }
+        },
       );
     }
   }
@@ -1368,7 +1313,6 @@ export class TissueListComponent implements OnInit {
   }
 
   public getDefaultFilterName() {
-    console.log(this.role.getUserSetting().defaultTissueFilter);
     this.defaultFilterName = this.role.getUserSetting().defaultTissueFilter;
   }
 
@@ -1413,7 +1357,6 @@ export class TissueListComponent implements OnInit {
 
   private filterProfileForNoESRelams(viewFilter: ViewFilter) {
     //check if it was a tableAlias data filter -> filter client side
-    console.log(viewFilter);
     if (viewFilter != null && viewFilter.filters != null && viewFilter.filters.length != 0) {
       for (let filter of viewFilter.filters) {
         if (filter.participantColumn.tableAlias === "data") {
@@ -1429,9 +1372,8 @@ export class TissueListComponent implements OnInit {
             if (filterText != null) {
               this.copyTissueListWrappers = this.tissueListWrappers;
               this.tissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
-                tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === value
+                tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === value,
               );
-              console.log(this.tissueListWrappers);
             }
           }
           else {
@@ -1439,7 +1381,7 @@ export class TissueListComponent implements OnInit {
             if (empt === "true") {
               this.copyTissueListWrappers = this.tissueListWrappers;
               this.tissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
-                tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === null
+                tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === null,
               );
             }
             else {
@@ -1447,7 +1389,7 @@ export class TissueListComponent implements OnInit {
               if (notempt === "true") {
                 this.copyTissueListWrappers = this.tissueListWrappers;
                 this.tissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
-                  tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== null
+                  tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== null,
                 );
               }
             }
@@ -1461,7 +1403,6 @@ export class TissueListComponent implements OnInit {
         for (let filter of this.selectedColumns["data"]) {
           let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
           let filterText = Filter.getFilterText(filter, tmp, this.allAdditionalColumns);
-          //          console.log(filterText);
           if (filterText != null) {
             this.copyTissueListWrappers = this.tissueListWrappers;
             let value = filterText["filter1"]["value"];
@@ -1472,22 +1413,21 @@ export class TissueListComponent implements OnInit {
                 value = value.substring(first + 1, last);
               }
               this.tissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
-                tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === filterText["filter1"]["value"]
+                tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === filterText["filter1"]["value"],
               );
-              console.log(this.tissueListWrappers);
             }
             else {
               let empt = filterText["empty"];
               if (empt) {
                 this.tissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
-                  tissueListWrapper.data[filterText["parentName"]] == null || tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] == undefined || tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === null || tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === ""
+                  tissueListWrapper.data[filterText["parentName"]] == null || tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] == undefined || tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === null || tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === "",
                 );
               }
               else {
                 let notempt = filterText["notEmpty"];
                 if (notempt) {
                   this.tissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
-                    tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== null && tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== undefined && tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== ""
+                    tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== null && tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== undefined && tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== "",
                   );
                 }
               }
