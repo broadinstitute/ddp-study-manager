@@ -27,7 +27,7 @@ import {FieldSettings} from "../field-settings/field-settings.model";
 @Component({
   selector: "app-participant-list",
   templateUrl: "./participant-list.component.html",
-  styleUrls: ["./participant-list.component.css"]
+  styleUrls: ["./participant-list.component.css"],
 })
 export class ParticipantListComponent implements OnInit {
 
@@ -148,7 +148,7 @@ export class ParticipantListComponent implements OnInit {
       err => {
         this.loadingParticipants = null;
         return null;
-      }
+      },
     );
   }
 
@@ -296,11 +296,8 @@ export class ParticipantListComponent implements OnInit {
           this.dataSources.delete("a");
         }
         if (jsonData.filters != null) {
-          console.log("299");
-          console.log(jsonData.filters);
           jsonData.filters.forEach((val) => {
             let view: ViewFilter = ViewFilter.parseFilter(val, this.sourceColumns);
-            console.log(view);
             if (val.userId.includes("System")) {
               // view = ViewFilter.parseFilter(val, this.sourceColumns);
               this.quickFilters.push(view);
@@ -320,7 +317,7 @@ export class ParticipantListComponent implements OnInit {
           this.auth.logout();
         }
         throw "Error - Loading display settings" + err;
-      }
+      },
     );
   }
 
@@ -360,10 +357,6 @@ export class ParticipantListComponent implements OnInit {
           return filter.filterName === this.role.getUserSetting().defaultParticipantFilter;
         });
       }
-      console.log(this.savedFilters);
-      console.log(defaultFilter);
-      console.log(this.role.getUserSetting().defaultParticipantFilter);
-
       if (defaultFilter != null && defaultFilter != undefined) {
         this.selectFilter(defaultFilter);
       }
@@ -376,13 +369,11 @@ export class ParticipantListComponent implements OnInit {
               this.participantList = [];
               let jsonData: any[];
               jsonData = data;
-              console.log(jsonData);
               jsonData.forEach((val) => {
                 let participant = Participant.parse(val);
                 this.participantList.push(participant);
               });
               this.copyParticipantList = this.participantList;
-              console.log(this.participantList);
               let date = new Date();
               this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
             }
@@ -394,7 +385,7 @@ export class ParticipantListComponent implements OnInit {
             }
             this.loadingParticipants = null;
             this.errorMessage = "Error - Loading Participant List, Please contact your DSM developer";
-          }
+          },
         );
       }
     }
@@ -404,7 +395,6 @@ export class ParticipantListComponent implements OnInit {
   }
 
   public selectFilter(viewFilter: ViewFilter) {
-    console.log(viewFilter);
     this.loadingParticipants = localStorage.getItem(ComponentService.MENU_SELECTED_REALM);
     this.currentView = JSON.stringify(viewFilter);
     let filterName = null;
@@ -418,23 +408,22 @@ export class ParticipantListComponent implements OnInit {
     this.dsmService.applyFilter(viewFilter, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, null).subscribe(
       data => {
         if (data != null) {
-          if (viewFilter!= null && viewFilter.filters != null){
-          for (let filter of viewFilter.filters){
-            for ( let f of this.sourceColumns[filter.participantColumn.tableAlias]) {
-              if (f.participantColumn.name === filter.participantColumn.name) {
-                let index = this.sourceColumns[filter.participantColumn.tableAlias].indexOf(f);
-                if (index !== -1) {
-                  this.sourceColumns[filter.participantColumn.tableAlias].splice(index, 1);
-                  this.sourceColumns[filter.participantColumn.tableAlias].push(filter);
+          if (viewFilter != null && viewFilter.filters != null) {
+            for (let filter of viewFilter.filters) {
+              for (let f of this.sourceColumns[filter.participantColumn.tableAlias]) {
+                if (f.participantColumn.name === filter.participantColumn.name) {
+                  let index = this.sourceColumns[filter.participantColumn.tableAlias].indexOf(f);
+                  if (index !== -1) {
+                    this.sourceColumns[filter.participantColumn.tableAlias].splice(index, 1);
+                    this.sourceColumns[filter.participantColumn.tableAlias].push(filter);
+                  }
                 }
               }
             }
           }
-          }
           this.participantList = [];
           let jsonData: any[];
           jsonData = data;
-          console.log(jsonData);
           jsonData.forEach((val) => {
             let participant = Participant.parse(val);
             this.participantList.push(participant);
@@ -443,7 +432,6 @@ export class ParticipantListComponent implements OnInit {
           if (viewFilter != null) {
             this.filterQuery = viewFilter.queryItems;
           }
-          console.log(this.participantList);
           if (viewFilter != null) {
             viewFilter.selected = true;
             for (let f of this.quickFilters) {
@@ -482,7 +470,7 @@ export class ParticipantListComponent implements OnInit {
         }
         this.loadingParticipants = null;
         this.errorMessage = "Error - Loading Participant List, Please contact your DSM developer";
-      }
+      },
     );
   }
 
@@ -501,12 +489,10 @@ export class ParticipantListComponent implements OnInit {
       data => {
         this.savedFilters = [];
         let jsonData = data;
-        console.log(jsonData);
         jsonData.forEach((val) => {
           let view: ViewFilter;
           if (!val.userId.includes("System")) {
             view = ViewFilter.parseFilter(val, this.sourceColumns);
-            console.log(view);
             this.savedFilters.push(view);
           }
         });
@@ -634,7 +620,7 @@ export class ParticipantListComponent implements OnInit {
           },
           err => {
             this.errorMessage = "Error - Loading Participant Information, Please contact your DSM developer";
-          }
+          },
         );
       }
       else {
@@ -677,8 +663,8 @@ export class ParticipantListComponent implements OnInit {
     //    this.c
     let json = [];
     this.dataSources.forEach((value: string, key: string) => {
-      this.createFilterJson(json, key);
-      }
+        this.createFilterJson(json, key);
+      },
     );
     //nothing to filter on the server
     if (json.length != 0) {
@@ -687,7 +673,7 @@ export class ParticipantListComponent implements OnInit {
       this.deselectQuickFilters();
       let data = {
         "filters": json,
-        "parent": this.parent
+        "parent": this.parent,
       };
       let jsonPatch = JSON.stringify(data);
       this.currentFilter = json;
@@ -720,7 +706,7 @@ export class ParticipantListComponent implements OnInit {
         err => {
           this.loadingParticipants = null;
           this.errorMessage = "Error - Loading Participant List, Please contact your DSM developer\n " + err;
-        }
+        },
       );
     }
     else {
@@ -736,7 +722,7 @@ export class ParticipantListComponent implements OnInit {
           let filterText = Filter.getFilterText(filter, tmp, this.settings);
           if (filterText != null) {
             this.participantList = this.copyParticipantList.filter(participant =>
-              participant.data != null && participant.data.profile[filterText["filter1"]["name"]] === filterText["filter1"]["value"]
+              participant.data != null && participant.data.profile[filterText["filter1"]["name"]] === filterText["filter1"]["value"],
             );
             didClientSearch = true;
           }
@@ -883,7 +869,7 @@ export class ParticipantListComponent implements OnInit {
       "filters": this.currentFilter,
       "parent": this.parent,
       "quickFilterName": tmpFilterName,
-      "queryItems": this.filterQuery
+      "queryItems": this.filterQuery,
     };
     let jsonPatch = JSON.stringify(jsonData);
     this.currentView = jsonPatch;
@@ -907,7 +893,6 @@ export class ParticipantListComponent implements OnInit {
   }
 
   private doSort(object: string) {
-    console.log(object);
     let order = this.sortDir === "asc" ? 1 : -1;
     if (this.sortParent === "data" && object != null) {
       this.participantList.sort((a, b) => this.sort(a.data[object][this.sortField], b.data[object][this.sortField], order));
@@ -949,7 +934,7 @@ export class ParticipantListComponent implements OnInit {
     else if (this.sortParent === "t") {
     }
     else {
-      //activity data
+      // activity data
       this.participantList.sort((a, b) => {
         let activityDataA = a.data.getActivityDataByCode(this.sortParent);
         let activityDataB = b.data.getActivityDataByCode(this.sortParent);
@@ -1109,7 +1094,6 @@ export class ParticipantListComponent implements OnInit {
   assign() { //arg[0] = selectedAssignee: Assignee
     this.additionalMessage = null;
     if (this.assignee != null && this.participantList.length > 0) {
-      // console.log(`${this.assigneeMr.assigneeId} ${this.assigneeMr.email}`);
       let assignParticipants: Array<AssigneeParticipant> = [];
       for (let pt of this.participantList) {
         if (pt.isSelected) {
@@ -1133,11 +1117,9 @@ export class ParticipantListComponent implements OnInit {
             this.assignee.email, pt.data.profile["shortId"]));
         }
       }
-      // console.log(`assigned participant: ${JSON.stringify(assignParticipants, null, 2)}`);
       this.deselect();
       this.dsmService.assignParticipant(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.assignMR, this.assignTissue, JSON.stringify(assignParticipants)).subscribe(// need to subscribe, otherwise it will not send!
         data => {
-          // console.log(`assigned participant received: ${JSON.stringify(data, null, 2)}`);
           let result = Result.parse(data);
           if (result.code !== 200) {
             this.additionalMessage = result.body;
@@ -1151,7 +1133,7 @@ export class ParticipantListComponent implements OnInit {
             this.router.navigate([Statics.HOME_URL]);
           }
           this.additionalMessage = "Error - Assigning Participants, Please contact your DSM developer";
-        }
+        },
       );
     }
     this.modal.hide();
@@ -1195,7 +1177,7 @@ export class ParticipantListComponent implements OnInit {
     this.setSelectedFilterName("");
     let data = {
       "filterQuery": queryText,
-      "parent": this.parent
+      "parent": this.parent,
     };
     let jsonPatch = JSON.stringify(data);
     if (queryText != null) {
