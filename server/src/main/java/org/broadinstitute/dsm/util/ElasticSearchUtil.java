@@ -178,7 +178,7 @@ public class ElasticSearchUtil {
                 if (f.contains(Filter.EQUALS) || f.contains(Filter.LIKE)) {
                     f = f.replace("(", "").replace(")", "").trim();
                     String[] nameValue = f.split(Filter.EQUALS);
-                    if (nameValue.length == 0) { //didn't contain EQUALS -> split LIKE
+                    if (nameValue.length == 1) { //didn't contain EQUALS -> split LIKE
                         nameValue = f.split(Filter.LIKE);
                     }
                     logger.info(nameValue[0]);
