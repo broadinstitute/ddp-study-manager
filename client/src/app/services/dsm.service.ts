@@ -736,6 +736,11 @@ export class DSMService {
 
   private checkCookieBeforeCall(): boolean {
     if (this.sessionService.getDSMToken() == null || this.sessionService.getDSMToken() == undefined) {
+      this.sessionService.logout();
+      this.router.navigate( [ Statics.HOME_URL ] );
+      return false;
+    }
+    else {
       let jwtHelper: JwtHelper = new JwtHelper();
       let expirationDate: Date = jwtHelper.getTokenExpirationDate( this.sessionService.getDSMToken() );
       let myDate = new Date();
@@ -750,7 +755,7 @@ export class DSMService {
         this.router.navigate( [ Statics.HOME_URL ] );
         return false;
       }
+      return true;
     }
-    return true;
   }
 }
