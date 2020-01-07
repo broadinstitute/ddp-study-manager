@@ -12,6 +12,7 @@ import {Participant} from "../participant-list/participant-list.model";
 import {Tissue} from "../tissue/tissue.model";
 import {OncHistoryDetail} from "../onc-history-detail/onc-history-detail.model";
 import {NameValue} from "./name-value.model";
+import {DateFormatPipe} from '../pipe/custom-date.pipe';
 
 var fileSaver = require( "file-saver/filesaver.js" );
 const Json2csvParser = require( "json2csv" ).Parser;
@@ -372,6 +373,9 @@ export class Utils {
             let value = o[ col.participantColumn.name ];
             if (col.participantColumn.object != null && o[ col.participantColumn.object ]!= null) {
               value = o[ col.participantColumn.object ][ col.participantColumn.name ];
+            }
+            if (col.type === Filter.DATE_TYPE) {
+              value = this.getDateFormatted(value, Utils.DATE_STRING_IN_CVS);
             }
             value = value == undefined ? "" : value;
             str = str + "\"" + value + "\"" + ",";

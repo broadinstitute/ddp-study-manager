@@ -349,6 +349,18 @@ export class TissueListComponent implements OnInit {
 
       this.dsmService.applyFilter(this.defaultFilter, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, null).subscribe(
         data => {
+          if (this.defaultFilter.filters != null)
+          for (let filter of this.defaultFilter.filters){
+            for ( let f of this.allColumns[filter.participantColumn.tableAlias]) {
+              if (f.participantColumn.name === filter.participantColumn.name) {
+                let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
+                if (index !== -1) {
+                  this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
+                  this.allColumns[filter.participantColumn.tableAlias].push(filter);
+                }
+              }
+            }
+          }
           let date = new Date();
           //        console.log(data);
           this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
@@ -799,6 +811,18 @@ export class TissueListComponent implements OnInit {
     let filters: Filter[];
     this.dsmService.applyFilter(savedFilter, this.realm, this.parent, null).subscribe(
       data => {
+        if(savedFilter.filters != null)
+        for (let filter of savedFilter.filters){
+          for ( let f of this.allColumns[filter.participantColumn.tableAlias]) {
+            if (f.participantColumn.name === filter.participantColumn.name) {
+              let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
+              if (index !== -1) {
+                this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
+                this.allColumns[filter.participantColumn.tableAlias].push(filter);
+              }
+            }
+          }
+        }
         let date = new Date();
         //        console.log(data);
         this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
@@ -859,6 +883,18 @@ export class TissueListComponent implements OnInit {
     this.dsmService.applyFilter(quickFilter, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, null).subscribe(
       data => {
         console.log(quickFilter);
+        if (quickFilter.filters != null)
+        for (let filter of quickFilter.filters){
+          for ( let f of this.allColumns[filter.participantColumn.tableAlias]) {
+            if (f.participantColumn.name === filter.participantColumn.name) {
+              let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
+              if (index !== -1) {
+                this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
+                this.allColumns[filter.participantColumn.tableAlias].push(filter);
+              }
+            }
+          }
+        }
         let date = new Date();
         this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
         this.currentQuickFilterName = quickFilter.filterName;
@@ -915,6 +951,18 @@ export class TissueListComponent implements OnInit {
     this.dsmService.applyFilter(destroyingViewFilter, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, null).subscribe(
       data => {
         //        console.log(data);
+        if(destroyingViewFilter.filters != null)
+        for (let filter of destroyingViewFilter.filters){
+          for ( let f of this.allColumns[filter.participantColumn.tableAlias]) {
+            if (f.participantColumn.name === filter.participantColumn.name) {
+              let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
+              if (index !== -1) {
+                this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
+                this.allColumns[filter.participantColumn.tableAlias].push(filter);
+              }
+            }
+          }
+        }
         let date = new Date();
         this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
         let jsonData: any[];

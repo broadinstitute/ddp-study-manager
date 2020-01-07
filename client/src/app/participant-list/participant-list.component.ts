@@ -310,6 +310,7 @@ export class ParticipantListComponent implements OnInit {
               this.savedFilters.push(view);
             }
           });
+
         }
         this.orderColumns();
         this.getData();
@@ -403,7 +404,7 @@ export class ParticipantListComponent implements OnInit {
   }
 
   public selectFilter(viewFilter: ViewFilter) {
-    console.log(viewFilter.filters);
+    console.log(viewFilter);
     this.loadingParticipants = localStorage.getItem(ComponentService.MENU_SELECTED_REALM);
     this.currentView = JSON.stringify(viewFilter);
     let filterName = null;
@@ -417,6 +418,19 @@ export class ParticipantListComponent implements OnInit {
     this.dsmService.applyFilter(viewFilter, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, null).subscribe(
       data => {
         if (data != null) {
+          if (viewFilter.filters != null){
+          for (let filter of viewFilter.filters){
+            for ( let f of this.sourceColumns[filter.participantColumn.tableAlias]) {
+              if (f.participantColumn.name === filter.participantColumn.name) {
+                let index = this.sourceColumns[filter.participantColumn.tableAlias].indexOf(f);
+                if (index !== -1) {
+                  this.sourceColumns[filter.participantColumn.tableAlias].splice(index, 1);
+                  this.sourceColumns[filter.participantColumn.tableAlias].push(filter);
+                }
+              }
+            }
+          }
+          }
           this.participantList = [];
           let jsonData: any[];
           jsonData = data;
@@ -426,6 +440,7 @@ export class ParticipantListComponent implements OnInit {
             this.participantList.push(participant);
           });
           this.copyParticipantList = this.participantList;
+          this.filterQuery = viewFilter.queryItems;
           console.log(this.participantList);
           if (viewFilter != null) {
             viewFilter.selected = true;
