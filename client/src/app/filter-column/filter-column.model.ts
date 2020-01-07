@@ -405,12 +405,14 @@ export class Filter {
     if (s.length > 0) {
       s = "The following columns does not exist in this realm: " + s;
     }
-    for(let filter of filters){
-      if(filter.participantColumn.object !== undefined && filter.participantColumn.object !== null && filter.participantColumn.object !== ''){
+    for (let filter of filters) {
+      if (filter.participantColumn.object !== undefined && filter.participantColumn.object !== null && filter.participantColumn.object !== ''){
         filter.parentName = filter.participantColumn.object;
       }
+
     }
     console.log(filters);
+    console.log(allColumns);
     return filters;
   }
 

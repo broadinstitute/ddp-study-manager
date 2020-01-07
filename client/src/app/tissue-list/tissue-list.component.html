@@ -297,26 +297,25 @@
             <tr>
               <ng-container>
                 <td *ngFor="let col of selectedColumns['data']" [height]="40" (click)="getParticipant(value, 'oD')">
-                  <!--<span *ngIf="col.participantColumn.name === 'country'">-->
-                  <!--<span *ngIf="value.data.address != undefined">-->
-                  <!--{{value.data.address[col.participantColumn.name]}}-->
-                  <!--</span>-->
-                  <!--</span>-->
-                  <!--<span-->
-                  <!--*ngIf="col.participantColumn.name === 'firstName' || col.participantColumn.name === 'lastName' || col.participantColumn.name === 'hruid' ">-->
-                  <!--{{value.data.profile[col.participantColumn.name]}}-->
-                  <!--</span>-->
                   <span *ngIf="col.participantColumn.object === null || col.participantColumn.object === undefined">
+                    <span *ngIf="col.type ==='DATE'">
+                    {{value.data[col.participantColumn.name] | dateFormatPipe}}
+                      </span>
+                    <span *ngIf="col.type !=='DATE'">
                     {{value.data[col.participantColumn.name]}}
+                      </span>
                   </span>
                   <span
                     *ngIf="col.participantColumn.object !== null && col.participantColumn.object !== undefined && value.data[col.participantColumn.object] === undefined">
-                    <!--*ngIf="col.participantColumn.name !== 'firstName' && col.participantColumn.name !== 'lastName' && col.participantColumn.name !== 'hruid' && col.participantColumn.name !== 'country'">-->
                   </span>
                   <span
                     *ngIf="col.participantColumn.object !== null && col.participantColumn.object !== undefined && value.data[col.participantColumn.object] !== undefined">
-                    <!--*ngIf="col.participantColumn.name !== 'firstName' && col.participantColumn.name !== 'lastName' && col.participantColumn.name !== 'hruid' && col.participantColumn.name !== 'country'">-->
+                    <span *ngIf="col.type ==='DATE'">
+                    {{value.data[col.participantColumn.object][col.participantColumn.name] | dateFormatPipe}}
+                      </span>
+                    <span *ngIf="col.type !=='DATE'">
                     {{value.data[col.participantColumn.object][col.participantColumn.name]}}
+                    </span>
                   </span>
                 </td>
               </ng-container>

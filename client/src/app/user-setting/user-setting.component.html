@@ -9,8 +9,15 @@
   <h3 class="Color--warn Line--Break">{{additionalMessage}}</h3>
   <br/>
 </div>
+<div *ngIf="loading">
+  <span class="Width--100">
+  <div align="center" class="Width--100 Height--100">
+    <i class="fas fa-spinner fa-spin fa-5x Color--primary"></i>
+  </div>
+</span>
+</div>
 
-<div *ngIf="errorMessage == null">
+<div *ngIf="errorMessage == null && !loading">
 
   <span [hidden]="!saving" class="Width--100">
     <div align="center" class="Width--100 Height--100">
