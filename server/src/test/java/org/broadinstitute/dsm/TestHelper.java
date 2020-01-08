@@ -154,6 +154,11 @@ public class TestHelper {
         checkRole("survey_creation", roles, testUser, testGroup);
         checkRole("field_settings", roles, testUser, testGroup);
 
+        //adding instance setting
+        if (!DBTestUtil.checkIfValueExists("SELECT * from instance_settings where ddp_instance_id = (SELECT ddp_instance_id from ddp_instance where instance_name = ?) ", TEST_DDP)) {
+            DBTestUtil.executeQuery("INSERT INTO instance_settings set mr_cover_pdf = \"[{\\\"value\\\":\\\"exchange_cb\\\", \\\"name\\\":\\\"MD to MD exchange\\\", \\\"type\\\":\\\"checkbox\\\"}]\", ddp_instance_id = (SELECT ddp_instance_id from ddp_instance where instance_name = \"" + TEST_DDP + "\") ");
+        }
+
         DBTestUtil.executeQuery("UPDATE ddp_instance set is_active = 1 where instance_name = \"" + TEST_DDP_MIGRATED + "\"");
 
         INSTANCE_ID = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TEST_DDP, DDP_INSTANCE_ID);
