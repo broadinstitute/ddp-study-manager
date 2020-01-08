@@ -273,7 +273,7 @@ public class DirectMethodTest extends TestHelper {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             //just get mr without mocked up ddp info
-            dbVals.resultValue = MedicalRecord.getMedicalRecords("TEST_PARTICIPANT");
+            dbVals.resultValue = MedicalRecord.getMedicalRecords(TEST_DDP);
             return dbVals;
         });
 
@@ -281,12 +281,13 @@ public class DirectMethodTest extends TestHelper {
             Assert.fail(results.resultException.getMessage());
         }
 
-        HashMap<String, MedicalRecord> medicalRecord = (HashMap<String, MedicalRecord>) results.resultValue;
+        Map<String, List<MedicalRecord>> medicalRecord = (HashMap<String, List<MedicalRecord>>) results.resultValue;
         Assert.assertNotNull(medicalRecord);
 
+        List<MedicalRecord> medicalRecords = medicalRecord.get("TEST_PARTICIPANT");
         List strings = new ArrayList<>();
         strings.add(participantId);
-        Assert.assertEquals(DBTestUtil.getStringFromQuery("select count(*) from ddp_medical_record mr, ddp_institution inst, ddp_participant pat where mr.institution_id = inst.institution_id and inst.participant_id = pat.participant_id and pat.participant_id = ? ", strings, "count(*)"), String.valueOf(medicalRecord.size()));
+        Assert.assertEquals(DBTestUtil.getStringFromQuery("select count(*) from ddp_medical_record mr, ddp_institution inst, ddp_participant pat where mr.institution_id = inst.institution_id and inst.participant_id = pat.participant_id and pat.participant_id = ? ", strings, "count(*)"), String.valueOf(medicalRecords.size()));
     }
 
     @Test
