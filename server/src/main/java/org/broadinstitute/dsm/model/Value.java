@@ -10,12 +10,19 @@ import java.util.List;
 public class Value{
 
     private String value;
+    private String name;
     private String type;
     private String type2;
     private List<Value> values;
 
     public Value(String value) {
         this.value = value;
+    }
+
+    public Value(String value, String type, String name) {
+        this.value = value;
+        this.type = type;
+        this.name = name;
     }
 
     public Value(String value, String type, String type2, List<Value> values) {
