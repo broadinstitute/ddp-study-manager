@@ -139,10 +139,8 @@ export class OncHistoryDetailComponent implements OnInit {
     this.dsmService.patchParticipantRecord( JSON.stringify( patch ) ).subscribe(// need to subscribe, otherwise it will not send!
       data => {
         let result = Result.parse( data );
-        // console.log(result);
         if (result.code === 200 && result.body != null && result.body !== "") {
           let jsonData: any | any[] = JSON.parse( result.body );
-          // console.log(jsonData);
           if (jsonData instanceof Array) {
             jsonData.forEach( ( val ) => {
               let nameValue = NameValue.parse( val );

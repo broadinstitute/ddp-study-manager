@@ -251,8 +251,8 @@ export class ParticipantPageComponent implements OnInit {
           }
           else {
             if (this.gender != oncHis.gender && oncHis.gender != undefined && oncHis.gender != null) {
-              console.log( this.gender );
-              console.log( oncHis.gender );
+              // console.log( this.gender );
+              // console.log( oncHis.gender );
               this.gender = "Discrepancy in gender between the different oncHistories";
             }
           }
@@ -320,7 +320,7 @@ export class ParticipantPageComponent implements OnInit {
       let patch = patch1.getPatch();
       this.currentPatchField = parameterName;
       this.patchFinished = false;
-      console.log( JSON.stringify( patch ) );
+      // console.log( JSON.stringify( patch ) );
       this.dsmService.patchParticipantRecord( JSON.stringify( patch ) ).subscribe(// need to subscribe, otherwise it will not send!
         data => {
           let result = Result.parse( data );
@@ -377,7 +377,6 @@ export class ParticipantPageComponent implements OnInit {
             if (jsonData instanceof Array) {
               jsonData.forEach( ( val ) => {
                 let nameValue = NameValue.parse( val );
-                console.log( nameValue );
                 oncHis[ nameValue.name.substr( 3 ) ] = nameValue.value;
               } );
             }
