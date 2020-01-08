@@ -35,7 +35,6 @@ export class UserSettingComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       let realm = params[DSMService.REALM] || null;
       if (realm != null) {
-        //        this.compService.realmMenu = realm;
         this.additionalMessage = null;
         this.checkRight();
       }
@@ -50,8 +49,6 @@ export class UserSettingComponent implements OnInit {
     }
     else {
       this.checkRight();
-      // this.userSetting = this.role.getUserSetting();
-      // console.log(this.userSetting.defaultTissueFilter);
     }
     window.scrollTo(0, 0);
   }
@@ -71,7 +68,6 @@ export class UserSettingComponent implements OnInit {
             allowedToSeeInformation = true;
             this.getSavedFilters();
             this.userSetting = this.role.getUserSetting();
-            console.log(this.userSetting.defaultTissueFilter);
             this.loading = false;
             this.errorMessage = null;
             this.additionalMessage = null;
@@ -96,7 +92,7 @@ export class UserSettingComponent implements OnInit {
     this.dsmService.saveUserSettings(JSON.stringify(this.userSetting)).subscribe(// need to subscribe, otherwise it will not send!
       data => {
         this.additionalMessage = "";
-        console.log(`received: ${JSON.stringify(data, null, 2)}`);
+        // console.log(`received: ${JSON.stringify(data, null, 2)}`);
         let result = Result.parse(data);
         if (result.code !== 200) {
           this.additionalMessage = result.body;
@@ -118,14 +114,12 @@ export class UserSettingComponent implements OnInit {
 
   setDefaultFilter(value, parent: string) {
     let filterName;
-    console.log(value);
     if (typeof value === "string") {
       filterName = value;
     }
     else {
       filterName = value.value;
     }
-    console.log(filterName);
     if (filterName === undefined) {
       filterName = "";
     }
@@ -145,7 +139,6 @@ export class UserSettingComponent implements OnInit {
           this.role.getUserSetting().defaultTissueFilter = filterName;
           this.userSetting.defaultTissueFilter = filterName;
         }
-        console.log(data);
         this.saving = false;
       },
       err => {

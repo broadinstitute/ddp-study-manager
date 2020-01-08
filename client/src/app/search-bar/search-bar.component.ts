@@ -96,9 +96,9 @@ export class SearchBarComponent implements OnInit {
         i++;
         continue;
       }
-      console.log(part);
-      console.log(state);
-      console.log(this.allFieldNames);
+      // console.log(part);
+      // console.log(state);
+      // console.log(this.allFieldNames);
       switch (state) {
         case -1:
           if (logicalOperators.includes(part)) {
