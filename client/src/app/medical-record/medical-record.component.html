@@ -515,61 +515,12 @@
           <app-field-datepicker [dateString]="endDate" (dateChanged)="endDateChanged($event)"></app-field-datepicker>
         </td>
       </tr>
-      <tr>
+      <tr *ngFor="let mrCoverSetting of mrCoverPdfSettings">
         <td>
-          <md-checkbox [(ngModel)]="notesCb" color="primary"></md-checkbox>
+          <md-checkbox [(ngModel)]="mrCoverSetting.selected" color="primary"></md-checkbox>
         </td>
         <td>
-          All clinic notes from treating providers, including medical oncologists, residents, fellows, radiation oncologists, surgeons, nurse practitioners,
-          etc.
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <md-checkbox [(ngModel)]="treatmentCb" color="primary"></md-checkbox>
-        </td>
-        <td>
-          Cancer treatment data (including radiation, chemotherapy and hormonal therapy).
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <md-checkbox [(ngModel)]="pathologyCb" color="primary"></md-checkbox>
-        </td>
-        <td>
-          Pathology reports
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <md-checkbox [(ngModel)]="operativeCb" color="primary"></md-checkbox>
-        </td>
-        <td>
-          Operative reports
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <md-checkbox [(ngModel)]="referralsCb" color="primary"></md-checkbox>
-        </td>
-        <td>
-          Referrals
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <md-checkbox [(ngModel)]="exchangeCb" color="primary"></md-checkbox>
-        </td>
-        <td>
-          MD to MD exchange
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <md-checkbox [(ngModel)]="geneticCb" color="primary"></md-checkbox>
-        </td>
-        <td>
-          Genetic testing reports
+          {{mrCoverSetting.name}}
         </td>
       </tr>
       </tbody>
