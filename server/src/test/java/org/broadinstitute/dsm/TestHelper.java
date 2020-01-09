@@ -254,7 +254,7 @@ public class TestHelper {
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
         String valueFromDB = DBTestUtil.getQueryDetail(SELECT_DATA_MEDICALRECORD_QUERY, medicalRecordId, columnName);
 
-        if (!valueName.equals("m.followUps")) {//because difference in Json parsing this will be checked in a separate test TODO Pegah - where?
+        if (!valueName.equals("m.followUps")) {
             Assert.assertEquals(value, valueFromDB);
         }
 

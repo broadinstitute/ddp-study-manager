@@ -66,7 +66,7 @@ public class ViewFilter {
     private String fDeleted;
 
     @ColumnName (DBConstants.SHARED_FILTER)
-    private String shared; //TODO Pegah - why string and not boolean?
+    private String shared;
 
     @ColumnName (DBConstants.QUERY_ITEMS)
     private String queryItems;
