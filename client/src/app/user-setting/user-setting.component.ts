@@ -46,7 +46,7 @@ export class UserSettingComponent implements OnInit {
     this.additionalMessage = null;
     // if (localStorage.getItem(ComponentService.MENU_SELECTED_REALM) == null || localStorage.getItem(ComponentService.MENU_SELECTED_REALM)
     // === undefined) { this.additionalMessage = "Please select a realm"; } else {
-      this.checkRight();
+    this.checkRight();
     this.userSetting = this.role.getUserSetting();
     // }
     window.scrollTo(0, 0);
@@ -72,7 +72,7 @@ export class UserSettingComponent implements OnInit {
             this.additionalMessage = null;
           }
         });
-        if (!allowedToSeeInformation) {
+        if (!allowedToSeeInformation && localStorage.getItem(ComponentService.MENU_SELECTED_REALM) !== null && localStorage.getItem(ComponentService.MENU_SELECTED_REALM) !== undefined) {
           this.compService.customViews = null;
           this.errorMessage = "You are not allowed to see information of the selected realm at that category";
         }
