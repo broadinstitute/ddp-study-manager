@@ -338,17 +338,19 @@ export class TissueListComponent implements OnInit {
       this.dsmService.applyFilter(this.defaultFilter, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, null).subscribe(
         data => {
           if (this.defaultFilter != null && this.defaultFilter != undefined && this.defaultFilter.filters != null) {
-            for (let filter of this.defaultFilter.filters) {
-              for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
-                if (f.participantColumn.name === filter.participantColumn.name) {
-                  let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
-                  if (index !== -1) {
-                    this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
-                    this.allColumns[filter.participantColumn.tableAlias].push(filter);
-                  }
-                }
-              }
-            }
+            this.adjustAllColumns(this.defaultFilter);
+            // for (let filter of this.defaultFilter.filters) {
+            // for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
+            //   if (f.participantColumn.name === filter.participantColumn.name) {
+            //     let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
+            //     if (index !== -1) {
+            //       this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
+            //       this.allColumns[filter.participantColumn.tableAlias].push(filter);
+            //       break;
+            //     }
+            //   }
+            // }
+            // }
           }
           let date = new Date();
           this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
@@ -774,17 +776,19 @@ export class TissueListComponent implements OnInit {
     this.dsmService.applyFilter(savedFilter, this.realm, this.parent, null).subscribe(
       data => {
         if (savedFilter != null && savedFilter.filters != null) {
-          for (let filter of savedFilter.filters) {
-            for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
-              if (f.participantColumn.name === filter.participantColumn.name) {
-                let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
-                if (index !== -1) {
-                  this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
-                  this.allColumns[filter.participantColumn.tableAlias].push(filter);
-                }
-              }
-            }
-          }
+          this.adjustAllColumns(savedFilter);
+          // for (let filter of savedFilter.filters) {
+          //   for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
+          //     if (f.participantColumn.name === filter.participantColumn.name) {
+          //       let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
+          //       if (index !== -1) {
+          //         this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
+          //         this.allColumns[filter.participantColumn.tableAlias].push(filter);
+          //         break;
+          //       }
+          //     }
+          //   }
+          // }
         }
         let date = new Date();
         this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
@@ -843,17 +847,19 @@ export class TissueListComponent implements OnInit {
     this.dsmService.applyFilter(quickFilter, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, null).subscribe(
       data => {
         if (quickFilter != null && quickFilter.filters != null) {
-          for (let filter of quickFilter.filters) {
-            for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
-              if (f.participantColumn.name === filter.participantColumn.name) {
-                let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
-                if (index !== -1) {
-                  this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
-                  this.allColumns[filter.participantColumn.tableAlias].push(filter);
-                }
-              }
-            }
-          }
+          this.adjustAllColumns(quickFilter);
+          // for (let filter of quickFilter.filters) {
+          //   for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
+          //     if (f.participantColumn.name === filter.participantColumn.name) {
+          //       let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
+          //       if (index !== -1) {
+          //         this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
+          //         this.allColumns[filter.participantColumn.tableAlias].push(filter);
+          //         break;
+          //       }
+          //     }
+          //   }
+          // }
         }
         let date = new Date();
         this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
@@ -909,17 +915,19 @@ export class TissueListComponent implements OnInit {
     this.dsmService.applyFilter(destroyingViewFilter, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, null).subscribe(
       data => {
         if (destroyingViewFilter.filters != null) {
-          for (let filter of destroyingViewFilter.filters) {
-            for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
-              if (f.participantColumn.name === filter.participantColumn.name) {
-                let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
-                if (index !== -1) {
-                  this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
-                  this.allColumns[filter.participantColumn.tableAlias].push(filter);
-                }
-              }
-            }
-          }
+          this.adjustAllColumns(destroyingViewFilter);
+          // for (let filter of destroyingViewFilter.filters) {
+          //   for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
+          //     if (f.participantColumn.name === filter.participantColumn.name) {
+          //       let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
+          //       if (index !== -1) {
+          //         this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
+          //         this.allColumns[filter.participantColumn.tableAlias].push(filter);
+          //         break;
+          //       }
+          //     }
+          //   }
+          // }
         }
         let date = new Date();
         this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
@@ -1119,24 +1127,6 @@ export class TissueListComponent implements OnInit {
   }
 
   downloadCurrentData() {
-    // let m = {a: 4, b: 5};
-    // let m2 = {a: 6, b: 7};
-    // let m3 = {a: 8, b: 9};
-    // let m4 = {a: 10, b: 11};
-    // let o = {
-    //   mr: [m, m2, m3, m4],
-    //   f: {c: 3, d: [{i: 1}, {i: 2}]},
-    //   g: 0,
-    // };
-    // let columns = {
-    //   e: ["a", "b"], f: [], d: ["i"],
-    // };
-    // let columns2 = {
-    //   a1: [], a2: ["a", "b"],
-    // };
-    // let paths2 = [["mr", "e"], ["f", "f"]];
-    // let paths = [["mr", "a2"]];
-
     let date = new Date();
     let fileName = "Tissue_" + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION;
     if (this.selectedColumns["t"] != null && this.selectedColumns["t"].length > 0) {
@@ -1145,14 +1135,10 @@ export class TissueListComponent implements OnInit {
     else {
       Utils.downloadCurrentData(this.tissueListOncHistories, [["data", Statics.ES_ALIAS], ["tissueList", "", "oncHistoryDetails", "oD"], ["tissue", "t"]], this.selectedColumns, fileName);
     }
-    //    Utils.downloadCurrentData([o], paths2, columns, fileName);
   }
 
 
   public doFilterByQuery(queryText: string) {
-    let data = {
-      "filterQuery": queryText,
-    };
     this.dsmService.applyFilter(null, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, queryText).subscribe(data => {
       let date = new Date();
       this.additionalMessage = null;
@@ -1439,6 +1425,21 @@ export class TissueListComponent implements OnInit {
 
     }
 
+  }
+
+  private adjustAllColumns(viewFilter: ViewFilter) {
+    for (let filter of viewFilter.filters) {
+      for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
+        if (f.participantColumn.name === filter.participantColumn.name) {
+          let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
+          if (index !== -1) {
+            this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
+            this.allColumns[filter.participantColumn.tableAlias].push(filter);
+            break;
+          }
+        }
+      }
+    }
   }
 
 }
