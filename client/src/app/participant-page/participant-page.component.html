@@ -342,7 +342,8 @@
                              (change)="onAdditionalValueChange($event, fieldSetting.columnName)"
                              [disabled]="participantExited">
                 </md-checkbox>
-                <app-field-datepicker *ngIf="fieldSetting.displayType === 'DATE'" [colorDuringPatch]="isPatchedCurrently(fieldSetting.columnName)"
+                <app-field-datepicker *ngIf="fieldSetting.displayType === 'DATE'"
+                                      [colorDuringPatch]="isPatchedCurrently(fieldSetting.columnName)"
                                       [disabled]="participantExited"
                                       [dateString]="getAdditionalValue(fieldSetting.columnName)"
                                       (dateChanged)="onAdditionalValueChange($event, fieldSetting.columnName)"></app-field-datepicker>
@@ -633,7 +634,8 @@
                 <hr style="border-color: black">
                 <app-medical-record-abstraction [abstractionFormControls]="reviewFields"
                                                 [abstractionActivity]="'review'" [status]="participant.review.status"
-                                                [fileList]="fileListUsed" [drugList]="drugs" [cancerList]="cancers" [participant]="participant"
+                                                [fileList]="fileListUsed" [drugList]="drugs" [cancerList]="cancers"
+                                                [participant]="participant"
                                                 (emitFileName)="addFileToParticipant($event, participant.review)">
                 </app-medical-record-abstraction>
               </div>

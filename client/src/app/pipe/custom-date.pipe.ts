@@ -8,7 +8,6 @@ import {DatePipe} from "@angular/common";
 })
 export class DateFormatPipe implements PipeTransform {
   transform(value: any, args?: any): any {
-    console.log(value);
     if (value != null) {
       if (value.length == 10) {
         let tmp = Utils.getDate(value);
@@ -22,8 +21,6 @@ export class DateFormatPipe implements PipeTransform {
       }
       else if (typeof value === "number") {
         let date =  new Date(value);
-        // let s = date.getMonth() + 1 + "/" + date.getDate() + "/" + date.getFullYear();
-        // console.log(s);
         return new DatePipe( "en-US" ).transform( date, Utils.DATE_STRING_IN_CVS );
       }
     }

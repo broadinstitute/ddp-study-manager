@@ -299,11 +299,9 @@ export class ParticipantListComponent implements OnInit {
           jsonData.filters.forEach((val) => {
             let view: ViewFilter = ViewFilter.parseFilter(val, this.sourceColumns);
             if (val.userId.includes("System")) {
-              // view = ViewFilter.parseFilter(val, this.sourceColumns);
               this.quickFilters.push(view);
             }
             else {
-              // view = ViewFilter.parseFilter(val, this.sourceColumns);
               this.savedFilters.push(view);
             }
           });
@@ -416,6 +414,7 @@ export class ParticipantListComponent implements OnInit {
                   if (index !== -1) {
                     this.sourceColumns[filter.participantColumn.tableAlias].splice(index, 1);
                     this.sourceColumns[filter.participantColumn.tableAlias].push(filter);
+                    break;
                   }
                 }
               }
