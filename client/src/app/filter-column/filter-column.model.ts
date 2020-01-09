@@ -339,11 +339,10 @@ export class Filter {
     return result;
   }
 
-  public static parseToCurrentFilterArray(json, allColumns, s: string): Filter[] {
+  public static parseToCurrentFilterArray(json, allColumns): Filter[] {
     if (json.filters == undefined) {
       return null;
     }
-    console.log(json);
     let filters: Filter[] = [];
     for (let filter of json.filters) {
       if (allColumns[filter.participantColumn.tableAlias] != undefined) {
@@ -351,7 +350,6 @@ export class Filter {
           return f.participantColumn.tableAlias === filter.participantColumn.tableAlias && f.participantColumn.name === filter.participantColumn.name;
         });
         if (f != undefined) {
-          console.log(f);
           filter.type = f.type;
           filter.participantColumn = f.participantColumn;
 
@@ -366,12 +364,9 @@ export class Filter {
             selectedOptions, (filter.filter1 == null || filter.filter1 == undefined) ? null : filter.filter1.value,
             (filter.filter2 == null || filter.filter2 == undefined) ? null : filter.filter2.value, null, f.alwaysExact, filter.empty,
             filter.notEmpty, f.singleOption, f.additionalType);
-          console.log(newFilter);
           filters.push(newFilter);
         }
-        else {
-          s = s + "" + filter.participantColumn.name + ", ";
-        }
+
       }
       else {
         for (let source of Object.keys(allColumns)) {
@@ -396,14 +391,9 @@ export class Filter {
             filters.push(newFilter);
             break;
           }
-          else {
-            s = s + "" + filter.participantColumn.name + ", ";
-          }
+
         }
       }
-    }
-    if (s.length > 0) {
-      s = "The following columns does not exist in this realm: " + s;
     }
     for (let filter of filters) {
       if (filter.participantColumn.object !== undefined && filter.participantColumn.object !== null && filter.participantColumn.object !== ''){
@@ -411,8 +401,6 @@ export class Filter {
       }
 
     }
-    console.log(filters);
-    console.log(allColumns);
     return filters;
   }
 

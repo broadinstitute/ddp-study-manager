@@ -24,7 +24,7 @@ export class UserSettingComponent implements OnInit {
   userSetting: UserSetting = null;
   tissueListFilterNames: string[] = [];
   participantListFilterNames: string[] = [];
-  loading = true;
+  realm: string;
 
   constructor(private route: ActivatedRoute, private role: RoleService, private dsmService: DSMService, private router: Router, private auth: Auth, private util: Utils,
               private compService: ComponentService) {
@@ -33,8 +33,8 @@ export class UserSettingComponent implements OnInit {
     }
     this.additionalMessage = null;
     this.route.queryParams.subscribe(params => {
-      let realm = params[DSMService.REALM] || null;
-      if (realm != null) {
+      this.realm = params[DSMService.REALM] || null;
+      if (this.realm != null) {
         this.additionalMessage = null;
         this.checkRight();
       }
@@ -44,12 +44,11 @@ export class UserSettingComponent implements OnInit {
 
   ngOnInit() {
     this.additionalMessage = null;
-    if (localStorage.getItem(ComponentService.MENU_SELECTED_REALM) == null || localStorage.getItem(ComponentService.MENU_SELECTED_REALM) === undefined) {
-      this.additionalMessage = "Please select a realm";
-    }
-    else {
+    // if (localStorage.getItem(ComponentService.MENU_SELECTED_REALM) == null || localStorage.getItem(ComponentService.MENU_SELECTED_REALM)
+    // === undefined) { this.additionalMessage = "Please select a realm"; } else {
       this.checkRight();
-    }
+    this.userSetting = this.role.getUserSetting();
+    // }
     window.scrollTo(0, 0);
   }
 
@@ -67,14 +66,13 @@ export class UserSettingComponent implements OnInit {
           if (localStorage.getItem(ComponentService.MENU_SELECTED_REALM) === val) {
             allowedToSeeInformation = true;
             this.getSavedFilters();
+            this.realm = val;
             this.userSetting = this.role.getUserSetting();
-            this.loading = false;
             this.errorMessage = null;
             this.additionalMessage = null;
           }
         });
         if (!allowedToSeeInformation) {
-          this.loading = true;
           this.compService.customViews = null;
           this.errorMessage = "You are not allowed to see information of the selected realm at that category";
         }
@@ -165,8 +163,10 @@ export class UserSettingComponent implements OnInit {
             this.participantListFilterNames.push(val.filterName);
           }
         });
+        console.log(this.tissueListFilterNames);
       },
       err => {
+        this.errorMessage = "Error getting a list of filters, Please contact your DSM Developer\n" + err;
       });
   }
 
