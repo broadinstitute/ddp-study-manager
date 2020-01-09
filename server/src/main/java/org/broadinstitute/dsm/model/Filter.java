@@ -188,7 +188,7 @@ public class Filter {
             }
         }
 
-        logger.info(finalQuery); //TODO pegah need to be removed at the end!!!
+//        logger.info(finalQuery);
         return finalQuery;
     }
 
