@@ -406,6 +406,11 @@ md-hint.ErrorMessageForm {
   padding-bottom: 15px !important;
 }
 
+.TD--Padding-Top {
+  margin-bottom: 6px !important;
+  padding-bottom: 6px !important;
+}
+
 .TD--Padding-Left-TINY {
   padding-left: 4px;
 }
