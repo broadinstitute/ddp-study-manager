@@ -39,13 +39,12 @@ public class ViewFilter {
     public static final String SQL_INSERT_VIEW = "INSERT INTO view_filters (view_columns, display_name, created_by, shared, query_items, parent,  quick_filter_name, ddp_group_id, changed_by, last_changed, deleted) " +
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     public static final String SQL_SELECT_USER_FILTERS = "SELECT * FROM view_filters WHERE (created_by = ? OR (created_by = 'System' AND ddp_group_id = ? )" +
-            "OR (shared = 1 AND ddp_group_id = ? ) OR (ddp_group_id is NULL AND ddp_realm_id LIKE '%#%') ) AND deleted <> 1";
+            "OR (shared = 1 AND ddp_group_id = ? ) OR (ddp_group_id is NULL AND ddp_realm_id LIKE '%#%') ) AND deleted <> 1 ";
     public static final String SQL_SELECT_QUERY_ITEMS = "SELECT query_items, quick_filter_name FROM view_filters WHERE display_name = ? AND parent = ?";
     public static final String SQL_GET_DEFAULT_FILTER = "SELECT display_name from view_filters WHERE default_users LIKE '%#%' AND parent = ?";
     public static final String SQL_SELECT_DEFAULT_FILTER_USERS = "SELECT default_users FROM view_filters WHERE display_name = ? AND parent = ? ";
     public static final String SQL_UPDATE_DEFAULT_FILTER = "UPDATE view_filters SET default_users = ? WHERE display_name = ? AND parent = ? ";
     public static final String SQL_AND_PARENT = " AND parent = ? ";
-    public static final String SQL_ORDER_BY_NAME = " ORDER BY display_name ";
 
     public static final String DESTROYING_FILTERS = "destruction";
     public static final String QUERIES_FOR_DIFFERENT_TABLES_DELIMITER = "";
@@ -240,7 +239,6 @@ public class ViewFilter {
             if (StringUtils.isNotBlank(parent)) {
                 query = query + SQL_AND_PARENT;
             }
-            query = query + SQL_ORDER_BY_NAME;
             query = query.replaceAll("(%#%)", "%" + realm + ",%");
 
             try (PreparedStatement stmt = conn.prepareStatement(query)) {

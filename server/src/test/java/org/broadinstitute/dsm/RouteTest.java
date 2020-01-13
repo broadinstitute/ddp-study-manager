@@ -14,10 +14,7 @@ import org.broadinstitute.ddp.email.SendGridEventData;
 import org.broadinstitute.ddp.handlers.util.*;
 import org.broadinstitute.ddp.security.SecurityHelper;
 import org.broadinstitute.dsm.db.*;
-import org.broadinstitute.dsm.model.Value;
-import org.broadinstitute.dsm.model.DashboardInformation;
-import org.broadinstitute.dsm.model.LookupResponse;
-import org.broadinstitute.dsm.model.ParticipantWrapper;
+import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.mbc.MBC;
 import org.broadinstitute.dsm.model.mbc.MBCInstitution;
 import org.broadinstitute.dsm.model.mbc.MBCParticipant;
@@ -393,7 +390,7 @@ public class RouteTest extends TestHelper {
             ddpPath = ddpPath + "/" + medicalRecordId;
         }
 
-        String json = "{\"ddpParticipantId\": \"" + FAKE_DDP_PARTICIPANT_ID + "\", \"userId\": \"26\"}";
+        String json = "{\"ddpParticipantId\": \"" + FAKE_DDP_PARTICIPANT_ID + "\", \"userId\": \"26\", \"exchange_cb\": true}";
         HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "downloadPDF" + "/" + ddpPath + "?realm=" + ddp), json, testUtil.buildAuthHeaders()).returnResponse();
 
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
