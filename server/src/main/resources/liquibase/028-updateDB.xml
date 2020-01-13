@@ -51,4 +51,11 @@
         <modifyDataType columnName="file_page" newDataType="VARCHAR(200)" tableName="ddp_medical_record_review"/>
         <modifyDataType columnName="file_page" newDataType="VARCHAR(200)" tableName="ddp_medical_record_qc"/>
     </changeSet>
+
+    <changeSet author="simone" id="DDP-3888_10012020">
+        <addColumn tableName="ddp_participant_record">
+            <column name="abstraction_ready" type="INT" afterColumn="minimal_mr">
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>
