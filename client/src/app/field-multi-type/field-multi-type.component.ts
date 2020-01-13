@@ -1,5 +1,4 @@
 import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
-import {forEach} from "@angular/router/src/utils/collection";
 import {Value} from "../utils/value.model";
 
 @Component( {
@@ -103,9 +102,6 @@ export class FieldMultiTypeComponent implements OnInit {
           if (other[ value ] != null && other[ value ] != "") {
             this._other[ value ] = other[ value ];
           }
-        }
-        else if (this._multiType[ value ] === "other") {
-          this._other[ value ] = "";
         }
       }
     }

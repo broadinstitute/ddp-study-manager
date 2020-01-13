@@ -37,7 +37,7 @@ public class TestHelper {
     public static final String SELECT_EMAILQUEUE_QUERY = "select * from EMAIL_QUEUE where EMAIL_RECORD_ID = ? and REMINDER_TYPE = ? and EMAIL_DATE_PROCESSED is null";
     public static final String SELECT_USER_SETTING = "select * from user_settings settings, access_user user where user.user_id = settings.user_id and user.is_active = 1 and user.name = ?";
 
-    public static final String TEST_DDP = "testDDP";
+    public static final String TEST_DDP = "TestDDP";
     public static final String TEST_DDP_2 = "anotherDDP";
     public static final String TEST_DDP_MIGRATED = "migratedDDP";
     public static final String DDP_PROMISE = "promise";
@@ -152,6 +152,12 @@ public class TestHelper {
         checkRole("participant_event", roles, testUser, testGroup);
         checkRole("participant_exit", roles, testUser, testGroup);
         checkRole("survey_creation", roles, testUser, testGroup);
+        checkRole("field_settings", roles, testUser, testGroup);
+
+        //adding instance setting
+        if (!DBTestUtil.checkIfValueExists("SELECT * from instance_settings where ddp_instance_id = (SELECT ddp_instance_id from ddp_instance where instance_name = ?) ", TEST_DDP)) {
+            DBTestUtil.executeQuery("INSERT INTO instance_settings set mr_cover_pdf = \"[{\\\"value\\\":\\\"exchange_cb\\\", \\\"name\\\":\\\"MD to MD exchange\\\", \\\"type\\\":\\\"checkbox\\\"}]\", ddp_instance_id = (SELECT ddp_instance_id from ddp_instance where instance_name = \"" + TEST_DDP + "\") ");
+        }
 
         DBTestUtil.executeQuery("UPDATE ddp_instance set is_active = 1 where instance_name = \"" + TEST_DDP_MIGRATED + "\"");
 

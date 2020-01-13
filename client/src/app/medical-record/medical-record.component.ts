@@ -38,6 +38,7 @@ export class MedicalRecordComponent implements OnInit {
   @Input() participant: Participant;
   @Input() medicalRecord: MedicalRecord;
   @Input() settings;
+  @Input() mrCoverPdfSettings;
   @Output() leaveMedicalRecord = new EventEmitter();
   @Output() leaveParticipant = new EventEmitter();
 
@@ -65,13 +66,6 @@ export class MedicalRecordComponent implements OnInit {
 
   startDate: string;
   endDate: string;
-  notesCb: boolean = true;
-  treatmentCb: boolean = true;
-  pathologyCb: boolean = true;
-  operativeCb: boolean = true;
-  referralsCb: boolean = true;
-  exchangeCb: boolean = true;
-  geneticCb: boolean = true;
   showFollowUp: boolean = false;
   pdfs: Array<PDFModel> = [];
   selectedPDF: string;
@@ -253,8 +247,7 @@ export class MedicalRecordComponent implements OnInit {
     else {
       this.disableDownloadCover = true;
       this.dsmService.downloadCoverPDFs( this.participant.participant.ddpParticipantId, this.medicalRecord.medicalRecordId,
-        this.startDate, this.endDate, this.notesCb, this.treatmentCb, this.pathologyCb, this.operativeCb, this.referralsCb,
-        this.exchangeCb, this.geneticCb, localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(
+        this.startDate, this.endDate, this.mrCoverPdfSettings, localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(
         data => {
           // console.info(data);
           this.downloadFile( data, "_MRRequest_" + this.medicalRecord.name );

@@ -14,6 +14,7 @@ import {Statics} from "../utils/statics";
 import {OncHistoryDetail} from "../onc-history-detail/onc-history-detail.model";
 import {ModalComponent} from "../modal/modal.component";
 import {Tissue} from "../tissue/tissue.model";
+import {Value} from "../utils/value.model";
 import {DDPParticipantInformation} from "./participant-page.model";
 import {Result} from "../utils/result.model";
 import {NameValue} from "../utils/name-value.model";
@@ -40,6 +41,7 @@ export class ParticipantPageComponent implements OnInit {
   @Input() activeTab: string;
   @Input() activityDefinitions: Array<ActivityDefinition>;
   @Input() settings: {};
+  @Input() mrCoverPdfSettings: Value[];
   @Input() oncHistoryId: string;
   @Input() mrId: string;
   @Output() leaveParticipant = new EventEmitter();
@@ -80,6 +82,7 @@ export class ParticipantPageComponent implements OnInit {
   finalFields: Array<AbstractionGroup>;
 
   gender: string;
+  counterReceived: number = 0;
 
   constructor( private auth: Auth, private compService: ComponentService, private dsmService: DSMService, private router: Router,
                private role: RoleService, private util: Utils, private route: ActivatedRoute ) {
@@ -147,7 +150,6 @@ export class ParticipantPageComponent implements OnInit {
                 this.participant.data.dsm[ "hasConsentedToTissueSample" ] = true;
               }
 
-              let counterReceived: number = 0;
               let medicalRecords = this.participant.medicalRecords;
               for (let mr of medicalRecords) {
                 if (mr.mrDocumentFileNames != null) {
@@ -174,13 +176,10 @@ export class ParticipantPageComponent implements OnInit {
                   }
                 }
                 //add that here in case a mr was received but participant object does not know it
-                let receivedMedicalRecord = -1;
-                if (receivedMedicalRecord < 1) {
-                  if (mr.mrReceived != null && mr.mrReceived !== "") {
-                    counterReceived = counterReceived + 1;
-                  }
+                if (mr.mrReceived != null && mr.mrReceived !== "") {
+                  this.counterReceived = this.counterReceived + 1;
                 }
-                if (counterReceived > 0) {
+                if (this.counterReceived > 0) {
                   if (this.hasRole().isAbstracter() || this.hasRole().isQC()) {
                     this.loadAbstractionValues();
                   }
@@ -198,12 +197,12 @@ export class ParticipantPageComponent implements OnInit {
               this.auth.logout();
             }
             this.loadingParticipantPage = false;
-            this.additionalMessage = "Error - Saving loading participant information\nPlease contact your DSM developer";
+            this.additionalMessage = "Error - Loading participant institution information\nPlease contact your DSM developer";
           }
         );
       }
       else {// don't need to load institution data
-        let counterReceived: number = 0;
+        this.counterReceived = 0;
         let medicalRecords = this.participant.medicalRecords;
         for (let mr of medicalRecords) {
           if (mr.mrDocumentFileNames != null) {
@@ -218,13 +217,10 @@ export class ParticipantPageComponent implements OnInit {
             this.showParticipantRecord = true;
           }
           //add that here in case a mr was received but participant object does not know it
-          let receivedMedicalRecord = -1;
-          if (receivedMedicalRecord < 1) {
-            if (mr.mrReceived != null && mr.mrReceived !== "") {
-              counterReceived = counterReceived + 1;
-            }
+          if (mr.mrReceived != null && mr.mrReceived !== "") {
+            this.counterReceived = this.counterReceived + 1;
           }
-          if (counterReceived > 0) {
+          if (this.counterReceived > 0) {
             if (this.hasRole().isAbstracter() || this.hasRole().isQC()) {
               this.loadAbstractionValues();
             }
@@ -679,6 +675,7 @@ export class ParticipantPageComponent implements OnInit {
   }
 
   lockParticipant( abstraction: Abstraction ) {
+    this.loadingParticipantPage = true;
     let ddpParticipantId = this.participant.participant.ddpParticipantId;
     this.dsmService.changeMedicalRecordAbstractionStatus(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), ddpParticipantId, "in_progress", abstraction).subscribe(// need to subscribe, otherwise it will not send!
       data => {
@@ -697,6 +694,7 @@ export class ParticipantPageComponent implements OnInit {
             this.additionalMessage = "Error";
           }
         }
+        this.loadingParticipantPage = false;
       },
       err => {
         if (err._body === Auth.AUTHENTICATION_ERROR) {

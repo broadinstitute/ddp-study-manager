@@ -34,7 +34,7 @@
                 <ng-container *ngIf="field.type === 'cancers' || field.type === 'drugs'">
                   <md-select class="Input--Min-WIDTH" placeholder="Input Type" [(ngModel)]="field.additionalType" (change)="formChanged(field)" [disabled]="!field.newAdded">
                     <md-option value="multi_options"> Multi-Select</md-option>
-                    <md-option value="select"> Select</md-option>
+                    <md-option value="options"> Select</md-option>
                     <md-option value="text"> Text</md-option>
                   </md-select>
                 </ng-container>
@@ -77,7 +77,7 @@
                     <ng-container *ngIf="value.type === 'cancers' || value.type === 'drugs'">
                       <md-select class="Input--Min-WIDTH" placeholder="Input Type" [(ngModel)]="value.type2" (change)="formChanged(field)" [disabled]="!field.newAdded">
                         <md-option value="multi_options"> Multi-Select</md-option>
-                        <md-option value="select"> Select</md-option>
+                        <md-option value="options"> Select</md-option>
                         <md-option value="text"> Text</md-option>
                       </md-select>
                     </ng-container>

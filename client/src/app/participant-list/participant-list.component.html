@@ -1,6 +1,7 @@
 <ng-container *ngIf="showParticipantInformation">
   <app-participant-page [parentList]="parent" [participant]="participant" [activeTab]="selectedTab"
                         [drugs]="drugs" [cancers]="cancers" [settings]="settings"
+                        [mrCoverPdfSettings]="mrCoverPdfSettings"
                         [activityDefinitions]="activityDefinitionList"
                         (leaveParticipant)="showParticipantInformation=false"></app-participant-page>
 
