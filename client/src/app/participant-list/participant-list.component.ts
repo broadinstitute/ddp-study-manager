@@ -123,7 +123,6 @@ export class ParticipantListComponent implements OnInit {
   private checkRight() {
     //assumption for now: profile parameters are always the same, only survey will be dynamic per ddp
     this.loadingParticipants = localStorage.getItem( ComponentService.MENU_SELECTED_REALM );
-    // this.loadAssignees();
     this.setSelectedFilterName( "" );
     this.currentFilter = null;
     this.filterQuery = null;
@@ -179,9 +178,33 @@ export class ParticipantListComponent implements OnInit {
         this.settings = {};
         this.getSourceColumnsFromFilterClass();
         if (jsonData.assignees != null) {
+          // let assigneesMap = [];
           jsonData.assignees.forEach( ( val ) => {
-            this.assignees.push( Assignee.parse( val ) );
+            let assignee = Assignee.parse( val );
+            this.assignees.push( assignee );
+            // assigneesMap.push( new NameValue( assignee.assigneeId, assignee.name ) );
           } );
+          // adding options to source column
+          // if (this.sourceColumns[ "p" ] != null) {
+          //   this.sourceColumns[ "p" ].forEach( ( col, i ) => {
+          //     if (col.participantColumn.name === Filter.ASSIGNEE_MR.participantColumn.name) {
+          //       this.sourceColumns[ "p" ][ i ] = new Filter( ParticipantColumn.ASSIGNEE_MR, Filter.OPTION_TYPE, assigneesMap );
+          //     }
+          //   } );
+          //   this.sourceColumns[ "p" ].forEach( ( col, i ) => {
+          //     if (col.participantColumn.name === Filter.ASSIGNEE_TISSUE.participantColumn.name) {
+          //       this.sourceColumns[ "p" ][ i ] = new Filter( ParticipantColumn.ASSIGNEE_TISSUE, Filter.OPTION_TYPE, assigneesMap );
+          //     }
+          //   } );
+          // }
+          // if(this.sourceColumns["a"] != null) {
+          //   this.sourceColumns[ "a" ].forEach( ( col, i ) => {
+          //     if (col.participantColumn.name === Filter.ABSTRACTION_USER.participantColumn.name) {
+          //       // col.options = assigneesMap;
+          //       this.sourceColumns[ "a" ][ i ] = new Filter( ParticipantColumn.ABSTRACTION_USER, Filter.OPTION_TYPE, assigneesMap );
+          //     }
+          //   } );
+          // }
         }
         if (jsonData.drugs != null) {
           jsonData.drugs.forEach( ( val ) => {
@@ -512,25 +535,6 @@ export class ParticipantListComponent implements OnInit {
   }
 
   showFiltersTable() {
-    let assigneesMap = [];
-    this.assignees.forEach( assignee => {
-      if (assignee.assigneeId !== "-1") {
-        assigneesMap.push( new NameValue( assignee.assigneeId, assignee.name ) );
-      }
-    } );
-    //fixing assignee filters
-    if (this.selectedColumns[ "p" ] != null) {
-      this.selectedColumns[ "p" ].forEach( ( col, i ) => {
-        if (col.participantColumn.name === Filter.ASSIGNEE_MR.participantColumn.name) {
-          this.selectedColumns[ "p" ][ i ] = new Filter( ParticipantColumn.ASSIGNEE_MR, Filter.OPTION_TYPE, assigneesMap );
-        }
-      } );
-      this.selectedColumns[ "p" ].forEach( ( col, i ) => {
-        if (col.participantColumn.name === Filter.ASSIGNEE_TISSUE.participantColumn.name) {
-          this.selectedColumns[ "p" ][ i ] = new Filter( ParticipantColumn.ASSIGNEE_TISSUE, Filter.OPTION_TYPE, assigneesMap );
-        }
-      } );
-    }
     this.showCustomizeViewTable = false;
     this.showSavedFilters = false;
     this.showFilters = !this.showFilters;
@@ -655,8 +659,6 @@ export class ParticipantListComponent implements OnInit {
   }
 
   public doFilter() {
-
-    //    this.c
     let json = [];
     this.dataSources.forEach( ( value: string, key: string ) => {
         this.createFilterJson( json, key );
@@ -823,7 +825,6 @@ export class ParticipantListComponent implements OnInit {
     }, err => {
       this.additionalMessage = "Error - Sharing Filter, Please contact your DSM developer";
     } );
-
   }
 
   public deleteView( savedFilter: ViewFilter ) {
@@ -889,7 +890,6 @@ export class ParticipantListComponent implements OnInit {
   }
 
   private doSort( object: string ) {
-    console.log( object );
     let order = this.sortDir === "asc" ? 1 : -1;
     if (this.sortParent === "data" && object != null) {
       this.participantList.sort( ( a, b ) => this.sort( a.data[ object ][ this.sortField ], b.data[ object ][ this.sortField ], order ) );
