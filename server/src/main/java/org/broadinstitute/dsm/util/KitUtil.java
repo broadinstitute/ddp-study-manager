@@ -407,6 +407,7 @@ public class KitUtil {
                                                 }
                                                 else if (status.equals(detail.getStatus())) {
                                                     //get message of the other end statuses
+                                                    deliveredDate = detail.getDatetime().getTime();
                                                     message = detail.getMessage();
                                                     break;
                                                 }

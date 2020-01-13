@@ -108,7 +108,7 @@
     <md-input-container *ngIf="_other[v.value] != null && (v.type === 'options' || v.type2 === 'options' || v.type === 'multi_options' || v.type2 === 'multi_options')"
                         [ngClass]="{'Width--100': true, 'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(v.value)}">
       <input mdInput maxlength="200" [disabled]="disabled || !patchFinished" autocomplete="off"
-             [(ngModel)]="_other[v.value]" placeholder="Other"
+             [(ngModel)]="_other[v.value]" placeholder="{{v.value}} - Other"
              (change)="multiTypeValueChanged($event, _multiType, 'other', v)"
              (blur)="currentField(null)" (focus)="currentField(v.value)">
     </md-input-container>

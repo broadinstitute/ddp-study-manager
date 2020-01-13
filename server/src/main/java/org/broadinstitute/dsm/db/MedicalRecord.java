@@ -10,6 +10,7 @@ import org.broadinstitute.ddp.handlers.util.MedicalInfo;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.TableName;
+import org.broadinstitute.dsm.model.FollowUp;
 import org.broadinstitute.dsm.model.mbc.MBCInstitution;
 import org.broadinstitute.dsm.model.mbc.MBCParticipant;
 import org.broadinstitute.dsm.statics.*;
