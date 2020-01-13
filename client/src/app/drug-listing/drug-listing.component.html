@@ -128,7 +128,7 @@
               {{ drug.dateAdded*1000 | date }}
           </td>
           <td>
-            <md-checkbox color="primary" *ngIf="hasRole().allowedToEditDrugList()" [checked]="drug.active" (change)="drug.active = $event.checked; check(i)" disableRipple></md-checkbox>
+            <md-checkbox color="primary" *ngIf="hasRole().allowedToEditDrugList()" [checked]="drug.active" (change)="drug.active = $event.checked; this._showWarningModal=true; check(i)" disableRipple></md-checkbox>
           </td>
         </tr>
       </ng-container>
@@ -145,3 +145,38 @@
     <button type="button" *ngIf="hasRole().allowedToEditDrugList()" class="btn btn-primary" (click)="saveDrugListings()">Save Drug Entries</button>
   </div>
 </div>
+
+
+<app-modal>
+  <div class="app-modal-header">
+    <ng-container *ngIf="_showWarningModal">
+      Warning! Deactivating a drug.
+    </ng-container>
+    <!--<ng-container *ngIf="!_showWarningModal">-->
+      <!--Successful!-->
+    <!--</ng-container>-->
+  </div>
+  <div class="app-modal-body">
+    <ng-container *ngIf="_showWarningModal">
+      {{_warningMessage}}
+    </ng-container>
+    <!--<ng-container *ngIf="!_showWarningModal">-->
+      <!--Successfully updated the destruction policy of this facility.-->
+    <!--</ng-container>-->
+  </div>
+  <div class="app-modal-footer">
+    <ng-container *ngIf="_showWarningModal && _warningMessage === _warningChangeMessage">
+      <button type="button" class="btn btn-default"
+              (click)="applyToAllModal.hide()">Cancel
+      </button>
+      <button type="button" class="btn btn-default" [disabled]="participantExited"
+              (click)="this.applyToAllModal.hide(); doRequest(oncHistoryDetail.destructionPolicy)">Yes
+      </button>
+    </ng-container>
+    <ng-container *ngIf="!_showWarningModal || _warningMessage === _warningChangeMessage">
+      <button type="button" class="btn btn-default" [disabled]="participantExited"
+              (click)="applyToAllModal.hide();">Ok
+      </button>
+    </ng-container>
+  </div>
+</app-modal>

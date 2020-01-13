@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import { DrugListing } from './drug-listing.model';
 import { Auth } from '../services/auth.service';
 import { DSMService } from '../services/dsm.service';
 import {RoleService} from '../services/role.service';
+import {ModalComponent} from '../modal/modal.component';
 
 @Component({
   selector: 'app-drug-listing',
@@ -11,11 +12,16 @@ import {RoleService} from '../services/role.service';
 })
 export class DrugListingComponent implements OnInit {
 
+  @ViewChild(ModalComponent)
+  public applyToAllModal: ModalComponent;
+
   errorMessage: string;
   additionalMessage: string;
 
   loading = false;
-
+  _showWarningModal = false;
+  _warningChangeMessage = 'Are you sure you want to deactivate this drug?';
+  _warningMessage = '';
   drugList: DrugListing[];
 
   constructor(private auth: Auth, private dsmService: DSMService, private role: RoleService) { }
@@ -24,9 +30,17 @@ export class DrugListingComponent implements OnInit {
     this.getListOfDrugObjects();
   }
 
+
+  public applyToAll() {
+    this._showWarningModal = true;
+    this._warningChangeMessage = this._warningChangeMessage;
+    this.applyToAllModal.show();
+  }
+
   getListOfDrugObjects() {
     this.drugList = [];
     this.loading = true;
+    this._showWarningModal = false;
     let jsonData: any[];
     this.dsmService.getDrugListings().subscribe(
       data => {
