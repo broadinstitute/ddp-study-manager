@@ -297,7 +297,7 @@ public class DashboardRoute extends RequestHandler {
 
             if (wrapper.getAbstractionActivities() != null) {
                 for (AbstractionActivity activity : wrapper.getAbstractionActivities()) {
-                    if (AbstractionUtil.ACTIVITY_FINAL.equals(activity.getActivity()) && AbstractionUtil.STATUS_DONE.equals(activity.getStatus())) {
+                    if (AbstractionUtil.ACTIVITY_FINAL.equals(activity.getActivity()) && AbstractionUtil.STATUS_DONE.equals(activity.getAStatus())) {
                         incrementCounter(dashboardValues, "abstraction.done");
                         incrementCounterPeriod(dashboardValuesPeriod, "abstraction.done", activity.getLastChanged(), start, end);
                     }

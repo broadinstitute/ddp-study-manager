@@ -99,7 +99,7 @@ public class KitRequestShipping extends KitRequest {
     private final String collaboratorParticipantId;
 
     @ColumnName (DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID)
-    private final String collaboratorSampleId;
+    private final String bspCollaboratorSampleId;
     private final String easypostAddressId;
     private final String realm;
 
@@ -146,7 +146,7 @@ public class KitRequestShipping extends KitRequest {
     }
 
     // shippingId = ddp_label !!!
-    public KitRequestShipping(String participantId, String collaboratorParticipantId, String collaboratorSampleId, String shippingId, String realm,
+    public KitRequestShipping(String participantId, String collaboratorParticipantId, String bspCollaboratorSampleId, String shippingId, String realm,
                               String kitType, String dsmKitRequestId, String dsmKitId, String labelUrlTo, String labelUrlReturn,
                               String trackingNumberTo, String trackingNumberReturn, String scannedTrackingNumber,
                               String trackingUrlTo, String trackingUrlReturn, long scanDate, boolean error, String message,
@@ -155,7 +155,7 @@ public class KitRequestShipping extends KitRequest {
                               String externalOrderNumber, boolean noReturn, String externalOrderStatus, String createdBy) {
         super(dsmKitRequestId, participantId, null, shippingId, externalOrderNumber, null, externalOrderStatus, null);
         this.collaboratorParticipantId = collaboratorParticipantId;
-        this.collaboratorSampleId = collaboratorSampleId;
+        this.bspCollaboratorSampleId = bspCollaboratorSampleId;
         this.realm = realm;
         this.kitType = kitType;
         this.dsmKitId = dsmKitId;

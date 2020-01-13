@@ -23,6 +23,7 @@ public class DBConstants {
     public static final String DDP_ONC_HISTORY_DETAIL_ALIAS = "oD";
     public static final String DDP_TISSUE_ALIAS = "t";
     public static final String DDP_KIT_REQUEST_ALIAS = "k";
+    public static final String DDP_ABSTRACTION_ALIAS = "a";
     public static final String ALIAS_DELIMITER = ".";
 
     //ddp instance
@@ -162,6 +163,7 @@ public class DBConstants {
     //participant record
     public static final String RECORD = "record";
     public static final String MINIMAL_MR = "minimal_mr";
+    public static final String ABSTRACTION_READY = "abstraction_ready";
 
     //oncHistoryDetails
     public static final String ONC_HISTORY_PREFIX = "oncDetail";
@@ -373,6 +375,7 @@ public class DBConstants {
     public static final String MEDICAL_RECORD_REVIEW = "ddp_medical_record_review";
     public static final String MEDICAL_RECORD_QC = "ddp_medical_record_qc";
     public static final String MEDICAL_RECORD_FINAL = "ddp_medical_record_final";
+    public static final String MEDICAL_RECORD_ABSTRACTION_ACTIVITY = "ddp_medical_record_abstraction_activity";
     public static final String MEDICAL_RECORD_ABSTRACTION_GROUP_ID = "medical_record_abstraction_group_id";
     public static final String MEDICAL_RECORD_ABSTRACTION_FIELD_ID = "medical_record_abstraction_field_id";
     public static final String MEDICAL_RECORD_ABSTRACTION_ID = "medical_record_abstraction_id";
@@ -392,6 +395,7 @@ public class DBConstants {
     public static final String START_DATE = "start_date";
     public static final String FILES_USED = "files_used";
     public static final String QUESTION = "question";
+    public static final String PROCESS = "process";
 
     //filter_tissue_view
     public static final String VIEW_FILTERS = "view_filters";
