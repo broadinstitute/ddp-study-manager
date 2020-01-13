@@ -14,11 +14,7 @@ import org.broadinstitute.ddp.email.SendGridEventData;
 import org.broadinstitute.ddp.handlers.util.*;
 import org.broadinstitute.ddp.security.SecurityHelper;
 import org.broadinstitute.dsm.db.*;
-import org.broadinstitute.dsm.model.Value;
-import org.broadinstitute.dsm.model.Value;
-import org.broadinstitute.dsm.model.DashboardInformation;
-import org.broadinstitute.dsm.model.LookupResponse;
-import org.broadinstitute.dsm.model.ParticipantWrapper;
+import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.mbc.MBC;
 import org.broadinstitute.dsm.model.mbc.MBCInstitution;
 import org.broadinstitute.dsm.model.mbc.MBCParticipant;
@@ -394,7 +390,7 @@ public class RouteTest extends TestHelper {
             ddpPath = ddpPath + "/" + medicalRecordId;
         }
 
-        String json = "{\"ddpParticipantId\": \"" + FAKE_DDP_PARTICIPANT_ID + "\", \"userId\": \"26\"}";
+        String json = "{\"ddpParticipantId\": \"" + FAKE_DDP_PARTICIPANT_ID + "\", \"userId\": \"26\", \"exchange_cb\": true}";
         HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "downloadPDF" + "/" + ddpPath + "?realm=" + ddp), json, testUtil.buildAuthHeaders()).returnResponse();
 
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
@@ -430,7 +426,7 @@ public class RouteTest extends TestHelper {
         String message = DDPRequestUtil.getContentAsString(response);
         DashboardInformation ddps = new Gson().fromJson(message, DashboardInformation.class);
         Assert.assertNotNull(ddps);
-        Assert.assertEquals(ddps.getDashboardValues(), 1); // TODO Simone - getMrReceivedFollowUpParticipant()
+        Assert.assertEquals(ddps.getDashboardValues(), "{all=1, status.ENROLLED=1}"); // TODO Simone - getMrReceivedFollowUpParticipant()
         Assert.assertEquals(ddps.getDashboardValues(), 1); // TODO Simone - getMrFollowUpSentParticipant()
 
         mrId = editMedicalRecord(TEST_DDP, "NEW_TEST_PARTICIPANT", "TEST_INSTITUTION", "m.followUpRequired", "1", "followup_required");
@@ -467,7 +463,7 @@ public class RouteTest extends TestHelper {
 
     @Test
     public void participantEndpoint() throws Exception {
-        ParticipantWrapper[] participants = getParticipants("/ui/applyFilter?parent=participantList&userId=1&realm=" + TEST_DDP);
+        ParticipantWrapper[] participants = getParticipants("/ui/applyFilter?parent=participantList&userId=26&realm=" + TEST_DDP);
         Assert.assertNotNull(participants);
         Assert.assertTrue(participants.length > 0);
     }
@@ -493,7 +489,7 @@ public class RouteTest extends TestHelper {
 
         Assert.assertEquals(200, responseAssign.getStatusLine().getStatusCode());
 
-        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/applyFilter?parent=participantList&userId=1&realm=" + TEST_DDP, testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/applyFilter?parent=participantList&userId=26&realm=" + TEST_DDP, testUtil.buildAuthHeaders()).returnResponse();
 
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 
@@ -505,7 +501,7 @@ public class RouteTest extends TestHelper {
 
     @Test
     public void institutionEndpoint() throws Exception {
-        String json = "{\"realm\": \"" + TEST_DDP + "\", \"ddpParticipantId\": \"" + TestHelper.FAKE_DDP_PARTICIPANT_ID + "\", \"userId\": \"1\"}";
+        String json = "{\"realm\": \"" + TEST_DDP + "\", \"ddpParticipantId\": \"" + TestHelper.FAKE_DDP_PARTICIPANT_ID + "\", \"userId\": \"26\"}";
         HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "institutions"), json, testUtil.buildAuthHeaders()).returnResponse();
 
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
@@ -775,7 +771,7 @@ public class RouteTest extends TestHelper {
         addOncHistoryDetails(participantId);
 
         //check if a oncHistoryDetail was returned
-        String json = "{\"realm\": \"" + TEST_DDP + "\", \"ddpParticipantId\": \"" + TestHelper.FAKE_DDP_PARTICIPANT_ID + "\", \"userId\": \"1\"}";
+        String json = "{\"realm\": \"" + TEST_DDP + "\", \"ddpParticipantId\": \"" + TestHelper.FAKE_DDP_PARTICIPANT_ID + "\", \"userId\": \"26\"}";
         HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "institutions"), json, testUtil.buildAuthHeaders()).returnResponse();
 
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
@@ -1543,7 +1539,7 @@ public class RouteTest extends TestHelper {
 
     @Test
     public void displaySettings() throws Exception {
-        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/" + "displaySettings/angio?userId=1&parent=participantList", testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/" + "displaySettings/angio?userId=26&parent=participantList", testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 
         List<Assignee> assignees = assigneeEndpoint();

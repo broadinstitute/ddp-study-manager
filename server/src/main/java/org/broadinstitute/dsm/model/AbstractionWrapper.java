@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.AbstractionActivity;
+import org.broadinstitute.dsm.db.AbstractionFinal;
 import org.broadinstitute.dsm.db.AbstractionGroup;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -30,11 +31,16 @@ public class AbstractionWrapper {
     private Collection<AbstractionGroup> abstraction;
     private Collection<AbstractionGroup> review;
     private Collection<AbstractionGroup> qc;
+    private Collection<AbstractionGroup> finalFields;
 
     public AbstractionWrapper(Collection<AbstractionGroup> abstraction, Collection<AbstractionGroup> review, Collection<AbstractionGroup> qc) {
         this.abstraction = abstraction;
         this.review = review;
         this.qc = qc;
+    }
+
+    public AbstractionWrapper(Collection<AbstractionGroup> finalFields) {
+        this.finalFields = finalFields;
     }
 
     public static AbstractionWrapper getAbstractionFieldValue(@NonNull String realm, @NonNull String ddpParticipantId) {
@@ -46,6 +52,11 @@ public class AbstractionWrapper {
             List<AbstractionGroup> review = AbstractionUtil.getAbstractionFieldValue(realm, ddpParticipantId, query, DBConstants.MEDICAL_RECORD_REVIEW_ID);
             List<AbstractionGroup> qc = AbstractionUtil.getQCFieldValue(realm, ddpParticipantId);
             return new AbstractionWrapper(abstraction, review, qc);
+        }
+        Map<String, List<AbstractionGroup>> abstractionSummary = AbstractionFinal.getAbstractionFinal(realm);
+        if (abstractionSummary != null && !abstractionSummary.isEmpty()) {
+            List<AbstractionGroup> abstractionGroup = abstractionSummary.get(ddpParticipantId);
+            return new AbstractionWrapper(abstractionGroup);
         }
         return null;
     }
