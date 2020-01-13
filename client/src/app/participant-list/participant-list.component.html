@@ -49,15 +49,11 @@
           <div id="searchTable" *ngIf="showFilters" class="table">
             <form>
               <ng-container *ngFor="let key of getKeys()">
-                <!--TODO S - currently not able to filter for samples-->
-                <!--TODO S - hasESData false will need to search client-side (shortId, firstName, lastName)-->
-                <ng-container *ngIf="key !== 'a'">
-                  <table *ngFor="let filter of selectedColumns[key]" style="border: none">
-                    <ng-container *ngIf="filter.participantColumn.name !== 'ddp'">
-                      <app-filter-column [dataFilter]="filter" [editable]="true"></app-filter-column>
-                    </ng-container>
-                  </table>
-                </ng-container>
+                <table *ngFor="let filter of selectedColumns[key]" style="border: none">
+                  <ng-container *ngIf="filter.participantColumn.name !== 'ddp'">
+                    <app-filter-column [dataFilter]="filter" [editable]="true"></app-filter-column>
+                  </ng-container>
+                </table>
               </ng-container>
 
               <button md-raised-button color="primary" (click)="doFilter()">Search</button>

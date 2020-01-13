@@ -39,6 +39,7 @@ export class Filter {
   public static PAPER_CR_RECEIVED = new Filter(ParticipantColumn.PAPER_CR_RECEIVED, Filter.DATE_TYPE);
   public static PARTICIPANT_NOTES = new Filter(ParticipantColumn.PARTICIPANT_NOTES, Filter.TEXT_TYPE);
   public static MINIMAL_RECORDS = new Filter(ParticipantColumn.MINIMAL_RECORDS, Filter.CHECKBOX_TYPE);
+  public static ABSTRACTION_READY = new Filter(ParticipantColumn.ABSTRACTION_READY, Filter.CHECKBOX_TYPE);
   public static ASSIGNEE_MR = new Filter(ParticipantColumn.ASSIGNEE_MR, Filter.OPTION_TYPE);
   public static ASSIGNEE_TISSUE = new Filter(ParticipantColumn.ASSIGNEE_TISSUE, Filter.OPTION_TYPE);
   public static EXIT_DATE = new Filter(ParticipantColumn.EXIT_DATE, Filter.DATE_TYPE);
@@ -172,7 +173,6 @@ export class Filter {
   public static ABSTRACTION_PROCESS_STATUS = new Filter(ParticipantColumn.ABSTRACTION_PROCESS_STATUS, Filter.OPTION_TYPE, [
     new NameValue("done", "Finished"),
     new NameValue("in_progress", "In Progress"),
-    new NameValue("not_started", "Not Started"),
     new NameValue("qc_in_progress", "QC in progress"),
     new NameValue("waiting_qc", "Waiting for QC")]);
   public static ABSTRACTION_STATUS = new Filter(ParticipantColumn.ABSTRACTION_STATUS, Filter.OPTION_TYPE, [
@@ -190,7 +190,7 @@ export class Filter {
     Filter.REALM, Filter.SHORT_ID, Filter.LEGACY_SHORT_ID, Filter.LEGACY_PARTICIPANT_ID, Filter.PARTICIPANT_ID, Filter.FIRST_NAME, Filter.LAST_NAME,
     Filter.COUNTRY, Filter.ENROLLMENT_STATUS, Filter.EMAIL, Filter.REGISTRATION_DATE, Filter.DO_NOT_CONTACT,
     Filter.ONC_HISTORY_CREATED, Filter.ONC_HISTORY_REVIEWED, Filter.PAPER_CR_SENT, Filter.PAPER_CR_RECEIVED,
-    Filter.PARTICIPANT_NOTES, Filter.MINIMAL_RECORDS, Filter.ASSIGNEE_MR, Filter.ASSIGNEE_TISSUE, Filter.EXIT_DATE,
+    Filter.PARTICIPANT_NOTES, Filter.MINIMAL_RECORDS, Filter.ABSTRACTION_READY, Filter.ASSIGNEE_MR, Filter.ASSIGNEE_TISSUE, Filter.EXIT_DATE,
     Filter.MR_INSTITUTION_NAME, Filter.MR_INSTITUTION_CONTACT, Filter.MR_INSTITUTION_PHONE, Filter.MR_INSTITUTION_FAX,
     Filter.MR_FAX_SENT, Filter.MR_FAX_SENT_2, Filter.MR_FAX_SENT_3, Filter.MR_RECEIVED,
     Filter.MR_DOCUMENT, Filter.MR_DOCUMENT_FILES, Filter.MR_PROBLEM, Filter.MR_PROBLEM_TEXT, Filter.MR_UNABLE_TO_OBTAIN,

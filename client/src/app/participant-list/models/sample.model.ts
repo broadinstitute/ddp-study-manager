@@ -6,9 +6,9 @@ export class Sample {
   static IN_QUEUE: string = "queue";
   static IN_ERROR: string = "error";
 
-  constructor( public collaboratorSampleId: string, public kitType: string, public scanDate: number, public error: boolean, public receiveDate: number, public deactivatedDate: number,
+  constructor( public bspCollaboratorSampleId: string, public kitType: string, public scanDate: number, public error: boolean, public receiveDate: number, public deactivatedDate: number,
                public trackingNumberTo: string, public scannedTrackingNumber: string, public kitLabel: string) {
-    this.collaboratorSampleId = collaboratorSampleId;
+    this.bspCollaboratorSampleId = bspCollaboratorSampleId;
     this.kitType = kitType;
     this.scanDate = scanDate;
     this.error = error;
@@ -36,7 +36,7 @@ export class Sample {
   }
 
   static parse( json ): Sample {
-    return new Sample( json.collaboratorSampleId, json.kitType, json.scanDate, json.error, json.receiveDate, json.deactivatedDate, json.trackingNumberTo,
+    return new Sample( json.bspCollaboratorSampleId, json.kitType, json.scanDate, json.error, json.receiveDate, json.deactivatedDate, json.trackingNumberTo,
       json.scannedTrackingNumber, json.kitLabel );
   }
 }
