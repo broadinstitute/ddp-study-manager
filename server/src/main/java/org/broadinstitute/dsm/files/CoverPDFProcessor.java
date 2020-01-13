@@ -1,12 +1,8 @@
 package org.broadinstitute.dsm.files;
 
-import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.exception.FileProcessingException;
-import org.broadinstitute.ddp.util.GoogleBucket;
-import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
-import org.broadinstitute.dsm.statics.RoutePath;
-import org.broadinstitute.dsm.util.DDPRequestUtil;
+import org.broadinstitute.dsm.db.InstanceSettings;
+import org.broadinstitute.dsm.model.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,13 +26,6 @@ public class CoverPDFProcessor extends PDFProcessor {
     public static final String FIELD_DATE_OF_BIRTH = "dob";
     public static final String FIELD_DATE_OF_DIAGNOSIS = "dateOfDiagnosis";
     public static final String START_DATE_2 = "start_page2";
-    public static final String NOTES_CHECKBOX = "notes_cb";
-    public static final String TREATMENT_CHECKBOX = "treatment_cb";
-    public static final String PATHOLOGY_CHECKBOX = "pathology_cb";
-    public static final String OPERATIVE_CHECKBOX = "operative_cb";
-    public static final String REFERRAL_CHECKBOX = "referrals_cb";
-    public static final String EXCHANGE_CHECKBOX = "exchange_cb";
-    public static final String GENETIC_CHECKBOX = "genetic_cb";
 
     private String ddp;
 
@@ -58,19 +47,20 @@ public class CoverPDFProcessor extends PDFProcessor {
             fields.put(FIELD_DATE, valueMap.get(FIELD_DATE));
             fields.put(FIELD_DATE_2, valueMap.get(FIELD_DATE_2));
             fields.put(START_DATE_2, valueMap.get(START_DATE_2));
-            fields.put(NOTES_CHECKBOX, valueMap.get(NOTES_CHECKBOX));
-            fields.put(TREATMENT_CHECKBOX, valueMap.get(TREATMENT_CHECKBOX));
-            fields.put(PATHOLOGY_CHECKBOX, valueMap.get(PATHOLOGY_CHECKBOX));
-            fields.put(OPERATIVE_CHECKBOX, valueMap.get(OPERATIVE_CHECKBOX));
-            fields.put(REFERRAL_CHECKBOX, valueMap.get(REFERRAL_CHECKBOX));
-            fields.put(EXCHANGE_CHECKBOX, valueMap.get(EXCHANGE_CHECKBOX));
-            fields.put(GENETIC_CHECKBOX, valueMap.get(GENETIC_CHECKBOX));
+
+            //adding checkboxes configured under instance_settings
+            InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(ddp);
+            if (instanceSettings != null && instanceSettings.getMrCoverPdf() != null && !instanceSettings.getMrCoverPdf().isEmpty()) {
+                for (Value mrCoverSetting : instanceSettings.getMrCoverPdf()) {
+                    fields.put(mrCoverSetting.getValue(), valueMap.get(mrCoverSetting.getValue()));
+                }
+            }
 
             byte[] bytes = PDFProcessor.getTemplateFromGoogleBucket(TEMPLATE_COVER_FILENAME.replace("%1", ddp));
             inputStream = generateStreamFromPdfForm(fields, bytes);
         }
         catch (Exception ex) {
-            throw new FileProcessingException("CONSENT PDF - Unable to generate consent stream.", ex);
+            throw new FileProcessingException("COVER PDF - Unable to generate consent stream.", ex);
         }
 
         return inputStream;

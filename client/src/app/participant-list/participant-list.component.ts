@@ -85,6 +85,7 @@ export class ParticipantListComponent implements OnInit {
   settings = {};
   drugs: string[] = [];
   cancers: string[] = [];
+  mrCoverPdfSettings: Value[] = [];
 
   sortField: string = null;
   sortDir: string = null;
@@ -162,6 +163,7 @@ export class ParticipantListComponent implements OnInit {
         this.activityDefinitionList = [];
         this.quickFilters = [];
         this.savedFilters = [];
+        this.mrCoverPdfSettings = [];
         this.assignees.push(new Assignee("-1", "Remove Assignee", ""));
         jsonData = data;
         this.dataSources = new Map([
@@ -306,6 +308,12 @@ export class ParticipantListComponent implements OnInit {
             }
           });
 
+        }
+        if (jsonData.mrCoverPDF != null) {
+          jsonData.mrCoverPDF.forEach((val) => {
+            let value: Value = Value.parse(val);
+            this.mrCoverPdfSettings.push(value);
+          });
         }
         this.orderColumns();
         this.getData();
@@ -586,7 +594,7 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  openParticipant(participant: Participant, colSource: string, id?) {
+  openParticipant(participant: Participant, colSource: string) {
     if (participant != null) {
       let tabAnchor = "Survey Data";
       if (colSource === "m" || participant.data.activities == null) {
@@ -934,7 +942,7 @@ export class ParticipantListComponent implements OnInit {
     else if (this.sortParent === "t") {
     }
     else {
-      // activity data
+      //activity data
       this.participantList.sort((a, b) => {
         let activityDataA = a.data.getActivityDataByCode(this.sortParent);
         let activityDataB = b.data.getActivityDataByCode(this.sortParent);

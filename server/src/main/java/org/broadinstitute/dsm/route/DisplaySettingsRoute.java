@@ -65,6 +65,10 @@ public class DisplaySettingsRoute extends RequestHandler {
                 displaySettings.put("activityDefinitions", ElasticSearchUtil.getActivityDefinitions(instance));
                 displaySettings.put("filters", ViewFilter.getAllFilters(userIdRequest, patchUtil.getColumnNameMap(), parent, ddpGroupId, instance.getDdpInstanceId()));
                 displaySettings.put("abstractionFields", AbstractionUtil.getFormControls(realm));
+                InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(realm);
+                if (instanceSettings != null && instanceSettings.getMrCoverPdf() != null && !instanceSettings.getMrCoverPdf().isEmpty()) {
+                    displaySettings.put("mrCoverPDF", instanceSettings.getMrCoverPdf());
+                }
                 return displaySettings;
             }
         }

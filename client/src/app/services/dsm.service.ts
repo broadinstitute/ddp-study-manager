@@ -2,6 +2,7 @@ import {Injectable} from "@angular/core";
 import {Headers, Http, RequestOptions, Response, ResponseContentType, URLSearchParams} from "@angular/http";
 import {JwtHelper} from "angular2-jwt";
 import {Observable} from "rxjs";
+import {Value} from "../utils/value.model";
 import {SessionService} from "./session.service";
 import {RoleService} from "./role.service";
 import {Router} from "@angular/router";
@@ -185,26 +186,22 @@ export class DSMService {
     return this.http.patch( url, json, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
-  public downloadCoverPDFs( ddpParticipantId: string, medicalRecordId: string, startDate: string, endDate: string, notesCb: boolean,
-                            treatmentCb: boolean, pathologyCb: boolean, operativeCb: boolean, referralsCb: boolean, exchangeCb: boolean,
-                            geneticCb: boolean, realm: string ) {
+  public downloadCoverPDFs(ddpParticipantId: string, medicalRecordId: string, startDate: string, endDate: string, mrCoverPdfSettings: Value[],
+                           realm: string) {
     let url = this.baseUrl + DSMService.UI + "downloadPDF/cover/" + medicalRecordId;
     let map: { name: string, value: any }[] = [];
     map.push( {name: DSMService.REALM, value: realm} );
-    let json = {
+    let json: { [k: string]: any } = {};
+    json = {
       ddpParticipantId: ddpParticipantId,
       startDate: startDate,
       endDate: endDate,
-      notesCb: notesCb,
-      treatmentCb: treatmentCb,
-      pathologyCb: pathologyCb,
-      operativeCb: operativeCb,
-      referralsCb: referralsCb,
-      exchangeCb: exchangeCb,
-      geneticCb: geneticCb,
       userId: this.role.userID()
     };
-    // console.log(json);
+    for (let mrSetting of mrCoverPdfSettings) {
+      json[mrSetting.value] = mrSetting.selected;
+    }
+    // console.log( json );
     return this.http.post( url, JSON.stringify( json ), this.buildQueryPDFHeader( map ) ).map( ( res: Response ) => res.blob() ).catch( this.handleError );
   }
 

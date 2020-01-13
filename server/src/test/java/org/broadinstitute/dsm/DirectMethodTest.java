@@ -45,7 +45,7 @@ public class DirectMethodTest extends TestHelper {
     }
 
     @Before
-    public void beforeTest(){
+    public void beforeTest() {
         DBTestUtil.deleteAllFieldSettings(TEST_DDP);
     }
 
@@ -86,13 +86,13 @@ public class DirectMethodTest extends TestHelper {
         Assert.assertEquals("getFieldSettingsTest: wrong number of tissue settings found", 1, tissueSettings.size());
 
         //Make sure the settings match the ones we created
-        for (FieldSettings oncSetting : oncHistorySettings){
+        for (FieldSettings oncSetting : oncHistorySettings) {
             DBTestUtil.checkSettingMatch(oncSetting, "oD",
                     "testOncDisplay", "testOncName", "text",
                     null, false, "setting named testOncName");
         }
 
-        for (FieldSettings tissueSetting : tissueSettings){
+        for (FieldSettings tissueSetting : tissueSettings) {
             DBTestUtil.checkSettingMatch(tissueSetting, "t",
                     "testTissueDisplay", "testTissueName",
                     "select", possibleTissueValues, false,
@@ -106,17 +106,17 @@ public class DirectMethodTest extends TestHelper {
                                                                              @NonNull String fieldType,
                                                                              @NonNull String displayType,
                                                                              List<Value> possibleValues,
-                                                                             boolean deleted){
+                                                                             boolean deleted) {
         FieldSettings setting = new FieldSettings(settingId, columnName, columnDisplay, fieldType, displayType,
                 possibleValues);
-        if (settingId != null && deleted){
+        if (settingId != null && deleted) {
             setting.setDeleted(true);
         }
         return constructFieldSettingsMap(fieldType, setting);
     }
 
     private Map<String, Collection<FieldSettings>> constructFieldSettingsMap(@NonNull String fieldType,
-                                                                             @NonNull FieldSettings setting){
+                                                                             @NonNull FieldSettings setting) {
         Collection<FieldSettings> settingsCollection = new ArrayList<>();
         settingsCollection.add(setting);
         Map<String, Collection<FieldSettings>> settingsMap = new HashMap<>();
@@ -125,7 +125,7 @@ public class DirectMethodTest extends TestHelper {
     }
 
     @Test
-    public void saveFieldSettingsTest(){
+    public void saveFieldSettingsTest() {
         //This test assumes that the before method has removed any TEST_DDP settings from the field_settings table
         //and that queries of the database return what they should.
 
@@ -151,8 +151,8 @@ public class DirectMethodTest extends TestHelper {
         List<String> strings = new ArrayList<>();
         strings.add(TEST_DDP);
         String stringFromQuery = DBTestUtil.getStringFromQuery("select count(*) from field_settings " +
-                        "where ddp_instance_id = (select ddp_instance_id from ddp_instance where instance_name = ?) " +
-                        "and not (deleted <=> 1)", strings, "count(*)");
+                "where ddp_instance_id = (select ddp_instance_id from ddp_instance where instance_name = ?) " +
+                "and not (deleted <=> 1)", strings, "count(*)");
 
         Assert.assertEquals("saveFieldSettingsTest: wrong number of field settings returned", 2,
                 Integer.parseInt(stringFromQuery));
@@ -185,7 +185,7 @@ public class DirectMethodTest extends TestHelper {
         //Check the table to make sure it got updated correctly
         DBTestUtil.checkSettingMatch(oncId, "oD",
                 "customOncName", "new onc display", "textarea",
-                null,  false);
+                null, false);
 
         //"Update" the tissue setting by setting deleted to true
         tissueSettingsLists = constructFieldSettingsMap(tissueId, "customTissueName", "customTissueDisplay",
@@ -254,7 +254,7 @@ public class DirectMethodTest extends TestHelper {
 
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            dbVals.resultValue = MedicalRecord.getMedicalRecord(TEST_DDP,"TEST_PARTICIPANT", medicalRecordId);
+            dbVals.resultValue = MedicalRecord.getMedicalRecord(TEST_DDP, "TEST_PARTICIPANT", medicalRecordId);
             return dbVals;
         });
 
@@ -273,7 +273,7 @@ public class DirectMethodTest extends TestHelper {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             //just get mr without mocked up ddp info
-            dbVals.resultValue = MedicalRecord.getMedicalRecords("migratedDDP");
+            dbVals.resultValue = MedicalRecord.getMedicalRecords(TEST_DDP);
             return dbVals;
         });
 
@@ -281,12 +281,13 @@ public class DirectMethodTest extends TestHelper {
             Assert.fail(results.resultException.getMessage());
         }
 
-        HashMap<String, MedicalRecord> medicalRecord = (HashMap<String, MedicalRecord>) results.resultValue;
+        Map<String, List<MedicalRecord>> medicalRecord = (HashMap<String, List<MedicalRecord>>) results.resultValue;
         Assert.assertNotNull(medicalRecord);
 
+        List<MedicalRecord> medicalRecords = medicalRecord.get("TEST_PARTICIPANT");
         List strings = new ArrayList<>();
         strings.add(participantId);
-        Assert.assertEquals(DBTestUtil.getStringFromQuery("select count(*) from ddp_medical_record mr, ddp_institution inst, ddp_participant pat where mr.institution_id = inst.institution_id and inst.participant_id = pat.participant_id and pat.participant_id = ? ", strings, "count(*)"), String.valueOf(medicalRecord.size()));
+        Assert.assertEquals(DBTestUtil.getStringFromQuery("select count(*) from ddp_medical_record mr, ddp_institution inst, ddp_participant pat where mr.institution_id = inst.institution_id and inst.participant_id = pat.participant_id and pat.participant_id = ? ", strings, "count(*)"), String.valueOf(medicalRecords.size()));
     }
 
     @Test
@@ -348,8 +349,6 @@ public class DirectMethodTest extends TestHelper {
 
     @Test
     public void ndiTestFail() throws Exception {
-
-
         String headers = "participantId\tFirst\tMiddle\tLast\tYear\tMonth\tDay";
         String input = "";
 
@@ -420,7 +419,6 @@ public class DirectMethodTest extends TestHelper {
         String line2 = participantId2 + "\t" + firstNameLong + "\t" + middleEmpty + "\t" + lastNameLong + "\t" + year2 + "\t" + month2 + "\t" + day2;
         input += line2;
 
-
         List<NDIUploadObject> requests = NDIRoute.isFileValid(input);
         Assert.assertNotNull(requests);
         Assert.assertEquals(2, requests.size());
@@ -458,7 +456,6 @@ public class DirectMethodTest extends TestHelper {
         Assert.assertEquals("         ", ndiRow1.substring(91));
         String ptIdInDB = DBTestUtil.getQueryDetail("SELECT * FROM ddp_ndi WHERE ndi_control_number = ? COLLATE utf8_bin", controlNumber1.get(0), "ddp_participant_id");
         Assert.assertEquals(participantId1, ptIdInDB);
-
 
         String ndiRow2 = output.substring(101, output.indexOf("\n", 102));
         Assert.assertEquals(100, ndiRow2.length());
@@ -582,8 +579,6 @@ public class DirectMethodTest extends TestHelper {
         Assert.assertEquals(size1, size2);
     }
 
-
-
     @Test
     public void drugListEndpoint() {
 
@@ -602,7 +597,6 @@ public class DirectMethodTest extends TestHelper {
         Assert.assertTrue("Checking for alphabetical order", isSorted(drugList));
         Assert.assertEquals("Checking for duplicate entries", drugList_size, set_length);
     }
-
 
     @Test
     public void cancerListEndpoint() {
@@ -731,5 +725,14 @@ public class DirectMethodTest extends TestHelper {
     public void json() {
         JsonObject json = new JsonObject();
         json.addProperty("name", "value");
+    }
+
+    @Test
+    public void instanceSettings() {
+        InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(TEST_DDP);
+        Assert.assertNotNull(instanceSettings);
+        Assert.assertNotNull(instanceSettings.getMrCoverPdf());
+        Assert.assertFalse(instanceSettings.getMrCoverPdf().isEmpty());
+
     }
 }
