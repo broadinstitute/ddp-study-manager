@@ -14,6 +14,7 @@ import {Statics} from "../utils/statics";
 import {OncHistoryDetail} from "../onc-history-detail/onc-history-detail.model";
 import {ModalComponent} from "../modal/modal.component";
 import {Tissue} from "../tissue/tissue.model";
+import {Value} from "../utils/value.model";
 import {DDPParticipantInformation} from "./participant-page.model";
 import {Result} from "../utils/result.model";
 import {NameValue} from "../utils/name-value.model";
@@ -40,6 +41,7 @@ export class ParticipantPageComponent implements OnInit {
   @Input() activeTab: string;
   @Input() activityDefinitions: Array<ActivityDefinition>;
   @Input() settings: {};
+  @Input() mrCoverPdfSettings: Value[];
   @Input() oncHistoryId: string;
   @Input() mrId: string;
   @Output() leaveParticipant = new EventEmitter();

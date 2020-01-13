@@ -1,5 +1,5 @@
 <ng-container *ngIf="showMedicalRecord">
-  <app-medical-record [participant]="participant" [medicalRecord]="medicalRecord" [settings]="settings"
+  <app-medical-record [participant]="participant" [medicalRecord]="medicalRecord" [settings]="settings" [mrCoverPdfSettings]="mrCoverPdfSettings"
                       (leaveMedicalRecord)="showMedicalRecord=false"
                       (leaveParticipant)="leavePage()"></app-medical-record>
 </ng-container>

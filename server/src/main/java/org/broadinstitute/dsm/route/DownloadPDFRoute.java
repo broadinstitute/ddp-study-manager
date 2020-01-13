@@ -11,11 +11,13 @@ import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.ddp.util.GoogleBucket;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.files.CoverPDFProcessor;
 import org.broadinstitute.dsm.files.PDFProcessor;
 import org.broadinstitute.dsm.files.RequestPDFProcessor;
+import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.mbc.MBCParticipant;
 import org.broadinstitute.dsm.security.RequestHandler;
@@ -58,13 +60,6 @@ public class DownloadPDFRoute extends RequestHandler {
 
     private static final String JSON_START_DATE = "startDate";
     private static final String JSON_END_DATE = "endDate";
-    private static final String JSON_NOTE_CB = "notesCb";
-    private static final String JSON_TREATMENT_CB = "treatmentCb";
-    private static final String JSON_PATHOLOGY_CB = "pathologyCb";
-    private static final String JSON_OPERATIVE_CB = "operativeCb";
-    private static final String JSON_REFERRALS_CB = "referralsCb";
-    private static final String JSON_EXCHANGE_CB = "exchangeCb";
-    private static final String JSON_GENETIC_CB = "geneticCb";
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
@@ -168,13 +163,6 @@ public class DownloadPDFRoute extends RequestHandler {
                     Set keySet = jsonObject.keySet();
                     String startDate = null;
                     String endDate = null;
-                    Boolean checkboxNotes = null;
-                    Boolean checkboxTreatment = null;
-                    Boolean checkboxPathology = null;
-                    Boolean checkboxOperative = null;
-                    Boolean checkboxReferral = null;
-                    Boolean checkboxExchange = null;
-                    Boolean checkboxGenetic = null;
                     if (keySet.contains(JSON_START_DATE)) {
                         startDate = (String) jsonObject.get(JSON_START_DATE);
                         if (!"0/0".equals(startDate) && !startDate.contains("/") && startDate.contains("-")) {
@@ -187,27 +175,6 @@ public class DownloadPDFRoute extends RequestHandler {
                     if (keySet.contains(JSON_END_DATE)) {
                         endDate = (String) jsonObject.get(JSON_END_DATE);
                         endDate = SystemUtil.changeDateFormat(SystemUtil.DATE_FORMAT, SystemUtil.US_DATE_FORMAT, endDate);
-                    }
-                    if (keySet.contains(JSON_NOTE_CB)) {
-                        checkboxNotes = (Boolean) jsonObject.get(JSON_NOTE_CB);
-                    }
-                    if (keySet.contains(JSON_TREATMENT_CB)) {
-                        checkboxTreatment = (Boolean) jsonObject.get(JSON_TREATMENT_CB);
-                    }
-                    if (keySet.contains(JSON_PATHOLOGY_CB)) {
-                        checkboxPathology = (Boolean) jsonObject.get(JSON_PATHOLOGY_CB);
-                    }
-                    if (keySet.contains(JSON_OPERATIVE_CB)) {
-                        checkboxOperative = (Boolean) jsonObject.get(JSON_OPERATIVE_CB);
-                    }
-                    if (keySet.contains(JSON_REFERRALS_CB)) {
-                        checkboxReferral = (Boolean) jsonObject.get(JSON_REFERRALS_CB);
-                    }
-                    if (keySet.contains(JSON_EXCHANGE_CB)) {
-                        checkboxExchange = (Boolean) jsonObject.get(JSON_EXCHANGE_CB);
-                    }
-                    if (keySet.contains(JSON_GENETIC_CB)) {
-                        checkboxGenetic = (Boolean) jsonObject.get(JSON_GENETIC_CB);
                     }
                     if (StringUtils.isBlank(medicalRecordId)) {
                         throw new RuntimeException("MedicalRecordID is missing. Can't create cover pdf");
@@ -224,13 +191,16 @@ public class DownloadPDFRoute extends RequestHandler {
                     String today = new SimpleDateFormat("MM/dd/yyyy").format(new Date());
                     valueMap.put(CoverPDFProcessor.FIELD_DATE, today);
                     valueMap.put(CoverPDFProcessor.FIELD_DATE_2, StringUtils.isNotBlank(endDate) ? endDate : today); //end date
-                    valueMap.put(CoverPDFProcessor.NOTES_CHECKBOX, BooleanUtils.toBoolean(checkboxNotes));
-                    valueMap.put(CoverPDFProcessor.TREATMENT_CHECKBOX, BooleanUtils.toBoolean(checkboxTreatment));
-                    valueMap.put(CoverPDFProcessor.PATHOLOGY_CHECKBOX, BooleanUtils.toBoolean(checkboxPathology));
-                    valueMap.put(CoverPDFProcessor.OPERATIVE_CHECKBOX, BooleanUtils.toBoolean(checkboxOperative));
-                    valueMap.put(CoverPDFProcessor.REFERRAL_CHECKBOX, BooleanUtils.toBoolean(checkboxReferral));
-                    valueMap.put(CoverPDFProcessor.EXCHANGE_CHECKBOX, BooleanUtils.toBoolean(checkboxExchange));
-                    valueMap.put(CoverPDFProcessor.GENETIC_CHECKBOX, BooleanUtils.toBoolean(checkboxGenetic));
+
+                    //adding checkboxes configured under instance_settings
+                    InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(realm);
+                    if (instanceSettings != null && instanceSettings.getMrCoverPdf() != null && !instanceSettings.getMrCoverPdf().isEmpty()) {
+                        for (Value mrCoverSetting : instanceSettings.getMrCoverPdf()) {
+                            if (keySet.contains(mrCoverSetting.getValue())) {
+                                valueMap.put(mrCoverSetting.getValue(), BooleanUtils.toBoolean((Boolean) jsonObject.get(mrCoverSetting.getValue())));
+                            }
+                        }
+                    }
 
                     if (ddpInstance.isHasRole()) {
                         //get information from ddp db
