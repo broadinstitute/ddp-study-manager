@@ -416,12 +416,16 @@ export class ParticipantListComponent implements OnInit {
         if (data != null) {
           if (viewFilter != null && viewFilter.filters != null) {
             for (let filter of viewFilter.filters) {
-              for (let f of this.sourceColumns[filter.participantColumn.tableAlias]) {
+              let t = filter.participantColumn.tableAlias;
+              if (t === "r" || t === "o" || t === "ex") {
+                t = "p";
+              }
+              for (let f of this.sourceColumns[t]) {
                 if (f.participantColumn.name === filter.participantColumn.name) {
-                  let index = this.sourceColumns[filter.participantColumn.tableAlias].indexOf(f);
+                  let index = this.sourceColumns[t].indexOf(f);
                   if (index !== -1) {
-                    this.sourceColumns[filter.participantColumn.tableAlias].splice(index, 1);
-                    this.sourceColumns[filter.participantColumn.tableAlias].push(filter);
+                    this.sourceColumns[t].splice(index, 1);
+                    this.sourceColumns[t].push(filter);
                     break;
                   }
                 }
