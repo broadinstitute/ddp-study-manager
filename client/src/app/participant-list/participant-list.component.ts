@@ -495,6 +495,7 @@ export class ParticipantListComponent implements OnInit {
             this.savedFilters.push(view);
           }
         });
+        this.savedFilters.sort((f1, f2) => f1.filterName.localeCompare(f2.filterName));
       },
       err => {
         this.showSavedFilters = false;
