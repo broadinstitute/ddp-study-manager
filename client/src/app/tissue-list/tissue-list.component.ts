@@ -688,6 +688,7 @@ export class TissueListComponent implements OnInit {
             this.savedFilters.push(view);
           }
         });
+        this.savedFilters.sort((vf1, vf2) => vf1.filterName.localeCompare(vf2.filterName));
         if (this.isDefaultFilter && applyDefault) {
           this.selectedFilterName = this.defaultFilterName;
           this.defaultFilter = this.savedFilters.find(f => {
