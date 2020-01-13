@@ -1430,12 +1430,16 @@ export class TissueListComponent implements OnInit {
 
   private adjustAllColumns(viewFilter: ViewFilter) {
     for (let filter of viewFilter.filters) {
-      for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
+      let t = filter.participantColumn.tableAlias;
+      if (t === "r" || t === "o" || t === "ex") {
+        t = "p";
+      }
+      for (let f of this.allColumns[t]) {
         if (f.participantColumn.name === filter.participantColumn.name) {
-          let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
+          let index = this.allColumns[t].indexOf(f);
           if (index !== -1) {
-            this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
-            this.allColumns[filter.participantColumn.tableAlias].push(filter);
+            this.allColumns[t].splice(index, 1);
+            this.allColumns[t].push(filter);
             break;
           }
         }

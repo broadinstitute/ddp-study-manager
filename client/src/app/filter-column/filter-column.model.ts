@@ -90,7 +90,7 @@ export class Filter {
     new NameValue("unable To Obtain", "Unable To Obtain"),
     new NameValue("sent", "Sent"),
     new NameValue("received", "Received"),
-    new NameValue("returned", "Returned")
+    new NameValue("returned", "Returned"),
   ]);
   public static TISSUE_FAX = new Filter(ParticipantColumn.TISSUE_FAX, Filter.DATE_TYPE);
   public static TISSUE_FAX_2 = new Filter(ParticipantColumn.TISSUE_FAX_2, Filter.DATE_TYPE);
@@ -144,7 +144,7 @@ export class Filter {
   public static TISSUE_SEQUENCE = new Filter(ParticipantColumn.TISSUE_SEQUENCE, Filter.OPTION_TYPE, [
     new NameValue("success", "Success"),
     new NameValue("failureSHL", "Failure at SHL"),
-    new NameValue("abandonedGP", "Abandoned at GP")
+    new NameValue("abandonedGP", "Abandoned at GP"),
   ]);
   public static SCROLLS_COUNT = new Filter(ParticipantColumn.SCROLLS_COUNT, Filter.NUMBER_TYPE);
   public static BLOCKS_COUNT = new Filter(ParticipantColumn.BLOCKS_COUNT, Filter.NUMBER_TYPE);
@@ -340,6 +340,7 @@ export class Filter {
   }
 
   public static parseToCurrentFilterArray(json, allColumns): Filter[] {
+    console.log(json);
     if (json.filters == undefined) {
       return null;
     }
@@ -371,8 +372,10 @@ export class Filter {
       else {
         for (let source of Object.keys(allColumns)) {
           let f = allColumns[source].find(f => {
-            return f.participantColumn.object === filter.participantColumn.tableAlias && f.participantColumn.name === filter.participantColumn.name;
+            return f.participantColumn.name === filter.participantColumn.name;
           });
+          console.log(source);
+          console.log(f);
           if (f != undefined) {
             filter.type = f.type;
             filter.participantColumn = f.participantColumn;
@@ -396,11 +399,12 @@ export class Filter {
       }
     }
     for (let filter of filters) {
-      if (filter.participantColumn.object !== undefined && filter.participantColumn.object !== null && filter.participantColumn.object !== ''){
+      if (filter.participantColumn.object !== undefined && filter.participantColumn.object !== null && filter.participantColumn.object !== "") {
         filter.parentName = filter.participantColumn.object;
       }
 
     }
+    console.log(filters);
     return filters;
   }
 
@@ -532,7 +536,7 @@ export class Filter {
       "range": range,
       "empty": empty,
       "notEmpty": notEmpty,
-      "participantColumn": participantColumn
+      "participantColumn": participantColumn,
     };
     return filterText;
   }

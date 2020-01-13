@@ -109,6 +109,7 @@ export class DSMService {
   }
 
   public applyFilter( json: ViewFilter, realm: string, parent: string, filterQuery: string ): Observable<any> {
+    console.log(json);
     if (json != null && json.filters != null) {
       for (let filter of json.filters) {
         if (filter.type === Filter.OPTION_TYPE) {
