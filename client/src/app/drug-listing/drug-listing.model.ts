@@ -1,5 +1,3 @@
-import {DrugListingComponent} from './drug-listing.component';
-
 export class DrugListing {
 
   addedNew = false;
