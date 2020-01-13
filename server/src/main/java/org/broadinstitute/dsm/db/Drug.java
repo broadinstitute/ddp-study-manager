@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 // Initially used for retrieving display name values only, then expanded to pull/view/edit full database entries
 
@@ -141,21 +142,23 @@ public class Drug {
         return drugList;
     }
 
-    //
 
-    // loop through a bunch of changed drugs and call updateDrugListing for each one
-    public static void updateDrugListings(@NonNull Drug[] updatedDrugs) {
+    public static void saveDrugListings(@NonNull Drug[] drugListings) {
 
-        // We'll attempt to update each changed value one at a time
-        // @TODO: placeholder for now, will need to come back and add validation, error handling, etc
-        for (Drug updatedDrug : updatedDrugs) {
-            SimpleResult dbVals = new SimpleResult();
-            updateDrugListing(updatedDrug);
+        for (Drug drugListing : drugListings) {
+
+            if (StringUtils.isNotBlank(drugListing.getDisplayName())) {
+                if (drugListing.drugId > 0) {
+                    updateDrugListing(drugListing);
+                }
+                else {
+                    addDrugListing(drugListing);
+                }
+            }
         }
     }
 
-    // For one updated drug listing, update its values if valid
-    // @TODO: placeholder for now, will need to come back and add validation, error handling, etc
+    // We get here after passing validation on the front end, update the values for this drug
     public static void updateDrugListing(@NonNull Drug updatedDrugValues) {
             Long nowValue = System.currentTimeMillis()/1000; //(divide by 1000 to match epoch)
 
@@ -193,22 +196,35 @@ public class Drug {
     }
 
 
+    private static void addDrugListing(@NonNull Drug newDrugEntry) {
+        Long nowValue = System.currentTimeMillis()/1000; //(divide by 1000 to match epoch)
 
-    // @TODO: will add this once we get to csv upload
-    // May want one method to loop through and keep track, and one to do the individual saving for each valid row
-    public static void addDrugListing(@NonNull Drug[] importedDrugs) {
-//        for (Drug importedDrug : importedDrugs) {
-////            if (StringUtils.isNotBlank(importedDrug.drugId)) {
-//            if (StringUtils.isNotBlank(importedDrug.drugId)) {
-//                int drugEntryId = importedDrug.drugId();
-//                if (StringUtils.isNotBlank(drugEntryId)) {
-//                    updateDruglistEntry(drugEntryId, importedDrug);
-//                }
-//                else {
-//                    // check for duplicate display name first, then
-//                    //addDruglistEntry(importedDrug);
-//                }
-//            }
-//        }
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.INSERT_DRUG_LISTING))) {
+                stmt.setString(1, newDrugEntry.getDisplayName());
+                stmt.setString(2, newDrugEntry.getGenericName());
+                stmt.setString(3, newDrugEntry.getBrandName());
+                stmt.setString(4, newDrugEntry.getChemocat());
+                stmt.setString(5, newDrugEntry.getChemoType());
+                stmt.setInt(6, newDrugEntry.getStudyDrug());
+                stmt.setString(7, newDrugEntry.getTreatmentType());
+                stmt.setString(8, newDrugEntry.getChemotherapy());
+                stmt.setLong(9, nowValue);
+                stmt.setInt(10, newDrugEntry.getActive());
+                int result = stmt.executeUpdate();
+                if (result == 1) {
+                    logger.info("Added new drugListing ");
+                } else {
+                    throw new RuntimeException("Error adding new drugListing, it was updating " + result + " rows");
+                }
+            } catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error saving drug Listing for: " + newDrugEntry.getDisplayName(), results.resultException);
+        }
     }
 }
