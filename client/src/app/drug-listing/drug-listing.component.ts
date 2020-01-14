@@ -90,10 +90,10 @@ export class DrugListingComponent implements OnInit {
 
   // @TODO: will come back here when we add new drugs
   addDrugListing() {
-    let labelSetting: DrugListing = new DrugListing(null, null, null, null,
-      null, null, 0, null, null, 0, 0);
-    labelSetting.addedNew = true;
-    this.drugList.push(labelSetting);
+    let drugListing: DrugListing = new DrugListing(null, null, null, null,
+      null, null, null, null, null, 1, 0);
+    drugListing.addedNew = true;
+    this.drugList.push(drugListing);
   }
 
   saveDrugListings() {
