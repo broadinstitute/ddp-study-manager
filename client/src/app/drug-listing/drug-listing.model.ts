@@ -5,6 +5,7 @@ export class DrugListing {
   deleted = false;
 
   notUniqueError = false;
+  duplicatedNamesError = false;
   notCorrectTypeError = false;
   chemoTypeLengthError = false;
   treatmentTypeLengthError = false;

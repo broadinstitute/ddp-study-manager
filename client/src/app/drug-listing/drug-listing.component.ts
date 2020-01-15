@@ -167,4 +167,18 @@ export class DrugListingComponent implements OnInit {
     }
     return null;
   }
+
+  // Validate against rows with generic & brand name values that are identical to another row
+  checkDuplicatedNames(index: number) {
+    this.drugList[index].notUniqueError = false;
+    for (let i = 0; i < this.drugList.length; i++) {
+      if (i !== index) {
+        if ( (this.drugList[i].genericName === this.drugList[index].genericName) && (this.drugList[i].brandName === this.drugList[index].brandName)) {
+          this.drugList[index].duplicatedNamesError = true;
+        }
+      }
+    }
+    return null;
+  }
+
 }
