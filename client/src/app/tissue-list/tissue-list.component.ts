@@ -21,7 +21,7 @@ import {FieldSettings} from "../field-settings/field-settings.model";
 @Component({
   selector: "app-tissue-view-page",
   templateUrl: "./tissue-list.component.html",
-  styleUrls: ["./tissue-list.component.css"],
+  styleUrls: [ "./tissue-list.component.css" ],
 })
 export class TissueListComponent implements OnInit {
 
@@ -30,6 +30,7 @@ export class TissueListComponent implements OnInit {
 
   tissueListWrappers: TissueListWrapper[] = [];
   copyTissueListWrappers: TissueListWrapper[] = [];
+  originalTissueListWrappers: TissueListWrapper[] = [];
   tissueListsMap = {};
   tissueListOncHistories: TissueListWrapper[] = [];
   selectedTab: string;
@@ -75,7 +76,7 @@ export class TissueListComponent implements OnInit {
   allColumns = {};
   allAdditionalColumns = {};
   selectedColumns = {};
-  dataSources = [Statics.ES_ALIAS, Statics.ONCDETAIL_ALIAS, Statics.TISSUE_ALIAS];
+  dataSources = [ Statics.ES_ALIAS, Statics.ONCDETAIL_ALIAS, Statics.TISSUE_ALIAS ];
   dataSourceNames = {
     "data": "Participant",
     "oD": "Onc History",
@@ -83,12 +84,12 @@ export class TissueListComponent implements OnInit {
   };
 
   selectedFilterName = "";
-  defaultOncHistoryColumns = [Filter.ACCESSION_NUMBER, Filter.DATE_PX, Filter.TYPE_PX, Filter.LOCATION_PX, Filter.HISTOLOGY, Filter.GENDER, Filter.FACILITY, Filter.DESTRUCTION_POLICY];
-  defaultTissueColumns = [Filter.COLLABORATOR_SAMPLE_ID];
-  defaultESColumns = [Filter.SHORT_ID, Filter.FIRST_NAME, Filter.LAST_NAME];
+  defaultOncHistoryColumns = [ Filter.ACCESSION_NUMBER, Filter.DATE_PX, Filter.TYPE_PX, Filter.LOCATION_PX, Filter.HISTOLOGY, Filter.GENDER, Filter.FACILITY, Filter.DESTRUCTION_POLICY ];
+  defaultTissueColumns = [ Filter.COLLABORATOR_SAMPLE_ID ];
+  defaultESColumns = [ Filter.SHORT_ID, Filter.FIRST_NAME, Filter.LAST_NAME ];
   destructionPolicyColumns = {
-    "data": [Filter.SHORT_ID, Filter.FIRST_NAME, Filter.LAST_NAME, Filter.FACILITY_PHONE, Filter.FACILITY_FAX],
-    "oD": this.defaultOncHistoryColumns.concat([Filter.FACILITY_PHONE, Filter.FACILITY_FAX]),
+    "data": [ Filter.SHORT_ID, Filter.FIRST_NAME, Filter.LAST_NAME, Filter.FACILITY_PHONE, Filter.FACILITY_FAX ],
+    "oD": this.defaultOncHistoryColumns.concat([ Filter.FACILITY_PHONE, Filter.FACILITY_FAX ]),
     "t": [],
   };
   savedFilters: ViewFilter[] = [];
@@ -116,7 +117,6 @@ export class TissueListComponent implements OnInit {
         else {
           this.hasESData = false;
         }
-        //        this.compService.realmMenu = localStorage.getItem(ComponentService.MENU_SELECTED_REALM);
         this.checkRight(true);
       }
     });
@@ -339,23 +339,12 @@ export class TissueListComponent implements OnInit {
         data => {
           if (this.defaultFilter != null && this.defaultFilter != undefined && this.defaultFilter.filters != null) {
             this.adjustAllColumns(this.defaultFilter);
-            // for (let filter of this.defaultFilter.filters) {
-            // for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
-            //   if (f.participantColumn.name === filter.participantColumn.name) {
-            //     let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
-            //     if (index !== -1) {
-            //       this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
-            //       this.allColumns[filter.participantColumn.tableAlias].push(filter);
-            //       break;
-            //     }
-            //   }
-            // }
-            // }
           }
           let date = new Date();
           this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
           let jsonData: any[];
           this.tissueListWrappers = [];
+          this.originalTissueListWrappers = [];
           this.tissueListsMap = {};
           this.tissueListOncHistories = [];
           jsonData = data;
@@ -363,6 +352,7 @@ export class TissueListComponent implements OnInit {
             let tissueListWrapper = TissueListWrapper.parse(val);
             this.tissueListWrappers.push(tissueListWrapper);
           });
+          this.originalTissueListWrappers = this.tissueListWrappers;
           this.currentFilter = this.defaultFilter.filters;
           this.selectedFilterName = this.defaultFilter.filterName;
           this.selectedColumns = this.defaultFilter.columns;
@@ -417,6 +407,7 @@ export class TissueListComponent implements OnInit {
             this.tissueListWrappers.push(tissueListWrapper);
             //          this.tissueListsMap[tissueListWrapper.tissueList.oncHistoryDetails.oncHistoryDetailId] = tissueListWrapper;
           });
+          this.originalTissueListWrappers = this.tissueListWrappers;
           for (let tissueList of this.tissueListWrappers) {
             this.tissueListsMap[tissueList.tissueList.oncHistoryDetails.oncHistoryDetailId] = tissueList;
           }
@@ -526,9 +517,6 @@ export class TissueListComponent implements OnInit {
       if (this.selectedColumns[array] == undefined) {
         continue;
       }
-      //      if (array === Statics.ES_ALIAS && !this.hasESData) {
-      //        continue;
-      //      }
       for (let filter of this.selectedColumns[array]) {
         let filterText = Filter.getFilterText(filter, array, this.allAdditionalColumns);
         if (filterText != null && array === Statics.ES_ALIAS) {
@@ -567,6 +555,7 @@ export class TissueListComponent implements OnInit {
           this.tissueListWrappers.push(tissueList);
 
         });
+        this.originalTissueListWrappers = this.tissueListWrappers;
         if (!this.hasESData) {
           //check if it was a tableAlias data filter -> filter client side
           this.filterProfileForNoESRelams(null);
@@ -778,18 +767,6 @@ export class TissueListComponent implements OnInit {
       data => {
         if (savedFilter != null && savedFilter.filters != null) {
           this.adjustAllColumns(savedFilter);
-          // for (let filter of savedFilter.filters) {
-          //   for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
-          //     if (f.participantColumn.name === filter.participantColumn.name) {
-          //       let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
-          //       if (index !== -1) {
-          //         this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
-          //         this.allColumns[filter.participantColumn.tableAlias].push(filter);
-          //         break;
-          //       }
-          //     }
-          //   }
-          // }
         }
         let date = new Date();
         this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
@@ -802,6 +779,7 @@ export class TissueListComponent implements OnInit {
           let tissueListWrapper = TissueListWrapper.parse(val);
           this.tissueListWrappers.push(tissueListWrapper);
         });
+        this.originalTissueListWrappers = this.tissueListWrappers;
         this.currentFilter = savedFilter.filters;
         this.selectedFilterName = savedFilter.filterName;
         this.selectedColumns = savedFilter.columns;
@@ -849,18 +827,6 @@ export class TissueListComponent implements OnInit {
       data => {
         if (quickFilter != null && quickFilter.filters != null) {
           this.adjustAllColumns(quickFilter);
-          // for (let filter of quickFilter.filters) {
-          //   for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
-          //     if (f.participantColumn.name === filter.participantColumn.name) {
-          //       let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
-          //       if (index !== -1) {
-          //         this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
-          //         this.allColumns[filter.participantColumn.tableAlias].push(filter);
-          //         break;
-          //       }
-          //     }
-          //   }
-          // }
         }
         let date = new Date();
         this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
@@ -875,6 +841,7 @@ export class TissueListComponent implements OnInit {
           this.tissueListWrappers.push(tissueListWrapper);
           this.tissueListsMap[tissueListWrapper.tissueList.oncHistoryDetails.oncHistoryDetailId] = tissueListWrapper;
         });
+        this.originalTissueListWrappers = this.tissueListWrappers;
         for (let key of Object.keys(this.tissueListsMap)) {
           this.tissueListOncHistories.push(this.tissueListsMap[key]);
         }
@@ -942,6 +909,7 @@ export class TissueListComponent implements OnInit {
           this.tissueListWrappers.push(tissueListWrapper);
           this.tissueListsMap[tissueListWrapper.tissueList.oncHistoryDetails.oncHistoryDetailId] = tissueListWrapper;
         });
+        this.originalTissueListWrappers = this.tissueListWrappers;
         for (let key of Object.keys(this.tissueListsMap)) {
           this.tissueListOncHistories.push(this.tissueListsMap[key]);
         }
@@ -1041,7 +1009,7 @@ export class TissueListComponent implements OnInit {
       },
       err => {
         if (err._body === Auth.AUTHENTICATION_ERROR) {
-          this.router.navigate([Statics.HOME_URL]);
+          this.router.navigate([ Statics.HOME_URL ]);
         }
       },
     );
@@ -1131,10 +1099,10 @@ export class TissueListComponent implements OnInit {
     let date = new Date();
     let fileName = "Tissue_" + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION;
     if (this.selectedColumns["t"] != null && this.selectedColumns["t"].length > 0) {
-      Utils.downloadCurrentData(this.tissueListWrappers, [["data", Statics.ES_ALIAS], ["tissueList", "", "oncHistoryDetails", "oD"], ["tissueList", "", "tissue", "t"]], this.selectedColumns, fileName);
+      Utils.downloadCurrentData(this.tissueListWrappers, [ [ "data", Statics.ES_ALIAS ], [ "tissueList", "", "oncHistoryDetails", "oD" ], [ "tissueList", "", "tissue", "t" ] ], this.selectedColumns, fileName);
     }
     else {
-      Utils.downloadCurrentData(this.tissueListOncHistories, [["data", Statics.ES_ALIAS], ["tissueList", "", "oncHistoryDetails", "oD"], ["tissue", "t"]], this.selectedColumns, fileName);
+      Utils.downloadCurrentData(this.tissueListOncHistories, [ [ "data", Statics.ES_ALIAS ], [ "tissueList", "", "oncHistoryDetails", "oD" ], [ "tissue", "t" ] ], this.selectedColumns, fileName);
     }
   }
 
@@ -1156,6 +1124,7 @@ export class TissueListComponent implements OnInit {
         this.tissueListWrappers.push(tissueListWrapper);
         this.tissueListsMap[tissueListWrapper.tissueList.oncHistoryDetails.oncHistoryDetailId] = tissueListWrapper;
       });
+      this.originalTissueListWrappers = this.tissueListWrappers;
       for (let key of Object.keys(this.tissueListsMap)) {
         this.tissueListOncHistories.push(this.tissueListsMap[key]);
       }
@@ -1343,8 +1312,9 @@ export class TissueListComponent implements OnInit {
   }
 
   private filterProfileForNoESRelams(viewFilter: ViewFilter) {
-    //check if it was a tableAlias data filter -> filter client side
+    //check if it was a filter with tableAlias of data -> filter client side
     if (viewFilter != null && viewFilter.filters != null && viewFilter.filters.length != 0) {
+      this.copyTissueListWrappers = this.originalTissueListWrappers;
       for (let filter of viewFilter.filters) {
         if (filter.participantColumn.tableAlias === "data") {
           let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
@@ -1357,8 +1327,7 @@ export class TissueListComponent implements OnInit {
               value = value.substring(first + 1, last);
             }
             if (filterText != null) {
-              this.copyTissueListWrappers = this.tissueListWrappers;
-              this.tissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
+              this.copyTissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
                 tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === value,
               );
             }
@@ -1366,16 +1335,14 @@ export class TissueListComponent implements OnInit {
           else {
             let empt = filterText["empty"];
             if (empt === "true") {
-              this.copyTissueListWrappers = this.tissueListWrappers;
-              this.tissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
+              this.copyTissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
                 tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === null,
               );
             }
             else {
               let notempt = filterText["notEmpty"];
               if (notempt === "true") {
-                this.copyTissueListWrappers = this.tissueListWrappers;
-                this.tissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
+                this.copyTissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
                   tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== null,
                 );
               }
@@ -1387,43 +1354,63 @@ export class TissueListComponent implements OnInit {
     }
     else if (viewFilter == null) {
       if (this.selectedColumns["data"].length != 0) {
+        this.copyTissueListWrappers = this.originalTissueListWrappers;
         for (let filter of this.selectedColumns["data"]) {
           let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
           let filterText = Filter.getFilterText(filter, tmp, this.allAdditionalColumns);
           if (filterText != null) {
-            this.copyTissueListWrappers = this.tissueListWrappers;
-            let value = filterText["filter1"]["value"];
-            if (value !== null) {
-              if (value.includes("'")) {
-                let first = value.indexOf("'");
-                let last = value.lastIndexOf("'");
-                value = value.substring(first + 1, last);
-              }
-              this.tissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
-                tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === filterText["filter1"]["value"],
-              );
-            }
-            else {
-              let empt = filterText["empty"];
-              if (empt) {
-                this.tissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
-                  tissueListWrapper.data[filterText["parentName"]] == null || tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] == undefined || tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === null || tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === "",
+            console.log(filterText);
+            if (filterText["type"] === "TEXT") {
+              let value = filterText["filter1"]["value"];
+              if (value !== null) {
+                if (value.includes("'")) {
+                  let first = value.indexOf("'");
+                  let last = value.lastIndexOf("'");
+                  value = value.substring(first + 1, last);
+                }
+                this.copyTissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
+                  tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === filterText["filter1"]["value"],
                 );
               }
               else {
-                let notempt = filterText["notEmpty"];
-                if (notempt) {
-                  this.tissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
-                    tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== null && tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== undefined && tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== "",
+                let empt = filterText["empty"];
+                if (empt) {
+                  this.copyTissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
+                    tissueListWrapper.data[filterText["parentName"]] == null || tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] == undefined || tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === null || tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === "",
                   );
                 }
+                else {
+                  let notempt = filterText["notEmpty"];
+                  if (notempt) {
+                    this.copyTissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
+                      tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== null && tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== undefined && tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== "",
+                    );
+                  }
+                }
               }
-            }
+              console.log(this.copyTissueListWrappers);
+              this.tissueListWrappers = this.copyTissueListWrappers;
 
+            }
+            else if (filterText["type"] === "OPTIONS") {
+              console.log(this.copyTissueListWrappers);
+              let results: TissueListWrapper[] = new Array();
+              let temp: TissueListWrapper[] = new Array();
+              for (let option of filterText["selectedOptions"]) {// status
+                temp = this.copyTissueListWrappers.filter(tissueListWrapper =>
+                  tissueListWrapper.data[filterText["filter1"]["name"]] === option,
+                );
+                for (let t of temp) {
+                  results.push(t);
+                }
+              }
+              this.copyTissueListWrappers = results;
+              this.tissueListWrappers = results;
+            }
           }
+
         }
       }
-
     }
 
   }

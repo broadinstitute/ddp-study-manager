@@ -27,7 +27,7 @@ import {FieldSettings} from "../field-settings/field-settings.model";
 @Component({
   selector: "app-participant-list",
   templateUrl: "./participant-list.component.html",
-  styleUrls: ["./participant-list.component.css"],
+  styleUrls: [ "./participant-list.component.css" ],
 })
 export class ParticipantListComponent implements OnInit {
 
@@ -57,6 +57,7 @@ export class ParticipantListComponent implements OnInit {
 
   participantList: Participant[] = [];
   copyParticipantList: Participant[] = [];
+  originalParticipantList: Participant[] = [];
   activePage: number = 1;
   activityDefinitionList: ActivityDefinition[] = [];
   participant: Participant;
@@ -76,7 +77,7 @@ export class ParticipantListComponent implements OnInit {
   activityDefinitions = new Map();
 
   selectedColumns = {};
-  defaultColumns = [Filter.REALM, Filter.SHORT_ID, Filter.FIRST_NAME, Filter.LAST_NAME, Filter.ENROLLMENT_STATUS];
+  defaultColumns = [ Filter.REALM, Filter.SHORT_ID, Filter.FIRST_NAME, Filter.LAST_NAME, Filter.ENROLLMENT_STATUS ];
 
   selectedFilter: Filter = null;
   savedFilters: ViewFilter[] = [];
@@ -167,13 +168,13 @@ export class ParticipantListComponent implements OnInit {
         this.assignees.push(new Assignee("-1", "Remove Assignee", ""));
         jsonData = data;
         this.dataSources = new Map([
-          ["data", "Participant"],
-          ["p", "Participant - DSM"],
-          ["m", "Medical Record"],
-          ["oD", "Onc History"],
-          ["t", "Tissue"],
-          ["k", "Sample"],
-          ["a", "Abstraction"]]);
+          [ "data", "Participant" ],
+          [ "p", "Participant - DSM" ],
+          [ "m", "Medical Record" ],
+          [ "oD", "Onc History" ],
+          [ "t", "Tissue" ],
+          [ "k", "Sample" ],
+          [ "a", "Abstraction" ] ]);
         this.sourceColumns = {};
         this.selectedColumns = {};
         this.settings = {};
@@ -237,7 +238,7 @@ export class ParticipantListComponent implements OnInit {
             possibleColumns.push(new Filter(new ParticipantColumn("Survey Status", "status", activityDefinition.activityCode, null, true), Filter.OPTION_TYPE, [
               new NameValue("COMPLETE", "Done"),
               new NameValue("CREATED", "Not Started"),
-              new NameValue("IN_PROGRESS", "In Progress")], null, false, true, null, null, null, null, false, true));
+              new NameValue("IN_PROGRESS", "In Progress") ], null, false, true, null, null, null, null, false, true));
             if (activityDefinition != null && activityDefinition.questions != null) {
               for (let question of activityDefinition.questions) {
                 if (question.stableId != null) {
@@ -379,7 +380,7 @@ export class ParticipantListComponent implements OnInit {
                 let participant = Participant.parse(val);
                 this.participantList.push(participant);
               });
-              this.copyParticipantList = this.participantList;
+              this.originalParticipantList = this.participantList;
               let date = new Date();
               this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
             }
@@ -439,7 +440,7 @@ export class ParticipantListComponent implements OnInit {
             let participant = Participant.parse(val);
             this.participantList.push(participant);
           });
-          this.copyParticipantList = this.participantList;
+          this.originalParticipantList = this.participantList;
           if (viewFilter != null) {
             this.filterQuery = viewFilter.queryItems;
           }
@@ -671,13 +672,12 @@ export class ParticipantListComponent implements OnInit {
   }
 
   public doFilter() {
-
-    //    this.c
     let json = [];
     this.dataSources.forEach((value: string, key: string) => {
         this.createFilterJson(json, key);
       },
     );
+    console.log(json);
     //nothing to filter on the server
     if (json.length != 0) {
       this.filterQuery = null;
@@ -694,6 +694,7 @@ export class ParticipantListComponent implements OnInit {
       this.loadingParticipants = localStorage.getItem(ComponentService.MENU_SELECTED_REALM);
       this.dsmService.filterData(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), jsonPatch, this.parent, null).subscribe(
         data => {
+          console.log(data);
           if (data != undefined && data != null && data !== "") {
             let jsonData: any[];
             this.participantList = [];
@@ -703,6 +704,7 @@ export class ParticipantListComponent implements OnInit {
               let participant = Participant.parse(val);
               this.participantList.push(participant);
             });
+            this.originalParticipantList = this.participantList;
             let date = new Date();
             this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
             this.additionalMessage = null;
@@ -721,29 +723,78 @@ export class ParticipantListComponent implements OnInit {
         },
       );
     }
-    else {
+    let didClientSearch = false;
+    if (this.selectedColumns["data"].length != 0) {
+      this.copyParticipantList = this.originalParticipantList;
+      for (let filter of this.selectedColumns["data"]) {
+        let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
+        let filterText = Filter.getFilterText(filter, tmp, this.settings);
+        if (filterText != null) {
+          didClientSearch = true;
+          if (filterText["type"] === "TEXT") {
+            let value = filterText["filter1"]["value"];
+            console.log(value);
+            if (value !== null) {
+              if (value.includes("'")) {
+                let first = value.indexOf("'");
+                let last = value.lastIndexOf("'");
+                value = value.substring(first + 1, last);
+              }
+              this.copyParticipantList = this.copyParticipantList.filter(participant =>
+                participant.data != null &&
+                participant.data[filterText["parentName"]][filterText["filter1"]["name"]] === value,
+              );
+              console.log(this.participantList);
+            }
+            else {
+              let empt = filterText["empty"];
+              if (empt) {
+                this.copyParticipantList = this.copyParticipantList.filter(participant =>
+                  participant.data != null &&
+                  participant.data[filterText["parentName"]] == null || participant.data[filterText["parentName"]][filterText["filter1"]["name"]] == undefined || participant.data[filterText["parentName"]][filterText["filter1"]["name"]] === null || participant.data[filterText["parentName"]][filterText["filter1"]["name"]] === "",
+                );
+              }
+              else {
+                let notempt = filterText["notEmpty"];
+                if (notempt) {
+                  this.copyParticipantList = this.copyParticipantList.filter(participant =>
+                    participant.data != null &&
+                    participant.data[filterText["parentName"]][filterText["filter1"]["name"]] !== null && participant.data[filterText["parentName"]][filterText["filter1"]["name"]] !== undefined && participant.data[filterText["parentName"]][filterText["filter1"]["name"]] !== "",
+                  );
+                }
+              }
+            }
+            this.participantList = this.copyParticipantList;
+          }
+          else if (filterText["type"] === "OPTIONS") {
+            let results: Participant[] = new Array();
+            let temp: Participant[] = new Array();
+            for (let option of filterText["selectedOptions"]) {// status
+              temp = this.copyParticipantList.filter(participant =>
+                participant.data != null &&
+                participant.data[filterText["filter1"]["name"]] === option,
+              );
+              for (let t of temp) {
+                results.push(t);
+              }
+              console.log(filterText["filter1"]["name"]);
+              console.log(results);
+            }
+            this.copyParticipantList = results;
+            this.participantList = results;
+          }
+        }
+
+      }
+    }
+    if (!didClientSearch) {
+      //get unfiltered pt list
       this.filtered = false;
       this.filterQuery = "";
       this.deselectQuickFilters();
       //TODO - can be changed later to all using the same - after all studies are migrated!
       //check if it was a tableAlias data filter -> filter client side
-      let didClientSearch = false;
-      if (this.selectedColumns["data"].length != 0) {
-        for (let filter of this.selectedColumns["data"]) {
-          let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
-          let filterText = Filter.getFilterText(filter, tmp, this.settings);
-          if (filterText != null) {
-            this.participantList = this.copyParticipantList.filter(participant =>
-              participant.data != null && participant.data.profile[filterText["filter1"]["name"]] === filterText["filter1"]["value"],
-            );
-            didClientSearch = true;
-          }
-        }
-      }
-      if (!didClientSearch) {
-        //get unfiltered pt list
-        this.selectFilter(null);
-      }
+      this.selectFilter(null);
     }
   }
 
@@ -771,7 +822,7 @@ export class ParticipantListComponent implements OnInit {
     if (filter.participantColumn.name === "sampleQueue") {
       if (filter.type === Filter.OPTION_TYPE) {
         let status = null;
-        for (let [key, value] of Object.entries(filter.selectedOptions)) {
+        for (let [ key, value ] of Object.entries(filter.selectedOptions)) {
           if (value) {
             status = filter.options[key].name;
             break;
@@ -906,6 +957,12 @@ export class ParticipantListComponent implements OnInit {
 
   private doSort(object: string) {
     let order = this.sortDir === "asc" ? 1 : -1;
+    console.log(this.participantList);
+    for (let p of this.participantList) {
+      if (p.data === null) {
+        console.log(p);
+      }
+    }
     if (this.sortParent === "data" && object != null) {
       this.participantList.sort((a, b) => this.sort(a.data[object][this.sortField], b.data[object][this.sortField], order));
     }
@@ -1049,19 +1106,19 @@ export class ParticipantListComponent implements OnInit {
       }
 
       if (source === "m") {
-        Utils.downloadCurrentData(this.participantList, [["data", "data"], ["participant", "p"], ["medicalRecords", "m"]], columns, "Participants-MR-" + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION);
+        Utils.downloadCurrentData(this.participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "medicalRecords", "m" ] ], columns, "Participants-MR-" + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION);
         fileCount = fileCount + 1;
       }
       else if (source === "oD") {
-        Utils.downloadCurrentData(this.participantList, [["data", "data"], ["participant", "p"], ["oncHistoryDetails", "oD", "tissues", "t"]], columns, "Participants-OncHistory-" + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION);
+        Utils.downloadCurrentData(this.participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "oncHistoryDetails", "oD", "tissues", "t" ] ], columns, "Participants-OncHistory-" + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION);
         fileCount = fileCount + 1;
       }
       else if (source === "k") {
-        Utils.downloadCurrentData(this.participantList, [["data", "data"], ["participant", "p"], ["kits", "k"]], columns, "Participants-Sample-" + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION);
+        Utils.downloadCurrentData(this.participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "kits", "k" ] ], columns, "Participants-Sample-" + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION);
         fileCount = fileCount + 1;
       }
       else {
-        Utils.downloadCurrentData(this.participantList, [["data", "data"], [source, source]], columns, "Participants-" + source + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION, true);
+        Utils.downloadCurrentData(this.participantList, [ [ "data", "data" ], [ source, source ] ], columns, "Participants-" + source + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION, true);
         fileCount = fileCount + 1;
       }
     }
@@ -1069,7 +1126,7 @@ export class ParticipantListComponent implements OnInit {
     if (fileCount == 0) {
       if (this.selectedColumns["data"] != null && this.selectedColumns["data"].length > 0) {
         fileCount = fileCount + 1;
-        Utils.downloadCurrentData(this.participantList, [["data", "data"], ["participant", "p"]], columns, "Participants-" + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION);
+        Utils.downloadCurrentData(this.participantList, [ [ "data", "data" ], [ "participant", "p" ] ], columns, "Participants-" + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION);
       }
     }
 
@@ -1142,7 +1199,7 @@ export class ParticipantListComponent implements OnInit {
         },
         err => {
           if (err._body === Auth.AUTHENTICATION_ERROR) {
-            this.router.navigate([Statics.HOME_URL]);
+            this.router.navigate([ Statics.HOME_URL ]);
           }
           this.additionalMessage = "Error - Assigning Participants, Please contact your DSM developer";
         },
@@ -1208,6 +1265,7 @@ export class ParticipantListComponent implements OnInit {
           let participant = Participant.parse(val);
           this.participantList.push(participant);
         });
+        this.originalParticipantList = this.participantList;
         let date = new Date();
         this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
         this.additionalMessage = null;

@@ -57,8 +57,6 @@ public class TissueList {
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, realm);
                 try (ResultSet rs = stmt.executeQuery()) {
-                    String oncHistoryDetailId = "";
-                    List<Tissue> tissues = new ArrayList<>();
                     OncHistoryDetail oncHistory = null;
                     String ptId = null;
                     while (rs.next()) {
