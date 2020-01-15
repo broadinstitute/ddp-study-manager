@@ -80,13 +80,15 @@
 
           <td>
             <md-input-container  *ngIf="hasRole().allowedToEditDrugList()">
-              <input mdInput type="text" [(ngModel)]="drug.genericName" (change)="onChange(i)" class="Width--100" maxlength="100">
+              <input mdInput type="text" [(ngModel)]="drug.genericName" (change)="checkDuplicatedNames(i); onChange(i)" class="Width--100" maxlength="100">
+              <md-hint class="ErrorMessageForm" *ngIf="drug.duplicatedNamesError">Generic/Brand combo is not new</md-hint>
             </md-input-container>
             <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.genericName}}</div>
           </td>
           <td>
             <md-input-container  *ngIf="hasRole().allowedToEditDrugList()">
-              <input mdInput type="text" [(ngModel)]="drug.brandName" (change)="onChange(i)" class="Width--100" maxlength="100">
+              <input mdInput type="text" [(ngModel)]="drug.brandName" (change)="checkDuplicatedNames(i); onChange(i)" class="Width--100" maxlength="100">
+              <md-hint class="ErrorMessageForm" *ngIf="drug.duplicatedNamesError">Generic/Brand combo is not new</md-hint>
             </md-input-container>
             <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.brandName}}</div>
           </td>
