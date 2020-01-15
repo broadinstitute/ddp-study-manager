@@ -143,6 +143,9 @@ public class ElasticSearchUtil {
                             (String) address.get("street1"), (String) address.get("street2"), (String) address.get("state"),
                             (String) profile.get("hruid"), null);
                 }
+                else if (profile != null && !profile.isEmpty()) {
+                    return new DDPParticipant((String) profile.get("hruid"), "", (String) profile.get("firstName"), (String) profile.get("lastName"));
+                }
             }
         }
         return null;
