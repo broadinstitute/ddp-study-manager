@@ -212,6 +212,7 @@ public class Drug {
                 stmt.setString(8, newDrugEntry.getChemotherapy());
                 stmt.setLong(9, nowValue);
                 stmt.setInt(10, newDrugEntry.getActive());
+                stmt.setLong(11, nowValue);
                 int result = stmt.executeUpdate();
                 if (result == 1) {
                     logger.info("Added new drugListing ");

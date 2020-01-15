@@ -13,7 +13,7 @@ export class DrugListing {
 
   constructor(public drugId: string, public genericName: string, public brandName: string, public displayName: string,
               public chemocat: string, public chemoType: string, public studyDrug: number, public treatmentType: string,
-              public chemotherapy: string, public active: number, public dateAdded: number) {
+              public chemotherapy: string, public active: number, public dateCreated: number) {
     this.drugId = drugId;
     this.genericName = genericName;
     this.brandName = brandName;
@@ -24,12 +24,12 @@ export class DrugListing {
     this.treatmentType = treatmentType;
     this.chemotherapy = chemotherapy;
     this.active = active;
-    this.dateAdded = dateAdded;
+    this.dateCreated = dateCreated;
   }
 
   static parse(json): DrugListing {
     return new DrugListing(json.drugId, json.genericName, json.brandName, json.displayName, json.chemocat, json.chemoType,
-      json.studyDrug, json.treatmentType, json.chemotherapy, json.active, json.dateAdded);
+      json.studyDrug, json.treatmentType, json.chemotherapy, json.active, json.dateCreated);
   }
 
   // Submit button gives the full list of drugs from the page, so we want to trim down to only the subset that user updated
@@ -39,7 +39,6 @@ export class DrugListing {
     for (let drug of array) {
       if (drug.changed) {
         if (drug.displayName == null || drug.displayName === '') {
-          // @TODO: also will need a dupe check here
           drug.displayName = drug.displayName;
         }
         cleanedDrugList.push(drug);
