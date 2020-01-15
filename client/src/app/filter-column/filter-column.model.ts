@@ -340,7 +340,6 @@ export class Filter {
   }
 
   public static parseToCurrentFilterArray(json, allColumns): Filter[] {
-    console.log(json);
     if (json.filters == undefined) {
       return null;
     }
@@ -374,8 +373,6 @@ export class Filter {
           let f = allColumns[source].find(f => {
             return f.participantColumn.name === filter.participantColumn.name;
           });
-          console.log(source);
-          console.log(f);
           if (f != undefined) {
             filter.type = f.type;
             filter.participantColumn = f.participantColumn;
@@ -404,7 +401,6 @@ export class Filter {
       }
 
     }
-    console.log(filters);
     return filters;
   }
 
@@ -471,6 +467,7 @@ export class Filter {
       if (selected.length > 0 || filter.empty || filter.notEmpty) {
         filterText = this.getFilterJson(parent, new NameValue(filter.participantColumn.name, filter.value1), new NameValue(filter.participantColumn.name, filter.value2), selected,
           true, filter.type, filter.range, filter.empty, filter.notEmpty, filter.participantColumn);
+        console.log(filterText);
 
       }
       else {
@@ -505,7 +502,7 @@ export class Filter {
         return null;
       }
     }
-    if (filterText != null && filter.participantColumn.tableAlias === Statics.ES_ALIAS) {
+    if (filterText != null && filter.participantColumn.tableAlias === Statics.ES_ALIAS && filter.participantColumn.object !== undefined && filter.participantColumn.object !== null) {
       filterText["exactMatch"] = true;
       filterText["parentName"] = filter.participantColumn.object;
     }

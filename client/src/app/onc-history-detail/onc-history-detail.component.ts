@@ -372,7 +372,7 @@ export class OncHistoryDetailComponent implements OnInit {
         this.oncHistory[ index ].histology = object.field1.value;
         let patch1 = new PatchUtil( this.oncHistory[ index ].oncHistoryDetailId, this.role.userMail(),
           {
-            name: "typePX",
+            name: "histology",
             value: object.field1.value
           }, null, "participantId", this.oncHistory[ index ].participantId, Statics.ONCDETAIL_ALIAS );
         let patch = patch1.getPatch();
