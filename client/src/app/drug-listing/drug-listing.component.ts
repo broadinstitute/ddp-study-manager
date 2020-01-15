@@ -88,10 +88,11 @@ export class DrugListingComponent implements OnInit {
     }
   }
 
-  // @TODO: will come back here when we add new drugs
   addDrugListing() {
+    const nowMilliseconds = Date.now();
+    const nowEpochCleaned = Math.floor(nowMilliseconds / 1000); // (divide by 1000 to match epoch, and remove decimal)
     let drugListing: DrugListing = new DrugListing(null, null, null, null,
-      null, null, null, null, null, 1, 0);
+      null, null, null, null, null, 1, nowEpochCleaned);
     drugListing.addedNew = true;
     this.drugList.push(drugListing);
   }
@@ -121,7 +122,7 @@ export class DrugListingComponent implements OnInit {
             this.auth.logout();
           }
           this.loading = false;
-          this.additionalMessage = 'Error - Saving Drug entries\nPlease contact your DSM developer';
+          this.additionalMessage = 'Error - Saving Drug listings\nPlease contact your DSM developer';
         }
       );
     }
