@@ -93,7 +93,7 @@ export class ParticipantPageComponent implements OnInit {
       let realm = params[ DSMService.REALM ] || null;
       if (realm != null) {
         //        this.compService.realmMenu = realm;
-        this.leaveParticipant.emit( true );
+        this.leaveParticipant.emit( null );
       }
     } );
   }
@@ -391,17 +391,15 @@ export class ParticipantPageComponent implements OnInit {
   }
 
   public leavePage(): boolean {
-    this.participant = null;
     this.medicalRecord = null;
     this.compService.justReturning = true;
-    this.leaveParticipant.emit( true );
+    this.leaveParticipant.emit( this.participant );
+    this.participant = null;
     return false;
   }
 
   openTissue( object: any ) {
-    console.info( object );
     if (object != null) {
-      console.info( "yes" );
       this.oncHistoryDetail = object;
       this.showTissue = true;
     }

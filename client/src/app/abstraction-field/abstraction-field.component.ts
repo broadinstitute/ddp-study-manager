@@ -250,21 +250,8 @@ export class AbstractionFieldComponent implements OnInit {
           nameValues: [ {name: this.activityOfField + "_" + fieldName, value: v} ]
         };
       }
-      // value of field changed AND filename was set
-      else if (fieldName === "value" && field.fieldValue.fileName != null && field.fieldValue.fileName !== "") {
-        patch = {
-          id: field.fieldValue.primaryKeyId,
-          parentId: this.participant.participant.participantId,
-          parent: "participantId",
-          user: this.role.userMail(),
-          fieldId: field.medicalRecordAbstractionFieldId,
-          nameValues: [ {name: this.activityOfField + "_" + fieldName, value: v},
-            {name: this.activityOfField + "_valueCounter", value: field.fieldValue.valueCounter},
-            {name: this.activityOfField + "_fileName", value: field.fieldValue.fileName} ]
-        };
-      }
-      // value of field changed AND NOT filename was set
-      else if (fieldName === "value" && ( field.fieldValue.fileName == null || field.fieldValue.fileName === "" )) {
+      // value of field changed
+      else if (fieldName === "value") {
         patch = {
           id: field.fieldValue.primaryKeyId,
           parentId: this.participant.participant.participantId,

@@ -170,11 +170,11 @@ export class Filter {
   public static MF_BARCODE = new Filter(ParticipantColumn.MF_BARCODE, Filter.TEXT_TYPE);
 
   //abstraction
-  public static ABSTRACTION_PROCESS_STATUS = new Filter(ParticipantColumn.ABSTRACTION_PROCESS_STATUS, Filter.OPTION_TYPE, [
-    new NameValue("done", "Finished"),
-    new NameValue("in_progress", "In Progress"),
-    new NameValue("qc_in_progress", "QC in progress"),
-    new NameValue("waiting_qc", "Waiting for QC")]);
+  // public static ABSTRACTION_PROCESS_STATUS = new Filter(ParticipantColumn.ABSTRACTION_PROCESS_STATUS, Filter.OPTION_TYPE, [
+  //   new NameValue("done", "Finished"),
+  //   new NameValue("in_progress", "In Progress"),
+  //   new NameValue("qc_in_progress", "QC in progress"),
+  //   new NameValue("waiting_qc", "Waiting for QC")]);
   public static ABSTRACTION_STATUS = new Filter(ParticipantColumn.ABSTRACTION_STATUS, Filter.OPTION_TYPE, [
     new NameValue("done", "Done"),
     new NameValue("in_progress", "In Progress"),
@@ -210,7 +210,7 @@ export class Filter {
     Filter.USS_COUNT, Filter.H_E_COUNT, Filter.BLOCKS_COUNT,
     Filter.COLLABORATOR_SAMPLE, Filter.SAMPLE_TYPE, Filter.SAMPLE_SENT, Filter.SAMPLE_RECEIVED, Filter.SAMPLE_DEACTIVATION, Filter.SAMPLE_QUEUE,
     Filter.TRACKING_TO_PARTICIPANT, Filter.TRACKING_RETURN, Filter.MF_BARCODE,
-    Filter.ABSTRACTION_PROCESS_STATUS, Filter.ABSTRACTION_ACTIVITY, Filter.ABSTRACTION_STATUS, Filter.ABSTRACTION_USER];
+    Filter.ABSTRACTION_ACTIVITY, Filter.ABSTRACTION_STATUS, Filter.ABSTRACTION_USER];
 
   constructor(public participantColumn: ParticipantColumn, public type: string, public options?: NameValue[], public filter2?: NameValue,
               public range?: boolean, public exactMatch?: boolean, public filter1?: NameValue,
