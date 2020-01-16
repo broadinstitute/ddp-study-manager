@@ -218,14 +218,14 @@ public class ViewFilter {
             if (queryConditions.containsKey(tmp)) {
                 queryCondition = queryConditions.get(tmp);
             }
-            queryConditions.put(tmp, queryCondition.concat(Filter.getQueryFilteringString(filter, dbElement)));
+            queryConditions.put(tmp, queryCondition.concat(Filter.getQueryStringForFiltering(filter, dbElement)));
         }
         else {
             String queryCondition = "";
             if (queryConditions.containsKey("ES")) {
                 queryCondition = queryConditions.get("ES");
             }
-            queryConditions.put("ES", queryCondition.concat(Filter.getQueryFilteringString(filter, null)));
+            queryConditions.put("ES", queryCondition.concat(Filter.getQueryStringForFiltering(filter, null)));
         }
     }
 

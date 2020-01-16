@@ -428,7 +428,7 @@ public class RouteTest extends TestHelper {
         String message = DDPRequestUtil.getContentAsString(response);
         DashboardInformation ddps = new Gson().fromJson(message, DashboardInformation.class);
         Assert.assertNotNull(ddps);
-        Assert.assertEquals(ddps.getDashboardValues(), "{all=1, status.ENROLLED=1}"); // TODO Simone - getMrReceivedFollowUpParticipant()
+        Assert.assertEquals(ddps.getDashboardValues(), "{all=1, aStatus.ENROLLED=1}"); // TODO Simone - getMrReceivedFollowUpParticipant()
         Assert.assertEquals(ddps.getDashboardValues(), 1); // TODO Simone - getMrFollowUpSentParticipant()
 
         mrId = editMedicalRecord(TEST_DDP, "NEW_TEST_PARTICIPANT", "TEST_INSTITUTION", "m.followUpRequired", "1", "followup_required");

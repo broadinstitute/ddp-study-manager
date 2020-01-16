@@ -7,6 +7,7 @@ import {Statics} from "../utils/statics";
 export class Filter {
 
   public static DATE_TYPE = "DATE";
+  public static EPOCH_DATE_TYPE = "epochDATE";
   public static TEXT_TYPE = "TEXT";
   public static OPTION_TYPE = "OPTIONS";
   public static NUMBER_TYPE = "NUMBER";
@@ -16,22 +17,22 @@ export class Filter {
   public static COMPOSITE_TYPE = "COMPOSITE";
 
   //ES data
-  public static REALM = new Filter(ParticipantColumn.REALM, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static SHORT_ID = new Filter(ParticipantColumn.SHORT_ID, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static LEGACY_SHORT_ID = new Filter(ParticipantColumn.LEGACY_SHORT_ID, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static PARTICIPANT_ID = new Filter(ParticipantColumn.PARTICIPANT_ID, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static LEGACY_PARTICIPANT_ID = new Filter(ParticipantColumn.LEGACY_PARTICIPANT_ID, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static FIRST_NAME = new Filter(ParticipantColumn.FIRST_NAME, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static LAST_NAME = new Filter(ParticipantColumn.LAST_NAME, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static COUNTRY = new Filter(ParticipantColumn.COUNTRY, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
+  public static REALM = new Filter(ParticipantColumn.REALM, Filter.TEXT_TYPE);
+  public static SHORT_ID = new Filter(ParticipantColumn.SHORT_ID, Filter.TEXT_TYPE);
+  public static LEGACY_SHORT_ID = new Filter(ParticipantColumn.LEGACY_SHORT_ID, Filter.TEXT_TYPE);
+  public static PARTICIPANT_ID = new Filter(ParticipantColumn.PARTICIPANT_ID, Filter.TEXT_TYPE);
+  public static LEGACY_PARTICIPANT_ID = new Filter(ParticipantColumn.LEGACY_PARTICIPANT_ID, Filter.TEXT_TYPE);
+  public static FIRST_NAME = new Filter(ParticipantColumn.FIRST_NAME, Filter.TEXT_TYPE);
+  public static LAST_NAME = new Filter(ParticipantColumn.LAST_NAME, Filter.TEXT_TYPE);
+  public static COUNTRY = new Filter(ParticipantColumn.COUNTRY, Filter.TEXT_TYPE);
   public static ENROLLMENT_STATUS = new Filter(ParticipantColumn.ENROLLMENT_STATUS, Filter.OPTION_TYPE, [
     new NameValue("REGISTERED", "Registered"),
     new NameValue("EXITED_BEFORE_ENROLLMENT", "Exited before Enrollment"),
     new NameValue("EXITED_AFTER_ENROLLMENT", "Exited after Enrollment"),
-    new NameValue("ENROLLED", "Enrolled")], null, false, true, null, null, null, null, false, true);
-  public static EMAIL = new Filter(ParticipantColumn.EMAIL, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static REGISTRATION_DATE = new Filter(ParticipantColumn.REGISTRATION_DATE, Filter.DATE_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static DO_NOT_CONTACT = new Filter(ParticipantColumn.DO_NOT_CONTACT, Filter.BOOLEAN_TYPE, null, null, false, true, null, null, null, null, false, true);
+    new NameValue("ENROLLED", "Enrolled") ]);
+  public static EMAIL = new Filter(ParticipantColumn.EMAIL, Filter.TEXT_TYPE);
+  public static REGISTRATION_DATE = new Filter(ParticipantColumn.REGISTRATION_DATE, Filter.DATE_TYPE);
+  public static DO_NOT_CONTACT = new Filter(ParticipantColumn.DO_NOT_CONTACT, Filter.BOOLEAN_TYPE);
 
   //participant columns
   public static ONC_HISTORY_CREATED = new Filter(ParticipantColumn.ONC_HISTORY_CREATED, Filter.DATE_TYPE);
@@ -40,6 +41,7 @@ export class Filter {
   public static PAPER_CR_RECEIVED = new Filter(ParticipantColumn.PAPER_CR_RECEIVED, Filter.DATE_TYPE);
   public static PARTICIPANT_NOTES = new Filter(ParticipantColumn.PARTICIPANT_NOTES, Filter.TEXT_TYPE);
   public static MINIMAL_RECORDS = new Filter(ParticipantColumn.MINIMAL_RECORDS, Filter.CHECKBOX_TYPE);
+  public static ABSTRACTION_READY = new Filter(ParticipantColumn.ABSTRACTION_READY, Filter.CHECKBOX_TYPE);
   public static ASSIGNEE_MR = new Filter(ParticipantColumn.ASSIGNEE_MR, Filter.OPTION_TYPE);
   public static ASSIGNEE_TISSUE = new Filter(ParticipantColumn.ASSIGNEE_TISSUE, Filter.OPTION_TYPE);
   public static EXIT_DATE = new Filter(ParticipantColumn.EXIT_DATE, Filter.DATE_TYPE);
@@ -170,12 +172,11 @@ export class Filter {
   public static MF_BARCODE = new Filter(ParticipantColumn.MF_BARCODE, Filter.TEXT_TYPE);
 
   //abstraction
-  public static ABSTRACTION_PROCESS_STATUS = new Filter(ParticipantColumn.ABSTRACTION_PROCESS_STATUS, Filter.OPTION_TYPE, [
-    new NameValue("done", "Finished"),
-    new NameValue("in_progress", "In Progress"),
-    new NameValue("not_started", "Not Started"),
-    new NameValue("qc_in_progress", "QC in progress"),
-    new NameValue("waiting_qc", "Waiting for QC")]);
+  // public static ABSTRACTION_PROCESS_STATUS = new Filter(ParticipantColumn.ABSTRACTION_PROCESS_STATUS, Filter.OPTION_TYPE, [
+  //   new NameValue("done", "Finished"),
+  //   new NameValue("in_progress", "In Progress"),
+  //   new NameValue("qc_in_progress", "QC in progress"),
+  //   new NameValue("waiting_qc", "Waiting for QC")]);
   public static ABSTRACTION_STATUS = new Filter(ParticipantColumn.ABSTRACTION_STATUS, Filter.OPTION_TYPE, [
     new NameValue("done", "Done"),
     new NameValue("in_progress", "In Progress"),
@@ -191,7 +192,7 @@ export class Filter {
     Filter.REALM, Filter.SHORT_ID, Filter.LEGACY_SHORT_ID, Filter.LEGACY_PARTICIPANT_ID, Filter.PARTICIPANT_ID, Filter.FIRST_NAME, Filter.LAST_NAME,
     Filter.COUNTRY, Filter.ENROLLMENT_STATUS, Filter.EMAIL, Filter.REGISTRATION_DATE, Filter.DO_NOT_CONTACT,
     Filter.ONC_HISTORY_CREATED, Filter.ONC_HISTORY_REVIEWED, Filter.PAPER_CR_SENT, Filter.PAPER_CR_RECEIVED,
-    Filter.PARTICIPANT_NOTES, Filter.MINIMAL_RECORDS, Filter.ASSIGNEE_MR, Filter.ASSIGNEE_TISSUE, Filter.EXIT_DATE,
+    Filter.PARTICIPANT_NOTES, Filter.MINIMAL_RECORDS, Filter.ABSTRACTION_READY, Filter.ASSIGNEE_MR, Filter.ASSIGNEE_TISSUE, Filter.EXIT_DATE,
     Filter.MR_INSTITUTION_NAME, Filter.MR_INSTITUTION_CONTACT, Filter.MR_INSTITUTION_PHONE, Filter.MR_INSTITUTION_FAX,
     Filter.MR_FAX_SENT, Filter.MR_FAX_SENT_2, Filter.MR_FAX_SENT_3, Filter.MR_RECEIVED,
     Filter.MR_DOCUMENT, Filter.MR_DOCUMENT_FILES, Filter.MR_PROBLEM, Filter.MR_PROBLEM_TEXT, Filter.MR_UNABLE_TO_OBTAIN,
@@ -211,8 +212,9 @@ export class Filter {
     Filter.USS_COUNT, Filter.H_E_COUNT, Filter.BLOCKS_COUNT,
     Filter.COLLABORATOR_SAMPLE, Filter.SAMPLE_TYPE, Filter.SAMPLE_SENT, Filter.SAMPLE_RECEIVED, Filter.SAMPLE_DEACTIVATION, Filter.SAMPLE_QUEUE,
     Filter.TRACKING_TO_PARTICIPANT, Filter.TRACKING_RETURN, Filter.MF_BARCODE,
-    Filter.ABSTRACTION_PROCESS_STATUS, Filter.ABSTRACTION_ACTIVITY, Filter.ABSTRACTION_STATUS, Filter.ABSTRACTION_USER];
+    Filter.ABSTRACTION_ACTIVITY, Filter.ABSTRACTION_STATUS, Filter.ABSTRACTION_USER ];
 
+  //TODO remove alwaysExact
   constructor(public participantColumn: ParticipantColumn, public type: string, public options?: NameValue[], public filter2?: NameValue,
               public range?: boolean, public exactMatch?: boolean, public filter1?: NameValue,
               public selectedOptions?: any, public value1?: any, public value2?: any, public sortAsc?: boolean, public alwaysExact?: boolean,

@@ -1319,38 +1319,63 @@ export class TissueListComponent implements OnInit {
         if (filter.participantColumn.tableAlias === "data") {
           let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
           let filterText = Filter.getFilterText(filter, tmp, this.allAdditionalColumns);
-          let value = filterText["filter1"]["value"];
-          if (value !== null) {
-            if (value.includes("'")) {
-              let first = value.indexOf("'");
-              let last = value.lastIndexOf("'");
-              value = value.substring(first + 1, last);
-            }
-            if (filterText != null) {
-              this.copyTissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
-                tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === value,
-              );
-            }
-          }
-          else {
-            let empt = filterText["empty"];
-            if (empt === "true") {
-              this.copyTissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
-                tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === null,
-              );
-            }
-            else {
-              let notempt = filterText["notEmpty"];
-              if (notempt === "true") {
+          if (filterText != null) {
+            console.log(filterText);
+            if (filter.type === "TEXT") {
+              let value = filterText["filter1"]["value"];
+              if (value !== null) {
+                if (value.includes("'")) {
+                  let first = value.indexOf("'");
+                  let last = value.lastIndexOf("'");
+                  value = value.substring(first + 1, last);
+                }
+                else if (value.includes("\"")) {
+                  let first = value.indexOf("\"");
+                  let last = value.lastIndexOf("\"");
+                  value = value.substring(first + 1, last);
+                }
                 this.copyTissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
-                  tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== null,
+                  tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === value,
                 );
+
               }
+              else {
+                let empt = filterText["empty"];
+                if (empt === "true") {
+                  this.copyTissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
+                    tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] === null,
+                  );
+                }
+                else {
+                  let notempt = filterText["notEmpty"];
+                  if (notempt === "true") {
+                    this.copyTissueListWrappers = this.copyTissueListWrappers.filter(tissueListWrapper =>
+                      tissueListWrapper.data[filterText["parentName"]][filterText["filter1"]["name"]] !== null,
+                    );
+                  }
+                }
+              }
+            }
+            else if (filterText["type"] === "OPTIONS") {
+              console.log(this.copyTissueListWrappers);
+              let results: TissueListWrapper[] = new Array();
+              let temp: TissueListWrapper[] = new Array();
+              for (let option of filterText["selectedOptions"]) {// status
+                temp = this.copyTissueListWrappers.filter(tissueListWrapper =>
+                  tissueListWrapper.data[filterText["filter1"]["name"]] === option,
+                );
+                for (let t of temp) {
+                  results.push(t);
+                }
+              }
+              this.copyTissueListWrappers = results;
+              this.tissueListWrappers = results;
             }
           }
         }
 
       }
+      this.tissueListWrappers = this.copyTissueListWrappers;
     }
     else if (viewFilter == null) {
       if (this.selectedColumns["data"].length != 0) {
@@ -1359,7 +1384,6 @@ export class TissueListComponent implements OnInit {
           let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
           let filterText = Filter.getFilterText(filter, tmp, this.allAdditionalColumns);
           if (filterText != null) {
-            console.log(filterText);
             if (filterText["type"] === "TEXT") {
               let value = filterText["filter1"]["value"];
               if (value !== null) {

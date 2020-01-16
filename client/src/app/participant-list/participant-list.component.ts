@@ -308,6 +308,7 @@ export class ParticipantListComponent implements OnInit {
               this.savedFilters.push(view);
             }
           });
+          this.savedFilters.sort((a, b) => a.filterName.localeCompare(b.filterName));
 
         }
         if (jsonData.mrCoverPDF != null) {
@@ -414,7 +415,9 @@ export class ParticipantListComponent implements OnInit {
     }
     this.dsmService.applyFilter(viewFilter, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, null).subscribe(
       data => {
+        console.log(viewFilter);
         if (data != null) {
+
           if (viewFilter != null && viewFilter.filters != null) {
             for (let filter of viewFilter.filters) {
               let t = filter.participantColumn.tableAlias;
@@ -443,8 +446,6 @@ export class ParticipantListComponent implements OnInit {
           this.originalParticipantList = this.participantList;
           if (viewFilter != null) {
             this.filterQuery = viewFilter.queryItems;
-          }
-          if (viewFilter != null) {
             viewFilter.selected = true;
             for (let f of this.quickFilters) {
               if (viewFilter.filterName !== f.filterName) {
@@ -461,6 +462,9 @@ export class ParticipantListComponent implements OnInit {
             this.selectedFilterName = viewFilter.filterName;
             this.filterQuery = viewFilter.queryItems.replace(",", "");
             this.selectedColumns = viewFilter.columns;
+            if (!this.hasESData) {
+              this.filterClientSide(viewFilter);
+            }
           }
           else {
             //if selected columns are not set, set to default columns
@@ -677,7 +681,6 @@ export class ParticipantListComponent implements OnInit {
         this.createFilterJson(json, key);
       },
     );
-    console.log(json);
     //nothing to filter on the server
     if (json.length != 0) {
       this.filterQuery = null;
@@ -687,6 +690,7 @@ export class ParticipantListComponent implements OnInit {
         "filters": json,
         "parent": this.parent,
       };
+      console.log(data);
       let jsonPatch = JSON.stringify(data);
       this.currentFilter = json;
       this.currentView = jsonPatch;
@@ -694,7 +698,6 @@ export class ParticipantListComponent implements OnInit {
       this.loadingParticipants = localStorage.getItem(ComponentService.MENU_SELECTED_REALM);
       this.dsmService.filterData(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), jsonPatch, this.parent, null).subscribe(
         data => {
-          console.log(data);
           if (data != undefined && data != null && data !== "") {
             let jsonData: any[];
             this.participantList = [];
@@ -705,6 +708,24 @@ export class ParticipantListComponent implements OnInit {
               this.participantList.push(participant);
             });
             this.originalParticipantList = this.participantList;
+
+            let didClientSearch = false;
+            if (!this.hasESData) {
+              didClientSearch = this.filterClientSide(null);
+            }
+            console.log(didClientSearch && !this.hasESData);
+            if ((!didClientSearch && !this.hasESData)) {
+              //get unfiltered pt list
+              this.filtered = false;
+              this.filterQuery = "";
+              this.deselectQuickFilters();
+              //TODO - can be changed later to all using the same - after all studies are migrated!
+              //check if it was a tableAlias data filter -> filter client side
+              this.selectFilter(null);
+            }
+            this.loadingParticipants = null;
+            this.errorMessage = null;
+            window.scrollTo(0, 0);
             let date = new Date();
             this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
             this.additionalMessage = null;
@@ -713,9 +734,6 @@ export class ParticipantListComponent implements OnInit {
             this.additionalMessage = "Something went wrong while filtering - List was not filtered!";
           }
 
-          this.loadingParticipants = null;
-          this.errorMessage = null;
-          window.scrollTo(0, 0);
         },
         err => {
           this.loadingParticipants = null;
@@ -723,72 +741,7 @@ export class ParticipantListComponent implements OnInit {
         },
       );
     }
-    let didClientSearch = false;
-    if (this.selectedColumns["data"].length != 0) {
-      this.copyParticipantList = this.originalParticipantList;
-      for (let filter of this.selectedColumns["data"]) {
-        let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
-        let filterText = Filter.getFilterText(filter, tmp, this.settings);
-        if (filterText != null) {
-          didClientSearch = true;
-          if (filterText["type"] === "TEXT") {
-            let value = filterText["filter1"]["value"];
-            console.log(value);
-            if (value !== null) {
-              if (value.includes("'")) {
-                let first = value.indexOf("'");
-                let last = value.lastIndexOf("'");
-                value = value.substring(first + 1, last);
-              }
-              this.copyParticipantList = this.copyParticipantList.filter(participant =>
-                participant.data != null &&
-                participant.data[filterText["parentName"]][filterText["filter1"]["name"]] === value,
-              );
-              console.log(this.participantList);
-            }
-            else {
-              let empt = filterText["empty"];
-              if (empt) {
-                this.copyParticipantList = this.copyParticipantList.filter(participant =>
-                  participant.data != null &&
-                  participant.data[filterText["parentName"]] == null || participant.data[filterText["parentName"]][filterText["filter1"]["name"]] == undefined || participant.data[filterText["parentName"]][filterText["filter1"]["name"]] === null || participant.data[filterText["parentName"]][filterText["filter1"]["name"]] === "",
-                );
-              }
-              else {
-                let notempt = filterText["notEmpty"];
-                if (notempt) {
-                  this.copyParticipantList = this.copyParticipantList.filter(participant =>
-                    participant.data != null &&
-                    participant.data[filterText["parentName"]][filterText["filter1"]["name"]] !== null && participant.data[filterText["parentName"]][filterText["filter1"]["name"]] !== undefined && participant.data[filterText["parentName"]][filterText["filter1"]["name"]] !== "",
-                  );
-                }
-              }
-            }
-            this.participantList = this.copyParticipantList;
-          }
-          else if (filterText["type"] === "OPTIONS") {
-            let results: Participant[] = new Array();
-            let temp: Participant[] = new Array();
-            for (let option of filterText["selectedOptions"]) {// status
-              temp = this.copyParticipantList.filter(participant =>
-                participant.data != null &&
-                participant.data[filterText["filter1"]["name"]] === option,
-              );
-              for (let t of temp) {
-                results.push(t);
-              }
-              console.log(filterText["filter1"]["name"]);
-              console.log(results);
-            }
-            this.copyParticipantList = results;
-            this.participantList = results;
-          }
-        }
-
-      }
-    }
-    if (!didClientSearch) {
-      //get unfiltered pt list
+    else {
       this.filtered = false;
       this.filterQuery = "";
       this.deselectQuickFilters();
@@ -796,21 +749,22 @@ export class ParticipantListComponent implements OnInit {
       //check if it was a tableAlias data filter -> filter client side
       this.selectFilter(null);
     }
+
   }
 
   createFilterJson(json, key: string) {
     if (this.selectedColumns[key] != null) {
       for (let filter of this.selectedColumns[key]) {
-        //TODO - can be changed later to all using the same - after all studies are migrated!
-        //only filter for ES data if ddp has ES data
-        if (filter.participantColumn.tableAlias === "data" && this.hasESData) {
-          this.addFilterToJson(filter, json);
-
-        }
-        //filter for all data which is not es
-        else if (filter.participantColumn.tableAlias !== "data") {
-          this.addFilterToJson(filter, json);
-        }
+        // //TODO - can be changed later to all using the same - after all studies are migrated!
+        // //only filter for ES data if ddp has ES data
+        // if (filter.participantColumn.tableAlias === "data" && this.hasESData) {
+        //   this.addFilterToJson(filter, json);
+        //
+        // }
+        // //filter for all data which is not es
+        // else if (filter.participantColumn.tableAlias !== "data") {
+        this.addFilterToJson(filter, json);
+        // }
       }
     }
   }
@@ -1282,4 +1236,99 @@ export class ParticipantListComponent implements OnInit {
   getQuestionAnswerByName(questionsAnswers: Array<QuestionAnswer>, name: string) {
     return questionsAnswers.find(x => x.stableId === name);
   }
+
+  filterClientSide(viewFilter: ViewFilter) {
+    let didClientSearch = false;
+    if (viewFilter == null && this.selectedColumns["data"].length == 0) {
+      return;
+    }
+    let participantFilters: Filter[];
+    if (viewFilter != null && viewFilter.filters != null && viewFilter.filters.length != 0) {
+      participantFilters = viewFilter.filters;
+    }
+    else if (viewFilter == null) {
+      participantFilters = this.selectedColumns["data"];
+    }
+    console.log(participantFilters);
+    this.copyParticipantList = this.originalParticipantList;
+    if (participantFilters != null && participantFilters.length != 0) {
+      for (let filter of participantFilters) {
+        console.log(this.copyParticipantList);
+        if (filter.participantColumn.tableAlias === "data") {
+          let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
+          let filterText = Filter.getFilterText(filter, tmp, this.settings);
+          if (filterText != null) {
+            console.log(filterText);
+            didClientSearch = true;
+            if (filter.type === "TEXT") {
+              let value = filterText["filter1"]["value"];
+              if (value !== null) {
+                if (value.includes("'")) {
+                  let first = value.indexOf("'");
+                  let last = value.lastIndexOf("'");
+                  value = value.substring(first + 1, last);
+                }
+                else if (value.includes("\"")) {
+                  let first = value.indexOf("\"");
+                  let last = value.lastIndexOf("\"");
+                  value = value.substring(first + 1, last);
+                }
+                console.log(value);
+                if (value != null && value !== "") {
+                  this.copyParticipantList = this.copyParticipantList.filter(participant =>
+                    participant.data !== null &&
+                    participant.data[filterText["parentName"]][filterText["filter1"]["name"]] === value,
+                  );
+                }
+                this.participantList = this.copyParticipantList;
+                console.log(this.copyParticipantList);
+              }
+              else {
+                let empt = filterText["empty"];
+                if (empt === "true") {
+                  this.copyParticipantList = this.copyParticipantList.filter(participant =>
+                    participant.data !== null &&
+                    participant.data[filterText["parentName"]][filterText["filter1"]["name"]] === null,
+                  );
+                }
+                else {
+                  let notempt = filterText["notEmpty"];
+                  if (notempt === "true") {
+                    this.copyParticipantList = this.copyParticipantList.filter(participant =>
+                      participant.data !== null &&
+                      participant.data[filterText["parentName"]][filterText["filter1"]["name"]] !== null,
+                    );
+                  }
+                }
+                this.participantList = this.copyParticipantList;
+              }
+
+            }
+            else if (filterText["type"] === "OPTIONS") {
+              let results: Participant[] = new Array();
+              let temp: Participant[] = new Array();
+              for (let option of filterText["selectedOptions"]) {// status
+                temp = this.copyParticipantList.filter(participant =>
+                  participant.data != null &&
+                  participant.data[filterText["filter1"]["name"]] === option,
+                );
+                for (let t of temp) {
+                  results.push(t);
+                }
+                console.log(filterText["filter1"]["name"]);
+                console.log(results);
+              }
+              this.copyParticipantList = results;
+              this.participantList = results;
+            }
+          }
+        }
+      }
+    }
+
+    return didClientSearch;
+
+  }
+
+
 }

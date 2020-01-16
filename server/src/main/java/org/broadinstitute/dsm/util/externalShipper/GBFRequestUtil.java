@@ -64,7 +64,7 @@ public class GBFRequestUtil implements ExternalShipper {
 
     public static final String ORDER_ENDPOINT = "order";
     public static final String CONFIRM_ENDPOINT = "confirm";
-    public static final String STATUS_ENDPOINT = "status";
+    public static final String STATUS_ENDPOINT = "aStatus";
     public final String CANCEL_ORDER_ENDPOINT = "cancelorder";
 
 //    private final String ORDERED = "ORDERED";
@@ -173,7 +173,7 @@ public class GBFRequestUtil implements ExternalShipper {
         }
     }
 
-    // Order Status is as it sounds, a real-time status of the order progression through the GBF internal process
+    // Order Status is as it sounds, a real-time aStatus of the order progression through the GBF internal process
     // 'RECEIVED', 'PROCESSING', 'SHIPPED', 'DISTRIBUTION', 'FORMS PRINTED', 'CANCELLED', 'NOT FOUND', 'SHIPPED (SIMULATED)'
     // return the actual tube barcode for all tubes but only after the kit is shipped (around 7:00pm)
     public void orderStatus(ArrayList<KitRequest> kitRequests) throws Exception {
@@ -202,7 +202,7 @@ public class GBFRequestUtil implements ExternalShipper {
                 }
             }
             else {
-                new RuntimeException("Failed to check status of kits from " + EXTERNAL_SHIPPER_NAME + ": " + gbfResponse.getErrorMessage());
+                new RuntimeException("Failed to check aStatus of kits from " + EXTERNAL_SHIPPER_NAME + ": " + gbfResponse.getErrorMessage());
             }
         }
     }
@@ -279,7 +279,7 @@ public class GBFRequestUtil implements ExternalShipper {
         if (results.resultException != null) {
             throw new RuntimeException("Error looking up kit requests  ", results.resultException);
         }
-        logger.info("Found " + kitRequests.size() + " kit requests which do not have a end status yet");
+        logger.info("Found " + kitRequests.size() + " kit requests which do not have a end aStatus yet");
         return kitRequests;
     }
 

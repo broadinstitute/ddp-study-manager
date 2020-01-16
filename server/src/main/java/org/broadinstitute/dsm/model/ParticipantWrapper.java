@@ -210,9 +210,9 @@ public class ParticipantWrapper {
         participantProfileDataMap.put("firstName", mbcParticipant.getFirstName());
         participantProfileDataMap.put("lastName", mbcParticipant.getLastName());
         participantDataMap.put("profile", participantProfileDataMap);
-        participantDataMap.put("status", "ENROLLED");
+        participantDataMap.put("aStatus", "ENROLLED");
         if (participantExit != null) {
-            participantDataMap.put("status", "EXITED_AFTER_ENROLLMENT");
+            participantDataMap.put("aStatus", "EXITED_AFTER_ENROLLMENT");
         }
         participantDataMap.put("ddp", "MBC");
         Map<String, Object> participantAddressMap = new HashMap<>();
@@ -243,9 +243,9 @@ public class ParticipantWrapper {
         participantProfileDataMap.put("firstName", ddpParticipant.getFirstName());
         participantProfileDataMap.put("lastName", ddpParticipant.getLastName());
         participantDataMap.put("profile", participantProfileDataMap);
-        participantDataMap.put("status", "ENROLLED");
+        participantDataMap.put("aStatus", "ENROLLED");
         if (participantExit != null) {
-            participantDataMap.put("status", "EXITED_AFTER_ENROLLMENT");
+            participantDataMap.put("aStatus", "EXITED_AFTER_ENROLLMENT");
         }
         participantDataMap.put("ddp", realm);
         Map<String, Object> participantAddressMap = new HashMap<>();

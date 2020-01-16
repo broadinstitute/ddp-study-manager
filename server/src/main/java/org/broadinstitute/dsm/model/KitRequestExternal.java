@@ -26,7 +26,7 @@ public class KitRequestExternal extends KitRequest {
         super(dsmKitRequestId, participantId, shortId, shippingId, externalOrderNumber, participant, externalOrderStatus, externalKitName);
     }
 
-    // update kit request with status and date of external shipper
+    // update kit request with aStatus and date of external shipper
     public static void updateKitRequest(String externalOrderStatus, long externalOrderDate, String dsmKitRequestId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
