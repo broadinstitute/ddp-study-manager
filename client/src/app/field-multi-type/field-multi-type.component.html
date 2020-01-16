@@ -2,7 +2,7 @@
   <ng-container *ngFor="let v of values">
 
     <ng-container *ngIf="v.type === 'drugs'">
-      <md-select placeholder="{{v.value}}" *ngIf="v.type2 === 'options'"
+      <md-select placeholder="{{v.value}}" *ngIf="v.type2 === options"
                  [ngClass]="{'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(v.value)}"
                  [(ngModel)]="_multiType[v.value]" [disabled]="disabled"
                  (change)="multiTypeValueChanged($event, _multiType, v.value, v)">
@@ -11,7 +11,7 @@
         </md-option>
         <md-option value="other"> Other</md-option>
       </md-select>
-      <md-select placeholder="{{v.value}}" *ngIf="v.type2 === 'multi_options'"
+      <md-select placeholder="{{v.value}}" *ngIf="v.type2 === multiOptions"
                  [ngClass]="{'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(v.value)}"
                  [(ngModel)]="_multiType[v.value]" [disabled]="disabled"
                  (change)="multiTypeValueChanged($event, _multiType, v.value, v)" multiple>
@@ -26,7 +26,7 @@
     </ng-container>
 
     <ng-container *ngIf="v.type === 'cancers'">
-      <md-select placeholder="{{v.value}}" *ngIf="v.type2 === 'options'"
+      <md-select placeholder="{{v.value}}" *ngIf="v.type2 === options"
                  [ngClass]="{'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(v.value)}"
                  [(ngModel)]="_multiType[v.value]" [disabled]="disabled"
                  (change)="multiTypeValueChanged($event, _multiType, v.value, v)">
@@ -35,7 +35,7 @@
         </md-option>
         <md-option value="other"> Other</md-option>
       </md-select>
-      <md-select placeholder="{{v.value}}" *ngIf="v.type2 === 'multi_options'"
+      <md-select placeholder="{{v.value}}" *ngIf="v.type2 === multiOptions"
                  [ngClass]="{'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(v.value)}"
                  [(ngModel)]="_multiType[v.value]" [disabled]="disabled"
                  (change)="multiTypeValueChanged($event, _multiType, v.value, v)" multiple>
@@ -85,7 +85,7 @@
       </md-button-toggle>
     </md-button-toggle-group>
 
-    <md-select placeholder="{{v.value}}" *ngIf="v.type === 'options'"
+    <md-select placeholder="{{v.value}}" *ngIf="v.type === options"
                [ngClass]="{'TD--Padding-Top': true, 'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(v.value)}"
                [(ngModel)]="_multiType[v.value]" [disabled]="disabled"
                (change)="multiTypeValueChanged($event, _multiType, v.value, v)">
@@ -95,7 +95,7 @@
       <md-option value="other"> Other</md-option>
     </md-select>
 
-    <md-select *ngIf="v.type === 'multi_options'" [ngClass]="{'TD--Padding-Top': true, 'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(v.value)}"
+    <md-select *ngIf="v.type === multiOptions" [ngClass]="{'TD--Padding-Top': true, 'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(v.value)}"
                placeholder="{{v.value}}"
                [(ngModel)]="_multiType[v.value]" [disabled]="disabled"
                (change)="multiTypeValueChanged($event, _multiType, v.value, v)" multiple>
@@ -105,16 +105,16 @@
       <md-option value="other"> Other</md-option>
     </md-select>
 
-    <md-input-container *ngIf="_other[v.value] != null && (v.type === 'options' || v.type2 === 'options' || v.type === 'multi_options' || v.type2 === 'multi_options')"
-                        [ngClass]="{'Width--100': true, 'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(v.value)}">
-      <input mdInput maxlength="200" [disabled]="disabled || !patchFinished" autocomplete="off"
+    <md-input-container *ngIf="_other[v.value] != null && (v.type === options || v.type2 === options || v.type === multiOptions || v.type2 === multiOptions)"
+                        [ngClass]="{'Width--100': true, 'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(other+'_'+v.value)}">
+      <input mdInput maxlength="200" [disabled]="disabled" autocomplete="off"
              [(ngModel)]="_other[v.value]" placeholder="{{v.value}} - Other"
-             (change)="multiTypeValueChanged($event, _multiType, 'other', v)"
-             (blur)="currentField(null)" (focus)="currentField(v.value)">
+             (change)="multiTypeValueChanged($event, _multiType, other, v)"
+             (blur)="currentField(null)" (focus)="currentField(other+'_'+v.value)">
     </md-input-container>
 
-    <md-checkbox *ngIf="v.type === 'checkbox'" color="primary" disableRipple
-                 [ngClass]="{'Color--Field--Patched': isPatchedCurrently(v.value)}"
+    <md-checkbox *ngIf="v.type === 'checkbox'" disableRipple
+                 [color]="isCheckboxPatchedCurrently(v.value)"
                  [ngModel]="_multiType[v.value]" [disabled]="disabled"
                  (change)="multiTypeValueChanged($event, _multiType, v.value, v)">{{v.value}}
     </md-checkbox>

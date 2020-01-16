@@ -7,6 +7,13 @@ md-hint.ErrorMessageForm {
   font-style: normal;
 }
 
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  /* display: none; <- Crashes Chrome on hover */
+  -webkit-appearance: none;
+  margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
 .Input label,
 .Select .mat-select-placeholder {
   font-weight: 400 !important;
@@ -407,8 +414,8 @@ md-hint.ErrorMessageForm {
 }
 
 .TD--Padding-Top {
-  margin-bottom: 6px !important;
-  padding-bottom: 6px !important;
+  margin-bottom: 10px !important;
+  padding-bottom: 10px !important;
 }
 
 .TD--Padding-Left-TINY {

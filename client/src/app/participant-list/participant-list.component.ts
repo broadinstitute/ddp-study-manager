@@ -1212,4 +1212,17 @@ export class ParticipantListComponent implements OnInit {
   getQuestionAnswerByName( questionsAnswers: Array<QuestionAnswer>, name: string ) {
     return questionsAnswers.find( x => x.stableId === name );
   }
+
+  updateParticipant( participant: Participant ) {
+    if (participant != null) {
+      this.showParticipantInformation = false;
+      let pt = this.participantList.find( pt => {
+        return pt.data.profile[ "guid" ] == participant.data.profile[ "guid" ];
+      } );
+      if (pt != null) {
+        let index = this.participantList.indexOf( pt );
+        this.participantList[ index ] = participant;
+      }
+    }
+  }
 }
