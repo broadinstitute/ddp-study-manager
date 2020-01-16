@@ -229,9 +229,9 @@ public class DashboardRoute extends RequestHandler {
         for (ParticipantWrapper wrapper : participantWrapperList) {
             //es data information
             Map<String, Object> esData = wrapper.getData();
-            //count pt enrollment status
-            String enrollmentStatus = (String) esData.get("status");
-            countParameter(dashboardValues, "status." + enrollmentStatus, esData, "status", false);
+            //count pt enrollment aStatus
+            String enrollmentStatus = (String) esData.get("aStatus");
+            countParameter(dashboardValues, "aStatus." + enrollmentStatus, esData, "aStatus", false);
 
             if (esData.get("profile") != null) {
                 Map<String, Object> profileData = (Map<String, Object>) esData.get("profile");
@@ -296,7 +296,7 @@ public class DashboardRoute extends RequestHandler {
 
             if (wrapper.getAbstractionActivities() != null) {
                 for (AbstractionActivity activity : wrapper.getAbstractionActivities()) {
-                    if (AbstractionUtil.ACTIVITY_FINAL.equals(activity.getActivity()) && AbstractionUtil.STATUS_DONE.equals(activity.getStatus())) {
+                    if (AbstractionUtil.ACTIVITY_FINAL.equals(activity.getActivity()) && AbstractionUtil.STATUS_DONE.equals(activity.getAStatus())) {
                         incrementCounter(dashboardValues, "abstraction.done");
                         incrementCounterPeriod(dashboardValuesPeriod, "abstraction.done", activity.getLastChanged(), start, end);
                     }

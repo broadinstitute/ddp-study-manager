@@ -1711,7 +1711,7 @@ public class RouteTestSample extends TestHelper {
     // write test to see what happens if kit get reactivated but doesn't find previous deactivated kit
     // 1) checking that no label was created when uploading/requesting kits from ddp
     // 2) trigger label creation > trigger another label creation > check that not 2 labels got created
-    // 3) status route for label creation job running
+    // 3) aStatus route for label creation job running
     // 4) trigger single or array label creation
     // 5) trigger label creation of all kits without label
 }

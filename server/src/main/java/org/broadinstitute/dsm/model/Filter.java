@@ -47,7 +47,7 @@ public class Filter {
     public String[] selectedOptions;
     public ParticipantColumn participantColumn;
 
-    public static String getQueryFilteringString(@NonNull Filter filter, DBElement dbElement) {
+    public static String getQueryStringForFiltering(@NonNull Filter filter, DBElement dbElement) {
         String finalQuery = "";
         String query = "";
         String condition = "";

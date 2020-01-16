@@ -113,86 +113,86 @@
         <div *ngIf="counterReceived > 0 && parentList === 'participantList'">
           <div class="Float--left TD--Padding">
             <div class="Float--left Width--100">
-              <b>First Abstraction</b> <b *ngIf="participant.abstraction.status === 'not_started'"> not started yet</b>
+              <b>First Abstraction</b> <b *ngIf="participant.abstraction.aStatus === 'not_started'"> not started yet</b>
             </div>
-            <div class="Float--left" *ngIf="participant.abstraction.status !== 'in_progress' && participant.abstraction.status !== 'done' && participant.abstraction.status !== 'clear'
+            <div class="Float--left" *ngIf="participant.abstraction.aStatus !== 'in_progress' && participant.abstraction.aStatus !== 'done' && participant.abstraction.aStatus !== 'clear'
                   && hasRole().isAbstracter()">
               <button md-raised-button type="button" color="primary" [disabled]="participantExited"
                       (click)="lockParticipant(participant.abstraction)">Start First MR Abstraction
               </button>
             </div>
-            <div class="Float--left" *ngIf="participant.abstraction.status === 'clear' && hasRole().isAbstracter()
-                  && ((participant.review != null && participant.review.user !== hasRole().getUserName()) || participant.review == null || participant.review.status === 'clear')">
+            <div class="Float--left" *ngIf="participant.abstraction.aStatus === 'clear' && hasRole().isAbstracter()
+                  && ((participant.review != null && participant.review.user !== hasRole().getUserName()) || participant.review == null || participant.review.aStatus === 'clear')">
               <button md-raised-button type="button" color="primary" [disabled]="participantExited"
                       (click)="lockParticipant(participant.abstraction)">Continue First MR Abstraction
               </button>
             </div>
             <div class="Float--left Width--100"
-                 *ngIf="participant.abstraction.status !== 'not_started' && participant.abstraction.status !== 'clear' && participant.abstraction.lastChanged == 0">
+                 *ngIf="participant.abstraction.aStatus !== 'not_started' && participant.abstraction.aStatus !== 'clear' && participant.abstraction.lastChanged == 0">
               <b>{{participant.abstraction.user}}</b>
               <b>started: {{participant.abstraction.startDate | date:'medium'}}</b>
             </div>
             <div class="Float--left Width--100"
-                 *ngIf="participant.abstraction.status !== 'not_started' && participant.abstraction.status !== 'clear' && participant.abstraction.lastChanged != 0">
+                 *ngIf="participant.abstraction.aStatus !== 'not_started' && participant.abstraction.aStatus !== 'clear' && participant.abstraction.lastChanged != 0">
               <b>{{participant.abstraction.user}}</b>
               <b>continued: {{participant.abstraction.lastChanged | date:'medium'}}</b>
             </div>
-            <div class="Float--left Width--100" *ngIf="participant.abstraction.status === 'clear'">
+            <div class="Float--left Width--100" *ngIf="participant.abstraction.aStatus === 'clear'">
               <b>{{participant.abstraction.user}}</b>
               <b>broke lock on: {{participant.abstraction.lastChanged | date:'medium'}}</b>
             </div>
             <div class="Float--left Width--100"
-                 *ngIf="participant.abstraction.status === 'in_progress' && hasRole().isAbstractionAdmin()">
+                 *ngIf="participant.abstraction.aStatus === 'in_progress' && hasRole().isAbstractionAdmin()">
               <button md-raised-button type="button" color="primary" [disabled]="participantExited"
                       (click)="breakLockParticipant(participant.abstraction)">Un-lock First MR Abstraction
               </button>
             </div>
-            <div class="Float--left Width--100" *ngIf="participant.abstraction.status === 'done'">
+            <div class="Float--left Width--100" *ngIf="participant.abstraction.aStatus === 'done'">
               <b>Finished: {{participant.abstraction.lastChanged | date:'medium'}}</b>
             </div>
           </div>
         </div>
 
         <div
-          *ngIf="participant.abstraction != null && (participant.abstraction.status === 'in_progress' || participant.abstraction.status === 'done' || participant.abstraction.status === 'clear')
+          *ngIf="participant.abstraction != null && (participant.abstraction.aStatus === 'in_progress' || participant.abstraction.aStatus === 'done' || participant.abstraction.aStatus === 'clear')
              && parentList === 'participantList'">
           <div class="Float--left TD--Padding">
             <div class="Float--left Width--100">
-              <b>Second Abstraction</b> <b *ngIf="participant.review.status === 'not_started'"> not started yet</b>
+              <b>Second Abstraction</b> <b *ngIf="participant.review.aStatus === 'not_started'"> not started yet</b>
             </div>
-            <div class="Float--left" *ngIf="participant.review.status !== 'in_progress' && participant.review.status !== 'done' && participant.review.status !== 'clear'
+            <div class="Float--left" *ngIf="participant.review.aStatus !== 'in_progress' && participant.review.aStatus !== 'done' && participant.review.aStatus !== 'clear'
                    && participant.abstraction.user !== hasRole().getUserName() && hasRole().isAbstracter()">
               <button md-raised-button type="button" color="primary" [disabled]="participantExited"
                       (click)="lockParticipant(participant.review)">Start Second MR Abstraction
               </button>
             </div>
-            <div class="Float--left" *ngIf="participant.review.status === 'clear' && hasRole().isAbstracter()
-                   && (participant.abstraction.user !== hasRole().getUserName() || participant.abstraction.status === 'clear')">
+            <div class="Float--left" *ngIf="participant.review.aStatus === 'clear' && hasRole().isAbstracter()
+                   && (participant.abstraction.user !== hasRole().getUserName() || participant.abstraction.aStatus === 'clear')">
               <button md-raised-button type="button" color="primary" [disabled]="participantExited"
                       (click)="lockParticipant(participant.review)">Continue Second MR Abstraction
               </button>
             </div>
             <div class="Float--left Width--100"
-                 *ngIf="participant.review.status !== 'not_started' && participant.review.status !== 'clear' && participant.review.lastChanged == 0">
+                 *ngIf="participant.review.aStatus !== 'not_started' && participant.review.aStatus !== 'clear' && participant.review.lastChanged == 0">
               <b>{{participant.review.user}}</b>
               <b>started: {{participant.review.startDate | date:'medium'}}</b>
             </div>
             <div class="Float--left Width--100"
-                 *ngIf="participant.review.status !== 'not_started' && participant.review.status !== 'clear' && participant.review.lastChanged != 0">
+                 *ngIf="participant.review.aStatus !== 'not_started' && participant.review.aStatus !== 'clear' && participant.review.lastChanged != 0">
               <b>{{participant.review.user}}</b>
               <b>continued: {{participant.review.lastChanged | date:'medium'}}</b>
             </div>
-            <div class="Float--left Width--100" *ngIf="participant.review.status === 'clear'">
+            <div class="Float--left Width--100" *ngIf="participant.review.aStatus === 'clear'">
               <b>{{participant.review.user}}</b>
               <b>broke lock on: {{participant.review.lastChanged | date:'medium'}}</b>
             </div>
             <div class="Float--left Width--100"
-                 *ngIf="participant.review.status === 'in_progress' && hasRole().isAbstractionAdmin()">
+                 *ngIf="participant.review.aStatus === 'in_progress' && hasRole().isAbstractionAdmin()">
               <button md-raised-button type="button" color="primary" [disabled]="participantExited"
                       (click)="breakLockParticipant(participant.review)">Un-lock Second MR Abstraction
               </button>
             </div>
-            <div class="Float--left Width--100" *ngIf="participant.review.status === 'done'">
+            <div class="Float--left Width--100" *ngIf="participant.review.aStatus === 'done'">
               <b>Finished: {{participant.review.lastChanged | date:'medium'}}</b>
             </div>
           </div>
@@ -200,41 +200,41 @@
 
         <!--tie breaker is only able to start when abstraction and review are done-->
         <div
-          *ngIf="participant.abstraction != null && participant.abstraction.status === 'done' && participant.review != null && participant.review.status === 'done'
+          *ngIf="participant.abstraction != null && participant.abstraction.aStatus === 'done' && participant.review != null && participant.review.aStatus === 'done'
            && parentList === 'participantList'">
           <div class="Float--left TD--Padding">
             <div class="Float--left Width--100">
-              <b>QC</b> <b *ngIf="participant.qc.status === 'not_started'"> not started yet</b>
+              <b>QC</b> <b *ngIf="participant.qc.aStatus === 'not_started'"> not started yet</b>
             </div>
-            <div class="Float--left" *ngIf="participant.qc.status !== 'in_progress' && participant.qc.status !== 'done'
+            <div class="Float--left" *ngIf="participant.qc.aStatus !== 'in_progress' && participant.qc.aStatus !== 'done'
                     && participant.abstraction.user !== hasRole().getUserName() && participant.review.user !== hasRole().getUserName()
                     && hasRole().isQC()">
               <button md-raised-button type="button" color="primary" [disabled]="participantExited"
                       (click)="lockParticipant(participant.qc)">Start QC
               </button>
             </div>
-            <div class="Float--left" *ngIf="participant.qc.status === 'clear'
+            <div class="Float--left" *ngIf="participant.qc.aStatus === 'clear'
                   && hasRole().isAbstracter()">
               <button md-raised-button type="button" color="primary" [disabled]="participantExited"
                       (click)="lockParticipant(participant.qc)">Continue QC
               </button>
             </div>
             <div class="Float--left Width--100"
-                 *ngIf="participant.qc.status !== 'not_started' && participant.qc.status !== 'clear'">
+                 *ngIf="participant.qc.aStatus !== 'not_started' && participant.qc.aStatus !== 'clear'">
               <b>{{participant.qc.user}}</b>
               <b>started: {{participant.qc.startDate | date:'medium'}}</b>
             </div>
-            <div class="Float--left Width--100" *ngIf="participant.qc.status === 'clear'">
+            <div class="Float--left Width--100" *ngIf="participant.qc.aStatus === 'clear'">
               <b>{{participant.qc.user}}</b>
               <b>broke lock on: {{participant.qc.lastChanged | date:'medium'}}</b>
             </div>
             <div class="Float--left Width--100"
-                 *ngIf="participant.qc.status === 'in_progress' && hasRole().isAbstractionAdmin()">
+                 *ngIf="participant.qc.aStatus === 'in_progress' && hasRole().isAbstractionAdmin()">
               <button md-raised-button type="button" color="primary" [disabled]="participantExited"
                       (click)="breakLockParticipant(participant.qc)">Un-lock QC
               </button>
             </div>
-            <div class="Float--left Width--100" *ngIf="participant.qc.status === 'done'">
+            <div class="Float--left Width--100" *ngIf="participant.qc.aStatus === 'done'">
               <b>Finished: {{participant.qc.lastChanged | date:'medium'}}</b>
             </div>
           </div>
@@ -552,8 +552,8 @@
             <tab heading="First Medical Record Abstraction" [active]="tabActive('abstraction')"
                  (select)="onSelect($event, 'abstraction'); getFileList(participant.abstraction)"
                  *ngIf="(participant.abstraction != null && abstractionFields != null
-                 && (participant.abstraction.status === 'in_progress' || participant.abstraction.status === 'done'))
-                 && participant.finalA != null && participant.finalA.status !== 'done'
+                 && (participant.abstraction.aStatus === 'in_progress' || participant.abstraction.aStatus === 'done'))
+                 && participant.finalA != null && participant.finalA.aStatus !== 'done'
                  && (hasRole().isAbstractionAdmin() || hasRole().isAbstracter() || hasRole().isQC())"
                  [disabled]="participant.abstraction.user !== hasRole().getUserName()">
               <br/>
@@ -586,13 +586,13 @@
                 <hr style="border-color: black">
                 <app-medical-record-abstraction [abstractionFormControls]="abstractionFields"
                                                 [abstractionActivity]="'abstraction'"
-                                                [status]="participant.abstraction.status" [participant]="participant"
+                                                [status]="participant.abstraction.aStatus" [participant]="participant"
                                                 [fileList]="fileListUsed" [drugList]="drugs" [cancerList]="cancers"
                                                 (emitFileName)="addFileToParticipant($event, participant.abstraction)">
                 </app-medical-record-abstraction>
               </div>
 
-              <div class="Float--left Width--100" *ngIf="participant.abstraction.status !== 'done'">
+              <div class="Float--left Width--100" *ngIf="participant.abstraction.aStatus !== 'done'">
                 <hr style="border-color: black">
                 <button md-raised-button type="button" color="primary"
                         (click)="submitParticipant(participant.abstraction)">Submit MR Abstraction
@@ -602,7 +602,7 @@
 
             <tab heading="Second Medical Record Abstraction" [active]="tabActive('review')"
                  (select)="onSelect($event, 'review'); getFileList(participant.review)"
-                 *ngIf="(participant.review != null && reviewFields != null && (participant.review.status === 'in_progress' || participant.review.status === 'done')) && participant.finalA != null && participant.finalA.status !== 'done' &&
+                 *ngIf="(participant.review != null && reviewFields != null && (participant.review.aStatus === 'in_progress' || participant.review.aStatus === 'done')) && participant.finalA != null && participant.finalA.aStatus !== 'done' &&
                     (hasRole().isAbstractionAdmin() || hasRole().isAbstracter() || hasRole().isQC())"
                  [disabled]="participant.review.user !== hasRole().getUserName()">
               <br/>
@@ -634,14 +634,14 @@
               <div class="Float--left Width--100">
                 <hr style="border-color: black">
                 <app-medical-record-abstraction [abstractionFormControls]="reviewFields"
-                                                [abstractionActivity]="'review'" [status]="participant.review.status"
+                                                [abstractionActivity]="'review'" [status]="participant.review.aStatus"
                                                 [fileList]="fileListUsed" [drugList]="drugs" [cancerList]="cancers"
                                                 [participant]="participant"
                                                 (emitFileName)="addFileToParticipant($event, participant.review)">
                 </app-medical-record-abstraction>
               </div>
 
-              <div class="Float--left Width--100" *ngIf="participant.review.status !== 'done'">
+              <div class="Float--left Width--100" *ngIf="participant.review.aStatus !== 'done'">
                 <hr style="border-color: black">
                 <button md-raised-button type="button" color="primary"
                         (click)="submitParticipant(participant.review)">Submit MR Abstraction
@@ -650,7 +650,7 @@
             </tab>
 
             <tab heading="QC" [active]="tabActive('qc')" (select)="onSelect($event, 'qc'); getFileList(participant.qc)"
-                 *ngIf="(participant.qc != null && qcFields != null && (participant.qc.status === 'in_progress' || participant.qc.status === 'done')) && participant.finalA != null && participant.finalA.status !== 'done' &&
+                 *ngIf="(participant.qc != null && qcFields != null && (participant.qc.aStatus === 'in_progress' || participant.qc.aStatus === 'done')) && participant.finalA != null && participant.finalA.aStatus !== 'done' &&
                     (hasRole().isAbstractionAdmin() || hasRole().isAbstracter() || hasRole().isQC())"
                  [disabled]="participant.qc.user !== hasRole().getUserName()">
               <br/>
@@ -682,13 +682,13 @@
               <div class="Float--left Width--100">
                 <hr style="border-color: black">
                 <app-medical-record-abstraction [abstractionFormControls]="qcFields" [abstractionActivity]="'qc'"
-                                                [status]="participant.qc.status" [participant]="participant"
+                                                [status]="participant.qc.aStatus" [participant]="participant"
                                                 [fileList]="fileListUsed" [drugList]="drugs" [cancerList]="cancers"
                                                 (emitFileName)="addFileToParticipant($event, participant.qc)">
                 </app-medical-record-abstraction>
               </div>
 
-              <div class="Float--left Width--100" *ngIf="participant.qc.status !== 'done'">
+              <div class="Float--left Width--100" *ngIf="participant.qc.aStatus !== 'done'">
                 <hr style="border-color: black">
                 <button md-raised-button type="button" color="primary"
                         (click)="submitParticipant(participant.qc)">Submit QC
@@ -697,7 +697,7 @@
             </tab>
 
             <tab heading="Final Abstraction Values" [active]="tabActive('final')" (select)="onSelect($event, 'final')"
-                 *ngIf="participant.finalA != null && finalFields != null && participant.finalA.status === 'done'">
+                 *ngIf="participant.finalA != null && finalFields != null && participant.finalA.aStatus === 'done'">
               <br/>
               <div class="Float--left Width--100">
                 <b class="Group--Title">Jump to:</b>
@@ -717,7 +717,7 @@
               <div class="Float--left Width--100">
                 <hr style="border-color: black">
                 <app-medical-record-abstraction [abstractionFormControls]="finalFields" [abstractionActivity]="'final'"
-                                                [status]="participant.finalA.status"
+                                                [status]="participant.finalA.aStatus"
                                                 [fileList]="fileListUsed" [participant]="participant">
                 </app-medical-record-abstraction>
               </div>

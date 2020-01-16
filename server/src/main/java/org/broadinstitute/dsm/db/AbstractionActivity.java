@@ -36,17 +36,17 @@ public class AbstractionActivity {
     private Integer medicalRecordAbstractionActivityId;
     private String participantId;
     private String activity;
-    private String status;
+    private String aStatus;
     private String user;
     private Long startDate;
     private String filesUsed;
     private Long lastChanged;
 
-    public AbstractionActivity(Integer medicalRecordAbstractionActivityId, String participantId, String activity, String status, String user, Long startDate, String filesUsed, Long lastChanged) {
+    public AbstractionActivity(Integer medicalRecordAbstractionActivityId, String participantId, String activity, String aStatus, String user, Long startDate, String filesUsed, Long lastChanged) {
         this.medicalRecordAbstractionActivityId = medicalRecordAbstractionActivityId;
         this.participantId = participantId;
         this.activity = activity;
-        this.status = status;
+        this.aStatus = aStatus;
         this.user = user;
         this.startDate = startDate;
         this.filesUsed = filesUsed;
@@ -109,7 +109,7 @@ public class AbstractionActivity {
                 stmt.setInt(6, abstractionActivity.medicalRecordAbstractionActivityId);
                 int result = stmt.executeUpdate();
                 if (result != 1) {
-                    throw new RuntimeException("Error updating status of medical record abstraction activity for participant w/ id " + abstractionActivity.getParticipantId() + " it was updating " + result + " rows");
+                    throw new RuntimeException("Error updating aStatus of medical record abstraction activity for participant w/ id " + abstractionActivity.getParticipantId() + " it was updating " + result + " rows");
                 }
             }
             catch (SQLException ex) {
@@ -121,7 +121,7 @@ public class AbstractionActivity {
         if (results.resultException != null) {
             throw new RuntimeException("Error adding new medical record abstraction activity for participantId w/ id " + abstractionActivity.getParticipantId(), results.resultException);
         }
-        abstractionActivity.setStatus(status);
+        abstractionActivity.setAStatus(status);
         return abstractionActivity;
     }
 

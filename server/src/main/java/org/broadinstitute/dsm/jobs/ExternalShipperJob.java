@@ -46,7 +46,7 @@ public class ExternalShipperJob implements Job {
                 }
             }
             catch (Exception e) {
-                throw new RuntimeException("Failed to get status and/or confirmation ", e);
+                throw new RuntimeException("Failed to get aStatus and/or confirmation ", e);
             }
         }
     }

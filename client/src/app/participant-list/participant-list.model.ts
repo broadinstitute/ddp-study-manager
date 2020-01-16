@@ -38,20 +38,20 @@ export class Participant {
   }
 
   getProcessStatus(): string {
-    if (this.abstraction.status === "not_started") {
+    if (this.abstraction.aStatus === "not_started") {
       return "Not Started";
     }
-    else if (this.abstraction.status === "in_progress" || this.abstraction.status === "clear"
-      || this.review.status === "in_progress" || this.review.status === "clear") {
+    else if (this.abstraction.aStatus === "in_progress" || this.abstraction.aStatus === "clear"
+      || this.review.aStatus === "in_progress" || this.review.aStatus === "clear") {
       return "In Progress";
     }
-    else if (this.qc.status === "in_progress") {
+    else if (this.qc.aStatus === "in_progress") {
       return "QC in progress";
     }
-    else if (this.abstraction.status === "done" && this.review.status === "done" && this.qc.status !== "done") {
+    else if (this.abstraction.aStatus === "done" && this.review.aStatus === "done" && this.qc.aStatus !== "done") {
       return "v";
     }
-    else if (this.qc.status === "done") {
+    else if (this.qc.aStatus === "done") {
       return "Finished";
     }
     return "";
@@ -59,28 +59,28 @@ export class Participant {
 
   getAbstractionStatus(): string {
     let status: string = "";
-    if (this.abstraction.status === "not_started") {
+    if (this.abstraction.aStatus === "not_started") {
       status += "First Abstraction not started\n";
     }
-    else if (this.abstraction.status === "in_progress") {
+    else if (this.abstraction.aStatus === "in_progress") {
       status += "First Abstraction started\n";
     }
-    else if (this.abstraction.status === "done") {
+    else if (this.abstraction.aStatus === "done") {
       status += "First Abstraction finished\n";
     }
-    else if (this.abstraction.status === "clear") {
+    else if (this.abstraction.aStatus === "clear") {
       status += "First Abstraction not finished\n";
     }
-    if (this.review.status === "not_started") {
+    if (this.review.aStatus === "not_started") {
       status += "Second Abstraction not started\n";
     }
-    if (this.review.status === "in_progress") {
+    if (this.review.aStatus === "in_progress") {
       status += "Second Abstraction started\n";
     }
-    else if (this.review.status === "clear") {
+    else if (this.review.aStatus === "clear") {
       status += "Second Abstraction not finished\n";
     }
-    else if (this.review.status === "done") {
+    else if (this.review.aStatus === "done") {
       status += "Second Abstraction finished\n";
     }
     return status;
@@ -88,13 +88,13 @@ export class Participant {
 
   getQCStatus(): string {
     let status: string = "";
-    if (this.qc.status === "not_started") {
+    if (this.qc.aStatus === "not_started") {
       status += "QC not started\n";
     }
-    else if (this.qc.status === "in_progress") {
+    else if (this.qc.aStatus === "in_progress") {
       status += "QC started\n";
     }
-    else if (this.qc.status === "done") {
+    else if (this.qc.aStatus === "done") {
       status += "QC finished\n";
     }
     return status;

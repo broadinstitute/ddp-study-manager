@@ -48,7 +48,7 @@ public class AbstractionRoute extends RequestHandler {
                     if (abstractionActivity != null && userIdRequest != null) {
                         // updated filesUsed
                         if (status == null) {
-                            return new Result(200, new GsonBuilder().serializeNulls().create().toJson(AbstractionActivity.changeAbstractionActivity(abstractionActivity, userIdRequest, abstractionActivity.getStatus())));
+                            return new Result(200, new GsonBuilder().serializeNulls().create().toJson(AbstractionActivity.changeAbstractionActivity(abstractionActivity, userIdRequest, abstractionActivity.getAStatus())));
                         }
                         else {
                             //changing activity of abstraction
@@ -192,7 +192,7 @@ public class AbstractionRoute extends RequestHandler {
                             }
                             //set abstraction to 'in_progress'
                             else {
-                                if (AbstractionUtil.STATUS_NOT_STARTED.equals(abstractionActivity.getStatus())) {
+                                if (AbstractionUtil.STATUS_NOT_STARTED.equals(abstractionActivity.getAStatus())) {
                                     return new Result(200, new GsonBuilder().serializeNulls().create().toJson(AbstractionActivity.startAbstractionActivity(ddpParticipantId, realm, userIdRequest, abstractionActivity.getActivity(), status)));
                                 }
                                 else {
