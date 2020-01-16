@@ -10,7 +10,7 @@ export class ParticipantColumn {
   public static LAST_NAME = new ParticipantColumn( "Last Name", "lastName", "data", "profile" );
   public static COUNTRY = new ParticipantColumn( "Country", "country", "data", "address" );
   public static EMAIL = new ParticipantColumn( "Email", "email", "data", "profile" );
-  public static REGISTRATION_DATE = new ParticipantColumn( "Registration Date", "statusTimestamp", "data" );
+  public static REGISTRATION_DATE = new ParticipantColumn( "Registration Date", "createdAt", "profile" );
   public static ENROLLMENT_STATUS = new ParticipantColumn( "Status", "status", "data" );
   public static DO_NOT_CONTACT = new ParticipantColumn( "Do Not Contact", "doNotContact", "data", "profile" );
 

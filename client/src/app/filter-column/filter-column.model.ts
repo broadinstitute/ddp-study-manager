@@ -15,22 +15,22 @@ export class Filter {
   public static COMPOSITE_TYPE = "COMPOSITE";
 
   //ES data
-  public static REALM = new Filter(ParticipantColumn.REALM, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static SHORT_ID = new Filter(ParticipantColumn.SHORT_ID, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static LEGACY_SHORT_ID = new Filter(ParticipantColumn.LEGACY_SHORT_ID, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static PARTICIPANT_ID = new Filter(ParticipantColumn.PARTICIPANT_ID, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static LEGACY_PARTICIPANT_ID = new Filter(ParticipantColumn.LEGACY_PARTICIPANT_ID, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static FIRST_NAME = new Filter(ParticipantColumn.FIRST_NAME, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static LAST_NAME = new Filter(ParticipantColumn.LAST_NAME, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static COUNTRY = new Filter(ParticipantColumn.COUNTRY, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
+  public static REALM = new Filter(ParticipantColumn.REALM, Filter.TEXT_TYPE);
+  public static SHORT_ID = new Filter(ParticipantColumn.SHORT_ID, Filter.TEXT_TYPE);
+  public static LEGACY_SHORT_ID = new Filter(ParticipantColumn.LEGACY_SHORT_ID, Filter.TEXT_TYPE);
+  public static PARTICIPANT_ID = new Filter(ParticipantColumn.PARTICIPANT_ID, Filter.TEXT_TYPE);
+  public static LEGACY_PARTICIPANT_ID = new Filter(ParticipantColumn.LEGACY_PARTICIPANT_ID, Filter.TEXT_TYPE);
+  public static FIRST_NAME = new Filter(ParticipantColumn.FIRST_NAME, Filter.TEXT_TYPE);
+  public static LAST_NAME = new Filter(ParticipantColumn.LAST_NAME, Filter.TEXT_TYPE);
+  public static COUNTRY = new Filter(ParticipantColumn.COUNTRY, Filter.TEXT_TYPE);
   public static ENROLLMENT_STATUS = new Filter(ParticipantColumn.ENROLLMENT_STATUS, Filter.OPTION_TYPE, [
     new NameValue("REGISTERED", "Registered"),
     new NameValue("EXITED_BEFORE_ENROLLMENT", "Exited before Enrollment"),
     new NameValue("EXITED_AFTER_ENROLLMENT", "Exited after Enrollment"),
-    new NameValue("ENROLLED", "Enrolled")], null, false, true, null, null, null, null, false, true);
-  public static EMAIL = new Filter(ParticipantColumn.EMAIL, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static REGISTRATION_DATE = new Filter(ParticipantColumn.REGISTRATION_DATE, Filter.DATE_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static DO_NOT_CONTACT = new Filter(ParticipantColumn.DO_NOT_CONTACT, Filter.BOOLEAN_TYPE, null, null, false, true, null, null, null, null, false, true);
+    new NameValue("ENROLLED", "Enrolled")]);
+  public static EMAIL = new Filter(ParticipantColumn.EMAIL, Filter.TEXT_TYPE);
+  public static REGISTRATION_DATE = new Filter(ParticipantColumn.REGISTRATION_DATE, Filter.DATE_TYPE);
+  public static DO_NOT_CONTACT = new Filter(ParticipantColumn.DO_NOT_CONTACT, Filter.BOOLEAN_TYPE);
 
   //participant columns
   public static ONC_HISTORY_CREATED = new Filter(ParticipantColumn.ONC_HISTORY_CREATED, Filter.DATE_TYPE);
@@ -212,6 +212,7 @@ export class Filter {
     Filter.TRACKING_TO_PARTICIPANT, Filter.TRACKING_RETURN, Filter.MF_BARCODE,
     Filter.ABSTRACTION_ACTIVITY, Filter.ABSTRACTION_STATUS, Filter.ABSTRACTION_USER];
 
+  //TODO remove alwaysExact
   constructor(public participantColumn: ParticipantColumn, public type: string, public options?: NameValue[], public filter2?: NameValue,
               public range?: boolean, public exactMatch?: boolean, public filter1?: NameValue,
               public selectedOptions?: any, public value1?: any, public value2?: any, public sortAsc?: boolean, public alwaysExact?: boolean,
