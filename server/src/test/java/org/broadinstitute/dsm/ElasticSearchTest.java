@@ -343,6 +343,30 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
+    public void searchPTByProfileDataLike() throws Exception {
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
+            int scrollSize = 1000;
+            Map<String, Map<String, Object>> esData = new HashMap<>();
+            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.angio");
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            SearchResponse response = null;
+            int i = 0;
+            while (response == null || response.getHits().getHits().length != 0) {
+                searchSourceBuilder.query(QueryBuilders.wildcardQuery("profile.email", "andrew*"));
+
+                searchSourceBuilder.size(scrollSize);
+                searchSourceBuilder.from(i * scrollSize);
+                searchRequest.source(searchSourceBuilder);
+
+                response = client.search(searchRequest, RequestOptions.DEFAULT);
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                i++;
+            }
+            Assert.assertNotEquals(0, esData.size());
+        }
+    }
+
+    @Test
     public void searchPTByStatusTimestamp() throws Exception {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;

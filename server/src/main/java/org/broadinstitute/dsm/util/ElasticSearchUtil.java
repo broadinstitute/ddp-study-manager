@@ -176,18 +176,26 @@ public class ElasticSearchUtil {
         BoolQueryBuilder finalQuery = new BoolQueryBuilder();
 
         for (String f : filters) {
-            logger.info(f);//TODO Simone - delete at the end (PHI)
             if (StringUtils.isNotBlank(f) && f.contains(DBConstants.ALIAS_DELIMITER)) {
                 if (f.contains(Filter.EQUALS) || f.contains(Filter.LIKE)) {
+                    boolean wildCard = false;
                     f = f.replace("(", "").replace(")", "").trim();
                     String[] nameValue = f.split(Filter.EQUALS);
-                    if (nameValue.length == 0) { //didn't contain EQUALS -> split LIKE
+                    if (nameValue.length == 1) { //didn't contain EQUALS -> split LIKE
                         nameValue = f.split(Filter.LIKE);
+                        wildCard = true;
                     }
-                    logger.info(nameValue[0]);
                     String userEntered = nameValue[1].replaceAll("'", "").trim();
+                    if (wildCard) {
+                        userEntered = userEntered.replaceAll("%", "").trim();
+                    }
                     if (StringUtils.isNotBlank(nameValue[0]) && (nameValue[0].startsWith(PROFILE) || nameValue[0].startsWith(ADDRESS))) {
-                        finalQuery.must(QueryBuilders.matchQuery(nameValue[0], userEntered));
+                        if (wildCard) {
+                            finalQuery.must(QueryBuilders.wildcardQuery(nameValue[0].trim(), userEntered + "*"));
+                        }
+                        else {
+                            finalQuery.must(QueryBuilders.matchQuery(nameValue[0], userEntered));
+                        }
                     }
                     else {
                         if (StringUtils.isNotBlank(nameValue[0]) && nameValue[0].startsWith(DATA)) {
@@ -201,7 +209,12 @@ public class ElasticSearchUtil {
                             catch (ParseException e) {
                                 //was no date string so go for normal text
                                 String[] dataParam = nameValue[0].split("\\.");
-                                finalQuery.must(QueryBuilders.matchQuery(dataParam[1], userEntered));
+                                if (wildCard) {
+                                    finalQuery.must(QueryBuilders.wildcardQuery(dataParam[1].trim(), userEntered + "*"));
+                                }
+                                else {
+                                    finalQuery.must(QueryBuilders.matchQuery(dataParam[1], userEntered));
+                                }
                             }
                         }
                         else {
@@ -220,7 +233,12 @@ public class ElasticSearchUtil {
                                 }
                                 catch (ParseException e) {
                                     //activity status
-                                    queryBuilder.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1], userEntered));
+                                    if (wildCard) {
+                                        queryBuilder.must(QueryBuilders.wildcardQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered + "*"));
+                                    }
+                                    else {
+                                        queryBuilder.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1], userEntered));
+                                    }
                                 }
                             }
                             else {
@@ -232,7 +250,12 @@ public class ElasticSearchUtil {
                                 }
                                 catch (ParseException e) {
                                     //was no date string so go for normal text
-                                    activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered).operator(Operator.AND));
+                                    if (wildCard) {
+                                        activityAnswer.must(QueryBuilders.wildcardQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered + "*"));
+                                    }
+                                    else {
+                                        activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered).operator(Operator.AND));
+                                    }
                                 }
                                 NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery(ACTIVITIES_QUESTIONS_ANSWER, activityAnswer, ScoreMode.Avg);
                                 queryBuilder.must(queryActivityAnswer);
