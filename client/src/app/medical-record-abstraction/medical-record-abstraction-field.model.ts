@@ -7,6 +7,7 @@ export class AbstractionField {
   changed: boolean = false;
   notUniqueError: boolean = false;
   viewHelpText: boolean = false;
+  copiedActivity: string = "";
 
   constructor(public medicalRecordAbstractionFieldId: number, public displayName: string, public type: string, public helpText: string, public orderNumber: number,
               public possibleValues: Value[], public additionalType: string, public hide: boolean,

@@ -159,14 +159,14 @@
           <app-abstraction-field [field]="field" [activityOfField]="activity" [activeFile]="currentFile" [availableFileNames]="fileNames"
                                  [availableDrugs]="drugNames" [availableCancers]="cancerNames" [participant]="participant"
                                  [readonly]="true" [type]="'abstraction'" [viewValue]="field.qcWrapper.abstraction"
-                                 (emitFileFromField)="addFileName($event)"></app-abstraction-field>
+                                 (emitFileFromField)="addFileName($event)" (dblclick)="applyAbstraction(field, 'abstraction')"></app-abstraction-field>
         </tr>
         <tr *ngIf="activity === 'qc' && field.qcWrapper.abstraction != null && field.qcWrapper.review != null"
             [ngClass]="{'Abstraction-Border-Check': field.qcWrapper.check, 'Abstraction-Border-Warning': !field.qcWrapper.equals}">
           <app-abstraction-field [field]="field" [activityOfField]="activity" [activeFile]="currentFile" [availableFileNames]="fileNames"
                                  [availableDrugs]="drugNames" [availableCancers]="cancerNames" [participant]="participant"
                                  [readonly]="true" [type]="'review'" [viewValue]="field.qcWrapper.review"
-                                 (emitFileFromField)="addFileName($event)"></app-abstraction-field>
+                                 (emitFileFromField)="addFileName($event)" (dblclick)="applyAbstraction(field, 'review')"></app-abstraction-field>
         </tr>
 
         <tr [ngClass]="{'Width--100': true}">

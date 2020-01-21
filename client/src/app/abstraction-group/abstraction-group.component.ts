@@ -2,11 +2,11 @@ import {Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild} fr
 import {DragulaService} from "ng2-dragula";
 import {Subscription} from "rxjs";
 import {Router} from "@angular/router";
+import {AbstractionFieldComponent} from "../abstraction-field/abstraction-field.component";
 
-import {AbstractionField} from "../medical-record-abstraction/medical-record-abstraction-field.model";
+import {AbstractionField, AbstractionFieldValue} from "../medical-record-abstraction/medical-record-abstraction-field.model";
 import {ModalComponent} from "../modal/modal.component";
 import {Participant} from "../participant-list/participant-list.model";
-import {Statics} from "../utils/statics";
 import {Value} from "../utils/value.model";
 import {ComponentService} from "../services/component.service";
 import {RoleService} from "../services/role.service";
@@ -21,6 +21,8 @@ export class AbstractionGroupComponent implements OnInit, OnDestroy {
 
   @ViewChild( ModalComponent )
   public noteModal: ModalComponent;
+
+  @ViewChild( AbstractionFieldComponent ) public abstractionField: AbstractionFieldComponent;
 
   @Input() participant: Participant;
   @Input() displayName: string;
@@ -146,13 +148,6 @@ export class AbstractionGroupComponent implements OnInit, OnDestroy {
     return false;
   }
 
-  getBackgroundColor( equal: boolean ): string {
-    if (equal != null && equal) {
-      return Statics.COLOR_WARN;
-    }
-    return Statics.COLOR_BASIC;
-  }
-
   addFileName( fileName: string ) {
     this.emitFile.emit( fileName );
   }
@@ -162,5 +157,17 @@ export class AbstractionGroupComponent implements OnInit, OnDestroy {
       return true;
     }
     return false;
+  }
+
+  applyAbstraction( field: AbstractionField, type: string ) {
+    if (!field.qcWrapper.equals && field.copiedActivity !== type) {
+      let selectedVersion: AbstractionFieldValue = field.qcWrapper[ type ];
+      field.copiedActivity = type;
+      field.fieldValue.value = selectedVersion.value;
+      field.fieldValue.noData = selectedVersion.noData;
+      field.fieldValue.fileName = selectedVersion.fileName;
+      field.fieldValue.filePage = selectedVersion.filePage;
+      this.abstractionField.saveSelectedQc( field );
+    }
   }
 }
