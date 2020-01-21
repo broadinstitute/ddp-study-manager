@@ -205,7 +205,7 @@
             <div class="Float--left Width--100">
               <b>QC</b> <b *ngIf="participant.qc.aStatus === 'not_started'"> not started yet</b>
             </div>
-            <div class="Float--left" *ngIf="participant.qc.aStatus !== 'in_progress' && participant.qc.aStatus !== 'done'
+            <div class="Float--left" *ngIf="participant.qc.aStatus !== 'in_progress' && participant.qc.aStatus !== 'done' && participant.qc.aStatus !== 'clear'
                     && participant.abstraction.user !== hasRole().getUserName() && participant.review.user !== hasRole().getUserName()
                     && hasRole().isQC()">
               <button md-raised-button type="button" color="primary" [disabled]="participantExited"
