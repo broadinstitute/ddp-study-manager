@@ -1075,7 +1075,7 @@ export class ParticipantListComponent implements OnInit {
         return nameValue.value;
       }
     }
-    return "";
+    return key;
   }
 
   checkboxChecked() {
