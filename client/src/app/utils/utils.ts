@@ -55,7 +55,7 @@ export class Utils {
         if (dateParts[ 0 ].length == 4) {
           check = new Date( Number( dateParts[ 0 ] ), Number( dateParts[ 1 ] ) - 1, Number( dateParts[ 2 ] ) );
         }
-        else if (dateParts[2].length == 4) {
+        else if (dateParts[ 2 ].length == 4) {
           check = new Date( Number( dateParts[ 2 ] ), Number( dateParts[ 0 ] ) - 1, Number( dateParts[ 1 ] ) );
         }
         if (check != null && !isNaN( check.getTime() )) {
@@ -63,14 +63,14 @@ export class Utils {
         }
       }
       else if (dateParts.length == 2) {
-        let check: Date = new Date( Number( dateParts[ 0 ] ), Number( dateParts[ 1 ] ) - 1);
+        let check: Date = new Date( Number( dateParts[ 0 ] ), Number( dateParts[ 1 ] ) - 1 );
         if (!isNaN( check.getTime() )) {
           return check;
         }
       }
     }
     else {
-      let check: Date = new Date( Number( dateString ));
+      let check: Date = new Date( Number( dateString ) );
       if (!isNaN( check.getTime() )) {
         return check;
       }
@@ -114,16 +114,12 @@ export class Utils {
     return questions.find( x => x.stableId === stableId );
   }
 
-  getAbstractionGroup(groups: Array<AbstractionGroup>, groupId: string) {
-    return groups.find( x => x.abstractionGroupId.toString() === groupId);
+  getAbstractionGroup( groups: Array<AbstractionGroup>, groupId: string ) {
+    return groups.find( x => x.abstractionGroupId.toString() === groupId );
   }
 
-  getAbstractionField(fields: Array<AbstractionField>, fieldId: string) {
-    return fields.find( x => x.medicalRecordAbstractionFieldId.toString() === fieldId);
-  }
-
-  public getDateStringFormat(): string {
-    return Utils.DATE_STRING;
+  getAbstractionField( fields: Array<AbstractionField>, fieldId: string ) {
+    return fields.find( x => x.medicalRecordAbstractionFieldId.toString() === fieldId );
   }
 
   public static getFormattedDate( date: Date ): string {
@@ -152,23 +148,6 @@ export class Utils {
     return null;
   }
 
-  //used to get db saved date string (yyyy-MM-dd or MM/dd/yyyy) as date
-  public static getDateIgnoreFormat( dateString: string ): Date {
-    if (dateString.indexOf( "-" ) > 0) {
-      var dateParts: string[] = dateString.split( "-" );
-      if (dateParts.length == 3) {
-        return new Date( Number( dateParts[ 0 ] ), Number( dateParts[ 1 ] ) - 1, Number( dateParts[ 2 ] ) );
-      }
-    }
-    else if (dateString.indexOf( "/" ) > 0) {
-      var dateParts: string[] = dateString.split( "/" );
-      if (dateParts.length == 3) {
-        return new Date( Number( dateParts[ 2 ] ), Number( dateParts[ 0 ] ) - 1, Number( dateParts[ 1 ] ) );
-      }
-    }
-    return null;
-  }
-
   //used to change db saved date (yyyy-MM) to user format
   public static getPartialFormatDate( dateString: string, format: string ) {
     if (Utils.DATE_STRING === format) {
@@ -185,50 +164,11 @@ export class Utils {
     }
   }
 
-  public reformatDateString( dateString: string, format: string ): string {
-    let date: Date = null;
-    if (dateString.indexOf( "-" ) > 0) {
-      let dateParts: string[] = dateString.split( "-" );
-      if (dateParts.length == 3) {
-        date = new Date( Number( dateParts[ 2 ] ), Number( dateParts[ 0 ] ) - 1, Number( dateParts[ 1 ] ) );
-      }
-    }
-    else if (dateString.indexOf( "/" ) > 0) {
-      var dateParts: string[] = dateString.split( "/" );
-      if (dateParts.length == 3) {
-        date = new Date( Number( dateParts[ 2 ] ), Number( dateParts[ 0 ] ) - 1, Number( dateParts[ 1 ] ) );
-      }
-    }
-    if (date != null) {
-      return Utils.getDateFormatted( date, format );
-    }
-    else {
-      return dateString;
-    }
-  }
-
-  public reformatMBCDateString( dateString: string, format: string ): string {
-    let date: Date = null;
-    if (dateString.indexOf( "-" ) > 0) {
-      let dateParts: string[] = dateString.split( "-" );
-      if (dateParts.length == 3) {
-        date = new Date( Number( dateParts[ 0 ] ), Number( dateParts[ 1 ] ) - 1, Number( dateParts[ 2 ] ) );
-      }
-    }
-    if (date != null) {
-      return Utils.getDateFormatted( date, format );
-    }
-    else {
-      return dateString;
-    }
-  }
-
   public static downloadCurrentData( data: any[], paths: any[], columns: {}, fileName: string, isSurveyData ?: boolean ) {
     let headers = "";
     for (let path of paths) {
       for (let i = 1; i < path.length; i += 2) {
         let source = path[ i ];
-        //        console.log( source );
         if (columns[ source ] != null) {
           for (let name of columns[ source ]) {
             let headerColumnName = name.participantColumn.display;
@@ -240,7 +180,6 @@ export class Utils {
         }
       }
     }
-    //    console.log( headers );
     let csv = this.getCSV( data, paths, columns, isSurveyData );
     csv = headers + "\r\n" + csv;
     let blob = new Blob( [ csv ], {type: "text/csv;charset=utf-8;"} );
@@ -276,28 +215,20 @@ export class Utils {
             temp.push( i + o );
           }
         }
-        //        console.log( temp );
         if (input.length == 0) {
           temp = output;
         }
         input = temp;
       }
       result = result.concat( input );
-      //      console.log( result );
     }
     let mainStr = result.join( "\r\n" );
-
-    //    for (let i in result) {
-    //      mainStr = mainStr + i + "\r\n";
-    //    }
-    //    console.log( mainStr );
     return mainStr;
   }
 
 
   public static getCSVForObjectArray( data: Object, paths: any[], columns: {}, index: number, isSurveyData ?: boolean ): string[] {
     let result: string[] = [];
-    //    console.log( data );
     if (index > paths.length - 1) {
       return null;
     }
@@ -309,13 +240,10 @@ export class Utils {
       else {
         objects = data[ paths[ index ] ];
       }
-      //      console.log( objects );
       if (objects != null) {
         for (let o of objects) {
           let oString = this.getCSVString( o, columns[ paths[ index + 1 ] ], data );
-          //          console.log( oString );
           let a = this.getCSVForObjectArray( o, paths, columns, index + 2 );
-          //          console.log( a );
           if (a != null && a.length > 0) {
             for (let t of a) {
               result.push( oString + t );
@@ -330,13 +258,11 @@ export class Utils {
           result.push( oString );
         }
       }
-
-      //      console.log( result );
       return result;
     }
   }
 
-  private static getObjectAddiotionalValue( o: Object, fieldName: string, column: any ) {
+  private static getObjectAdditionalValue( o: Object, fieldName: string, column: any ) {
     if (o[ fieldName ] != null) {
       for (let nv of o[ fieldName ]) {
         if (nv.name === column.participantColumn.name) {
@@ -362,15 +288,55 @@ export class Utils {
               fieldName = "additionalValues";
             }
             if (fieldName !== "") {
-              let value = this.getObjectAddiotionalValue( o, fieldName, col );
-              //              console.log( value );
+              let value = this.getObjectAdditionalValue( o, fieldName, col );
               value = value == undefined ? "" : value;
               str = str + "\"" + value + "\"" + ",";
             }
           }
+          else if (col.participantColumn.object != null && col.participantColumn.object === "final" && o instanceof AbstractionGroup && col.participantColumn.tableAlias === o[ "abstractionGroupId" ].toString()) {
+            if (o[ "fields" ] != null && o[ "fields" ] instanceof Array) {
+              let abstractionField: AbstractionField = o[ "fields" ].find( field => {
+                return field.medicalRecordAbstractionFieldId.toString() === col.participantColumn.name;
+              } );
+              if (abstractionField != null && abstractionField.fieldValue != null) {
+                let value = abstractionField.fieldValue.value;
+                value = value == undefined ? "" : value;
+                if (value !== "") {
+                  let tmp = "";
+                  let multiObject: Object[] = this.getMultiObjects( value );
+                  multiObject.forEach( ( object ) => {
+                    let keys: string[] = this.getMultiKeys( object );
+                    keys.forEach( ( key ) => {
+                      if (key === "other") {
+                        object[ key ].forEach( ( oV ) => {
+                          let otherKeys: string[] = this.getMultiKeys( oV );
+                          otherKeys.forEach( ( otherKey ) => {
+                            let tmp2 = oV[ otherKey ] == undefined ? "" : oV[ otherKey ];
+                            tmp = tmp + "Other - " + otherKey + ": " + tmp2 + " ";
+                          } );
+                        } );
+                      }
+                      else {
+                        if (this.isDateValue( object[ key ] )) {
+                          let tmp2 = this.getDateValue( object[ key ] ) == undefined ? "" : this.getDateValue( object[ key ] );
+                          tmp = tmp + key + ": " + tmp2 + " ";
+                        }
+                        else {
+                          let tmp2 = object[ key ] == undefined ? "" : object[ key ];
+                          tmp = tmp + key + ": " + tmp2 + " ";
+                        }
+                      }
+                    } );
+                  } );
+                  value = tmp.trim();
+                }
+                str = str + "\"" + value + "\"" + ","; //TODO make answer pretty
+              }
+            }
+          }
           else {
             let value = o[ col.participantColumn.name ];
-            if (col.participantColumn.object != null && o[ col.participantColumn.object ]!= null) {
+            if (col.participantColumn.object != null && o[ col.participantColumn.object ] != null) {
               value = o[ col.participantColumn.object ][ col.participantColumn.name ];
             }
             value = value == undefined ? "" : value;
@@ -385,12 +351,11 @@ export class Utils {
             //check for survey data
             let activityData = this.getSurveyData( data, col.participantColumn.tableAlias );
             if (activityData != null) {
-              //              console.log( activityData );
-              if ((col.participantColumn.name === "createdAt" || col.participantColumn.name === "completedAt"
-                || col.participantColumn.name === "lastUpdatedAt") && activityData[col.participantColumn.name] != null) {
+              if (( col.participantColumn.name === "createdAt" || col.participantColumn.name === "completedAt"
+                || col.participantColumn.name === "lastUpdatedAt" ) && activityData[ col.participantColumn.name ] != null) {
                 value = this.getDateFormatted( new Date( activityData[ col.participantColumn.name ] ), this.DATE_STRING_IN_CVS );
               }
-              else if (col.participantColumn.name === "status" && activityData[col.participantColumn.name] != null) {
+              else if (col.participantColumn.name === "status" && activityData[ col.participantColumn.name ] != null) {
                 value = activityData[ col.participantColumn.name ];
               }
               else {
@@ -424,46 +389,39 @@ export class Utils {
     return questionsAnswers.find( x => x.stableId === name );
   }
 
-  //used to change date to user format
-  public getFormatDate( date: Date, format: string ): string {
-    if (date != null && date != undefined && !isNaN( date.getTime() )) {
-      if (format != null) {
-        return new DatePipe( "en-US" ).transform( date, format );
-      }
-      return new DatePipe( "en-US" ).transform( date, Utils.DATE_STRING_IN_CVS );
+  public static getMultiObjects( fieldValue: string | string[] ) {
+    if (!( fieldValue instanceof Array )) {
+      let o: any = JSON.parse( fieldValue );
+      return o;
     }
     return null;
   }
 
-  //get date of string
-  public getDateFromString( dateString: string ): Date {
-    if (dateString != null && typeof dateString === "string" && dateString.indexOf( "-" ) > 0) {
-      let dateParts: string[] = dateString.split( "-" );
-      if (dateParts.length == 3) {
-        let check: Date = new Date( Number( dateParts[ 0 ] ), Number( dateParts[ 1 ] ) - 1, Number( dateParts[ 2 ] ) );
-        if (!isNaN( check.getTime() )) {
-          return check;
-        }
-      }
+  public static getMultiKeys( o: any ) {
+    if (o != null) {
+      return Object.keys( o );
     }
     return null;
+  }
+
+  public static isDateValue( value: string ): boolean {
+    if (value != null && value != undefined && typeof value === "string" && value.indexOf( "dateString" ) > -1 && value.indexOf( "est" ) > -1) {
+      return true;
+    }
+    return false;
+  }
+
+  public static getDateValue( value: string ) {
+    if (value != null) {
+      let o: any = JSON.parse( value );
+      return o[ "dateString" ];
+    }
+    return "";
   }
 
   public static createCSV( fields: any[], dataArray: Array<any>, fileName: string ) {
     const json2csvParser = new Json2csvParser( {fields} );
     const csv = json2csvParser.parse( dataArray );
-    Utils.fileSaverCreateCSV( fileName, csv );
-  }
-
-  public static createSimpleCSV( dataArray: Array<any>, fileName: string ) {
-    let json2csvParser = new Json2csvParser();
-    let csv = json2csvParser.parse( dataArray );
-    Utils.fileSaverCreateCSV( fileName, csv );
-  }
-
-  public static createCSVUnwindPath( fields: string[], dataArray: Array<any>, unwindPath: string[], fileName: string ) {
-    let json2csvParser = new Json2csvParser( {fields, unwind: unwindPath} );
-    let csv = json2csvParser.parse( dataArray );
     Utils.fileSaverCreateCSV( fileName, csv );
   }
 
@@ -546,7 +504,6 @@ export class Utils {
       var dateParts: string[] = null;
       if (Utils.DATE_STRING_IN_CVS === format) {
         dateParts = dateString.split( "/" );
-        // console.log(dateParts);
         if (dateParts.length == 2) {
           if (dateParts[ 1 ].length == 4 && dateParts[ 0 ].length < 3) {
             if (Number( dateParts[ 0 ] ) > -1 && Number( dateParts[ 0 ] ) < 12) {
@@ -577,17 +534,5 @@ export class Utils {
       }
     }
     return null;
-  }
-
-  getBooleanAsString( booleanValue: string ): string {
-    if (booleanValue != null && booleanValue !== "") {
-      if (booleanValue === "true") {
-        return "Yes";
-      }
-      if (booleanValue === "false") {
-        return "No";
-      }
-    }
-    return "";
   }
 }
