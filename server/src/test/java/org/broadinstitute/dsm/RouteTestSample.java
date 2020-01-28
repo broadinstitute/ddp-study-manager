@@ -69,6 +69,7 @@ public class RouteTestSample extends TestHelper {
         DBTestUtil.deleteAllKitData("POBOX");
         DBTestUtil.deleteAllKitData("PepperParticipant");
         DBTestUtil.deleteAllKitData("OtherPepperParticipant");
+        DBTestUtil.deleteAllKitData("CheapLabelPT");
         DBTestUtil.deleteAllKitData("8899777882");
         DBTestUtil.deleteAllKitData("9889938837");
         DBTestUtil.deleteAllKitData("33837748499");
@@ -176,6 +177,9 @@ public class RouteTestSample extends TestHelper {
                 .respond(response().withStatusCode(200).withBody(messageParticipant));
         mockDDP.when(
                 request().withPath("/ddp/participants/" + FAKE_DDP_PARTICIPANT_ID))
+                .respond(response().withStatusCode(200).withBody(messageParticipant));
+        mockDDP.when(
+                request().withPath("/ddp/participants/CheapLabelPT"))
                 .respond(response().withStatusCode(200).withBody(messageParticipant));
 
         messageParticipant = TestUtil.readFile("ddpResponses/ParticipantsWithIdWithNewField.json");
@@ -295,14 +299,14 @@ public class RouteTestSample extends TestHelper {
     @Test
     public void labelNormalUSParticipant() throws Exception {
         DDPParticipant participant = DDPParticipant.getDDPParticipant(DDP_BASE_URL, TEST_DDP, FAKE_BSP_TEST, false);
-        Address toAddress = easyPost(participant);
+        Address toAddress = easyPost(INSTANCE_ID, TEST_DDP, participant, false);
         Assert.assertEquals("Karl Lejon", toAddress.getName());
     }
 
     @Test
     public void labelPepperParticipant() throws Exception {
         DDPParticipant participant = DDPParticipant.getDDPParticipant(DDP_BASE_URL, TEST_DDP, "PepperParticipant", false);
-        Address toAddress = easyPost(participant);
+        Address toAddress = easyPost(INSTANCE_ID, TEST_DDP, participant, false);
         Assert.assertEquals("Bob Barker", toAddress.getName());
         Assert.assertNotEquals("Karl Lejon", toAddress.getName());
     }
@@ -310,29 +314,35 @@ public class RouteTestSample extends TestHelper {
     @Test
     public void labelPepperParticipantMailToNameNull() throws Exception {
         DDPParticipant participant = DDPParticipant.getDDPParticipant(DDP_BASE_URL, TEST_DDP, "OtherPepperParticipant", false);
-        Address toAddress = easyPost(participant);
+        Address toAddress = easyPost(INSTANCE_ID, TEST_DDP, participant, false);
         Assert.assertEquals("Karl Lejon", toAddress.getName());
         Assert.assertNotEquals("Bob Barker", toAddress.getName());
+    }
+
+    @Test
+    public void cheapLabel() throws Exception {
+        DDPParticipant participant = DDPParticipant.getDDPParticipant(DDP_BASE_URL, TEST_DDP_MIGRATED, "CheapLabelPT", false);
+        Address toAddress = easyPost(INSTANCE_ID_MIGRATED, TEST_DDP_MIGRATED, participant, true);
+        Assert.assertEquals("Karl Lejon", toAddress.getName());
     }
 
     @Test
     @Ignore ("No shipping to PO Box participants")
     public void labelPOBoxUSParticipant() throws Exception {
         DDPParticipant participant = DDPParticipant.getDDPParticipant(DDP_BASE_URL, TEST_DDP, "POBOX", false);
-        easyPost(participant);
+        easyPost(INSTANCE_ID, TEST_DDP, participant, false);
     }
 
     @Test
     @Ignore ("No shipping to Canadian participants")
     public void labelCAParticipant() throws Exception {
         DDPParticipant participant = DDPParticipant.getDDPParticipant(DDP_BASE_URL, TEST_DDP, "CA", false);
-        easyPost(participant);
+        easyPost(INSTANCE_ID, TEST_DDP, participant, false);
     }
 
-    public Address easyPost(DDPParticipant participant) throws Exception {
-        HashMap<Integer, KitRequestSettings> carrierServiceMap = KitRequestSettings.getKitRequestSettings(
-                INSTANCE_ID);
-        EasyPostUtil easyPostUtil = new EasyPostUtil(TEST_DDP);
+    public Address easyPost(String instanceId, String instanceName, DDPParticipant participant, boolean notFEDEX2DAY) throws Exception {
+        HashMap<Integer, KitRequestSettings> carrierServiceMap = KitRequestSettings.getKitRequestSettings(instanceId);
+        EasyPostUtil easyPostUtil = new EasyPostUtil(instanceName);
         Address toAddress = easyPostUtil.createAddress(participant, "617-714-8952");
         Address returnAddress = easyPostUtil.createBroadAddress("Broad Institute", "320 Charles St - Lab 181", "Attn. Broad Genomics",
                 "Cambridge", "02141", "MA", "US", "617-714-8952");
@@ -342,7 +352,7 @@ public class RouteTestSample extends TestHelper {
             customs = easyPostUtil.createCustomsInfo(CUSTOMS_JSON);
         }
         KitRequestSettings kitRequestSettings = carrierServiceMap.get(1);
-        if (kitRequestSettings.getCarrierTo() != null && kitRequestSettings.getServiceTo() != null) {
+        if (kitRequestSettings.getCarrierTo() != null) {
             double start = System.currentTimeMillis();
             try {
                 Shipment shipment2Participant = easyPostUtil.buyShipment(kitRequestSettings.getCarrierTo(),
@@ -350,6 +360,12 @@ public class RouteTestSample extends TestHelper {
                         kitRequestSettings.getServiceTo(), toAddress, returnAddress, parcel, FAKE_BILLING_REF, customs);
                 double end = System.currentTimeMillis();
                 logger.info("took " + (end - start) / 1000 + " seconds");
+                if (notFEDEX2DAY) {
+                    Assert.assertNotEquals("FEDEX_2_DAY", shipment2Participant.getSelectedRate().getService());
+                }
+                else {
+                    Assert.assertEquals("FEDEX_2_DAY", shipment2Participant.getSelectedRate().getService());
+                }
                 printShipmentInfos(shipment2Participant);
                 doAsserts(shipment2Participant);
             }
