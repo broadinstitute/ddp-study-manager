@@ -227,7 +227,7 @@ export class ParticipantListComponent implements OnInit {
                 } );
               }
               let filter = new Filter( new ParticipantColumn( fieldSetting.columnDisplay, fieldSetting.columnName, key ), Filter.ADDITIONAL_VALUE_TYPE, options, new NameValue( fieldSetting.columnName, null ),
-                false, true, null, null, null, null, false, false, false, false, false, fieldSetting.displayType );
+                false, true, null, null, null, null, false, false, false, false, fieldSetting.displayType );
               if (this.settings[ key ] == null || this.settings[ key ] == undefined) {
                 this.settings[ key ] = [];
               }
@@ -276,7 +276,6 @@ export class ParticipantListComponent implements OnInit {
                   let displayName = question.questionText != null && question.questionText !== "" ? question.questionText : question.stableId;
                   let filter = new Filter( new ParticipantColumn( displayName, question.stableId, activityDefinition.activityCode, null, true ), type, options, null, false, true,
                     null, null, null, null, false, true );
-                  filter.alwaysExact = true;
                   possibleColumns.push( filter );
                 }
               }
@@ -307,6 +306,9 @@ export class ParticipantListComponent implements OnInit {
                   tmpValues.push( new NameValue( value.value, value.value ) );
                 } );
               }
+              else if (field.type === "multi_type" || field.type === "multi_type_array") {
+                tmpType = field.type;
+              }
               this.sourceColumns[ "a" ].push( new Filter( new ParticipantColumn( field.displayName, tmp, abstractionGroup.abstractionGroupId.toString(), "final" ), tmpType, tmpValues, new NameValue( tmp, null ) ) );
             } );
           } );
@@ -316,6 +318,7 @@ export class ParticipantListComponent implements OnInit {
             //add when abstraction is searchable
             // this.allFieldNames.add( tmp + "." + filter.participantColumn.name );
           } );
+          console.log(this.sourceColumns["a"]);
         }
         else {
           this.dataSources.delete( "a" );
@@ -511,7 +514,6 @@ export class ParticipantListComponent implements OnInit {
           let view: ViewFilter;
           if (!val.userId.includes( "System" )) {
             view = ViewFilter.parseFilter( val, this.sourceColumns );
-            console.log( view );
             this.savedFilters.push( view );
           }
         } );
@@ -1045,6 +1047,11 @@ export class ParticipantListComponent implements OnInit {
         Utils.downloadCurrentData( this.participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "kits", "k" ] ], columns, "Participants-Sample-" + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
         fileCount = fileCount + 1;
       }
+      else if (source === "a") {
+        Utils.downloadCurrentData( this.participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "abstractionActivities", "a" ] ], columns, "Participants-AbstractionActivity-" + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
+        Utils.downloadCurrentData( this.participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "abstractionSummary", "a" ] ], columns, "Participants-Abstraction-" + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
+        fileCount = fileCount + 1;
+      }
       else {
         Utils.downloadCurrentData( this.participantList, [ [ "data", "data" ], [ source, source ] ], columns, "Participants-" + source + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION, true );
         fileCount = fileCount + 1;
@@ -1075,7 +1082,7 @@ export class ParticipantListComponent implements OnInit {
         return nameValue.value;
       }
     }
-    return "";
+    return key;
   }
 
   checkboxChecked() {
@@ -1224,5 +1231,35 @@ export class ParticipantListComponent implements OnInit {
         this.participantList[ index ] = participant;
       }
     }
+  }
+
+  getMultiObjects( fieldValue: string | string[] ) {
+    if (!( fieldValue instanceof Array )) {
+      let o: any = JSON.parse( fieldValue );
+      return o;
+    }
+    return null;
+  }
+
+  getMultiKeys( o: any ) {
+    if (o != null) {
+      return Object.keys( o );
+    }
+    return null;
+  }
+
+  isDateValue( value: string ): boolean {
+    if (value != null && value != undefined && typeof value === "string" && value.indexOf( "dateString" ) > -1 && value.indexOf( "est" ) > -1) {
+      return true;
+    }
+    return false;
+  }
+
+  getDateValue( value: string ) {
+    if (value != null) {
+      let o: any = JSON.parse( value );
+      return o[ "dateString" ];
+    }
+    return "";
   }
 }

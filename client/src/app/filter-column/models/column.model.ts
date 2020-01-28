@@ -99,7 +99,6 @@ export class ParticipantColumn {
 
   //abstraction column
   public static ABSTRACTION = new ParticipantColumn( "Abstraction", "abstraction" );
-  // public static ABSTRACTION_PROCESS_STATUS = new ParticipantColumn( "Abstraction Process Status", "process", "a" );
   public static ABSTRACTION_STATUS = new ParticipantColumn( "Status", "aStatus", "a" );
   public static ABSTRACTION_ACTIVITY = new ParticipantColumn( "Activity", "activity", "a" );
   public static ABSTRACTION_USER = new ParticipantColumn( "User", "user", "a" );

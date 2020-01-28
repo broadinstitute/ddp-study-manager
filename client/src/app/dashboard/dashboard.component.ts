@@ -62,7 +62,8 @@ export class DashboardComponent implements OnInit {
     [ "m", "Medical Record" ],
     [ "oD", "Onc History" ],
     [ "t", "Tissue" ],
-    [ "k", "Sample" ] ] );
+    [ "k", "Sample" ],
+    [ "a", "Abstraction" ] ] );
   sourceColumns = {};
   downloadSource;
   hasESData = false;
@@ -75,9 +76,6 @@ export class DashboardComponent implements OnInit {
     }
     this.route.queryParams.subscribe( params => {
       this.realm = params[ DSMService.REALM ] || null;
-      //      if (this.realm != null) {
-      //        this.compService.realmMenu = localStorage.getItem(ComponentService.MENU_SELECTED_REALM);
-      //      }
       if (auth.authenticated()) {
         this.getDashboardInformation( this.router.url );
       }
@@ -85,8 +83,8 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit() {
-    if (localStorage.getItem(ComponentService.MENU_SELECTED_REALM) != null) {
-      this.realm = localStorage.getItem(ComponentService.MENU_SELECTED_REALM);
+    if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) != null) {
+      this.realm = localStorage.getItem( ComponentService.MENU_SELECTED_REALM );
     }
     if (this.auth.authenticated()) {
       this.getDashboardInformation( this.router.url );
@@ -112,13 +110,16 @@ export class DashboardComponent implements OnInit {
                     // console.log(data);
                     let result = Result.parse( data );
                     if (result.code != null && result.code !== 200) {
-                      this.errorMessage = "Error - Downloading all participant csv\nPlease contact your DSM developer";
+                      this.errorMessage = "Error - Getting all participant numbers\nPlease contact your DSM developer";
                     }
                     else {
                       // console.info( `received: ${JSON.stringify( data, null, 2 )}` );
                       this.ddp = DDPInformation.parse( data );
-                      this.activityKeys = this.getActivityKeys(this.ddp.dashboardValues);
-                      this.activityKeys.forEach(value => this.showActivityDetails[value] = false);
+                      this.activityKeys = this.getActivityKeys( this.ddp.dashboardValues );
+                      this.activityKeys.forEach( value => this.showActivityDetails[ value ] = false );
+                      this.getSourceColumnsFromFilterClass();
+                      this.loadSettings();
+                      this.getParticipantData( null );
                     }
                     this.loadingDDPData = false;
                   },
@@ -199,12 +200,7 @@ export class DashboardComponent implements OnInit {
     this.loadingDDPData = true;
     if (url.indexOf( Statics.MEDICALRECORD_DASHBOARD ) > -1) {
       this.dashboardVersion = Statics.MEDICALRECORD_DASHBOARD;
-        this.loadDDPSummary();
-      if (localStorage.getItem(ComponentService.MENU_SELECTED_REALM) != null && this.allowedToSeeInformation) {
-        this.getSourceColumnsFromFilterClass();
-        this.loadSettings();
-        this.getParticipantData( null );
-      }
+      this.loadDDPSummary();
     }
     else if (url.indexOf( Statics.SHIPPING_DASHBOARD ) > -1) {
       this.dashboardVersion = Statics.SHIPPING_DASHBOARD;
@@ -414,8 +410,9 @@ export class DashboardComponent implements OnInit {
   }
 
   loadSettings() {
+    console.log( "loadSettings" );
     let jsonData: any;
-    this.dsmService.getSettings(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), "participantList").subscribe(
+    this.dsmService.getSettings( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), "participantList" ).subscribe(
       data => {
         this.activityDefinitionList = [];
         jsonData = data;
@@ -430,6 +427,7 @@ export class DashboardComponent implements OnInit {
           } );
         }
 
+        console.log( jsonData.activityDefinitions );
         if (jsonData.activityDefinitions != null) {
           Object.keys( jsonData.activityDefinitions ).forEach( ( key ) => {
             let activityDefinition: ActivityDefinition = ActivityDefinition.parse( jsonData.activityDefinitions[ key ] );
@@ -454,7 +452,6 @@ export class DashboardComponent implements OnInit {
                       } );
                     }
                     let filter = new Filter( new ParticipantColumn( questionDefinition.questionText, question.stableId, activityDefinition.activityCode, null, true ), type, options );
-                    filter.alwaysExact = true;
                     possibleColumns.push( filter );
                   }
                 }
@@ -464,6 +461,7 @@ export class DashboardComponent implements OnInit {
             }
           } );
         }
+        console.log( this.dataSources );
       },
       err => {
         if (err._body === Auth.AUTHENTICATION_ERROR) {
@@ -482,13 +480,14 @@ export class DashboardComponent implements OnInit {
   }
 
   getParticipantData( source: string ) {
-    this.dsmService.applyFilter(null, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), "participantList", null).subscribe(
+    this.dsmService.applyFilter( null, localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), "participantList", null ).subscribe(
       data => {
         let jsonData: any[];
         let participantList = [];
         jsonData = data;
         jsonData.forEach( ( val ) => {
           let participant = Participant.parse( val );
+          console.log(participant);
           participantList.push( participant );
         } );
         let date = new Date();
@@ -510,6 +509,11 @@ export class DashboardComponent implements OnInit {
           }
           else if (source === "k") {
             Utils.downloadCurrentData( participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "kits", "k" ] ], columns, "Participants-Sample-" + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
+            this.downloadDone();
+          }
+          else if (source === "a") {
+            //TODO add final abstraction values to download
+            Utils.downloadCurrentData( participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "abstractionActivities", "a" ] ], columns, "Participants-Abstraction-" + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
             this.downloadDone();
           }
           else {

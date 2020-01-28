@@ -37,26 +37,6 @@ export class Participant {
     return status;
   }
 
-  getProcessStatus(): string {
-    if (this.abstraction.aStatus === "not_started") {
-      return "Not Started";
-    }
-    else if (this.abstraction.aStatus === "in_progress" || this.abstraction.aStatus === "clear"
-      || this.review.aStatus === "in_progress" || this.review.aStatus === "clear") {
-      return "In Progress";
-    }
-    else if (this.qc.aStatus === "in_progress") {
-      return "QC in progress";
-    }
-    else if (this.abstraction.aStatus === "done" && this.review.aStatus === "done" && this.qc.aStatus !== "done") {
-      return "v";
-    }
-    else if (this.qc.aStatus === "done") {
-      return "Finished";
-    }
-    return "";
-  }
-
   static parse( json ): Participant {
     let jsonData: any[];
     let medicalRecords: Array<MedicalRecord> = [];
@@ -126,8 +106,8 @@ export class Participant {
 
     let participant: ParticipantDSMInformation = null;
     jsonData = json.participant;
-    if (jsonData != null ) {
-      participant = ParticipantDSMInformation.parse(jsonData);
+    if (jsonData != null) {
+      participant = ParticipantDSMInformation.parse( jsonData );
     }
 
     return new Participant( data, participant, medicalRecords, samples, oncHistoryDetails, json.abstractionActivities, abstractionSummary, abstraction, review, qc, finalA );

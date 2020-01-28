@@ -101,7 +101,7 @@ export class AbstractionGroupComponent implements OnInit, OnDestroy {
       let value = new Value( null );
       values.push( value );
     }
-    let newAbstractionField = new AbstractionField( null, this.newField, this.newType, null, this.fields.length + 1, values, null, false,
+    let newAbstractionField = new AbstractionField( null, this.newField.trim(), this.newType, null, this.fields.length + 1, values, null, false,
       null, null );
     newAbstractionField.newAdded = true;
     newAbstractionField.changed = true;
