@@ -72,6 +72,30 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
+    public void searchPTByProfileDataLike() throws Exception {
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
+            int scrollSize = 1000;
+            Map<String, Map<String, Object>> esData = new HashMap<>();
+            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-osteo");
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            SearchResponse response = null;
+            int i = 0;
+            while (response == null || response.getHits().getHits().length != 0) {
+                searchSourceBuilder.query(QueryBuilders.wildcardQuery("profile.firstName", "Kiara*"));
+
+                searchSourceBuilder.size(scrollSize);
+                searchSourceBuilder.from(i * scrollSize);
+                searchRequest.source(searchSourceBuilder);
+
+                response = client.search(searchRequest, RequestOptions.DEFAULT);
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                i++;
+            }
+            Assert.assertNotEquals(0, esData.size());
+        }
+    }
+
+    @Test
     public void activityDefinitionSearchRequest() throws Exception {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
@@ -343,13 +367,13 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
-    public void searchPTByStatusTimestamp() throws Exception {
+    public void searchPTByTimestamp() throws Exception {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-brain");
+            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-osteo");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            String dateUserEntered = "2019-06-20";
+            String dateUserEntered = "2020-01-28";
 
             final long start = SystemUtil.getLongFromDateString(dateUserEntered);
             //set endDate to midnight of that date
@@ -358,9 +382,32 @@ public class ElasticSearchTest extends TestHelper {
             SearchResponse response = null;
             int i = 0;
             while (response == null || response.getHits().getHits().length != 0) {
-                SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-                sourceBuilder.query(QueryBuilders.rangeQuery("statusTimestamp").from(start).to(end));
+                searchSourceBuilder.query(QueryBuilders.rangeQuery("profile.createdAt").gte(start).lte(end));
+                searchSourceBuilder.size(scrollSize);
+                searchSourceBuilder.from(i * scrollSize);
+                searchRequest.source(searchSourceBuilder);
 
+                response = client.search(searchRequest, RequestOptions.DEFAULT);
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                i++;
+            }
+            Assert.assertNotEquals(0, esData.size());
+        }
+    }
+
+    @Test
+    public void searchPTByDateString() throws Exception {
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
+            int scrollSize = 1000;
+            Map<String, Map<String, Object>> esData = new HashMap<>();
+            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-osteo");
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            String date1 = "2002-01-28";
+            String date2 = "2002-01-29";
+            SearchResponse response = null;
+            int i = 0;
+            while (response == null || response.getHits().getHits().length != 0) {
+                searchSourceBuilder.query(QueryBuilders.rangeQuery("dsm.dateOfBirth").gte(date1).lte(date2));
                 searchSourceBuilder.size(scrollSize);
                 searchSourceBuilder.from(i * scrollSize);
                 searchRequest.source(searchSourceBuilder);

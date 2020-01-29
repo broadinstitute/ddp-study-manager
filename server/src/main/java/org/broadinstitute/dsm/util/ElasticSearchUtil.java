@@ -31,6 +31,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class ElasticSearchUtil {
@@ -44,6 +46,7 @@ public class ElasticSearchUtil {
     private static final String ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID = "activities.questionsAnswers.stableId";
     private static final String PROFILE = "profile";
     private static final String DATA = "data";
+    private static final String DSM = "dsm";
     private static final String ACTIVITY_CODE = "activityCode";
     private static final String ADDRESS = "address";
 
@@ -143,6 +146,9 @@ public class ElasticSearchUtil {
                             (String) address.get("street1"), (String) address.get("street2"), (String) address.get("state"),
                             (String) profile.get("hruid"), null);
                 }
+                else if (profile != null && !profile.isEmpty()) {
+                    return new DDPParticipant((String) profile.get("hruid"), "", (String) profile.get("firstName"), (String) profile.get("lastName"));
+                }
             }
         }
         return null;
@@ -173,32 +179,62 @@ public class ElasticSearchUtil {
         BoolQueryBuilder finalQuery = new BoolQueryBuilder();
 
         for (String f : filters) {
-            logger.info(f);//TODO Simone - delete at the end (PHI)
             if (StringUtils.isNotBlank(f) && f.contains(DBConstants.ALIAS_DELIMITER)) {
                 if (f.contains(Filter.EQUALS) || f.contains(Filter.LIKE)) {
+                    boolean wildCard = false;
                     f = f.replace("(", "").replace(")", "").trim();
                     String[] nameValue = f.split(Filter.EQUALS);
-                    if (nameValue.length == 0) { //didn't contain EQUALS -> split LIKE
+                    if (nameValue.length == 1) { //didn't contain EQUALS -> split LIKE
                         nameValue = f.split(Filter.LIKE);
+                        wildCard = true;
                     }
-                    logger.info(nameValue[0]);
-                    String userEntered = nameValue[1].replaceAll("'", "").trim();
-                    if (StringUtils.isNotBlank(nameValue[0]) && (nameValue[0].startsWith(PROFILE) || nameValue[0].startsWith(ADDRESS))) {
-                        finalQuery.must(QueryBuilders.matchQuery(nameValue[0], userEntered));
-                    }
-                    else {
-                        if (StringUtils.isNotBlank(nameValue[0]) && nameValue[0].startsWith(DATA)) {
+                    if (StringUtils.isNotBlank(nameValue[0]) && StringUtils.isNotBlank(nameValue[1])) {
+                        String userEntered = nameValue[1].replaceAll("'", "").trim();
+                        if (wildCard) {
+                            userEntered = userEntered.replaceAll("%", "").trim();
+                        }
+                        if ((nameValue[0].startsWith(PROFILE) || nameValue[0].startsWith(ADDRESS))) {
                             try {
                                 long start = SystemUtil.getLongFromString(userEntered);
                                 //set endDate to midnight of that date
                                 String endDate = userEntered + " 23:59:59";
                                 long end = SystemUtil.getLongFromDetailDateString(endDate);
-                                finalQuery.must(QueryBuilders.rangeQuery("statusTimestamp").from(start).to(end));
+                                finalQuery.must(QueryBuilders.rangeQuery(nameValue[0]).gte(start).lte(end));
+                            }
+                            catch (ParseException e) {
+                                if (wildCard) {
+                                    finalQuery.must(QueryBuilders.wildcardQuery(nameValue[0].trim(), userEntered.toLowerCase() + "*"));
+                                }
+                                else {
+                                    finalQuery.must(QueryBuilders.matchQuery(nameValue[0], userEntered));
+                                }
+                            }
+                        }
+                        else if (nameValue[0].startsWith(DSM)) {
+                            if (wildCard) {
+                                finalQuery.must(QueryBuilders.wildcardQuery(nameValue[0].trim(), userEntered + "*"));
+                            }
+                            else {
+                                finalQuery.must(QueryBuilders.matchQuery(nameValue[0], userEntered));
+                            }
+                        }
+                        else if (nameValue[0].startsWith(DATA)) {
+                            String[] dataParam = nameValue[0].split("\\.");
+                            try {
+                                long start = SystemUtil.getLongFromString(userEntered);
+                                //set endDate to midnight of that date
+                                String endDate = userEntered + " 23:59:59";
+                                long end = SystemUtil.getLongFromDetailDateString(endDate);
+                                finalQuery.must(QueryBuilders.rangeQuery(dataParam[1]).gte(start).lte(end));
                             }
                             catch (ParseException e) {
                                 //was no date string so go for normal text
-                                String[] dataParam = nameValue[0].split("\\.");
-                                finalQuery.must(QueryBuilders.matchQuery(dataParam[1], userEntered));
+                                if (wildCard) {
+                                    finalQuery.must(QueryBuilders.wildcardQuery(dataParam[1].trim(), userEntered + "*"));
+                                }
+                                else {
+                                    finalQuery.must(QueryBuilders.matchQuery(dataParam[1], userEntered));
+                                }
                             }
                         }
                         else {
@@ -217,7 +253,12 @@ public class ElasticSearchUtil {
                                 }
                                 catch (ParseException e) {
                                     //activity status
-                                    queryBuilder.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1], userEntered));
+                                    if (wildCard) {
+                                        queryBuilder.must(QueryBuilders.wildcardQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered + "*"));
+                                    }
+                                    else {
+                                        queryBuilder.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1], userEntered));
+                                    }
                                 }
                             }
                             else {
@@ -229,53 +270,139 @@ public class ElasticSearchUtil {
                                 }
                                 catch (ParseException e) {
                                     //was no date string so go for normal text
-                                    activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered).operator(Operator.AND));
+                                    if (wildCard) {
+                                        activityAnswer.must(QueryBuilders.wildcardQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered + "*"));
+                                    }
+                                    else {
+                                        activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered).operator(Operator.AND));
+                                    }
                                 }
                                 NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery(ACTIVITIES_QUESTIONS_ANSWER, activityAnswer, ScoreMode.Avg);
                                 queryBuilder.must(queryActivityAnswer);
                             }
-
                             queryBuilder.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + ACTIVITY_CODE, surveyParam[0]).operator(Operator.AND));
                             NestedQueryBuilder query = QueryBuilders.nestedQuery(ACTIVITIES, queryBuilder, ScoreMode.Avg);
                             finalQuery.must(query);
                         }
                     }
+                    else {
+                        logger.error("one of the following is null: fieldName: " + nameValue[0] + " userEntered: [hidingValueInCasePHI]");
+                    }
                 }
                 else if (f.contains(Filter.LARGER_EQUALS)) {
                     String[] nameValue = f.split(Filter.LARGER_EQUALS);
                     String userEntered = nameValue[1].replaceAll("'", "").trim();
-                    try {
-                        long start = SystemUtil.getLongFromString(userEntered);
-                        finalQuery.must(QueryBuilders.rangeQuery("statusTimestamp").from(start));
+
+                    if (StringUtils.isNotBlank(nameValue[0])) {
+                        if (nameValue[0].startsWith(PROFILE) || nameValue[0].startsWith(ADDRESS)) {
+                            try {
+                                long date = SystemUtil.getLongFromString(userEntered);
+                                QueryBuilder tmpBuilder = getRangeQueryBuilder(finalQuery, nameValue[0]);
+                                if (tmpBuilder != null) {
+                                    ((RangeQueryBuilder) tmpBuilder).gte(date);
+                                }
+                                else {
+                                    finalQuery.must(QueryBuilders.rangeQuery(nameValue[0]).gte(date));
+                                }
+                            }
+                            catch (ParseException e) {
+                                finalQuery.must(QueryBuilders.matchQuery(nameValue[0], userEntered));
+                            }
+                        }
+                        else if (nameValue[0].startsWith(DSM)) {
+                            QueryBuilder tmpBuilder = getRangeQueryBuilder(finalQuery, nameValue[0]);
+                            if (tmpBuilder != null) {
+                                ((RangeQueryBuilder) tmpBuilder).gte(userEntered);
+                            }
+                            else {
+                                finalQuery.must(QueryBuilders.rangeQuery(nameValue[0]).gte(userEntered));
+                            }
+                        }
+                        else if (nameValue[0].startsWith(DATA)) {
+                            String[] dataParam = nameValue[0].split("\\.");
+                            QueryBuilder tmpBuilder = getRangeQueryBuilder(finalQuery, dataParam[1]);
+                            try {
+                                long date = SystemUtil.getLongFromString(userEntered);
+                                if (tmpBuilder != null) {
+                                    ((RangeQueryBuilder) tmpBuilder).gte(date);
+                                }
+                                else {
+                                    finalQuery.must(QueryBuilders.rangeQuery(dataParam[1]).gte(date));
+                                }
+                            }
+                            catch (ParseException e) {
+                                logger.error("range was not date. user entered: " + userEntered);
+                            }
+                        }
+                        else {
+
+                        }
                     }
-                    catch (ParseException e) {
-                        //was no date string so go for normal text
-                        String[] dataParam = nameValue[0].split("\\.");
-                        finalQuery.must(QueryBuilders.matchQuery(dataParam[1], userEntered));
+                    else {
+                        logger.error("one of the following is null: fieldName: " + nameValue[0] + " userEntered: [hidingValueInCasePHI]");
                     }
                 }
                 else if (f.contains(Filter.SMALLER_EQUALS)) {
                     String[] nameValue = f.split(Filter.SMALLER_EQUALS);
                     String userEntered = nameValue[1].replaceAll("'", "").trim();
-                    try {
-                        String endDate = userEntered + " 23:59:59";
-                        long end = SystemUtil.getLongFromDetailDateString(endDate);
-                        finalQuery.must(QueryBuilders.rangeQuery("statusTimestamp").to(end));
+
+                    if (StringUtils.isNotBlank(nameValue[0])) {
+                        if (nameValue[0].startsWith(PROFILE) || nameValue[0].startsWith(ADDRESS)) {
+                            String endDate = userEntered + " 23:59:59";
+                            long date = SystemUtil.getLongFromDetailDateString(endDate);
+                            QueryBuilder tmpBuilder = getRangeQueryBuilder(finalQuery, nameValue[0]);
+                            if (tmpBuilder != null) {
+                                ((RangeQueryBuilder) tmpBuilder).lte(date);
+                            }
+                            else {
+                                finalQuery.must(QueryBuilders.rangeQuery(nameValue[0]).lte(date));
+                            }
+                        }
+                        else if (nameValue[0].startsWith(DSM)) {
+                            QueryBuilder tmpBuilder = getRangeQueryBuilder(finalQuery, nameValue[0]);
+                            if (tmpBuilder != null) {
+                                ((RangeQueryBuilder) tmpBuilder).lte(userEntered);
+                            }
+                            else {
+                                finalQuery.must(QueryBuilders.rangeQuery(nameValue[0]).lte(userEntered));
+                            }
+                        }
+                        else if (nameValue[0].startsWith(DATA)) {
+                            String[] dataParam = nameValue[0].split("\\.");
+                            QueryBuilder tmpBuilder = getRangeQueryBuilder(finalQuery, dataParam[1]);
+                            try {
+                                long date = SystemUtil.getLongFromString(userEntered);
+                                if (tmpBuilder != null) {
+                                    ((RangeQueryBuilder) tmpBuilder).lte(date);
+                                }
+                                else {
+                                    finalQuery.must(QueryBuilders.rangeQuery(dataParam[1]).lte(date));
+                                }
+                            }
+                            catch (ParseException e) {
+                                logger.error("range was not date. user entered: " + userEntered);
+                            }
+                        }
+                        else {
+                        }
                     }
-                    catch (RuntimeException e) {
-                        //was no date string so go for normal text
-                        String[] dataParam = nameValue[0].split("\\.");
-                        finalQuery.must(QueryBuilders.matchQuery(dataParam[1], userEntered));
+                    else {
+                        logger.error("one of the following is null: fieldName: " + nameValue[0] + " userEntered: [hidingValueInCasePHI]");
                     }
                 }
-                else { //is not null or is null
-                    if (f.contains(Filter.IS_NOT_NULL)) {
-                        String[] nameValue = f.split(Filter.IS_NOT_NULL);
-                        if (StringUtils.isNotBlank(nameValue[0]) && (nameValue[0].startsWith(PROFILE) || nameValue[0].startsWith(ADDRESS))) {
+                else if (f.contains(Filter.IS_NOT_NULL)) {
+                    String[] nameValue = f.split(Filter.IS_NOT_NULL);
+                    if (StringUtils.isNotBlank(nameValue[0])) {
+                        if (nameValue[0].startsWith(PROFILE) || nameValue[0].startsWith(ADDRESS) || nameValue[0].startsWith(DSM)) {
                             ExistsQueryBuilder existsQuery = new ExistsQueryBuilder(nameValue[0].trim());
                             finalQuery.must(existsQuery);
                         }
-                        else if (StringUtils.isNotBlank(nameValue[0]) && !nameValue[0].startsWith(DATA)) {
+                        else if (nameValue[0].startsWith(DATA)) {
+                            String[] dataParam = nameValue[0].split("\\.");
+                            ExistsQueryBuilder existsQuery = new ExistsQueryBuilder(dataParam[1].trim());
+                            finalQuery.must(existsQuery);
+                        }
+                        else {
                             String[] surveyParam = nameValue[0].split("\\.");
 
                             BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
@@ -291,9 +418,15 @@ public class ElasticSearchUtil {
                             finalQuery.must(query);
                         }
                     }
-                    else if (f.contains(Filter.IS_NULL)) {
-
+                    else {
+                        logger.error("one of the following is null: fieldName: " + nameValue[0] + " userEntered: [hidingValueInCasePHI]");
                     }
+                }
+                else if (f.contains(Filter.IS_NULL)) {
+
+                }
+                else {
+                    logger.error("Filter could not be parsed");
                 }
             }
         }
@@ -301,6 +434,20 @@ public class ElasticSearchUtil {
             return finalQuery;
         }
         return null;
+    }
+
+    private static QueryBuilder getRangeQueryBuilder(BoolQueryBuilder finalQuery, String fieldName) {
+        QueryBuilder tmpBuilder = null;
+        List<QueryBuilder> tmpFilters = finalQuery.must();
+        if (!tmpFilters.isEmpty()) {
+            for (Iterator<QueryBuilder> iterator = tmpFilters.iterator(); iterator.hasNext(); ) {
+                QueryBuilder builder = iterator.next();
+                if (builder instanceof RangeQueryBuilder && ((RangeQueryBuilder) builder).fieldName().equals(fieldName)) {
+                    tmpBuilder = builder;
+                }
+            }
+        }
+        return tmpBuilder;
     }
 
     public static void addingParticipantStructuredHits(@NonNull SearchResponse response, Map<String, Map<String, Object>> esData, String ddp) {

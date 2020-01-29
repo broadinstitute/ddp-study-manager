@@ -30,6 +30,7 @@ public class Filter {
     public static String TEXT = "TEXT";
     public static String OPTIONS = "OPTIONS";
     public static String DATE = "DATE";
+    public static String DATE_SHORT = "DATE_SHORT";
     public static String ADDITIONAL_VALUES = "ADDITIONALVALUE";
     public static String NUMBER = "NUMBER";
     public static String BOOLEAN = "BOOLEAN";
@@ -108,8 +109,7 @@ public class Filter {
                 finalQuery = finalQuery.substring(0, finalQuery.length() - 4);
                 finalQuery += " ) ";
             }
-            else if (DATE.equals(filter.getType())) {
-
+            else if (DATE.equals(filter.getType()) || DATE_SHORT.equals(filter.getType())) {
                 if (!filter.isRange()) {
                     if (String.valueOf(filter.filter1.getValue()).length() == 10) {
                         query = AND + filter.getColumnName(dbElement);
