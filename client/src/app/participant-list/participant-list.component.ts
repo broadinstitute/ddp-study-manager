@@ -250,6 +250,9 @@ export class ParticipantListComponent implements OnInit {
                       options.push( new NameValue( value.optionStableId, value.optionText ) );
                     } );
                   }
+                  else if (question.questionType === "NUMERIC") {
+                    type = Filter.NUMBER_TYPE;
+                  }
                   let displayName = question.questionText != null && question.questionText !== "" ? question.questionText : question.stableId;
                   let filter = new Filter( new ParticipantColumn( displayName, question.stableId, activityDefinition.activityCode, null, true ), type, options, null, false, true,
                     null, null, null, null, false, true );
@@ -257,7 +260,8 @@ export class ParticipantListComponent implements OnInit {
                   possibleColumns.push( filter );
                 }
               }
-              this.dataSources.set( activityDefinition.activityCode, activityDefinition.activityName );
+              let name = activityDefinition.activityName == undefined || activityDefinition.activityName === "" ? activityDefinition.activityCode : activityDefinition.activityName;
+              this.dataSources.set( activityDefinition.activityCode, name );
               this.sourceColumns[ activityDefinition.activityCode ] = possibleColumns;
               this.selectedColumns[ activityDefinition.activityCode ] = [];
               //add now all these columns to allFieldsName for the search-bar
@@ -889,16 +893,35 @@ export class ParticipantListComponent implements OnInit {
   }
 
   private doSort( object: string ) {
-    console.log( object );
     let order = this.sortDir === "asc" ? 1 : -1;
     if (this.sortParent === "data" && object != null) {
-      this.participantList.sort( ( a, b ) => this.sort( a.data[ object ][ this.sortField ], b.data[ object ][ this.sortField ], order ) );
+      this.participantList.sort( ( a, b ) => {
+        if (a.data[ object ] == null) {
+          return 1;
+        }
+        else if (b.data[ object ] == null) {
+          return -1;
+        }
+        else {
+          return this.sort( a.data[ object ][ this.sortField ], b.data[ object ][ this.sortField ], order );
+        }
+      } );
     }
     else if (this.sortParent === "data" && object == null) {
       this.participantList.sort( ( a, b ) => this.sort( a.data[ this.sortField ], b.data[ this.sortField ], order ) );
     }
     else if (this.sortParent === "p") {
-      this.participantList.sort( ( a, b ) => this.sort( a.participant[ this.sortField ], b.participant[ this.sortField ], order ) );
+      this.participantList.sort( ( a, b ) => {
+        if (a.participant == null || a.participant[ this.sortField ] == null) {
+          return 1;
+        }
+        else if (b.participant == null || b.participant[ this.sortField ] == null) {
+          return -1;
+        }
+        else {
+          return this.sort( a.participant[ this.sortField ], b.participant[ this.sortField ], order );
+        }
+      } );
     }
     else if (this.sortParent === "m") {
       this.participantList.sort( ( a, b ) => {

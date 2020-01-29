@@ -6,6 +6,7 @@ import {Value} from "../utils/value.model";
 export class Filter {
 
   public static DATE_TYPE = "DATE";
+  public static SHORT_DATE_TYPE = "DATE_SHORT";
   public static TEXT_TYPE = "TEXT";
   public static OPTION_TYPE = "OPTIONS";
   public static NUMBER_TYPE = "NUMBER";
@@ -15,22 +16,30 @@ export class Filter {
   public static COMPOSITE_TYPE = "COMPOSITE";
 
   //ES data
-  public static REALM = new Filter(ParticipantColumn.REALM, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static SHORT_ID = new Filter(ParticipantColumn.SHORT_ID, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static LEGACY_SHORT_ID = new Filter(ParticipantColumn.LEGACY_SHORT_ID, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static PARTICIPANT_ID = new Filter(ParticipantColumn.PARTICIPANT_ID, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static LEGACY_PARTICIPANT_ID = new Filter(ParticipantColumn.LEGACY_PARTICIPANT_ID, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static FIRST_NAME = new Filter(ParticipantColumn.FIRST_NAME, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static LAST_NAME = new Filter(ParticipantColumn.LAST_NAME, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static COUNTRY = new Filter(ParticipantColumn.COUNTRY, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
+  public static REALM = new Filter(ParticipantColumn.REALM, Filter.TEXT_TYPE);
+  public static SHORT_ID = new Filter(ParticipantColumn.SHORT_ID, Filter.TEXT_TYPE);
+  public static LEGACY_SHORT_ID = new Filter(ParticipantColumn.LEGACY_SHORT_ID, Filter.TEXT_TYPE);
+  public static PARTICIPANT_ID = new Filter(ParticipantColumn.PARTICIPANT_ID, Filter.TEXT_TYPE);
+  public static LEGACY_PARTICIPANT_ID = new Filter(ParticipantColumn.LEGACY_PARTICIPANT_ID, Filter.TEXT_TYPE);
+  public static FIRST_NAME = new Filter(ParticipantColumn.FIRST_NAME, Filter.TEXT_TYPE);
+  public static LAST_NAME = new Filter(ParticipantColumn.LAST_NAME, Filter.TEXT_TYPE);
+  public static COUNTRY = new Filter(ParticipantColumn.COUNTRY, Filter.TEXT_TYPE);
   public static ENROLLMENT_STATUS = new Filter(ParticipantColumn.ENROLLMENT_STATUS, Filter.OPTION_TYPE, [
     new NameValue("REGISTERED", "Registered"),
     new NameValue("EXITED_BEFORE_ENROLLMENT", "Exited before Enrollment"),
     new NameValue("EXITED_AFTER_ENROLLMENT", "Exited after Enrollment"),
-    new NameValue("ENROLLED", "Enrolled")], null, false, true, null, null, null, null, false, true);
-  public static EMAIL = new Filter(ParticipantColumn.EMAIL, Filter.TEXT_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static REGISTRATION_DATE = new Filter(ParticipantColumn.REGISTRATION_DATE, Filter.DATE_TYPE, null, null, false, true, null, null, null, null, false, true);
-  public static DO_NOT_CONTACT = new Filter(ParticipantColumn.DO_NOT_CONTACT, Filter.BOOLEAN_TYPE, null, null, false, true, null, null, null, null, false, true);
+    new NameValue("ENROLLED", "Enrolled"),
+    new NameValue("CONSENT_SUSPENDED", "Lost to Followup")
+  ]);
+  public static EMAIL = new Filter(ParticipantColumn.EMAIL, Filter.TEXT_TYPE);
+  public static REGISTRATION_DATE = new Filter(ParticipantColumn.REGISTRATION_DATE, Filter.DATE_TYPE);
+  public static DO_NOT_CONTACT = new Filter(ParticipantColumn.DO_NOT_CONTACT, Filter.BOOLEAN_TYPE);
+  public static DATE_OF_MAJORITY = new Filter(ParticipantColumn.DATE_OF_MAJORITY, Filter.SHORT_DATE_TYPE);
+  public static HAS_CONSENTED_TO_BLOOD = new Filter(ParticipantColumn.HAS_CONSENTED_TO_BLOOD, Filter.BOOLEAN_TYPE);
+  public static HAS_CONSENTED_TO_TISSUE = new Filter(ParticipantColumn.HAS_CONSENTED_TO_TISSUE, Filter.BOOLEAN_TYPE);
+  public static DATE_OF_BIRTH = new Filter(ParticipantColumn.DATE_OF_BIRTH, Filter.SHORT_DATE_TYPE);
+  public static DIAGNOSIS_MONTH = new Filter(ParticipantColumn.DIAGNOSIS_MONTH, Filter.NUMBER_TYPE);
+  public static DIAGNOSIS_YEAR = new Filter(ParticipantColumn.DIAGNOSIS_YEAR, Filter.NUMBER_TYPE);
 
   //participant columns
   public static ONC_HISTORY_CREATED = new Filter(ParticipantColumn.ONC_HISTORY_CREATED, Filter.DATE_TYPE);
@@ -189,6 +198,8 @@ export class Filter {
   public static ALL_COLUMNS = [
     Filter.REALM, Filter.SHORT_ID, Filter.LEGACY_SHORT_ID, Filter.LEGACY_PARTICIPANT_ID, Filter.PARTICIPANT_ID, Filter.FIRST_NAME, Filter.LAST_NAME,
     Filter.COUNTRY, Filter.ENROLLMENT_STATUS, Filter.EMAIL, Filter.REGISTRATION_DATE, Filter.DO_NOT_CONTACT,
+    Filter.DATE_OF_MAJORITY, Filter.HAS_CONSENTED_TO_BLOOD, Filter.HAS_CONSENTED_TO_TISSUE, Filter.DATE_OF_BIRTH,
+    Filter.DIAGNOSIS_MONTH, Filter.DIAGNOSIS_YEAR,
     Filter.ONC_HISTORY_CREATED, Filter.ONC_HISTORY_REVIEWED, Filter.PAPER_CR_SENT, Filter.PAPER_CR_RECEIVED,
     Filter.PARTICIPANT_NOTES, Filter.MINIMAL_RECORDS, Filter.ASSIGNEE_MR, Filter.ASSIGNEE_TISSUE, Filter.EXIT_DATE,
     Filter.MR_INSTITUTION_NAME, Filter.MR_INSTITUTION_CONTACT, Filter.MR_INSTITUTION_PHONE, Filter.MR_INSTITUTION_FAX,
@@ -433,7 +444,7 @@ export class Filter {
   public static getFilterText(filter: Filter, parent: string, fieldSettings: {}): {} {
 
     let filterText = {};
-    if (filter.type === Filter.TEXT_TYPE || filter.type === Filter.NUMBER_TYPE || filter.type === Filter.DATE_TYPE || filter.type === Filter.COMPOSITE_TYPE) {
+    if (filter.type === Filter.TEXT_TYPE || filter.type === Filter.NUMBER_TYPE || filter.type === Filter.DATE_TYPE || filter.type === Filter.SHORT_DATE_TYPE || filter.type === Filter.COMPOSITE_TYPE) {
       if ((filter.value1 !== null && filter.value1 !== "" && filter.value1 !== undefined) ||
         (filter.range && filter.value2 != null && filter.value2 != "" && filter.value2 !== undefined)
         || (filter.empty || filter.notEmpty)) {

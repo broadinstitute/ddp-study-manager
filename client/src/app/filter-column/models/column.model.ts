@@ -10,9 +10,15 @@ export class ParticipantColumn {
   public static LAST_NAME = new ParticipantColumn( "Last Name", "lastName", "data", "profile" );
   public static COUNTRY = new ParticipantColumn( "Country", "country", "data", "address" );
   public static EMAIL = new ParticipantColumn( "Email", "email", "data", "profile" );
-  public static REGISTRATION_DATE = new ParticipantColumn( "Registration Date", "statusTimestamp", "data" );
+  public static REGISTRATION_DATE = new ParticipantColumn( "Registration Date", "createdAt", "data", "profile" );
   public static ENROLLMENT_STATUS = new ParticipantColumn( "Status", "status", "data" );
   public static DO_NOT_CONTACT = new ParticipantColumn( "Do Not Contact", "doNotContact", "data", "profile" );
+  public static DATE_OF_MAJORITY = new ParticipantColumn( "Date of Majority", "dateOfMajority", "data", "dsm" );
+  public static HAS_CONSENTED_TO_BLOOD = new ParticipantColumn( "Consent Blood", "hasConsentedToBloodDraw", "data", "dsm" );
+  public static HAS_CONSENTED_TO_TISSUE = new ParticipantColumn( "Consent Tissue", "hasConsentedToTissueSample", "data", "dsm" );
+  public static DATE_OF_BIRTH = new ParticipantColumn( "Date of Birth", "dateOfBirth", "data", "dsm" );
+  public static DIAGNOSIS_MONTH = new ParticipantColumn( "Diagnosis Month", "diagnosisMonth", "data", "dsm" );
+  public static DIAGNOSIS_YEAR = new ParticipantColumn( "Diagnosis Year", "diagnosisYear", "data", "dsm" );
 
   public static ONC_HISTORY_CREATED = new ParticipantColumn( "Onc History Created", "createdOncHistory", "o" );
   public static ONC_HISTORY_REVIEWED = new ParticipantColumn( "Onc History Reviewed", "reviewedOncHistory", "o" );
