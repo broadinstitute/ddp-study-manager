@@ -25,7 +25,12 @@
                 </b>
                 <ng-container *ngIf="qDef.questionType === 'DATE'">
                   <b *ngIf="questionAnswer.date != null && questionAnswer.date !== ''" class="TD--Padding-Left-Bigger">
-                    {{questionAnswer.date}}
+                    <ng-container *ngIf="questionAnswer.date.length == 10">
+                      {{questionAnswer.date | date:'shortDate'}}
+                    </ng-container>
+                    <ng-container *ngIf="questionAnswer.date.length != 10">
+                      {{questionAnswer.date}}
+                    </ng-container>
                   </b>
                 </ng-container>
                 <b *ngIf="qDef.questionType === 'BOOLEAN' || qDef.questionType === 'AGREEMENT'" class="TD--Padding-Left-Bigger">
@@ -36,7 +41,7 @@
                   <div *ngFor="let answer of questionAnswer.answer; let i = index">
                     <div *ngFor="let cQ of qDef.childQuestions; let i = index" class="TD--Padding-Left-Bigger">
                       <b *ngIf="cQ.questionType === 'DATE' && answer[i] != null">
-                        {{getUtil().getNiceUserText(answer[i])}}
+                        {{getUtil().getNiceUserText(answer[i])}} DATE 2
                       </b>
                       <b *ngIf="cQ.questionType === 'PICKLIST' && answer[i] != null">
                         {{getUtil().getOptionText(cQ.options, answer[i])}}

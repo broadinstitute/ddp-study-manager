@@ -287,7 +287,7 @@
                             <ng-container *ngIf="getUtil().getQuestionDefinition(activityDefinitionList, alias, questionAnswer.stableId) as qDef">
                               <ng-container *ngIf="qDef.selectMode === 'MULTIPLE'">
                                 <ul *ngFor="let o of qDef.options">
-                                  <li *ngIf="getUtil().isOptionSelected(questionAnswer.answer, o.optionStableId)"><b>{{o.optionText}}</b>
+                                  <li *ngIf="getUtil().isOptionSelected(questionAnswer.answer, o.optionStableId)"><div>{{o.optionText}}</div>
                                     <ng-container *ngIf="getUtil().getOptionDetails(questionAnswer.optionDetails, o.optionStableId) as oDetail">
                                       <div>{{oDetail.details}}
                                       </div>
@@ -296,8 +296,8 @@
                                 </ul>
                               </ng-container>
                               <ng-container *ngIf="qDef.selectMode === 'SINGLE'">
-                                <ng-container *ngIf="questionAnswer.answer[0] != null"><b class="TD--Padding-Left-Bigger">{{getUtil().getOptionText(qDef.options,
-                                  questionAnswer.answer[0])}}</b>
+                                <ng-container *ngIf="questionAnswer.answer[0] != null">
+                                  <div class="TD--Padding-Left-Bigger">{{getUtil().getOptionText(qDef.options, questionAnswer.answer[0])}}</div>
                                   <ng-container *ngIf="getUtil().getOptionDetails(questionAnswer.optionDetails, questionAnswer.answer[0]) as oDetail">
                                     <div>{{oDetail.details}}
                                     </div>
@@ -321,6 +321,14 @@
                         {{pt.data[col.participantColumn.name] | date:'medium'}}
                       </ng-container>
                     </ng-container>
+                    <ng-container *ngIf="col.type === 'DATE_SHORT'">
+                      <ng-container *ngIf="col.participantColumn.object != null">
+                        {{pt.data[col.participantColumn.object][col.participantColumn.name] | date:'shortDate'}}
+                      </ng-container>
+                      <ng-container *ngIf="col.participantColumn.object == null">
+                        {{pt.data[col.participantColumn.name] | date:'shortDate'}}
+                      </ng-container>
+                    </ng-container>
                     <ng-container *ngIf="col.type === 'OPTIONS' && col.participantColumn.object == null && pt.data[col.participantColumn.name] != null">
                       {{getUtil().getNameValue(col.options, pt.data[col.participantColumn.name])}}
                     </ng-container>
@@ -328,7 +336,7 @@
                     && pt.data[col.participantColumn.object][col.participantColumn.name]!= null">
                       {{getUtil().getYesNo(pt.data[col.participantColumn.object][col.participantColumn.name])}}
                     </ng-container>
-                    <ng-container *ngIf="col.type !== 'OPTIONS' && col.type !== 'BOOLEAN' && col.type !== 'DATE'">
+                    <ng-container *ngIf="col.type !== 'OPTIONS' && col.type !== 'BOOLEAN' && col.type !== 'DATE' && col.type !== 'DATE_SHORT'">
                       <ng-container *ngIf="col.participantColumn.object == null && pt.data[col.participantColumn.name] != null">
                         {{pt.data[col.participantColumn.name]}}
                       </ng-container>
