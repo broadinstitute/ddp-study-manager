@@ -462,8 +462,18 @@ export class DSMService {
   }
 
   public getPossiblePDFs( realm: string ): Observable<any> {
-    let url = this.baseUrl + DSMService.UI + "pdfs/" + realm;
-    return this.http.get( url, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
+    let url = this.baseUrl + DSMService.UI + "pdf";
+    let map: { name: string, value: any }[] = [];
+    map.push( {name: DSMService.REALM, value: realm} );
+    return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
+  }
+
+  public getParticipantsPDFs( realm: string, ddpParticipantId: string ): Observable<any> {
+    let url = this.baseUrl + DSMService.UI + "pdf";
+    let map: { name: string, value: any }[] = [];
+    map.push( {name: DSMService.REALM, value: realm} );
+    map.push( {name: "ddpParticipantId", value: ddpParticipantId} );
+    return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public getSkippedParticipantEvents( realm: string ): Observable<any> {
