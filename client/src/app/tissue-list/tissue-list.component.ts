@@ -171,6 +171,10 @@ export class TissueListComponent implements OnInit {
     for (let col of this.allColumns[Statics.ONCDETAIL_ALIAS]) {
       this.allFieldNames.add(col.participantColumn.tableAlias + Statics.DELIMITER_ALIAS + col.participantColumn.name);
     }
+    for (let col of this.allColumns["data"]) {
+      let t = col.participantColumn.object !== null && col.participantColumn.object !== undefined ? col.participantColumn.object : col.participantColumn.tableAlias;
+      this.allFieldNames.add(t + Statics.DELIMITER_ALIAS + col.participantColumn.name);
+    }
   }
 
   private checkRight(defaultFilter: boolean) {
@@ -268,6 +272,10 @@ export class TissueListComponent implements OnInit {
         for (let col of this.allColumns[Statics.ONCDETAIL_ALIAS]) {
           this.allFieldNames.add(col.participantColumn.tableAlias + Statics.DELIMITER_ALIAS + col.participantColumn.name);
         }
+        for (let col of this.allColumns["data"]) {
+          let t = col.participantColumn.object !== null && col.participantColumn.object !== undefined ? col.participantColumn.object : col.participantColumn.tableAlias;
+          this.allFieldNames.add(t + Statics.DELIMITER_ALIAS + col.participantColumn.name);
+        }
         for (let data of this.dataSources) {
           this.allColumns[data].sort((a, b) => {
             return a.participantColumn.display.localeCompare(b.participantColumn.display);
@@ -278,6 +286,7 @@ export class TissueListComponent implements OnInit {
         this.errorMessage = "Could not getting the field settings for this realm. Please contact your DSM developer\n " + err;
       },
     );
+
   }
 
 
@@ -352,6 +361,7 @@ export class TissueListComponent implements OnInit {
             let tissueListWrapper = TissueListWrapper.parse(val);
             this.tissueListWrappers.push(tissueListWrapper);
           });
+          console.log(this.tissueListWrappers);
           this.originalTissueListWrappers = this.tissueListWrappers;
           this.currentFilter = this.defaultFilter.filters;
           this.selectedFilterName = this.defaultFilter.filterName;
@@ -553,8 +563,8 @@ export class TissueListComponent implements OnInit {
         jsonData.forEach((val) => {
           let tissueList = TissueListWrapper.parse(val);
           this.tissueListWrappers.push(tissueList);
-
         });
+        console.log(this.tissueListWrappers);
         this.originalTissueListWrappers = this.tissueListWrappers;
         if (!this.hasESData) {
           //check if it was a tableAlias data filter -> filter client side
@@ -626,9 +636,6 @@ export class TissueListComponent implements OnInit {
       "shared": "0",
       "fDeleted": "0",
       "filters": this.currentFilter,
-      //      "sortDir": this.sortDir,
-      //      "sortField": this.sortField,
-      //      "sortParent": this.sortParent,
       "parent": this.parent,
       "quickFilterName": this.currentQuickFilterName,
       "queryItems": this.filterQuery,
@@ -649,10 +656,14 @@ export class TissueListComponent implements OnInit {
           this.modal.hide();
           this.newFilterModal = false;
           this.openTissueModal = false;
-
         }
       },
       err => {
+        if (err.status == 500) {
+          this.newFilterModal = true;
+          this.dup = true;
+          return;
+        }
         this.errorMessage = "Error saving the filter. Please contact your DSM developer\n " + err;
       });
     this.showModal = false;
@@ -1074,6 +1085,9 @@ export class TissueListComponent implements OnInit {
     this.sortParent = sortParent;
     this.sortColumn = col;
     this.doSort();
+    if (this.sortColumn.type === "ADDITIONALVALUE") {
+      this.sortField = col.participantColumn.name;
+    }
   }
 
   public isSortField(name: string) {
@@ -1151,6 +1165,10 @@ export class TissueListComponent implements OnInit {
   }
 
   private doSort() {
+    let fieldName = "";
+    if (this.sortColumn.type === "ADDITIONALVALUE") {
+      fieldName = this.sortField;
+    }
     let order = this.sortDir === "asc" ? 1 : -1;
     if (this.sortParent === Statics.ES_ALIAS) {
       if (this.selectedColumns["t"] != undefined && this.selectedColumns["t"].length > 0) {
@@ -1162,7 +1180,7 @@ export class TissueListComponent implements OnInit {
               return -1;
             }
 
-            if (this.sortColumn.type !== "NUMBER" && !(this.sortColumn.type === "ADDITIONALVALUE" && this.sortColumn.additionalType === "NUMBER")) {
+          if (this.sortColumn.type !== "DATE" && this.sortColumn.type !== "NUMBER" && !(this.sortColumn.type === "ADDITIONALVALUE" && this.sortColumn.additionalType === "NUMBER")) {
               return (order * a.data[this.sortColumn.participantColumn.object][this.sortField].localeCompare(b.data[this.sortColumn.participantColumn.object][this.sortField]));
             }
             else {
@@ -1193,6 +1211,25 @@ export class TissueListComponent implements OnInit {
     else if (this.sortParent === "oD") {
       if (this.selectedColumns["t"] != undefined && this.selectedColumns["t"].length > 0) {
         this.tissueListWrappers.sort((a, b) => {
+          if (this.sortColumn.type === "ADDITIONALVALUE") {
+            this.sortField = "additionalValues";
+            if (a.tissueList.oncHistoryDetails[this.sortField] == null || a.tissueList.oncHistoryDetails[this.sortField] === undefined || a.tissueList.oncHistoryDetails[this.sortField][fieldName] == undefined || a.tissueList.oncHistoryDetails[this.sortField][fieldName] == "") {
+              return 1;
+            }
+            if (b.tissueList.oncHistoryDetails[this.sortField] == null || b.tissueList.oncHistoryDetails[this.sortField] === undefined || b.tissueList.oncHistoryDetails[this.sortField][fieldName] == undefined || b.tissueList.oncHistoryDetails[this.sortField][fieldName] == "") {
+              return -1;
+            }
+
+            if (typeof a.tissueList.oncHistoryDetails[this.sortField][fieldName] === "string") {
+              return (order * a.tissueList.oncHistoryDetails[this.sortField][fieldName].localeCompare(b.tissueList.oncHistoryDetails[this.sortField][fieldName]));
+            }
+            else {
+              return (order * a.tissueList.oncHistoryDetails[this.sortField][fieldName] - b.tissueList.oncHistoryDetails[this.sortField][fieldName]);
+            }
+
+          }
+          else {
+
             if (a.tissueList.oncHistoryDetails[this.sortField] == undefined) {
               return 1;
             }
@@ -1206,11 +1243,30 @@ export class TissueListComponent implements OnInit {
             else {
               return (order * a.tissueList.oncHistoryDetails[this.sortField] - b.tissueList.oncHistoryDetails[this.sortField]);
             }
+          }
           },
         );
       }
       else {
         this.tissueListOncHistories.sort((a, b) => {
+          if (this.sortColumn.type === "ADDITIONALVALUE") {
+            this.sortField = "additionalValues";
+            if (a.tissueList.oncHistoryDetails[this.sortField] == null || a.tissueList.oncHistoryDetails[this.sortField] === undefined || a.tissueList.oncHistoryDetails[this.sortField][fieldName] == undefined || a.tissueList.oncHistoryDetails[this.sortField][fieldName] == "") {
+              return 1;
+            }
+            if (b.tissueList.oncHistoryDetails[this.sortField] == null || b.tissueList.oncHistoryDetails[this.sortField] === undefined || b.tissueList.oncHistoryDetails[this.sortField][fieldName] == undefined || b.tissueList.oncHistoryDetails[this.sortField][fieldName] == "") {
+              return -1;
+            }
+
+            if (typeof a.tissueList.oncHistoryDetails[this.sortField][fieldName] === "string") {
+              return (order * a.tissueList.oncHistoryDetails[this.sortField][fieldName].localeCompare(b.tissueList.oncHistoryDetails[this.sortField][fieldName]));
+            }
+            else {
+              return (order * a.tissueList.oncHistoryDetails[this.sortField][fieldName] - b.tissueList.oncHistoryDetails[this.sortField][fieldName]);
+            }
+
+          }
+          else {
             if (a.tissueList.oncHistoryDetails[this.sortField] == undefined) {
               return 1;
             }
@@ -1224,12 +1280,37 @@ export class TissueListComponent implements OnInit {
             else {
               return (order * a.tissueList.oncHistoryDetails[this.sortField] - b.tissueList.oncHistoryDetails[this.sortField]);
             }
+          }
           },
         );
       }
     }
     else if (this.sortParent === "t") {
       this.tissueListWrappers.sort((a, b) => {
+        if (this.sortColumn.type === "ADDITIONALVALUE") {
+          this.sortField = "additionalValues";
+          if (a.tissueList.tissue == undefined || a.tissueList.tissue[this.sortField] == undefined) {
+            return 1;
+          }
+          if (b.tissueList.tissue == undefined || b.tissueList.tissue[this.sortField] == undefined) {
+            return -1;
+          }
+          if (a.tissueList.tissue[this.sortField] == null || a.tissueList.tissue[this.sortField] === undefined || a.tissueList.tissue[this.sortField][fieldName] == undefined || a.tissueList.tissue[this.sortField][fieldName] == "") {
+            return 1;
+          }
+          if (b.tissueList.tissue[this.sortField] == null || b.tissueList.tissue[this.sortField] === undefined || b.tissueList.tissue[this.sortField][fieldName] == undefined || b.tissueList.tissue[this.sortField][fieldName] == "") {
+            return -1;
+          }
+
+          if (typeof a.tissueList.tissue[this.sortField][fieldName] === "string") {
+            return (order * a.tissueList.tissue[this.sortField][fieldName].localeCompare(b.tissueList.tissue[this.sortField][fieldName]));
+          }
+          else {
+            return (order * a.tissueList.tissue[this.sortField][fieldName] - b.tissueList.tissue[this.sortField][fieldName]);
+          }
+
+        }
+        else {
           if (a.tissueList.tissue == undefined || a.tissueList.tissue[this.sortField] == undefined) {
             return 1;
           }
@@ -1243,6 +1324,7 @@ export class TissueListComponent implements OnInit {
           else {
             return (order * a.tissueList.tissue[this.sortField] - b.tissueList.tissue[this.sortField]);
           }
+        }
         },
       );
     }

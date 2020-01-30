@@ -132,6 +132,7 @@ export class DSMService {
     else {
       map.push( {name: "filters", value: JSON.stringify( json.filters )} );
     }
+    console.log(map);
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 

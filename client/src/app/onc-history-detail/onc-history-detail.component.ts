@@ -58,7 +58,7 @@ export class OncHistoryDetailComponent implements OnInit {
 
   ngOnInit() {
     this.triggerSort = this.triggerSort + 1;
-    if (this.participant.data.status.indexOf( Statics.EXITED ) == -1) {
+    if (this.participant.data.status === undefined || this.participant.data.status.indexOf(Statics.EXITED) == -1) {
       this.participantExited = false;
     }
   }

@@ -415,9 +415,7 @@ export class ParticipantListComponent implements OnInit {
     }
     this.dsmService.applyFilter(viewFilter, localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent, null).subscribe(
       data => {
-        console.log(viewFilter);
         if (data != null) {
-
           if (viewFilter != null && viewFilter.filters != null) {
             for (let filter of viewFilter.filters) {
               let t = filter.participantColumn.tableAlias;
@@ -683,6 +681,7 @@ export class ParticipantListComponent implements OnInit {
     );
     //nothing to filter on the server
     if (json.length != 0) {
+      console.log(json);
       this.filterQuery = null;
       this.selectedFilterName = null;
       this.deselectQuickFilters();
@@ -755,16 +754,7 @@ export class ParticipantListComponent implements OnInit {
   createFilterJson(json, key: string) {
     if (this.selectedColumns[key] != null) {
       for (let filter of this.selectedColumns[key]) {
-        // //TODO - can be changed later to all using the same - after all studies are migrated!
-        // //only filter for ES data if ddp has ES data
-        // if (filter.participantColumn.tableAlias === "data" && this.hasESData) {
-        //   this.addFilterToJson(filter, json);
-        //
-        // }
-        // //filter for all data which is not es
-        // else if (filter.participantColumn.tableAlias !== "data") {
         this.addFilterToJson(filter, json);
-        // }
       }
     }
   }
@@ -911,20 +901,20 @@ export class ParticipantListComponent implements OnInit {
 
   private doSort(object: string) {
     let order = this.sortDir === "asc" ? 1 : -1;
-    console.log(this.participantList);
     for (let p of this.participantList) {
       if (p.data === null) {
         console.log(p);
       }
     }
+
     if (this.sortParent === "data" && object != null) {
-      this.participantList.sort((a, b) => this.sort(a.data[object][this.sortField], b.data[object][this.sortField], order));
+      this.participantList.sort((a, b) => this.sort(a.data[object], b.data[object], order, this.sortField));
     }
     else if (this.sortParent === "data" && object == null) {
-      this.participantList.sort((a, b) => this.sort(a.data[this.sortField], b.data[this.sortField], order));
+      this.participantList.sort((a, b) => this.sort(a.data, b.data, order, this.sortField));
     }
     else if (this.sortParent === "p") {
-      this.participantList.sort((a, b) => this.sort(a.participant[this.sortField], b.participant[this.sortField], order));
+      this.participantList.sort((a, b) => this.sort(a.participant, b.participant, order, this.sortField));
     }
     else if (this.sortParent === "m") {
       this.participantList.sort((a, b) => {
@@ -994,11 +984,16 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  private sort(x, y, order) {
-    if (x === null || x == undefined) {
+  private sort(x, y, order, sortField?) {
+    if (sortField !== undefined && x != undefined && y != undefined && x != null && y != null) {
+      x = x[sortField];
+      y = y[sortField];
+    }
+    console.log(x + " " + y);
+    if (x === null || x == undefined || x === "") {
       return 1;
     }
-    else if (y === null || y == undefined) {
+    else if (y === null || y == undefined || y === "") {
       return -1;
     }
     else {

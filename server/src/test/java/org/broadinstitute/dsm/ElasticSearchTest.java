@@ -373,7 +373,7 @@ public class ElasticSearchTest extends TestHelper {
             Map<String, Map<String, Object>> esData = new HashMap<>();
             SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-brain");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            String dateUserEntered = "2019-06-20";
+            String dateUserEntered = "2019-06-14";
 
             final long start = SystemUtil.getLongFromDateString(dateUserEntered);
             //set endDate to midnight of that date
@@ -383,7 +383,7 @@ public class ElasticSearchTest extends TestHelper {
             int i = 0;
             while (response == null || response.getHits().getHits().length != 0) {
                 SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-                sourceBuilder.query(QueryBuilders.rangeQuery("statusTimestamp").from(start).to(end));
+                sourceBuilder.query(QueryBuilders.rangeQuery("createdAt").from(start).to(end));
 
                 searchSourceBuilder.size(scrollSize);
                 searchSourceBuilder.from(i * scrollSize);
