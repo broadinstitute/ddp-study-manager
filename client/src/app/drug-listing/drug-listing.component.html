@@ -59,7 +59,7 @@
         <th>
           Date Added
         </th>
-        <th  *ngIf="hasRole().allowedToEditDrugList()">
+        <th>
           Active
         </th>
         <th>
@@ -130,7 +130,7 @@
               {{ drug.dateCreated*1000 | date }}
           </td>
           <td>
-            <md-checkbox color="primary" *ngIf="hasRole().allowedToEditDrugList()" [checked]="drug.active" (change)="drug.active = $event.checked; this._showWarningModal=true; check(i)" disableRipple></md-checkbox>
+            <md-checkbox color="primary"  [checked]="drug.active" (change)="drug.active = $event.checked; this._showWarningModal=true; check(i)" disableRipple></md-checkbox>
           </td>
         </tr>
       </ng-container>
