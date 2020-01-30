@@ -18,7 +18,7 @@ import {NameValue} from "../utils/name-value.model";
 import {FollowUp} from "../follow-up/follow-up.model";
 import {PatchUtil} from "../utils/patch.model";
 import {MedicalRecord} from "./medical-record.model";
-import {PDFModel} from "./model/pdf.model";
+import {PDFModel} from "../pdf-download/pdf-download.model";
 
 var fileSaver = require( "file-saver/filesaver.js" );
 
