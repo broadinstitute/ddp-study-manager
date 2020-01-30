@@ -613,10 +613,9 @@ public class DirectMethodTest extends TestHelper {
         Set druglist_without_dupes = new HashSet(drugList);
 
         Assert.assertFalse(drugList.isEmpty());
-        Assert.assertEquals("Checking for size 551", 551, drugList_size);
+        Assert.assertEquals("Checking for size 551", 551, drugList_size);  // adding drugs in UI will make this fail
 
         // Will update this as we go
-        // DSM will need a dupe-checking method anyway for edits/additions, so this test will use it too
     }
 
     @Test // update drug 9's chemo_type from R to D
