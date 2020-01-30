@@ -44,6 +44,7 @@ public class EasyPostUtil {
     private final String zip = "zip";
     private final String country = "country";
     private final String phone = "phone";
+    private final String residential = "residential";
 
     private final String weight = "weight";
     private final String height = "height";
@@ -86,9 +87,9 @@ public class EasyPostUtil {
         }
     }
 
-    public Shipment buyShipment(@NonNull String carrier, String carrierId, @NonNull String service, @NonNull Address toAddress, @NonNull Address fromAddress,
+    public Shipment buyShipment(@NonNull String carrier, String carrierId, String service, @NonNull Address toAddress, @NonNull Address fromAddress,
                                 @NonNull Parcel parcel, String billingReference, CustomsInfo customsInfo) throws EasyPostException {
-        if (StringUtils.isEmpty(carrier) || StringUtils.isEmpty(service)) {
+        if (StringUtils.isEmpty(carrier)) {
             logger.error("Carrier and service needs to be set");
             return null;
         }
@@ -132,13 +133,21 @@ public class EasyPostUtil {
 
             Rate rate = null;
             for (Rate availableRate : shipment.getRates()) {
-                if (carrier.equals(availableRate.getCarrier()) && service.equals(availableRate.getService())) {
+                if (StringUtils.isBlank(service) && carrier.equals(availableRate.getCarrier())) {
+                    if (rate == null ) {
+                        rate = availableRate;
+                    }
+                    if (availableRate.getRate() < rate.getRate()) {
+                        rate = availableRate;
+                    }
+                }
+                else if (carrier.equals(availableRate.getCarrier()) && service.equals(availableRate.getService())) {
                     rate = availableRate;
                     logger.debug("Requested rate is available. Carrier: " + availableRate.getCarrier() + ", service: " + availableRate.getService() + " " + availableRate.getRate());
                 }
             }
             if (rate != null) {
-                logger.debug("Going to buy shipment with requested rate");
+                logger.info("Going to buy shipment with rate " + rate.getService());
                 shipment.buy(rate);
                 return shipment;
             }
@@ -173,6 +182,7 @@ public class EasyPostUtil {
         toAddressMap.put(this.zip, ddpParticipant.getPostalCode());
         toAddressMap.put(this.country, ddpParticipant.getCountry());
         toAddressMap.put(this.phone, phone); //Needed for FedEx!
+        toAddressMap.put(this.residential, true);
 
         return Address.create(toAddressMap);
     }
