@@ -298,10 +298,10 @@
               <ng-container>
                 <td *ngFor="let col of selectedColumns['data']" [height]="40" (click)="getParticipant(value, 'oD')">
                   <span *ngIf="col.participantColumn.object === null || col.participantColumn.object === undefined">
-                    <span *ngIf="col.type ==='DATE' || col.type === 'epochDATE'">
+                    <span *ngIf="col.type ==='DATE' || col.type === 'EPOCHDATE'">
                     {{value.data[col.participantColumn.name] | dateFormatPipe}}
                       </span>
-                    <span *ngIf="col.type !=='DATE' && col.type !== 'epochDATE'">
+                    <span *ngIf="col.type !=='DATE' && col.type !== 'EPOCHDATE'">
                     {{value.data[col.participantColumn.name]}}
                       </span>
                   </span>
@@ -310,10 +310,10 @@
                   </span>
                   <span
                     *ngIf="col.participantColumn.object !== null && col.participantColumn.object !== undefined && value.data[col.participantColumn.object] !== undefined">
-                    <span *ngIf="col.type ==='DATE' || col.type === 'epochDATE'">
+                    <span *ngIf="col.type ==='DATE' || col.type === 'EPOCHDATE'">
                     {{value.data[col.participantColumn.object][col.participantColumn.name] | dateFormatPipe}}
                       </span>
-                    <span *ngIf="col.type !=='DATE' && col.type !== 'epochDATE'">
+                    <span *ngIf="col.type !=='DATE' && col.type !== 'EPOCHDATE'">
                     {{value.data[col.participantColumn.object][col.participantColumn.name]}}
                     </span>
                   </span>
@@ -325,10 +325,10 @@
                     (click)="stopIfRequest($event, value, col.participantColumn.name);">
                 <span
                   *ngIf="col.participantColumn.name !== 'request' && (allAdditionalColumns['oD'] == undefined || !allAdditionalColumns['oD'].includes(col) ) && col.participantColumn.name !== 'tissueProblemOption'
-                && col.type !== 'DATE' && col.type !== 'epochDATE'&& col.type != 'OPTIONS'">
+                && col.type !== 'DATE' && col.type !== 'EPOCHDATE'&& col.type != 'OPTIONS'">
                 {{value.tissueList.oncHistoryDetails[col.participantColumn.name]}}
                 </span>
-                  <span *ngIf="col.type === 'DATE' || col.type === 'epochDATE'">
+                  <span *ngIf="col.type === 'DATE' || col.type === 'EPOCHDATE'">
                 {{value.tissueList.oncHistoryDetails[col.participantColumn.name] | dateFormatPipe}}
                 </span>
                   <span *ngIf="isASettingsFilter('oD', col.participantColumn.name)">
@@ -364,7 +364,7 @@
                   *ngIf="allAdditionalColumns['t'] == undefined || !allAdditionalColumns['t'].includes(col) && col.type !== 'DATE' && col.type !== 'OPTIONS'">
                 {{value.tissueList.tissue[col.participantColumn.name]}}
                 </span>
-                  <span *ngIf="col.type === 'DATE' || col.type === 'epochDATE'">
+                  <span *ngIf="col.type === 'DATE' || col.type === 'EPOCHDATE'">
                 {{value.tissueList.tissue[col.participantColumn.name] | dateFormatPipe}}
                 </span>
                   <span *ngIf="isASettingsFilter('t', col.participantColumn.name)">
@@ -385,10 +385,10 @@
             <tr (click)="getParticipant(value, 'oD')">
               <td *ngFor="let col of selectedColumns['data']" [height]="40" (click)="getParticipant(value, 'oD')">
                 <span *ngIf="col.participantColumn.object === null || col.participantColumn.object === undefined">
-                  <span *ngIf="col.type ==='DATE' || col.type === 'epochDATE'">
+                  <span *ngIf="col.type ==='DATE' || col.type === 'EPOCHDATE'">
                    {{value.data[col.participantColumn.name] | dateFormatPipe}}
                   </span>
-                  <span *ngIf="col.type !=='DATE' && col.type !== 'epochDATE'">
+                  <span *ngIf="col.type !=='DATE' && col.type !== 'EPOCHDATE'">
                     {{value.data[col.participantColumn.name]}}
                   </span>
 
@@ -398,10 +398,10 @@
                 </span>
                 <span
                   *ngIf="col.participantColumn.object !== null && col.participantColumn.object !== undefined && value.data[col.participantColumn.object] !== undefined">
-                  <span *ngIf="col.type ==='DATE' || col.type === 'epochDATE'">
+                  <span *ngIf="col.type ==='DATE' || col.type === 'EPOCHDATE'">
                     {{value.data[col.participantColumn.object][col.participantColumn.name] | dateFormatPipe}}
                   </span>
-                  <span *ngIf="col.type !=='DATE' && col.type !== 'epochDATE'">
+                  <span *ngIf="col.type !=='DATE' && col.type !== 'EPOCHDATE'">
                     {{value.data[col.participantColumn.object][col.participantColumn.name]}}
                   </span>
                 </span>
@@ -412,10 +412,10 @@
                   (click)="stopIfRequest($event,value, col.participantColumn.name);">
         <span
           *ngIf="col.participantColumn.name !== 'request' && allAdditionalColumns['oD']!= undefined && !allAdditionalColumns['oD'].includes(col) && col.participantColumn.name !== 'tissueProblemOption'
-        && col.type !== 'DATE' && col.type !== 'epochDATE'&& col.type !== 'OPTIONS'">
+        && col.type !== 'DATE' && col.type !== 'EPOCHDATE'&& col.type !== 'OPTIONS'">
         {{value.tissueList.oncHistoryDetails[col.participantColumn.name]}}
         </span>
-                <span *ngIf="col.type === 'DATE' || col.type === 'epochDATE'">
+                <span *ngIf="col.type === 'DATE' || col.type === 'EPOCHDATE'">
         {{value.tissueList.oncHistoryDetails[col.participantColumn.name] | dateFormatPipe}}
         </span>
                 <span *ngIf="isASettingsFilter('oD', col.participantColumn.name)">

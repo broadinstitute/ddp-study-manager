@@ -190,21 +190,13 @@ public class ElasticSearchUtil {
                         userEntered = userEntered.replaceAll("%", "").trim();
                     }
                     if (StringUtils.isNotBlank(nameValue[0]) && (nameValue[0].startsWith(PROFILE) || nameValue[0].startsWith(ADDRESS))) {
-                        if (wildCard) {
-                            finalQuery.must(QueryBuilders.wildcardQuery(nameValue[0].trim(), userEntered + "*"));
-                        }
-                        else {
-                            finalQuery.must(QueryBuilders.matchQuery(nameValue[0], userEntered));
-                        }
-                    }
-                    else {
-                        if (StringUtils.isNotBlank(nameValue[0]) && nameValue[0].startsWith(DATA)) {
+                        if (nameValue[0].contains("createdAt")) {
                             try {
                                 long start = SystemUtil.getLongFromString(userEntered);
                                 //set endDate to midnight of that date
                                 String endDate = userEntered + " 23:59:59";
                                 long end = SystemUtil.getLongFromDetailDateString(endDate);
-                                finalQuery.must(QueryBuilders.rangeQuery("statusTimestamp").from(start).to(end));
+                                finalQuery.must(QueryBuilders.rangeQuery("createdAt").from(start).to(end));
                             }
                             catch (ParseException e) {
                                 //was no date string so go for normal text
@@ -216,6 +208,26 @@ public class ElasticSearchUtil {
                                     finalQuery.must(QueryBuilders.matchQuery(dataParam[1], userEntered));
                                 }
                             }
+                        }
+                        else {
+                            if (wildCard) {
+                                finalQuery.must(QueryBuilders.wildcardQuery(nameValue[0].trim(), userEntered + "*"));
+                            }
+                            else {
+                                finalQuery.must(QueryBuilders.matchQuery(nameValue[0], userEntered));
+                            }
+                        }
+                    }
+                    else {
+                        if (StringUtils.isNotBlank(nameValue[0]) && nameValue[0].startsWith(DATA)) {
+                            String[] dataParam = nameValue[0].split("\\.");
+                            if (wildCard) {
+                                finalQuery.must(QueryBuilders.wildcardQuery(dataParam[1].trim(), userEntered + "*"));
+                            }
+                            else {
+                                finalQuery.must(QueryBuilders.matchQuery(dataParam[1], userEntered));
+                            }
+
                         }
                         else {
                             String[] surveyParam = nameValue[0].split("\\.");

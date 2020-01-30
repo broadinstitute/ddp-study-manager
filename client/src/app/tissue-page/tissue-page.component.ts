@@ -68,7 +68,7 @@ export class TissuePageComponent implements OnInit {
 
   ngOnInit() {
     //    console.log(this.oncHistoryDetail.additionalValues);
-    if (this.participant != null && this.participant.data.status.indexOf(Statics.EXITED) == -1) {
+    if (this.participant.data.status == undefined || (this.participant != null && this.participant.data.status.indexOf(Statics.EXITED) == -1)) {
       this.participantExited = false;
       //      console.log("*");
     }

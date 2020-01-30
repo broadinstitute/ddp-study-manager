@@ -117,10 +117,10 @@ export class ParticipantPageComponent implements OnInit {
 
   private loadInstitutions() {
     if (this.participant.data != null) {
-      if (this.participant.data.status.indexOf( Statics.EXITED ) == -1) {
+      if (this.participant.data.status === undefined || this.participant.data.status.indexOf(Statics.EXITED) == -1) {
         this.participantExited = false;
       }
-      if (this.participant.data.status.indexOf( Statics.CONSENT_SUSPENDED ) == -1) {
+      if (this.participant.data.status === undefined || this.participant.data.status.indexOf(Statics.CONSENT_SUSPENDED) == -1) {
         this.participantNotConsented = false;
       }
       //if surveys is null then it is a gen2 participant > go and get institution information
@@ -134,7 +134,6 @@ export class ParticipantPageComponent implements OnInit {
           data => {
             let ddpInformation = DDPParticipantInformation.parse( data );
             if (ddpInformation != null) {
-              console.log( ddpInformation );
               this.participant.data.dsm[ "dateOfBirth" ] = ddpInformation.dob;
               let tmp = ddpInformation.dateOfDiagnosis;
               if (tmp != null && tmp.indexOf( "/" ) > -1) {

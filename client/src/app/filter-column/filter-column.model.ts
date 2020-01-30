@@ -7,7 +7,7 @@ import {Statics} from "../utils/statics";
 export class Filter {
 
   public static DATE_TYPE = "DATE";
-  public static EPOCH_DATE_TYPE = "epochDATE";
+  public static EPOCH_DATE_TYPE = "EPOCHDATE";
   public static TEXT_TYPE = "TEXT";
   public static OPTION_TYPE = "OPTIONS";
   public static NUMBER_TYPE = "NUMBER";
@@ -32,6 +32,7 @@ export class Filter {
     new NameValue("ENROLLED", "Enrolled") ]);
   public static EMAIL = new Filter(ParticipantColumn.EMAIL, Filter.TEXT_TYPE);
   public static REGISTRATION_DATE = new Filter(ParticipantColumn.REGISTRATION_DATE, Filter.DATE_TYPE);
+  public static REGISTRATION_DATE2 = new Filter(ParticipantColumn.REGISTRATION_DATE2, Filter.EPOCH_DATE_TYPE);
   public static DO_NOT_CONTACT = new Filter(ParticipantColumn.DO_NOT_CONTACT, Filter.BOOLEAN_TYPE);
 
   //participant columns
@@ -57,7 +58,7 @@ export class Filter {
   public static MR_RECEIVED = new Filter(ParticipantColumn.MR_RECEIVED, Filter.DATE_TYPE);
   public static MR_DOCUMENT = new Filter(ParticipantColumn.MR_DOCUMENT, Filter.OPTION_TYPE, [
     new NameValue("Full", "Full"),
-    new NameValue("Partial", "Partial")]);
+    new NameValue("Partial", "Partial") ]);
   public static MR_DOCUMENT_FILES = new Filter(ParticipantColumn.MR_DOCUMENT_FILES, Filter.TEXT_TYPE);
   public static MR_PROBLEM = new Filter(ParticipantColumn.MR_PROBLEM, Filter.CHECKBOX_TYPE);
   public static MR_PROBLEM_TEXT = new Filter(ParticipantColumn.MR_PROBLEM_TEXT, Filter.TEXT_TYPE);
@@ -67,11 +68,11 @@ export class Filter {
   public static MR_PAPER_CR = new Filter(ParticipantColumn.MR_PAPER_CR, Filter.CHECKBOX_TYPE);
   public static PATHOLOGY_RESENT = new Filter(ParticipantColumn.PATHOLOGY_RESENT, Filter.OPTION_TYPE, [
     new NameValue("yes", "Yes"),
-    new NameValue("no", "No")]);
+    new NameValue("no", "No") ]);
   public static MR_NOTES = new Filter(ParticipantColumn.MR_NOTES, Filter.TEXT_TYPE);
   public static MR_REVIEW = new Filter(ParticipantColumn.MR_REVIEW, Filter.OPTION_TYPE, [
     new NameValue("yes", "Yes"),
-    new NameValue("no", "No")]);
+    new NameValue("no", "No") ]);
   public static MR_FOLLOW_UP = new Filter(ParticipantColumn.MR_FOLLOW_UP, Filter.CHECKBOX_TYPE);
 
   //oncHistory columns
@@ -100,7 +101,7 @@ export class Filter {
   public static TISSUE_RECEIVED = new Filter(ParticipantColumn.TISSUE_RECEIVED, Filter.DATE_TYPE);
   public static GENDER = new Filter(ParticipantColumn.GENDER, Filter.OPTION_TYPE, [
     new NameValue("male", "Male"),
-    new NameValue("female", "Female")]);
+    new NameValue("female", "Female") ]);
   public static TISSUE_PROBLEM_OPTION = new Filter(ParticipantColumn.TISSUE_PROBLEM_OPTION, Filter.OPTION_TYPE, [
     new NameValue("insufficientPath", "Insufficient material per path"),
     new NameValue("insufficientSHL", "Insufficient material per SHL"),
@@ -108,7 +109,7 @@ export class Filter {
     new NameValue("pathPolicy", "Path department policy"),
     new NameValue("pathNoLocate", "Path department unable to locate"),
     new NameValue("destroyed", "Tissue destroyed"),
-    new NameValue("other", "Other")]);
+    new NameValue("other", "Other") ]);
   public static UNABLE_OBTAIN_TISSUE = new Filter(ParticipantColumn.UNABLE_OBTAIN_TISSUE, Filter.CHECKBOX_TYPE);
   public static DESTRUCTION_POLICY = new Filter(ParticipantColumn.DESTRUCTION_POLICY, Filter.TEXT_TYPE);
 
@@ -118,19 +119,19 @@ export class Filter {
   public static TISSUE_TYPE = new Filter(ParticipantColumn.TISSUE_TYPE, Filter.OPTION_TYPE, [
     new NameValue("block", "Block"),
     new NameValue("slide", "Slide"),
-    new NameValue("scrolls", "Scrolls")]);
+    new NameValue("scrolls", "Scrolls") ]);
   public static TISSUE_SITE = new Filter(ParticipantColumn.TISSUE_SITE, Filter.TEXT_TYPE);
   public static TUMOR_TYPE = new Filter(ParticipantColumn.TUMOR_TYPE, Filter.OPTION_TYPE, [
     new NameValue("Primary", "Primary"),
     new NameValue("Met", "Met"),
     new NameValue("Recurrent", "Recurrent"),
-    new NameValue("Unknown", "Unknown")]);
+    new NameValue("Unknown", "Unknown") ]);
   public static H_E = new Filter(ParticipantColumn.H_E, Filter.OPTION_TYPE, [
     new NameValue("yes", "Yes"),
-    new NameValue("no", "No")]);
+    new NameValue("no", "No") ]);
   public static PATHOLOGY_REPORT = new Filter(ParticipantColumn.PATHOLOGY_REPORT, Filter.OPTION_TYPE, [
     new NameValue("yes", "Yes"),
-    new NameValue("no", "No")]);
+    new NameValue("no", "No") ]);
   public static COLLABORATOR_SAMPLE_ID = new Filter(ParticipantColumn.COLLABORATOR_SAMPLE_ID, Filter.TEXT_TYPE);
   public static BLOCK_SENT = new Filter(ParticipantColumn.BLOCK_SENT, Filter.DATE_TYPE);
   public static SCROLL_RECEIVED = new Filter(ParticipantColumn.SCROLL_RECEIVED, Filter.DATE_TYPE);
@@ -156,7 +157,7 @@ export class Filter {
   //sample columns
   public static SAMPLE_TYPE = new Filter(ParticipantColumn.SAMPLE_TYPE, Filter.OPTION_TYPE, [
     new NameValue("SALIVA", "Saliva"),
-    new NameValue("BLOOD", "Blood")]);
+    new NameValue("BLOOD", "Blood") ]);
   public static SAMPLE_SENT = new Filter(ParticipantColumn.SAMPLE_SENT, Filter.DATE_TYPE);
   public static COLLABORATOR_SAMPLE = new Filter(ParticipantColumn.COLLABORATOR_SAMPLE, Filter.TEXT_TYPE);
   public static SAMPLE_RECEIVED = new Filter(ParticipantColumn.SAMPLE_RECEIVED, Filter.DATE_TYPE);
@@ -166,7 +167,7 @@ export class Filter {
     new NameValue("error", "GP manual Label"),
     new NameValue("deactivated", "Deactivated"),
     new NameValue("sent", "Sent"),
-    new NameValue("received", "Received")], null, false, true, null, null, null, null, false, true, false, false, true);
+    new NameValue("received", "Received") ], null, false, true, null, null, null, null, false, true, false, false, true);
   public static TRACKING_TO_PARTICIPANT = new Filter(ParticipantColumn.TRACKING_TO_PARTICIPANT, Filter.TEXT_TYPE);
   public static TRACKING_RETURN = new Filter(ParticipantColumn.TRACKING_RETURN, Filter.TEXT_TYPE);
   public static MF_BARCODE = new Filter(ParticipantColumn.MF_BARCODE, Filter.TEXT_TYPE);
@@ -181,16 +182,16 @@ export class Filter {
     new NameValue("done", "Done"),
     new NameValue("in_progress", "In Progress"),
     new NameValue("not_started", "Not Started"),
-    new NameValue("clear", "Lock Broken")]);
+    new NameValue("clear", "Lock Broken") ]);
   public static ABSTRACTION_ACTIVITY = new Filter(ParticipantColumn.ABSTRACTION_ACTIVITY, Filter.OPTION_TYPE, [
     new NameValue("abstraction", "First Abstraction"),
     new NameValue("review", "Second Abstraction"),
-    new NameValue("qc", "QC")]);
+    new NameValue("qc", "QC") ]);
   public static ABSTRACTION_USER = new Filter(ParticipantColumn.ABSTRACTION_USER, Filter.TEXT_TYPE);
 
   public static ALL_COLUMNS = [
     Filter.REALM, Filter.SHORT_ID, Filter.LEGACY_SHORT_ID, Filter.LEGACY_PARTICIPANT_ID, Filter.PARTICIPANT_ID, Filter.FIRST_NAME, Filter.LAST_NAME,
-    Filter.COUNTRY, Filter.ENROLLMENT_STATUS, Filter.EMAIL, Filter.REGISTRATION_DATE, Filter.DO_NOT_CONTACT,
+    Filter.COUNTRY, Filter.ENROLLMENT_STATUS, Filter.EMAIL, Filter.REGISTRATION_DATE, Filter.REGISTRATION_DATE2, Filter.DO_NOT_CONTACT,
     Filter.ONC_HISTORY_CREATED, Filter.ONC_HISTORY_REVIEWED, Filter.PAPER_CR_SENT, Filter.PAPER_CR_RECEIVED,
     Filter.PARTICIPANT_NOTES, Filter.MINIMAL_RECORDS, Filter.ABSTRACTION_READY, Filter.ASSIGNEE_MR, Filter.ASSIGNEE_TISSUE, Filter.EXIT_DATE,
     Filter.MR_INSTITUTION_NAME, Filter.MR_INSTITUTION_CONTACT, Filter.MR_INSTITUTION_PHONE, Filter.MR_INSTITUTION_FAX,
@@ -250,7 +251,7 @@ export class Filter {
 
   public getSelectedOptionsName(): Array<string> {
     let selected = [];
-    for (let [key, value] of Object.entries(this.selectedOptions)) {
+    for (let [ key, value ] of Object.entries(this.selectedOptions)) {
       if (value) {
         selected.push(this.options[key].name);
       }
@@ -361,7 +362,12 @@ export class Filter {
               selectedOptions.push(filter.selectedOptions.includes(o.name));
             }
           }
-          filter.filter1.value = this.replace(filter.filter1.value);
+          if (filter.filter1 == undefined) {
+            filter.filter1 = new NameValue(f.participantColumn.name, null);
+          }
+          if (filter.filter1.value != null) {
+            filter.filter1.value = this.replace(filter.filter1.value);
+          }
           let newFilter = new Filter(filter.participantColumn, filter.type, f.options, filter.filter2, filter.range, filter.exactMatch, filter.filter1,
             selectedOptions, (filter.filter1 == null || filter.filter1 == undefined) ? null : filter.filter1.value,
             (filter.filter2 == null || filter.filter2 == undefined) ? null : filter.filter2.value, null, f.alwaysExact, filter.empty,
@@ -438,10 +444,10 @@ export class Filter {
   public static getFilterText(filter: Filter, parent: string, fieldSettings: {}): {} {
 
     let filterText = {};
-    if (filter.type === Filter.TEXT_TYPE || filter.type === Filter.NUMBER_TYPE || filter.type === Filter.DATE_TYPE || filter.type === Filter.COMPOSITE_TYPE) {
+    if (filter.type === Filter.TEXT_TYPE || filter.type === Filter.NUMBER_TYPE || filter.type === Filter.DATE_TYPE || filter.type === Filter.EPOCH_DATE_TYPE
+      || filter.type === Filter.COMPOSITE_TYPE) {
       if ((filter.value1 !== null && filter.value1 !== "" && filter.value1 !== undefined) ||
-        (filter.range && filter.value2 != null && filter.value2 != "" && filter.value2 !== undefined)
-        || (filter.empty || filter.notEmpty)) {
+        (filter.range && filter.value2 != null && filter.value2 != "" && filter.value2 !== undefined) || (filter.empty || filter.notEmpty)) {
         if (filter.value2 != undefined && filter.value2 != null) {
           if (filter.filter2 != undefined && filter.filter2 != null) {
             filter.filter2.value = filter.value2;
@@ -451,7 +457,15 @@ export class Filter {
             //            filter.filter2.name = filter.participantColumn.name;
           }
         }
-        filterText = this.getFilterJson(parent, new NameValue(filter.participantColumn.name, filter.value1), filter.filter2, null,
+        let nv: NameValue;
+        if (filter.type === Filter.EPOCH_DATE_TYPE) {
+          let epoch = new Date(filter.value1).getTime();
+          nv = new NameValue(filter.participantColumn.name, epoch + "");
+        }
+        else {
+          nv = new NameValue(filter.participantColumn.name, filter.value1);
+        }
+        filterText = this.getFilterJson(parent, nv, filter.filter2, null,
           filter.exactMatch, filter.type, filter.range, filter.empty, filter.notEmpty, filter.participantColumn);
 
       }
@@ -461,7 +475,7 @@ export class Filter {
     }
     else if (filter.type === Filter.OPTION_TYPE) {
       let selected = [];
-      for (let [key, value] of Object.entries(filter.selectedOptions)) {
+      for (let [ key, value ] of Object.entries(filter.selectedOptions)) {
         if (value) {
           selected.push(filter.options[key].name);
         }

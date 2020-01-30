@@ -168,8 +168,8 @@ public class Filter {
             }
             else if (CHECKBOX.equals(filter.getType())) { //1/0
                 //                String notNullQuery = AND + filter.getParentName() + "." + dbElement.getColumnName() + IS_NOT_NULL;
-                if (filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())) && (TRUE.equals(filter.getFilter1().getValue())|| "1".equals(filter.filter1.getValue()))) {
-                    query = AND + dbElement.tableAlias + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + EQUALS + "'1'";
+                if (filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())) && (TRUE.equals(filter.getFilter1().getValue()) || TRUE.equals(String.valueOf(filter.getFilter1().getValue())) || "1".equals(filter.filter1.getValue()))) {
+                    query = AND + dbElement.tableAlias + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + LIKE + "'1'";
                 }
                 else if (filter.filter2 != null && filter.getFilter2().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue())) && (TRUE.equals(filter.getFilter2().getValue())
                 || "1".equals(filter.getFilter2().getValue()))) {

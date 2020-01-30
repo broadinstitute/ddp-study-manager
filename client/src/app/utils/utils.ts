@@ -242,7 +242,7 @@ export class Utils {
       }
     }
     //    console.log( headers );
-    let csv = this.getCSV( data, paths, columns, isSurveyData );
+    let csv = this.makeCSV(data, paths, columns, isSurveyData);
     csv = headers + "\r\n" + csv;
     let blob = new Blob( [ csv ], {type: "text/csv;charset=utf-8;"} );
     if (navigator.msSaveBlob) { // IE 10+
@@ -263,13 +263,13 @@ export class Utils {
     }
   }
 
-  private static getCSV( data: any[], paths: any[], columns: {}, isSurveyData ?: boolean ): string {
+  private static makeCSV(data: any[], paths: any[], columns: {}, isSurveyData ?: boolean): string {
     let input = [];
     let result = [];
     for (let d of data) {
       let input = [];
       for (let path of paths) {
-        let output = this.getCSVForObjectArray( d, path, columns, 0, isSurveyData );
+        let output = this.makeCSVForObjectArray(d, path, columns, 0, isSurveyData);
         let temp = [];
 
         for (let o of output) {
@@ -296,7 +296,7 @@ export class Utils {
   }
 
 
-  public static getCSVForObjectArray( data: Object, paths: any[], columns: {}, index: number, isSurveyData ?: boolean ): string[] {
+  public static makeCSVForObjectArray(data: Object, paths: any[], columns: {}, index: number, isSurveyData ?: boolean): string[] {
     let result: string[] = [];
     //    console.log( data );
     if (index > paths.length - 1) {
@@ -313,9 +313,9 @@ export class Utils {
       //      console.log( objects );
       if (objects != null) {
         for (let o of objects) {
-          let oString = this.getCSVString( o, columns[ paths[ index + 1 ] ], data );
+          let oString = this.makeCSVString(o, columns[paths[index + 1]], data);
           //          console.log( oString );
-          let a = this.getCSVForObjectArray( o, paths, columns, index + 2 );
+          let a = this.makeCSVForObjectArray(o, paths, columns, index + 2);
           //          console.log( a );
           if (a != null && a.length > 0) {
             for (let t of a) {
@@ -327,7 +327,7 @@ export class Utils {
           }
         }
         if (objects.length == 0) {
-          let oString = this.getCSVString( null, columns[ paths[ index + 1 ] ] );
+          let oString = this.makeCSVString(null, columns[paths[index + 1]]);
           result.push( oString );
         }
       }
@@ -339,32 +339,29 @@ export class Utils {
 
   private static getObjectAddiotionalValue( o: Object, fieldName: string, column: any ) {
     if (o[ fieldName ] != null) {
-      for (let nv of o[ fieldName ]) {
-        if (nv.name === column.participantColumn.name) {
-          return nv.value;
-        }
-      }
+      console.log(o);
+      console.log(fieldName);
+      console.log(column.participantColumn.name);
+      return o[fieldName][column.participantColumn.name];
+      // for (let nv of o[ fieldName ]) {
+      //   if (nv.name === column.participantColumn.name) {
+      //     return nv.value;
+      //   }
+      // }
     }
     return "";
   }
 
-  private static getCSVString( o: Object, columns: any[], data?: any ): string {
+  private static makeCSVString(o: Object, columns: any[], data?: any): string {
     let str = "";
     let col: Filter;
     if (columns != null) {
       if (o != null) {
         for (col of columns) {
           if (col.type === "ADDITIONALVALUE") {
-            let fieldName = "";
-            if (o instanceof Tissue) {
-              fieldName = "additionalValues";
-            }
-            else if (o instanceof OncHistoryDetail) {
-              fieldName = "additionalValues";
-            }
+            let fieldName = "additionalValues";
             if (fieldName !== "") {
               let value = this.getObjectAddiotionalValue( o, fieldName, col );
-              //              console.log( value );
               value = value == undefined ? "" : value;
               str = str + "\"" + value + "\"" + ",";
             }

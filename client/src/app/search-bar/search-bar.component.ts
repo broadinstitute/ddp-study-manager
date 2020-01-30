@@ -234,13 +234,6 @@ export class SearchBarComponent implements OnInit {
     return false;
   }
 
-  getButtonColorStyle(isOpened: boolean): string {
-    if (isOpened) {
-      return Statics.COLOR_PRIMARY;
-    }
-    return Statics.COLOR_BASIC;
-  }
-
   public search(event) {
     if (event.keyCode == 13) {
       this.checkQuery();
