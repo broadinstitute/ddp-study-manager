@@ -32,6 +32,7 @@ public class PatchUtil {
         getColumnNames(AbstractionFieldValue.class);
         getColumnNames(AbstractionReviewValue.class);
         getColumnNames(AbstractionQCValue.class);
+        getColumnNames(AbstractionActivity.class);
         getColumnNames(ViewFilter.class);
         getColumnNames(KitRequestShipping.class);
         logger.info("Loaded patch utils");

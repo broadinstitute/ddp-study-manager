@@ -31,7 +31,7 @@ import {FieldSettings} from "../field-settings/field-settings.model";
 })
 export class ParticipantListComponent implements OnInit {
 
-  @ViewChild(ModalComponent)
+  @ViewChild( ModalComponent )
   public modal: ModalComponent;
 
   modalAnchor: string;
@@ -95,8 +95,8 @@ export class ParticipantListComponent implements OnInit {
   showHelp: boolean = false;
   filtered: boolean = false;
 
-  constructor(private role: RoleService, private dsmService: DSMService, private compService: ComponentService,
-              private router: Router, private auth: Auth, private route: ActivatedRoute, private util: Utils) {
+  constructor( private role: RoleService, private dsmService: DSMService, private compService: ComponentService,
+               private router: Router, private auth: Auth, private route: ActivatedRoute, private util: Utils ) {
     if (!auth.authenticated()) {
       auth.logout();
     }
@@ -123,9 +123,8 @@ export class ParticipantListComponent implements OnInit {
 
   private checkRight() {
     //assumption for now: profile parameters are always the same, only survey will be dynamic per ddp
-    this.loadingParticipants = localStorage.getItem(ComponentService.MENU_SELECTED_REALM);
-    // this.loadAssignees();
-    this.setSelectedFilterName("");
+    this.loadingParticipants = localStorage.getItem( ComponentService.MENU_SELECTED_REALM );
+    this.setSelectedFilterName( "" );
     this.currentFilter = null;
     this.filterQuery = null;
     let allowedToSeeInformation = false;
@@ -204,10 +203,10 @@ export class ParticipantListComponent implements OnInit {
                   options.push(new NameValue(value.value, value.value));
                 });
               }
-              let filter = new Filter(new ParticipantColumn(fieldSetting.columnDisplay, fieldSetting.columnName, key), Filter.ADDITIONAL_VALUE_TYPE, options, new NameValue(fieldSetting.columnName, null),
-                false, true, null, null, null, null, false, false, false, false, false, fieldSetting.displayType);
-              if (this.settings[key] == null || this.settings[key] == undefined) {
-                this.settings[key] = [];
+              let filter = new Filter( new ParticipantColumn( fieldSetting.columnDisplay, fieldSetting.columnName, key ), Filter.ADDITIONAL_VALUE_TYPE, options, new NameValue( fieldSetting.columnName, null ),
+                false, true, null, null, null, null, false, false, false, false, fieldSetting.displayType );
+              if (this.settings[ key ] == null || this.settings[ key ] == undefined) {
+                this.settings[ key ] = [];
               }
               if (key === "r") {
                 if (this.sourceColumns["p"] == null || this.sourceColumns["p"] == undefined) {
@@ -252,10 +251,9 @@ export class ParticipantListComponent implements OnInit {
                     });
                   }
                   let displayName = question.questionText != null && question.questionText !== "" ? question.questionText : question.stableId;
-                  let filter = new Filter(new ParticipantColumn(displayName, question.stableId, activityDefinition.activityCode, null, true), type, options, null, false, true,
-                    null, null, null, null, false, true);
-                  filter.alwaysExact = true;
-                  possibleColumns.push(filter);
+                  let filter = new Filter( new ParticipantColumn( displayName, question.stableId, activityDefinition.activityCode, null, true ), type, options, null, false, true,
+                    null, null, null, null, false, true );
+                  possibleColumns.push( filter );
                 }
               }
               this.dataSources.set(activityDefinition.activityCode, activityDefinition.activityName);
@@ -285,15 +283,19 @@ export class ParticipantListComponent implements OnInit {
                   tmpValues.push(new NameValue(value.value, value.value));
                 });
               }
-              this.sourceColumns["a"].push(new Filter(new ParticipantColumn(field.displayName, tmp, abstractionGroup.abstractionGroupId.toString(), "final"), tmpType, tmpValues, new NameValue(tmp, null)));
-            });
-          });
+              else if (field.type === "multi_type" || field.type === "multi_type_array") {
+                tmpType = field.type;
+              }
+              this.sourceColumns[ "a" ].push( new Filter( new ParticipantColumn( field.displayName, tmp, abstractionGroup.abstractionGroupId.toString(), "final" ), tmpType, tmpValues, new NameValue( tmp, null ) ) );
+            } );
+          } );
           //add now all these columns to allFieldsName for the search-bar
           this.sourceColumns["a"].forEach(filter => {
             let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
             //add when abstraction is searchable
             // this.allFieldNames.add( tmp + "." + filter.participantColumn.name );
-          });
+          } );
+          console.log(this.sourceColumns["a"]);
         }
         else {
           this.dataSources.delete("a");
@@ -833,8 +835,7 @@ export class ParticipantListComponent implements OnInit {
       }
     }, err => {
       this.additionalMessage = "Error - Sharing Filter, Please contact your DSM developer";
-    });
-
+    } );
   }
 
   public deleteView(savedFilter: ViewFilter) {
@@ -899,7 +900,7 @@ export class ParticipantListComponent implements OnInit {
     this.doSort(col.participantColumn.object);
   }
 
-  private doSort(object: string) {
+  private doSort( object: string ) {
     let order = this.sortDir === "asc" ? 1 : -1;
     for (let p of this.participantList) {
       if (p.data === null) {
@@ -1066,6 +1067,11 @@ export class ParticipantListComponent implements OnInit {
         Utils.downloadCurrentData(this.participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "kits", "k" ] ], columns, "Participants-Sample-" + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION);
         fileCount = fileCount + 1;
       }
+      else if (source === "a") {
+        Utils.downloadCurrentData( this.participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "abstractionActivities", "a" ] ], columns, "Participants-AbstractionActivity-" + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
+        Utils.downloadCurrentData( this.participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "abstractionSummary", "a" ] ], columns, "Participants-Abstraction-" + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
+        fileCount = fileCount + 1;
+      }
       else {
         Utils.downloadCurrentData(this.participantList, [ [ "data", "data" ], [ source, source ] ], columns, "Participants-" + source + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION, true);
         fileCount = fileCount + 1;
@@ -1230,6 +1236,49 @@ export class ParticipantListComponent implements OnInit {
 
   getQuestionAnswerByName(questionsAnswers: Array<QuestionAnswer>, name: string) {
     return questionsAnswers.find(x => x.stableId === name);
+  }
+
+  updateParticipant( participant: Participant ) {
+    if (participant != null) {
+      this.showParticipantInformation = false;
+      let pt = this.participantList.find( pt => {
+        return pt.data.profile[ "guid" ] == participant.data.profile[ "guid" ];
+      } );
+      if (pt != null) {
+        let index = this.participantList.indexOf( pt );
+        this.participantList[ index ] = participant;
+      }
+    }
+  }
+
+  getMultiObjects( fieldValue: string | string[] ) {
+    if (!( fieldValue instanceof Array )) {
+      let o: any = JSON.parse( fieldValue );
+      return o;
+    }
+    return null;
+  }
+
+  getMultiKeys( o: any ) {
+    if (o != null) {
+      return Object.keys( o );
+    }
+    return null;
+  }
+
+  isDateValue( value: string ): boolean {
+    if (value != null && value != undefined && typeof value === "string" && value.indexOf( "dateString" ) > -1 && value.indexOf( "est" ) > -1) {
+      return true;
+    }
+    return false;
+  }
+
+  getDateValue( value: string ) {
+    if (value != null) {
+      let o: any = JSON.parse( value );
+      return o[ "dateString" ];
+    }
+    return "";
   }
 
   filterClientSide(viewFilter: ViewFilter) {

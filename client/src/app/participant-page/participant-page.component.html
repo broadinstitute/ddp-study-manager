@@ -206,7 +206,7 @@
             <div class="Float--left Width--100">
               <b>QC</b> <b *ngIf="participant.qc.aStatus === 'not_started'"> not started yet</b>
             </div>
-            <div class="Float--left" *ngIf="participant.qc.aStatus !== 'in_progress' && participant.qc.aStatus !== 'done'
+            <div class="Float--left" *ngIf="participant.qc.aStatus !== 'in_progress' && participant.qc.aStatus !== 'done' && participant.qc.aStatus !== 'clear'
                     && participant.abstraction.user !== hasRole().getUserName() && participant.review.user !== hasRole().getUserName()
                     && hasRole().isQC()">
               <button md-raised-button type="button" color="primary" [disabled]="participantExited"
@@ -300,6 +300,19 @@
                            [ngClass]="{'Width--100': true, 'Color--Field--Patched': isPatchedCurrently('minimalMR')}"
                            [(ngModel)]="participant.participant.minimalMR"
                            (change)="valueChanged($event, 'minimalMR', 'r')"
+                           disableRipple>
+              </md-checkbox>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              Ready for Abstraction
+            </td>
+            <td>
+              <md-checkbox color="primary" [disabled]="participantExited"
+                           [ngClass]="{'Width--100': true, 'Color--Field--Patched': isPatchedCurrently('abstractionReady')}"
+                           [(ngModel)]="participant.participant.abstractionReady"
+                           (change)="valueChanged($event, 'abstractionReady', 'r')"
                            disableRipple>
               </md-checkbox>
             </td>
@@ -635,8 +648,7 @@
                 <hr style="border-color: black">
                 <app-medical-record-abstraction [abstractionFormControls]="reviewFields"
                                                 [abstractionActivity]="'review'" [status]="participant.review.aStatus"
-                                                [fileList]="fileListUsed" [drugList]="drugs" [cancerList]="cancers"
-                                                [participant]="participant"
+                                                [fileList]="fileListUsed" [drugList]="drugs" [cancerList]="cancers" [participant]="participant"
                                                 (emitFileName)="addFileToParticipant($event, participant.review)">
                 </app-medical-record-abstraction>
               </div>
