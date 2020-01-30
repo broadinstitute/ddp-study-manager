@@ -3,7 +3,7 @@
                         [drugs]="drugs" [cancers]="cancers" [settings]="settings"
                         [mrCoverPdfSettings]="mrCoverPdfSettings"
                         [activityDefinitions]="activityDefinitionList"
-                        (leaveParticipant)="showParticipantInformation=false"></app-participant-page>
+                        (leaveParticipant)="updateParticipant($event)"></app-participant-page>
 
 </ng-container>
 
@@ -50,15 +50,11 @@
           <div id="searchTable" *ngIf="showFilters" class="table">
             <form>
               <ng-container *ngFor="let key of getKeys()">
-                <!--TODO S - currently not able to filter for samples-->
-                <!--TODO S - hasESData false will need to search client-side (shortId, firstName, lastName)-->
-                <ng-container *ngIf="key !== 'a'">
-                  <table *ngFor="let filter of selectedColumns[key]" style="border: none">
-                    <ng-container *ngIf="filter.participantColumn.name !== 'ddp'">
-                      <app-filter-column [dataFilter]="filter" [editable]="true"></app-filter-column>
-                    </ng-container>
-                  </table>
-                </ng-container>
+                <table *ngFor="let filter of selectedColumns[key]" style="border: none">
+                  <ng-container *ngIf="filter.participantColumn.name !== 'ddp'">
+                    <app-filter-column [dataFilter]="filter" [editable]="true"></app-filter-column>
+                  </ng-container>
+                </table>
               </ng-container>
 
               <button md-raised-button color="primary" (click)="doFilter()">Search</button>
@@ -221,7 +217,7 @@
         <table class="table table-striped Table--Hover Table--Foot Width--100">
           <!--#mf="mfDataTable" [mfRowsOnPage]="hasRole().getUserSetting().getRowsPerPage()"-->
           <thead>
-          <th></th>
+          <th></th> <!-- needed for the first column with checkbox -->
           <ng-container *ngFor="let alias of getKeys()">
             <th *ngFor="let col of selectedColumns[alias]" (click)="sortByColumnName(col, alias)"
                 tooltip="{{getTableAlias(col.participantColumn)}}.{{col.participantColumn.name}}"
@@ -503,36 +499,49 @@
                     </ul>
                   </div>
                   <div *ngIf="alias === 'a'">
+                    <!--final abstraction values-->
                     <ng-container *ngIf="col.participantColumn.object === 'final'">
-                      <ng-container
-                        *ngIf="getUtil().getAbstractionGroup(pt.abstractionSummary, col.participantColumn.tableAlias) as group">
-                        <div
-                          *ngIf="getUtil().getAbstractionField(group.fields, col.participantColumn.name) as field">{{field.fieldValue.value}}
+                      <ng-container *ngIf="getUtil().getAbstractionGroup(pt.abstractionSummary, col.participantColumn.tableAlias) as group">
+                        <div *ngIf="getUtil().getAbstractionField(group.fields, col.participantColumn.name) as field">
+                          <ng-container *ngIf="col.type === 'multi_type_array'">
+                            <div *ngFor="let object of getMultiObjects(field.fieldValue.value); let i = index">
+                              <div *ngFor="let key of getMultiKeys(object)">
+                                <ng-container *ngIf="isDateValue(object[key])">
+                                  {{key}}: {{getDateValue(object[key])}}
+                                </ng-container>
+                                <ng-container *ngIf="key === 'other'">
+                                  <ng-container *ngFor="let otherV of object[key]">
+                                    <ng-container *ngFor="let oV of getMultiKeys(otherV)">
+                                      Other - {{oV}}: {{otherV[oV]}}
+                                    </ng-container>
+                                  </ng-container>
+                                </ng-container>
+                                <ng-container *ngIf="!isDateValue(object[key]) && key !== 'other'">
+                                  {{key}}: {{object[key]}}
+                                </ng-container>
+                              </div>
+                              <hr *ngIf="i !== getMultiObjects(field.fieldValue.value).length-1" style="border-color: lightgray">
+                            </div>
+                          </ng-container>
+                          <ng-container *ngIf="col.type === 'TEXT'">TEXT: {{field.fieldValue.value}}</ng-container>
+                          <ng-container *ngIf="col.type === 'multi_type'">multi_type: {{field.fieldValue.value}}</ng-container>
+                          <ng-container *ngIf="col.type === 'OPTIONS'">Options: {{field.fieldValue.value}}</ng-container>
                         </div>
                       </ng-container>
                     </ng-container>
+                    <!--abstraction activity values-->
                     <ng-container *ngIf="col.participantColumn.object == null">
-                      <ul class="NO-PADDING-START" *ngIf="col.participantColumn.name !== 'process'">
+                      <ul class="NO-PADDING-START">
                         <li class="LIST-SEPARATOR" *ngFor="let abs of pt.abstractionActivities">
                           <p class="BIT-OF-MARGIN" *ngIf="abs.activity !== 'final'">
-                            <ng-container
-                              *ngIf="col.type !== 'DATE' && col.type !== 'BOOLEAN' && col.type !== 'OPTIONS'">
+                            <ng-container *ngIf="col.type !== 'OPTIONS'">
                               {{abs[col.participantColumn.name]}}
-                            </ng-container>
-                            <ng-container
-                              *ngIf="col.type === 'BOOLEAN'">{{getUtil().getYesNo(abs[col.participantColumn.name])}}</ng-container>
-                            <ng-container
-                              *ngIf="col.type === 'DATE' && abs[col.participantColumn.name] != 0">{{abs[col.participantColumn.name] |
-                              date:'medium'}}
                             </ng-container>
                             <ng-container
                               *ngIf="col.type === 'OPTIONS'">{{getOptionDisplay(col.options, abs[col.participantColumn.name])}}</ng-container>
                           </p>
                         </li>
                       </ul>
-                      <ng-container *ngIf="col.participantColumn.name === 'process'">
-                        {{pt.getProcessStatus()}}
-                      </ng-container>
                     </ng-container>
                   </div>
                 </ng-container>

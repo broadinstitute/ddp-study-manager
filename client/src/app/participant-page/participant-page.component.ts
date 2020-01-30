@@ -93,7 +93,7 @@ export class ParticipantPageComponent implements OnInit {
       let realm = params[ DSMService.REALM ] || null;
       if (realm != null) {
         //        this.compService.realmMenu = realm;
-        this.leaveParticipant.emit( true );
+        this.leaveParticipant.emit( null );
       }
     } );
   }
@@ -130,7 +130,7 @@ export class ParticipantPageComponent implements OnInit {
         }
         this.loadingParticipantPage = true;
         let ddpParticipantId = this.participant.data.profile[ "guid" ];
-        this.dsmService.getMedicalRecordData(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), ddpParticipantId).subscribe(
+        this.dsmService.getMedicalRecordData( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), ddpParticipantId ).subscribe(
           data => {
             let ddpInformation = DDPParticipantInformation.parse( data );
             if (ddpInformation != null) {
@@ -389,17 +389,15 @@ export class ParticipantPageComponent implements OnInit {
   }
 
   public leavePage(): boolean {
-    this.participant = null;
     this.medicalRecord = null;
     this.compService.justReturning = true;
-    this.leaveParticipant.emit( true );
+    this.leaveParticipant.emit( this.participant );
+    this.participant = null;
     return false;
   }
 
   openTissue( object: any ) {
-    console.info( object );
     if (object != null) {
-      console.info( "yes" );
       this.oncHistoryDetail = object;
       this.showTissue = true;
     }
@@ -510,7 +508,7 @@ export class ParticipantPageComponent implements OnInit {
 
   downloadRequestPDF( requestOncHistoryList: Array<OncHistoryDetail> ) {
     let map: { name: string, value: any }[] = [];
-    map.push({name: DSMService.REALM, value: localStorage.getItem(ComponentService.MENU_SELECTED_REALM)});
+    map.push( {name: DSMService.REALM, value: localStorage.getItem( ComponentService.MENU_SELECTED_REALM )} );
     for (let onc of requestOncHistoryList) {
       map.push( {name: "requestId", value: onc.oncHistoryDetailId} );
     }
@@ -626,7 +624,7 @@ export class ParticipantPageComponent implements OnInit {
       // this.summaryFields = [];
       this.loadingParticipantPage = true;
       let ddpParticipantId = this.participant.participant.ddpParticipantId;
-      this.dsmService.getAbstractionValues(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), ddpParticipantId).subscribe(
+      this.dsmService.getAbstractionValues( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), ddpParticipantId ).subscribe(
         data => {
           let jsonData: any | any[];
           if (data != null) {
@@ -676,7 +674,7 @@ export class ParticipantPageComponent implements OnInit {
   lockParticipant( abstraction: Abstraction ) {
     this.loadingParticipantPage = true;
     let ddpParticipantId = this.participant.participant.ddpParticipantId;
-    this.dsmService.changeMedicalRecordAbstractionStatus(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), ddpParticipantId, "in_progress", abstraction).subscribe(// need to subscribe, otherwise it will not send!
+    this.dsmService.changeMedicalRecordAbstractionStatus( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), ddpParticipantId, "in_progress", abstraction ).subscribe(// need to subscribe, otherwise it will not send!
       data => {
         let result = Result.parse( data );
         if (result.code != 200) {
@@ -688,6 +686,18 @@ export class ParticipantPageComponent implements OnInit {
             let abstraction: Abstraction = Abstraction.parse( jsonData );
             this.participant[ abstraction.activity ] = abstraction;
             this.activeTab = abstraction.activity;
+            let activity = this.participant.abstractionActivities.find( activity => activity.activity === abstraction.activity );
+            if (activity != null) {
+              let index = this.participant.abstractionActivities.indexOf( activity );
+              if (index != -1) {
+                activity.aStatus = abstraction.aStatus;
+                this.participant.abstractionActivities[ index ] = activity;
+              }
+            }
+            else {
+              this.participant.abstractionActivities.push( abstraction );
+            }
+            this.additionalMessage = null;
           }
           else {
             this.additionalMessage = "Error";
@@ -705,7 +715,7 @@ export class ParticipantPageComponent implements OnInit {
 
   breakLockParticipant( abstraction: Abstraction ) {
     let ddpParticipantId = this.participant.participant.ddpParticipantId;
-    this.dsmService.changeMedicalRecordAbstractionStatus(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), ddpParticipantId, "clear", abstraction).subscribe(// need to subscribe, otherwise it will not send!
+    this.dsmService.changeMedicalRecordAbstractionStatus( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), ddpParticipantId, "clear", abstraction ).subscribe(// need to subscribe, otherwise it will not send!
       data => {
         let result = Result.parse( data );
         if (result.code != 200) {
@@ -716,6 +726,15 @@ export class ParticipantPageComponent implements OnInit {
             let jsonData: any | any[] = JSON.parse( result.body );
             let abstraction: Abstraction = Abstraction.parse( jsonData );
             this.participant[ abstraction.activity ] = abstraction;
+            let activity = this.participant.abstractionActivities.find( activity => activity.activity === abstraction.activity );
+            if (activity != null) {
+              let index = this.participant.abstractionActivities.indexOf( activity );
+              if (index != -1) {
+                activity.aStatus = abstraction.aStatus;
+                this.participant.abstractionActivities[ index ] = activity;
+              }
+            }
+            this.additionalMessage = null;
           }
           else {
             this.additionalMessage = "Error";
@@ -732,7 +751,7 @@ export class ParticipantPageComponent implements OnInit {
 
   submitParticipant( abstraction: Abstraction ) {
     let ddpParticipantId = this.participant.participant.ddpParticipantId;
-    this.dsmService.changeMedicalRecordAbstractionStatus(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), ddpParticipantId, "submit", abstraction).subscribe(// need to subscribe, otherwise it will not send!
+    this.dsmService.changeMedicalRecordAbstractionStatus( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), ddpParticipantId, "submit", abstraction ).subscribe(// need to subscribe, otherwise it will not send!
       data => {
         let result = Result.parse( data );
         if (result.code != 200 && result.body != null) {
@@ -743,6 +762,14 @@ export class ParticipantPageComponent implements OnInit {
           let jsonData: any | any[] = JSON.parse( result.body );
           let abstraction: Abstraction = Abstraction.parse( jsonData );
           this.participant[ abstraction.activity ] = abstraction;
+          let activity = this.participant.abstractionActivities.find( activity => activity.activity === abstraction.activity );
+          if (activity != null) {
+            let index = this.participant.abstractionActivities.indexOf( activity );
+            if (index != -1) {
+              activity.aStatus = abstraction.aStatus;
+              this.participant.abstractionActivities[ index ] = activity;
+            }
+          }
           this.additionalMessage = null;
           abstraction.colorNotFinished = false;
         }
@@ -764,7 +791,7 @@ export class ParticipantPageComponent implements OnInit {
     this.currentPatchField = "filesUsed";
     this.patchFinished = false;
     let ddpParticipantId = this.participant.participant.ddpParticipantId;
-    this.dsmService.changeMedicalRecordAbstractionStatus(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), ddpParticipantId, null, abstraction).subscribe(// need to subscribe, otherwise it will not send!
+    this.dsmService.changeMedicalRecordAbstractionStatus( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), ddpParticipantId, null, abstraction ).subscribe(// need to subscribe, otherwise it will not send!
       data => {
         let result = Result.parse( data );
         if (result.code != 200 && result.body != null) {

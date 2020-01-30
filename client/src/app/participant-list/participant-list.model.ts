@@ -169,8 +169,8 @@ export class Participant {
 
     let participant: ParticipantDSMInformation = null;
     jsonData = json.participant;
-    if (jsonData != null ) {
-      participant = ParticipantDSMInformation.parse(jsonData);
+    if (jsonData != null) {
+      participant = ParticipantDSMInformation.parse( jsonData );
     }
 
     return new Participant( data, participant, medicalRecords, samples, oncHistoryDetails, json.abstractionActivities, abstractionSummary, abstraction, review, qc, finalA );
