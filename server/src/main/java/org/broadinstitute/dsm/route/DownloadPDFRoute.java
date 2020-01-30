@@ -129,10 +129,35 @@ public class DownloadPDFRoute extends RequestHandler {
             }
         }
         else {
-            String realmName = request.params(RequestParameter.REALM);
-            if (UserUtil.checkUserAccess(realmName, userId, "pdf_download")) {
-                if (StringUtils.isNotBlank(realmName)) {
-                    return getPDFs(realmName);
+            QueryParamsMap queryParams = request.queryMap();
+            String realm = null;
+            if (queryParams.value(RoutePath.REALM) != null) {
+                realm = queryParams.get(RoutePath.REALM).value();
+            }
+            if (UserUtil.checkUserAccess(realm, userId, "pdf_download")) {
+                if (StringUtils.isNotBlank(realm)) {
+                    String ddpParticipantId = null;
+                    if (queryParams.value(RequestParameter.DDP_PARTICIPANT_ID) != null) {
+                        ddpParticipantId = queryParams.get(RequestParameter.DDP_PARTICIPANT_ID).value();
+                    }
+                    if (StringUtils.isNotBlank(ddpParticipantId)) {
+                        DDPInstance instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
+                        Map<String, Map<String, Object>> participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, " AND profile.guid = " + ddpParticipantId);
+                        if (participantESData != null && !participantESData.isEmpty()) {
+                            Map<String, Object> participantDate = participantESData.get(ddpParticipantId);
+                            if (participantDate != null) {
+                                Map<String, Object> dsm = (Map<String, Object>) participantDate.get("dsm");
+                                if (dsm != null) {
+                                    Object pdf = dsm.get("pdfs");
+                                    return pdf;
+                                }
+                            }
+                        }
+                        return null;
+                    }
+                    else {
+                        return getPDFs(realm);
+                    }
                 }
             }
             else {

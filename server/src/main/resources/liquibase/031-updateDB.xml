@@ -17,4 +17,9 @@
             </column>
         </createTable>
     </changeSet>
+    <changeSet author="simone" id="DDP-4374_pdfDownloadRole">
+        <insert tableName="instance_role">
+            <column name="name" value="pdf_download"></column>
+        </insert>
+    </changeSet>
 </databaseChangeLog>
