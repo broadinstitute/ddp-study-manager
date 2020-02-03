@@ -290,7 +290,7 @@ export class Utils {
           if (col.type === "ADDITIONALVALUE") {
             let fieldName = "additionalValues";
             if (fieldName !== "") {
-              let value = this.getObjectAddiotionalValue( o, fieldName, col );
+              let value = this.getObjectAdditionalValue (o, fieldName, col);
               value = value == undefined ? "" : value;
               str = str + "\"" + value + "\"" + ",";
             }

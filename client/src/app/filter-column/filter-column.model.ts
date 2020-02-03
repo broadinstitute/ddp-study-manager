@@ -210,10 +210,10 @@ export class Filter {
     Filter.TRACKING_TO_PARTICIPANT, Filter.TRACKING_RETURN, Filter.MF_BARCODE,
     Filter.ABSTRACTION_ACTIVITY, Filter.ABSTRACTION_STATUS, Filter.ABSTRACTION_USER ];
 
-  constructor( public participantColumn: ParticipantColumn, public type: string, public options?: NameValue[], public filter2?: NameValue,
-               public range?: boolean, public exactMatch?: boolean, public filter1?: NameValue,
-               public selectedOptions?: any, public value1?: any, public value2?: any, public sortAsc?: boolean,
-               public empty?: boolean, public notEmpty?: boolean, public singleOption?: boolean, public additionalType?: string ) {
+  constructor(public participantColumn: ParticipantColumn, public type: string, public options?: NameValue[], public filter2?: NameValue,
+              public range?: boolean, public exactMatch?: boolean, public filter1?: NameValue,
+              public selectedOptions?: any, public value1?: any, public value2?: any, public sortAsc?: boolean,
+              public empty?: boolean, public notEmpty?: boolean, public singleOption?: boolean, public additionalType?: string, public parentName?: string) {
     this.participantColumn = participantColumn;
     this.type = type;
     if (options != null) {
@@ -362,7 +362,7 @@ export class Filter {
           }
           let newFilter = new Filter(filter.participantColumn, filter.type, f.options, filter.filter2, filter.range, filter.exactMatch, filter.filter1,
             selectedOptions, (filter.filter1 == null || filter.filter1 == undefined) ? null : filter.filter1.value,
-            (filter.filter2 == null || filter.filter2 == undefined) ? null : filter.filter2.value, null, f.alwaysExact, filter.empty,
+            (filter.filter2 == null || filter.filter2 == undefined) ? null : filter.filter2.value, null, filter.empty,
             filter.notEmpty, f.singleOption, f.additionalType);
           filters.push(newFilter);
         }
@@ -426,7 +426,6 @@ export class Filter {
     this.value1 = null;
     this.value2 = null;
     this.sortAsc = true;
-    this.alwaysExact = this.alwaysExact;// I changed html so this would fix it for ES now by always exactMatch and doesn't need exactMatch
     this.empty = false;
     this.notEmpty = false;
 
