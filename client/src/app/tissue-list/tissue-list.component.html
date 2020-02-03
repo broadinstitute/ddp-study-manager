@@ -251,7 +251,7 @@
         <thead>
         <th *ngFor="let col of selectedColumns['data']" (click)="sortByColumnName(col, 'data')"
             [ngClass]="{'Table--Sticky': true, 'Color--blue': isSortField(col.participantColumn.name)}"
-            tooltip="{{col.participantColumn.tableAlias}}.{{col.participantColumn.name}}">
+            tooltip="{{col.participantColumn.object === undefined? col.participantColumn.tableAlias : col.participantColumn.object}}.{{col.participantColumn.name}}">
           {{col.participantColumn.display}}
           <span *ngIf="isSortField(col.participantColumn.name)">
             <span *ngIf="sortDir === 'asc'">
