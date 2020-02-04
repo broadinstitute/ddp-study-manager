@@ -96,9 +96,9 @@ export class SearchBarComponent implements OnInit {
         i++;
         continue;
       }
-      console.log(part);
-      console.log(state);
-      console.log(this.allFieldNames);
+      // console.log(part);
+      // console.log(state);
+      // console.log(this.allFieldNames);
       switch (state) {
         case -1:
           if (logicalOperators.includes(part)) {
@@ -232,13 +232,6 @@ export class SearchBarComponent implements OnInit {
       return this.allFieldNames.has(name);
     }
     return false;
-  }
-
-  getButtonColorStyle(isOpened: boolean): string {
-    if (isOpened) {
-      return Statics.COLOR_PRIMARY;
-    }
-    return Statics.COLOR_BASIC;
   }
 
   public search(event) {

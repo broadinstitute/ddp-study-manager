@@ -250,21 +250,8 @@ export class AbstractionFieldComponent implements OnInit {
           nameValues: [ {name: this.activityOfField + "_" + fieldName, value: v} ]
         };
       }
-      // value of field changed AND filename was set
-      else if (fieldName === "value" && field.fieldValue.fileName != null && field.fieldValue.fileName !== "") {
-        patch = {
-          id: field.fieldValue.primaryKeyId,
-          parentId: this.participant.participant.participantId,
-          parent: "participantId",
-          user: this.role.userMail(),
-          fieldId: field.medicalRecordAbstractionFieldId,
-          nameValues: [ {name: this.activityOfField + "_" + fieldName, value: v},
-            {name: this.activityOfField + "_valueCounter", value: field.fieldValue.valueCounter},
-            {name: this.activityOfField + "_fileName", value: field.fieldValue.fileName} ]
-        };
-      }
-      // value of field changed AND NOT filename was set
-      else if (fieldName === "value" && ( field.fieldValue.fileName == null || field.fieldValue.fileName === "" )) {
+      // value of field changed
+      else if (fieldName === "value") {
         patch = {
           id: field.fieldValue.primaryKeyId,
           parentId: this.participant.participant.participantId,
@@ -328,6 +315,40 @@ export class AbstractionFieldComponent implements OnInit {
         );
       }
     }
+  }
+
+  saveSelectedQc( field: AbstractionField, ) {
+    field.fieldValue.valueCounter++;
+    let patch = {
+      id: field.fieldValue.primaryKeyId,
+      parentId: this.participant.participant.participantId,
+      parent: "participantId",
+      user: this.role.userMail(),
+      fieldId: field.medicalRecordAbstractionFieldId,
+      nameValues: [ {name: "qc_noData", value: field.fieldValue.noData},
+        {name: "qc_value", value: field.fieldValue.value},
+        {name: "qc_valueCounter", value: field.fieldValue.valueCounter},
+        {name: "qc_fileName", value: field.fieldValue.fileName},
+        {name: "qc_filePage", value: field.fieldValue.filePage} ]
+    };
+    this.dsmService.patchParticipantRecord( JSON.stringify( patch ) ).subscribe(// need to subscribe, otherwise it will not send!
+      data => {
+        let result = Result.parse( data );
+        if (result.code === 200) {
+          if (result.body != null && result.body !== "") {
+            let jsonData: any | any[] = JSON.parse( result.body );
+            if (jsonData.primaryKeyId !== undefined && jsonData.primaryKeyId !== "") {
+              field.fieldValue.primaryKeyId = jsonData.primaryKeyId;
+            }
+          }
+        }
+      },
+      err => {
+        if (err._body === Auth.AUTHENTICATION_ERROR) {
+          this.router.navigate( [ Statics.HOME_URL ] );
+        }
+      }
+    );
   }
 
   addFileNameToList( fileName: string ) {

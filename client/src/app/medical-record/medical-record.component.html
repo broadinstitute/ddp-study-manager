@@ -313,7 +313,7 @@
         </td>
       </tr>
       <tr>
-        <td>Fax Sent</td>
+        <td>Initial MR Request</td>
         <td>
           <app-field-datepicker [colorDuringPatch]="isPatchedCurrently('faxSent')" [disabled]="participantExited"
                                 [dateString]="medicalRecord.faxSent" (dateChanged)="valueChanged($event, 'faxSent')"></app-field-datepicker>
@@ -347,7 +347,7 @@
         </td>
       </tr>
       <tr *ngIf="medicalRecord.faxSent != null">
-        <td>MR Received</td>
+        <td>Initial MR Received</td>
         <td colspan="3">
           <app-field-datepicker [dateString]="medicalRecord.mrReceived" (dateChanged)="valueChanged($event, 'mrReceived')"
                                 [colorDuringPatch]="isPatchedCurrently('mrReceived')" [disabled]="participantExited"></app-field-datepicker>
@@ -355,7 +355,7 @@
       </tr>
       <ng-container *ngFor="let followup of medicalRecord.followUps; let i = index;">
         <tr>
-          <td class="Width--20">Follow-Up {{i + 1}} Requested</td>
+          <td class="Width--20">{{i + 1}} Follow-Up MR Request</td>
           <td>
             <app-field-datepicker [colorDuringPatch]="isPatchedCurrently('fRequest1' + i)"
                                   [dateString]="followup.fRequest1" [disabled]="participantExited"

@@ -361,13 +361,13 @@ public class RouteTestAbstraction extends TestHelper {
         strings.add(participantId);
         strings.add(activity);
         String activityId = DBTestUtil.getStringFromQuery("SELECT * FROM ddp_medical_record_abstraction_activities WHERE participant_id = ? AND activity = ?", strings, "medical_record_abstraction_activities_id");
-        String json = "{\"ddpParticipantId\":\"" + ddpParticipantId + "\", \"realm\": \"" + realm + "\", \"status\": \"" + newStatus + "\", \"userId\": \"1\", \"abstraction\": {\"participantId\":\"" + participantId + "\",\"user\":\"Name of user\", \"activity\":\"" + activity + "\", \"status\":\"" + currentStatus + "\"}}";
+        String json = "{\"ddpParticipantId\":\"" + ddpParticipantId + "\", \"realm\": \"" + realm + "\", \"aStatus\": \"" + newStatus + "\", \"userId\": \"1\", \"abstraction\": {\"participantId\":\"" + participantId + "\",\"user\":\"Name of user\", \"activity\":\"" + activity + "\", \"aStatus\":\"" + currentStatus + "\"}}";
 
         if (activityId != null) {
-            json = "{\"ddpParticipantId\":\"" + ddpParticipantId + "\", \"realm\": \"" + realm + "\", \"status\": \"" + newStatus + "\", \"userId\": \"1\", \"abstraction\": {\"participantId\":\"" + participantId + "\", \"medicalRecordAbstractionActivityId\":\"" + activityId + "\",\"user\":\"Name of user\", \"activity\":\"" + activity + "\", \"status\":\"" + currentStatus + "\"}}";
+            json = "{\"ddpParticipantId\":\"" + ddpParticipantId + "\", \"realm\": \"" + realm + "\", \"aStatus\": \"" + newStatus + "\", \"userId\": \"1\", \"abstraction\": {\"participantId\":\"" + participantId + "\", \"medicalRecordAbstractionActivityId\":\"" + activityId + "\",\"user\":\"Name of user\", \"activity\":\"" + activity + "\", \"aStatus\":\"" + currentStatus + "\"}}";
 
         }
-        //change abstraction status
+        //change abstraction aStatus
         HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/abstraction"), json, testUtil.buildAuthHeaders()).returnResponse();
         assertEquals(200, response.getStatusLine().getStatusCode());
         if (submitFail) {

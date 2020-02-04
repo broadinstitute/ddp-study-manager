@@ -267,7 +267,7 @@ public class DirectMethodTest extends TestHelper {
     }
 
     @Test
-    public void medicalRecords() {
+    public void medicalRecords() {//todo pegah check why not working
         String participantId = DBTestUtil.getParticipantIdOfTestParticipant("TEST_PARTICIPANT");
 
         SimpleResult results = inTransaction((conn) -> {

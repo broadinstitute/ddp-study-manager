@@ -48,7 +48,7 @@ public class Filter {
     public String[] selectedOptions;
     public ParticipantColumn participantColumn;
 
-    public static String getQueryFilteringString(@NonNull Filter filter, DBElement dbElement) {
+    public static String getQueryStringForFiltering(@NonNull Filter filter, DBElement dbElement) {
         String finalQuery = "";
         String query = "";
         String condition = "";
@@ -168,11 +168,12 @@ public class Filter {
             }
             else if (CHECKBOX.equals(filter.getType())) { //1/0
                 //                String notNullQuery = AND + filter.getParentName() + "." + dbElement.getColumnName() + IS_NOT_NULL;
-                if (filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())) && TRUE.equals(filter.getFilter1().getValue())) {
-                    query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + EQUALS + "'1'";
+                if (filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())) && (TRUE.equals(filter.getFilter1().getValue()) || TRUE.equals(String.valueOf(filter.getFilter1().getValue())) || "1".equals(filter.filter1.getValue()))) {
+                    query = AND + dbElement.tableAlias + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + LIKE + "'1'";
                 }
-                else if (filter.getFilter2().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue())) && TRUE.equals(filter.getFilter2().getValue())) {
-                    query = AND + NOT + " " + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " <=> 1";
+                else if (filter.filter2 != null && filter.getFilter2().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue())) && (TRUE.equals(filter.getFilter2().getValue())
+                || "1".equals(filter.getFilter2().getValue()))) {
+                    query = AND + NOT + " " +  dbElement.tableAlias  + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " <=> 1";
                 }
                 //                finalQuery = notNullQuery + query;
                 finalQuery = query;
@@ -188,7 +189,7 @@ public class Filter {
             }
         }
 
-        logger.info(finalQuery); //TODO pegah need to be removed at the end!!!
+//        logger.info(finalQuery);
         return finalQuery;
     }
 

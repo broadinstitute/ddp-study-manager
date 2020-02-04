@@ -1,9 +1,10 @@
 <div
-  *ngIf="dataFilter.type === 'DATE' || dataFilter.type === 'DATE_SHORT' || dataFilter.type === 'OPTIONS' || dataFilter.type === 'BOOLEAN' || dataFilter.type === 'CHECKBOX'
+  *ngIf="dataFilter.type === 'DATE' || dataFilter.type === 'EPOCHDATE' || dataFilter.type === 'DATE_SHORT' || dataFilter.type === 'OPTIONS' || dataFilter.type === 'BOOLEAN' || dataFilter.type === 'CHECKBOX'
   || (dataFilter.type === 'ADDITIONALVALUE' && (dataFilter.additionalType !== 'TEXT' && dataFilter.additionalType !== 'TEXTAREA'))">
   <b>{{dataFilter.participantColumn.display}}</b>
 </div>
-<ng-container *ngIf="dataFilter.type === 'DATE' ||  dataFilter.type === 'DATE_SHORT' || (dataFilter.type === 'ADDITIONALVALUE' && dataFilter.additionalType === 'DATE')">
+<ng-container
+  *ngIf="dataFilter.type === 'DATE' || dataFilter.type === 'EPOCHDATE' ||  dataFilter.type === 'DATE_SHORT' || (dataFilter.type === 'ADDITIONALVALUE' && dataFilter.additionalType === 'DATE')">
   <app-field-datepicker [allowFutureDate]="true" [showNAButton]="true" [dateString]="dataFilter.value1" [allowUnknownDay]="true"
                         (dateChanged)="dateChange($event, 1)" [disabled]="!editable"></app-field-datepicker>
   <ng-container *ngIf="dataFilter.range">
@@ -79,7 +80,8 @@
         Exact Match
       </md-checkbox>
     </div>
-    <div *ngIf="(dataFilter.type === 'NUMBER' || dataFilter.type === 'DATE' || dataFilter.type === 'DATE_SHORT') && showOptions">
+    <div
+      *ngIf="(dataFilter.type === 'NUMBER' || dataFilter.type === 'DATE' || dataFilter.type === 'EPOCHDATE' || dataFilter.type === 'DATE_SHORT') && showOptions">
       <md-checkbox [(ngModel)]="dataFilter.range" color="primary" [disabled]="!editable" disableRipple>
         Range
       </md-checkbox>

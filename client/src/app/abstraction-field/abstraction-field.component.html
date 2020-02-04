@@ -40,7 +40,7 @@
       <b>{{field.displayName}}</b>
       <div *ngIf="participant[activityOfField] != null && participant[activityOfField].colorNotFinished && (!field.fieldValue.noData
       && (field.fieldValue.value === ''|| field.fieldValue.value === null || field.fieldValue.value == undefined))"
-            class="Color--warn"><b>Field not completed</b></div>
+           class="Color--warn"><b>Field not completed</b></div>
       <a href="#" *ngIf="field.helpText != null && field.helpText !== '' && (type !== 'abstraction' && type !== 'review')"
          [attr.aria-expanded]="field.viewHelpText" [attr.aria-controls]="field.displayName+'_Help'"
          (click)="field.viewHelpText = !field.viewHelpText; doNothing()">

@@ -53,7 +53,6 @@ export class FieldSettings {
           elem.displayType = "text";
         }
         let oldPVals: Array<Value> = elem.possibleValues;
-        console.log(oldPVals);
         elem.possibleValues = [];
         if (this.allowPossibleValues(elem)) {
           // If possible values were specified and the display type is one that can have possible values, add valid possible values back
@@ -63,7 +62,6 @@ export class FieldSettings {
                 elem.possibleValues.push(item);
               }
             });
-            console.log(elem.possibleValues);
           }
           // If the display type is select or multiselect but no options are specified, change it to text
           if (elem.possibleValues.length < 1) {

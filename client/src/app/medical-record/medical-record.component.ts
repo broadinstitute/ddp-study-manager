@@ -89,7 +89,7 @@ export class MedicalRecordComponent implements OnInit {
     if (this.medicalRecord != null && this.participant != null) {
       this.loadLogs();
       // otherwise something went horrible wrong!
-      if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ).toLowerCase() === "mbc") {//TODO - needs to change when MBC gets migrated
+      if (localStorage.getItem(ComponentService.MENU_SELECTED_REALM).toLowerCase() === "mbc") {//TODO - needs to change when MBC gets migrated
         this.disableDownloadConsent = true;
         this.disableDownloadRelease = true;
         this.hideDownloadButtons = true;
@@ -247,7 +247,7 @@ export class MedicalRecordComponent implements OnInit {
     else {
       this.disableDownloadCover = true;
       this.dsmService.downloadCoverPDFs( this.participant.participant.ddpParticipantId, this.medicalRecord.medicalRecordId,
-        this.startDate, this.endDate, this.mrCoverPdfSettings, localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) ).subscribe(
+        this.startDate, this.endDate, this.mrCoverPdfSettings, localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(
         data => {
           // console.info(data);
           this.downloadFile( data, "_MRRequest_" + this.medicalRecord.name );
@@ -274,9 +274,9 @@ export class MedicalRecordComponent implements OnInit {
     return value;
   }
 
-  downloadPDFs( configName: string ) {
+  downloadPDFs(configName: string) {
     this.disableDownloadConsent = true;
-    this.dsmService.downloadPDF( this.participant.participant.ddpParticipantId, this.compService.getRealm(), configName ).subscribe(
+    this.dsmService.downloadPDF(this.participant.participant.ddpParticipantId, this.compService.getRealm(), configName).subscribe(
       data => {
         console.info( data );
         this.downloadFile( data, "_" + configName );
@@ -294,7 +294,7 @@ export class MedicalRecordComponent implements OnInit {
 
   downloadConsentPDFs() {
     this.disableDownloadConsent = true;
-    this.dsmService.downloadConsentPDFs( this.participant.participant.ddpParticipantId, localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) ).subscribe(
+    this.dsmService.downloadConsentPDFs(this.participant.participant.ddpParticipantId, localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(
       data => {
         console.info( data );
         this.downloadFile( data, "_Consent" );
@@ -312,7 +312,7 @@ export class MedicalRecordComponent implements OnInit {
 
   downloadReleasePDFs() {
     this.disableDownloadRelease = true;
-    this.dsmService.downloadReleasePDFs( this.participant.participant.ddpParticipantId, localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) ).subscribe(
+    this.dsmService.downloadReleasePDFs(this.participant.participant.ddpParticipantId, localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(
       data => {
         this.downloadFile( data, "_Release" );
         this.disableDownloadRelease = false;

@@ -441,7 +441,7 @@ public class KitUtil {
                 });
             }
         }
-        //update status of kit
+        //update aStatus of kit
     }
 
     private static List<KitRequestShipping> getKitRequestsToCheckStatus(@NonNull String realm) {
