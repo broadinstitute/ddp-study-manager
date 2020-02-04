@@ -391,7 +391,7 @@ public class DBConstants {
     public static final String DOUBLE_CHECK = "double_check";
     public static final String NO_DATA = "no_data";
     public static final String ACTIVITY= "activity";
-    public static final String STATUS = "aStatus";
+    public static final String STATUS = "status";
     public static final String START_DATE = "start_date";
     public static final String FILES_USED = "files_used";
     public static final String QUESTION = "question";
