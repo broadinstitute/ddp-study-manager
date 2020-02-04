@@ -39,14 +39,11 @@ export class Tissue {
   }
 
   static parse(json): Tissue {
-    //    console.log(json.additionalValues);
     let additionalValues: {};
     let jsonData = json.additionalValues;
     if (jsonData != null) {
       jsonData = "{" + jsonData.substring(1, jsonData.length - 1) + "}";
-      //      console.log(jsonData);
       additionalValues = JSON.parse(jsonData);
-      //      console.log(additionalValues);
     }
     return new Tissue(json.tissueId, json.oncHistoryDetailId, json.tNotes, json.countReceived, json.tissueType,
       json.tissueSite, json.tumorType, json.hE, json.pathologyReport, json.collaboratorSampleId, json.blockSent,
