@@ -26,6 +26,7 @@ export class ParticipantColumn {
   public static PAPER_CR_RECEIVED = new ParticipantColumn( "Paper C/R Received", "paperCRReceived", "r" );
   public static PARTICIPANT_NOTES = new ParticipantColumn( "Participant Note", "ptNotes", "r" );
   public static MINIMAL_RECORDS = new ParticipantColumn( "Minimal Records", "minimalMR", "r" );
+  public static ABSTRACTION_READY = new ParticipantColumn( "Ready for Abstraction", "abstractionReady", "r" );
   public static ASSIGNEE_MR = new ParticipantColumn( "MR Assignee", "assigneeMr", "p" );
   public static ASSIGNEE_TISSUE = new ParticipantColumn( "Tissue Assignee", "assigneeTissue", "p" );
   public static EXIT_DATE = new ParticipantColumn( "Date Withdrawn", "exitDate", "ex" );
@@ -38,10 +39,10 @@ export class ParticipantColumn {
   public static MR_INSTITUTION_CONTACT = new ParticipantColumn( "Institution Contact", "contact", "m" );
   public static MR_INSTITUTION_PHONE = new ParticipantColumn( "Institution Phone", "phone", "m" );
   public static MR_INSTITUTION_FAX = new ParticipantColumn( "Institution Fax", "fax", "m" );
-  public static MR_FAX_SENT = new ParticipantColumn( "MR Fax Date", "faxSent", "m" );
-  public static MR_FAX_SENT_2 = new ParticipantColumn("Initial MR Request 2", "faxSent2", "m");// todo Simone please check this is right naming for all 3 mr requests
+  public static MR_FAX_SENT = new ParticipantColumn( "Initial MR Request", "faxSent", "m" );
+  public static MR_FAX_SENT_2 = new ParticipantColumn("Initial MR Request 2", "faxSent2", "m");
   public static MR_FAX_SENT_3 = new ParticipantColumn("Initial MR Request 3", "faxSent3", "m");
-  public static MR_RECEIVED = new ParticipantColumn( "MR Received Date", "mrReceived", "m" );
+  public static MR_RECEIVED = new ParticipantColumn( "Initial MR Received", "mrReceived", "m" );
   public static MR_DOCUMENT = new ParticipantColumn( "MR Document", "mrDocument", "m" );
   public static MR_DOCUMENT_FILES = new ParticipantColumn( "MR File Names", "mrDocumentFileNames", "m" );
   public static MR_PROBLEM = new ParticipantColumn( "MR Problem", "mrProblem", "m" );
@@ -104,15 +105,14 @@ export class ParticipantColumn {
 
   //abstraction column
   public static ABSTRACTION = new ParticipantColumn( "Abstraction", "abstraction" );
-  public static ABSTRACTION_PROCESS_STATUS = new ParticipantColumn( "Abstraction Process Status", "process", "a" );
-  public static ABSTRACTION_STATUS = new ParticipantColumn( "Status", "status", "a" );
+  public static ABSTRACTION_STATUS = new ParticipantColumn( "Status", "aStatus", "a" );
   public static ABSTRACTION_ACTIVITY = new ParticipantColumn( "Activity", "activity", "a" );
   public static ABSTRACTION_USER = new ParticipantColumn( "User", "user", "a" );
   public static REVIEW = new ParticipantColumn( "Review", "review" );
   public static QC = new ParticipantColumn( "QC", "qc" );
 
   //kit
-  public static COLLABORATOR_SAMPLE = new ParticipantColumn( "Collaborator Sample ID", "collaboratorSampleId", "k" );
+  public static COLLABORATOR_SAMPLE = new ParticipantColumn("Collaborator Sample ID", "bspCollaboratorSampleId", "k");
   public static SAMPLE_TYPE = new ParticipantColumn( "Sample Type", "kitType", "k" );
   public static SAMPLE_SENT = new ParticipantColumn( "Sample Sent", "scanDate", "k" );
   public static SAMPLE_RECEIVED = new ParticipantColumn( "Sample Received", "receiveDate", "k" );

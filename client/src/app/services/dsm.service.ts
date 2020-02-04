@@ -78,12 +78,12 @@ export class DSMService {
   public setDefaultFilter( json: string, filterName: string, parent: string, realm ) {
     let url = this.baseUrl + DSMService.UI + "defaultFilter";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "filterName", value: filterName} );
-    map.push( {name: "parent", value: parent} );
-    map.push( {name: "userId", value: this.role.userID()} );
-    map.push( {name: "userMail", value: this.role.userMail()} );
-    map.push( {name: DSMService.REALM, value: realm} );
-    return this.http.patch( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
+    map.push({name: "filterName", value: filterName});
+    map.push({name: "parent", value: parent});
+    map.push({name: "userId", value: this.role.userID()});
+    map.push({name: "userMail", value: this.role.userMail()});
+    map.push({name: DSMService.REALM, value: realm});
+    return this.http.patch(url, json, this.buildQueryHeader(map)).map((res: Response) => res.json()).catch(this.handleError);
   }
 
 
@@ -109,6 +109,7 @@ export class DSMService {
   }
 
   public applyFilter( json: ViewFilter, realm: string, parent: string, filterQuery: string ): Observable<any> {
+    console.log(json);
     if (json != null && json.filters != null) {
       for (let filter of json.filters) {
         if (filter.type === Filter.OPTION_TYPE) {
@@ -131,6 +132,7 @@ export class DSMService {
     else {
       map.push( {name: "filters", value: JSON.stringify( json.filters )} );
     }
+    console.log(map);
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
@@ -186,12 +188,12 @@ export class DSMService {
     return this.http.patch( url, json, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
-  public downloadCoverPDFs( ddpParticipantId: string, medicalRecordId: string, startDate: string, endDate: string, mrCoverPdfSettings: Value[],
-                            realm: string ) {
+  public downloadCoverPDFs(ddpParticipantId: string, medicalRecordId: string, startDate: string, endDate: string, mrCoverPdfSettings: Value[],
+                           realm: string) {
     let url = this.baseUrl + DSMService.UI + "downloadPDF/cover/" + medicalRecordId;
     let map: { name: string, value: any }[] = [];
     map.push( {name: DSMService.REALM, value: realm} );
-    let json: { [ k: string ]: any } = {};
+    let json: { [k: string]: any } = {};
     json = {
       ddpParticipantId: ddpParticipantId,
       startDate: startDate,
@@ -199,7 +201,7 @@ export class DSMService {
       userId: this.role.userID()
     };
     for (let mrSetting of mrCoverPdfSettings) {
-      json[ mrSetting.value ] = mrSetting.selected;
+      json[mrSetting.value] = mrSetting.selected;
     }
     // console.log( json );
     return this.http.post( url, JSON.stringify( json ), this.buildQueryPDFHeader( map ) ).map( ( res: Response ) => res.blob() ).catch( this.handleError );

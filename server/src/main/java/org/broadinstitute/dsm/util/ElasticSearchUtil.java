@@ -236,6 +236,7 @@ public class ElasticSearchUtil {
                                     finalQuery.must(QueryBuilders.matchQuery(dataParam[1], userEntered));
                                 }
                             }
+
                         }
                         else {
                             String[] surveyParam = nameValue[0].split("\\.");

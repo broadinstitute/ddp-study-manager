@@ -6,6 +6,7 @@
 /client/dist
 /client/tmp
 /client/node_modules
+/client/tslint.json
 
 # server
 /server/target

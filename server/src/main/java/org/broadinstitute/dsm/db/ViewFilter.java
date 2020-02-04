@@ -38,6 +38,7 @@ public class ViewFilter {
 
     public static final String SQL_INSERT_VIEW = "INSERT INTO view_filters (view_columns, display_name, created_by, shared, query_items, parent,  quick_filter_name, ddp_group_id, changed_by, last_changed, deleted) " +
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    public static final String SQL_CHECK_VIEW_NAME = "SELECT * FROM view_filters WHERE (display_name = ? ) and deleted <=> 0 ";
     public static final String SQL_SELECT_USER_FILTERS = "SELECT * FROM view_filters WHERE (created_by = ? OR (created_by = 'System' AND ddp_group_id = ? )" +
             "OR (shared = 1 AND ddp_group_id = ? ) OR (ddp_group_id is NULL AND ddp_realm_id LIKE '%#%') ) AND deleted <> 1 ";
     public static final String SQL_SELECT_QUERY_ITEMS = "SELECT query_items, quick_filter_name FROM view_filters WHERE display_name = ? AND parent = ?";
@@ -66,7 +67,7 @@ public class ViewFilter {
     private String fDeleted;
 
     @ColumnName (DBConstants.SHARED_FILTER)
-    private String shared; //TODO Pegah - why string and not boolean?
+    private String shared;
 
     @ColumnName (DBConstants.QUERY_ITEMS)
     private String queryItems;
@@ -112,6 +113,34 @@ public class ViewFilter {
         ViewFilter viewFilter = new Gson().fromJson(filterViewToSave, ViewFilter.class);
 
         String query;
+        String suggestedName = viewFilter.getFilterName();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_CHECK_VIEW_NAME)) {
+                stmt.setString(1, suggestedName);
+                try {
+                    ResultSet rs = stmt.executeQuery();
+                    if (rs.next()) {
+                        dbVals.resultException = new DuplicateException(viewFilter.getFilterName());
+                    }
+                }
+                catch (Exception e) {
+                    dbVals.resultException = e;
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+        if (results.resultException != null) {
+            if (results.resultException instanceof SQLIntegrityConstraintViolationException) {
+                return new Result(500, "Duplicate Name");
+            }
+            else {
+                throw new RuntimeException(results.resultException);
+            }
+        }
         if (StringUtils.isBlank(viewFilter.getQueryItems())) {
             Filter[] filters = viewFilter.getFilters();
             Map<String, String> queryConditions = new HashMap<>();
@@ -201,12 +230,7 @@ public class ViewFilter {
             return dbVals;
         });
         if (results.resultException != null) {
-            if (results.resultException instanceof SQLIntegrityConstraintViolationException) {
-                return new Result(500, "Duplicate Name");
-            }
-            else {
-                throw new RuntimeException(results.resultException);
-            }
+            throw new RuntimeException(results.resultException);
         }
         return new Result(200);
     }
@@ -218,14 +242,14 @@ public class ViewFilter {
             if (queryConditions.containsKey(tmp)) {
                 queryCondition = queryConditions.get(tmp);
             }
-            queryConditions.put(tmp, queryCondition.concat(Filter.getQueryFilteringString(filter, dbElement)));
+            queryConditions.put(tmp, queryCondition.concat(Filter.getQueryStringForFiltering(filter, dbElement)));
         }
         else {
             String queryCondition = "";
             if (queryConditions.containsKey("ES")) {
                 queryCondition = queryConditions.get("ES");
             }
-            queryConditions.put("ES", queryCondition.concat(Filter.getQueryFilteringString(filter, null)));
+            queryConditions.put("ES", queryCondition.concat(Filter.getQueryStringForFiltering(filter, null)));
         }
     }
 
@@ -433,6 +457,7 @@ public class ViewFilter {
             String tableName = "";
             String columnName = "";
             String value = "";
+            String tempValue = "";
             String type = null;
             String path = null;
             ArrayList<String> selectedOptions = new ArrayList<>();
@@ -440,21 +465,29 @@ public class ViewFilter {
             Boolean empty = false;
             Boolean notEmpty = false;
             Boolean exact = false;
+            Boolean longWord = false;
+            NameValue filter2 = null;
+            NameValue filter1 = null;
             if (StringUtils.isBlank(condition)) {
                 continue;
             }
             String[] words = condition.split("(\\s+)");
-
             for (String word : words) {
                 if (StringUtils.isNotBlank(word)) {
                     switch (state) {
                         case 0:
                             if (word.equals("(")) {// beginning of an options query
                                 state = 2;
+                                break;
                             }
                             else if (word.equals("JSON_EXTRACT")) {// beginning of an additional fields query
                                 type = Filter.ADDITIONAL_VALUES;
                                 state = 16;
+                                break;
+                            }
+                            else if (word.equals("NOT")) {
+                                state = 24;
+                                break;
                             }
                             else {// beginning of other types of query
                                 tableName = word.substring(0, word.indexOf("."));
@@ -467,21 +500,32 @@ public class ViewFilter {
                                 exact = true;
                                 range = false;
                                 state = 3;
+                                break;
                             }
                             else if (word.equals("<=") || word.equals(">=")) { // range selected in the frontend
                                 exact = false;
                                 range = true;
                                 state = 4;
+                                break;
                             }
                             else if (word.toUpperCase().equals(Filter.IS)) { // empty or not empty selected in the frontend
                                 exact = false;
                                 range = false;
                                 state = 5;
+                                break;
                             }
                             else if (word.equals("LIKE")) { // either checkbox or exact match not selected in the frontend
                                 exact = false;
                                 range = false;
                                 state = 8;
+                                break;
+                            }
+                            else if (word.equals("<=>")) {
+                                exact = false;
+                                range = false;
+                                type = Filter.CHECKBOX;
+                                state = 8;
+                                break;
                             }
                             break;
 
@@ -494,19 +538,40 @@ public class ViewFilter {
                             break;
 
                         case 3: // exact matching value
-                            value = word;
-                            state = 11;
+                            if (word.equals("NOW()")) {
+                                state = 22;
+                                break;
+                            }
+                            else {
+                                tempValue = word;
+                                if (!longWord) {
+                                    if (tempValue.contains("'")) {
+                                        if (tempValue.indexOf("'") != tempValue.lastIndexOf("'")) {
+                                            value = trimValue(tempValue);
+                                            state = 11;
+                                            break;
+                                        }
+                                        else {
+                                            longWord = true;
+                                            value += trimValue(tempValue) + " ";
+                                        }
+                                    }
+                                }
+                                else if (longWord && tempValue.contains("'")) {
+                                    value += trimValue(tempValue) + " ";
+                                    longWord = false;
+                                    value = value.substring(0, value.length() - 1);//remove the last added space
+                                    state = 11;
+                                    break;
+                                }
+                                else if (longWord) {
+                                    value += tempValue + " ";
+                                }
+                            }
                             break;
 
                         case 4: // range value
-                            value = word;
-                            if (value.contains("'")) {
-                                int first = value.indexOf('\'');
-                                int last = value.lastIndexOf('\'');
-                                if (first != -1) {
-                                    value = value.substring(first + 1, last);
-                                }
-                            }
+                            value = trimValue(word);
                             state = 11;
                             break;
 
@@ -514,12 +579,14 @@ public class ViewFilter {
                             if (word.toUpperCase().equals(Filter.NOT)) {
                                 empty = false;
                                 state = 6;
+                                break;
 
                             }//if query contains "IS NULL" then empty was selected
                             else if (word.toUpperCase().equals(Filter.NULL)) {
                                 notEmpty = false;
                                 empty = true;
                                 state = 10;
+                                break;
                             }
                             break;
                         case 6:// query contains "IS NOT NULL" so not empty was selected in the frontend
@@ -527,6 +594,7 @@ public class ViewFilter {
                                 notEmpty = true;
                                 empty = false;
                                 state = 7;
+                                break;
                             }
                             break;
                         case 7:
@@ -534,9 +602,16 @@ public class ViewFilter {
 
                         case 8:// query contained word "LIKE", exact match is false then
                             exact = false;
-                            if (word.equals("'1")) {// check boxes are either 1 or 0
+                            if (word.equals("'1'") || (word.equals("1") && (Filter.CHECKBOX.equals(type)))) {// check boxes are either 1 or 0
+                                if (StringUtils.isNotBlank(type)) {
+                                    filter2 = new NameValue(columnName, true);
+                                }
+                                else {
+                                    filter1 = new NameValue(columnName, true);
+                                }
                                 type = Filter.CHECKBOX;
                                 state = 9;
+                                break;
                             }
                             else {// "LIKE %?% query
                                 value = word;
@@ -561,6 +636,8 @@ public class ViewFilter {
                         case 12:
                             state = 14;
                             break;
+                        case 13:
+                            break;
                         case 14:// finding the next selected option
                             int first = word.indexOf('\'');
                             int last = word.lastIndexOf('\'');
@@ -573,9 +650,11 @@ public class ViewFilter {
                         case 15:
                             if (word.equals(Filter.OR)) {// look for another selected option
                                 state = 2;
+                                break;
                             }
                             else if (word.equals(")")) {// end of selected options
                                 state = 13;
+                                break;
                             }
                             break;
                         case 16: // beginning of additional fields query
@@ -604,20 +683,32 @@ public class ViewFilter {
                                 state = 21;
                             }
                             break;
-
                         case 21:// finding the  exact match value
                             if (word.equals("=")) {
                                 state = 3;
+                                break;
                             }
                             else if (word.equals(Filter.LIKE)) {
                                 state = 8;
+                                break;
                             }
+                            break;
+                        case 22:
+                            if (word.equals("+") || word.equals("-")) {
+                                state = 23;
+                                break;
+                            }
+                            break;
+                        case 24:
+                            names = word.split("\\.");
+                            tableName = names[0];
+                            columnName = names[1];
+                            state = 1;
                             break;
                     }
                 }
-
             }
-            if (state != 9 && state != 11 && state != 10 && state != 13 && state != 7) {// terminal states
+            if (state != 9 && state != 11 && state != 10 && state != 13 && state != 7 && state != 22) {// terminal states
                 throw new RuntimeException("Query parsing ended in bad state: " + state);
             }
             String columnKey = columnName;
@@ -641,16 +732,26 @@ public class ViewFilter {
                 filter.range = range;
                 filter.notEmpty = notEmpty;
                 filter.empty = empty;
+                filter.participantColumn = new ParticipantColumn(columnName, tableName);
                 String[] b = new String[selectedOptions.size()];
                 filter.selectedOptions = selectedOptions.toArray(b);
                 filter.type = type == null ? Filter.TEXT : type;
-                filter.participantColumn = new ParticipantColumn(columnName, tableName);
                 if (Filter.ADDITIONAL_VALUES.equals(type)) {
                     filter.participantColumn = new ParticipantColumn(path, tableName);
                 }
-                filter.filter1 = new NameValue(columnName, value);
-                if (path != null) {
-                    filter.filter2 = new NameValue(path, "");
+                if (!Filter.CHECKBOX.equals(type)) {
+                    filter.filter1 = new NameValue(columnName, value);
+                    if (path != null) {
+                        filter.filter2 = new NameValue(path, "");
+                    }
+                }
+                else {
+                    if(filter1 != null){
+                        filter.filter1 = filter1;
+                    }
+                    else if(filter2 != null){
+                        filter.filter2 = filter2;
+                    }
                 }
                 filters.put(columnName, filter);
             }
@@ -842,6 +943,35 @@ public class ViewFilter {
             throw new RuntimeException("Error adding new view", results.resultException);
         }
         return (String) results.resultValue;
+    }
+
+    private static String trimValue(String value) {
+        if (value.contains("'")) {
+            value = trimFromCharSequence(value, '\'');
+        }
+        if (value.contains("%")) {
+            value = trimFromCharSequence(value, '%');
+        }
+        return value;
+    }
+
+    private static String trimFromCharSequence(String value, char charSeq) {
+        int first = value.indexOf(charSeq);
+        int last = value.lastIndexOf(charSeq);
+        if (first != -1) {
+            if (last != first) {
+                value = value.substring(first + 1, last);
+            }
+            else {
+                if (first == 0) {
+                    value = value.substring(first + 1);
+                }
+                else {
+                    value = value.substring(0, last);
+                }
+            }
+        }
+        return value;
     }
 }
 

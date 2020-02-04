@@ -43,7 +43,6 @@ public class ParticipantWrapper {
 
     public static List<ParticipantWrapper> getFilteredList(@NonNull DDPInstance instance, Map<String, String> filters) {
         logger.info("Getting list of participant information");
-        long timeBegin = System.currentTimeMillis();
         if (filters == null) {
             Map<String, Map<String, Object>> participantESData = getESData(instance);
             Map<String, Participant> participants = Participant.getParticipants(instance.getName());
@@ -63,8 +62,6 @@ public class ParticipantWrapper {
             }
 
             List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary);
-            long timeEnd = System.currentTimeMillis();
-            logger.info("Time it took Elastic Search to return results in ms: " + (timeEnd - timeBegin));
             return r;
         }
         else {
@@ -74,6 +71,7 @@ public class ParticipantWrapper {
             Map<String, List<MedicalRecord>> medicalRecords = null;
             Map<String, List<OncHistoryDetail>> oncHistories = null;
             Map<String, List<KitRequestShipping>> kitRequests = null;
+            Map<String, List<AbstractionActivity>> abstractionActivities = null;
             Map<String, List<AbstractionGroup>> abstractionSummary = null;
             List<String> baseList = null;
             //filter the lists depending on filter
@@ -95,10 +93,14 @@ public class ParticipantWrapper {
                     kitRequests = KitRequestShipping.getKitRequests(instance.getName(), filters.get(source));
                     baseList = getCommonEntries(baseList, new ArrayList<>(kitRequests.keySet()));
                 }
-                else if ("a".equals(source)) {
-                    abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName(), filters.get(source));
-                    baseList = getCommonEntries(baseList, new ArrayList<>(abstractionSummary.keySet()));
+                else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
+                    abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName(), filters.get(source));
+                    baseList = getCommonEntries(baseList, new ArrayList<>(abstractionActivities.keySet()));
                 }
+//                else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
+//                    abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName(), filters.get(source));
+//                    baseList = getCommonEntries(baseList, new ArrayList<>(abstractionSummary.keySet()));
+//                }
                 else {
                     participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filters.get(source));
                 }
@@ -122,6 +124,9 @@ public class ParticipantWrapper {
             if (kitRequests == null) {
                 kitRequests = KitRequestShipping.getKitRequests(instance.getName());
             }
+            if (abstractionActivities == null) {
+                abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName());
+            }
             if (abstractionSummary == null) {
                 abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName());
             }
@@ -132,12 +137,9 @@ public class ParticipantWrapper {
             else {
                 baseList = getCommonEntries(baseList, new ArrayList<>(participants.keySet()));
             }
-            Map<String, List<AbstractionActivity>> abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName());
             //bring together all the information
 
             List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistories, kitRequests, abstractionActivities, abstractionSummary);
-            long timeEnd = System.currentTimeMillis();
-            logger.info("Time it took Elastic Search to return results in ms: " + (timeEnd - timeBegin));
             return r;
         }
     }
@@ -170,18 +172,15 @@ public class ParticipantWrapper {
     public static List<ParticipantWrapper> addAllData(List<String> baseList, Map<String, Map<String, Object>> esDataMap,
                                                       Map<String, Participant> participantMap, Map<String, List<MedicalRecord>> medicalRecordMap,
                                                       Map<String, List<OncHistoryDetail>> oncHistoryMap, Map<String, List<KitRequestShipping>> kitRequestMap,
-                                                      Map<String, List<AbstractionActivity>> abstractionActivities, Map<String, List<AbstractionGroup>> abstractionSummary) {
+                                                      Map<String, List<AbstractionActivity>> abstractionActivityMap, Map<String, List<AbstractionGroup>> abstractionSummary) {
         List<ParticipantWrapper> participantList = new ArrayList<>();
         for (String ddpParticipantId : baseList) {
             Participant participant = participantMap != null ? participantMap.get(ddpParticipantId) : null;
-            List<AbstractionActivity> abstractionActivity = null;
-            if (participant != null && abstractionActivities != null) {
-                abstractionActivity = abstractionActivities.get(participant.getParticipantId());
-            }
             participantList.add(new ParticipantWrapper(esDataMap.get(ddpParticipantId), participant,
                     medicalRecordMap != null ? medicalRecordMap.get(ddpParticipantId) : null,
                     oncHistoryMap != null ? oncHistoryMap.get(ddpParticipantId) : null,
-                    kitRequestMap != null ? kitRequestMap.get(ddpParticipantId) : null, abstractionActivity,
+                    kitRequestMap != null ? kitRequestMap.get(ddpParticipantId) : null,
+                    abstractionActivityMap != null ? abstractionActivityMap.get(ddpParticipantId) : null,
                     abstractionSummary != null ? abstractionSummary.get(ddpParticipantId) : null));
         }
         logger.info("Returning list now");
@@ -210,9 +209,9 @@ public class ParticipantWrapper {
         participantProfileDataMap.put("firstName", mbcParticipant.getFirstName());
         participantProfileDataMap.put("lastName", mbcParticipant.getLastName());
         participantDataMap.put("profile", participantProfileDataMap);
-        participantDataMap.put("status", "ENROLLED");
+        participantDataMap.put("aStatus", "ENROLLED");
         if (participantExit != null) {
-            participantDataMap.put("status", "EXITED_AFTER_ENROLLMENT");
+            participantDataMap.put("aStatus", "EXITED_AFTER_ENROLLMENT");
         }
         participantDataMap.put("ddp", "MBC");
         Map<String, Object> participantAddressMap = new HashMap<>();
@@ -243,9 +242,9 @@ public class ParticipantWrapper {
         participantProfileDataMap.put("firstName", ddpParticipant.getFirstName());
         participantProfileDataMap.put("lastName", ddpParticipant.getLastName());
         participantDataMap.put("profile", participantProfileDataMap);
-        participantDataMap.put("status", "ENROLLED");
+        participantDataMap.put("aStatus", "ENROLLED");
         if (participantExit != null) {
-            participantDataMap.put("status", "EXITED_AFTER_ENROLLMENT");
+            participantDataMap.put("aStatus", "EXITED_AFTER_ENROLLMENT");
         }
         participantDataMap.put("ddp", realm);
         Map<String, Object> participantAddressMap = new HashMap<>();

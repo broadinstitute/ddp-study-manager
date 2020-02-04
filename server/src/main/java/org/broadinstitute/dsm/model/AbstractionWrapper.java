@@ -45,7 +45,7 @@ public class AbstractionWrapper {
 
     public static AbstractionWrapper getAbstractionFieldValue(@NonNull String realm, @NonNull String ddpParticipantId) {
         AbstractionActivity activity = AbstractionActivity.getAbstractionActivity(realm, ddpParticipantId, "final");
-        if (activity == null || !activity.getStatus().equals("done")) {
+        if (activity == null || !activity.getAStatus().equals("done")) {
             String query = AbstractionUtil.SQL_SELECT_MEDICAL_RECORD_ABSTRACTION.replace(Patch.TABLE, DBConstants.MEDICAL_RECORD_ABSTRACTION).replace(Patch.PK, DBConstants.MEDICAL_RECORD_ABSTRACTION_ID);
             List<AbstractionGroup> abstraction = AbstractionUtil.getAbstractionFieldValue(realm, ddpParticipantId, query, DBConstants.MEDICAL_RECORD_ABSTRACTION_ID);
             query = AbstractionUtil.SQL_SELECT_MEDICAL_RECORD_ABSTRACTION.replace(Patch.TABLE, DBConstants.MEDICAL_RECORD_REVIEW).replace(Patch.PK, DBConstants.MEDICAL_RECORD_REVIEW_ID);

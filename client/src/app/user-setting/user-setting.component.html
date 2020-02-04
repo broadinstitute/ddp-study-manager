@@ -10,6 +10,7 @@
   <br/>
 </div>
 
+
 <div *ngIf="errorMessage == null">
 
   <span [hidden]="!saving" class="Width--100">
@@ -71,27 +72,38 @@
           <td></td>
           <td></td>
         </tr>
-        <tr>
-          <td colspan="4"><b>Default Filters</b></td>
-        </tr>
-        <tr>
-          <td>Participant List Default Filter</td>
-          <td colspan="3">
-            <md-select class="Input--Bigger-WIDTH" [(ngModel)]="userSetting.defaultParticipantFilter" (change)="setDefaultFilter($event, 'participantList')">
-              <md-option *ngFor="let t of participantListFilterNames" [value]="t">{{t}}</md-option>
-              <md-option [value]="">No default filter</md-option>
-            </md-select>
-          </td>
-        </tr>
-        <tr>
-          <td>Tissue List Default Filter</td>
-          <td colspan="3">
-            <md-select class="Input--Bigger-WIDTH" [(ngModel)]="userSetting.defaultTissueFilter" (change)="setDefaultFilter($event, 'tissueList')">
-              <md-option *ngFor="let t of tissueListFilterNames" [value]="t">{{t}}</md-option>
-              <md-option [value]="">No default filter</md-option>
-            </md-select>
-          </td>
-        </tr>
+        <ng-container *ngIf="realm !== null&& realm !== undefined">
+          <tr>
+            <td colspan="4"><b>Default Filters</b></td>
+          </tr>
+          <tr>
+            <td>Participant List Default Filter</td>
+            <td colspan="3">
+              <md-select class="Input--Bigger-WIDTH" [(ngModel)]="userSetting.defaultParticipantFilter"
+                         (change)="setDefaultFilter($event, 'participantList')">
+                <md-option *ngFor="let t of participantListFilterNames" [value]="t">{{t}}</md-option>
+                <md-option [value]="">No default filter</md-option>
+              </md-select>
+            </td>
+          </tr>
+
+          <tr>
+            <td>Tissue List Default Filter</td>
+            <td colspan="3">
+              <md-select class="Input--Bigger-WIDTH" [(ngModel)]="userSetting.defaultTissueFilter"
+                         (change)="setDefaultFilter($event, 'tissueList')">
+                <md-option *ngFor="let t of tissueListFilterNames" [value]="t">{{t}}</md-option>
+                <md-option [value]="">No default filter</md-option>
+              </md-select>
+            </td>
+          </tr>
+        </ng-container>
+        <ng-container *ngIf="realm === null || realm === undefined" class="Color--warn Line--Break">
+          <h3 class="Color--primary Line--Break">Please select a realm to show the default filter associated with its
+            group.</h3>
+          <br/>
+
+        </ng-container>
         </tbody>
       </table>
       <button md-raised-button (click)="saveUserSettings()" color="primary"> Save user settings</button>
