@@ -48,18 +48,19 @@
         <div *ngIf="(errorMessage === null || errorMessage === '') ">
           <br>
           <div id="searchTable" *ngIf="showFilters" class="table">
-            <form>
-              <ng-container *ngFor="let key of getKeys()">
-                <table *ngFor="let filter of selectedColumns[key]" style="border: none">
-                  <ng-container *ngIf="filter.participantColumn.name !== 'ddp'">
-                    <app-filter-column [dataFilter]="filter" [editable]="true"></app-filter-column>
-                  </ng-container>
-                </table>
-              </ng-container>
+            <button md-raised-button color="primary" (click)="doFilter()">Search</button>
+            <button md-raised-button color="primary" (click)="clearManualFilters()">Clear</button>
 
-              <button md-raised-button color="primary" (click)="doFilter()">Search</button>
-              <button md-raised-button color="primary" (click)="clearManualFilters()">Clear</button>
-            </form>
+            <ng-container *ngFor="let key of getKeys()">
+              <table *ngFor="let filter of selectedColumns[key]" style="border: none">
+                <ng-container *ngIf="filter.participantColumn.name !== 'ddp'">
+                  <app-filter-column [dataFilter]="filter" [editable]="true"></app-filter-column>
+                </ng-container>
+              </table>
+            </ng-container>
+
+            <button md-raised-button color="primary" (click)="doFilter()">Search</button>
+            <button md-raised-button color="primary" (click)="clearManualFilters()">Clear</button>
           </div>
         </div>
         <div>
@@ -260,7 +261,8 @@
                       <div
                         *ngIf="activityData[col.participantColumn.name] != null && col.participantColumn.name === 'status'">
                         <ng-container
-                          *ngIf="col.type === 'OPTIONS'">{{getOptionDisplay(col.options, activityData[col.participantColumn.name])}}</ng-container>
+                          *ngIf="col.type === 'OPTIONS'">{{getOptionDisplay(col.options, activityData[col.participantColumn.name])}}
+                        </ng-container>
                       </div>
                     </ng-container>
 
@@ -297,7 +299,8 @@
                               *ngIf="getUtil().getQuestionDefinition(activityDefinitionList, alias, questionAnswer.stableId) as qDef">
                               <ng-container *ngIf="qDef.selectMode === 'MULTIPLE'">
                                 <ul *ngFor="let o of qDef.options">
-                                  <li *ngIf="getUtil().isOptionSelected(questionAnswer.answer, o.optionStableId)"><div>{{o.optionText}}</div>
+                                  <li *ngIf="getUtil().isOptionSelected(questionAnswer.answer, o.optionStableId)">
+                                    <div>{{o.optionText}}</div>
                                     <ng-container *ngIf="getUtil().getOptionDetails(questionAnswer.optionDetails, o.optionStableId) as oDetail">
                                       <div>{{oDetail.details}}
                                       </div>
@@ -405,9 +408,11 @@
                             *ngIf="col.type === 'BOOLEAN' || col.type === 'CHECKBOX'">{{getUtil().getYesNo(mr[col.participantColumn.name])}}
                           </ng-container>
                           <ng-container
-                            *ngIf="col.type === 'OPTIONS'">{{getOptionDisplay(col.options, mr[col.participantColumn.name])}}</ng-container>
+                            *ngIf="col.type === 'OPTIONS'">{{getOptionDisplay(col.options, mr[col.participantColumn.name])}}
+                          </ng-container>
                           <ng-container
-                            *ngIf="col.type === 'DATE'">{{getUtil().getDateFormatted(mr[col.participantColumn.name])}}</ng-container>
+                            *ngIf="col.type === 'DATE'">{{getUtil().getDateFormatted(mr[col.participantColumn.name])}}
+                          </ng-container>
                         </p>
                       </li>
                     </ul>
@@ -434,9 +439,11 @@
                             </ng-container>
                           </ng-container>
                           <ng-container
-                            *ngIf="col.type === 'DATE'">{{getUtil().getDateFormatted(onc[col.participantColumn.name])}}</ng-container>
+                            *ngIf="col.type === 'DATE'">{{getUtil().getDateFormatted(onc[col.participantColumn.name])}}
+                          </ng-container>
                           <ng-container
-                            *ngIf="col.type === 'OPTIONS'">{{getOptionDisplay(col.options, onc[col.participantColumn.name])}}</ng-container>
+                            *ngIf="col.type === 'OPTIONS'">{{getOptionDisplay(col.options, onc[col.participantColumn.name])}}
+                          </ng-container>
                           <ng-container
                             *ngIf="col.type === 'BOOLEAN' || col.type === 'CHECKBOX'">{{getUtil().getYesNo(onc[col.participantColumn.name])}}
                           </ng-container>
@@ -469,9 +476,11 @@
                                 </ng-container>
                               </ng-container>
                               <ng-container
-                                *ngIf="col.type === 'DATE'">{{getUtil().getDateFormatted(tissue[col.participantColumn.name])}}</ng-container>
+                                *ngIf="col.type === 'DATE'">{{getUtil().getDateFormatted(tissue[col.participantColumn.name])}}
+                              </ng-container>
                               <ng-container
-                                *ngIf="col.type === 'OPTIONS'">{{getOptionDisplay(col.options, tissue[col.participantColumn.name])}}</ng-container>
+                                *ngIf="col.type === 'OPTIONS'">{{getOptionDisplay(col.options, tissue[col.participantColumn.name])}}
+                              </ng-container>
                               <ng-container
                                 *ngIf="col.type === 'BOOLEAN' || col.type === 'CHECKBOX'">{{getUtil().getYesNo(onc[col.participantColumn.name])}}
                               </ng-container>
@@ -489,13 +498,15 @@
                             *ngIf="col.type !== 'DATE' && col.type !== 'BOOLEAN' && col.type !== 'OPTIONS'">{{sample[col.participantColumn.name]}}
                           </ng-container>
                           <ng-container
-                            *ngIf="col.type === 'BOOLEAN'">{{getUtil().getYesNo(sample[col.participantColumn.name])}}</ng-container>
+                            *ngIf="col.type === 'BOOLEAN'">{{getUtil().getYesNo(sample[col.participantColumn.name])}}
+                          </ng-container>
                           <ng-container
                             *ngIf="col.type === 'DATE' && sample[col.participantColumn.name] != 0">{{sample[col.participantColumn.name] |
                             date:'medium'}}
                           </ng-container>
                           <ng-container
-                            *ngIf="col.type === 'OPTIONS'">{{getOptionDisplay(col.options, sample[col.participantColumn.name])}}</ng-container>
+                            *ngIf="col.type === 'OPTIONS'">{{getOptionDisplay(col.options, sample[col.participantColumn.name])}}
+                          </ng-container>
                         </p>
                       </li>
                     </ul>
@@ -540,7 +551,8 @@
                               {{abs[col.participantColumn.name]}}
                             </ng-container>
                             <ng-container
-                              *ngIf="col.type === 'OPTIONS'">{{getOptionDisplay(col.options, abs[col.participantColumn.name])}}</ng-container>
+                              *ngIf="col.type === 'OPTIONS'">{{getOptionDisplay(col.options, abs[col.participantColumn.name])}}
+                            </ng-container>
                           </p>
                         </li>
                       </ul>
