@@ -278,7 +278,6 @@ export class MedicalRecordComponent implements OnInit {
     this.disableDownloadConsent = true;
     this.dsmService.downloadPDF(this.participant.participant.ddpParticipantId, this.compService.getRealm(), configName).subscribe(
       data => {
-        console.info( data );
         this.downloadFile( data, "_" + configName );
         this.disableDownloadConsent = false;
       },
@@ -296,7 +295,6 @@ export class MedicalRecordComponent implements OnInit {
     this.disableDownloadConsent = true;
     this.dsmService.downloadConsentPDFs(this.participant.participant.ddpParticipantId, localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(
       data => {
-        console.info( data );
         this.downloadFile( data, "_Consent" );
         this.disableDownloadConsent = false;
       },
@@ -453,39 +451,42 @@ export class MedicalRecordComponent implements OnInit {
     if (this.participant != null && this.participant.data != null
       && this.participant.data.profile != null && this.participant.data.medicalProviders != null) {
       let medicalProvider = this.participant.data.medicalProviders.find( medicalProvider => {
-        return medicalProvider.guid === ddpInstitutionId;
+        let tmpId = medicalProvider.legacyGuid != null && medicalProvider.legacyGuid !== 0 ? medicalProvider.legacyGuid : medicalProvider.guid;
+        return tmpId === ddpInstitutionId;
       } );
 
-
-      let address: string = "";
-      if (medicalProvider.physicianName) {
-        address += medicalProvider.physicianName;
-      }
-      if (medicalProvider.institutionName) {
-        address += this.addLineBreak( address );
-        address += medicalProvider.institutionName;
-      }
-      if (medicalProvider.street) {
-        address += this.addLineBreak( address );
-        address += medicalProvider.street;
-      }
-      if (medicalProvider.city && medicalProvider.state) {
-        //both are not empty, so add them both
-        address += this.addLineBreak( address );
-        address += medicalProvider.city + " " + medicalProvider.state;
-      }
-      else {
-        //one is not empty, so add that one
-        if (medicalProvider.city) {
-          address += this.addLineBreak( address );
-          address += medicalProvider.city;
+      if( medicalProvider != null) {
+        let address: string = "";
+        if (medicalProvider.physicianName) {
+          address += medicalProvider.physicianName;
         }
-        if (medicalProvider.state) {
+        if (medicalProvider.institutionName) {
           address += this.addLineBreak( address );
-          address += medicalProvider.state;
+          address += medicalProvider.institutionName;
         }
+        if (medicalProvider.street) {
+          address += this.addLineBreak( address );
+          address += medicalProvider.street;
+        }
+        if (medicalProvider.city && medicalProvider.state) {
+          //both are not empty, so add them both
+          address += this.addLineBreak( address );
+          address += medicalProvider.city + " " + medicalProvider.state;
+        }
+        else {
+          //one is not empty, so add that one
+          if (medicalProvider.city) {
+            address += this.addLineBreak( address );
+            address += medicalProvider.city;
+          }
+          if (medicalProvider.state) {
+            address += this.addLineBreak( address );
+            address += medicalProvider.state;
+          }
+        }
+        return address;
       }
-      return address;
+      return "";
     }
   }
 

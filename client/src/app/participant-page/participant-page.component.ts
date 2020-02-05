@@ -493,7 +493,7 @@ export class ParticipantPageComponent implements OnInit {
 
     this.dsmService.patchParticipantRecord( JSON.stringify( patch ) ).subscribe(// need to subscribe, otherwise it will not send!
       data => {
-        console.info( `response saving data: ${JSON.stringify( data, null, 2 )}` );
+        // console.info( `response saving data: ${JSON.stringify( data, null, 2 )}` );
       },
       err => {
         if (err._body === Auth.AUTHENTICATION_ERROR) {
@@ -855,14 +855,15 @@ export class ParticipantPageComponent implements OnInit {
   getMedicalRecordName( name: string, ddpInstitutionId: string ) {
     if (this.participant.data != null && this.participant.data.profile != null && this.participant.data.medicalProviders != null) {
       let medicalProvider = this.participant.data.medicalProviders.find( medicalProvider => {
-        return medicalProvider.guid === ddpInstitutionId;
+        let tmpId = medicalProvider.legacyGuid != null && medicalProvider.legacyGuid !== 0 ? medicalProvider.legacyGuid : medicalProvider.guid;
+        return tmpId === ddpInstitutionId;
       } );
-      if (name) {
+      if (name != undefined && name != null && name !== "") {
         return name;
       }
       else {
         if (medicalProvider != null) {
-          if ("PHYSICIAN" === medicalProvider.institutionType) {
+          if ("PHYSICIAN" === medicalProvider.type) {
             return medicalProvider.physicianName;
           }
           else {

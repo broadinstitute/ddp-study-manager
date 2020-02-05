@@ -113,7 +113,7 @@
           <br/>
           <br/>
           <button md-raised-button color="primary"
-                  [disabled]="selectedPDF == null || selectedPDF === ''"
+                  [disabled]="selectedPDF == null || selectedPDF === '' || disableDownloadConsent"
                   (click)="downloadPDFs(selectedPDF)">Download selected PDF
           </button>
         </ng-container>

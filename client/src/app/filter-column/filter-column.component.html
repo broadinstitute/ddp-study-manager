@@ -76,7 +76,7 @@
     <div
       *ngIf="(dataFilter.type === 'TEXT' || (dataFilter.type === 'ADDITIONALVALUE' && dataFilter.additionalType === 'TEXT') || dataFilter.type === 'COMPOSITE'|| (dataFilter.type === 'ADDITIONALVALUE' && (dataFilter.additionalType === 'TEXT' || dataFilter.additionalType === 'TEXTAREA'))) && showOptions">
       <md-checkbox [(ngModel)]="dataFilter.exactMatch" color="primary" disableRipple
-                   [disabled]="dataFilter == null || dataFilter.value1 == null || dataFilter.value1 === '' || !editable || dataFilter.alwaysExact">
+                   [disabled]="dataFilter == null || dataFilter.value1 == null || dataFilter.value1 === '' || !editable">
         Exact Match
       </md-checkbox>
     </div>
