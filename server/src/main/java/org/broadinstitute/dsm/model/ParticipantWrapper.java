@@ -183,7 +183,7 @@ public class ParticipantWrapper {
                     abstractionActivityMap != null ? abstractionActivityMap.get(ddpParticipantId) : null,
                     abstractionSummary != null ? abstractionSummary.get(ddpParticipantId) : null));
         }
-        logger.info("Returning list now");
+        logger.info("Returning list w/ " + participantList.size() + " pts now");
         return participantList;
     }
 

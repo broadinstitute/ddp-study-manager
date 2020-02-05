@@ -159,7 +159,12 @@ public class FilterRoute extends RequestHandler {
                 // get pt for selected tissue (@ tissue list)
                 Map<String, String> queryConditions = new HashMap<>();
                 queryConditions.put("p", " AND p.ddp_participant_id = '" + ddpParticipantId + "'");
-                queryConditions.put("ES", " AND profile.guid = '" + ddpParticipantId + "'");
+                if (instance.isMigratedDDP()) {
+                    queryConditions.put("ES", " AND profile.legacyAltPid = '" + ddpParticipantId + "'");
+                }
+                else {
+                    queryConditions.put("ES", " AND profile.guid = '" + ddpParticipantId + "'");
+                }
                 return ParticipantWrapper.getFilteredList(instance, queryConditions);
             }
             else if (request.url().contains(RoutePath.FILTER_LIST)) {
