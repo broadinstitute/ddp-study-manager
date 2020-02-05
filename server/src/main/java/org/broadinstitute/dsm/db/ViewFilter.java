@@ -23,6 +23,8 @@ import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
@@ -438,7 +440,30 @@ public class ViewFilter {
             List<String> basedQuickFilter = getQueryItems(quickFilterName, parent);
             quickFilterQuery = basedQuickFilter.get(0);
         }
-        query = quickFilterQuery + " " + query;
+        String[] queryWords = query.split("\\s+");
+        for (int i = 0; i < queryWords.length; i++) {
+            if (StringUtils.isNotBlank(queryWords[i]) && queryWords[i].equals("today")) {
+                String date = getDate();
+                System.out.println(getDate());
+
+                if (i < queryWords.length - 1 && (queryWords[i + 1].equals("+") || queryWords[i + 1].equals("-"))) {
+                    String days = queryWords[i + 2];
+                    days = days.replace("d", "");
+                    int numberOfDays = Integer.parseInt(days);
+                    if (queryWords[i + 1].equals("-")) {
+                        numberOfDays *= -1;
+                    }
+                    LocalDateTime today = LocalDateTime.now();     //Today
+                    LocalDateTime tomorrow = today.plusDays(numberOfDays);
+                    date = getDate(tomorrow);
+                    queryWords[i + 1] = "";
+                    queryWords[i + 2] = "";
+                }
+                queryWords[i] = "'" + date + "'";
+                i = i + 2;
+            }
+        }
+        query = quickFilterQuery + " " + String.join(" ", queryWords);
         logger.info(query);
         return query;
     }
@@ -466,6 +491,7 @@ public class ViewFilter {
             Boolean notEmpty = false;
             Boolean exact = false;
             Boolean longWord = false;
+            Boolean f2 = false;
             NameValue filter2 = null;
             NameValue filter1 = null;
             if (StringUtils.isBlank(condition)) {
@@ -506,6 +532,9 @@ public class ViewFilter {
                                 exact = false;
                                 range = true;
                                 state = 4;
+                                if (word.equals("<=")) {
+                                    f2 = true;
+                                }
                                 break;
                             }
                             else if (word.toUpperCase().equals(Filter.IS)) { // empty or not empty selected in the frontend
@@ -538,7 +567,7 @@ public class ViewFilter {
                             break;
 
                         case 3: // exact matching value
-                            if (word.equals("NOW()")) {
+                            if (word.equals("getDate")) {
                                 state = 22;
                                 break;
                             }
@@ -571,7 +600,15 @@ public class ViewFilter {
                             break;
 
                         case 4: // range value
+                            if (word.equals("today")) {
+                                state = 22;
+                                type = Filter.DATE;
+                                break;
+                            }
                             value = trimValue(word);
+                            if(isValidDate(value, false)){
+                                type=Filter.DATE;
+                            }
                             state = 11;
                             break;
 
@@ -632,6 +669,10 @@ public class ViewFilter {
                         case 10:// termination state
                             break;
                         case 11:// termination state
+                            if (word.equals("+") || word.equals("-")) {
+                                state = 23;
+                                break;
+                            }
                             break;
                         case 12:
                             state = 14;
@@ -699,6 +740,8 @@ public class ViewFilter {
                                 break;
                             }
                             break;
+                        case 23:
+                            break;
                         case 24:
                             names = word.split("\\.");
                             tableName = names[0];
@@ -708,7 +751,7 @@ public class ViewFilter {
                     }
                 }
             }
-            if (state != 9 && state != 11 && state != 10 && state != 13 && state != 7 && state != 22) {// terminal states
+            if (state != 9 && state != 11 && state != 10 && state != 13 && state != 7 && state != 22 && state != 23) {// terminal states
                 throw new RuntimeException("Query parsing ended in bad state: " + state);
             }
             String columnKey = columnName;
@@ -736,20 +779,29 @@ public class ViewFilter {
                 String[] b = new String[selectedOptions.size()];
                 filter.selectedOptions = selectedOptions.toArray(b);
                 filter.type = type == null ? Filter.TEXT : type;
+                if(isValidDate(value, false)){
+                    type=Filter.DATE;
+                }
                 if (Filter.ADDITIONAL_VALUES.equals(type)) {
                     filter.participantColumn = new ParticipantColumn(path, tableName);
                 }
                 if (!Filter.CHECKBOX.equals(type)) {
-                    filter.filter1 = new NameValue(columnName, value);
-                    if (path != null) {
+                    if (!f2) {
+                        filter.filter1 = new NameValue(columnName, value);
+                    }
+                    if (path != null && !f2) {
                         filter.filter2 = new NameValue(path, "");
+                    }
+                    if (f2) {
+                        filter.filter1 = new NameValue(columnName, null);
+                        filter.filter2 = new NameValue(columnName, value);
                     }
                 }
                 else {
-                    if(filter1 != null){
+                    if (filter1 != null && !f2) {
                         filter.filter1 = filter1;
                     }
-                    else if(filter2 != null){
+                    else if (filter2 != null || f2) {
                         filter.filter2 = filter2;
                     }
                 }
@@ -972,6 +1024,17 @@ public class ViewFilter {
             }
         }
         return value;
+    }
+
+    public static String getDate() {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDateTime now = LocalDateTime.now();
+        return (dtf.format(now));
+    }
+
+    public static String getDate(LocalDateTime date) {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        return (dtf.format(date));
     }
 }
 

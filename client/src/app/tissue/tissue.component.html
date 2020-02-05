@@ -272,8 +272,9 @@
     <tr *ngFor="let col of additionalColumns">
       <td class="TD--Padding">{{col.columnDisplay}}</td>
       <td colspan="3">
-        <md-input-container *ngIf="col.displayType === 'TEXT' || col.displayType === ''|| col.displayType == null"
-                            [ngClass]="{'Width--100': true, 'Input--Min-WIDTH': true, 'Color--Field--Patched': isPatchedCurrently(col.columnName)}">
+        <md-input-container
+          *ngIf="col.displayType === 'text' || col.displayType === 'TEXT' || col.displayType === ''|| col.displayType == null"
+          [ngClass]="{'Width--100': true, 'Input--Min-WIDTH': true, 'Color--Field--Patched': isPatchedCurrently(col.columnName)}">
           <input mdInput maxlength="200" [disabled]="!editable"
                  value="{{getAdditionalValue(col.columnName)}}" placeholder="{{col.columnDisplay}}"
                  (change)="onAdditionalColChange($event, col.columnName)"
@@ -286,7 +287,8 @@
                  (change)="onAdditionalColChange($event, col.columnName)"
                  (blur)="currentField(null)" (focus)="currentField(col.columnName)">
         </md-input-container>
-        <textarea maxlength="1000" *ngIf="col.displayType === 'TEXTAREA'"
+        <textarea maxlength="1000"
+                  *ngIf="col.displayType === 'TEXTAREA'"
                   [ngClass]="{'Width--100': true, 'Color--Field--Patched': isPatchedCurrently(col.columnName)}"
                   (blur)="currentField(null)" (focus)="currentField(col.columnName)" [disabled]="!editable"
                   value="{{getAdditionalValue(col.columnName)}}"

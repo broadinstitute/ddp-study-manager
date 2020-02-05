@@ -22,7 +22,7 @@ public class RequestPDFProcessor extends PDFProcessor {
     public static final String FIELD_CONFIRMED_PHONE = "confirmedPhone";
     public static final String FIELD_CONFIRMED_FAX = "confirmedFax";
     public static final String FIELD_FULL_NAME = "fullName";
-    public static final String FIELD_DATE = "today";
+    public static final String FIELD_DATE = "getDate";
     public static final String FIELD_DATE_2 = "today_page2";
     public static final String FIELD_DATE_OF_BIRTH = "dob";
     public static final String FIELD_DATE_PX = "datePX";

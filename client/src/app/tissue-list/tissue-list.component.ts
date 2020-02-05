@@ -888,6 +888,7 @@ export class TissueListComponent implements OnInit {
     this.loading = true;
     this.currentQuickFilterName = filterName;
     this.textQuery = "";
+    this.filterQuery = "";
     this.wrongQuery = false;
     let destroyingViewFilter = new ViewFilter(null, filterName, this.destructionPolicyColumns, false, "0",
       null, null, this.parent, null, null, null);
@@ -895,18 +896,6 @@ export class TissueListComponent implements OnInit {
       data => {
         if (destroyingViewFilter.filters != null) {
           this.adjustAllColumns(destroyingViewFilter);
-          // for (let filter of destroyingViewFilter.filters) {
-          //   for (let f of this.allColumns[filter.participantColumn.tableAlias]) {
-          //     if (f.participantColumn.name === filter.participantColumn.name) {
-          //       let index = this.allColumns[filter.participantColumn.tableAlias].indexOf(f);
-          //       if (index !== -1) {
-          //         this.allColumns[filter.participantColumn.tableAlias].splice(index, 1);
-          //         this.allColumns[filter.participantColumn.tableAlias].push(filter);
-          //         break;
-          //       }
-          //     }
-          //   }
-          // }
         }
         let date = new Date();
         this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
