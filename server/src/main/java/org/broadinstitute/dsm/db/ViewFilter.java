@@ -43,7 +43,7 @@ public class ViewFilter {
     public static final String SQL_CHECK_VIEW_NAME = "SELECT * FROM view_filters WHERE (display_name = ? ) and deleted <=> 0 ";
     public static final String SQL_SELECT_USER_FILTERS = "SELECT * FROM view_filters WHERE (created_by = ? OR (created_by = 'System' AND ddp_group_id = ? )" +
             "OR (shared = 1 AND ddp_group_id = ? ) OR (ddp_group_id is NULL AND ddp_realm_id LIKE '%#%') ) AND deleted <> 1 ";
-    public static final String SQL_SELECT_QUERY_ITEMS = "SELECT query_items, quick_filter_name FROM view_filters WHERE display_name = ? AND parent = ?";
+    public static final String SQL_SELECT_QUERY_ITEMS = "SELECT query_items, quick_filter_name FROM view_filters WHERE display_name = ? AND parent = ? AND deleted <> 1";
     public static final String SQL_GET_DEFAULT_FILTER = "SELECT display_name from view_filters WHERE default_users LIKE '%#%' AND parent = ?";
     public static final String SQL_SELECT_DEFAULT_FILTER_USERS = "SELECT default_users FROM view_filters WHERE display_name = ? AND parent = ? ";
     public static final String SQL_UPDATE_DEFAULT_FILTER = "UPDATE view_filters SET default_users = ? WHERE display_name = ? AND parent = ? ";
