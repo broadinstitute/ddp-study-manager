@@ -830,7 +830,7 @@ export class TissueListComponent implements OnInit {
     );
   }
 
-  public doQuickFilter(quickFilter) {
+  public applyQuickFilter (quickFilter) {
     this.loading = true;
     this.currentQuickFilterName = quickFilter.name;
     this.currentView = JSON.stringify(quickFilter);

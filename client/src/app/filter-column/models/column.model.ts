@@ -25,11 +25,8 @@ export class ParticipantColumn {
   public static ASSIGNEE_MR = new ParticipantColumn( "MR Assignee", "assigneeMr", "p" );
   public static ASSIGNEE_TISSUE = new ParticipantColumn( "Tissue Assignee", "assigneeTissue", "p" );
   public static EXIT_DATE = new ParticipantColumn( "Date Withdrawn", "exitDate", "ex" );
-  public static MR_NEEDS_ATTENTION = new ParticipantColumn( "MR Attention", "mrNeedsAttention" );
-  public static TISSUE_NEEDS_ATTENTION = new ParticipantColumn( "Tissue Attention", "tissueNeedsAttention" );
 
   //mr columns
-  public static MR_TYPE = new ParticipantColumn( "Type", "type", "m" );
   public static MR_INSTITUTION_NAME = new ParticipantColumn( "Institution Name", "name", "m" );
   public static MR_INSTITUTION_CONTACT = new ParticipantColumn( "Institution Contact", "contact", "m" );
   public static MR_INSTITUTION_PHONE = new ParticipantColumn( "Institution Phone", "phone", "m" );

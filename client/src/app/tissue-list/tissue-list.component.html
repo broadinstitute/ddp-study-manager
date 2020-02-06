@@ -205,7 +205,7 @@
       <span *ngFor="let qFilter of quickFilters; let i=index">
       <button md-mini-fab
               [color]="isCurrentFilter(qFilter.filterName)"
-              (click)="doQuickFilter(qFilter)">
+              (click)="applyQuickFilter(qFilter)">
         <span tooltip="{{qFilter.filterName}}">
         <i [ngClass]="qFilter.icon"></i>
         </span>
