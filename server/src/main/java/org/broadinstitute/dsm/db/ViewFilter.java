@@ -567,7 +567,8 @@ public class ViewFilter {
                             break;
 
                         case 3: // exact matching value
-                            if (word.equals("getDate")) {
+                            if (word.equals("today")) {
+                                value = getDate();
                                 state = 22;
                                 break;
                             }
@@ -606,8 +607,8 @@ public class ViewFilter {
                                 break;
                             }
                             value = trimValue(word);
-                            if(isValidDate(value, false)){
-                                type=Filter.DATE;
+                            if (isValidDate(value, false)) {
+                                type = Filter.DATE;
                             }
                             state = 11;
                             break;
@@ -669,8 +670,12 @@ public class ViewFilter {
                         case 10:// termination state
                             break;
                         case 11:// termination state
-                            if (word.equals("+") || word.equals("-")) {
+                            if (word.equals("+")) {
                                 state = 23;
+                                break;
+                            }
+                            else if (word.equals("-")) {
+                                state = 26;
                                 break;
                             }
                             break;
@@ -735,12 +740,24 @@ public class ViewFilter {
                             }
                             break;
                         case 22:
-                            if (word.equals("+") || word.equals("-")) {
+                            if (word.equals("+")) {
                                 state = 23;
+                                break;
+                            }
+                            else if (word.equals("-")){
+                                state = 26;
                                 break;
                             }
                             break;
                         case 23:
+                            if (word.indexOf("d") != -1) {
+                                String days = word;
+                                days = days.replace("d", "");
+                                int numberOfDays = Integer.parseInt(days);
+                                value = getDate(numberOfDays, '+');
+                                state = 25;
+                                break;
+                            }
                             break;
                         case 24:
                             names = word.split("\\.");
@@ -748,10 +765,22 @@ public class ViewFilter {
                             columnName = names[1];
                             state = 1;
                             break;
+                        case 25:
+                            break;
+                        case 26:
+                            if (word.indexOf("d") != -1) {
+                                String days = word;
+                                days = days.replace("d", "");
+                                int numberOfDays = Integer.parseInt(days);
+                                value = getDate(numberOfDays, '-');
+                                state = 25;
+                                break;
+                            }
+                            break;
                     }
                 }
             }
-            if (state != 9 && state != 11 && state != 10 && state != 13 && state != 7 && state != 22 && state != 23) {// terminal states
+            if (state != 9 && state != 11 && state != 10 && state != 13 && state != 7 && state != 22 && state != 25) {// terminal states
                 throw new RuntimeException("Query parsing ended in bad state: " + state);
             }
             String columnKey = columnName;
@@ -779,8 +808,8 @@ public class ViewFilter {
                 String[] b = new String[selectedOptions.size()];
                 filter.selectedOptions = selectedOptions.toArray(b);
                 filter.type = type == null ? Filter.TEXT : type;
-                if(isValidDate(value, false)){
-                    type=Filter.DATE;
+                if (isValidDate(value, false)) {
+                    type = Filter.DATE;
                 }
                 if (Filter.ADDITIONAL_VALUES.equals(type)) {
                     filter.participantColumn = new ParticipantColumn(path, tableName);
@@ -818,6 +847,7 @@ public class ViewFilter {
 
 
     private static String parseToFrontEndQuery(String str) {
+
         if (StringUtils.isNotBlank(str)) {
             String[] words = str.split("[ ]");
             Set<String> map = PatchUtil.getTableAliasArray();
@@ -1035,6 +1065,15 @@ public class ViewFilter {
     public static String getDate(LocalDateTime date) {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         return (dtf.format(date));
+    }
+
+    public static String getDate(int numberOfDays, char operator) {
+        if (operator == '-') {
+            numberOfDays *= -1;
+        }
+        LocalDateTime today = LocalDateTime.now();     //Today
+        LocalDateTime tomorrow = today.plusDays(numberOfDays);
+        return getDate(tomorrow);
     }
 }
 
