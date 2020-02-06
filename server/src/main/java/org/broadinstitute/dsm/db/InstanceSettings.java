@@ -17,13 +17,15 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 @Data
 public class InstanceSettings {
 
-    private static final String SQL_SELECT_INSTANCE_SETTINGS = "SELECT mr_cover_pdf FROM instance_settings settings, ddp_instance realm " +
+    private static final String SQL_SELECT_INSTANCE_SETTINGS = "SELECT mr_cover_pdf, kit_behavior_change FROM instance_settings settings, ddp_instance realm " +
             "WHERE realm.ddp_instance_id = settings.ddp_instance_id AND realm.instance_name = ?";
 
     private List<Value> mrCoverPdf;
+    private Object kitBehaviorChange;
 
-    public InstanceSettings(List<Value> mrCoverPdf) {
+    public InstanceSettings(List<Value> mrCoverPdf, Object kitBehaviorChange) {
         this.mrCoverPdf = mrCoverPdf;
+        this.kitBehaviorChange = kitBehaviorChange;
     }
 
     public static InstanceSettings getInstanceSettings(@NonNull String realm) {
@@ -34,7 +36,8 @@ public class InstanceSettings {
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         List<Value> mrCoverPdfSettings = Arrays.asList(new Gson().fromJson(rs.getString(DBConstants.MR_COVER_PDF), Value[].class));
-                        dbVals.resultValue = new InstanceSettings(mrCoverPdfSettings);
+                        Object kitBehaviorChange = new Gson().fromJson(rs.getString(DBConstants.KIT_BEHAVIOR_CHANGE), Object.class);
+                        dbVals.resultValue = new InstanceSettings(mrCoverPdfSettings, kitBehaviorChange);
                     }
                 }
             }

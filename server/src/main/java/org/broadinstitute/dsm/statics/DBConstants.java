@@ -353,7 +353,7 @@ public class DBConstants {
     // bookmark
     public static final String PDF_AUDIT_KIT = "pdf_audit_kit";
 
-    //participant aStatus
+    //participant status
     public static final String MR_REQUESTED = "mrRequested";
     public static final String M_RECEIVED = "mrReceived";
     public static final String TISSUE_REQUESTED = "tissueRequested";
@@ -413,4 +413,5 @@ public class DBConstants {
     public static final String DDP_GROUP_ID = "ddp_group_id";
 
     public static final String MR_COVER_PDF = "mr_cover_pdf";
+    public static final String KIT_BEHAVIOR_CHANGE = "kit_behavior_change";
 }

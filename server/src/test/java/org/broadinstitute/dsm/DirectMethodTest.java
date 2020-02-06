@@ -17,6 +17,7 @@ import org.broadinstitute.dsm.model.gbf.ShippingConfirmations;
 import org.broadinstitute.dsm.model.gbf.ShippingInfo;
 import org.broadinstitute.dsm.route.NDIRoute;
 import org.broadinstitute.dsm.util.DBTestUtil;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.TestUtil;
 import org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil;
 import org.junit.*;
@@ -732,7 +733,23 @@ public class DirectMethodTest extends TestHelper {
         InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(TEST_DDP);
         Assert.assertNotNull(instanceSettings);
         Assert.assertNotNull(instanceSettings.getMrCoverPdf());
+        Assert.assertNotNull(instanceSettings.getKitBehaviorChange());
         Assert.assertFalse(instanceSettings.getMrCoverPdf().isEmpty());
+    }
 
+    @Test
+    public void osteoSingleCountry() {
+        DDPInstance instance = DDPInstance.getDDPInstance("Osteo");
+        String filter = " AND ( PREQUAL.SELF_COUNTRY = 'US' )";
+        Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filter);
+        Assert.assertTrue(!participants.isEmpty());
+    }
+
+    @Test
+    public void osteoTwoCountries() {
+        DDPInstance instance = DDPInstance.getDDPInstance("Osteo");
+        String filter = " AND ( PREQUAL.SELF_COUNTRY = 'US' OR PREQUAL.SELF_COUNTRY = 'CA' )";
+        Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filter);
+        Assert.assertTrue(!participants.isEmpty());
     }
 }
