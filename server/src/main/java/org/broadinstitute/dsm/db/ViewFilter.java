@@ -744,7 +744,7 @@ public class ViewFilter {
                                 state = 23;
                                 break;
                             }
-                            else if (word.equals("-")){
+                            else if (word.equals("-")) {
                                 state = 26;
                                 break;
                             }
@@ -780,7 +780,7 @@ public class ViewFilter {
                     }
                 }
             }
-            if (state != 9 && state != 11 && state != 10 && state != 13 && state != 7 && state != 22 && state != 25) {// terminal states
+            if (state != 7 && state != 9 && state != 10 && state != 11 && state != 13 && state != 22 && state != 25) {// terminal states
                 throw new RuntimeException("Query parsing ended in bad state: " + state);
             }
             String columnKey = columnName;
@@ -903,7 +903,52 @@ public class ViewFilter {
                 }
 
             }
+            if (StringUtils.isNotBlank(words[i]) && words[i].equals("today")) {
+                String date = getDate();
+                System.out.println(getDate());
+
+                if (i < words.length - 1 && (words[i + 1].equals("+") || words[i + 1].equals("-"))) {
+                    String days = words[i + 2];
+                    days = days.replace("d", "");
+                    int numberOfDays = Integer.parseInt(days);
+                    if (words[i + 1].equals("-")) {
+                        numberOfDays *= -1;
+                    }
+                    LocalDateTime today = LocalDateTime.now();     //Today
+                    LocalDateTime tomorrow = today.plusDays(numberOfDays);
+                    date = getDate(tomorrow);
+                    words[i + 1] = "";
+                    words[i + 2] = "";
+                }
+                words[i] = "'" + date + "'";
+                i = i + 2;
+            }
         }
+//        if (filterQuery.indexOf("today") != -1) {
+//            String[] queryWords = filterQuery.split("\\s+");
+//            for (int i = 0; i < queryWords.length; i++) {
+//                if (StringUtils.isNotBlank(queryWords[i]) && queryWords[i].equals("today")) {
+//                    String date = getDate();
+//                    System.out.println(getDate());
+//
+//                    if (i < queryWords.length - 1 && (queryWords[i + 1].equals("+") || queryWords[i + 1].equals("-"))) {
+//                        String days = queryWords[i + 2];
+//                        days = days.replace("d", "");
+//                        int numberOfDays = Integer.parseInt(days);
+//                        if (queryWords[i + 1].equals("-")) {
+//                            numberOfDays *= -1;
+//                        }
+//                        LocalDateTime today = LocalDateTime.now();     //Today
+//                        LocalDateTime tomorrow = today.plusDays(numberOfDays);
+//                        date = getDate(tomorrow);
+//                        queryWords[i + 1] = "";
+//                        queryWords[i + 2] = "";
+//                    }
+//                    queryWords[i] = "'" + date + "'";
+//                    i = i + 2;
+//                }
+//            }
+//        }
         return String.join(" ", words);
     }
 
