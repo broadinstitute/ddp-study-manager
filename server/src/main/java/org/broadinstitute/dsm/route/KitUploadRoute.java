@@ -408,7 +408,7 @@ public class KitUploadRoute extends RequestHandler {
         if (dbVals.resultValue == null) {
             throw new RuntimeException("Error getting id of new kit request ");
         }
-        logger.info("Found " + dbVals.resultValue + " kit requests for bsp_collaborator_participant_id " + ddpParticipantId);
+        logger.info("Found " + dbVals.resultValue + " kit requests for ddp_participant_id " + ddpParticipantId);
         return (int) dbVals.resultValue > 0;
     }
 }
