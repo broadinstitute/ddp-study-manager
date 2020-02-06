@@ -38,6 +38,7 @@ Thumbs.db
 server/config/test-config.conf
 server/config/vault.conf
 server/config/dev-keystore
+server/config/dev-keystore2
 server/config/test-keystore
 server/config/staging-keystore
 server/config/prod-keystore
