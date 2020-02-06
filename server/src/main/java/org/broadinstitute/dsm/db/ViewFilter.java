@@ -847,6 +847,7 @@ public class ViewFilter {
 
 
     private static String parseToFrontEndQuery(String str) {
+
         if (StringUtils.isNotBlank(str)) {
             String[] words = str.split("[ ]");
             Set<String> map = PatchUtil.getTableAliasArray();
