@@ -43,7 +43,7 @@ public class ViewFilter {
     public static final String SQL_CHECK_VIEW_NAME = "SELECT * FROM view_filters WHERE (display_name = ? ) and deleted <=> 0 ";
     public static final String SQL_SELECT_USER_FILTERS = "SELECT * FROM view_filters WHERE (created_by = ? OR (created_by = 'System' AND ddp_group_id = ? )" +
             "OR (shared = 1 AND ddp_group_id = ? ) OR (ddp_group_id is NULL AND ddp_realm_id LIKE '%#%') ) AND deleted <> 1 ";
-    public static final String SQL_SELECT_QUERY_ITEMS = "SELECT query_items, quick_filter_name FROM view_filters WHERE display_name = ? AND parent = ?";
+    public static final String SQL_SELECT_QUERY_ITEMS = "SELECT query_items, quick_filter_name FROM view_filters WHERE display_name = ? AND parent = ? AND deleted <> 1";
     public static final String SQL_GET_DEFAULT_FILTER = "SELECT display_name from view_filters WHERE default_users LIKE '%#%' AND parent = ?";
     public static final String SQL_SELECT_DEFAULT_FILTER_USERS = "SELECT default_users FROM view_filters WHERE display_name = ? AND parent = ? ";
     public static final String SQL_UPDATE_DEFAULT_FILTER = "UPDATE view_filters SET default_users = ? WHERE display_name = ? AND parent = ? ";
@@ -744,7 +744,7 @@ public class ViewFilter {
                                 state = 23;
                                 break;
                             }
-                            else if (word.equals("-")){
+                            else if (word.equals("-")) {
                                 state = 26;
                                 break;
                             }
@@ -780,7 +780,7 @@ public class ViewFilter {
                     }
                 }
             }
-            if (state != 9 && state != 11 && state != 10 && state != 13 && state != 7 && state != 22 && state != 25) {// terminal states
+            if (state != 7 && state != 9 && state != 10 && state != 11 && state != 13 && state != 22 && state != 25) {// terminal states
                 throw new RuntimeException("Query parsing ended in bad state: " + state);
             }
             String columnKey = columnName;
@@ -903,7 +903,52 @@ public class ViewFilter {
                 }
 
             }
+            if (StringUtils.isNotBlank(words[i]) && words[i].equals("today")) {
+                String date = getDate();
+                System.out.println(getDate());
+
+                if (i < words.length - 1 && (words[i + 1].equals("+") || words[i + 1].equals("-"))) {
+                    String days = words[i + 2];
+                    days = days.replace("d", "");
+                    int numberOfDays = Integer.parseInt(days);
+                    if (words[i + 1].equals("-")) {
+                        numberOfDays *= -1;
+                    }
+                    LocalDateTime today = LocalDateTime.now();     //Today
+                    LocalDateTime tomorrow = today.plusDays(numberOfDays);
+                    date = getDate(tomorrow);
+                    words[i + 1] = "";
+                    words[i + 2] = "";
+                }
+                words[i] = "'" + date + "'";
+                i = i + 2;
+            }
         }
+//        if (filterQuery.indexOf("today") != -1) {
+//            String[] queryWords = filterQuery.split("\\s+");
+//            for (int i = 0; i < queryWords.length; i++) {
+//                if (StringUtils.isNotBlank(queryWords[i]) && queryWords[i].equals("today")) {
+//                    String date = getDate();
+//                    System.out.println(getDate());
+//
+//                    if (i < queryWords.length - 1 && (queryWords[i + 1].equals("+") || queryWords[i + 1].equals("-"))) {
+//                        String days = queryWords[i + 2];
+//                        days = days.replace("d", "");
+//                        int numberOfDays = Integer.parseInt(days);
+//                        if (queryWords[i + 1].equals("-")) {
+//                            numberOfDays *= -1;
+//                        }
+//                        LocalDateTime today = LocalDateTime.now();     //Today
+//                        LocalDateTime tomorrow = today.plusDays(numberOfDays);
+//                        date = getDate(tomorrow);
+//                        queryWords[i + 1] = "";
+//                        queryWords[i + 2] = "";
+//                    }
+//                    queryWords[i] = "'" + date + "'";
+//                    i = i + 2;
+//                }
+//            }
+//        }
         return String.join(" ", words);
     }
 
