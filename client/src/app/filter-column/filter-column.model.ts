@@ -213,7 +213,8 @@ export class Filter {
   constructor(public participantColumn: ParticipantColumn, public type: string, public options?: NameValue[], public filter2?: NameValue,
               public range?: boolean, public exactMatch?: boolean, public filter1?: NameValue,
               public selectedOptions?: any, public value1?: any, public value2?: any, public sortAsc?: boolean,
-              public empty?: boolean, public notEmpty?: boolean, public singleOption?: boolean, public additionalType?: string, public parentName?: string) {
+              public empty?: boolean, public notEmpty?: boolean, public singleOption?: boolean, public additionalType?: string,
+              public parentName?: string) {
     this.participantColumn = participantColumn;
     this.type = type;
     if (options != null) {
@@ -339,6 +340,7 @@ export class Filter {
     if (json.filters == undefined) {
       return null;
     }
+    console.log(json.filterName);
     let filters: Filter[] = [];
     for (let filter of json.filters) {
       if (allColumns[ filter.participantColumn.tableAlias ] != undefined) {
@@ -401,6 +403,7 @@ export class Filter {
       }
 
     }
+    console.log(filters);
     return filters;
   }
 

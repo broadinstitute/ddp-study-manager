@@ -83,6 +83,7 @@ export class DSMService {
     map.push({name: "userId", value: this.role.userID()});
     map.push({name: "userMail", value: this.role.userMail()});
     map.push({name: DSMService.REALM, value: realm});
+    console.log(map);
     return this.http.patch(url, json, this.buildQueryHeader(map)).map((res: Response) => res.json()).catch(this.handleError);
   }
 
