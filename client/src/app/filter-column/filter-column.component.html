@@ -1,6 +1,6 @@
 <div
   *ngIf="dataFilter.type === 'DATE' || dataFilter.type === 'EPOCHDATE' || dataFilter.type === 'OPTIONS' || dataFilter.type === 'BOOLEAN' || dataFilter.type === 'CHECKBOX'
-  || (dataFilter.type === 'ADDITIONALVALUE' && (dataFilter.additionalType !== 'TEXT' && dataFilter.additionalType !== 'TEXTAREA'))">
+  || (dataFilter.type === 'ADDITIONALVALUE' && (dataFilter.additionalType !== 'TEXT' && dataFilter.additionalType !== 'text' && dataFilter.additionalType !== 'TEXTAREA'))">
   <b>{{dataFilter.participantColumn.display}}</b>
 </div>
 <ng-container
@@ -33,7 +33,7 @@
   </ng-container>
 </ng-container>
 <ng-container
-  *ngIf="dataFilter.type === 'TEXT' || dataFilter.type === 'COMPOSITE' || (dataFilter.type === 'ADDITIONALVALUE' && (dataFilter.additionalType === null || dataFilter.additionalType === undefined || dataFilter.additionalType === '' || dataFilter.additionalType === 'TEXT' || dataFilter.additionalType === 'TEXTAREA'))">
+  *ngIf="dataFilter.type === 'TEXT' || dataFilter.type === 'COMPOSITE' || (dataFilter.type === 'ADDITIONALVALUE' && (dataFilter.additionalType === null || dataFilter.additionalType === undefined || dataFilter.additionalType === '' || dataFilter.additionalType === 'TEXT' || dataFilter.additionalType === 'text' || dataFilter.additionalType === 'TEXTAREA'))">
   <md-input-container>
     <input mdInput maxlength="500" placeholder="{{dataFilter.participantColumn.display}}" type="text" [(ngModel)]="dataFilter.value1"
            autocomplete="off" [disabled]="!editable">
@@ -74,9 +74,9 @@
   </ng-container>
   <ng-container *ngIf="showOptions">
     <div
-      *ngIf="(dataFilter.type === 'TEXT' || (dataFilter.type === 'ADDITIONALVALUE' && dataFilter.additionalType === 'TEXT') || dataFilter.type === 'COMPOSITE'|| (dataFilter.type === 'ADDITIONALVALUE' && (dataFilter.additionalType === 'TEXT' || dataFilter.additionalType === 'TEXTAREA'))) && showOptions">
+      *ngIf="(dataFilter.type === 'TEXT' || (dataFilter.type === 'ADDITIONALVALUE' && (dataFilter.additionalType === 'TEXT' || dataFilter.additionalType === 'text')) || dataFilter.type === 'COMPOSITE'|| (dataFilter.type === 'ADDITIONALVALUE' && (dataFilter.additionalType === 'TEXT' || dataFilter.additionalType === 'text' || dataFilter.additionalType === 'TEXTAREA'))) && showOptions">
       <md-checkbox [(ngModel)]="dataFilter.exactMatch" color="primary" disableRipple
-                   [disabled]="dataFilter == null || dataFilter.value1 == null || dataFilter.value1 === '' || !editable || dataFilter.alwaysExact">
+                   [disabled]="dataFilter == null || dataFilter.value1 == null || dataFilter.value1 === '' || !editable">
         Exact Match
       </md-checkbox>
     </div>
