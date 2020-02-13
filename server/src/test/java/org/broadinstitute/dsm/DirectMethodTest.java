@@ -735,6 +735,36 @@ public class DirectMethodTest extends TestHelper {
         Assert.assertNotNull(instanceSettings.getMrCoverPdf());
         Assert.assertNotNull(instanceSettings.getKitBehaviorChange());
         Assert.assertFalse(instanceSettings.getMrCoverPdf().isEmpty());
+        Assert.assertFalse(instanceSettings.getKitBehaviorChange().isEmpty());
+
+        List<Value> kitBehaviour = instanceSettings.getKitBehaviorChange();
+        Value upload = kitBehaviour.stream().filter(o -> o.getName().equals("upload")).findFirst().get();
+        if (upload != null && upload.getValues() != null && !upload.getValues().isEmpty()) {
+            for (Value condition : upload.getValues()) {
+                if (StringUtils.isNotBlank(condition.getName()) && condition.getName().contains(".")) {
+                    String[] names = condition.getName().split("\\.");
+                }
+            }
+        }
+        else {
+            Assert.fail();
+        }
+    }
+
+    @Test
+    public void mbcLegacyPTGUID() {
+        DDPInstance instance = DDPInstance.getDDPInstance("Pepper-MBC");
+        String filter = " AND profile.guid = TCDEPIJVKXT7I6K1FRG6";
+        Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filter);
+        Assert.assertTrue(!participants.isEmpty());
+    }
+
+    @Test
+    public void mbcLegacyPTAltPID() {
+        DDPInstance instance = DDPInstance.getDDPInstance("Pepper-MBC");
+        String filter = " AND profile.legacyAltPid = 8187_v2";
+        Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filter);
+        Assert.assertTrue(!participants.isEmpty());
     }
 
     @Test

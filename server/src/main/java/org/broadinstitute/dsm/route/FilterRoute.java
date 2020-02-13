@@ -15,6 +15,7 @@ import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.PatchUtil;
 import org.broadinstitute.dsm.util.UserUtil;
 import org.slf4j.Logger;
@@ -159,13 +160,18 @@ public class FilterRoute extends RequestHandler {
                 // get pt for selected tissue (@ tissue list)
                 Map<String, String> queryConditions = new HashMap<>();
                 queryConditions.put("p", " AND p.ddp_participant_id = '" + ddpParticipantId + "'");
-                if (instance.isMigratedDDP()) {
-                    queryConditions.put("ES", " AND profile.legacyAltPid = '" + ddpParticipantId + "'");
+                queryConditions.put("ES", ElasticSearchUtil.BY_GUID + ddpParticipantId);
+                List<ParticipantWrapper> ptList = ParticipantWrapper.getFilteredList(instance, queryConditions);
+                if (!ptList.isEmpty()) {
+                    return ptList;
                 }
-                else {
-                    queryConditions.put("ES", " AND profile.guid = '" + ddpParticipantId + "'");
+                else if (instance.isMigratedDDP()) {
+                    queryConditions = new HashMap<>();
+                    queryConditions.put("p", " AND p.ddp_participant_id = '" + ddpParticipantId + "'");
+                    queryConditions.put("ES", ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId);
+                    return ParticipantWrapper.getFilteredList(instance, queryConditions);
                 }
-                return ParticipantWrapper.getFilteredList(instance, queryConditions);
+                throw new RuntimeException("Participant Id was not found " + ddpParticipantId);
             }
             else if (request.url().contains(RoutePath.FILTER_LIST)) {
                 String defaultFilter = null;

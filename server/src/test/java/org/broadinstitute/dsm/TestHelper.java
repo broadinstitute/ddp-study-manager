@@ -129,7 +129,9 @@ public class TestHelper {
             DBTestUtil.executeQuery("INSERT INTO ddp_group set name = \"test\", description=\"Unit Test\"");
         }
         //setting roles for test user for test group
-        List<String> roles = UserUtil.getUserRolesPerRealm(UserUtil.SQL_USER_ROLES_PER_REALM, "1", TEST_DDP);
+        List<String> roles = UserUtil.getUserRolesPerRealm("SELECT role.name FROM  access_user_role_group roleGroup LEFT JOIN ddp_instance_group gr on (gr.ddp_group_id = roleGroup.group_id) " +
+                "LEFT JOIN access_user user on (roleGroup.user_id = user.user_id) LEFT JOIN ddp_instance realm on (realm.ddp_instance_id = gr.ddp_instance_id) " +
+                "LEFT JOIN access_role role on (role.role_id = roleGroup.role_id) WHERE user.name = ? and instance_name = ?", "THE UNIT TESTER 1", TEST_DDP);
         String testGroup = DBTestUtil.getQueryDetail("SELECT * FROM ddp_group where name = ?", "test", "group_id");
         String testUser = DBTestUtil.getQueryDetail("SELECT * FROM access_user where name = ?", "THE UNIT TESTER 1", "user_id");
 

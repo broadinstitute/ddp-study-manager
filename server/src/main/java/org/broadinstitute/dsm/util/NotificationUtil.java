@@ -3,7 +3,9 @@ package org.broadinstitute.dsm.util;
 import com.google.gson.*;
 import com.typesafe.config.Config;
 import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.email.EmailClient;
 import org.broadinstitute.ddp.email.EmailRecord;
 import org.broadinstitute.ddp.email.Recipient;
@@ -22,16 +24,17 @@ import org.slf4j.LoggerFactory;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 public class NotificationUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(NotificationUtil.class);
+
+    public static final String EMAIL_TYPE = "EXITED_KIT_RECEIVED_NOTIFICATION";
+
+    public static final String KITREQUEST_LINK = "/permalink/whereto?";
 
     private static String emailClassName = null;
     private static String emailKey = null;
@@ -63,6 +66,34 @@ public class NotificationUtil {
 
     public JsonElement getPortalReminderNotifications(String id) {
         return reminderNotificationLookup.get(id);
+    }
+
+    public void sentNotification(String notificationRecipient, String message) {
+        try {
+            if (StringUtils.isNotBlank(notificationRecipient)) {
+                notificationRecipient = notificationRecipient.replaceAll("\\s", "");
+                List<String> recipients = Arrays.asList(notificationRecipient.split(","));
+                sentNotification(recipients, message);
+            }
+        }
+        catch (Exception e) {
+            logger.error("Was not able to notify study staff.", e);
+        }
+    }
+
+    public void sentNotification(List<String> recipients, String message) {
+        for (String recipient : recipients) {
+            doNotification(recipient, message);
+        }
+    }
+
+    private void doNotification(@NonNull String recipient, String message) {
+        Map<String, String> mapy = new HashMap<>();
+        mapy.put(":customText", message);
+        Recipient emailRecipient = new Recipient(recipient);
+        emailRecipient.setUrl(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.EMAIL_FRONTEND_URL_FOR_LINKS) + KITREQUEST_LINK);
+        emailRecipient.setSurveyLinks(mapy);
+        queueCurrentAndFutureEmails(EMAIL_TYPE, emailRecipient, EMAIL_TYPE);
     }
 
     public void queueCurrentAndFutureEmails(@NonNull String reason, @NonNull Recipient recipient, @NonNull String recordId) {

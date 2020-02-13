@@ -213,7 +213,7 @@ public class DashboardRoute extends RequestHandler {
         Map<String, Participant> participants = Participant.getParticipants(realm);
         Map<String, List<MedicalRecord>> medicalRecords = MedicalRecord.getMedicalRecords(realm);
         Map<String, List<OncHistoryDetail>> oncHistoryDetails = OncHistoryDetail.getOncHistoryDetails(realm);
-        Map<String, List<KitRequestShipping>> kitRequests = KitRequestShipping.getAllKitRequestsByRealm(realm, null, null, null, true);
+        Map<String, List<KitRequestShipping>> kitRequests = KitRequestShipping.getAllKitRequestsByRealm(realm, null, null, true);
         Map<String, List<AbstractionActivity>> abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(realm);
         Map<String, List<AbstractionGroup>> abstractionSummary = AbstractionFinal.getAbstractionFinal(realm);
 

@@ -8,11 +8,14 @@ import com.easypost.model.TrackingDetail;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.KitRequestCreateLabel;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitType;
+import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
@@ -70,6 +73,7 @@ public class KitUtil {
     private static final String SQL_UPDATE_KIT = "UPDATE ddp_kit SET easypost_shipment_status = ?, easypost_shipment_date = ?, message = ? WHERE dsm_kit_id = ?";
 
     public static final String BOOKMARK_LABEL_CREATION_RUNNING = "label_creation_running";
+    public static final String IGNORE_AUTO_DEACTIVATION = "ignore_auto_deactivation";
     private static final String BSP = "BSP";
     //easypost end statuses
     public static final String EASYPOST_DELIVERED_STATUS = "delivered";
@@ -494,5 +498,43 @@ public class KitUtil {
             dbVals.resultException = e;
         }
         return dbVals;
+    }
+
+    public static List<KitRequestShipping> findSpecialBehaviorKits(@NonNull NotificationUtil notificationUtil) {
+        List<DDPInstance> ddpInstances = DDPInstance.getDDPInstanceListWithKitBehavior();
+        for (DDPInstance ddpInstance : ddpInstances) {
+            //only instances which have special kit behavior
+            if (ddpInstance.getInstanceSettings() != null && ddpInstance.getInstanceSettings().getKitBehaviorChange() != null) {
+                List<Value> kitBehavior = ddpInstance.getInstanceSettings().getKitBehaviorChange();
+                Value uploaded = kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_UPLOADED)).findFirst().get();
+                // only look up kits if instance has special kit behavior for uploaded and has data in ES
+                if (uploaded != null && StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
+                    List<org.broadinstitute.dsm.db.KitType> kitTypes = org.broadinstitute.dsm.db.KitType.getKitTypes(ddpInstance.getName(), null);
+                    for (org.broadinstitute.dsm.db.KitType kitType : kitTypes) {
+                        List<KitRequestShipping> kitRequestList = KitRequestShipping.getKitRequestsByRealm(ddpInstance.getName(),
+                                InstanceSettings.INSTANCE_SETTING_UPLOADED, kitType.getName());
+                        for (KitRequestShipping kit : kitRequestList) {
+                            //ignore if kit was reactivated with special behavior alert
+                            if (!IGNORE_AUTO_DEACTIVATION.equals(kit.getMessage())) {
+                                boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(ddpInstance, kit.getParticipantId(), uploaded);
+                                if (specialBehavior) {
+                                    KitRequestShipping.deactivateKitRequest(kit.getDsmKitRequestId(), uploaded.getValue(),
+                                            DSMServer.getDDPEasypostApiKey(ddpInstance.getName()), "System");
+                                    if (InstanceSettings.TYPE_NOTIFICATION.equals(uploaded.getType())) {
+                                        String message = "Kit uploaded for participant " + kit.getParticipantId() + ". \n" +
+                                                uploaded.getValue();
+                                        notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message);
+                                    }
+                                    else {
+                                        logger.error("Instance settings behavior for kit was not known " + uploaded.getType());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 }
