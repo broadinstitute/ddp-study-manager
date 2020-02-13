@@ -1,12 +1,13 @@
 export class UploadResponse {
 
-  constructor(public invalidKitAddressList: string[], public duplicateKitList: string[]) {
+  constructor(public invalidKitAddressList: string[], public duplicateKitList: string[], public specialKitList: string[]) {
     this.invalidKitAddressList = invalidKitAddressList;
     this.duplicateKitList = duplicateKitList;
+    this.specialKitList = specialKitList;
   }
 
   static parse(json): UploadResponse {
-    return new UploadResponse(json.invalidKitAddressList, json.duplicateKitList);
+    return new UploadResponse(json.invalidKitAddressList, json.duplicateKitList, json.specialKitList);
   }
 }
 
