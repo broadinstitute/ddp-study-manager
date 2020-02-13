@@ -63,14 +63,6 @@
             </form>
           </div>
         </div>
-        <!--<div>-->
-        <!--<button md-mini-fab color="Color&#45;&#45;primary"-->
-        <!--(click)="reload(false)">-->
-        <!--<i class="fas fa-sync-alt"></i>-->
-        <!--</button>-->
-        <!--Clear Filter-->
-        <!--</div>-->
-        <!--<br>-->
         <div>
           <button md-mini-fab color="Color--primary"
                   (click)="reload(true)">
@@ -478,6 +470,7 @@
           <input mdInput class="Width--100" maxlength="100" autocomplete="off"
                  [(ngModel)]="newFilterName">
           <md-hint class="ErrorMessageForm" *ngIf="dup">Name not unique</md-hint>
+          <md-hint class="ErrorMessageForm" *ngIf="plus">Name can't contain +</md-hint>
         </md-input-container>
       </ng-container>
     </ng-container>

@@ -410,7 +410,6 @@ export class DashboardComponent implements OnInit {
   }
 
   loadSettings() {
-    console.log( "loadSettings" );
     let jsonData: any;
     this.dsmService.getSettings( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), "participantList" ).subscribe(
       data => {
@@ -427,7 +426,6 @@ export class DashboardComponent implements OnInit {
           } );
         }
 
-        console.log( jsonData.activityDefinitions );
         if (jsonData.activityDefinitions != null) {
           Object.keys( jsonData.activityDefinitions ).forEach( ( key ) => {
             let activityDefinition: ActivityDefinition = ActivityDefinition.parse( jsonData.activityDefinitions[ key ] );
@@ -461,7 +459,6 @@ export class DashboardComponent implements OnInit {
             }
           } );
         }
-        console.log( this.dataSources );
       },
       err => {
         if (err._body === Auth.AUTHENTICATION_ERROR) {
@@ -487,7 +484,6 @@ export class DashboardComponent implements OnInit {
         jsonData = data;
         jsonData.forEach( ( val ) => {
           let participant = Participant.parse( val );
-          console.log(participant);
           participantList.push( participant );
         } );
         let date = new Date();

@@ -26,6 +26,7 @@ public class Filter {
     public static final String OR = "OR";
     public static final String TRUE = "true";
     public static final String FALSE = "false";
+    public static final String TODAY = "today";
 
     public static String TEXT = "TEXT";
     public static String OPTIONS = "OPTIONS";
