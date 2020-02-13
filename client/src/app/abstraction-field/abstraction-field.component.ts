@@ -317,7 +317,7 @@ export class AbstractionFieldComponent implements OnInit {
     }
   }
 
-  saveSelectedQc( field: AbstractionField, ) {
+  saveSelectedQc (field: AbstractionField) {
     field.fieldValue.valueCounter++;
     let patch = {
       id: field.fieldValue.primaryKeyId,

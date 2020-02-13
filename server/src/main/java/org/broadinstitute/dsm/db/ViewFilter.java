@@ -44,9 +44,9 @@ public class ViewFilter {
     public static final String SQL_SELECT_USER_FILTERS = "SELECT * FROM view_filters WHERE (created_by = ? OR (created_by = 'System' AND ddp_group_id = ? )" +
             "OR (shared = 1 AND ddp_group_id = ? ) OR (ddp_group_id is NULL AND ddp_realm_id LIKE '%#%') ) AND deleted <> 1 ";
     public static final String SQL_SELECT_QUERY_ITEMS = "SELECT query_items, quick_filter_name FROM view_filters WHERE display_name = ? AND parent = ? AND deleted <> 1";
-    public static final String SQL_GET_DEFAULT_FILTER = "SELECT display_name from view_filters WHERE default_users LIKE '%#%' AND parent = ?";
-    public static final String SQL_SELECT_DEFAULT_FILTER_USERS = "SELECT default_users FROM view_filters WHERE display_name = ? AND parent = ? ";
-    public static final String SQL_UPDATE_DEFAULT_FILTER = "UPDATE view_filters SET default_users = ? WHERE display_name = ? AND parent = ? ";
+    public static final String SQL_GET_DEFAULT_FILTER = "SELECT display_name from view_filters WHERE default_users LIKE '%#%' AND parent = ? AND deleted <> 1";
+    public static final String SQL_SELECT_DEFAULT_FILTER_USERS = "SELECT default_users FROM view_filters WHERE display_name = ? AND parent = ? AND deleted <> 1";
+    public static final String SQL_UPDATE_DEFAULT_FILTER = "UPDATE view_filters SET default_users = ? WHERE display_name = ? AND parent = ? AND deleted <> 1";
     public static final String SQL_AND_PARENT = " AND parent = ? ";
 
     public static final String DESTROYING_FILTERS = "destruction";
@@ -440,32 +440,13 @@ public class ViewFilter {
             List<String> basedQuickFilter = getQueryItems(quickFilterName, parent);
             quickFilterQuery = basedQuickFilter.get(0);
         }
-        String[] queryWords = query.split("\\s+");
-        for (int i = 0; i < queryWords.length; i++) {
-            if (StringUtils.isNotBlank(queryWords[i]) && queryWords[i].equals("today")) {
-                String date = getDate();
-                System.out.println(getDate());
 
-                if (i < queryWords.length - 1 && (queryWords[i + 1].equals("+") || queryWords[i + 1].equals("-"))) {
-                    String days = queryWords[i + 2];
-                    days = days.replace("d", "");
-                    int numberOfDays = Integer.parseInt(days);
-                    if (queryWords[i + 1].equals("-")) {
-                        numberOfDays *= -1;
-                    }
-                    LocalDateTime today = LocalDateTime.now();     //Today
-                    LocalDateTime tomorrow = today.plusDays(numberOfDays);
-                    date = getDate(tomorrow);
-                    queryWords[i + 1] = "";
-                    queryWords[i + 2] = "";
-                }
-                queryWords[i] = "'" + date + "'";
-                i = i + 2;
-            }
+        int todayIndex = query.indexOf(Filter.TODAY);
+        if (todayIndex != -1) {
+            query = fixTodayInQuery(query);
         }
-        query = quickFilterQuery + " " + String.join(" ", queryWords);
-        logger.info(query);
-        return query;
+        logger.info(quickFilterQuery);
+        return quickFilterQuery + " " + query;
     }
 
     /***
@@ -567,7 +548,7 @@ public class ViewFilter {
                             break;
 
                         case 3: // exact matching value
-                            if (word.equals("today")) {
+                            if (word.equals(Filter.TODAY)) {
                                 value = getDate();
                                 state = 22;
                                 break;
@@ -601,7 +582,7 @@ public class ViewFilter {
                             break;
 
                         case 4: // range value
-                            if (word.equals("today")) {
+                            if (word.equals(Filter.TODAY)) {
                                 state = 22;
                                 type = Filter.DATE;
                                 break;
@@ -883,6 +864,32 @@ public class ViewFilter {
         return true;
     }
 
+    public static String fixTodayInQuery(String query) {
+        String[] queryWords = query.split("\\s+");
+
+        for (int i = 0; i < queryWords.length; i++) {
+            if (StringUtils.isNotBlank(queryWords[i]) && queryWords[i].equals(Filter.TODAY)) {
+                String date = getDate();
+                System.out.println(getDate());
+                if (i < queryWords.length - 1 && (queryWords[i + 1].equals("+") || queryWords[i + 1].equals("-"))) {
+                    String days = queryWords[i + 2];
+                    days = days.replace("d", "");
+                    int numberOfDays = Integer.parseInt(days);
+                    if (queryWords[i + 1].equals("-")) {
+                        numberOfDays *= -1;
+                    }
+                    LocalDateTime today = LocalDateTime.now();     //Today
+                    LocalDateTime tomorrow = today.plusDays(numberOfDays);
+                    date = getDate(tomorrow);
+                    queryWords[i + 1] = "";
+                    queryWords[i + 2] = "";
+                }
+                queryWords[i] = "'" + date + "'";
+                i = i + 2;
+            }
+        }
+        return String.join(" ", queryWords);
+    }
 
     public static String changeFieldsInQuery(String filterQuery) {
         String[] words = filterQuery.split("\\s+");
@@ -903,53 +910,11 @@ public class ViewFilter {
                 }
 
             }
-            if (StringUtils.isNotBlank(words[i]) && words[i].equals("today")) {
-                String date = getDate();
-                System.out.println(getDate());
-
-                if (i < words.length - 1 && (words[i + 1].equals("+") || words[i + 1].equals("-"))) {
-                    String days = words[i + 2];
-                    days = days.replace("d", "");
-                    int numberOfDays = Integer.parseInt(days);
-                    if (words[i + 1].equals("-")) {
-                        numberOfDays *= -1;
-                    }
-                    LocalDateTime today = LocalDateTime.now();     //Today
-                    LocalDateTime tomorrow = today.plusDays(numberOfDays);
-                    date = getDate(tomorrow);
-                    words[i + 1] = "";
-                    words[i + 2] = "";
-                }
-                words[i] = "'" + date + "'";
-                i = i + 2;
-            }
         }
-//        if (filterQuery.indexOf("today") != -1) {
-//            String[] queryWords = filterQuery.split("\\s+");
-//            for (int i = 0; i < queryWords.length; i++) {
-//                if (StringUtils.isNotBlank(queryWords[i]) && queryWords[i].equals("today")) {
-//                    String date = getDate();
-//                    System.out.println(getDate());
-//
-//                    if (i < queryWords.length - 1 && (queryWords[i + 1].equals("+") || queryWords[i + 1].equals("-"))) {
-//                        String days = queryWords[i + 2];
-//                        days = days.replace("d", "");
-//                        int numberOfDays = Integer.parseInt(days);
-//                        if (queryWords[i + 1].equals("-")) {
-//                            numberOfDays *= -1;
-//                        }
-//                        LocalDateTime today = LocalDateTime.now();     //Today
-//                        LocalDateTime tomorrow = today.plusDays(numberOfDays);
-//                        date = getDate(tomorrow);
-//                        queryWords[i + 1] = "";
-//                        queryWords[i + 2] = "";
-//                    }
-//                    queryWords[i] = "'" + date + "'";
-//                    i = i + 2;
-//                }
-//            }
-//        }
-        return String.join(" ", words);
+
+        String query = String.join(" ", words);
+        query = fixTodayInQuery(query);
+        return query;
     }
 
     public static String getDefaultFilterForUser(@NonNull String userId, @NonNull String parent) {
