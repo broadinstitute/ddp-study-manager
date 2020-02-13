@@ -19,7 +19,7 @@
   <div *ngIf="allowedToSeeInformation">
     <br/>
     <div *ngIf="realm != null" class="Width--60">
-      <ng-container *ngIf="hasParticiapantSpecificPDFs">
+      <ng-container *ngIf="hasParticipantSpecificPDFs">
         <p>If your participant is a migrated one and has a altPID please use that ID for the PDF download, otherwise use the GUID</p>
 
         <md-input-container>
@@ -48,7 +48,7 @@
       </ng-container>
 
 
-      <ng-container *ngIf="!hasParticiapantSpecificPDFs">
+      <ng-container *ngIf="!hasParticipantSpecificPDFs">
         <p>Select a pdf type and enter the participant participant ID to download the pdf</p>
         <p>If your participant is a migrated one and has a altPID please use that ID for the PDF download, otherwise use the GUID</p>
 

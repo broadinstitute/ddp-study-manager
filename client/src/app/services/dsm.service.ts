@@ -390,7 +390,7 @@ export class DSMService {
     map.push( {name: DSMService.REALM, value: realm} );
     map.push( {name: "kitType", value: kitType} );
     map.push( {name: "userId", value: this.role.userID()} );
-    map.push( {name: "uploadDuplicate", value: true} );
+    map.push( {name: "uploadAnyway", value: true} );
     return this.http.post( url, jsonParticipants, this.buildQueryUploadHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
@@ -580,9 +580,12 @@ export class DSMService {
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
-  public activateKitRequest( kitRequestId: string ): Observable<any> {
+  public activateKitRequest( kitRequestId: string, activate: boolean ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "activateKit/" + kitRequestId;
-    return this.http.patch( url, null, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
+    let map: { name: string, value: any }[] = [];
+    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( {name: "activate", value: activate} );
+    return this.http.patch( url, null, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public saveUserSettings( json: string ) {

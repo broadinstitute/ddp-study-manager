@@ -30,7 +30,7 @@ export class PdfDownloadComponent implements OnInit {
   participantPDFs: Array<PDFModel> = [];
   selectedPDF: string;
 
-  hasParticiapantSpecificPDFs: boolean = false;
+  hasParticipantSpecificPDFs: boolean = false;
 
   constructor( private dsmService: DSMService, private auth: Auth, private router: Router, private role: RoleService,
                private compService: ComponentService, private route: ActivatedRoute ) {
@@ -100,7 +100,7 @@ export class PdfDownloadComponent implements OnInit {
               this.possiblePDFs.push( roleParts[ 2 ] );
             }
             else if (role === "pdf_download") {
-              this.hasParticiapantSpecificPDFs = true;
+              this.hasParticipantSpecificPDFs = true;
             }
           } );
           this.loading = false;
@@ -123,7 +123,7 @@ export class PdfDownloadComponent implements OnInit {
       this.loading = true;
       this.dsmService.getParticipantsPDFs( this.realm, this.participantId ).subscribe(
         data => {
-          this.possiblePDFs = [];
+          this.participantPDFs = [];
           // console.info( `received: ${JSON.stringify( data, null, 2 )}` );
           let jsonData: any[];
           jsonData = data;
@@ -133,6 +133,7 @@ export class PdfDownloadComponent implements OnInit {
               this.participantPDFs.push(participantPdf);
             } );
           }
+          console.log(this.participantPDFs);
           this.loading = false;
         },
         err => {

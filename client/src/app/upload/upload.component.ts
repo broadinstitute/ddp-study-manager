@@ -12,17 +12,17 @@ import {Statics} from "../utils/statics";
 import {FieldFilepickerComponent} from "../field-filepicker/field-filepicker.component";
 import {Result} from "../utils/result.model";
 
-@Component({
-  selector: 'app-upload',
-  templateUrl: './upload.component.html',
-  styleUrls: ['./upload.component.css']
-})
+@Component( {
+  selector: "app-upload",
+  templateUrl: "./upload.component.html",
+  styleUrls: [ "./upload.component.css" ]
+} )
 export class UploadComponent implements OnInit {
 
-  @ViewChild(ModalComponent)
+  @ViewChild( ModalComponent )
   public modal: ModalComponent;
 
-  @ViewChild(FieldFilepickerComponent)
+  @ViewChild( FieldFilepickerComponent )
   public filepicker: FieldFilepickerComponent;
 
   errorMessage: string;
@@ -38,36 +38,37 @@ export class UploadComponent implements OnInit {
 
   failedParticipants: Array<UploadParticipant> = [];
   duplicateParticipants: Array<UploadParticipant> = [];
+  specialKits: Array<UploadParticipant> = [];
 
   realmNameStoredForFile: string;
   allowedToSeeInformation: boolean = false;
 
-  constructor(private dsmService: DSMService, private auth: Auth, private compService: ComponentService, private route: ActivatedRoute) {
+  constructor( private dsmService: DSMService, private auth: Auth, private compService: ComponentService, private route: ActivatedRoute ) {
     if (!auth.authenticated()) {
       auth.logout();
     }
-    this.route.queryParams.subscribe(params => {
-      let realm = params[DSMService.REALM] || null;
+    this.route.queryParams.subscribe( params => {
+      let realm = params[ DSMService.REALM ] || null;
       if (realm != null && realm !== "") {
         //        this.compService.realmMenu = realm;
         this.checkRight();
       }
-    });
+    } );
   }
 
   private checkRight() {
     this.allowedToSeeInformation = false;
     this.additionalMessage = null;
     let jsonData: any[];
-    this.dsmService.getRealmsAllowed(Statics.SHIPPING).subscribe(
+    this.dsmService.getRealmsAllowed( Statics.SHIPPING ).subscribe(
       data => {
         jsonData = data;
-        jsonData.forEach((val) => {
-          if (localStorage.getItem(ComponentService.MENU_SELECTED_REALM) === val) {
+        jsonData.forEach( ( val ) => {
+          if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) === val) {
             this.allowedToSeeInformation = true;
             this.getPossibleKitType();
           }
-        });
+        } );
         if (!this.allowedToSeeInformation) {
           this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
         }
@@ -79,27 +80,27 @@ export class UploadComponent implements OnInit {
   }
 
   ngOnInit() {
-    if (localStorage.getItem(ComponentService.MENU_SELECTED_REALM) != null) {
+    if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) != null) {
       this.checkRight();
     }
     else {
       this.additionalMessage = "Please select a realm";
     }
-    window.scrollTo(0,0);
+    window.scrollTo( 0, 0 );
   }
 
   getPossibleKitType() {
-    if (localStorage.getItem(ComponentService.MENU_SELECTED_REALM) != null && localStorage.getItem(ComponentService.MENU_SELECTED_REALM) !== "") {
+    if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) != null && localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) !== "") {
       this.loading = true;
       let jsonData: any[];
-      this.dsmService.getKitTypes(localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(
+      this.dsmService.getKitTypes( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) ).subscribe(
         data => {
           this.kitTypes = [];
           jsonData = data;
-          jsonData.forEach((val) => {
-            let kitType = KitType.parse(val);
-            this.kitTypes.push(kitType);
-          });
+          jsonData.forEach( ( val ) => {
+            let kitType = KitType.parse( val );
+            this.kitTypes.push( kitType );
+          } );
           // console.info(`${this.kitTypes.length} kit types received: ${JSON.stringify(data, null, 2)}`);
           this.loading = false;
         },
@@ -114,7 +115,7 @@ export class UploadComponent implements OnInit {
     }
   }
 
-  typeChecked(type: KitType) {
+  typeChecked( type: KitType ) {
     this.uploadPossible = false;
     if (type.selected) {
       this.kitType = type;
@@ -138,7 +139,7 @@ export class UploadComponent implements OnInit {
     this.failedParticipants = [];
     this.loading = true;
     let jsonData: any[];
-    this.dsmService.uploadTxtFile(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.kitType.name, this.file).subscribe(
+    this.dsmService.uploadTxtFile( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), this.kitType.name, this.file ).subscribe(
       data => {
         this.loading = false;
         // console.log(`received: ${JSON.stringify(data, null, 2)}`);
@@ -147,30 +148,34 @@ export class UploadComponent implements OnInit {
         }
         else {
 
-          let result = Result.parse(data);
+          let result = Result.parse( data );
           if (result.code == 500) {
             this.additionalMessage = result.body;
           }
           else {
-            let response: UploadResponse = UploadResponse.parse(data);
-            response.invalidKitAddressList.forEach((val) => {
-              this.failedParticipants.push(UploadParticipant.parse(val));
-            });
+            let response: UploadResponse = UploadResponse.parse( data );
+            response.invalidKitAddressList.forEach( ( val ) => {
+              this.failedParticipants.push( UploadParticipant.parse( val ) );
+            } );
             if (this.failedParticipants.length > 0) {
               this.errorMessage = "Participants uploaded.\nCouldn't create kit requests for " + this.failedParticipants.length + " participant(s)";
             }
 
-            response.duplicateKitList.forEach((val) => {
-              this.duplicateParticipants.push(UploadParticipant.parse(val));
-            });
-            if (this.duplicateParticipants.length > 0) {
+            response.duplicateKitList.forEach( ( val ) => {
+              this.duplicateParticipants.push( UploadParticipant.parse( val ) );
+            } );
+            response.specialKitList.forEach( ( val ) => {
+              this.specialKits.push( UploadParticipant.parse( val ) );
+            } );
+
+            if (this.duplicateParticipants.length > 0 || this.specialKits.length > 0) {
               this.modal.show();
             }
             if (this.failedParticipants.length === 0 && this.duplicateParticipants.length === 0) {
               this.additionalMessage = "All participants were uploaded.";
               this.file = null;
               this.filepicker.unselectFile();
-              this.realmNameStoredForFile = localStorage.getItem(ComponentService.MENU_SELECTED_REALM);
+              this.realmNameStoredForFile = localStorage.getItem( ComponentService.MENU_SELECTED_REALM );
             }
           }
         }
@@ -187,11 +192,11 @@ export class UploadComponent implements OnInit {
 
   downloadFailed() {
     if (this.failedParticipants != null && this.failedParticipants.length > 0 && this.realmNameStoredForFile != null &&
-    this.kitType != null && this.kitType.name != null) {
-      var fields = ["altPID", "shortId", "firstName", "lastName", "street1", "street2",
-        "city", "postalCode", "state", "country"];
+      this.kitType != null && this.kitType.name != null) {
+      var fields = [ "altPID", "shortId", "firstName", "lastName", "street1", "street2",
+        "city", "postalCode", "state", "country" ];
       var date = new Date();
-      Utils.createCSV(fields, this.failedParticipants, "Upload " + this.realmNameStoredForFile + " " + this.kitType.name + " Failed " + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION);
+      Utils.createCSV( fields, this.failedParticipants, "Upload " + this.realmNameStoredForFile + " " + this.kitType.name + " Failed " + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
       this.realmNameStoredForFile = null;
     }
     else {
@@ -203,14 +208,14 @@ export class UploadComponent implements OnInit {
     this.additionalMessage = null;
     this.errorMessage = null;
     this.loading = true;
-    for (var i = this.duplicateParticipants.length-1; i >= 0; i--) {
-        if (!this.duplicateParticipants[i].selected) {
-          this.duplicateParticipants.splice(i, 1);
-        }
+    for (var i = this.duplicateParticipants.length - 1; i >= 0; i--) {
+      if (!this.duplicateParticipants[ i ].selected) {
+        this.duplicateParticipants.splice( i, 1 );
+      }
     }
-    var jsonParticipants = JSON.stringify(this.duplicateParticipants);
+    var jsonParticipants = JSON.stringify( this.duplicateParticipants );
 //    console.log(jsonParticipants);
-    this.dsmService.uploadDuplicateParticipant(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.kitType.name, jsonParticipants).subscribe(
+    this.dsmService.uploadDuplicateParticipant( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), this.kitType.name, jsonParticipants ).subscribe(
       data => {
         this.loading = false;
         if (typeof data === "string") {
@@ -239,12 +244,13 @@ export class UploadComponent implements OnInit {
   emptyUpload() {
     this.modal.hide();
     this.duplicateParticipants = [];
+    this.specialKits = [];
     this.file = null;
     this.filepicker.unselectFile();
-    this.realmNameStoredForFile = localStorage.getItem(ComponentService.MENU_SELECTED_REALM);
+    this.realmNameStoredForFile = localStorage.getItem( ComponentService.MENU_SELECTED_REALM );
   }
 
-  fileSelected(file: File) {
+  fileSelected( file: File ) {
     this.file = file;
   }
 
