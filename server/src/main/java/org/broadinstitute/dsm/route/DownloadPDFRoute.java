@@ -142,16 +142,14 @@ public class DownloadPDFRoute extends RequestHandler {
                     }
                     if (StringUtils.isNotBlank(ddpParticipantId)) {
                         DDPInstance instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
-                        Map<String, Map<String, Object>> participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, " AND profile.guid = " + ddpParticipantId);
+                        Map<String, Map<String, Object>> participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance,
+                                ElasticSearchUtil.BY_GUID + ddpParticipantId);
                         if (participantESData != null && !participantESData.isEmpty()) {
-                            Map<String, Object> participantDate = participantESData.get(ddpParticipantId);
-                            if (participantDate != null) {
-                                Map<String, Object> dsm = (Map<String, Object>) participantDate.get("dsm");
-                                if (dsm != null) {
-                                    Object pdf = dsm.get("pdfs");
-                                    return pdf;
-                                }
-                            }
+                            return returnPDFS(participantESData, ddpParticipantId);
+                        }
+                        else if (instance.isMigratedDDP()){
+                            participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId);
+                            return returnPDFS(participantESData, ddpParticipantId);
                         }
                         return null;
                     }
@@ -166,6 +164,20 @@ public class DownloadPDFRoute extends RequestHandler {
             }
         }
         throw new RuntimeException("Something went wrong");
+    }
+
+    private Object returnPDFS(Map<String, Map<String, Object>> participantESData, @NonNull String ddpParticipantId){
+        if (participantESData != null && !participantESData.isEmpty()) {
+            Map<String, Object> participantDate = participantESData.get(ddpParticipantId);
+            if (participantDate != null) {
+                Map<String, Object> dsm = (Map<String, Object>) participantDate.get("dsm");
+                if (dsm != null) {
+                    Object pdf = dsm.get("pdfs");
+                    return pdf;
+                }
+            }
+        }
+        return null;
     }
 
     /**

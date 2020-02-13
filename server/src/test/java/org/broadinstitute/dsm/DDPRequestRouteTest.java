@@ -131,13 +131,13 @@ public class DDPRequestRouteTest extends TestHelper {
     public void readKitRequest() {
         String realm = TEST_DDP;
         try {
-            KitRequestRoute route = new KitRequestRoute(ddpRequestUtil);
+            KitRequestRoute route = new KitRequestRoute();
             inTransaction((conn) -> {
                 try (PreparedStatement stmt = conn.prepareStatement(DDPInstance.SQL_SELECT_ALL_ACTIVE_REALMS + QueryExtension.BY_INSTANCE_NAME)) {
                     stmt.setString(1, realm);
                     try (ResultSet rs = stmt.executeQuery()) {
                         if (rs.next()) {
-                            List<KitRequestShipping> kitRequestList = KitRequestShipping.getKitRequestsByRealm(realm, "uploaded", "SALIVA", ddpRequestUtil);
+                            List<KitRequestShipping> kitRequestList = KitRequestShipping.getKitRequestsByRealm(realm, "uploaded", "SALIVA");
 
                             Assert.assertEquals(counter, kitRequestList.size());
 

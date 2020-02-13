@@ -49,6 +49,8 @@ public class ElasticSearchUtil {
     private static final String DSM = "dsm";
     private static final String ACTIVITY_CODE = "activityCode";
     private static final String ADDRESS = "address";
+    public static final String BY_GUID = " AND profile.guid = ";
+    public static final String BY_LEGACY_ALTPID = " AND profile.legacyAltPid = ";
 
     public static RestHighLevelClient getClientForElasticsearchCloud(@NonNull String baseUrl, @NonNull String userName, @NonNull String password) throws MalformedURLException {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
@@ -449,7 +451,7 @@ public class ElasticSearchUtil {
                     rangeQueryBuilder(finalQuery, nameValue[0], start, end, must);
                 }
                 catch (ParseException e) {
-                    valueQueryBuilder(finalQuery, nameValue[0].trim(), userEntered.toLowerCase(), wildCard, must);
+                    valueQueryBuilder(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
                 }
             }
             else if (nameValue[0].startsWith(DSM)) {
@@ -537,10 +539,10 @@ public class ElasticSearchUtil {
     private static void valueQueryBuilder(@NonNull BoolQueryBuilder finalQuery, @NonNull String name, @NonNull String query, boolean wildCard, boolean must) {
         if (wildCard) {
             if (must) {
-                finalQuery.must(QueryBuilders.wildcardQuery(name, query + "*"));
+                finalQuery.must(QueryBuilders.wildcardQuery(name, query.toLowerCase() + "*"));
             }
             else {
-                finalQuery.should(QueryBuilders.wildcardQuery(name, query + "*"));
+                finalQuery.should(QueryBuilders.wildcardQuery(name, query.toLowerCase() + "*"));
             }
         }
         else {

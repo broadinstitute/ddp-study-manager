@@ -492,6 +492,17 @@ public class RouteTestSample extends TestHelper {
     }
 
     @Test
+    //double check that your user 26 has role kit_upload for osteo
+    public void uploadOsteoBloodKitAOM() throws Exception {
+        String kitType = "BLOOD";
+        //upload kits for one type
+        String csvContent = TestUtil.readFile("SpecialKitOsteo.txt");
+        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "kitUpload?realm=osteo&kitType=BLOOD&userId=26"), csvContent, testUtil.buildAuthHeaders()).returnResponse();
+        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+        //TODO check db for kit
+    }
+
+    @Test
     public void differentReturnPhoneAddress() throws Exception {
         //upload kits for one type
         String csvContent = TestUtil.readFile("KitUploadTestDDP.txt");
@@ -1552,7 +1563,7 @@ public class RouteTestSample extends TestHelper {
 
         //upload duplicates
         String dupParticipants = TestUtil.readFile("KitUploadMigratedDDP.json");
-        response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "kitUpload?realm=" + TEST_DDP_MIGRATED + "&kitType=SALIVA&userId=26&uploadDuplicate=true"), dupParticipants, testUtil.buildAuthHeaders()).returnResponse();
+        response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "kitUpload?realm=" + TEST_DDP_MIGRATED + "&kitType=SALIVA&userId=26&uploadAnyway=true"), dupParticipants, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
         List<String> strings = new ArrayList<>();
         strings.add(TEST_DDP_MIGRATED);

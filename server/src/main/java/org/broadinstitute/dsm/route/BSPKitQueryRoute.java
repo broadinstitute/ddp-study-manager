@@ -3,7 +3,9 @@ package org.broadinstitute.dsm.route;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.TransactionWrapper;
-import org.broadinstitute.ddp.email.Recipient;
+import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.InstanceSettings;
+import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.bsp.BSPKitQueryResult;
 import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
 import org.broadinstitute.dsm.model.bsp.BSPKitStatus;
@@ -25,17 +27,14 @@ public class BSPKitQueryRoute implements Route {
 
     private static final Logger logger = LoggerFactory.getLogger(BSPKitQueryRoute.class);
 
-    public static final String EMAIL_TYPE = "EXITED_KIT_RECEIVED_NOTIFICATION";
-    public static final String KITREQUEST_LINK = "/permalink/whereto?";
-
     private NotificationUtil notificationUtil;
 
-    public BSPKitQueryRoute (@NonNull NotificationUtil notificationUtil) {
+    public BSPKitQueryRoute(@NonNull NotificationUtil notificationUtil) {
         this.notificationUtil = notificationUtil;
     }
 
     @Override
-    public Object handle (Request request, Response response) throws Exception {
+    public Object handle(Request request, Response response) throws Exception {
         String kitLabel = request.params(RequestParameter.LABEL);
         if (StringUtils.isBlank(kitLabel)) {
             throw new RuntimeException("Please include a kit label as a path parameter");
@@ -43,7 +42,7 @@ public class BSPKitQueryRoute implements Route {
         return getBSPKitInfo(kitLabel, response);
     }
 
-    public Object getBSPKitInfo (@NonNull String kitLabel, @NonNull Response response) {
+    public Object getBSPKitInfo(@NonNull String kitLabel, @NonNull Response response) {
         logger.info("Checking label " + kitLabel);
         BSPKitQueryResult bspKitInfo = BSPKitQueryResult.getBSPKitQueryResult(kitLabel);
 
@@ -55,35 +54,38 @@ public class BSPKitQueryRoute implements Route {
 
         boolean firstTimeReceived = KitUtil.setKitReceived(kitLabel);
         if (StringUtils.isNotBlank(bspKitInfo.getParticipantExitId())) {
-            try {
-                String notificationRecipient = bspKitInfo.getNotificationRecipient();
-                if (StringUtils.isNotBlank(notificationRecipient)) {
-                    notificationRecipient = notificationRecipient.replaceAll("\\s", "");
-                    List<String> recipients = Arrays.asList(notificationRecipient.split(","));
-                    for (String recipient : recipients) {
-                        doNotification(recipient, bspKitInfo.getBspParticipantId());
-                    }
-                }
-            }
-            catch (Exception e) {
-                logger.error("Was not able to notify study staff.", e);
-            }
+            String message = "Kit of exited participant " + bspKitInfo.getBspParticipantId() + " was received by GP.<br>";
+            notificationUtil.sentNotification(bspKitInfo.getNotificationRecipient(), message);
             return new BSPKitStatus(BSPKitStatus.EXITED);
         }
         if (StringUtils.isNotBlank(bspKitInfo.getDeactivationDate())) {
             return new BSPKitStatus(BSPKitStatus.DEACTIVATED);
         }
         if (StringUtils.isNotBlank(bspKitInfo.getDdpParticipantId())) {
-            try {
-                if (bspKitInfo.isHasParticipantNotifications() && firstTimeReceived) {
-                    KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_RECEIVED_KIT_INFORMATION_FOR_NOTIFICATION_EMAIL), kitLabel);
-                    if (kitDDPNotification != null) {
-                        EventUtil.triggerDDP(kitDDPNotification);
+            DDPInstance ddpInstance = DDPInstance.getDDPInstance(bspKitInfo.getInstanceName());
+            InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(bspKitInfo.getInstanceName());
+            List<Value> kitBehavior = instanceSettings.getKitBehaviorChange();
+            Value received = kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_RECEIVED)).findFirst().get();
+
+            if (received != null && StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
+                boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(ddpInstance, bspKitInfo.getDdpParticipantId(), received);
+                if (specialBehavior) {
+                    //don't trigger ddp to sent out email, only email to study staff
+                    if (InstanceSettings.TYPE_NOTIFICATION.equals(received.getType())) {
+                        String message = "Kit of participant " + bspKitInfo.getBspParticipantId() + " was received by GP. \n" +
+                                "Participant reached AOM and hasn't re-consented yet<br>";
+                        notificationUtil.sentNotification(bspKitInfo.getNotificationRecipient(), message);
+                    }
+                    else {
+                        logger.error("Instance settings behavior for kit was not known " + received.getType());
                     }
                 }
+                else {
+                    triggerDDP(bspKitInfo, firstTimeReceived, kitLabel);
+                }
             }
-            catch (Exception e) {
-                logger.error("Failed doing DSM internal received things for kit w/ label " + kitLabel, e);
+            else {
+                triggerDDP(bspKitInfo, firstTimeReceived, kitLabel);
             }
 
             String bspParticipantId = bspKitInfo.getBspParticipantId();
@@ -112,13 +114,17 @@ public class BSPKitQueryRoute implements Route {
         }
     }
 
-    private void doNotification (@NonNull String recipient, String bspParticipantId) {
-        String message = "Kit of exited participant " + bspParticipantId + " was received by GP.<br>";
-        Map<String, String> mapy = new HashMap<>();
-        mapy.put(":customText", message);
-        Recipient emailRecipient = new Recipient(recipient);
-        emailRecipient.setUrl(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.EMAIL_FRONTEND_URL_FOR_LINKS) + KITREQUEST_LINK);
-        emailRecipient.setSurveyLinks(mapy);
-        notificationUtil.queueCurrentAndFutureEmails(EMAIL_TYPE, emailRecipient, EMAIL_TYPE);
+    private void triggerDDP(@NonNull BSPKitQueryResult bspKitInfo, boolean firstTimeReceived, String kitLabel) {
+        try {
+            if (bspKitInfo.isHasParticipantNotifications() && firstTimeReceived) {
+                KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_RECEIVED_KIT_INFORMATION_FOR_NOTIFICATION_EMAIL), kitLabel);
+                if (kitDDPNotification != null) {
+                    EventUtil.triggerDDP(kitDDPNotification);
+                }
+            }
+        }
+        catch (Exception e) {
+            logger.error("Failed doing DSM internal received things for kit w/ label " + kitLabel, e);
+        }
     }
 }
