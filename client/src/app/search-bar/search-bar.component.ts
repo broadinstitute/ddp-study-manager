@@ -96,8 +96,8 @@ export class SearchBarComponent implements OnInit {
         i++;
         continue;
       }
-      console.log (part);
-      console.log (state);
+      // console.log (part);
+      // console.log (state);
       // console.log(this.allFieldNames);
       switch ( state ) {
         case -1:
@@ -151,7 +151,6 @@ export class SearchBarComponent implements OnInit {
           }
         case 3:
           if ( part === "today" ) {
-            console.log ("*");
             state = 9;
             break;
           }
