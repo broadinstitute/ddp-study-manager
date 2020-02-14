@@ -83,7 +83,6 @@ export class DSMService {
     map.push({name: "userId", value: this.role.userID()});
     map.push({name: "userMail", value: this.role.userMail()});
     map.push({name: DSMService.REALM, value: realm});
-    console.log(map);
     return this.http.patch(url, json, this.buildQueryHeader(map)).map((res: Response) => res.json()).catch(this.handleError);
   }
 
@@ -110,7 +109,6 @@ export class DSMService {
   }
 
   public applyFilter( json: ViewFilter, realm: string, parent: string, filterQuery: string ): Observable<any> {
-    console.log(json);
     if (json != null && json.filters != null) {
       for (let filter of json.filters) {
         if (filter.type === Filter.OPTION_TYPE) {

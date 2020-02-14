@@ -817,7 +817,7 @@ export class ParticipantListComponent implements OnInit {
       }
     }
     else {
-      filterText = Filter.getFilterText( filter, tmp, this.settings );
+      filterText = Filter.getFilterText( filter, tmp );
     }
     if (filterText != null) {
       json.push( filterText );
@@ -1316,7 +1316,7 @@ export class ParticipantListComponent implements OnInit {
       for (let filter of participantFilters) {
         if (filter.participantColumn.tableAlias === "data") {
           let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
-          let filterText = Filter.getFilterText( filter, tmp, this.settings );
+          let filterText = Filter.getFilterText( filter, tmp );
           if (filterText != null) {
             didClientSearch = true;
             if (filter.type === "TEXT") {

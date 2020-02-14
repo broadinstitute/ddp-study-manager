@@ -530,7 +530,7 @@ export class TissueListComponent implements OnInit {
         continue;
       }
       for ( let filter of this.selectedColumns[array] ) {
-        let filterText = Filter.getFilterText(filter, array, this.allAdditionalColumns);
+        let filterText = Filter.getFilterText(filter, array);
         if ( filterText != null && array === Statics.ES_ALIAS ) {
           filterText["exactMatch"] = true;
           filterText["parentName"] = filter.participantColumn.object;
@@ -1415,7 +1415,7 @@ export class TissueListComponent implements OnInit {
     for ( let filter of filters ) {
       if ( filter.participantColumn.tableAlias === "data" ) {
         let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
-        let filterText = Filter.getFilterText(filter, tmp, this.allAdditionalColumns);
+        let filterText = Filter.getFilterText(filter, tmp);
         if ( filterText != null ) {
           console.log(filterText);
           if ( filter.type === "TEXT" ) {

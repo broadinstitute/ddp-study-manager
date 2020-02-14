@@ -324,7 +324,7 @@
                 <br/>
                 <md-input-container
                   *ngIf="fieldSetting.displayType === 'TEXT' || fieldSetting.displayType === ''|| fieldSetting.displayType == null"
-                  [ngClass]="{'Width--100': true, 'Input--Min-WIDTH': true, 'Color--Field--Patched': isPatchedCurrently(col.columnName)}">
+                  [ngClass]="{'Width--100': true, 'Input--Min-WIDTH': true, 'Color--Field--Patched': isPatchedCurrently(fieldSetting.columnName)}">
                   <input mdInput maxlength="200" [disabled]="participantExited"
                          value="{{getAdditionalValue(fieldSetting.columnName)}}"
                          placeholder="{{fieldSetting.columnDisplay}}"
