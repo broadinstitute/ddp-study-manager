@@ -209,7 +209,7 @@ export class Utils {
     for (let d of data) {
       let input = [];
       for (let path of paths) {
-        let output = this.makeCSVForObjectArray(d, path, columns, 0, isSurveyData);
+        let output = this.makeCSVForObjectArray(d, path, columns, 0);
         let temp = [];
 
         for (let o of output) {
@@ -229,7 +229,7 @@ export class Utils {
   }
 
 
-  public static makeCSVForObjectArray(data: Object, paths: any[], columns: {}, index: number, isSurveyData ?: boolean): string[] {
+  public static makeCSVForObjectArray (data: Object, paths: any[], columns: {}, index: number): string[] {
     let result: string[] = [];
     if (index > paths.length - 1) {
       return null;
