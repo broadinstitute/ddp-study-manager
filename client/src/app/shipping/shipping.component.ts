@@ -569,6 +569,7 @@ export class ShippingComponent implements OnInit {
   activateKitRequest( kitRequest: KitRequest, activate: boolean ) {
     if (kitRequest == null && this.tmpKitRequest != null) {
       kitRequest = this.tmpKitRequest;
+      this.modal.hide();
     }
     if (kitRequest != null) {
       this.dsmService.activateKitRequest( kitRequest.dsmKitRequestId, activate ).subscribe(
@@ -576,7 +577,7 @@ export class ShippingComponent implements OnInit {
           // console.log(`Deactivating kit request received: ${JSON.stringify(data, null, 2)}`);
           let result = Result.parse( data );
           if (result.code == 200) {
-            if (result.body != null) {
+            if (result.body != "") {
               this.tmpKitRequest = kitRequest;
               this.alertText = result.body;
               this.modalType = this.ACTIVATED;

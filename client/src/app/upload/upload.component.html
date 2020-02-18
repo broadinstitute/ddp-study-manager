@@ -130,7 +130,7 @@
             </md-checkbox>
           </div>
           <div *ngFor="let duplicateParticipant of specialKits">
-            Participant didn't meet criteria.
+            {{specialMessage}}
             <md-checkbox color="primary" [checked]="duplicateParticipant.selected" (change)="duplicateParticipant.selected = $event.checked" disableRipple>
               {{duplicateParticipant.participantId}} {{duplicateParticipant.shortId}} {{duplicateParticipant.firstName}} {{duplicateParticipant.lastName}}
             </md-checkbox>

@@ -42,6 +42,7 @@ export class UploadComponent implements OnInit {
 
   realmNameStoredForFile: string;
   allowedToSeeInformation: boolean = false;
+  specialMessage: string;
 
   constructor( private dsmService: DSMService, private auth: Auth, private compService: ComponentService, private route: ActivatedRoute ) {
     if (!auth.authenticated()) {
@@ -167,6 +168,7 @@ export class UploadComponent implements OnInit {
             response.specialKitList.forEach( ( val ) => {
               this.specialKits.push( UploadParticipant.parse( val ) );
             } );
+            this.specialMessage = response.specialMessage;
 
             if (this.duplicateParticipants.length > 0 || this.specialKits.length > 0) {
               this.modal.show();
@@ -208,13 +210,18 @@ export class UploadComponent implements OnInit {
     this.additionalMessage = null;
     this.errorMessage = null;
     this.loading = true;
-    for (var i = this.duplicateParticipants.length - 1; i >= 0; i--) {
-      if (!this.duplicateParticipants[ i ].selected) {
-        this.duplicateParticipants.splice( i, 1 );
+    let array: UploadParticipant[] = [];
+    for (let i = this.duplicateParticipants.length - 1; i >= 0; i--) {
+      if (this.duplicateParticipants[ i ].selected) {
+        array.push(this.duplicateParticipants[i]);
       }
     }
-    var jsonParticipants = JSON.stringify( this.duplicateParticipants );
-//    console.log(jsonParticipants);
+    for (let i = this.specialKits.length - 1; i >= 0; i--) {
+      if (this.specialKits[ i ].selected) {
+        array.push(this.specialKits[i]);
+      }
+    }
+    let jsonParticipants = JSON.stringify( array );
     this.dsmService.uploadDuplicateParticipant( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), this.kitType.name, jsonParticipants ).subscribe(
       data => {
         this.loading = false;
@@ -237,7 +244,7 @@ export class UploadComponent implements OnInit {
   }
 
   forgetDuplicate() {
-    this.errorMessage = "No duplicate kits uploaded";
+    this.additionalMessage = "No duplicate kits uploaded";
     this.emptyUpload();
   }
 

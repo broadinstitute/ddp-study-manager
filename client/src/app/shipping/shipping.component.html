@@ -63,11 +63,8 @@
              [mfSortBy]="sort_field" [(mfSortOrder)]="sort_dir">
         <thead>
         <tr>
-          <th *ngIf="getRole().allowedToHandleSamples() && (queueToPrint() || shippingPage === UPLOADED) && !kitType.externalShipper" class="Line--Break">Print
-            Kit
-            <md-checkbox color="primary" disableRipple
-                         [checked]="allSelected" (change)="allSelected = $event.checked; allChecked()"></md-checkbox>
-          </th>
+          <th *ngIf="getRole().allowedToHandleSamples() && (queueToPrint() || shippingPage === UPLOADED) && !kitType.externalShipper" class="Line--Break">Print Kit
+<md-checkbox color="primary" disableRipple [checked]="allSelected" (change)="allSelected = $event.checked; allChecked()"></md-checkbox></th>
           <th>
             <mfDefaultSorter by="collaboratorParticipantId">Short ID</mfDefaultSorter>
           </th>
