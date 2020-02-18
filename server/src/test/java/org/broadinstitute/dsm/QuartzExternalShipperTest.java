@@ -65,7 +65,7 @@ public class QuartzExternalShipperTest extends TestHelper {
                 .respond(response().withStatusCode(200).withBody(gbfResponse));
         gbfResponse = TestUtil.readFile("gbf/StatusResponse.json").replace("%1", externalOrderNumber1).replace("%2", externalOrderNumber2);
         mockDDP.when(
-                request().withPath("/aStatus"))
+                request().withPath("/status"))
                 .respond(response().withStatusCode(200).withBody(gbfResponse));
 
         Scheduler scheduler = new StdSchedulerFactory().getScheduler();
@@ -80,7 +80,7 @@ public class QuartzExternalShipperTest extends TestHelper {
             throw new RuntimeException("something went wrong, while waiting for quartz jon to finish...", e);
         }
 
-        // check that aStatus was changed - all external columns should be filled at the end of the job...
+        // check that status was changed - all external columns should be filled at the end of the job...
         checkDBValues(CHECK_EXTERNAL_SHIPPER_REQUEST, "00004", "external_order_status", true);
         checkDBValues(CHECK_EXTERNAL_SHIPPER_REQUEST, "00003", "external_order_status", true);
         checkDBValues(CHECK_EXTERNAL_SHIPPER_REQUEST, "00004", "external_order_number", true);
@@ -92,7 +92,7 @@ public class QuartzExternalShipperTest extends TestHelper {
         checkDBValues(CHECK_EXTERNAL_SHIPPER_REQUEST, "00004", "external_response", true);
         checkDBValues(CHECK_EXTERNAL_SHIPPER_REQUEST, "00003", "external_response", true);
 
-        // check sent aStatus of kits - add the end of job kit should be set to sent and have a mf barcode
+        // check sent status of kits - add the end of job kit should be set to sent and have a mf barcode
         checkDBValues(CHECK_EXTERNAL_SHIPPER_KIT, "00003", "kit_label", true); // mf barcode
         checkDBValues(CHECK_EXTERNAL_SHIPPER_KIT, "00004", "kit_label", true); // mf barcode
         checkDBValues(CHECK_EXTERNAL_SHIPPER_KIT, "00003", "tracking_to_id", true); // tracking to id

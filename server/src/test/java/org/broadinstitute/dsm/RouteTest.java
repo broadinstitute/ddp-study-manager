@@ -422,13 +422,13 @@ public class RouteTest extends TestHelper {
         Assert.assertEquals(followUp[0].getFRequest1(), "2019-04-24");
         Assert.assertEquals(followUp[0].getFReceived(), "2019-04-28");
 
-        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/ddpInformation/2017-03-01/2020-03-20?realm=" + TEST_DDP + "&userId="+userId+"", testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/ddpInformation/2017-03-01/2020-03-20?realm=" + TEST_DDP + "&userId="+userId, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 
         String message = DDPRequestUtil.getContentAsString(response);
         DashboardInformation ddps = new Gson().fromJson(message, DashboardInformation.class);
         Assert.assertNotNull(ddps);
-        Assert.assertEquals(ddps.getDashboardValues(), "{all=1, aStatus.ENROLLED=1}"); // TODO Simone - getMrReceivedFollowUpParticipant()
+        Assert.assertEquals(ddps.getDashboardValues(), "{all=1, status.ENROLLED=1}"); // TODO Simone - getMrReceivedFollowUpParticipant()
         Assert.assertEquals(ddps.getDashboardValues(), 1); // TODO Simone - getMrFollowUpSentParticipant()
 
         mrId = editMedicalRecord(TEST_DDP, "NEW_TEST_PARTICIPANT", "TEST_INSTITUTION", "m.followUpRequired", "1", "followup_required");
@@ -517,7 +517,7 @@ public class RouteTest extends TestHelper {
 
     @Test
     public void dashboardEndpoint() throws Exception {
-        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/ddpInformation/2017-03-01/2017-03-20?realm=" + TEST_DDP + "&userId="+userId+"", testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/ddpInformation/2017-03-01/2017-03-20?realm=" + TEST_DDP + "&userId="+userId, testUtil.buildAuthHeaders()).returnResponse();
 
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 
@@ -528,7 +528,7 @@ public class RouteTest extends TestHelper {
     @Ignore
     @Test
     public void doParticipantMedicalRecordsAsserts() throws Exception {
-        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/rawData/" + TEST_DDP + "?userId="+userId+"", testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/rawData/" + TEST_DDP + "?userId="+userId, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 
         String message = DDPRequestUtil.getContentAsString(response);

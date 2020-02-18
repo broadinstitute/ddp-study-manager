@@ -110,7 +110,7 @@ public class NotificationUtil {
         }
         catch (Exception ex) {
             //NOTE: we need to swallow this because frontend should NOT get a 500 for this
-            logger.error("Unable to queue email(s) for user with email = " + email + " and aStatus = " + reason + ".", ex);
+            logger.error("Unable to queue email(s) for user with email = " + email + " and status = " + reason + ".", ex);
         }
     }
 
@@ -138,7 +138,7 @@ public class NotificationUtil {
         }
         catch (Exception ex) {
             //NOTE: we need to swallow this because frontend should NOT get a 500 for this
-            logger.error("Unable to queue email(s) for user with email = " + email + " and aStatus = " + reason + ".", ex);
+            logger.error("Unable to queue email(s) for user with email = " + email + " and status = " + reason + ".", ex);
         }
     }
 

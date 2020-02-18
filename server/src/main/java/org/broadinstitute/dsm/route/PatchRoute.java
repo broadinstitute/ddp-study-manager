@@ -69,12 +69,12 @@ public class PatchRoute extends RequestHandler {
                                     boolean writeBack = false;
                                     for (int i = 0; i < questionArray.length(); i++) {
                                         JSONObject question = questionArray.getJSONObject(i);
-                                        if (question.optString("aStatus") != null && question.optString("aStatus").equals("sent")) {
+                                        if (question.optString("status") != null && question.optString("status").equals("sent")) {
                                             if (question.optString("email") != null && question.optString("question") != null) {
                                                 notificationUtil.sentAbstractionExpertQuestion(user.getEmail(), user.getName(), question.optString("email"),
                                                         patch.getFieldName(), question.optString("question"), notificationUtil.getTemplate("DSM_ABSTRACTION_EXPERT_QUESTION"));
                                             }
-                                            question.put("aStatus", "done");
+                                            question.put("status", "done");
                                             writeBack = true;
                                         }
                                     }

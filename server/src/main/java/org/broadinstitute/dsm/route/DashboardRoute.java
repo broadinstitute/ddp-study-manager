@@ -229,9 +229,9 @@ public class DashboardRoute extends RequestHandler {
         for (ParticipantWrapper wrapper : participantWrapperList) {
             //es data information
             Map<String, Object> esData = wrapper.getData();
-            //count pt enrollment aStatus
-            String enrollmentStatus = (String) esData.get("aStatus");
-            countParameter(dashboardValues, "aStatus." + enrollmentStatus, esData, "aStatus", false);
+            //count pt enrollment status
+            String enrollmentStatus = (String) esData.get("status");
+            countParameter(dashboardValues, "status." + enrollmentStatus, esData, "status", false);
 
             if (esData.get("profile") != null) {
                 Map<String, Object> profileData = (Map<String, Object>) esData.get("profile");

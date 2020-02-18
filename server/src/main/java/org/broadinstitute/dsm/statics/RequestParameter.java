@@ -16,7 +16,7 @@ public class RequestParameter {
     public static final String DDP_PARTICIPANT_ID = "ddpParticipantId";
     public static final String DDP_REALM = "realm";
     public static final String ACTIVITY = "activity";
-    public static final String STATUS = "aStatus";
+    public static final String STATUS = "status";
     public static final String QUERY_PARAM_TARGET = "target";
     public static final String LOOKUP_FIELD = "field";
     public static final String LOOKUP_VALUE = "value";

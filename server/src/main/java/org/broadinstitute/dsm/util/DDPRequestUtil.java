@@ -212,7 +212,7 @@ public class DDPRequestUtil {
             }
         }
         catch (Exception ioe) {
-            throw new RuntimeException("Couldn't get followUp survey aStatus list from " + sendRequest, ioe);
+            throw new RuntimeException("Couldn't get followUp survey status list from " + sendRequest, ioe);
         }
         return list;
     }
