@@ -181,8 +181,7 @@ export class Utils {
         }
       }
     }
-    //    console.log( headers );
-    let csv = this.makeCSV(data, paths, columns, isSurveyData);
+    let csv = this.makeCSV(data, paths, columns);
     csv = headers + "\r\n" + csv;
     let blob = new Blob( [ csv ], {type: "text/csv;charset=utf-8;"} );
     if (navigator.msSaveBlob) { // IE 10+
@@ -203,7 +202,7 @@ export class Utils {
     }
   }
 
-  private static makeCSV(data: any[], paths: any[], columns: {}, isSurveyData ?: boolean): string {
+  private static makeCSV (data: any[], paths: any[], columns: {}): string {
     let input = [];
     let result = [];
     for (let d of data) {
@@ -245,9 +244,7 @@ export class Utils {
       if (objects != null) {
         for (let o of objects) {
           let oString = this.makeCSVString(o, columns[paths[index + 1]], data);
-          //          console.log( oString );
           let a = this.makeCSVForObjectArray(o, paths, columns, index + 2);
-          //          console.log( a );
           if (a != null && a.length > 0) {
             for (let t of a) {
               result.push( oString + t );
@@ -268,9 +265,6 @@ export class Utils {
 
   private static getObjectAdditionalValue( o: Object, fieldName: string, column: any ) {
     if (o[ fieldName ] != null) {
-      console.log(o);
-      console.log(fieldName);
-      console.log(column.participantColumn.name);
       return o[fieldName][column.participantColumn.name];
       // for (let nv of o[ fieldName ]) {
       //   if (nv.name === column.participantColumn.name) {
