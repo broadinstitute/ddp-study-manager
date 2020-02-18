@@ -23,6 +23,7 @@ import spark.Request;
 import spark.Response;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class KitDeactivationRoute extends RequestHandler {
 
@@ -67,22 +68,29 @@ public class KitDeactivationRoute extends RequestHandler {
                     else {
                         DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
                         InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(realm);
-                        List<Value> kitBehavior = instanceSettings.getKitBehaviorChange();
-                        Value deactivation = kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_ACTIVATION)).findFirst().get();
+                        Value activation = null;
+                        if (instanceSettings.getKitBehaviorChange() != null) {
+                            List<Value> kitBehavior = instanceSettings.getKitBehaviorChange();
+                            try {
+                                activation = kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_ACTIVATION)).findFirst().get();
+                            }
+                            catch (NoSuchElementException e) {
+                                activation = null;
+                            }
+                        }
 
-                        if (deactivation != null && StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
-                            boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(ddpInstance, kitRequest.getParticipantId(), deactivation);
+                        if (activation != null && StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
+                            boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(ddpInstance, kitRequest.getParticipantId(), activation);
                             if (specialBehavior) {
-                                if (InstanceSettings.TYPE_ALERT.equals(deactivation.getType())) {
-                                    return new Result(200, deactivation.getValue());
+                                if (InstanceSettings.TYPE_ALERT.equals(activation.getType())) {
+                                    return new Result(200, activation.getValue());
                                 }
-                                else if (InstanceSettings.TYPE_NOTIFICATION.equals(deactivation.getType())) {
-                                    String message = "Kit uploaded for participant " + kitRequest.getParticipantId() + ". \n" +
-                                            deactivation.getValue();
-                                    notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message);
+                                else if (InstanceSettings.TYPE_NOTIFICATION.equals(activation.getType())) {
+                                    String message = "Kit for participant " + kitRequest.getParticipantId() + " was activated </br>" + activation.getValue();
+                                    notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE);
                                 }
                                 else {
-                                    logger.error("Instance settings behavior for kit was not known " + deactivation.getType());
+                                    logger.error("Instance settings behavior for kit was not known " + activation.getType());
                                 }
                             }
                             else {
