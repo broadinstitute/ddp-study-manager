@@ -65,7 +65,7 @@
             <td>
               <ng-container *ngIf="setting.addedNew">
                 <md-input-container class="Input">
-                  <input mdInput class="Width--100" maxlength="100" [(ngModel)]="setting.columnName"
+                  <input mdInput class="Width--100" maxlength="45" [(ngModel)]="setting.columnName"
                          (change)="checkColName(i); onChange(i)" autocomplete="off">
                   <md-hint class="ErrorMessageForm" *ngIf="setting.notUniqueError">Name not unique</md-hint>
                   <md-hint class="ErrorMessageForm" *ngIf="setting.spaceError">No space allowed</md-hint>

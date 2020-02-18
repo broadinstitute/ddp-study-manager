@@ -212,7 +212,7 @@ public class ViewFilter {
                 stmt.setString(1, columnString);
                 stmt.setString(2, viewFilter.getFilterName());
                 stmt.setString(3, userId);
-                stmt.setString(4, viewFilter.getShared() ? "1" : "0");
+                stmt.setBoolean(4, viewFilter.getShared());
                 stmt.setString(5, query);
                 stmt.setString(6, viewFilter.getParent());
                 stmt.setString(7, viewFilter.getQuickFilterName());
@@ -340,7 +340,7 @@ public class ViewFilter {
                 columnMap,
                 rs.getString(DBConstants.FILTER_ID),
                 rs.getString(DBConstants.DELETED),
-                !("0".equals(rs.getString(DBConstants.SHARED_FILTER))),
+                rs.getBoolean(DBConstants.SHARED_FILTER),
                 rs.getString(DBConstants.CREATED_BY),
                 null,
                 rs.getString(DBConstants.FILTER_PARENT),

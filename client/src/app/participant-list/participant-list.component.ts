@@ -377,6 +377,8 @@ export class ParticipantListComponent implements OnInit {
           data => {
             if (data != null) {
               this.participantList = [];
+              this.originalParticipantList = [];
+              this.copyParticipantList = [];
               let jsonData: any[];
               jsonData = data;
               jsonData.forEach( ( val ) => {
@@ -437,6 +439,8 @@ export class ParticipantListComponent implements OnInit {
             }
           }
           this.participantList = [];
+          this.originalParticipantList = [];
+          this.copyParticipantList = [];
           let jsonData: any[];
           jsonData = data;
           jsonData.forEach( ( val ) => {
@@ -702,6 +706,8 @@ export class ParticipantListComponent implements OnInit {
           if (data != undefined && data != null && data !== "") {
             let jsonData: any[];
             this.participantList = [];
+            this.originalParticipantList = [];
+            this.copyParticipantList = [];
             this.filterQuery = "";
             jsonData = data;
             jsonData.forEach( ( val ) => {
@@ -1216,6 +1222,8 @@ export class ParticipantListComponent implements OnInit {
     this.loadingParticipants = localStorage.getItem( ComponentService.MENU_SELECTED_REALM );
     this.dsmService.filterData( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), jsonPatch, this.parent, null ).subscribe( data => {
       this.participantList = [];
+      this.originalParticipantList = [];
+      this.copyParticipantList = [];
       if (data != null) {
         let jsonData: any[];
         jsonData = data;
@@ -1232,6 +1240,8 @@ export class ParticipantListComponent implements OnInit {
       this.filterQuery = queryText;
     }, err => {
       this.participantList = [];
+      this.originalParticipantList = [];
+      this.copyParticipantList = [];
       this.loadingParticipants = null;
       this.additionalMessage = "Error - Filtering Participant List, Please contact your DSM developer";
     } );
