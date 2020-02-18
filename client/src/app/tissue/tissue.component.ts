@@ -14,21 +14,21 @@ import {Router} from "@angular/router";
 import {NameValue} from "../utils/name-value.model";
 import {PatchUtil} from "../utils/patch.model";
 
-@Component ({
+@Component({
   selector: "app-tissue",
   templateUrl: "./tissue.component.html",
   styleUrls: [ "./tissue.component.css" ],
 })
 export class TissueComponent implements OnInit {
 
-  @ViewChild ("collaboratorSampleId") collaboratorSampleIdInputField;
+  @ViewChild("collaboratorSampleId") collaboratorSampleIdInputField;
 
-  @Input () participant: Participant;
-  @Input () oncHistoryDetail: OncHistoryDetail;
-  @Input () additionalColumns: Array<FieldSettings>;
-  @Input () tissue: Tissue;
-  @Input () tissueId: string;
-  @Input () editable: boolean;
+  @Input() participant: Participant;
+  @Input() oncHistoryDetail: OncHistoryDetail;
+  @Input() additionalColumns: Array<FieldSettings>;
+  @Input() tissue: Tissue;
+  @Input() tissueId: string;
+  @Input() editable: boolean;
 
   collaboratorS: string;
   currentPatchField: string;
@@ -40,9 +40,6 @@ export class TissueComponent implements OnInit {
   }
 
   ngOnInit () {
-    for ( let col of this.additionalColumns ) {
-      console.log (col);
-    }
   }
 
   public getCompService () {
@@ -57,7 +54,7 @@ export class TissueComponent implements OnInit {
       else {
         this.tissue.tissueSite = object;
       }
-      this.valueChanged (this.tissue.tissueSite, "tissueSite");
+      this.valueChanged(this.tissue.tissueSite, "tissueSite");
     }
   }
 
@@ -86,7 +83,7 @@ export class TissueComponent implements OnInit {
         addArray[colName] = v;
         this.tissue.additionalValues = addArray;
       }
-      this.valueChanged (this.tissue.additionalValues, "additionalValues");
+      this.valueChanged(this.tissue.additionalValues, "additionalValues");
     }
   }
 
@@ -103,7 +100,7 @@ export class TissueComponent implements OnInit {
   valueChanged (value: any, parameterName: string) {
     let v;
     if ( parameterName === "additionalValues" ) {
-      v = JSON.stringify (value);
+      v = JSON.stringify(value);
     }
     else if ( typeof value === "string" ) {
       v = value;
@@ -127,27 +124,26 @@ export class TissueComponent implements OnInit {
           }
         }
       }
-      let patch1 = new PatchUtil (this.tissue.tissueId, this.role.userMail (),
+      let patch1 = new PatchUtil(this.tissue.tissueId, this.role.userMail(),
         {
           name: parameterName,
           value: v,
         }, null, "oncHistoryDetailId", this.tissue.oncHistoryDetailId, Statics.TISSUE_ALIAS);
-      let patch = patch1.getPatch ();
+      let patch = patch1.getPatch();
       this.patchFinished = false;
       this.currentPatchField = parameterName;
-      this.dsmService.patchParticipantRecord (JSON.stringify (patch)).subscribe (// need to subscribe, otherwise it will not send!
+      this.dsmService.patchParticipantRecord(JSON.stringify(patch)).subscribe(// need to subscribe, otherwise it will not send!
         data => {
-          let result = Result.parse (data);
+          let result = Result.parse(data);
           if ( result.code == 200 && result.body != null && result.body !== "" && this.tissue.tissueId == null ) {
-            let jsonData: any | any[] = JSON.parse (result.body);
-            console.log (jsonData);
+            let jsonData: any | any[] = JSON.parse(result.body);
             this.tissue.tissueId = jsonData.tissueId;
             this.patchFinished = true;
             this.currentPatchField = null;
             this.dup = false;
             if ( jsonData instanceof Array ) {
-              jsonData.forEach ((val) => {
-                let nameValue = NameValue.parse (val);
+              jsonData.forEach((val) => {
+                let nameValue = NameValue.parse(val);
                 this.oncHistoryDetail[nameValue.name] = nameValue.value;
               });
             }
@@ -158,10 +154,10 @@ export class TissueComponent implements OnInit {
           }
           else if ( result.code === 200 ) {
             if ( result.body != null && result.body !== "" ) {
-              let jsonData: any | any[] = JSON.parse (result.body);
+              let jsonData: any | any[] = JSON.parse(result.body);
               if ( jsonData instanceof Array ) {
-                jsonData.forEach ((val) => {
-                  let nameValue = NameValue.parse (val);
+                jsonData.forEach((val) => {
+                  let nameValue = NameValue.parse(val);
                   this.oncHistoryDetail[nameValue.name] = nameValue.value;
                 });
               }
@@ -173,7 +169,7 @@ export class TissueComponent implements OnInit {
         },
         err => {
           if ( err._body === Auth.AUTHENTICATION_ERROR ) {
-            this.router.navigate ([ Statics.HOME_URL ]);
+            this.router.navigate([ Statics.HOME_URL ]);
           }
         },
       );
@@ -196,18 +192,18 @@ export class TissueComponent implements OnInit {
   public checkCollaboratorId () {
     let jsonData: any[];
     if ( this.collaboratorS == null && (this.tissue.collaboratorSampleId == null || this.tissue.collaboratorSampleId === "") ) {
-      this.dsmService.lookupCollaboratorId ("tCollab", this.participant.participant.participantId, this.participant.data.profile["hruid"], localStorage.getItem (ComponentService.MENU_SELECTED_REALM)).subscribe (// need to subscribe, otherwise it will not send!
+      this.dsmService.lookupCollaboratorId("tCollab", this.participant.participant.participantId, this.participant.data.profile["hruid"], localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(// need to subscribe, otherwise it will not send!
         data => {
           //          console.log(`received: ${JSON.stringify(data, null, 2)}`);
           jsonData = data;
-          jsonData.forEach ((val) => {
-            let con = Lookup.parse (val);
+          jsonData.forEach((val) => {
+            let con = Lookup.parse(val);
             this.collaboratorS = con.field1.value + "_";
           });
         },
         err => {
           if ( err._body === Auth.AUTHENTICATION_ERROR ) {
-            this.router.navigate ([ Statics.HOME_URL ]);
+            this.router.navigate([ Statics.HOME_URL ]);
           }
         },
       );
@@ -217,7 +213,7 @@ export class TissueComponent implements OnInit {
   public setLookup () {
     this.tissue.collaboratorSampleId = this.collaboratorS;
     this.collaboratorS = null;
-    this.collaboratorSampleIdInputField.nativeElement.focus ();
+    this.collaboratorSampleIdInputField.nativeElement.focus();
   }
 
   isPatchedCurrently (field: string): boolean {

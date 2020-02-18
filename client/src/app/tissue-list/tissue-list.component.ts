@@ -265,19 +265,21 @@ export class TissueListComponent implements OnInit {
           for ( let filter of Filter.ALL_COLUMNS ) {
             if ( filter.participantColumn.tableAlias === key ) {
               this.allColumns[key].push(filter);
+              let t = filter.participantColumn.object !== null && filter.participantColumn.object !== undefined ? filter.participantColumn.object : filter.participantColumn.tableAlias;
+              this.allFieldNames.add(t + Statics.DELIMITER_ALIAS + filter.participantColumn.name);
+
             }
           }
         });
-        for ( let col of this.allColumns[Statics.TISSUE_ALIAS] ) {
-          this.allFieldNames.add(col.participantColumn.tableAlias + Statics.DELIMITER_ALIAS + col.participantColumn.name);
-        }
-        for ( let col of this.allColumns[Statics.ONCDETAIL_ALIAS] ) {
-          this.allFieldNames.add(col.participantColumn.tableAlias + Statics.DELIMITER_ALIAS + col.participantColumn.name);
-        }
-        for ( let col of this.allColumns["data"] ) {
-          let t = col.participantColumn.object !== null && col.participantColumn.object !== undefined ? col.participantColumn.object : col.participantColumn.tableAlias;
-          this.allFieldNames.add(t + Statics.DELIMITER_ALIAS + col.participantColumn.name);
-        }
+        // for ( let col of this.allColumns[Statics.TISSUE_ALIAS] ) {
+        //   this.allFieldNames.add(col.participantColumn.tableAlias + Statics.DELIMITER_ALIAS + col.participantColumn.name);
+        // }
+        // for ( let col of this.allColumns[Statics.ONCDETAIL_ALIAS] ) {
+        //   this.allFieldNames.add(col.participantColumn.tableAlias + Statics.DELIMITER_ALIAS + col.participantColumn.name);
+        // }
+        // for ( let col of this.allColumns["data"] ) {
+        //   let t = col.participantColumn.object !== null && col.participantColumn.object !== undefined ? col.participantColumn.object :
+        // col.participantColumn.tableAlias; this.allFieldNames.add(t + Statics.DELIMITER_ALIAS + col.participantColumn.name); }
         for ( let data of this.dataSources ) {
           this.allColumns[data].sort((a, b) => {
             return a.participantColumn.display.localeCompare(b.participantColumn.display);
