@@ -64,6 +64,7 @@ public class KitRequestShipping extends KitRequest {
     private static final String UPDATE_KIT_DEACTIVATION = "UPDATE ddp_kit kit INNER JOIN(SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit " +
             "ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id AND kit.dsm_kit_id = groupedKit.kit_id SET deactivated_date = ?, " +
             "deactivation_reason = ?, deactivated_by = ? WHERE kit.dsm_kit_request_id = ?";
+    private static final String INSERT_KIT = "INSERT INTO ddp_kit (dsm_kit_request_id, easypost_address_id_to,  error, message) VALUES (?,?,?,?)";
 
     public static final String DEACTIVATION_REASON = "Generated Express";
 
@@ -663,7 +664,7 @@ public class KitRequestShipping extends KitRequest {
 
     private static SimpleResult writeNewKit(Connection conn, String kitRequestId, String addressIdTo, String errorMessage) {
         SimpleResult dbVals = new SimpleResult();
-        try (PreparedStatement insertKit = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.INSERT_UPLOADED_KIT))) {
+        try (PreparedStatement insertKit = conn.prepareStatement(INSERT_KIT)) {
             insertKit.setString(1, kitRequestId);
             if (StringUtils.isNotBlank(addressIdTo)) {
                 insertKit.setString(2, addressIdTo);
@@ -671,7 +672,7 @@ public class KitRequestShipping extends KitRequest {
             else {
                 insertKit.setString(2, null);
             }
-            if (StringUtils.isNotBlank(errorMessage)) {
+            if (StringUtils.isNotBlank(errorMessage) && !KitUtil.IGNORE_AUTO_DEACTIVATION.equals(errorMessage)) {
                 insertKit.setInt(3, 1);
             }
             else {
@@ -1033,7 +1034,7 @@ public class KitRequestShipping extends KitRequest {
 
     private static Shipment getEasyPostShipment(@NonNull EasyPostUtil easyPostUtil, String carrier, String carrierId, String service, String billingReference, @NonNull Address toAddress,
                                                 @NonNull Address senderAddress, @NonNull Parcel parcel, CustomsInfo customsInfo) throws Exception {
-        if (carrier != null && service != null) {
+        if (carrier != null) {
             String billingRef = null;
             if (CARRIER_FEDEX.equals(carrier) && billingReference != null) {
                 billingRef = billingReference;

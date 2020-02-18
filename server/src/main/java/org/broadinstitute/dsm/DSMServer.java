@@ -199,6 +199,7 @@ public class DSMServer extends BasicServer {
                 }
             }
         });
+        setupDDPConfigurationLookup(cfg.getString(ApplicationConfigConstants.DDP));
 
         AuthenticationRoute authenticationRoute = new AuthenticationRoute(auth0Util,
                 jwtSecret, cookieSalt, cookieName, userUtil, cfg.getString("portal.environment"));
@@ -218,8 +219,6 @@ public class DSMServer extends BasicServer {
         catch (Exception e) {
             logger.error("Couldn't setup ruby for MBC decryption");
         }
-
-        setupDDPConfigurationLookup(cfg.getString(ApplicationConfigConstants.DDP));
 
         DDPRequestUtil ddpRequestUtil = new DDPRequestUtil();
         PatchUtil patchUtil = new PatchUtil();

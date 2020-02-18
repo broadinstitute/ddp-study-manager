@@ -23,10 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -74,6 +71,7 @@ public class KitUtil {
 
     public static final String BOOKMARK_LABEL_CREATION_RUNNING = "label_creation_running";
     public static final String IGNORE_AUTO_DEACTIVATION = "ignore_auto_deactivation";
+    public static final String SYSTEM_AUTOMATICALLY_DEACTIVATED = "system_automatically_deactivated";
     private static final String BSP = "BSP";
     //easypost end statuses
     public static final String EASYPOST_DELIVERED_STATUS = "delivered";
@@ -505,8 +503,16 @@ public class KitUtil {
         for (DDPInstance ddpInstance : ddpInstances) {
             //only instances which have special kit behavior
             if (ddpInstance.getInstanceSettings() != null && ddpInstance.getInstanceSettings().getKitBehaviorChange() != null) {
-                List<Value> kitBehavior = ddpInstance.getInstanceSettings().getKitBehaviorChange();
-                Value uploaded = kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_UPLOADED)).findFirst().get();
+                Value uploaded = null;
+                if (ddpInstance.getInstanceSettings().getKitBehaviorChange() != null) {
+                    List<Value> kitBehavior = ddpInstance.getInstanceSettings().getKitBehaviorChange();
+                    try {
+                        uploaded = kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_UPLOADED)).findFirst().get();
+                    }
+                    catch (NoSuchElementException e) {
+                        uploaded = null;
+                    }
+                }
                 // only look up kits if instance has special kit behavior for uploaded and has data in ES
                 if (uploaded != null && StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
                     List<org.broadinstitute.dsm.db.KitType> kitTypes = org.broadinstitute.dsm.db.KitType.getKitTypes(ddpInstance.getName(), null);
@@ -518,12 +524,12 @@ public class KitUtil {
                             if (!IGNORE_AUTO_DEACTIVATION.equals(kit.getMessage())) {
                                 boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(ddpInstance, kit.getParticipantId(), uploaded);
                                 if (specialBehavior) {
-                                    KitRequestShipping.deactivateKitRequest(kit.getDsmKitRequestId(), uploaded.getValue(),
+                                    KitRequestShipping.deactivateKitRequest(kit.getDsmKitRequestId(), SYSTEM_AUTOMATICALLY_DEACTIVATED + ": " + uploaded.getValue(),
                                             DSMServer.getDDPEasypostApiKey(ddpInstance.getName()), "System");
                                     if (InstanceSettings.TYPE_NOTIFICATION.equals(uploaded.getType())) {
-                                        String message = "Kit uploaded for participant " + kit.getParticipantId() + ". \n" +
-                                                uploaded.getValue();
-                                        notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message);
+                                        String message = kitType.getName() + " kit for participant " + kit.getParticipantId() + " (" + kit.getCollaboratorParticipantId()
+                                                + ") was deactivated per background job </br>. " + uploaded.getValue();
+                                        notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE);
                                     }
                                     else {
                                         logger.error("Instance settings behavior for kit was not known " + uploaded.getType());

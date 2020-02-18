@@ -20,10 +20,7 @@ import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
-import org.broadinstitute.dsm.util.EasyPostUtil;
-import org.broadinstitute.dsm.util.NotificationUtil;
-import org.broadinstitute.dsm.util.SystemUtil;
-import org.broadinstitute.dsm.util.UserUtil;
+import org.broadinstitute.dsm.util.*;
 import org.broadinstitute.dsm.util.externalShipper.ExternalShipper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,8 +110,20 @@ public class KitUploadRoute extends RequestHandler {
 
                 DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
                 InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(realm);
-                List<Value> kitBehavior = instanceSettings.getKitBehaviorChange();
-                Value upload = kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_UPLOAD)).findFirst().get();
+                Value upload = null;
+                String specialMessage = null;
+                if (instanceSettings.getKitBehaviorChange() != null) {
+                    List<Value> kitBehavior = instanceSettings.getKitBehaviorChange();
+                    try {
+                        upload = kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_UPLOAD)).findFirst().get();
+                        if (upload != null) {
+                            specialMessage = upload.getValue();
+                        }
+                    }
+                    catch (NoSuchElementException e) {
+                        upload = null;
+                    }
+                }
 
                 HashMap<String, KitType> kitTypes = KitType.getKitLookup();
                 String key = kitTypeName + "_" + ddpInstance.getDdpInstanceId();
@@ -156,7 +165,7 @@ public class KitUploadRoute extends RequestHandler {
                 logger.info(kitUploadObjects.size() + " " + ddpInstance.getName() + " " + kitTypeName + " kit uploaded");
                 logger.info(invalidAddressList.size() + " uploaded addresses were not valid and " + duplicateKitList.size() + " are already in DSM");
                 logger.info(specialKitList.size() + " kits didn't meet the kit behaviour");
-                return new KitUploadResponse(invalidAddressList.values(), duplicateKitList, specialKitList);
+                return new KitUploadResponse(invalidAddressList.values(), duplicateKitList, specialKitList, specialMessage);
             }
             catch (UploadLineException e) {
                 return e.getMessage();
@@ -232,7 +241,7 @@ public class KitUploadRoute extends RequestHandler {
                 else if (InstanceSettings.TYPE_NOTIFICATION.equals(behavior.getType())) {
                     String message = "Kit uploaded for participant " + kit.getParticipantId() + ". \n" +
                             behavior.getValue();
-                    notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message);
+                    notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE);
                 }
                 else {
                     logger.error("Instance settings behavior for kit was not known " + behavior.getType());
@@ -246,7 +255,7 @@ public class KitUploadRoute extends RequestHandler {
         }
         else {
             handleKit(conn, ddpInstance, kitType, kit, kitRequestSettings, easyPostUtil, userIdRequest, kitTypeName,
-                    collaboratorParticipantId, errorMessage, uploadAnyway, duplicateKitList, orderKits);
+                    collaboratorParticipantId, KitUtil.IGNORE_AUTO_DEACTIVATION, uploadAnyway, duplicateKitList, orderKits);
         }
     }
 

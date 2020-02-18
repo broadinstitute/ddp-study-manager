@@ -33,6 +33,7 @@ public class NotificationUtil {
     private static final Logger logger = LoggerFactory.getLogger(NotificationUtil.class);
 
     public static final String EMAIL_TYPE = "EXITED_KIT_RECEIVED_NOTIFICATION";
+    public static final String UNIVERSAL_NOTIFICATION_TEMPLATE = "UNIVERSAL_NOTIFICATION_TEMPLATE";
 
     public static final String KITREQUEST_LINK = "/permalink/whereto?";
 
@@ -69,11 +70,15 @@ public class NotificationUtil {
     }
 
     public void sentNotification(String notificationRecipient, String message) {
+        sentNotification(notificationRecipient, message, EMAIL_TYPE);
+    }
+
+    public void sentNotification(String notificationRecipient, String message, String recordId) {
         try {
             if (StringUtils.isNotBlank(notificationRecipient)) {
                 notificationRecipient = notificationRecipient.replaceAll("\\s", "");
                 List<String> recipients = Arrays.asList(notificationRecipient.split(","));
-                sentNotification(recipients, message);
+                sentNotification(recipients, message, recordId);
             }
         }
         catch (Exception e) {
@@ -81,19 +86,21 @@ public class NotificationUtil {
         }
     }
 
-    public void sentNotification(List<String> recipients, String message) {
+    public void sentNotification(List<String> recipients, String message, String recordId) {
         for (String recipient : recipients) {
-            doNotification(recipient, message);
+            doNotification(recipient, message, recordId);
         }
     }
 
-    private void doNotification(@NonNull String recipient, String message) {
+    private void doNotification(@NonNull String recipient, String message, String recordId) {
         Map<String, String> mapy = new HashMap<>();
         mapy.put(":customText", message);
         Recipient emailRecipient = new Recipient(recipient);
-        emailRecipient.setUrl(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.EMAIL_FRONTEND_URL_FOR_LINKS) + KITREQUEST_LINK);
+        if (EMAIL_TYPE.equals(recordId)) {
+            emailRecipient.setUrl(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.EMAIL_FRONTEND_URL_FOR_LINKS) + KITREQUEST_LINK);
+        }
         emailRecipient.setSurveyLinks(mapy);
-        queueCurrentAndFutureEmails(EMAIL_TYPE, emailRecipient, EMAIL_TYPE);
+        queueCurrentAndFutureEmails(recordId, emailRecipient, recordId);
     }
 
     public void queueCurrentAndFutureEmails(@NonNull String reason, @NonNull Recipient recipient, @NonNull String recordId) {

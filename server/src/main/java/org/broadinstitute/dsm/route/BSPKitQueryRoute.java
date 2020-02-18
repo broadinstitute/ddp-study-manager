@@ -64,17 +64,26 @@ public class BSPKitQueryRoute implements Route {
         if (StringUtils.isNotBlank(bspKitInfo.getDdpParticipantId())) {
             DDPInstance ddpInstance = DDPInstance.getDDPInstance(bspKitInfo.getInstanceName());
             InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(bspKitInfo.getInstanceName());
-            List<Value> kitBehavior = instanceSettings.getKitBehaviorChange();
-            Value received = kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_RECEIVED)).findFirst().get();
+            Value received = null;
+            if (instanceSettings.getKitBehaviorChange() != null) {
+                List<Value> kitBehavior = instanceSettings.getKitBehaviorChange();
+                try {
+                    received = kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_RECEIVED)).findFirst().get();
+                }
+                catch (NoSuchElementException e) {
+                    received = null;
+                }
+            }
 
             if (received != null && StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
                 boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(ddpInstance, bspKitInfo.getDdpParticipantId(), received);
                 if (specialBehavior) {
                     //don't trigger ddp to sent out email, only email to study staff
                     if (InstanceSettings.TYPE_NOTIFICATION.equals(received.getType())) {
-                        String message = "Kit of participant " + bspKitInfo.getBspParticipantId() + " was received by GP. \n" +
-                                "Participant reached AOM and hasn't re-consented yet<br>";
-                        notificationUtil.sentNotification(bspKitInfo.getNotificationRecipient(), message);
+                        String message = "Kit of participant " + bspKitInfo.getBspParticipantId() + " was received by GP. </br> " +
+                                "CollaboratorSampleId:  " + bspKitInfo.getBspSampleId() + " </br> " +
+                                received.getValue();
+                        notificationUtil.sentNotification(bspKitInfo.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE);
                     }
                     else {
                         logger.error("Instance settings behavior for kit was not known " + received.getType());

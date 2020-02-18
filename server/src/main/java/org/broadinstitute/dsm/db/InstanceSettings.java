@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -52,8 +53,16 @@ public class InstanceSettings {
                 stmt.setString(1, realm);
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        List<Value> mrCoverPdfSettings = Arrays.asList(new Gson().fromJson(rs.getString(DBConstants.MR_COVER_PDF), Value[].class));
-                        List<Value> kitBehaviorChange = Arrays.asList(new Gson().fromJson(rs.getString(DBConstants.MR_COVER_PDF), Value[].class));
+                        String mrCoverPDf = rs.getString(DBConstants.MR_COVER_PDF);
+                        List<Value> mrCoverPdfSettings = null;
+                        if (StringUtils.isNotBlank(mrCoverPDf)) {
+                            mrCoverPdfSettings = Arrays.asList(new Gson().fromJson(mrCoverPDf, Value[].class));
+                        }
+                        String kitBehavior = rs.getString(DBConstants.KIT_BEHAVIOR_CHANGE);
+                        List<Value> kitBehaviorChange = null;
+                        if (StringUtils.isNotBlank(kitBehavior)) {
+                            kitBehaviorChange = Arrays.asList(new Gson().fromJson(kitBehavior, Value[].class));
+                        }
                         dbVals.resultValue = new InstanceSettings(mrCoverPdfSettings, kitBehaviorChange);
                     }
                 }
@@ -86,8 +95,8 @@ public class InstanceSettings {
                         Object nameObject1 = nameObject0.get(names[1]);
                         if (nameObject1 instanceof String) {
                             if (StringUtils.isNotBlank((String) nameObject1)) {
-                                if (condition.getValue().contains("today()")) {
-                                        String tmp = condition.getValue().replace("today()", "").trim();
+                                if (condition.getValue().contains(Filter.TODAY)) {
+                                    String tmp = condition.getValue().replace(Filter.TODAY, "").trim();
                                     LocalDate dateStart = LocalDate.now();
                                     LocalDate dateStop = LocalDate.now();
                                     //value has +/- x d
@@ -113,7 +122,7 @@ public class InstanceSettings {
                                     String formattedStop = dateStop.format(formatter);
                                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                                     try {
-                                        //date from ES field is before today() + x
+                                        //date from ES field is before today +/- x
                                         //in case of osteo dateOfMajority is before the date
                                         if (sdf.parse((String) nameObject1).after(sdf.parse(formattedStart)) &&
                                                 sdf.parse((String) nameObject1).before(sdf.parse(formattedStop))) {
@@ -135,7 +144,7 @@ public class InstanceSettings {
                         Object nameObject0 = participant.get(condition.getName());
                         if (nameObject0 instanceof String) {
                             if (StringUtils.isNotBlank((String) nameObject0)) {
-                                if (!condition.getValue().contains("today()")) {
+                                if (!condition.getValue().contains(Filter.TODAY)) {
                                     if (!nameObject0.equals(condition.getValue())) {
                                         specialKit = true;
                                     }

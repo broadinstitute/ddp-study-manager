@@ -31,7 +31,7 @@ public class DDPInstance {
             "AND realm.ddp_instance_id = main.ddp_instance_id) AS 'has_role', mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients FROM ddp_instance main " +
             "WHERE is_active = 1";
     private static final String SQL_SELECT_INSTANCE_WITH_KIT_BEHAVIOR = "SELECT main.ddp_instance_id, instance_name, base_url, collaborator_id_prefix, migrated_ddp, billing_reference, " +
-            "es_participant_index, es_activity_definition_index, mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients, kit_behavior_change" +
+            "es_participant_index, es_activity_definition_index, mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients, kit_behavior_change " +
             "FROM ddp_instance main, instance_settings setting WHERE main.ddp_instance_id = setting.ddp_instance_id " +
             "AND main.is_active = 1 AND setting.kit_behavior_change IS NOT NULL";
     public static final String SQL_SELECT_ALL_ACTIVE_REALMS = "SELECT ddp_instance_id, instance_name, base_url, collaborator_id_prefix, es_participant_index, es_activity_definition_index, " +
@@ -340,8 +340,8 @@ public class DDPInstance {
             try (PreparedStatement bspStatement = conn.prepareStatement(SQL_SELECT_INSTANCE_WITH_KIT_BEHAVIOR)) {
                 try (ResultSet rs = bspStatement.executeQuery()) {
                     while (rs.next()) {
-                        DDPInstance ddpInstance = getDDPInstanceWithRoleFormResultSet(rs);
-                        List<Value> kitBehavior = Arrays.asList(new Gson().fromJson(rs.getString(DBConstants.MR_COVER_PDF), Value[].class));
+                        DDPInstance ddpInstance = getDDPInstanceFormResultSet(rs);
+                        List<Value> kitBehavior = Arrays.asList(new Gson().fromJson(rs.getString(DBConstants.KIT_BEHAVIOR_CHANGE), Value[].class));
                         InstanceSettings instanceSettings = new InstanceSettings(null, kitBehavior);
                         ddpInstance.setInstanceSettings(instanceSettings);
                         ddpInstances.add(ddpInstance);
@@ -355,7 +355,7 @@ public class DDPInstance {
         });
 
         if (results.resultException != null) {
-            throw new RuntimeException("Error looking ddpInstances ", results.resultException);
+            throw new RuntimeException("Error getting ddpInstances ", results.resultException);
         }
         return ddpInstances;
     }
