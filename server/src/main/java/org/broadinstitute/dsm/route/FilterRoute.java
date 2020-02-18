@@ -223,7 +223,7 @@ public class FilterRoute extends RequestHandler {
                 requestForFiltering = ViewFilter.parseFilteringQuery(filterQuery, requestForFiltering);
             }
             filters = requestForFiltering.getFilters();
-            quickFilterName = requestForFiltering == null? null: requestForFiltering.quickFilterName;
+            quickFilterName = requestForFiltering == null? null: requestForFiltering.getQuickFilterName();
         }
         else if (savedFilters != null) {
             filters = savedFilters;

@@ -27,7 +27,7 @@ public class GBFMockServer {
         String status = "{\"success\": true, \"statuses\": [{\"orderNumber\": \"" + orderNumber + "\", \"orderStatus\": \"SHIPPED\"},{\"orderNumber\": \"WRBO64NNRV2C3XVZ1WJJ\", \"orderStatus\": \"SHIPPED\"}," +
                 "{\"orderNumber\": \"K6289XU7Z69J46FPASZ8\", \"orderStatus\": \"NOT FOUND\"}]}";
         mockDDP.when(
-                request().withPath("/aStatus"))
+                request().withPath("/status"))
                 .respond(response().withStatusCode(200).withBody(status));
 
         String confirm = "{\"XML\":\"<ShippingConfirmations><ShippingConfirmation OrderNumber=\\\"" + orderNumber + "\\\" Shipper=\\\"B47456\\\" ShipVia=\\\"FedEx Ground\\\" ShipDate=\\\"2018-06-04\\\" ClientID=\\\"P1\\\">" +
