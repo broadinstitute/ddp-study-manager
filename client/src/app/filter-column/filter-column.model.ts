@@ -15,7 +15,7 @@ export class Filter {
   public static BOOLEAN_TYPE = "BOOLEAN"; //ES boolean value true/false
   public static CHECKBOX_TYPE = "CHECKBOX"; //DSM UI checkbox (unable to obtain/problem)
   public static ADDITIONAL_VALUE_TYPE = "ADDITIONALVALUE";
-  public static COMPOSITE_TYPE = "COMPOSITE";
+  public static COMPOSITE_TYPE = "COMPOSITE";// ES dynamic filters
 
   //ES data
   public static REALM = new Filter(ParticipantColumn.REALM, Filter.TEXT_TYPE);

@@ -51,7 +51,7 @@ public class TriggerSurveyRoute extends RequestHandler {
                     DDPInstance instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.SURVEY_STATUS_ENDPOINTS);
                     QueryParamsMap queryParams = request.queryMap();
                     String selectedSurvey = "";
-                    //follow up survey aStatus
+                    //follow up survey status
                     if (queryParams.value("surveyName") != null) {
                         selectedSurvey = queryParams.get("surveyName").value();
                         if (instance.isHasRole()) {
