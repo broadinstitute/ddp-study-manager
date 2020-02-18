@@ -100,12 +100,13 @@
                     <input mdInput maxlength="100" (change)="onChange(i)" [(ngModel)]="value.value"
                            placeholder="Value {{j+1}}" autocomplete="off">
                     <md-hint class="ErrorMessageForm" *ngIf="setting.missingOptionsError">Missing possible
-                      values</md-hint>
+                      values
+                    </md-hint>
                   </md-input-container>
                 </ng-container>
-                  <button md-mini-fab color="primary" tooltip="Add Value" (click)="addValue(setting)">
-                    <i class="fas fa-plus fa-lg"></i>
-                  </button>
+                <button md-mini-fab color="primary" tooltip="Add Value" (click)="addValue(setting)">
+                  <i class="fas fa-plus fa-lg"></i>
+                </button>
               </ng-container>
             </td>
             <td>
@@ -128,7 +129,8 @@
       </table>
       <br/>
       <button md-raised-button (click)="saveFieldSettings()" color="primary"
-              [disabled]="saving">Save Settings</button>
+              [disabled]="saving">Save Settings
+      </button>
     </div>
   </div>
 </div>
