@@ -95,8 +95,8 @@ export class ParticipantListComponent implements OnInit {
   showHelp: boolean = false;
   filtered: boolean = false;
 
-  constructor (private role: RoleService, private dsmService: DSMService, private compService: ComponentService,
-               private router: Router, private auth: Auth, private route: ActivatedRoute, private util: Utils) {
+  constructor(private role: RoleService, private dsmService: DSMService, private compService: ComponentService,
+              private router: Router, private auth: Auth, private route: ActivatedRoute, private util: Utils) {
     if ( !auth.authenticated() ) {
       auth.logout();
     }
@@ -110,7 +110,7 @@ export class ParticipantListComponent implements OnInit {
     });
   }
 
-  ngOnInit () {
+  ngOnInit() {
     this.additionalMessage = null;
     if ( localStorage.getItem(ComponentService.MENU_SELECTED_REALM) == null || localStorage.getItem(ComponentService.MENU_SELECTED_REALM) === undefined ) {
       this.additionalMessage = "Please select a realm";
@@ -121,7 +121,7 @@ export class ParticipantListComponent implements OnInit {
     window.scrollTo(0, 0);
   }
 
-  private checkRight () {
+  private checkRight() {
     //assumption for now: profile parameters are always the same, only survey will be dynamic per ddp
     this.loadingParticipants = localStorage.getItem(ComponentService.MENU_SELECTED_REALM);
     this.setSelectedFilterName("");
@@ -153,7 +153,7 @@ export class ParticipantListComponent implements OnInit {
     );
   }
 
-  loadSettings () {
+  loadSettings() {
     let jsonData: any;
     this.dsmService.getSettings(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent).subscribe(
       data => {
@@ -331,13 +331,13 @@ export class ParticipantListComponent implements OnInit {
     );
   }
 
-  orderColumns () {
+  orderColumns() {
     this.dataSources.forEach((value: string, key: string) => {
       this.sourceColumns[key].sort((a: Filter, b: Filter) => this.sort(a.participantColumn.display, b.participantColumn.display, 1));
     });
   }
 
-  getSourceColumnsFromFilterClass () {
+  getSourceColumnsFromFilterClass() {
     this.dataSources.forEach((value: string, key: string) => {
       this.selectedColumns[key] = [];
       this.sourceColumns[key] = [];
@@ -355,7 +355,7 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  private getData () {
+  private getData() {
     //find viewFilter by filterName
     let defaultFilter = null;
     if ( this.role.getUserSetting().defaultParticipantFilter != null ) {
@@ -404,7 +404,7 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  public selectFilter (viewFilter: ViewFilter) {
+  public selectFilter(viewFilter: ViewFilter) {
     this.loadingParticipants = localStorage.getItem(ComponentService.MENU_SELECTED_REALM);
     this.currentView = JSON.stringify(viewFilter);
     let filterName = null;
@@ -490,7 +490,7 @@ export class ParticipantListComponent implements OnInit {
     );
   }
 
-  getColSpan () {
+  getColSpan() {
     let columnCount = 1; //1 = checkbox column
     this.dataSources.forEach((value: string, key: string) => {
       if ( this.selectedColumns[key] != null ) {
@@ -500,7 +500,7 @@ export class ParticipantListComponent implements OnInit {
     return columnCount;
   }
 
-  getFilters () {
+  getFilters() {
     this.dsmService.getFiltersForUserForRealm(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), this.parent).subscribe(
       data => {
         this.savedFilters = [];
@@ -520,11 +520,11 @@ export class ParticipantListComponent implements OnInit {
       });
   }
 
-  public onclickDropDown (e) {
+  public onclickDropDown(e) {
     e.stopPropagation();
   }
 
-  showCustomizeView () {
+  showCustomizeView() {
     // this.loadSettings();
     this.showFilters = false;
     this.showSavedFilters = false;
@@ -532,7 +532,7 @@ export class ParticipantListComponent implements OnInit {
 
   }
 
-  showFiltersTable () {
+  showFiltersTable() {
     let assigneesMap = [];
     this.assignees.forEach(assignee => {
       if ( assignee.assigneeId !== "-1" ) {
@@ -557,7 +557,7 @@ export class ParticipantListComponent implements OnInit {
     this.showFilters = !this.showFilters;
   }
 
-  showSavedFiltersPanel () {
+  showSavedFiltersPanel() {
     this.showCustomizeViewTable = false;
     this.showFilters = false;
     this.showSavedFilters = !this.showSavedFilters;
@@ -566,14 +566,14 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  public clearFilter () {
+  public clearFilter() {
     this.filterQuery = null;
     this.deselectQuickFilters();
     this.clearManualFilters();
     this.getData();
   }
 
-  public clearManualFilters () {
+  public clearManualFilters() {
     this.dataSources.forEach((value: string, key: string) => {
       if ( this.selectedColumns[key] != null ) {
         for ( let filter of this.selectedColumns[key] ) {
@@ -585,12 +585,12 @@ export class ParticipantListComponent implements OnInit {
     });
   }
 
-  public setSelectedFilterName (filterName) {
+  public setSelectedFilterName(filterName) {
     this.selectedFilterName === filterName;
   }
 
 
-  addOrRemoveColumn (column: Filter, parent: string) {
+  addOrRemoveColumn(column: Filter, parent: string) {
     if ( this.selectedColumns[parent] == null ) {
       this.selectedColumns[parent] = [];
     }
@@ -603,7 +603,7 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  openParticipant (participant: Participant, colSource: string) {
+  openParticipant(participant: Participant, colSource: string) {
     if ( participant != null ) {
       let tabAnchor = "Survey Data";
       if ( colSource === "m" || participant.data.activities == null ) {
@@ -649,7 +649,7 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  openTissue (participant: Participant, oncHistory: OncHistoryDetail) {
+  openTissue(participant: Participant, oncHistory: OncHistoryDetail) {
     if ( participant != null && oncHistory != null ) {
       this.participant = participant;
       this.oncHistoryDetail = oncHistory;
@@ -657,25 +657,25 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  getRealm (): string {
+  getRealm(): string {
     return localStorage.getItem(ComponentService.MENU_SELECTED_REALM);
   }
 
-  getFilterButtonColorStyle (isOpened: boolean): string {
+  getFilterButtonColorStyle(isOpened: boolean): string {
     if ( isOpened ) {
       return Statics.COLOR_ACCENT;
     }
     return Statics.COLOR_BASIC;
   }
 
-  getButtonColorStyle (isOpened: boolean): string {
+  getButtonColorStyle(isOpened: boolean): string {
     if ( isOpened ) {
       return Statics.COLOR_PRIMARY;
     }
     return Statics.COLOR_BASIC;
   }
 
-  public doFilter () {
+  public doFilter() {
     let json = [];
     this.dataSources.forEach((value: string, key: string) => {
       this.createFilterJson(json, key);
@@ -753,7 +753,7 @@ export class ParticipantListComponent implements OnInit {
 
   }
 
-  createFilterJson (json, key: string) {
+  createFilterJson(json, key: string) {
     if ( this.selectedColumns[key] != null ) {
       for ( let filter of this.selectedColumns[key] ) {
         this.addFilterToJson(filter, json);
@@ -761,7 +761,7 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  addFilterToJson (filter: Filter, json) {
+  addFilterToJson(filter: Filter, json) {
     let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
     let filterText = null;
     // change filter to something backend knows!
@@ -819,11 +819,11 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  hasRole (): RoleService {
+  hasRole(): RoleService {
     return this.role;
   }
 
-  public shareFilter (savedFilter: ViewFilter, i) {
+  public shareFilter(savedFilter: ViewFilter, i) {
     let value = savedFilter.shared ? "0" : "1";
     let patch1 = new PatchUtil(savedFilter.id, this.role.userMail(),
       {name: "shared", value: value}, null, this.parent, null);
@@ -838,7 +838,7 @@ export class ParticipantListComponent implements OnInit {
     });
   }
 
-  public deleteView (savedFilter: ViewFilter) {
+  public deleteView(savedFilter: ViewFilter) {
     let patch1 = new PatchUtil(savedFilter.id, this.role.userMail(),
       {name: "fDeleted", value: "1"}, null, this.parent, null);
     let patch = patch1.getPatch();
@@ -852,7 +852,7 @@ export class ParticipantListComponent implements OnInit {
     });
   }
 
-  saveCurrentFilter () {
+  saveCurrentFilter() {
     this.modal.hide();
 
     let columns = [];
@@ -889,18 +889,18 @@ export class ParticipantListComponent implements OnInit {
       });
   }
 
-  public isSortField (name: string) {
+  public isSortField(name: string) {
     return name === this.sortField;
   }
 
-  sortByColumnName (col: Filter, sortParent: string) {
+  sortByColumnName(col: Filter, sortParent: string) {
     this.sortDir = this.sortField === col.participantColumn.name ? (this.sortDir === "asc" ? "desc" : "asc") : "asc";
     this.sortField = col.participantColumn.name;
     this.sortParent = sortParent;
     this.doSort(col.participantColumn.object);
   }
 
-  private doSort (object: string) {
+  private doSort(object: string) {
     let order = this.sortDir === "asc" ? 1 : -1;
     // let i = 0;
     // for ( let p of this.participantList ) {
@@ -989,7 +989,7 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  private sort (x, y, order, sortField?) {
+  private sort(x, y, order, sortField?) {
     if ( sortField !== undefined && x != undefined && y != undefined && x != null && y != null ) {
       x = x[sortField];
       y = y[sortField];
@@ -1026,23 +1026,23 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  public isSelectedFilter (filterName): boolean {
+  public isSelectedFilter(filterName): boolean {
     return this.selectedFilterName === filterName;
   }
 
-  getUtil (): Utils {
+  getUtil(): Utils {
     return this.util;
   }
 
-  getKeys () {
+  getKeys() {
     return Array.from(this.dataSources.keys());
   }
 
-  getTableAlias (col: ParticipantColumn) {
+  getTableAlias(col: ParticipantColumn) {
     return col.object != null ? col.object : col.tableAlias;
   }
 
-  downloadCurrentData () {
+  downloadCurrentData() {
     let date = new Date();
     let columns = {};
     this.dataSources.forEach((value: string, key: string) => {
@@ -1096,7 +1096,7 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  getOptionDisplay (options: NameValue[], key: string) {
+  getOptionDisplay(options: NameValue[], key: string) {
     if ( options != null ) {
       let nameValue = options.find(obj => {
         return obj.name === key;
@@ -1108,7 +1108,7 @@ export class ParticipantListComponent implements OnInit {
     return key;
   }
 
-  checkboxChecked () {
+  checkboxChecked() {
     this.isAssignButtonDisabled = true;
     for ( let pt of this.participantList ) {
       if ( pt.isSelected ) {
@@ -1118,7 +1118,7 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  assign () { //arg[0] = selectedAssignee: Assignee
+  assign() { //arg[0] = selectedAssignee: Assignee
     this.additionalMessage = null;
     if ( this.assignee != null && this.participantList.length > 0 ) {
       let assignParticipants: Array<AssigneeParticipant> = [];
@@ -1167,11 +1167,11 @@ export class ParticipantListComponent implements OnInit {
     window.scrollTo(0, 0);
   }
 
-  assigneeSelected (evt: any) {
+  assigneeSelected(evt: any) {
     this.assignee = evt;
   }
 
-  deselect () {
+  deselect() {
     for ( let pt of this.participantList ) {
       if ( pt.isSelected ) {
         pt.isSelected = false;
@@ -1179,16 +1179,16 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  openModal (modalAnchor: string) {
+  openModal(modalAnchor: string) {
     this.modalAnchor = modalAnchor;
     this.modal.show();
   }
 
-  deselectQuickFilters () {
+  deselectQuickFilters() {
     this.deselectFilters(this.quickFilters);
   }
 
-  deselectFilters (filterArray: ViewFilter[]) {
+  deselectFilters(filterArray: ViewFilter[]) {
     if ( filterArray != null ) {
       filterArray.forEach(filter => {
         if ( filter.selected ) {
@@ -1198,7 +1198,7 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  public doFilterByQuery (queryText: string) {
+  public doFilterByQuery(queryText: string) {
     this.clearManualFilters();
     this.deselectQuickFilters();
     this.setSelectedFilterName("");
@@ -1237,11 +1237,11 @@ export class ParticipantListComponent implements OnInit {
     });
   }
 
-  getQuestionAnswerByName (questionsAnswers: Array<QuestionAnswer>, name: string) {
+  getQuestionAnswerByName(questionsAnswers: Array<QuestionAnswer>, name: string) {
     return questionsAnswers.find(x => x.stableId === name);
   }
 
-  updateParticipant (participant: Participant) {
+  updateParticipant(participant: Participant) {
     if ( participant != null ) {
       this.showParticipantInformation = false;
       let pt = this.participantList.find(pt => {
@@ -1254,7 +1254,7 @@ export class ParticipantListComponent implements OnInit {
     }
   }
 
-  getMultiObjects (fieldValue: string | string[]) {
+  getMultiObjects(fieldValue: string | string[]) {
     if ( !(fieldValue instanceof Array) ) {
       let o: any = JSON.parse(fieldValue);
       return o;
@@ -1262,21 +1262,21 @@ export class ParticipantListComponent implements OnInit {
     return null;
   }
 
-  getMultiKeys (o: any) {
+  getMultiKeys(o: any) {
     if ( o != null ) {
       return Object.keys(o);
     }
     return null;
   }
 
-  isDateValue (value: string): boolean {
+  isDateValue(value: string): boolean {
     if ( value != null && value != undefined && typeof value === "string" && value.indexOf("dateString") > -1 && value.indexOf("est") > -1 ) {
       return true;
     }
     return false;
   }
 
-  getDateValue (value: string) {
+  getDateValue(value: string) {
     if ( value != null ) {
       let o: any = JSON.parse(value);
       return o["dateString"];
@@ -1284,7 +1284,7 @@ export class ParticipantListComponent implements OnInit {
     return "";
   }
 
-  filterClientSide (viewFilter: ViewFilter) {
+  filterClientSide(viewFilter: ViewFilter) {
     let didClientSearch = false;
     if ( viewFilter == null && this.selectedColumns["data"].length == 0 ) {
       return;
