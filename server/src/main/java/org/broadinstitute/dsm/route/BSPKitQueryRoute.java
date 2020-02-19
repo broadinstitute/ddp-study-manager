@@ -80,8 +80,8 @@ public class BSPKitQueryRoute implements Route {
                 if (specialBehavior) {
                     //don't trigger ddp to sent out email, only email to study staff
                     if (InstanceSettings.TYPE_NOTIFICATION.equals(received.getType())) {
-                        String message = "Kit of participant " + bspKitInfo.getBspParticipantId() + " was received by GP. </br> " +
-                                "CollaboratorSampleId:  " + bspKitInfo.getBspSampleId() + " </br> " +
+                        String message = "Kit of participant " + bspKitInfo.getBspParticipantId() + " was received by GP. <br> " +
+                                "CollaboratorSampleId:  " + bspKitInfo.getBspSampleId() + " <br> " +
                                 received.getValue();
                         notificationUtil.sentNotification(bspKitInfo.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE);
                     }

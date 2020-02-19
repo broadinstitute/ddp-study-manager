@@ -527,8 +527,8 @@ public class KitUtil {
                                     KitRequestShipping.deactivateKitRequest(kit.getDsmKitRequestId(), SYSTEM_AUTOMATICALLY_DEACTIVATED + ": " + uploaded.getValue(),
                                             DSMServer.getDDPEasypostApiKey(ddpInstance.getName()), "System");
                                     if (InstanceSettings.TYPE_NOTIFICATION.equals(uploaded.getType())) {
-                                        String message = kitType.getName() + " kit for participant " + kit.getParticipantId() + " (" + kit.getCollaboratorParticipantId()
-                                                + ") was deactivated per background job </br>. " + uploaded.getValue();
+                                        String message = kitType.getName() + " kit for participant " + kit.getParticipantId() + " (<b>" + kit.getCollaboratorParticipantId()
+                                                + "</b>) was deactivated per background job <br>. " + uploaded.getValue();
                                         notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE);
                                     }
                                     else {
