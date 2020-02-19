@@ -127,6 +127,8 @@ export class TissueListComponent implements OnInit {
     if ( resetData != undefined ) {
       if ( resetData ) {
         this.tissueListWrappers = [];
+        this.originalTissueListWrappers = [];
+        this.copyTissueListWrappers = [];
       }
     }
     this.setSelectedFilterName("");
@@ -358,6 +360,7 @@ export class TissueListComponent implements OnInit {
           let jsonData: any[];
           this.tissueListWrappers = [];
           this.originalTissueListWrappers = [];
+          this.copyTissueListWrappers = [];
           this.tissueListsMap = {};
           this.tissueListOncHistories = [];
           jsonData = data;
@@ -411,6 +414,8 @@ export class TissueListComponent implements OnInit {
           this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
           let jsonData: any[];
           this.tissueListWrappers = [];
+          this.originalTissueListWrappers = [];
+          this.copyTissueListWrappers = [];
           this.tissueListsMap = {};
           this.tissueListOncHistories = [];
           jsonData = data;
@@ -561,6 +566,8 @@ export class TissueListComponent implements OnInit {
         this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
         let jsonData: any[];
         this.tissueListWrappers = [];
+        this.originalTissueListWrappers = [];
+        this.copyTissueListWrappers = [];
         this.tissueListsMap = {};
         this.tissueListOncHistories = [];
         jsonData = data;
@@ -795,6 +802,8 @@ export class TissueListComponent implements OnInit {
         this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
         let jsonData: any[];
         this.tissueListWrappers = [];
+        this.originalTissueListWrappers = [];
+        this.copyTissueListWrappers = [];
         this.tissueListsMap = {};
         this.tissueListOncHistories = [];
         jsonData = data;
@@ -856,6 +865,8 @@ export class TissueListComponent implements OnInit {
         this.currentQuickFilterName = quickFilter.filterName;
         let jsonData: any[];
         this.tissueListWrappers = [];
+        this.originalTissueListWrappers = [];
+        this.copyTissueListWrappers = [];
         this.tissueListsMap = {};
         this.tissueListOncHistories = [];
         jsonData = data;
@@ -913,6 +924,8 @@ export class TissueListComponent implements OnInit {
         this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
         let jsonData: any[];
         this.tissueListWrappers = [];
+        this.originalTissueListWrappers = [];
+        this.copyTissueListWrappers = [];
         this.tissueListsMap = {};
         this.tissueListOncHistories = [];
         jsonData = data;
@@ -1129,6 +1142,8 @@ export class TissueListComponent implements OnInit {
       this.loadedTimeStamp = Utils.getDateFormatted(date, Utils.DATE_STRING_IN_EVENT_CVS);
       let jsonData: any[];
       this.tissueListWrappers = [];
+      this.originalTissueListWrappers = [];
+      this.copyTissueListWrappers = [];
       this.tissueListsMap = {};
       this.tissueListOncHistories = [];
       jsonData = data;

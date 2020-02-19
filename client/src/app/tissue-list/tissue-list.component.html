@@ -317,7 +317,7 @@
                     (click)="stopIfRequest($event, value, col.participantColumn.name);">
                 <span
                   *ngIf="col.participantColumn.name !== 'request' && (allAdditionalColumns['oD'] == undefined || !allAdditionalColumns['oD'].includes(col) ) && col.participantColumn.name !== 'tissueProblemOption'
-                && col.type !== 'DATE' && col.type !== 'EPOCHDATE'&& col.type != 'OPTIONS'">
+                && col.type !== 'DATE' && col.type !== 'EPOCHDATE'&& col.type !== 'OPTIONS'">
                 {{value.tissueList.oncHistoryDetails[col.participantColumn.name]}}
                 </span>
                   <span *ngIf="col.type === 'DATE' || col.type === 'EPOCHDATE'">
