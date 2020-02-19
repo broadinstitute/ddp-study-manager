@@ -157,7 +157,6 @@ public class AbstractionActivity {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(DBUtil.getFinalQuery(SQL_SELECT_ALL_MEDICAL_RECORD_ABSTRACTION_ACTIVITY, changeQueryAddition(queryAddition)))) {
                 stmt.setString(1, realm);
-                logger.info(stmt.toString());
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         String ddpParticipantId = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
