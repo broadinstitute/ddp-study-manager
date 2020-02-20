@@ -72,6 +72,8 @@ export class ParticipantListComponent implements OnInit {
   dataSources: Map<string, string> = null;
   sourceColumns = {};
   allFieldNames = new Set();
+  dup: boolean = false;
+  plus: boolean = false;
   filterName: string = null;
   filterQuery: string = null;
   activityDefinitions = new Map();
@@ -864,7 +866,12 @@ export class ParticipantListComponent implements OnInit {
   }
 
   saveCurrentFilter() {
-    this.modal.hide();
+    this.dup = false;
+    this.plus = false;
+    if ( this.filterName.includes("+") ) {
+      this.plus = true;
+      return;
+    }
 
     let columns = [];
     this.dataSources.forEach( ( value: string, key: string ) => {
@@ -892,8 +899,19 @@ export class ParticipantListComponent implements OnInit {
     };
     let jsonPatch = JSON.stringify( jsonData );
     this.currentView = jsonPatch;
-    this.dsmService.saveCurrentFilter( jsonPatch, localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), this.parent ).subscribe( data => {
-        this.filterName = null;
+    this.dsmService.saveCurrentFilter( jsonPatch, localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), this.parent ).subscribe(
+      data => {
+        let result = Result.parse(data);
+        if ( result.code === 500 && result.body != null ) {
+          this.dup = true;
+          return;
+        }
+        else if ( result.code !== 500 ) {
+          this.dup = false;
+          this.plus = false;
+          this.filterName = null;
+          this.modal.hide();
+        }
       },
       err => {
         this.additionalMessage = "Error - Saving Filter, Please contact your DSM developer";

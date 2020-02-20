@@ -460,14 +460,13 @@
 </ng-container>
 
 <app-modal>
-  <div class="app-modal-header" *ngIf="newFilterModal">New Filter's Name</div>
+  <div class="app-modal-header" *ngIf="newFilterModal">Please enter a name for your filter</div>
   <div class="app-modal-header" *ngIf="openTissueModal">Opening tissue page...</div>
   <div class="app-modal-body">
     <ng-container *ngIf="newFilterModal">
-      Please enter a name for this set of filters to be saved for you <br>
       <ng-container>
         <md-input-container class="Input">
-          <input mdInput class="Width--100" maxlength="100" autocomplete="off"
+          <input mdInput class="Width--100" maxlength="200" autocomplete="off"
                  [(ngModel)]="newFilterName">
           <md-hint class="ErrorMessageForm" *ngIf="dup">Name not unique</md-hint>
           <md-hint class="ErrorMessageForm" *ngIf="plus">Name can't contain +</md-hint>
@@ -482,10 +481,10 @@
     <ng-container *ngIf="newFilterModal">
       <button md-raised-button color="primary"
               (click)="modal.hide(); dup=false; showModal=false; openTissueModal=false; newFilterModal=false;">
-        CANCEL
+        Cancel
       </button>
       <button md-raised-button color="primary"
-              (click)="saveCurrentFilter();">SAVE
+              (click)="saveCurrentFilter();">Save Filter
       </button>
     </ng-container>
     <ng-container *ngIf="openTissueModal">
