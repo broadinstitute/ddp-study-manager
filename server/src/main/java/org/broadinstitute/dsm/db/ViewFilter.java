@@ -469,7 +469,7 @@ public class ViewFilter {
      * @return ViewFilter which the input string is parsed and is in as a Filter[]
      */
     public static ViewFilter parseFilteringQuery(String str, ViewFilter viewFilter) {
-        String[] conditions = str.split("AND ");
+        String[] conditions = str.split("(and\\s*)|(AND\\s*)");
         Map<String, Filter> filters = new HashMap<>(conditions.length);
         for (String condition : conditions) {
             int state = 0;
@@ -537,7 +537,7 @@ public class ViewFilter {
                                 state = 5;
                                 break;
                             }
-                            else if (word.equals(Filter.LIKE_TRIMMED)) { // either checkbox or exact match not selected in the frontend
+                            else if (word.toUpperCase().equals(Filter.LIKE_TRIMMED)) { // either checkbox or exact match not selected in the frontend
                                 exact = false;
                                 range = false;
                                 state = 8;
@@ -677,7 +677,10 @@ public class ViewFilter {
                             }
                             break;
                         case 12:
-                            state = 14;
+                            if (Filter.EQUALS_TRIMMED.equals(word)) {
+                                state = 14;
+                                break;
+                            }
                             break;
                         case 13:
                             break;
