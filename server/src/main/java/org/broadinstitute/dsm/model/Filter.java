@@ -75,137 +75,136 @@ public class Filter {
         else if (filter.isNotEmpty() && !ADDITIONAL_VALUES.equals(filter.getType())) {
             finalQuery = AND + filter.getColumnName(dbElement) + IS_NOT_NULL + " ";
         }
-        else {
-            if ((StringUtils.isBlank(filter.getType()) || TEXT.equals(filter.getType()) || COMPOSITE.equals(filter.getType())) && (filter.getFilter1() != null)) {
-                filter.getFilter1().setValue(replaceQuotes(filter.getFilter1().getValue()));
-                if (filter.isExactMatch()) {
-                    condition = EQUALS + "'" + filter.getFilter1().getValue() + "'";
-                }
-                else {
-                    condition = " " + LIKE + " \'%" + filter.getFilter1().getValue() + "%\'";
-                }
-                query = AND + filter.getColumnName(dbElement);
-                finalQuery = query + condition;
+
+        if ((StringUtils.isBlank(filter.getType()) || TEXT.equals(filter.getType()) || COMPOSITE.equals(filter.getType())) && (filter.getFilter1() != null) && (filter.getFilter1().getValue() != null)) {
+            filter.getFilter1().setValue(replaceQuotes(filter.getFilter1().getValue()));
+            if (filter.isExactMatch()) {
+                condition = EQUALS + "'" + filter.getFilter1().getValue() + "'";
             }
-            else if (NUMBER.equals(filter.getType())) {
-                if (!filter.isRange()) {
-                    if (filter.getFilter1() != null) {
+            else {
+                condition = " " + LIKE + " \'%" + filter.getFilter1().getValue() + "%\'";
+            }
+            query = AND + filter.getColumnName(dbElement);
+            finalQuery = query + condition;
+        }
+        else if (NUMBER.equals(filter.getType())) {
+            if (!filter.isRange()) {
+                if (filter.getFilter1() != null) {
+                    query = AND + filter.getColumnName(dbElement);
+                    condition = EQUALS + filter.getFilter1().getValue();
+                    finalQuery = query + condition;
+                }
+            }
+            else {
+                String notNullQuery = AND + filter.getColumnName(dbElement) + IS_NOT_NULL;
+                if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue()))) {
+                    query = AND + filter.getColumnName(dbElement);
+                    condition = LARGER_EQUALS + (int) Double.parseDouble(String.valueOf(filter.getFilter1().getValue()));
+                }
+                String query2 = "";
+                String condition2 = "";
+                if (filter.getFilter2() != null && filter.getFilter2() != null && filter.getFilter2().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue()))) {
+                    query2 = AND + filter.getColumnName(dbElement);
+                    condition2 = SMALLER_EQUALS + (int) Double.parseDouble(String.valueOf(filter.getFilter2().getValue()));
+                }
+                finalQuery = query + condition + query2 + condition2 + notNullQuery;
+                if (StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())) && !StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue()))) {
+                    finalQuery = finalQuery + notNullQuery;
+                }
+            }
+        }
+        else if (OPTIONS.equals(filter.getType())) {
+            if (filter.getSelectedOptions().length < 1) {
+                return "";
+            }
+            finalQuery = AND + "( ";
+            for (String selectedOption : filter.getSelectedOptions()) {
+                query = filter.getColumnName(dbElement);
+                condition = EQUALS + "'" + selectedOption + "'";
+                finalQuery = finalQuery + query + condition + " " + OR + " ";
+            }
+            finalQuery = finalQuery.substring(0, finalQuery.length() - 4);
+            finalQuery += " ) ";
+        }
+        else if (DATE.equals(filter.getType()) || DATE_SHORT.equals(filter.getType())) {
+            if (!filter.isRange()) {
+                if (filter.getFilter1() != null) {
+                    if (String.valueOf(filter.getFilter1().getValue()).length() == 10) {
                         query = AND + filter.getColumnName(dbElement);
-                        condition = EQUALS + filter.getFilter1().getValue();
+                        condition = EQUALS + "'" + filter.getFilter1().getValue() + "'";
+                        finalQuery = query + condition;
+                    }
+                    else {
+                        query = AND + filter.getColumnName(dbElement);
+                        condition = LIKE + " '%" + filter.getFilter1().getValue() + "%'";
                         finalQuery = query + condition;
                     }
                 }
-                else {
-                    String notNullQuery = AND + filter.getColumnName(dbElement) + IS_NOT_NULL;
-                    if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue()))) {
-                        query = AND + filter.getColumnName(dbElement);
-                        condition = LARGER_EQUALS + (int) Double.parseDouble(String.valueOf(filter.getFilter1().getValue()));
-                    }
-                    String query2 = "";
-                    String condition2 = "";
-                    if (filter.getFilter2() != null && filter.getFilter2() != null && filter.getFilter2().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue()))) {
-                        query2 = AND + filter.getColumnName(dbElement);
-                        condition2 = SMALLER_EQUALS + (int) Double.parseDouble(String.valueOf(filter.getFilter2().getValue()));
-                    }
-                    finalQuery = query + condition + query2 + condition2 + notNullQuery;
-                    if (StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())) && !StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue()))) {
-                        finalQuery = finalQuery + notNullQuery;
-                    }
+            }
+            else {
+                filter = convertFilterDateValues(filter);
+                String notNullQuery = AND + filter.getColumnName(dbElement) + IS_NOT_NULL;
+                if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue()))) {
+                    query = AND + filter.getColumnName(dbElement);
+                    condition = LARGER_EQUALS + "'" + filter.getFilter1().getValue() + "'";
+                }
+                String query2 = "";
+                String condition2 = "";
+                if (filter.getFilter2() != null && filter.getFilter2() != null && filter.getFilter2().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue()))) {
+                    query2 = AND + filter.getColumnName(dbElement);
+                    condition2 = SMALLER_EQUALS + "'" + filter.getFilter2().getValue() + "'";
+                }
+                finalQuery = query + condition + query2 + condition2;
+                if (filter.getFilter1().getValue() != null && filter.getFilter2() != null && filter.getFilter2().getValue() != null && !filter.getFilter1().getValue().equals("") && !filter.getFilter2().getValue().equals("")) {
+                    finalQuery = finalQuery + notNullQuery;
                 }
             }
-            else if (OPTIONS.equals(filter.getType())) {
-                if (filter.getSelectedOptions().length < 1) {
-                    return "";
-                }
-                finalQuery = AND + "( ";
-                for (String selectedOption : filter.getSelectedOptions()) {
-                    query = filter.getColumnName(dbElement);
-                    condition = EQUALS + "'" + selectedOption + "'";
-                    finalQuery = finalQuery + query + condition + " " + OR + " ";
-                }
-                finalQuery = finalQuery.substring(0, finalQuery.length() - 4);
-                finalQuery += " ) ";
-            }
-            else if (DATE.equals(filter.getType()) || DATE_SHORT.equals(filter.getType())) {
-                if (!filter.isRange()) {
-                    if (filter.getFilter1() != null) {
-                        if (String.valueOf(filter.getFilter1().getValue()).length() == 10) {
-                            query = AND + filter.getColumnName(dbElement);
-                            condition = EQUALS + "'" + filter.getFilter1().getValue() + "'";
-                            finalQuery = query + condition;
-                        }
-                        else {
-                            query = AND + filter.getColumnName(dbElement);
-                            condition = LIKE + " '%" + filter.getFilter1().getValue() + "%'";
-                            finalQuery = query + condition;
-                        }
-                    }
-                }
-                else {
-                    filter = convertFilterDateValues(filter);
-                    String notNullQuery = AND + filter.getColumnName(dbElement) + IS_NOT_NULL;
-                    if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue()))) {
-                        query = AND + filter.getColumnName(dbElement);
-                        condition = LARGER_EQUALS + "'" + filter.getFilter1().getValue() + "'";
-                    }
-                    String query2 = "";
-                    String condition2 = "";
-                    if (filter.getFilter2() != null && filter.getFilter2() != null && filter.getFilter2().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue()))) {
-                        query2 = AND + filter.getColumnName(dbElement);
-                        condition2 = SMALLER_EQUALS + "'" + filter.getFilter2().getValue() + "'";
-                    }
-                    finalQuery = query + condition + query2 + condition2;
-                    if (filter.getFilter1().getValue() != null && filter.getFilter2() != null && filter.getFilter2().getValue() != null && !filter.getFilter1().getValue().equals("") && !filter.getFilter2().getValue().equals("")) {
-                        finalQuery = finalQuery + notNullQuery;
-                    }
-                }
-            }
-            else if (ADDITIONAL_VALUES.equals(filter.getType())) {
-                query = AND + " JSON_EXTRACT ( " + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.columnName + " , '$." + filter.getFilter2().getName() + "' ) ";
-                if (filter.empty) {
-                    finalQuery = query + IS_NULL + " ";
+        }
+        else if (ADDITIONAL_VALUES.equals(filter.getType())) {
+            query = AND + " JSON_EXTRACT ( " + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.columnName + " , '$." + filter.getFilter2().getName() + "' ) ";
+            if (filter.empty) {
+                finalQuery = query + IS_NULL + " ";
 
-                }
-                else if (filter.notEmpty) {
-                    finalQuery = query + IS_NOT_NULL + " ";
-                }
-                else {
-                    String notNullQuery = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.columnName + IS_NOT_NULL;
-                    if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue()))) {
-                        query = AND + " JSON_EXTRACT ( " + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " , '$." + filter.getFilter2().getName() + "' ) ";
-                        if (filter.isExactMatch()) {
-                            query += EQUALS + "'#'";
-                            query = query.replaceAll("#", String.valueOf(filter.getFilter1().getValue()));
-                        }
-                        else {
-                            query += " " + LIKE + " '%#%'";
-                            query = query.replaceAll("#", String.valueOf(filter.getFilter1().getValue()));
-                        }
+            }
+            else if (filter.notEmpty) {
+                finalQuery = query + IS_NOT_NULL + " ";
+            }
+            else {
+                String notNullQuery = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.columnName + IS_NOT_NULL;
+                if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue()))) {
+                    query = AND + " JSON_EXTRACT ( " + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " , '$." + filter.getFilter2().getName() + "' ) ";
+                    if (filter.isExactMatch()) {
+                        query += EQUALS + "'#'";
+                        query = query.replaceAll("#", String.valueOf(filter.getFilter1().getValue()));
                     }
-                    finalQuery = notNullQuery + query;
+                    else {
+                        query += " " + LIKE + " '%#%'";
+                        query = query.replaceAll("#", String.valueOf(filter.getFilter1().getValue()));
+                    }
                 }
+                finalQuery = notNullQuery + query;
             }
-            else if (CHECKBOX.equals(filter.getType())) { //1/0
-                //                String notNullQuery = AND + filter.getParentName() + "." + dbElement.getColumnName() + IS_NOT_NULL;
-                if (filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())) && (TRUE.equals(filter.getFilter1().getValue()) || TRUE.equals(String.valueOf(filter.getFilter1().getValue())) || "1".equals(filter.filter1.getValue()))) {
-                    query = AND + dbElement.tableAlias + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + LIKE + "'1'";
-                }
-                else if (filter.getFilter2() != null && filter.getFilter2().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue())) && (TRUE.equals(filter.getFilter2().getValue())
-                        || "1".equals(filter.getFilter2().getValue()))) {
-                    query = AND + NOT + " " + dbElement.tableAlias + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " <=> 1";
-                }
-                //                finalQuery = notNullQuery + query;
-                finalQuery = query;
+        }
+        else if (CHECKBOX.equals(filter.getType())) { //1/0
+            //                String notNullQuery = AND + filter.getParentName() + "." + dbElement.getColumnName() + IS_NOT_NULL;
+            if (filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())) && (TRUE.equals(filter.getFilter1().getValue()) || TRUE.equals(String.valueOf(filter.getFilter1().getValue())) || "1".equals(filter.filter1.getValue()))) {
+                query = AND + dbElement.tableAlias + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + LIKE + "'1'";
             }
-            else if (BOOLEAN.equals(filter.getType())) { //true/false
-                if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())) && TRUE.equals(filter.getFilter1().getValue())) {
-                    query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + filter.getFilter1().getName() + EQUALS + filter.getFilter1().getValue();
-                }
-                else if (filter.getFilter1() != null && filter.getFilter2().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue())) && TRUE.equals(filter.getFilter2().getValue())) {
-                    query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + filter.getFilter1().getName() + EQUALS + FALSE;
-                }
-                finalQuery = query;
+            else if (filter.getFilter2() != null && filter.getFilter2().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue())) && (TRUE.equals(filter.getFilter2().getValue())
+                    || "1".equals(filter.getFilter2().getValue()))) {
+                query = AND + NOT + " " + dbElement.tableAlias + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " <=> 1";
             }
+            //                finalQuery = notNullQuery + query;
+            finalQuery = query;
+        }
+        else if (BOOLEAN.equals(filter.getType())) { //true/false
+            if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())) && TRUE.equals(filter.getFilter1().getValue())) {
+                query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + filter.getFilter1().getName() + EQUALS + filter.getFilter1().getValue();
+            }
+            else if (filter.getFilter1() != null && filter.getFilter2().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue())) && TRUE.equals(filter.getFilter2().getValue())) {
+                query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + filter.getFilter1().getName() + EQUALS + FALSE;
+            }
+            finalQuery = query;
         }
 
         //        logger.info(finalQuery);
