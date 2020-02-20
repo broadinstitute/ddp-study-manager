@@ -121,7 +121,7 @@ public class ViewFilter {
                 try {
                     ResultSet rs = stmt.executeQuery();
                     if (rs.next()) {
-                        dbVals.resultException = new DuplicateException(suggestedName);
+                        dbVals.resultValue = "Duplicate Name";
                     }
                 }
                 catch (Exception e) {
@@ -139,19 +139,17 @@ public class ViewFilter {
     public static Object saveFilter(@NonNull String filterViewToSave, String userId,
                                     @NonNull Map<String, DBElement> columnNameMap, @NonNull String ddpGroupId) {
         ViewFilter viewFilter = new Gson().fromJson(filterViewToSave, ViewFilter.class);
-        if(viewFilter == null){
+        if (viewFilter == null) {
             throw new RuntimeException("The request for saving filter doesn't have a ViewFilter");
         }
         String query;
         String suggestedName = viewFilter.getFilterName();
         SimpleResult results = checkUniqueFilterName(suggestedName);
+        if (results.resultValue != null && results.resultValue instanceof String) {
+            return new Result(500, (String) results.resultValue);
+        }
         if (results.resultException != null) {
-            if (results.resultException instanceof SQLIntegrityConstraintViolationException) {
-                return new Result(500, "Duplicate Name");
-            }
-            else {
-                throw new RuntimeException(results.resultException);
-            }
+            throw new RuntimeException(results.resultException);
         }
         if (StringUtils.isBlank(viewFilter.getQueryItems())) {
             Filter[] filters = viewFilter.getFilters();

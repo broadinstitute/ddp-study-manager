@@ -90,8 +90,8 @@ public class SystemUtil {
             }
             catch (ParseException e1) {
                 SimpleDateFormat sdf = new SimpleDateFormat(SystemUtil.YEAR_DATE_FORMAT);
-                if (dateString.length() > 4){
-                    throw new ParseException("String is not a year", 0);
+                if (dateString.length() != 4) {
+                    throw new ParseException("String " + dateString + " is not a year", 0);
                 }
                 Date date = sdf.parse(dateString);
                 return date.getTime();
