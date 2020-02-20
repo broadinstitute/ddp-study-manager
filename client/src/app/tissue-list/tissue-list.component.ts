@@ -640,7 +640,6 @@ export class TissueListComponent implements OnInit {
       this.plus = true;
       return;
     }
-    this.plus = false;
     let cols = [];
     for ( let source of this.dataSources ) {
       for ( let o of this.selectedColumns[source] ) {

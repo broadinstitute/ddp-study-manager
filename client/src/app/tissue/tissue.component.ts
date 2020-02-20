@@ -192,7 +192,7 @@ export class TissueComponent implements OnInit {
   public checkCollaboratorId () {
     let jsonData: any[];
     if ( this.collaboratorS == null && (this.tissue.collaboratorSampleId == null || this.tissue.collaboratorSampleId === "") ) {
-      this.dsmService.lookupCollaboratorId("tCollab", this.participant.participant.participantId, this.participant.data.profile["hruid"], localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(// need to subscribe, otherwise it will not send!
+      this.dsmService.lookupCollaboratorId("tCollab", this.participant.participant.ddpParticipantId, this.participant.data.profile["hruid"], localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(// need to subscribe, otherwise it will not send!
         data => {
           //          console.log(`received: ${JSON.stringify(data, null, 2)}`);
           jsonData = data;
