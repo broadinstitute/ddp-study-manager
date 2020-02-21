@@ -71,6 +71,11 @@
             <td>Internal Participant ID</td>
             <td>{{participant.data.profile['guid']}}</td>
           </tr>
+          <tr
+            *ngIf="participant.data.profile['legacyAltPid'] != null && participant.data.profile['legacyAltPid'] !== ''">
+            <td>Legacy Participant ID</td>
+            <td>{{participant.data.profile['legacyAltPid']}}</td>
+          </tr>
           <tr>
             <td>Name</td>
             <td>{{participant.data.profile['firstName']}} {{participant.data.profile['lastName']}}</td>
@@ -99,11 +104,6 @@
           <tr *ngIf="participant.oncHistoryDetails != null && participant.oncHistoryDetails.length > 0">
             <td>Gender</td>
             <td>{{gender | titlecase}}</td>
-          </tr>
-          <tr
-            *ngIf="participant.data.profile['legacyAltPid'] != null && participant.data.profile['legacyAltPid'] !== ''">
-            <td>Legacy Participant ID</td>
-            <td>{{participant.data.profile['legacyAltPid']}}</td>
           </tr>
           </tbody>
         </table>

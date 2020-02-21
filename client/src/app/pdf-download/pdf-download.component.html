@@ -31,7 +31,7 @@
                 [disabled]="participantId == null || loading">Get List of PDFs for Participant
         </button>
 
-        <ng-container *ngIf="participantPDFs != null && participantPDFs.length != 0">
+        <div *ngIf="participantPDFs != null && participantPDFs.length != 0">
           <md-select placeholder="Select PDF" class="Input--Abstraction" [(ngModel)]="selectedPDF">
             <md-option *ngFor="let e of participantPDFs" [value]="e.configName">
               {{e.displayName}}
@@ -43,7 +43,7 @@
                   [disabled]="selectedPDF == null || selectedPDF === ''"
                   (click)="downloadPDFs(selectedPDF)">Download selected PDF
           </button>
-        </ng-container>
+        </div>
 
       </ng-container>
 
