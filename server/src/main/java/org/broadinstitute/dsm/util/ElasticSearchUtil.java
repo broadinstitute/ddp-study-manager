@@ -48,7 +48,7 @@ public class ElasticSearchUtil {
     private static final String DATA = "data";
     public static final String DSM = "dsm";
     private static final String ACTIVITY_CODE = "activityCode";
-    private static final String ADDRESS = "address";
+    public static final String ADDRESS = "address";
     public static final String PDFS = "pdfs";
     public static final String GUID = "guid";
     public static final String HRUID = "hruid";
