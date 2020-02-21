@@ -4,6 +4,7 @@ import {AbstractionGroup} from "../abstraction-group/abstraction-group.model";
 import {ActivityDefinition} from "../activity-data/models/activity-definition.model";
 import {Option} from "../activity-data/models/option.model";
 import {QuestionAnswer} from "../activity-data/models/question-answer.model";
+import {QuestionDefinition} from "../activity-data/models/question-definition.model";
 import {Assignee} from "../assignee/assignee.model";
 import {Filter} from "../filter-column/filter-column.model";
 import {ModalComponent} from "../modal/modal.component";
@@ -239,7 +240,7 @@ export class ParticipantListComponent implements OnInit {
             possibleColumns.push( new Filter( new ParticipantColumn( "Survey Status", "status", activityDefinition.activityCode, null, true ), Filter.OPTION_TYPE, [
               new NameValue( "COMPLETE", "Done" ),
               new NameValue( "CREATED", "Not Started" ),
-              new NameValue( "IN_PROGRESS", "In Progress" ) ], null, false, true, null, null, null, null, false, true ) );
+              new NameValue( "IN_PROGRESS", "In Progress" ) ] ) );
             if (activityDefinition != null && activityDefinition.questions != null) {
               for (let question of activityDefinition.questions) {
                 if (question.stableId != null) {
@@ -255,9 +256,8 @@ export class ParticipantListComponent implements OnInit {
                   else if (question.questionType === "NUMERIC") {
                     type = Filter.NUMBER_TYPE;
                   }
-                  let displayName = question.questionText != null && question.questionText !== "" ? question.questionText : question.stableId;
-                  let filter = new Filter( new ParticipantColumn( displayName, question.stableId, activityDefinition.activityCode, null, true ), type, options, null, false, true,
-                    null, null, null, null, false, true );
+                  let displayName = this.getQuestionOrStableId( question );
+                  let filter = new Filter( new ParticipantColumn( displayName, question.stableId, activityDefinition.activityCode, null, true ), type, options );
                   possibleColumns.push( filter );
                 }
               }
@@ -334,6 +334,10 @@ export class ParticipantListComponent implements OnInit {
         throw "Error - Loading display settings" + err;
       }
     );
+  }
+
+  getQuestionOrStableId( question: QuestionDefinition ): string {
+    return question.questionText != null && question.questionText !== "" && question.questionText.length < 45 ? question.questionText : question.stableId;
   }
 
   orderColumns() {
@@ -868,7 +872,7 @@ export class ParticipantListComponent implements OnInit {
   saveCurrentFilter() {
     this.dup = false;
     this.plus = false;
-    if ( this.filterName.includes("+") ) {
+    if (this.filterName.includes( "+" )) {
       this.plus = true;
       return;
     }
@@ -901,12 +905,12 @@ export class ParticipantListComponent implements OnInit {
     this.currentView = jsonPatch;
     this.dsmService.saveCurrentFilter( jsonPatch, localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), this.parent ).subscribe(
       data => {
-        let result = Result.parse(data);
-        if ( result.code === 500 && result.body != null ) {
+        let result = Result.parse( data );
+        if (result.code === 500 && result.body != null) {
           this.dup = true;
           return;
         }
-        else if ( result.code !== 500 ) {
+        else if (result.code !== 500) {
           this.dup = false;
           this.plus = false;
           this.filterName = null;

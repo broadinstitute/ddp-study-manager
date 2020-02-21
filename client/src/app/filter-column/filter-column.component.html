@@ -12,7 +12,8 @@
                           [dateString]="dataFilter.value2" [disabled]="!editable"></app-field-datepicker>
   </ng-container>
 </ng-container>
-<ng-container *ngIf="dataFilter.type === 'BOOLEAN' || dataFilter.type === 'CHECKBOX' || (dataFilter.type === 'ADDITIONALVALUE' && dataFilter.additionalType === 'CHECKBOX')">
+<ng-container
+  *ngIf="dataFilter.type === 'BOOLEAN' || dataFilter.type === 'CHECKBOX' || (dataFilter.type === 'ADDITIONALVALUE' && dataFilter.additionalType === 'CHECKBOX')">
   <md-checkbox color="primary" disableRipple
                [checked]="dataFilter.value1" [(ngModel)]="dataFilter.value1" (change)="changeValue($event, dataFilter)"> Yes
   </md-checkbox>
@@ -39,7 +40,8 @@
            autocomplete="off" [disabled]="!editable">
   </md-input-container>
 </ng-container>
-<ng-container *ngIf="(dataFilter.type === 'OPTIONS'  || (dataFilter.type === 'ADDITIONALVALUE' && dataFilter.additionalType === 'OPTIONS')) && dataFilter != null && dataFilter.options != null">
+<ng-container
+  *ngIf="(dataFilter.type === 'OPTIONS'  || (dataFilter.type === 'ADDITIONALVALUE' && dataFilter.additionalType === 'OPTIONS')) && dataFilter != null && dataFilter.options != null">
   <div *ngIf="dataFilter.singleOption" class="TD--Padding-Left">
     <md-radio-group [(ngModel)]="selected">
       <div *ngFor="let option of dataFilter.options; let i=index">
@@ -59,7 +61,8 @@
     </div>
   </ng-container>
 </ng-container>
-<ng-container *ngIf="dataFilter.type !== 'BOOLEAN' && dataFilter.type !== 'CHECKBOX' && !(dataFilter.type === 'ADDITIONALVALUE' && dataFilter.additionalType === 'CHECKBOX')">
+<ng-container
+  *ngIf="dataFilter.type !== 'BOOLEAN' && dataFilter.type !== 'CHECKBOX' && !(dataFilter.type === 'ADDITIONALVALUE' && dataFilter.additionalType === 'CHECKBOX')">
   <ng-container *ngIf="!showOptions">
     <button class="btn btn-sq-xs" color="primary"
             (click)="showOptions = !showOptions">
@@ -74,7 +77,8 @@
   </ng-container>
   <ng-container *ngIf="showOptions">
     <div
-      *ngIf="(dataFilter.type === 'TEXT' || (dataFilter.type === 'ADDITIONALVALUE' && (dataFilter.additionalType === 'TEXT' || dataFilter.additionalType === 'text')) || dataFilter.type === 'COMPOSITE'|| (dataFilter.type === 'ADDITIONALVALUE' && (dataFilter.additionalType === 'TEXT' || dataFilter.additionalType === 'text' || dataFilter.additionalType === 'TEXTAREA'))) && showOptions">
+      *ngIf="(dataFilter.type === 'TEXT' || (dataFilter.type === 'ADDITIONALVALUE' && (dataFilter.additionalType === 'TEXT' || dataFilter.additionalType === 'text')) || dataFilter.type === 'COMPOSITE'
+      || (dataFilter.type === 'ADDITIONALVALUE' && (dataFilter.additionalType === 'TEXT' || dataFilter.additionalType === 'text' || dataFilter.additionalType === 'TEXTAREA'))) && showOptions">
       <md-checkbox [(ngModel)]="dataFilter.exactMatch" color="primary" disableRipple
                    [disabled]="dataFilter == null || dataFilter.value1 == null || dataFilter.value1 === '' || !editable">
         Exact Match
@@ -86,7 +90,11 @@
         Range
       </md-checkbox>
     </div>
-    <div>
+    <!--quick fix! remove when ES has option to search for empty-->
+    <div
+      *ngIf="dataFilter.participantColumn.tableAlias === 'p' || dataFilter.participantColumn.tableAlias === 'm' || dataFilter.participantColumn.tableAlias === 'oD'
+      || dataFilter.participantColumn.tableAlias === 't' || dataFilter.participantColumn.tableAlias === 'a' || dataFilter.participantColumn.tableAlias === 'r' || dataFilter.participantColumn.tableAlias === 'o'
+      || dataFilter.participantColumn.tableAlias === 'k'">
       <md-checkbox [(ngModel)]="dataFilter.empty" color="primary" disableRipple
                    [disabled]="!editable || !(dataFilter == null || dataFilter.value1 == null || dataFilter.value1 === '' ) || hasSelectedOption(dataFilter) || dataFilter.notEmpty">
         Empty
