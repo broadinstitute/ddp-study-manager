@@ -694,7 +694,7 @@ public class ViewFilter {
                             state = 15;
                             break;
                         case 15:
-                            if (word.equals(Filter.OR)) {// look for another selected option
+                            if (word.equals(Filter.OR_TRIMMED)) {// look for another selected option
                                 state = 2;
                                 break;
                             }
