@@ -50,7 +50,7 @@ export class FieldSettings {
         }
         elem.fieldType = selectedType.tableAlias;
         if (elem.displayType === null || elem.displayType === "") {
-          elem.displayType = "text";
+          elem.displayType = "TEXT";
         }
         let oldPVals: Array<Value> = elem.possibleValues;
         elem.possibleValues = [];
@@ -65,7 +65,7 @@ export class FieldSettings {
           }
           // If the display type is select or multiselect but no options are specified, change it to text
           if (elem.possibleValues.length < 1) {
-            elem.displayType = "text";
+            elem.displayType = "TEXT";
           }
         }
         cleanedFieldSettings.push(elem);
