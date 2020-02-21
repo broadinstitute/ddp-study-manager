@@ -174,10 +174,6 @@ export class TissueListComponent implements OnInit {
     for (let col of this.allColumns[ Statics.ONCDETAIL_ALIAS ]) {
       this.allFieldNames.add( col.participantColumn.tableAlias + Statics.DELIMITER_ALIAS + col.participantColumn.name );
     }
-    for (let col of this.allColumns[ "data" ]) {
-      let t = col.participantColumn.object !== null && col.participantColumn.object !== undefined ? col.participantColumn.object : col.participantColumn.tableAlias;
-      this.allFieldNames.add( t + Statics.DELIMITER_ALIAS + col.participantColumn.name );
-    }
   }
 
   private checkRight( defaultFilter: boolean ) {
@@ -269,8 +265,10 @@ export class TissueListComponent implements OnInit {
               //TODO - can be changed to add all after all DDPs are migrated
               if (this.hasESData) {
                 this.allColumns[ key ].push( filter );
-                let t = filter.participantColumn.object !== null && filter.participantColumn.object !== undefined ? filter.participantColumn.object : filter.participantColumn.tableAlias;
-                this.allFieldNames.add( t + Statics.DELIMITER_ALIAS + filter.participantColumn.name );
+                if (filter.participantColumn.tableAlias !== "data") {
+                  let t = filter.participantColumn.object !== null && filter.participantColumn.object !== undefined ? filter.participantColumn.object : filter.participantColumn.tableAlias;
+                  this.allFieldNames.add( t + Statics.DELIMITER_ALIAS + filter.participantColumn.name );
+                }
               }
               else {
                 if (filter.participantColumn.tableAlias === "data" && ( filter.participantColumn.object === "profile" || filter.participantColumn.object === "address" )) {

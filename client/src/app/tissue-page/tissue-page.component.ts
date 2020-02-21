@@ -68,7 +68,7 @@ export class TissuePageComponent implements OnInit {
 
   ngOnInit() {
     //    console.log(this.oncHistoryDetail.additionalValues);
-    if (this.participant.data.status == undefined || (this.participant != null && this.participant.data.status.indexOf(Statics.EXITED) == -1)) {
+    if ((this.participant != null && this.participant.data.status.indexOf(Statics.EXITED) == -1)) {
       this.participantExited = false;
       //      console.log("*");
     }
@@ -190,7 +190,8 @@ export class TissuePageComponent implements OnInit {
     let data = {
       "facility": this.oncHistoryDetail.facility,
       "policy": destructionPolicy,
-      "userId": this.role.userMail()
+      "userId": this.role.userID(),
+      "userMail": this.role.userMail()
     };
     this.dsmService.applyDestructionPolicyToAll(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), JSON.stringify(data)).subscribe(data => {
         let result = Result.parse(data);

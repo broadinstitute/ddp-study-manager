@@ -94,7 +94,7 @@ export class MedicalRecordComponent implements OnInit {
         this.disableDownloadRelease = true;
         this.hideDownloadButtons = true;
       }
-      if (this.participant.data == undefined || this.participant.data.status == undefined || this.participant.data.status.indexOf( Statics.EXITED ) == -1) {
+      if (this.participant.data == undefined || this.participant.data.status.indexOf( Statics.EXITED ) == -1) {
         this.participantExited = false;
       }
       if (this.participant.data != null && this.participant.data.dsm != null && this.participant.data.dsm[ "pdfs" ] != null) {

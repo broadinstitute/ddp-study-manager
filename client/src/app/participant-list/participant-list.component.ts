@@ -180,6 +180,10 @@ export class ParticipantListComponent implements OnInit {
         this.sourceColumns = {};
         this.selectedColumns = {};
         this.settings = {};
+        this.dataSources.forEach( ( value: string, key: string ) => {
+          this.selectedColumns[ key ] = [];
+          this.sourceColumns[ key ] = [];
+        } );
         if (jsonData.assignees != null) {
           jsonData.assignees.forEach( ( val ) => {
             this.assignees.push( Assignee.parse( val ) );
@@ -262,7 +266,7 @@ export class ParticipantListComponent implements OnInit {
               }
               let name = activityDefinition.activityName == undefined || activityDefinition.activityName === "" ? activityDefinition.activityCode : activityDefinition.activityName;
               this.dataSources.set( activityDefinition.activityCode, name );
-              this.sourceColumns[ activityDefinition.activityCode ] = possibleColumns;
+;             this.sourceColumns[ activityDefinition.activityCode ] = possibleColumns;
               this.selectedColumns[ activityDefinition.activityCode ] = [];
               //add now all these columns to allFieldsName for the search-bar
               possibleColumns.forEach( filter => {
@@ -347,10 +351,6 @@ export class ParticipantListComponent implements OnInit {
   }
 
   getSourceColumnsFromFilterClass() {
-    this.dataSources.forEach( ( value: string, key: string ) => {
-      this.selectedColumns[ key ] = [];
-      this.sourceColumns[ key ] = [];
-    } );
     for (let filter of Filter.ALL_COLUMNS) {
       if (filter.participantColumn.tableAlias === "o" || filter.participantColumn.tableAlias === "ex" || filter.participantColumn.tableAlias === "r") {
         this.sourceColumns[ "p" ].push( filter );
@@ -411,7 +411,6 @@ export class ParticipantListComponent implements OnInit {
                 let participant = Participant.parse( val );
                 this.participantList.push( participant );
               } );
-              console.info( this.participantList );
               this.originalParticipantList = this.participantList;
               let date = new Date();
               this.loadedTimeStamp = Utils.getDateFormatted( date, Utils.DATE_STRING_IN_EVENT_CVS );
@@ -472,7 +471,6 @@ export class ParticipantListComponent implements OnInit {
             let participant = Participant.parse( val );
             this.participantList.push( participant );
           } );
-          console.info( this.participantList );
           this.originalParticipantList = this.participantList;
           if (viewFilter != null) {
             this.filterQuery = viewFilter.queryItems;
@@ -743,21 +741,10 @@ export class ParticipantListComponent implements OnInit {
               let participant = Participant.parse( val );
               this.participantList.push( participant );
             } );
-            console.info( this.participantList );
             this.originalParticipantList = this.participantList;
 
-            let didClientSearch = false;
             if (!this.hasESData) {
-              didClientSearch = this.filterClientSide( null );
-            }
-            if (( !didClientSearch && !this.hasESData )) {
-              //get unfiltered pt list
-              this.filtered = false;
-              this.filterQuery = "";
-              this.deselectQuickFilters();
-              //TODO - can be changed later to all using the same - after all studies are migrated!
-              //check if it was a tableAlias data filter -> filter client side
-              this.selectFilter( null );
+              this.filterClientSide( null );
             }
             this.loadingParticipants = null;
             this.errorMessage = null;
@@ -1286,7 +1273,6 @@ export class ParticipantListComponent implements OnInit {
           let participant = Participant.parse( val );
           this.participantList.push( participant );
         } );
-        console.info( this.participantList );
         this.originalParticipantList = this.participantList;
         let date = new Date();
         this.loadedTimeStamp = Utils.getDateFormatted( date, Utils.DATE_STRING_IN_EVENT_CVS );
@@ -1353,7 +1339,7 @@ export class ParticipantListComponent implements OnInit {
   filterClientSide( viewFilter: ViewFilter ) {
     let didClientSearch = false;
     if (viewFilter == null && this.selectedColumns[ "data" ].length == 0) {
-      return;
+      return didClientSearch;
     }
     let participantFilters: Filter[];
     if (viewFilter != null && viewFilter.filters != null && viewFilter.filters.length != 0) {
@@ -1431,9 +1417,7 @@ export class ParticipantListComponent implements OnInit {
         }
       }
     }
-
     return didClientSearch;
-
   }
 
 
