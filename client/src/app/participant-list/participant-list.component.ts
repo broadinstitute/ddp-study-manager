@@ -180,7 +180,6 @@ export class ParticipantListComponent implements OnInit {
         this.sourceColumns = {};
         this.selectedColumns = {};
         this.settings = {};
-        this.getSourceColumnsFromFilterClass();
         if (jsonData.assignees != null) {
           jsonData.assignees.forEach( ( val ) => {
             this.assignees.push( Assignee.parse( val ) );
@@ -274,6 +273,7 @@ export class ParticipantListComponent implements OnInit {
             this.activityDefinitionList.push( activityDefinition );
           } );
         }
+        this.getSourceColumnsFromFilterClass();
         if (jsonData.abstractionFields != null && jsonData.abstractionFields.length > 0) {
           //only add abstraction columns if there is a abstraction form setup
           jsonData.abstractionFields.forEach( ( key ) => {
@@ -352,14 +352,31 @@ export class ParticipantListComponent implements OnInit {
       this.sourceColumns[ key ] = [];
     } );
     for (let filter of Filter.ALL_COLUMNS) {
-      if (filter.participantColumn.tableAlias === "o" || filter.participantColumn.tableAlias === "ex"
-        || filter.participantColumn.tableAlias === "r") {
+      if (filter.participantColumn.tableAlias === "o" || filter.participantColumn.tableAlias === "ex" || filter.participantColumn.tableAlias === "r") {
         this.sourceColumns[ "p" ].push( filter );
       }
-      if (this.sourceColumns[ filter.participantColumn.tableAlias ] != null && this.sourceColumns[ filter.participantColumn.tableAlias ] != undefined) {
-        this.sourceColumns[ filter.participantColumn.tableAlias ].push( filter );
-        let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
-        this.allFieldNames.add( tmp + "." + filter.participantColumn.name );
+      else if (this.sourceColumns[ filter.participantColumn.tableAlias ] != null && this.sourceColumns[ filter.participantColumn.tableAlias ] != undefined) {
+        //TODO - can be changed to add all after all DDPs are migrated
+        if (this.hasESData) {
+          this.sourceColumns[ filter.participantColumn.tableAlias ].push( filter );
+          let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
+          this.allFieldNames.add( tmp + "." + filter.participantColumn.name );
+        }
+        else {
+          if (filter.participantColumn.tableAlias === "data" && ( filter.participantColumn.object === "profile" || filter.participantColumn.object === "address" )) {
+            if (filter.participantColumn.name !== "doNotContact" && filter.participantColumn.name !== "email" && filter.participantColumn.name !== "legacyShortId"
+              && filter.participantColumn.name !== "legacyAltPid" && filter.participantColumn.name !== "createdAt") {
+              this.sourceColumns[ filter.participantColumn.tableAlias ].push( filter );
+              let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
+              this.allFieldNames.add( tmp + "." + filter.participantColumn.name );
+            }
+          }
+          else if (filter.participantColumn.tableAlias !== "data") {
+            this.sourceColumns[ filter.participantColumn.tableAlias ].push( filter );
+            let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
+            this.allFieldNames.add( tmp + "." + filter.participantColumn.name );
+          }
+        }
       }
     }
   }
@@ -394,6 +411,7 @@ export class ParticipantListComponent implements OnInit {
                 let participant = Participant.parse( val );
                 this.participantList.push( participant );
               } );
+              console.info( this.participantList );
               this.originalParticipantList = this.participantList;
               let date = new Date();
               this.loadedTimeStamp = Utils.getDateFormatted( date, Utils.DATE_STRING_IN_EVENT_CVS );
@@ -418,9 +436,7 @@ export class ParticipantListComponent implements OnInit {
   public selectFilter( viewFilter: ViewFilter ) {
     this.loadingParticipants = localStorage.getItem( ComponentService.MENU_SELECTED_REALM );
     this.currentView = JSON.stringify( viewFilter );
-    let filterName = null;
     if (viewFilter != null) {
-      filterName = viewFilter.filterName;
       this.filtered = true;
     }
     else {
@@ -456,6 +472,7 @@ export class ParticipantListComponent implements OnInit {
             let participant = Participant.parse( val );
             this.participantList.push( participant );
           } );
+          console.info( this.participantList );
           this.originalParticipantList = this.participantList;
           if (viewFilter != null) {
             this.filterQuery = viewFilter.queryItems;
@@ -726,6 +743,7 @@ export class ParticipantListComponent implements OnInit {
               let participant = Participant.parse( val );
               this.participantList.push( participant );
             } );
+            console.info( this.participantList );
             this.originalParticipantList = this.participantList;
 
             let didClientSearch = false;
@@ -1268,6 +1286,7 @@ export class ParticipantListComponent implements OnInit {
           let participant = Participant.parse( val );
           this.participantList.push( participant );
         } );
+        console.info( this.participantList );
         this.originalParticipantList = this.participantList;
         let date = new Date();
         this.loadedTimeStamp = Utils.getDateFormatted( date, Utils.DATE_STRING_IN_EVENT_CVS );

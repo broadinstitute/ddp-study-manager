@@ -327,18 +327,18 @@
                 <ng-container *ngIf="!col.participantColumn.esData">
                   <div *ngIf="alias === 'data' && pt.data != null">
                     <ng-container *ngIf="col.type === 'DATE'">
-                      <ng-container *ngIf="col.participantColumn.object != null">
+                      <ng-container *ngIf="col.participantColumn.object != null && pt.data[col.participantColumn.object] != null">
                         {{pt.data[col.participantColumn.object][col.participantColumn.name] | date:'medium'}}
                       </ng-container>
-                      <ng-container *ngIf="col.participantColumn.object == null">
+                      <ng-container *ngIf="col.participantColumn.object == null && pt.data[col.participantColumn.name] != null">
                         {{pt.data[col.participantColumn.name] | date:'medium'}}
                       </ng-container>
                     </ng-container>
                     <ng-container *ngIf="col.type === 'DATE_SHORT'">
-                      <ng-container *ngIf="col.participantColumn.object != null">
+                      <ng-container *ngIf="col.participantColumn.object != null && pt.data[col.participantColumn.object] != null">
                         {{pt.data[col.participantColumn.object][col.participantColumn.name] | date:'shortDate'}}
                       </ng-container>
-                      <ng-container *ngIf="col.participantColumn.object == null">
+                      <ng-container *ngIf="col.participantColumn.object == null && pt.data[col.participantColumn.name] != null">
                         {{pt.data[col.participantColumn.name] | date:'shortDate'}}
                       </ng-container>
                     </ng-container>

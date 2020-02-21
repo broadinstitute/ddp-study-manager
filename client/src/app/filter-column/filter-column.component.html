@@ -94,7 +94,7 @@
     <div
       *ngIf="dataFilter.participantColumn.tableAlias === 'p' || dataFilter.participantColumn.tableAlias === 'm' || dataFilter.participantColumn.tableAlias === 'oD'
       || dataFilter.participantColumn.tableAlias === 't' || dataFilter.participantColumn.tableAlias === 'a' || dataFilter.participantColumn.tableAlias === 'r' || dataFilter.participantColumn.tableAlias === 'o'
-      || dataFilter.participantColumn.tableAlias === 'k'">
+      || dataFilter.participantColumn.tableAlias === 'k' || dataFilter.participantColumn.tableAlias === 'ex'">
       <md-checkbox [(ngModel)]="dataFilter.empty" color="primary" disableRipple
                    [disabled]="!editable || !(dataFilter == null || dataFilter.value1 == null || dataFilter.value1 === '' ) || hasSelectedOption(dataFilter) || dataFilter.notEmpty">
         Empty
