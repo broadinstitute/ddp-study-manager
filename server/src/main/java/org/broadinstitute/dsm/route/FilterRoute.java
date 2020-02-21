@@ -219,9 +219,7 @@ public class FilterRoute extends RequestHandler {
         }
     }
 
-
     public Object doFiltering(String json, DDPInstance instance, String filterName, String parent, Filter[] savedFilters) {
-
         ViewFilter requestForFiltering = null;
         String filterQuery = "";
         Filter[] filters = null;
@@ -252,8 +250,7 @@ public class FilterRoute extends RequestHandler {
 
     }
 
-    public static List<?> filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap,
-                                                @NonNull DDPInstance instance) {
+    public static List<?> filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap, @NonNull DDPInstance instance) {
         Map<String, String> queryConditions = new HashMap<>();
         if (filters != null && columnNameMap != null && !columnNameMap.isEmpty()) {
             for (Filter filter : filters) {
@@ -375,9 +372,7 @@ public class FilterRoute extends RequestHandler {
             List<TissueList> tissueLists = TissueList.getAllTissueListsForRealm(realm, TissueList.SQL_SELECT_ALL_ONC_HISTORY_TISSUE_FOR_REALM + (queryString != null ? queryString : "") + query);
             List<TissueListWrapper> wrapperList = TissueListWrapper.getTissueListData(instance, filters, tissueLists);
             return wrapperList;
-
         }
         return null;
-
     }
 }

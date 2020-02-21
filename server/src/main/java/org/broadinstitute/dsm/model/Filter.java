@@ -28,7 +28,8 @@ public class Filter {
     public static final String NULL = "NULL";
     public static final String LIKE = " LIKE ";
     public static final String LIKE_TRIMMED = "LIKE";
-    public static final String OR = "OR";
+    public static final String OR = " OR ";
+    public static final String OR_TRIMMED = "OR";
     public static final String TRUE = "true";
     public static final String FALSE = "false";
     public static final String TODAY = "today";
@@ -121,7 +122,7 @@ public class Filter {
             for (String selectedOption : filter.getSelectedOptions()) {
                 query = filter.getColumnName(dbElement);
                 condition = EQUALS + "'" + selectedOption + "'";
-                finalQuery = finalQuery + query + condition + " " + OR + " ";
+                finalQuery = finalQuery + query + condition + OR;
             }
             finalQuery = finalQuery.substring(0, finalQuery.length() - 4);
             finalQuery += " ) ";
@@ -129,15 +130,22 @@ public class Filter {
         else if (DATE.equals(filter.getType()) || DATE_SHORT.equals(filter.getType())) {
             if (!filter.isRange()) {
                 if (filter.getFilter1() != null) {
+                    query = AND + filter.getColumnName(dbElement);
                     if (String.valueOf(filter.getFilter1().getValue()).length() == 10) {
-                        query = AND + filter.getColumnName(dbElement);
                         condition = EQUALS + "'" + filter.getFilter1().getValue() + "'";
                         finalQuery = query + condition;
                     }
                     else {
-                        query = AND + filter.getColumnName(dbElement);
-                        condition = LIKE + " '%" + filter.getFilter1().getValue() + "%'";
-                        finalQuery = query + condition;
+                        if (filter.isEmpty()) {
+                            finalQuery = query + IS_NULL + " ";
+                        }
+                        else if (filter.isNotEmpty()) {
+                            finalQuery = query + IS_NOT_NULL + " ";
+                        }
+                        else {
+                            condition = LIKE + " '%" + filter.getFilter1().getValue() + "%'";
+                            finalQuery = query + condition;
+                        }
                     }
                 }
             }
@@ -162,11 +170,10 @@ public class Filter {
         }
         else if (ADDITIONAL_VALUES.equals(filter.getType())) {
             query = AND + " JSON_EXTRACT ( " + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.columnName + " , '$." + filter.getFilter2().getName() + "' ) ";
-            if (filter.empty) {
+            if (filter.isEmpty()) {
                 finalQuery = query + IS_NULL + " ";
-
             }
-            else if (filter.notEmpty) {
+            else if (filter.isNotEmpty()) {
                 finalQuery = query + IS_NOT_NULL + " ";
             }
             else {
