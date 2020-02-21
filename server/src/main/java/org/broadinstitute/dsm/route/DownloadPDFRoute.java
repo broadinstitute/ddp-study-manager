@@ -147,7 +147,7 @@ public class DownloadPDFRoute extends RequestHandler {
                         if (participantESData != null && !participantESData.isEmpty()) {
                             return returnPDFS(participantESData, ddpParticipantId);
                         }
-                        else if (instance.isMigratedDDP()){
+                        else if (instance.isMigratedDDP()) {
                             participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId);
                             return returnPDFS(participantESData, ddpParticipantId);
                         }
@@ -166,14 +166,33 @@ public class DownloadPDFRoute extends RequestHandler {
         throw new RuntimeException("Something went wrong");
     }
 
-    private Object returnPDFS(Map<String, Map<String, Object>> participantESData, @NonNull String ddpParticipantId){
-        if (participantESData != null && !participantESData.isEmpty()) {
-            Map<String, Object> participantDate = participantESData.get(ddpParticipantId);
-            if (participantDate != null) {
-                Map<String, Object> dsm = (Map<String, Object>) participantDate.get("dsm");
+    private Object returnPDFS(Map<String, Map<String, Object>> participantESData, @NonNull String ddpParticipantId) {
+        if (participantESData != null && !participantESData.isEmpty() && participantESData.size() == 1) {
+            Map<String, Object> participantData = participantESData.get(ddpParticipantId);
+            if (participantData != null) {
+                Map<String, Object> dsm = (Map<String, Object>) participantData.get(ElasticSearchUtil.DSM);
                 if (dsm != null) {
-                    Object pdf = dsm.get("pdfs");
+                    Object pdf = dsm.get(ElasticSearchUtil.PDFS);
                     return pdf;
+                }
+            }
+            else {
+                for (Object value : participantESData.values()) {
+                    participantData = (Map<String, Object>) value;
+                    //check that it is really right participant
+                    if (participantData != null) {
+                        Map<String, Object> profile = (Map<String, Object>) participantData.get(ElasticSearchUtil.PROFILE);
+                        if (profile != null) {
+                            String guid = (String) profile.get(ElasticSearchUtil.GUID);
+                            if (ddpParticipantId.equals(guid)) {
+                                Map<String, Object> dsm = (Map<String, Object>) participantData.get(ElasticSearchUtil.DSM);
+                                if (dsm != null) {
+                                    Object pdf = dsm.get(ElasticSearchUtil.PDFS);
+                                    return pdf;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

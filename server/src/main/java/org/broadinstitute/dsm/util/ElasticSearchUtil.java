@@ -44,11 +44,15 @@ public class ElasticSearchUtil {
     private static final String ACTIVITIES_QUESTIONS_ANSWER_ANSWER = "activities.questionsAnswers.answer";
     private static final String ACTIVITIES_QUESTIONS_ANSWER_DATE = "activities.questionsAnswers.date";
     private static final String ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID = "activities.questionsAnswers.stableId";
-    private static final String PROFILE = "profile";
+    public static final String PROFILE = "profile";
     private static final String DATA = "data";
-    private static final String DSM = "dsm";
+    public static final String DSM = "dsm";
     private static final String ACTIVITY_CODE = "activityCode";
     private static final String ADDRESS = "address";
+    public static final String PDFS = "pdfs";
+    public static final String GUID = "guid";
+    public static final String HRUID = "hruid";
+    private static final String LEGACY_ALT_PID = "legacyAltPid";
     public static final String BY_GUID = " AND profile.guid = ";
     public static final String BY_LEGACY_ALTPID = " AND profile.legacyAltPid = ";
 
@@ -140,16 +144,16 @@ public class ElasticSearchUtil {
         if (participantsESData != null && !participantsESData.isEmpty()) {
             Map<String, Object> participantESData = participantsESData.get(ddpParticipantId);
             if (participantESData != null && !participantESData.isEmpty()) {
-                Map<String, Object> address = (Map<String, Object>) participantESData.get("address");
-                Map<String, Object> profile = (Map<String, Object>) participantESData.get("profile");
+                Map<String, Object> address = (Map<String, Object>) participantESData.get(ADDRESS);
+                Map<String, Object> profile = (Map<String, Object>) participantESData.get(PROFILE);
                 if (address != null && !address.isEmpty() && profile != null && !profile.isEmpty()) {
                     return new DDPParticipant(ddpParticipantId, "", (String) address.get("mailToName"),
                             (String) address.get("country"), (String) address.get("city"), (String) address.get("zip"),
                             (String) address.get("street1"), (String) address.get("street2"), (String) address.get("state"),
-                            (String) profile.get("hruid"), null);
+                            (String) profile.get(HRUID), null);
                 }
                 else if (profile != null && !profile.isEmpty()) {
-                    return new DDPParticipant((String) profile.get("hruid"), "", (String) profile.get("firstName"), (String) profile.get("lastName"));
+                    return new DDPParticipant((String) profile.get(HRUID), "", (String) profile.get("firstName"), (String) profile.get("lastName"));
                 }
             }
         }
@@ -160,7 +164,7 @@ public class ElasticSearchUtil {
         if (participantsESData != null && !participantsESData.isEmpty()) {
             Map<String, Object> participantESData = participantsESData.get(ddpParticipantId);
             if (participantESData != null && !participantESData.isEmpty()) {
-                Map<String, Object> dsm = (Map<String, Object>) participantESData.get("dsm");
+                Map<String, Object> dsm = (Map<String, Object>) participantESData.get(DSM);
                 if (dsm != null && !dsm.isEmpty()) {
                     boolean hasConsentedToBloodDraw = (boolean) dsm.get("hasConsentedToBloodDraw");
                     boolean hasConsentedToTissueSample = (boolean) dsm.get("hasConsentedToTissueSample");
@@ -373,7 +377,7 @@ public class ElasticSearchUtil {
         for (SearchHit hit : response.getHits()) {
             Map<String, Object> sourceMap = hit.getSourceAsMap();
             sourceMap.put("ddp", ddp);
-            String legacyId = (String) ((Map<String, Object>) sourceMap.get(PROFILE)).get("legacyAltPid");
+            String legacyId = (String) ((Map<String, Object>) sourceMap.get(PROFILE)).get(LEGACY_ALT_PID);
             if (StringUtils.isNotBlank(legacyId)) {
                 esData.put(legacyId, sourceMap);
             }
