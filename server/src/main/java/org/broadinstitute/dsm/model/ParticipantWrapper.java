@@ -204,11 +204,11 @@ public class ParticipantWrapper {
     private static Map<String, Object> parseGen1toESParticipant(String ddpParticipantId, MBCParticipant mbcParticipant, ParticipantExit participantExit) {
         Map<String, Object> participantDataMap = new HashMap<>();
         Map<String, Object> participantProfileDataMap = new HashMap<>();
-        participantProfileDataMap.put("guid", ddpParticipantId);
-        participantProfileDataMap.put("hruid", ddpParticipantId);
+        participantProfileDataMap.put(ElasticSearchUtil.GUID, ddpParticipantId);
+        participantProfileDataMap.put(ElasticSearchUtil.HRUID, ddpParticipantId);
         participantProfileDataMap.put("firstName", mbcParticipant.getFirstName());
         participantProfileDataMap.put("lastName", mbcParticipant.getLastName());
-        participantDataMap.put("profile", participantProfileDataMap);
+        participantDataMap.put(ElasticSearchUtil.PROFILE, participantProfileDataMap);
         participantDataMap.put("status", "ENROLLED");
         if (participantExit != null) {
             participantDataMap.put("status", "EXITED_AFTER_ENROLLMENT");
@@ -216,7 +216,7 @@ public class ParticipantWrapper {
         participantDataMap.put("ddp", "MBC");
         Map<String, Object> participantAddressMap = new HashMap<>();
         participantAddressMap.put("country", mbcParticipant.getCountry());
-        participantDataMap.put("address", participantAddressMap);
+        participantDataMap.put(ElasticSearchUtil.ADDRESS, participantAddressMap);
         return participantDataMap;
     }
 
@@ -237,11 +237,11 @@ public class ParticipantWrapper {
     private static Map<String, Object> parseGen2toESParticipant(String ddpParticipantId, DDPParticipant ddpParticipant, String realm, ParticipantExit participantExit) {
         Map<String, Object> participantDataMap = new HashMap<>();
         Map<String, Object> participantProfileDataMap = new HashMap<>();
-        participantProfileDataMap.put("guid", ddpParticipantId);
-        participantProfileDataMap.put("hruid", ddpParticipant.getShortId());
+        participantProfileDataMap.put(ElasticSearchUtil.GUID, ddpParticipantId);
+        participantProfileDataMap.put(ElasticSearchUtil.HRUID, ddpParticipant.getShortId());
         participantProfileDataMap.put("firstName", ddpParticipant.getFirstName());
         participantProfileDataMap.put("lastName", ddpParticipant.getLastName());
-        participantDataMap.put("profile", participantProfileDataMap);
+        participantDataMap.put(ElasticSearchUtil.PROFILE, participantProfileDataMap);
         participantDataMap.put("status", "ENROLLED");
         if (participantExit != null) {
             participantDataMap.put("status", "EXITED_AFTER_ENROLLMENT");
@@ -252,7 +252,7 @@ public class ParticipantWrapper {
         if (address != null && StringUtils.isNotBlank(address.getCountry())) {
             participantAddressMap.put("country", address.getCountry());
         }
-        participantDataMap.put("address", participantAddressMap);
+        participantDataMap.put(ElasticSearchUtil.ADDRESS, participantAddressMap);
         return participantDataMap;
     }
 }
