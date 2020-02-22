@@ -284,17 +284,17 @@ public class DashboardRoute extends RequestHandler {
 
             Set<String> foundAtPt = new HashSet<>();
             Set<String> foundAtPtPeriod = new HashSet<>();
-            if (wrapper.getMedicalRecords() != null) {
+            if (wrapper.getMedicalRecords() != null && !wrapper.getMedicalRecords().isEmpty()) {
                 countMedicalRecordData(wrapper.getMedicalRecords(), foundAtPt, foundAtPtPeriod, dashboardValuesDetailed, dashboardValuesPeriodDetailed, start, end);
             }
-            if (wrapper.getOncHistoryDetails() != null) {
+            if (wrapper.getOncHistoryDetails() != null && !wrapper.getOncHistoryDetails().isEmpty()) {
                 countOncHistoryData(wrapper.getOncHistoryDetails(), foundAtPt, foundAtPtPeriod, dashboardValuesDetailed, dashboardValuesPeriodDetailed, start, end);
             }
-            if (wrapper.getKits() != null) {
+            if (wrapper.getKits() != null && !wrapper.getKits().isEmpty()) {
                 countKits(wrapper.getKits(), foundAtPt, foundAtPtPeriod, dashboardValuesDetailed, dashboardValuesPeriodDetailed, start, end);
             }
 
-            if (wrapper.getAbstractionActivities() != null) {
+            if (wrapper.getAbstractionActivities() != null && !wrapper.getAbstractionActivities().isEmpty()) {
                 for (AbstractionActivity activity : wrapper.getAbstractionActivities()) {
                     if (AbstractionUtil.ACTIVITY_FINAL.equals(activity.getActivity()) && AbstractionUtil.STATUS_DONE.equals(activity.getAStatus())) {
                         incrementCounter(dashboardValues, "abstraction.done");
@@ -309,7 +309,6 @@ public class DashboardRoute extends RequestHandler {
             for (String found : foundAtPtPeriod) {
                 incrementCounter(dashboardValuesPeriod, found);
             }
-
         }
         logger.info("Done calculating dashboard. Returning map now");
         return new DashboardInformation(dashboardValues, dashboardValuesDetailed, dashboardValuesPeriod, dashboardValuesPeriodDetailed);
@@ -318,7 +317,6 @@ public class DashboardRoute extends RequestHandler {
     private void countMedicalRecordData(@NonNull List<MedicalRecord> medicalRecordList, @NonNull Set<String> foundAtPT, @NonNull Set<String> foundAtPtPeriod,
                                         @NonNull Map<String, Integer> dashboardValuesDetailed, @NonNull Map<String, Integer> dashboardValuesPeriodDetailed,
                                         long start, long end) {
-
         for (MedicalRecord medicalRecord : medicalRecordList) {
             if (medicalRecord.isDuplicate()) {
                 incrementCounter(dashboardValuesDetailed, "duplicateMedicalRecord");
