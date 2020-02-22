@@ -24,7 +24,6 @@ export class DashboardComponent implements OnInit {
 
   errorMessage: string;
   additionalMessage: string;
-  realm: string;
 
   Arr = Array;
 
@@ -41,7 +40,6 @@ export class DashboardComponent implements OnInit {
   startDate: string;
   endDate: string;
 
-  disableDownloadButton: boolean = false;
   allowedToSeeInformation: boolean = false;
 
   kitsNoLabel: boolean = false;
@@ -68,6 +66,7 @@ export class DashboardComponent implements OnInit {
   downloadSource;
   hasESData = false;
   activityDefinitionList: ActivityDefinition[] = [];
+  participantList: Participant[] = [];
 
   constructor( private dsmService: DSMService, private auth: Auth, private router: Router, private compService: ComponentService,
                private route: ActivatedRoute, private role: RoleService ) {
@@ -75,24 +74,27 @@ export class DashboardComponent implements OnInit {
       auth.logout();
     }
     this.route.queryParams.subscribe( params => {
-      this.realm = params[ DSMService.REALM ] || null;
-      if (auth.authenticated()) {
+      let realm = params[ DSMService.REALM ] || null;
+      if (realm != null && auth.authenticated()) {
         this.getDashboardInformation( this.router.url );
+        this.participantList = [];
       }
     } );
   }
 
   ngOnInit() {
-    if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) != null) {
-      this.realm = localStorage.getItem( ComponentService.MENU_SELECTED_REALM );
+    if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) == null || localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) === undefined) {
+      this.additionalMessage = "Please select a realm";
     }
-    if (this.auth.authenticated()) {
-      this.getDashboardInformation( this.router.url );
+    else {
+      if (this.auth.authenticated()) {
+        this.getDashboardInformation( this.router.url );
+      }
     }
   }
 
   private loadDDPData( startDate: string, endDate: string, version: string ) {
-    if (this.realm != null) {
+    if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) != null) {
       this.allowedToSeeInformation = false;
       this.loadingDDPData = true;
       this.ddp = null;
@@ -100,26 +102,22 @@ export class DashboardComponent implements OnInit {
         let jsonData: any[];
         this.dsmService.getRealmsAllowed( Statics.MEDICALRECORD ).subscribe(
           data => {
-            // console.log(data);
             jsonData = data;
             jsonData.forEach( ( val ) => {
-              if (this.realm === val) {
+              if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) === val) {
                 this.allowedToSeeInformation = true;
-                this.dsmService.getMedicalRecordDashboard( this.realm, startDate, endDate ).subscribe(
+                this.dsmService.getMedicalRecordDashboard( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), startDate, endDate ).subscribe(
                   data => {
-                    // console.log(data);
                     let result = Result.parse( data );
                     if (result.code != null && result.code !== 200) {
                       this.errorMessage = "Error - Getting all participant numbers\nPlease contact your DSM developer";
                     }
                     else {
-                      // console.info( `received: ${JSON.stringify( data, null, 2 )}` );
                       this.ddp = DDPInformation.parse( data );
                       this.activityKeys = this.getActivityKeys( this.ddp.dashboardValues );
                       this.activityKeys.forEach( value => this.showActivityDetails[ value ] = false );
                       this.getSourceColumnsFromFilterClass();
                       this.loadSettings();
-                      this.getParticipantData( null );
                     }
                     this.loadingDDPData = false;
                   },
@@ -133,7 +131,6 @@ export class DashboardComponent implements OnInit {
                 );
               }
             } );
-            // console.log(this.allowedToSeeInformation);
             if (!this.allowedToSeeInformation) {
               this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
               this.loadingDDPData = false;
@@ -153,13 +150,11 @@ export class DashboardComponent implements OnInit {
           data => {
             jsonData = data;
             jsonData.forEach( ( val ) => {
-              if (this.realm === val) {
+              if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) === val) {
                 this.allowedToSeeInformation = true;
-                this.dsmService.getShippingDashboard( this.realm ).subscribe(
+                this.dsmService.getShippingDashboard( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) ).subscribe(
                   data => {
-                    // console.log(`received: ${JSON.stringify(data, null, 2)}`);
                     this.ddp = DDPInformation.parse( data );
-                    // console.log(this.ddp);
                     this.loadingDDPData = false;
                   },
                   err => {
@@ -172,7 +167,6 @@ export class DashboardComponent implements OnInit {
                 );
               }
             } );
-            // console.log(this.allowedToSeeInformation);
             if (!this.allowedToSeeInformation) {
               this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
               this.loadingDDPData = false;
@@ -231,7 +225,7 @@ export class DashboardComponent implements OnInit {
   }
 
   loadDDPSummary() {
-    if (this.realm != null) {
+    if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) != null) {
       let start = new Date();
       start.setDate( start.getDate() - 7 );
       this.startDate = Utils.getFormattedDate( start );
@@ -252,7 +246,6 @@ export class DashboardComponent implements OnInit {
     this.allowedToSeeInformation = true;
     this.dsmService.getShippingOverview().subscribe(
       data => {
-        // console.log(`received: ${JSON.stringify(data, null, 2)}`);
         this.kitsNoLabel = false;
         this.ddp = DDPInformation.parse( data );
         for (let kit of this.ddp.kits) {
@@ -296,7 +289,6 @@ export class DashboardComponent implements OnInit {
     }
     this.dsmService.kitLabel( realm, kitType ).subscribe(
       data => {
-        // console.log(`received: ${JSON.stringify(data, null, 2)}`);
         let result = Result.parse( data );
         if (result.code === 200) {
           this.additionalMessage = "Triggered label creation";
@@ -459,6 +451,7 @@ export class DashboardComponent implements OnInit {
             }
           } );
         }
+        this.getParticipantData();
       },
       err => {
         if (err._body === Auth.AUTHENTICATION_ERROR) {
@@ -472,51 +465,50 @@ export class DashboardComponent implements OnInit {
 
   dataExport( source: string ) {
     this.loadingDDPData = true;
-    this.disableDownloadButton = true;
-    this.getParticipantData( source );
+    if (source != null) {
+      let date = new Date();
+      let columns = {};
+      this.dataSources.forEach( ( value: string, key: string ) => {
+        if (this.sourceColumns[ key ] != null && this.sourceColumns[ key ].length != 0) {
+          columns[ key ] = this.sourceColumns[ key ];
+        }
+      } );
+      if (this.participantList.length != 0) {
+        if (source === "m") {
+          Utils.downloadCurrentData( this.participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "medicalRecords", "m" ] ], columns, "Participants-MR-" + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
+          this.downloadDone();
+        }
+        else if (source === "oD") {
+          Utils.downloadCurrentData( this.participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "oncHistoryDetails", "oD", "tissues", "t" ] ], columns, "Participants-OncHistory-" + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
+          this.downloadDone();
+        }
+        else if (source === "k") {
+          Utils.downloadCurrentData( this.participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "kits", "k" ] ], columns, "Participants-Sample-" + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
+          this.downloadDone();
+        }
+        else if (source === "a") {
+          //TODO add final abstraction values to download
+          Utils.downloadCurrentData( this.participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "abstractionActivities", "a" ] ], columns, "Participants-Abstraction-" + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
+          this.downloadDone();
+        }
+        else {
+          Utils.downloadCurrentData( this.participantList, [ [ "data", "data" ], [ source, source ] ], columns, "Participants-" + source + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION, true );
+          this.downloadDone();
+        }
+      }
+    }
   }
 
-  getParticipantData( source: string ) {
+  getParticipantData() {
     this.dsmService.applyFilter( null, localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), "participantList", null ).subscribe(
       data => {
         let jsonData: any[];
-        let participantList = [];
+        this.participantList = [];
         jsonData = data;
         jsonData.forEach( ( val ) => {
           let participant = Participant.parse( val );
-          participantList.push( participant );
+          this.participantList.push( participant );
         } );
-        let date = new Date();
-        let columns = {};
-        this.dataSources.forEach( ( value: string, key: string ) => {
-          if (this.sourceColumns[ key ] != null && this.sourceColumns[ key ].length != 0) {
-            columns[ key ] = this.sourceColumns[ key ];
-          }
-        } );
-
-        if (source != null) {
-          if (source === "m") {
-            Utils.downloadCurrentData( participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "medicalRecords", "m" ] ], columns, "Participants-MR-" + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
-            this.downloadDone();
-          }
-          else if (source === "oD") {
-            Utils.downloadCurrentData( participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "oncHistoryDetails", "oD", "tissues", "t" ] ], columns, "Participants-OncHistory-" + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
-            this.downloadDone();
-          }
-          else if (source === "k") {
-            Utils.downloadCurrentData( participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "kits", "k" ] ], columns, "Participants-Sample-" + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
-            this.downloadDone();
-          }
-          else if (source === "a") {
-            //TODO add final abstraction values to download
-            Utils.downloadCurrentData( participantList, [ [ "data", "data" ], [ "participant", "p" ], [ "abstractionActivities", "a" ] ], columns, "Participants-Abstraction-" + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
-            this.downloadDone();
-          }
-          else {
-            Utils.downloadCurrentData( participantList, [ [ "data", "data" ], [ source, source ] ], columns, "Participants-" + source + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION, true );
-            this.downloadDone();
-          }
-        }
       },
       err => {
         if (err._body === Auth.AUTHENTICATION_ERROR) {
@@ -531,7 +523,6 @@ export class DashboardComponent implements OnInit {
   downloadDone() {
     this.loadingDDPData = false;
     this.errorMessage = null;
-    this.disableDownloadButton = false;
   }
 
   getSourceKeys(): string[] {

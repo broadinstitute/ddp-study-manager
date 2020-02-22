@@ -371,6 +371,11 @@ export class ParticipantListComponent implements OnInit {
               this.allFieldNames.add( tmp + "." + filter.participantColumn.name );
             }
           }
+          else if (filter.participantColumn.tableAlias === "data" && filter.participantColumn.object == null) {
+            this.sourceColumns[ filter.participantColumn.tableAlias ].push( filter );
+            let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
+            this.allFieldNames.add( tmp + "." + filter.participantColumn.name );
+          }
           else if (filter.participantColumn.tableAlias !== "data") {
             this.sourceColumns[ filter.participantColumn.tableAlias ].push( filter );
             let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;

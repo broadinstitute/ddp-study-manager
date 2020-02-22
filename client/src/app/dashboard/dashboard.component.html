@@ -198,7 +198,7 @@
           <td></td>
         </tr>
         <tr>
-          <td>PT withdrawn per DSM</td>
+          <td>PT withdrawn</td>
           <td>
             <ng-container *ngIf="ddp.dashboardValues['Withdrawn per DSM'] !== null && ddp.dashboardValues['Withdrawn per DSM'] !== undefined">
               {{ddp.dashboardValues['Withdrawn per DSM']}} pts
@@ -1124,7 +1124,7 @@
             </md-select>
             <button type="button" md-raised-button color="primary"
                     (click)="dataExport(downloadSource)"
-                    [disabled]="disableDownloadButton && downloadSource != null">Export Data
+                    [disabled]="participantList.length == 0 || downloadSource == null">Export Data
             </button>
           </td>
         </tr>
