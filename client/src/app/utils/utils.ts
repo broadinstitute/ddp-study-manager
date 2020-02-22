@@ -128,10 +128,16 @@ export class Utils {
   }
 
   public static getDateFormatted( date: Date, format: string ): string {
-    if (format != null) {
-      return new DatePipe( "en-US" ).transform( date, format );
+    if (date instanceof Date && !isNaN(date.getTime())) {
+      if (format != null) {
+        return new DatePipe( "en-US" ).transform( date, format );
+      }
+      return new DatePipe( "en-US" ).transform( date, Utils.DATE_STRING_IN_CVS );
     }
-    return new DatePipe( "en-US" ).transform( date, Utils.DATE_STRING_IN_CVS );
+    if (date != null) {
+      return date.toString();
+    }
+    return "";
   }
 
   public maxDate(): Date {
