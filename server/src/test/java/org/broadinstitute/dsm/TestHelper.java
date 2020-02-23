@@ -132,10 +132,16 @@ public class TestHelper {
         List<String> roles = UserUtil.getUserRolesPerRealm("SELECT role.name FROM  access_user_role_group roleGroup LEFT JOIN ddp_instance_group gr on (gr.ddp_group_id = roleGroup.group_id) " +
                 "LEFT JOIN access_user user on (roleGroup.user_id = user.user_id) LEFT JOIN ddp_instance realm on (realm.ddp_instance_id = gr.ddp_instance_id) " +
                 "LEFT JOIN access_role role on (role.role_id = roleGroup.role_id) WHERE user.name = ? and instance_name = ?", "THE UNIT TESTER 1", TEST_DDP);
+        //setting roles for test user for test group
+        List<String> roles2 = UserUtil.getUserRolesPerRealm("SELECT role.name FROM  access_user_role_group roleGroup LEFT JOIN ddp_instance_group gr on (gr.ddp_group_id = roleGroup.group_id) " +
+                "LEFT JOIN access_user user on (roleGroup.user_id = user.user_id) LEFT JOIN ddp_instance realm on (realm.ddp_instance_id = gr.ddp_instance_id) " +
+                "LEFT JOIN access_role role on (role.role_id = roleGroup.role_id) WHERE user.name = ? and instance_name = ?", "THE UNIT TESTER 1", "angio");
         String testGroup = DBTestUtil.getQueryDetail("SELECT * FROM ddp_group where name = ?", "test", "group_id");
+        String testGroup2 = DBTestUtil.getQueryDetail("SELECT * FROM ddp_group where name = ?", "cmi", "group_id");
         String testUser = DBTestUtil.getQueryDetail("SELECT * FROM access_user where name = ?", "THE UNIT TESTER 1", "user_id");
 
         checkRole("mr_view", roles, testUser, testGroup);
+        checkRole("mr_view", roles2, testUser, testGroup2);
         checkRole("mr_request", roles, testUser, testGroup);
         checkRole("ndi_download", roles, testUser, testGroup);
         checkRole("mr_abstraction_admin", roles, testUser, testGroup);

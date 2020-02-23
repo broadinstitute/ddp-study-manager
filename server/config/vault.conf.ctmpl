@@ -52,6 +52,7 @@
         "googleProjectName": "",
       {{end}}
         "discardSampleBucket": "{{$portalEnvironment.discardSampleBucket}}",
+        "configBucket": "{{$portalEnvironment.configBucket}}",
         "enableBlindTrustDDP": {{$portalEnvironment.enableBlindTrustDDP}}
     },
     "bsp": {

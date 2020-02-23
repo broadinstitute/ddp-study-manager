@@ -95,7 +95,7 @@ public class RouteTest extends TestHelper {
     }
 
     @After
-    public void afterTest(){
+    public void afterTest() {
         DBTestUtil.deleteAllFieldSettings(TEST_DDP);
     }
 
@@ -207,6 +207,9 @@ public class RouteTest extends TestHelper {
                 .respond(response().withStatusCode(200).withBody(messageParticipant));
         mockDDP.when(
                 request().withPath("/ddp/participants/" + FAKE_DDP_PARTICIPANT_ID))
+                .respond(response().withStatusCode(200).withBody(messageParticipant));
+        mockDDP.when(
+                request().withPath("/ddp/participants/NEW_TEST_PARTICIPANT1"))
                 .respond(response().withStatusCode(200).withBody(messageParticipant));
     }
 
@@ -422,14 +425,16 @@ public class RouteTest extends TestHelper {
         Assert.assertEquals(followUp[0].getFRequest1(), "2019-04-24");
         Assert.assertEquals(followUp[0].getFReceived(), "2019-04-28");
 
-        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/ddpInformation/2017-03-01/2020-03-20?realm=" + TEST_DDP + "&userId="+userId, testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/ddpInformation/2017-03-01/2020-03-20?realm=" + TEST_DDP + "&userId=" + userId, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 
         String message = DDPRequestUtil.getContentAsString(response);
         DashboardInformation ddps = new Gson().fromJson(message, DashboardInformation.class);
         Assert.assertNotNull(ddps);
-        Assert.assertEquals(ddps.getDashboardValues(), "{all=1, status.ENROLLED=1}"); // TODO Simone - getMrReceivedFollowUpParticipant()
-        Assert.assertEquals(ddps.getDashboardValues(), 1); // TODO Simone - getMrFollowUpSentParticipant()
+        Map<String, Integer> map = new HashMap<>();
+        map.put("all", 1);
+        map.put("status.ENROLLED", 1);
+        Assert.assertEquals(map, ddps.getDashboardValues()); // TODO Simone - getMrReceivedFollowUpParticipant()
 
         mrId = editMedicalRecord(TEST_DDP, "NEW_TEST_PARTICIPANT", "TEST_INSTITUTION", "m.followUpRequired", "1", "followup_required");
         String followupRequired = DBTestUtil.getQueryDetail("SELECT * from ddp_medical_record where medical_record_id = ? ", mrId, "followup_required");
@@ -517,7 +522,7 @@ public class RouteTest extends TestHelper {
 
     @Test
     public void dashboardEndpoint() throws Exception {
-        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/ddpInformation/2017-03-01/2017-03-20?realm=" + TEST_DDP + "&userId="+userId, testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/ddpInformation/2017-03-01/2017-03-20?realm=" + TEST_DDP + "&userId=" + userId, testUtil.buildAuthHeaders()).returnResponse();
 
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 
@@ -525,10 +530,11 @@ public class RouteTest extends TestHelper {
         DashboardInformation ddps = new Gson().fromJson(message, DashboardInformation.class);
         Assert.assertNotNull(ddps);
     }
+
     @Ignore
     @Test
     public void doParticipantMedicalRecordsAsserts() throws Exception {
-        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/rawData/" + TEST_DDP + "?userId="+userId, testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/rawData/" + TEST_DDP + "?userId=" + userId, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 
         String message = DDPRequestUtil.getContentAsString(response);
@@ -820,13 +826,14 @@ public class RouteTest extends TestHelper {
         Assert.assertEquals("testGetFieldSettings: GET returned error code", 200, response.getStatusLine().getStatusCode());
         String settingsString = DDPRequestUtil.getContentAsString(response);
         Gson gson = new Gson();
-        Type settingsType = new TypeToken<Map<String, Collection<FieldSettings>>>(){}.getType();
+        Type settingsType = new TypeToken<Map<String, Collection<FieldSettings>>>() {
+        }.getType();
         Map<String, Collection<FieldSettings>> returnedSettings = gson.fromJson(settingsString, settingsType);
         Assert.assertEquals("testGetFieldSettings: Returned wrong number of onchistory settings", 2, returnedSettings.get("oD").size());
         Assert.assertEquals("testGetFieldSettings: Returned wrong number of tissue settings", 1, returnedSettings.get("t").size());
 
         //Only 1 tissue but fake iterating
-        for (FieldSettings tissueSetRet : returnedSettings.get("t")){
+        for (FieldSettings tissueSetRet : returnedSettings.get("t")) {
             DBTestUtil.checkSettingMatch(tissueSetRet, "t",
                     "display of Tissue", "nameOfTissue",
                     "text", null, false,
@@ -836,7 +843,7 @@ public class RouteTest extends TestHelper {
         //Check the onc settings
         FieldSettings[] oncSets = returnedSettings.get("oD").toArray(new FieldSettings[2]);
         FieldSettings onc1, onc2;
-        if (oncSets[0].getColumnName().equals("nameOfOnc")){
+        if (oncSets[0].getColumnName().equals("nameOfOnc")) {
             onc1 = oncSets[0];
             onc2 = oncSets[1];
         }
@@ -871,8 +878,8 @@ public class RouteTest extends TestHelper {
         ArrayList<String> strings = new ArrayList<>();
         strings.add(TEST_DDP);
         String stringFromQuery = DBTestUtil.getStringFromQuery("select count(*) from field_settings where " +
-                        "ddp_instance_id= (select ddp_instance_id from ddp_instance where instance_name = ?) and not" +
-                        " (deleted <=> 1)", strings, "count(*)");
+                "ddp_instance_id= (select ddp_instance_id from ddp_instance where instance_name = ?) and not" +
+                " (deleted <=> 1)", strings, "count(*)");
 
         Assert.assertEquals("testPatchFieldSettings: wrong number of settings returned", 1,
                 Integer.parseInt(stringFromQuery));
@@ -1345,14 +1352,14 @@ public class RouteTest extends TestHelper {
         File file = TestUtil.getResouresFile("BSPscreenshot.png");
         byte[] bytes = Files.readAllBytes(Paths.get(file.getPath()));
 
-        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "discardUpload?userId="+userId+"&kitDiscardId=1&realm=" + TEST_DDP + "&pathBSPScreenshot=" + nameInBucket), bytes, testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "discardUpload?userId=" + userId + "&kitDiscardId=1&realm=" + TEST_DDP + "&pathBSPScreenshot=" + nameInBucket), bytes, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 
         String json = "{\"path\": \"1_" + nameInBucket + "\"}";
         response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/" + "showUpload?realm=" + TEST_DDP), json, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 
-        response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "discardUpload?kitDiscardId=1&userId="+userId+"&realm=" + TEST_DDP + "&delete=true&pathBSPScreenshot=1_" + nameInBucket), bytes, testUtil.buildAuthHeaders()).returnResponse();
+        response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "discardUpload?kitDiscardId=1&userId=" + userId + "&realm=" + TEST_DDP + "&delete=true&pathBSPScreenshot=1_" + nameInBucket), bytes, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
     }
 
@@ -1551,32 +1558,31 @@ public class RouteTest extends TestHelper {
         Assert.assertEquals("testGetFieldSettings: GET returned error code", 200, response.getStatusLine().getStatusCode());
         String settingsString = DDPRequestUtil.getContentAsString(response);
         Gson gson = new Gson();
-        Type settingsType = new TypeToken<Map<String, Collection<FieldSettings>>>(){}.getType();
+        Type settingsType = new TypeToken<Map<String, Collection<FieldSettings>>>() {
+        }.getType();
         Map<String, Collection<FieldSettings>> fieldSettings = gson.fromJson(settingsString, settingsType);
         //TODO add filters and activityDefinition
     }
 
     @Test
     public void listsEndPoint() throws Exception {
-        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/" + "displaySettings/" + TEST_DDP+"?userId="+userId+"&parent=participantList", testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/" + "displaySettings/" + TEST_DDP + "?userId=" + userId + "&parent=participantList", testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
     }
 
     @Test
     public void tissueListEndpoint() throws Exception {
         DBTestUtil.createTestData(TEST_DDP, "NEW_TEST_PARTICIPANT1", "TEST_INSTITUTION");
-        String mrId = editMedicalRecord(TEST_DDP, "NEW_TEST_PARTICIPANT1", "TEST_INSTITUTION", "m.followUps", "[{\\\"fRequest1\\\":\\\"2019-04-24\\\", \\\"fReceived\\\":\\\"2019-04-28\\\"}]", "follow_ups");
         String participantId = DBTestUtil.getParticipantIdOfTestParticipant("NEW_TEST_PARTICIPANT1");
         String oncHistoryId = addOncHistoryDetails(participantId);
         String tissueId1 = addTissue(oncHistoryId);
-        String tissueId2 = addTissue(oncHistoryId);
         Map<String, String> map = testUtil.buildAuthHeaders();
-        map.put("realm",TEST_DDP);
+        map.put("realm", TEST_DDP);
         map.put("parent", "tissueList");
         map.put("userId", "26");
         map.put("userMail", "simone+1@broadinstitute.org");
         map.put("defaultFilter", "0");
-        HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/filterList?realm="+TEST_DDP+"&parent=tissueList&userID=26&userMail=simone+1@broadinstitute.org&defaultFilter=0"), null, map).returnResponse();
+        HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/filterList?realm=" + TEST_DDP + "&parent=tissueList&userID=26&userMail=simone+1@broadinstitute.org&defaultFilter=0"), null, map).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 
         List<TissueListWrapper> results = new Gson().fromJson(DDPRequestUtil.getContentAsString(response), List.class);
@@ -1584,17 +1590,14 @@ public class RouteTest extends TestHelper {
         Assert.assertNotEquals(0, results.size());
 
         changeTissueValue(tissueId1, oncHistoryId, "t.smId", "1224", "sm_id");
-        String json = "\"{\\\"filters\\\":[{\\\"parentName\\\":\\\"t\\\",\\\"filter1\\\":{\\\"name\\\":\\\"smId\\\",\\\"value\\\":\\\"1224\\\"},\\\"filter2\\\":{\\\"name\\\":null,\\\"value\\\":null},\\\"exactMatch\\\":true,\\\"selectedOptions\\\":null,\\\"type\\\":\\\"TEXT\\\",\\\"range\\\":false,\\\"empty\\\":false,\\\"notEmpty\\\":false,\\\"participantColumn\\\":{\\\"display\\\":\\\"SM ID for H&E\\\",\\\"name\\\":\\\"smId\\\",\\\"tableAlias\\\":\\\"t\\\"}}],\\\"parent\\\":\\\"tissueList\\\",\\\"quickFilterName\\\":\\\"\\\"}\"";
-        response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/filterList?realm="+TEST_DDP+"&parent=tissueList&userID=26&userMail=simone+1@broadinstitute.org"), json, map).returnResponse();
+        String json = "{\"filters\":[{\"parentName\":\"t\",\"filter1\":{\"name\":\"smId\",\"value\":\"1224\"},\"filter2\":{\"name\":null,\"value\":null},\"exactMatch\":true,\"selectedOptions\":null,\"type\":\"TEXT\",\"range\":false,\"empty\":false,\"notEmpty\":false,\"participantColumn\":{\"display\":\"SM ID for H&E\",\"name\":\"smId\",\"tableAlias\":\"t\"}}],\"parent\":\"tissueList\",\"quickFilterName\":\"\"}";
+        response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/filterList?realm=" + TEST_DDP + "&parent=tissueList&userID=26&userMail=simone+1@broadinstitute.org"), json, map).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
         results = new Gson().fromJson(DDPRequestUtil.getContentAsString(response), List.class);
         Assert.assertNotNull(results);
         Assert.assertNotEquals(0, results.size());
         Assert.assertEquals(1, results.size());
-
-
     }
-
 
     // TODO add missing tests
     // 1) when reminder emails functionality is getting added again, tests are needed!
