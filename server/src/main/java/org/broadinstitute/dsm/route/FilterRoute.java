@@ -228,7 +228,6 @@ public class FilterRoute extends RequestHandler {
             requestForFiltering = new Gson().fromJson(json, ViewFilter.class);
             if (requestForFiltering.getFilters() == null && StringUtils.isNotBlank(requestForFiltering.getFilterQuery())) {
                 filterQuery = ViewFilter.changeFieldsInQuery(requestForFiltering.getFilterQuery());
-                logger.info(filterQuery);
                 requestForFiltering = ViewFilter.parseFilteringQuery(filterQuery, requestForFiltering);
             }
             filters = requestForFiltering.getFilters();

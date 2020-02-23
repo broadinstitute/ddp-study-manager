@@ -87,7 +87,7 @@ public class RouteTestAbstraction extends TestHelper {
                     "('Diagnostic Sample Type', 'select', '[{\"value\":\"valueI\"}, {\"value\": \"valueA\"}]', " +
                     "(SELECT medical_record_abstraction_group_id from medical_record_abstraction_group where display_name='Unit Test Group 2'), " +
                     "(SELECT ddp_instance_id from ddp_instance where instance_name =  \"" + TEST_DDP + "\"), 1, 'Diagnostic Sample Type - Help text')");
-            DBTestUtil.executeQuery("INSERT INTO medical_record_abstraction_field (display_name, type, medical_record_abstraction_group_id, ddp_instance_id, order_number, help_text, possible_value) values " +
+            DBTestUtil.executeQuery("INSERT INTO medical_record_abstraction_field (display_name, type, medical_record_abstraction_group_id, ddp_instance_id, order_number, help_text, possible_values) values " +
                     "('Medication', 'multi_type_array', (SELECT medical_record_abstraction_group_id from medical_record_abstraction_group where display_name='Unit Test Group 2'), " +
                     "(SELECT ddp_instance_id from ddp_instance where instance_name = \"" + TEST_DDP + "\"), 2, 'Medication - Help text'," +
                     "'[{\"value\":\"Name of Drug\",\"type\":\"drugs\",\"type2\":\"select\"},{\"value\":\"Start\",\"type\":\"date\"},{\"value\":\"Stop\",\"type\":\"date\"},{\"value\":\"Trail\",\"type\":\"checkbox\"},{\"value\":\"Name\",\"type\":\"text\"},{\"value\":\"Treatment Response\",\"type\":\"options\",\"values\":[{\"value\":\"stable\"},{\"value\":\"response\"},{\"value\":\"progression\"}]},{\"value\":\"DC Reason\",\"type\":\"options\",\"values\":[{\"value\":\"v1\"},{\"value\":\"v2\"},{\"value\":\"v3\"}]}]')");
@@ -99,7 +99,7 @@ public class RouteTestAbstraction extends TestHelper {
                     "('Favorite number', 'number', " +
                     "(SELECT medical_record_abstraction_group_id from medical_record_abstraction_group where display_name='Unit Test Group 2'), " +
                     "(SELECT ddp_instance_id from ddp_instance where instance_name =  \"" + TEST_DDP + "\"), 4, 'Favorite number - Help text')");
-            DBTestUtil.executeQuery("INSERT INTO medical_record_abstraction_field (display_name, type, medical_record_abstraction_group_id, ddp_instance_id, order_number, help_text, possible_value) values " +
+            DBTestUtil.executeQuery("INSERT INTO medical_record_abstraction_field (display_name, type, medical_record_abstraction_group_id, ddp_instance_id, order_number, help_text, possible_values) values " +
                     "('Recurrence', 'multi_type_array', " +
                     "(SELECT medical_record_abstraction_group_id from medical_record_abstraction_group where display_name='Unit Test Group 2'), " +
                     "(SELECT ddp_instance_id from ddp_instance where instance_name =  \"" + TEST_DDP + "\"), 5, 'Recurrence - Help text', " +
@@ -226,18 +226,20 @@ public class RouteTestAbstraction extends TestHelper {
 
     public void abstraction(@NonNull String activityName, @NonNull String abstractionUniqueValue, @NonNull String abstractionUniqueValue2) throws Exception {
         String ddpParticipantId = "ABSTRACTION_PARTICIPANT_ID";
-        ParticipantWrapper[] participants = RouteTest.getParticipants("/ui/participants?showDeleted=true&showDone=false&userId=1&realm=" + TEST_DDP);
+        ParticipantWrapper[] participants = RouteTest.getParticipants("/ui/applyFilter?parent=participantList&userId=26&realm=" + TEST_DDP);
         for (ParticipantWrapper participant : participants) {
             if (participant.getParticipant().getDdpParticipantId().equals(ddpParticipantId)) {
                 List<AbstractionActivity> abstractionActivities = participant.getAbstractionActivities();
-                for (AbstractionActivity activity : abstractionActivities) {
-                    if (activityName.equals(activity.getActivity())) {
-                        //TODO what now?
+                if (abstractionActivities != null) {
+                    for (AbstractionActivity activity : abstractionActivities) {
+                        if (activityName.equals(activity.getActivity())) {
+                            //TODO what now?
+                        }
+                        //activity is not yet started
+                        Assert.assertNull(activity);
                     }
-                    //activity is not yet started
-                    Assert.assertNull(activity);
+                    break;
                 }
-                break;
             }
         }
         //start abstraction

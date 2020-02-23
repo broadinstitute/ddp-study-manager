@@ -754,7 +754,7 @@ public class DirectMethodTest extends TestHelper {
     @Test
     public void mbcLegacyPTGUID() {
         DDPInstance instance = DDPInstance.getDDPInstance("Pepper-MBC");
-        String filter = " AND profile.guid = TCDEPIJVKXT7I6K1FRG6";
+        String filter = " AND profile.guid = R0RR2K62F1D4JT2NUF0D";
         Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filter);
         Assert.assertTrue(!participants.isEmpty());
     }
@@ -762,7 +762,7 @@ public class DirectMethodTest extends TestHelper {
     @Test
     public void mbcLegacyPTAltPID() {
         DDPInstance instance = DDPInstance.getDDPInstance("Pepper-MBC");
-        String filter = " AND profile.legacyAltPid = 8187_v2";
+        String filter = " AND profile.legacyAltPid = 8315_v3";
         Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filter);
         Assert.assertTrue(!participants.isEmpty());
     }

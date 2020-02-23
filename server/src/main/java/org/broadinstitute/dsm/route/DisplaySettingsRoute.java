@@ -41,6 +41,9 @@ public class DisplaySettingsRoute extends RequestHandler {
             logger.error("Realm is empty");
         }
         String ddpGroupId = DDPInstance.getDDPGroupId(realm);
+        if (StringUtils.isBlank(ddpGroupId)) {
+            logger.error("GroupId is empty");
+        }
 
         String userIdRequest = UserUtil.getUserId(request);//gets checked in UserUtil
         if (!userId.equals(userIdRequest)) {
@@ -73,9 +76,11 @@ public class DisplaySettingsRoute extends RequestHandler {
             }
         }
         else {
+            logger.warn(UserErrorMessages.NO_RIGHTS);
             response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
         }
+        logger.warn(UserErrorMessages.CONTACT_DEVELOPER);
         return new Result(500, UserErrorMessages.CONTACT_DEVELOPER);
     }
 }

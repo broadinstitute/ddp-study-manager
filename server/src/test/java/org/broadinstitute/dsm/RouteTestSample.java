@@ -334,7 +334,7 @@ public class RouteTestSample extends TestHelper {
     }
 
     @Test
-    @Ignore ("No shipping to Canadian participants")
+    //    @Ignore ("No shipping to Canadian participants")
     public void labelCAParticipant() throws Exception {
         DDPParticipant participant = DDPParticipant.getDDPParticipant(DDP_BASE_URL, TEST_DDP, "CA", false);
         easyPost(INSTANCE_ID, TEST_DDP, participant, false);
@@ -370,7 +370,7 @@ public class RouteTestSample extends TestHelper {
                 doAsserts(shipment2Participant);
             }
             catch (RateNotAvailableException e) {
-                logger.warn("Rate was not available");
+                Assert.fail("Rate was not available " + e.getMessage());
             }
         }
         else {
@@ -961,7 +961,7 @@ public class RouteTestSample extends TestHelper {
         strings.add(FAKE_LATEST_KIT + "_deactivate");
         strings.add(FAKE_DDP_PARTICIPANT_ID + "_deactivate");
         String kitRequestId = DBTestUtil.getStringFromQuery(SELECT_KITREQUEST_QUERY, strings, "dsm_kit_request_id");
-        HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/" + "activateKit/" + kitRequestId), null, testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/" + "activateKit/" + kitRequestId + "?userId=26"), null, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
         Assert.assertNull(DBTestUtil.getQueryDetail("select * from(select req.ddp_participant_id, req.dsm_kit_request_id from kit_type kt, ddp_kit_request req, ddp_instance ddp_site where req.ddp_instance_id = ddp_site.ddp_instance_id and req.kit_type_id = kt.kit_type_id) as request left join (select * from (SELECT kit.dsm_kit_request_id, kit.error, kit.message, kit.deactivated_date FROM ddp_kit kit INNER JOIN( SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id AND kit.dsm_kit_id = groupedKit.kit_id LEFT JOIN ddp_kit_tracking tracking ON (kit.kit_label = tracking.kit_label))as wtf) as kit on kit.dsm_kit_request_id = request.dsm_kit_request_id where request.dsm_kit_request_id = ?", kitRequestId, "deactivated_date"));
     }
@@ -970,7 +970,7 @@ public class RouteTestSample extends TestHelper {
     // will throw error because it won't be able to refund the test shipment (was just added into db and not by creating of a new label,
     // therefore easypost doesn't know anything about that shipment id)
     public void reactivateKitRequestBeforeLabelCreation() throws Exception {
-        deactivateKitRequest(true,"_deactivate2");
+        deactivateKitRequest(true, "_deactivate2");
 
         ArrayList strings = new ArrayList<>();
         strings.add(FAKE_LATEST_KIT + "_deactivate2");
@@ -979,7 +979,7 @@ public class RouteTestSample extends TestHelper {
         if (StringUtils.isBlank(kitRequestId)) {
             Assert.fail("Didn't find kit");
         }
-        HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/" + "activateKit/" + kitRequestId), null, testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/" + "activateKit/" + kitRequestId + "?userId=26"), null, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
         Assert.assertNull(DBTestUtil.getQueryDetail("select * from(select req.ddp_participant_id, req.dsm_kit_request_id from kit_type kt, ddp_kit_request req, ddp_instance ddp_site where req.ddp_instance_id = ddp_site.ddp_instance_id and req.kit_type_id = kt.kit_type_id) as request left join (select * from (SELECT kit.dsm_kit_request_id, kit.error, kit.message, kit.deactivated_date FROM ddp_kit kit INNER JOIN( SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id AND kit.dsm_kit_id = groupedKit.kit_id LEFT JOIN ddp_kit_tracking tracking ON (kit.kit_label = tracking.kit_label))as wtf) as kit on kit.dsm_kit_request_id = request.dsm_kit_request_id where request.dsm_kit_request_id = ?", kitRequestId, "deactivated_date"));
     }

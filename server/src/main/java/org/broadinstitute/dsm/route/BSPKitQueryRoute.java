@@ -65,7 +65,7 @@ public class BSPKitQueryRoute implements Route {
             DDPInstance ddpInstance = DDPInstance.getDDPInstance(bspKitInfo.getInstanceName());
             InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(bspKitInfo.getInstanceName());
             Value received = null;
-            if (instanceSettings.getKitBehaviorChange() != null) {
+            if (instanceSettings != null && instanceSettings.getKitBehaviorChange() != null) {
                 List<Value> kitBehavior = instanceSettings.getKitBehaviorChange();
                 try {
                     received = kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_RECEIVED)).findFirst().get();
