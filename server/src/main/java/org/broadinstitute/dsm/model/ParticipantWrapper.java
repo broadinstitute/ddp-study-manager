@@ -76,7 +76,6 @@ public class ParticipantWrapper {
             List<String> baseList = null;
             //filter the lists depending on filter
             for (String source : filters.keySet()) {
-                logger.info(filters.get(source));
                 if (DBConstants.DDP_PARTICIPANT_ALIAS.equals(source)) {
                     participants = Participant.getParticipants(instance.getName(), filters.get(source));
                     baseList = getCommonEntries(baseList, new ArrayList<>(participants.keySet()));
