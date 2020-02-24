@@ -116,7 +116,7 @@ public class Filter {
         }
         else if (OPTIONS.equals(filter.getType())) {
             if (filter.getSelectedOptions().length < 1) {
-                return "";
+                return finalQuery;
             }
             finalQuery = AND + "( ";
             for (String selectedOption : filter.getSelectedOptions()) {
