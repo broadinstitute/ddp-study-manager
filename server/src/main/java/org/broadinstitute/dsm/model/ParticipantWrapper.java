@@ -96,10 +96,10 @@ public class ParticipantWrapper {
                     abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName(), filters.get(source));
                     baseList = getCommonEntries(baseList, new ArrayList<>(abstractionActivities.keySet()));
                 }
-//                else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
-//                    abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName(), filters.get(source));
-//                    baseList = getCommonEntries(baseList, new ArrayList<>(abstractionSummary.keySet()));
-//                }
+                //                else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
+                //                    abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName(), filters.get(source));
+                //                    baseList = getCommonEntries(baseList, new ArrayList<>(abstractionSummary.keySet()));
+                //                }
                 else {
                     participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filters.get(source));
                 }
