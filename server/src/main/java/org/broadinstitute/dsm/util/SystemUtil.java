@@ -36,8 +36,11 @@ public class SystemUtil {
     }
 
     public static long getLongFromDateString(@NonNull String dateString) {
-        SimpleDateFormat sdf = new SimpleDateFormat(SystemUtil.DATE_FORMAT);
-        return getLong(dateString, sdf);
+        if (StringUtils.isNotBlank(dateString)) {
+            SimpleDateFormat sdf = new SimpleDateFormat(SystemUtil.DATE_FORMAT);
+            return getLong(dateString, sdf);
+        }
+        return 0;
     }
 
     public static long getLongFromDetailDateString(@NonNull String dateString) {
