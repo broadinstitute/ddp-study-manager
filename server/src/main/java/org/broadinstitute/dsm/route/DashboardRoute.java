@@ -588,7 +588,7 @@ public class DashboardRoute extends RequestHandler {
         if (dashboardValues.containsKey(dashboardValueName)) {
             counter = dashboardValues.get(dashboardValueName);
         }
-        if (date >= start && date <= end) {
+        if (date != 0 && date >= start && date <= end) {
             counter = counter + 1;
             if (foundAtPtPeriod != null) {
                 foundAtPtPeriod.add(dashboardValueName);
