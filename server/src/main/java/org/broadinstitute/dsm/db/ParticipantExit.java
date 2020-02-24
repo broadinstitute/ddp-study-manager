@@ -47,6 +47,10 @@ public class ParticipantExit {
     }
 
     public static Map<String, ParticipantExit> getExitedParticipants(@NonNull String realm) {
+        return getExitedParticipants(realm, true);
+    }
+
+    public static Map<String, ParticipantExit> getExitedParticipants(@NonNull String realm, boolean addParticipantInformation) {
         Map<String, ParticipantExit> exitedParticipants = new HashMap<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -72,7 +76,9 @@ public class ParticipantExit {
             logger.error("Couldn't get exited participants for " + realm, results.resultException);
         }
         else {
-            addParticipantInformation(realm, exitedParticipants.values());
+            if (addParticipantInformation) {
+                addParticipantInformation(realm, exitedParticipants.values());
+            }
         }
         return exitedParticipants;
     }

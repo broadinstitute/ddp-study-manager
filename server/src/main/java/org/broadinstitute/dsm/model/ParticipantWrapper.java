@@ -148,7 +148,7 @@ public class ParticipantWrapper {
             return ElasticSearchUtil.getDDPParticipantsFromES(instance.getName(), instance.getParticipantIndexES());
         }
         else {
-            Map<String, ParticipantExit> exitedParticipants = ParticipantExit.getExitedParticipants(instance.getName());
+            Map<String, ParticipantExit> exitedParticipants = ParticipantExit.getExitedParticipants(instance.getName(), false);
             if (instance.isHasRole()) { //participant in db (MBC)
                 return parseGen1toESParticipant(DSMServer.getMbcParticipants(), exitedParticipants);
             }
