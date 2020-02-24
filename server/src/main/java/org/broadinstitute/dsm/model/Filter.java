@@ -77,7 +77,7 @@ public class Filter {
             finalQuery = AND + filter.getColumnName(dbElement) + IS_NOT_NULL + " ";
         }
 
-        if ((StringUtils.isBlank(filter.getType()) || TEXT.equals(filter.getType()) || COMPOSITE.equals(filter.getType())) && (filter.getFilter1() != null) && (filter.getFilter1().getValue() != null)) {
+        if ((StringUtils.isBlank(filter.getType()) || TEXT.equals(filter.getType()) || COMPOSITE.equals(filter.getType())) && (filter.getFilter1() != null)  && filter.getFilter1().getValue() != null && (StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())))) {
             filter.getFilter1().setValue(replaceQuotes(filter.getFilter1().getValue()));
             if (filter.isExactMatch()) {
                 condition = EQUALS + "'" + filter.getFilter1().getValue() + "'";
@@ -116,7 +116,7 @@ public class Filter {
         }
         else if (OPTIONS.equals(filter.getType())) {
             if (filter.getSelectedOptions().length < 1) {
-                return "";
+                return finalQuery;
             }
             finalQuery = AND + "( ";
             for (String selectedOption : filter.getSelectedOptions()) {
