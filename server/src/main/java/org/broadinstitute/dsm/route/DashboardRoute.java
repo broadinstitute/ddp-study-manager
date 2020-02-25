@@ -462,7 +462,7 @@ public class DashboardRoute extends RequestHandler {
                 incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitType() + ".sent", foundAtPT);
                 incrementCounterPeriod(dashboardValuesPeriodDetailed, "kit." + kit.getKitType() + ".sent", kit.getScanDate(), start, end, foundAtPtPeriod);
             }
-            else {
+            else if (kit.getDeactivatedDate() == 0) {
                 incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitType() + ".waiting", foundAtPT);
             }
             if (kit.getReceiveDate() != 0) {
