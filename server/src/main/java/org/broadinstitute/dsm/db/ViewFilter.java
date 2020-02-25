@@ -472,6 +472,9 @@ public class ViewFilter {
         String[] conditions = str.split("(and\\s*)|(AND\\s*)");
         Map<String, Filter> filters = new HashMap<>(conditions.length);
         for (String condition : conditions) {
+            if (StringUtils.isBlank(condition)) {
+                continue;
+            }
             int state = 0;
             String tableName = "";
             String columnName = "";
@@ -488,9 +491,6 @@ public class ViewFilter {
             Boolean f2 = false;
             NameValue filter2 = null;
             NameValue filter1 = null;
-            if (StringUtils.isBlank(condition)) {
-                continue;
-            }
             String[] words = condition.split("(\\s+)");
             for (String word : words) {
                 if (StringUtils.isNotBlank(word)) {
