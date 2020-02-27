@@ -472,6 +472,9 @@ public class ViewFilter {
         String[] conditions = str.split("(and\\s*)|(AND\\s*)");
         Map<String, Filter> filters = new HashMap<>(conditions.length);
         for (String condition : conditions) {
+            if (StringUtils.isBlank(condition)) {
+                continue;
+            }
             int state = 0;
             String tableName = "";
             String columnName = "";
@@ -488,9 +491,6 @@ public class ViewFilter {
             Boolean f2 = false;
             NameValue filter2 = null;
             NameValue filter1 = null;
-            if (StringUtils.isBlank(condition)) {
-                continue;
-            }
             String[] words = condition.split("(\\s+)");
             for (String word : words) {
                 if (StringUtils.isNotBlank(word)) {
@@ -928,8 +928,8 @@ public class ViewFilter {
             if (PatchUtil.getColumnNameMap().containsKey(word)) {
                 words[i] = PatchUtil.getColumnNameMap().get(word).tableAlias + DBConstants.ALIAS_DELIMITER + PatchUtil.getColumnNameMap().get(word).columnName;
             }
-            else if (word.contains("'") && word.charAt(0) == '\'' && word.charAt(word.length() - 1) == '\'') {
-                String temp = word.substring(1, word.length() - 1);
+            else if (word.contains("'") && (word.charAt(0) == '\'' || word.charAt(word.length() - 1) == '\'')) {
+                String temp = word.replace("'", "");
                 if (isValidDate(temp, true)) {
                     try {
                         words[i] = "'" + SystemUtil.changeDateFormat("MM/dd/yyyy", "yyyy-MM-dd", temp) + "'";

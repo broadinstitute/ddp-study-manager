@@ -1,98 +1,99 @@
 import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
 import {Statics} from "../utils/statics";
 
-@Component ({
+@Component( {
   selector: "app-search-bar",
   templateUrl: "./search-bar.component.html",
   styleUrls: [ "./search-bar.component.css" ],
-})
+} )
 export class SearchBarComponent implements OnInit {
 
-  @Input () textQuery: string;
-  @Input () filters: {};
-  @Input () allFieldNames: Set<string>;
-  @Input () showHelp: boolean;
-  @Output () queryText = new EventEmitter ();
+  @Input() textQuery: string;
+  @Input() filters: {};
+  @Input() allFieldNames: Set<string>;
+  @Input() showHelp: boolean;
+  @Output() queryText = new EventEmitter();
 
   filterQuery: string;
   edit: boolean;
   wrongQuery: boolean;
 
-  constructor () {
+  constructor() {
   }
 
-  ngOnInit () {
+  ngOnInit() {
   }
 
-  checkQuery () {
-    for ( let key of Object.keys (this.filters) ) {
-      for ( let filter of this.filters[key] ) {
-        filter.clearFilter ();
+  checkQuery() {
+    for (let key of Object.keys( this.filters )) {
+      for (let filter of this.filters[ key ]) {
+        filter.clearFilter();
       }
     }
     let str = this.textQuery;
     let regex = /(\s*(AND\s*)|\s*(and\s*))/g;
-    if ( this.textQuery === null || this.textQuery.length == 0 || this.textQuery.search (regex) != 0 ) {
-      if ( this.textQuery === null ) {
+    if (this.textQuery === null || this.textQuery.length == 0 || this.textQuery.search( regex ) != 0) {
+      if (this.textQuery === null) {
         this.textQuery = "";
       }
       this.textQuery = "AND " + (this.textQuery.length > 0 ? this.textQuery : "");
     }
-    this.wrongQuery = !this.checkQueryWithAutomata (this.textQuery);
-    if ( this.wrongQuery ) {
+    this.wrongQuery = !this.checkQueryWithAutomata( this.textQuery );
+    if (this.wrongQuery) {
       return;
     }
     let p = 0;
     let q = 0;
-    for ( let c of str ) {
-      if ( c === ")" ) {
+    for (let c of str) {
+      if (c === ")") {
         p--;
-        if ( p < 0 ) {
+        if (p < 0) {
           this.wrongQuery = true;
           break;
         }
       }
-      else if ( c === "(" ) {
+      else if (c === "(") {
         p++;
       }
 
-      else if ( c === "'" ) {
-        if ( q == 0 ) {
+      else if (c === "'") {
+        if (q == 0) {
           q++;
         }
-        else if ( q == 1 ) {
+        else if (q == 1) {
           q--;
         }
       }
 
     }
-    if ( p != 0 || q != 0 ) {
+    if (p != 0 || q != 0) {
       this.wrongQuery = true;
     }
   }
 
-  putFilterQueryBack () {
+  putFilterQueryBack() {
     this.textQuery = "";
     this.edit = true;
   }
 
-  doFilterByQuery () {
-    if ( this.textQuery !== "" && this.textQuery != null ) {
-      this.queryText.emit (this.textQuery);
+  doFilterByQuery() {
+    if (this.textQuery !== "" && this.textQuery != null) {
+      this.queryText.emit( this.textQuery );
     }
   }
 
-  checkQueryWithAutomata (query: string): boolean {
+  checkQueryWithAutomata( query: string ): boolean {
     let logicalOperators = [ "AND", "OR", "and", "or" ];
     let parenthesis = [ "(", ")" ];
     let operators = [ "LIKE", "=", "<=", ">=", "<>", "like" ];
     let initialState = -1;
     let state = initialState;
-    let queryParts = query.split (" ");
+    let queryParts = query.split( " " );
     let i = 0;
+    let longword = false;
     while ( i < queryParts.length ) {
-      let part = queryParts[i];
-      if ( part === "" ) {
+      let part = queryParts[ i ];
+      if (part === "") {
         i++;
         continue;
       }
@@ -101,7 +102,7 @@ export class SearchBarComponent implements OnInit {
       // console.log(this.allFieldNames);
       switch ( state ) {
         case -1:
-          if ( logicalOperators.includes (part) ) {
+          if (logicalOperators.includes( part )) {
             state = 1;
             break;
           }
@@ -109,11 +110,11 @@ export class SearchBarComponent implements OnInit {
             return false;
           }
         case 1:
-          if ( part === "(" ) {
+          if (part === "(") {
             state = 0;
             break;
           }
-          else if ( this.isColumn (part) ) {
+          else if (this.isColumn( part )) {
             state = 2;
             break;
           }
@@ -121,11 +122,11 @@ export class SearchBarComponent implements OnInit {
             return false;
           }
         case 0:
-          if ( part === "(" ) {
+          if (part === "(") {
             state = 0;
             break;
           }
-          if ( this.isColumn (part) ) {
+          if (this.isColumn( part )) {
             state = 2;
             break;
           }
@@ -134,15 +135,15 @@ export class SearchBarComponent implements OnInit {
           }
 
         case 2:
-          if ( part === "IS" || part === "is" ) {
+          if (part === "IS" || part === "is") {
             state = 6;
             break;
           }
-          else if ( part === "like" || part === "LIKE" ) {
+          else if (part === "like" || part === "LIKE") {
             state = 8;
             break;
           }
-          else if ( operators.includes (part) ) {
+          else if (operators.includes( part )) {
             state = 3;
             break;
           }
@@ -150,27 +151,50 @@ export class SearchBarComponent implements OnInit {
             return false;
           }
         case 3:
-          if ( part === "today" ) {
+          if (part === "today") {
             state = 9;
             break;
           }
-          else if ( logicalOperators.includes (part) || operators.includes (part) || parenthesis.includes (part) ) {
+          else if (logicalOperators.includes( part ) || operators.includes( part ) || parenthesis.includes( part )) {
             return false;
           }
           else {
-            state = 4;
-            break;
+            if (!longword) {
+              if (part.includes( "'" ) && part.indexOf( "'" ) != part.lastIndexOf( "'" )) {//no spaces
+                state = 4;
+                break;
+              }
+              else if (part.includes( "'" )) {//start of a new long word
+                state = 3;
+                longword = true;
+                break;
+              }
+              else{
+                return false;
+              }
+            }
+            else {
+              if(!part.includes("'")){
+                state = 3;
+                break;
+              }
+              else{
+                longword = false;
+                state =4;
+                break;
+              }
+            }
           }
         case 4:
-          if ( part === "(" ) {
+          if (part === "(") {
             state = 0;
             break;
           }
-          else if ( logicalOperators.includes (part) ) {
+          else if (logicalOperators.includes( part )) {
             state = 1;
             break;
           }
-          else if ( part === ")" ) {
+          else if (part === ")") {
             state = 5;
             break;
           }
@@ -178,20 +202,20 @@ export class SearchBarComponent implements OnInit {
             return false;
           }
         case 5:
-          if ( part === ")" ) {
+          if (part === ")") {
             state = 5;
             break;
           }
-          if ( logicalOperators.includes (part) ) {
+          if (logicalOperators.includes( part )) {
             state = 1;
             break;
           }
         case 6:
-          if ( part === "NOT" || part === "not" ) {
+          if (part === "NOT" || part === "not") {
             state = 7;
             break;
           }
-          else if ( part === "NULL" || part === "null" ) {
+          else if (part === "NULL" || part === "null") {
             state = 4;
             break;
           }
@@ -199,7 +223,7 @@ export class SearchBarComponent implements OnInit {
             return false;
           }
         case 7:
-          if ( part === "NULL" || part === "null" ) {
+          if (part === "NULL" || part === "null") {
             state = 4;
             break;
           }
@@ -207,22 +231,22 @@ export class SearchBarComponent implements OnInit {
             return false;
           }
         case 8:
-          if ( logicalOperators.includes (part) || operators.includes (part) || parenthesis.includes (part) ) {
+          if (logicalOperators.includes( part ) || operators.includes( part ) || parenthesis.includes( part )) {
             return false;
           }
           else {
-            if ( part.indexOf ("'") != 0 || part.lastIndexOf ("'") != part.length - 1 || (part.substr (1, part.length - 2).includes ("'")) ) {
+            if (part.indexOf( "'" ) != 0 || part.lastIndexOf( "'" ) != part.length - 1 || (part.substr( 1, part.length - 2 ).includes( "'" ))) {
               return false;
             }
             state = 4;
             break;
           }
         case 9:
-          if ( logicalOperators.includes (part) ) {
+          if (logicalOperators.includes( part )) {
             state = 1;
             break;
           }
-          else if ( part === "+" || part === "-" ) {
+          else if (part === "+" || part === "-") {
             state = 10;
             break;
           }
@@ -230,7 +254,7 @@ export class SearchBarComponent implements OnInit {
             return false;
           }
         case 10:
-          if ( part.indexOf ("d") != -1 ) {
+          if (part.indexOf( "d" ) != -1) {
             state = 4;
             break;
           }
@@ -243,7 +267,7 @@ export class SearchBarComponent implements OnInit {
       }
       i += 1;
     }
-    if ( state == 5 || state == 4 || state == 9 ) {
+    if (state == 5 || state == 4 || state == 9) {
       return true;
     }
     else {
@@ -251,18 +275,18 @@ export class SearchBarComponent implements OnInit {
     }
   }
 
-  isColumn (name): boolean {
-    if ( this.allFieldNames != null ) {
-      return this.allFieldNames.has (name);
+  isColumn( name ): boolean {
+    if (this.allFieldNames != null) {
+      return this.allFieldNames.has( name );
     }
     return false;
   }
 
-  public search (event) {
-    if ( event.keyCode == 13 ) {
-      this.checkQuery ();
-      if ( !this.wrongQuery && this.textQuery.length > 0 ) {
-        this.doFilterByQuery ();
+  public search( event ) {
+    if (event.keyCode == 13) {
+      this.checkQuery();
+      if (!this.wrongQuery && this.textQuery.length > 0) {
+        this.doFilterByQuery();
       }
     }
     else {
