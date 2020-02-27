@@ -35,7 +35,7 @@ public class SystemUtil {
         return sdf.format(date);
     }
 
-    public static long getLongFromDateString(@NonNull String dateString) {
+    public static long getLongFromDateString(String dateString) {
         if (StringUtils.isNotBlank(dateString)) {
             SimpleDateFormat sdf = new SimpleDateFormat(SystemUtil.DATE_FORMAT);
             return getLong(dateString, sdf);

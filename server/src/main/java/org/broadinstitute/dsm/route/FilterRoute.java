@@ -124,7 +124,6 @@ public class FilterRoute extends RequestHandler {
                             ViewFilter requestForFiltering = new ViewFilter(filterName, parent);
                             requestForFiltering.setFilterQuery(ViewFilter.getFilterQuery(filterName, parent));
                             if (requestForFiltering.getFilters() == null && StringUtils.isNotBlank(requestForFiltering.getFilterQuery())) {
-                                //                                requestForFiltering.setFilterQuery(requestForFiltering.getFilterQuery().replaceAll("(#&)", ""));
                                 requestForFiltering = ViewFilter.parseFilteringQuery(requestForFiltering.getFilterQuery(), requestForFiltering);
                             }
                             filters = requestForFiltering.getFilters();
@@ -231,7 +230,7 @@ public class FilterRoute extends RequestHandler {
                 requestForFiltering = ViewFilter.parseFilteringQuery(filterQuery, requestForFiltering);
             }
             filters = requestForFiltering.getFilters();
-            quickFilterName = requestForFiltering == null? null: requestForFiltering.getQuickFilterName();
+            quickFilterName = requestForFiltering == null ? null : requestForFiltering.getQuickFilterName();
         }
         else if (savedFilters != null) {
             filters = savedFilters;
@@ -255,7 +254,17 @@ public class FilterRoute extends RequestHandler {
             for (Filter filter : filters) {
                 if (filter != null) {
                     String tmp = StringUtils.isNotBlank(filter.getParentName()) ? filter.getParentName() : filter.getParticipantColumn().getTableAlias();
-                    DBElement dbElement = columnNameMap.get(tmp + "." + filter.getFilter1().getName());
+                    String tmpName = null;
+                    DBElement dbElement = null;
+                    if (filter.getFilter1() != null && StringUtils.isNotBlank(filter.getFilter1().getName())) {
+                        tmpName = filter.getFilter1().getName();
+                    }
+                    else if (filter.getFilter2() != null && StringUtils.isNotBlank(filter.getFilter2().getName())) {
+                        tmpName = filter.getFilter2().getName();
+                    }
+                    if (StringUtils.isNotBlank(tmpName)) {
+                        dbElement = columnNameMap.get(tmp + "." + tmpName);
+                    }
                     ViewFilter.addQueryCondition(queryConditions, dbElement, filter);
                 }
             }
