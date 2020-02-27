@@ -840,9 +840,11 @@ public class ViewFilter {
                 }
                 else {
                     if (filter1 != null && !f2) {
+                        filter1.setName(columnName);
                         filter.filter1 = filter1;
                     }
                     else if (filter2 != null || f2) {
+                        filter2.setName(columnName);
                         filter.filter2 = filter2;
                     }
                 }
