@@ -91,6 +91,7 @@ export class SearchBarComponent implements OnInit {
     let queryParts = query.split( " " );
     let i = 0;
     let longword = false;
+    let singleQuote = "'";
     while ( i < queryParts.length ) {
       let part = queryParts[ i ];
       if (part === "") {
@@ -231,15 +232,35 @@ export class SearchBarComponent implements OnInit {
             return false;
           }
         case 8:
-          if (logicalOperators.includes( part ) || operators.includes( part ) || parenthesis.includes( part )) {
+          if (logicalOperators.includes( part ) || operators.includes( part ) || parenthesis.includes( part ) || (part.substr( 1, part.length - 2 ).includes( "'" ))) {
             return false;
           }
           else {
-            if (part.indexOf( "'" ) != 0 || part.lastIndexOf( "'" ) != part.length - 1 || (part.substr( 1, part.length - 2 ).includes( "'" ))) {
-              return false;
+            if (!longword) {
+              if (part.includes( "'" ) && part.indexOf( "'" ) != part.lastIndexOf( "'" )) {//no spaces
+                state = 4;
+                break;
+              }
+              else if (part.includes( "'" )) {//start of a new long word
+                state = 8;
+                longword = true;
+                break;
+              }
+              else {
+                return false;
+              }
             }
-            state = 4;
-            break;
+            else {
+              if (!part.includes( "'" )) {
+                state = 8;
+                break;
+              }
+              else {
+                longword = false;
+                state = 4;
+                break;
+              }
+            }
           }
         case 9:
           if (logicalOperators.includes( part )) {

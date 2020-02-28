@@ -238,7 +238,6 @@ export class TissueListComponent implements OnInit {
   private getFieldSettings() {
     this.dsmService.getFieldSettings( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) ).subscribe(
       data => {
-        console.log( data );
         this.allAdditionalColumns = {};
         this.settings = {};
         for (let source of this.dataSources) {
