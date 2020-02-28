@@ -350,7 +350,6 @@ export class Filter {
     if ( json.filters == undefined ) {
       return null;
     }
-    console.log(json);
     let filters: Filter[] = [];
     for ( let filter of json.filters ) {
       if ( allColumns[filter.participantColumn.tableAlias] != undefined ) {
@@ -396,6 +395,9 @@ export class Filter {
                 selectedOptions.push(filter.selectedOptions.includes(o.name));
               }
             }
+            if (filter.filter1 == undefined || filter.filter1 == null) {
+              filter.filter1 = new NameValue( filter.participantColumn.name, null );
+            }
             filter.filter1.value = this.replace(filter.filter1.value);
             let newFilter = new Filter(filter.participantColumn, filter.type, f.options, filter.filter2, filter.range, filter.exactMatch, filter.filter1,
               selectedOptions, (filter.filter1 == null || filter.filter1 == undefined) ? null : filter.filter1.value,
@@ -414,7 +416,6 @@ export class Filter {
       }
 
     }
-    console.log(filters);
     return filters;
   }
 

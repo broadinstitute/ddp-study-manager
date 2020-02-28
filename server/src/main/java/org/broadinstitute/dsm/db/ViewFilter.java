@@ -796,8 +796,9 @@ public class ViewFilter {
             if (StringUtils.isNotBlank(tableName)) {
                 columnKey = tableName.concat(DBConstants.ALIAS_DELIMITER).concat(columnName);
             }
-            columnName = PatchUtil.getDataBaseMap().containsKey(columnKey) ? PatchUtil.getDataBaseMap().get(columnKey) : columnName;
+            columnName = PatchUtil.getDataBaseMap().containsKey(columnKey) ? PatchUtil.getDataBaseMap().get(columnKey) : columnName;// to change from dbName to column name
             if (filters.containsKey(columnName) && (type == null || !type.equals(Filter.ADDITIONAL_VALUES))) {
+                // this is not the first time that field is in the query -> all related to the same filter
                 Filter filter = filters.get(columnName);
                 if (filter == null) {
                     throw new RuntimeException("Bad columnName! " + columnName);
@@ -840,11 +841,11 @@ public class ViewFilter {
                 }
                 else {
                     if (filter1 != null && !f2) {
-                        filter1.setName(columnName);
+                        filter1.setName(columnName);// to change from dbName to column name
                         filter.filter1 = filter1;
                     }
                     else if (filter2 != null || f2) {
-                        filter2.setName(columnName);
+                        filter2.setName(columnName);// to change from dbName to column name
                         filter.filter2 = filter2;
                     }
                 }

@@ -95,9 +95,10 @@ public class UserSettings {
             return dbVals;
         });
         UserSettings us = (UserSettings) results.resultValue;
-        ;
-        us.defaultTissueFilter = ViewFilter.getDefaultFilterForUser(email, "tissueList");
-        us.defaultParticipantFilter = ViewFilter.getDefaultFilterForUser(email, "participantList");
+        if(us != null) {
+            us.defaultTissueFilter = ViewFilter.getDefaultFilterForUser(email, "tissueList");
+            us.defaultParticipantFilter = ViewFilter.getDefaultFilterForUser(email, "participantList");
+        }
         logger.info("UserSettings for user w/ email " + email);
         return us;
     }
