@@ -105,9 +105,10 @@ public class DDPRequestRouteTest extends TestHelper {
                     response().withStatusCode(200).withBody(message.replaceAll("%1", test_participant_id).replaceAll("%2", ""))
             );
             kitRequestTestList.add(new KitRequestShipping(test_participant_id, "TestProject_2", null, "FAKE_DSM_LABEL_UID", TEST_DDP,
-                    "SALIVA", "1", "1", "https://easypost-files.s3-us-west-2.amazonaws.com/files/postage_label/20161024/7bbae573c24041f0bec7eb5ef06a72df.png",
-                    "", "794644644357", "9405536897846100551129", null, "https://track.easypost.com/djE6dHJrX2RhMjFmZDU1YzYwYzQ5NTlhNDQ0MjhiZDZmYjlkMWE4",
-                    "https://track.easypost.com/djE6dHJrX2E3ODRlODdjOTk0ZDRkNDU4ZGQ4Mjk4OTc2ODE5NjVj", 12, false, "", 12, null, 12, "so what", "mf_testLabel", false, "sh_kdajdfjasdlfj", 12, null, "44445", false, "NOT FOUND", null));
+                    "SALIVA", "1", "1", "https://easypost-files.s3-us-west-2.amazonaws.com/files/postage_label/20200214/8240f1b66535494a82b1ec0d566c3f0f.png",
+                    "", "794685038506", "9405536897846100551129", null, "https://track.easypost.com/djE6dHJrXzY4NGJmYzU3ZjM5OTQ1Zjg5MjEzOGRmMWVmMjI1NWZl",
+                    null, 12, false, "", 12, null, 12, "so what", "mf_testLabel", false, "shp_f470591c3fb441a68dbb9b76ecf3bb3d",
+                    12, null, "44445", false, "NOT FOUND", null));
             addedDefaultKitRequest = true;
             counter = 1;
         }
@@ -118,10 +119,11 @@ public class DDPRequestRouteTest extends TestHelper {
                 mockDDP.when(request().withPath("/ddp/participants/" + participant_id)).respond(
                         response().withStatusCode(200).withBody(message.replaceAll("%1", participant_id).replaceAll("%2", Integer.toString(counter)))
                 );
-                kitRequestTestList.add(new KitRequestShipping(participant_id, "TestProject_2", null,"FAKE_DSM_LABEL_UID" + counter, TEST_DDP,
-                        "SALIVA", "1", "1", "https://easypost-files.s3-us-west-2.amazonaws.com/files/postage_label/20161024/7bbae573c24041f0bec7eb5ef06a72df.png",
-                        "", "794644644357", "9405536897846100551129", null, "https://track.easypost.com/djE6dHJrX2RhMjFmZDU1YzYwYzQ5NTlhNDQ0MjhiZDZmYjlkMWE4",
-                        "https://track.easypost.com/djE6dHJrX2E3ODRlODdjOTk0ZDRkNDU4ZGQ4Mjk4OTc2ODE5NjVj", 12, false, "", 12, null, 12, "so what", "mf_testLabel", false, "sh_kdajdfjasdlfj", 12, null, "44445", false, "NOT FOUND", null));
+                kitRequestTestList.add(new KitRequestShipping(participant_id, "TestProject_2", null, "FAKE_DSM_LABEL_UID" + counter, TEST_DDP,
+                        "SALIVA", "1", "1", "https://easypost-files.s3-us-west-2.amazonaws.com/files/postage_label/20200214/8240f1b66535494a82b1ec0d566c3f0f.png",
+                        "", "794685038506", "9405536897846100551129", null, "https://track.easypost.com/djE6dHJrXzY4NGJmYzU3ZjM5OTQ1Zjg5MjEzOGRmMWVmMjI1NWZl",
+                        null, 12, false, "", 12, null, 12, "so what", "mf_testLabel", false, "shp_f470591c3fb441a68dbb9b76ecf3bb3d",
+                        12, null, "44445", false, "NOT FOUND", null));
                 counter++;
             }
         }
