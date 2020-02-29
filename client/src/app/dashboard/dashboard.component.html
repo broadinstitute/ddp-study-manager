@@ -160,6 +160,36 @@
           </td>
           <td></td>
         </tr>
+        <tr>
+          <td>PT Enrolled</td>
+          <td>
+            <ng-container
+              *ngIf="ddp.dashboardValues['status.ENROLLED'] !== null && ddp.dashboardValues['status.ENROLLED'] !== undefined">
+              {{ddp.dashboardValues['status.ENROLLED']}} pts
+            </ng-container>
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>PT Exited before Enrolled</td>
+          <td>
+            <ng-container
+              *ngIf="ddp.dashboardValues['status.EXITED_BEFORE_ENROLLMENT'] !== null && ddp.dashboardValues['status.EXITED_BEFORE_ENROLLMENT'] !== undefined">
+              {{ddp.dashboardValues['status.EXITED_BEFORE_ENROLLMENT']}} pts
+            </ng-container>
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>PT Exited after Enrolled</td>
+          <td>
+            <ng-container
+              *ngIf="ddp.dashboardValues['status.EXITED_AFTER_ENROLLMENT'] !== null && ddp.dashboardValues['status.EXITED_AFTER_ENROLLMENT'] !== undefined">
+              {{ddp.dashboardValues['status.EXITED_AFTER_ENROLLMENT']}} pts
+            </ng-container>
+          </td>
+          <td></td>
+        </tr>
         <!--<tr>-->
         <!--<td>PT Enrolled</td>-->
         <!--<td>-->
@@ -186,29 +216,6 @@
             </ng-container>
           </td>
           <td></td>
-        </tr>
-        <tr>
-          <td>PT Exited after Enrolled</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValues['status.EXITED_AFTER_ENROLLMENT'] !== null && ddp.dashboardValues['status.EXITED_AFTER_ENROLLMENT'] !== undefined">
-              {{ddp.dashboardValues['status.EXITED_AFTER_ENROLLMENT']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>PT withdrawn</td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValues['Withdrawn per DSM'] !== null && ddp.dashboardValues['Withdrawn per DSM'] !== undefined">
-              {{ddp.dashboardValues['Withdrawn per DSM']}} pts
-            </ng-container>
-          </td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesPeriod['Withdrawn per DSM'] !== null && ddp.dashboardValuesPeriod['Withdrawn per DSM'] !== undefined">
-              {{ddp.dashboardValuesPeriod['Withdrawn per DSM']}} pts
-            </ng-container>
-          </td>
         </tr>
         <tr>
           <td>PT with minimal mr</td>
