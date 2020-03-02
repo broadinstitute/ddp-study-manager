@@ -584,7 +584,6 @@ export class TissueListComponent implements OnInit {
           let tissueList = TissueListWrapper.parse( val );
           this.tissueListWrappers.push( tissueList );
         } );
-        console.log( this.tissueListWrappers );
         this.originalTissueListWrappers = this.tissueListWrappers;
         if (!this.hasESData) {
           //check if it was a tableAlias data filter -> filter client side
