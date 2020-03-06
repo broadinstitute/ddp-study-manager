@@ -105,10 +105,6 @@ public class ApplicationConfigConstants {
     public static final String UPDATE_LABEL_SETTINGS = "portal.updateLabelSettings";
     public static final String INSERT_LABEL_SETTINGS = "portal.insertLabelSettings";
 
-    public static final String GET_DRUG_LIST = "portal.selectDrugDisplayNames";
-    public static final String GET_DRUG_DATA = "portal.selectDrugListings";
-    public static final String UPDATE_DRUG_LISTING = "portal.updateDrugListing";
-    public static final String INSERT_DRUG_LISTING = "portal.insertDrugListing";
     public static final String GET_PARTICIPANT_EVENTS = "portal.selectParticipantEvents";
     public static final String GET_PARTICIPANT_EVENT = "portal.selectParticipantEvent";
     public static final String INSERT_PARTICIPANT_EVENT = "portal.insertParticipantEvent";

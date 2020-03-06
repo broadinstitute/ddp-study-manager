@@ -152,15 +152,13 @@ public class DSMServer extends BasicServer {
         new SecurityUtil(jwtSecret);
 
         // path is: /app/drugs (this gets the list of display names)
-        get(appRoute + RoutePath.DRUG_LIST_REQUEST, new DrugRoute(), new JsonTransformer());
-        get(UI_ROOT + RoutePath.DRUG_LIST_REQUEST, new DrugRoute(), new JsonTransformer());
+        DrugRoute drugRoute = new DrugRoute();
+        get(appRoute + RoutePath.DRUG_LIST_REQUEST, drugRoute, new JsonTransformer());
+        get(UI_ROOT + RoutePath.DRUG_LIST_REQUEST, drugRoute, new JsonTransformer());
 
-        // path is: /app/druglistEntries (this gets the full data in our drug list (all fields))
-        get(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, new DrugListingRoute(), new JsonTransformer());
-        patch(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, new DrugListingRoute(), new JsonTransformer());
-
-        get(appRoute + RoutePath.CANCER_LIST_REQUEST, new CancerRoute(), new JsonTransformer());
-        get(UI_ROOT + RoutePath.CANCER_LIST_REQUEST, new CancerRoute(), new JsonTransformer());
+        CancerRoute cancerRoute = new CancerRoute();
+        get(appRoute + RoutePath.CANCER_LIST_REQUEST, cancerRoute, new JsonTransformer());
+        get(UI_ROOT + RoutePath.CANCER_LIST_REQUEST, cancerRoute, new JsonTransformer());
 
         UserUtil userUtil = new UserUtil();
 
@@ -237,7 +235,7 @@ public class DSMServer extends BasicServer {
 
         setupMRAbstractionRoutes();
 
-        setupMiscellaneousRoutes(notificationUtil);
+        setupMiscellaneousRoutes();
 
         setupSharedRoutes(kitUtil, notificationUtil, patchUtil, container, receiver);
 
@@ -368,7 +366,7 @@ public class DSMServer extends BasicServer {
         post(UI_ROOT + RoutePath.ABSTRACTION, new AbstractionRoute(), new JsonTransformer());
     }
 
-    private void setupMiscellaneousRoutes(@NonNull NotificationUtil notificationUtil) {
+    private void setupMiscellaneousRoutes() {
         MailingListRoute mailingListRoute = new MailingListRoute();
         get(UI_ROOT + RoutePath.MAILING_LIST_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, mailingListRoute, new JsonTransformer());
 
@@ -387,6 +385,10 @@ public class DSMServer extends BasicServer {
         post(UI_ROOT + RoutePath.SKIP_PARTICIPANT_EVENTS, participantEventRoute, new JsonTransformer());
 
         post(UI_ROOT + RoutePath.NDI_REQUEST, new NDIRoute(), new JsonTransformer());
+
+        DrugListRoute drugListRoute = new DrugListRoute();
+        get(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, drugListRoute, new JsonTransformer());
+        patch(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, drugListRoute, new JsonTransformer());
     }
 
     private void setupSharedRoutes(@NonNull KitUtil kitUtil, @NonNull NotificationUtil notificationUtil,

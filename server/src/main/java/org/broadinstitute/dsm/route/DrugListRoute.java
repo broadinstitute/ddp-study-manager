@@ -11,22 +11,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
-import spark.Route;
 
-public class DrugListingRoute extends RequestHandler implements Route {
+public class DrugListRoute extends RequestHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(DrugListingRoute.class);
+    private static final Logger logger = LoggerFactory.getLogger(DrugListRoute.class);
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         if (RoutePath.RequestMethod.GET.toString().equals(request.requestMethod())) {
-                return Drug.getDrugListings();
+            return Drug.getDrugListALL();
         }
         if (RoutePath.RequestMethod.PATCH.toString().equals(request.requestMethod())) {
             if (UserUtil.checkUserAccess(null, userId, "drug_list_edit")) {
                 String requestBody = request.body();
                 Drug[] drugUpdateValues = new Gson().fromJson(requestBody, Drug[].class);
-                Drug.saveDrugListings(drugUpdateValues);
+                Drug.saveDrugListings(userId, drugUpdateValues);
                 return new Result(200);
             }
             else {
