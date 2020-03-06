@@ -78,12 +78,12 @@ export class DSMService {
   public setDefaultFilter( json: string, filterName: string, parent: string, realm ) {
     let url = this.baseUrl + DSMService.UI + "defaultFilter";
     let map: { name: string, value: any }[] = [];
-    map.push({name: "filterName", value: filterName});
-    map.push({name: "parent", value: parent});
-    map.push({name: "userId", value: this.role.userID()});
-    map.push({name: "userMail", value: this.role.userMail()});
-    map.push({name: DSMService.REALM, value: realm});
-    return this.http.patch(url, json, this.buildQueryHeader(map)).map((res: Response) => res.json()).catch(this.handleError);
+    map.push( {name: "filterName", value: filterName} );
+    map.push( {name: "parent", value: parent} );
+    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( {name: "userMail", value: this.role.userMail()} );
+    map.push( {name: DSMService.REALM, value: realm} );
+    return this.http.patch( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
 
@@ -153,21 +153,17 @@ export class DSMService {
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
-  // returns a comma-separated list of drug display names
-  public getDrugs(): Observable<any> {
-    let url = this.baseUrl + DSMService.UI + 'drugs';
-    return this.http.get( url, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
-  }
-
   // returns drug list entries with all fields
-  public getDrugListings(): Observable<any> {
-    let url = this.baseUrl + DSMService.UI + 'druglistEntries';
+  public getDrugs(): Observable<any> {
+    let url = this.baseUrl + DSMService.UI + "drugList";
     return this.http.get( url, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
-  public saveDrugListings( json: string ): Observable<any> {
-    let url = this.baseUrl + DSMService.UI + 'druglistEntries';
-    return this.http.patch( url, json, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
+  public saveDrugs( json: string ): Observable<any> {
+    let url = this.baseUrl + DSMService.UI + "drugList";
+    let map: { name: string, value: any }[] = [];
+    map.push( {name: "userId", value: this.role.userID()} );
+    return this.http.patch( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public getMedicalRecordData( realm: string, ddpParticipantId: string ): Observable<any> {
@@ -198,12 +194,12 @@ export class DSMService {
     return this.http.patch( url, json, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
-  public downloadCoverPDFs(ddpParticipantId: string, medicalRecordId: string, startDate: string, endDate: string, mrCoverPdfSettings: Value[],
-                           realm: string) {
+  public downloadCoverPDFs( ddpParticipantId: string, medicalRecordId: string, startDate: string, endDate: string, mrCoverPdfSettings: Value[],
+                            realm: string ) {
     let url = this.baseUrl + DSMService.UI + "downloadPDF/cover/" + medicalRecordId;
     let map: { name: string, value: any }[] = [];
     map.push( {name: DSMService.REALM, value: realm} );
-    let json: { [k: string]: any } = {};
+    let json: { [ k: string ]: any } = {};
     json = {
       ddpParticipantId: ddpParticipantId,
       startDate: startDate,
@@ -211,7 +207,7 @@ export class DSMService {
       userId: this.role.userID()
     };
     for (let mrSetting of mrCoverPdfSettings) {
-      json[mrSetting.value] = mrSetting.selected;
+      json[ mrSetting.value ] = mrSetting.selected;
     }
     // console.log( json );
     return this.http.post( url, JSON.stringify( json ), this.buildQueryPDFHeader( map ) ).map( ( res: Response ) => res.blob() ).catch( this.handleError );

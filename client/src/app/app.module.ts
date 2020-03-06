@@ -35,6 +35,7 @@ import {AppRoutes} from "./app.routing";
 import {KitLabelComponent} from "./kit-label/kit-label.component";
 import {AddressComponent} from "./address/address.component";
 import {NDIUploadComponent} from "./ndiupload/ndiupload.component";
+import {DrugFilterPipe} from "./pipe/drug-filter.pipe";
 import {OrdinalPipe} from "./pipe/ordinal.pipe";
 import {DSMService} from "./services/dsm.service";
 import {ScanComponent} from "./scan/scan.component";
@@ -80,7 +81,7 @@ import {KitRequestFilterPipe} from "./pipe/kit-request-filter.pipe";
 import {ShippingReportComponent} from "./shipping-report/shipping-report.component";
 import {OncHistoryDetailSortPipe} from "./pipe/onc-history-detail-sort.pipe";
 import {LabelSettingsComponent} from "./label-settings/label-settings.component";
-import {DrugListingComponent} from "./drug-listing/drug-listing.component";
+import {DrugListComponent} from "./drug-list/drug-list.component";
 import {ParticipantEventComponent} from "./participant-event/participant-event.component";
 import {FieldFilepickerComponent} from "./field-filepicker/field-filepicker.component";
 import {ShippingSearchComponent} from "./shipping-search/shipping-search.component";
@@ -157,12 +158,13 @@ import {FieldSettingsComponent} from "./field-settings/field-settings.component"
     ButtonSelectTitleCasePipe,
     OrdinalPipe,
     LabelSettingsComponent,
-    DrugListingComponent,
+    DrugListComponent,
     ParticipantEventComponent,
     ShippingSearchComponent,
     FieldFilepickerComponent,
     SurveySortPipe,
     SurveyFilterPipe,
+    DrugFilterPipe,
     PdfDownloadComponent,
     DateFormatPipe,
     NDIUploadComponent,
