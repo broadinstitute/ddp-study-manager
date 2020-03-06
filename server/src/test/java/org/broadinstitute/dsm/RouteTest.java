@@ -1328,7 +1328,7 @@ public class RouteTest extends TestHelper {
         assertEquals(200, response.getStatusLine().getStatusCode());
     }
 
-    @Test    // (for endpoint that returns list of drug DISPLAY NAMES)
+    @Test
     public void drugListEndpoint() throws Exception {
         String jwtDdpSecret = cfg.hasPath("portal.jwtDdpSecret") ? cfg.getString("portal.jwtDdpSecret") : null;
         Assert.assertTrue(StringUtils.isNotBlank(jwtDdpSecret));
@@ -1337,28 +1337,18 @@ public class RouteTest extends TestHelper {
         assertEquals(200, response.getStatusLine().getStatusCode());
     }
 
-    // (GET request for list of FULL DRUG OBJECTS)
     @Test
-    public void drugListingsGET() throws Exception {
-        String jwtDdpSecret = cfg.hasPath("portal.jwtDdpSecret") ? cfg.getString("portal.jwtDdpSecret") : null;
-        Assert.assertTrue(StringUtils.isNotBlank(jwtDdpSecret));
-
-        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/druglistEntries", testUtil.buildAuthHeaders()).returnResponse();
+    public void getDrugList() throws Exception {
+        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/ui/drugList", testUtil.buildAuthHeaders()).returnResponse();
         assertEquals(200, response.getStatusLine().getStatusCode());
     }
 
-    // (PATCH request list of FULL DRUG OBJECTS)
     @Test
-    public void drugListingsPATCH() throws Exception {
-        String jwtDdpSecret = cfg.hasPath("portal.jwtDdpSecret") ? cfg.getString("portal.jwtDdpSecret") : null;
-        Assert.assertTrue(StringUtils.isNotBlank(jwtDdpSecret));
+    public void patchDrugList() throws Exception {
+        String json = "[{\"drugId\": 9, \"displayName\": \"ABARELIX (PLENAXIS)\", \"brandName\": \"PLENAXIS\", \"chemocat\": \"ABARELIX\", \"chemoType\": \"R\", \"studyDrug\": false, \"treatmentType\": \"H\", \"chemotherapy\": \"N\", \"active\": true}]";
 
-        // @TODO: decide which approach to use (send Drug object, or json)
-        Drug sampleDrug = new Drug(9, "ABARELIX (PLENAXIS)","ABARELIX", "PLENAXIS",	"ABARELIX", "R",0,"H","N",528119063, 1, null);
-        //String json = "[\"drugId\": 9, \"displayName\": \"ABARELIX (PLENAXIS)\", \"brandName\": \"PLENAXIS\", \"chemocat\": \"ABARELIX\", \"chemoType\": \"R\", \"studyDrug\": 0, \"treatmentType\": \"H\", \"chemotherapy\": \"N\", \"dateCreated\": 528119063, \"active\": 1, \"dateUpdated\": null}]";
-
-        HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/druglistEntries"), sampleDrug, testUtil.buildAuthHeaders()).returnResponse();
-        assertEquals(200, response.getStatusLine().getStatusCode()); // So far this fails: 500
+        HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/drugList"), json, testUtil.buildAuthHeaders()).returnResponse();
+        assertEquals(200, response.getStatusLine().getStatusCode());
     }
 
     @Test

@@ -33,4 +33,10 @@
             <column name="name" value="drug_list_edit"/>
         </insert>
     </changeSet>
+    <changeSet author="simone" id="03062020">
+        <addColumn tableName="drug_list">
+            <column name="changed_by" type="VARCHAR(45)">
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

@@ -603,7 +603,7 @@ public class DirectMethodTest extends TestHelper {
     @Test
     public void drugListEntriesGET() {
 
-        List<Drug> drugList = Drug.getDrugListings();
+        List<Drug> drugList = Drug.getDrugListALL();
         int drugList_size = drugList.size();
 
         Set druglist_without_dupes = new HashSet(drugList);
@@ -618,8 +618,8 @@ public class DirectMethodTest extends TestHelper {
     public void drugListingsPATCH() throws Exception {
         String jwtDdpSecret = cfg.hasPath("portal.jwtDdpSecret") ? cfg.getString("portal.jwtDdpSecret") : null;
         Assert.assertTrue(StringUtils.isNotBlank(jwtDdpSecret));
-        Drug sampleDrug = new Drug(9, "ABARELIX (PLENAXIS)","ABARELIX", "PLENAXIS",	"ABARELIX", "D",0,"H","N",528119063, 1, null);
-        Drug.updateDrugListing(sampleDrug);
+        Drug sampleDrug = new Drug(9, "ABARELIX (PLENAXIS)","ABARELIX", "PLENAXIS",	"ABARELIX", "D",false,"H","N", true);
+        Drug.updateDrugListing("1", sampleDrug);
 
         // check that the value was changed
         Assert.assertEquals("D", DBTestUtil.getStringFromQuery("select chemo_type from drug_list where drug_id = 9", null, "chemo_type"));
