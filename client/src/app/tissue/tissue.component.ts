@@ -17,7 +17,7 @@ import {PatchUtil} from "../utils/patch.model";
 @Component({
   selector: "app-tissue",
   templateUrl: "./tissue.component.html",
-  styleUrls: ["./tissue.component.css"]
+  styleUrls: [ "./tissue.component.css" ],
 })
 export class TissueComponent implements OnInit {
 
@@ -35,20 +35,20 @@ export class TissueComponent implements OnInit {
   patchFinished: boolean = true;
   dup: boolean = false;
 
-  constructor(private role: RoleService, private dsmService: DSMService, private compService: ComponentService,
-              private router: Router) {
+  constructor (private role: RoleService, private dsmService: DSMService, private compService: ComponentService,
+               private router: Router) {
   }
 
-  ngOnInit() {
+  ngOnInit () {
   }
 
-  public getCompService() {
+  public getCompService () {
     return this.compService;
   }
 
-  public setTissueSite(object: any) {
-    if (object != null) {
-      if (event instanceof MouseEvent) {
+  public setTissueSite (object: any) {
+    if ( object != null ) {
+      if ( event instanceof MouseEvent ) {
         this.tissue.tissueSite = object.field1.value;
       }
       else {
@@ -58,24 +58,24 @@ export class TissueComponent implements OnInit {
     }
   }
 
-  onAdditionalColChange(evt: any, colName: string) {
+  onAdditionalColChange (evt: any, colName: string) {
     let v;
-    if (typeof evt === "string") {
+    if ( typeof evt === "string" ) {
       v = evt;
     }
     else {
-      if (evt.srcElement != null && typeof evt.srcElement.value === "string") {
+      if ( evt.srcElement != null && typeof evt.srcElement.value === "string" ) {
         v = evt.srcElement.value;
       }
-      else if (evt.value != null) {
+      else if ( evt.value != null ) {
         v = evt.value;
       }
-      else if (evt.checked != null) {
+      else if ( evt.checked != null ) {
         v = evt.checked;
       }
     }
-    if (v !== null) {
-      if (this.tissue.additionalValues != null) {
+    if ( v !== null ) {
+      if ( this.tissue.additionalValues != null ) {
         this.tissue.additionalValues[colName] = v;
       }
       else {
@@ -88,38 +88,38 @@ export class TissueComponent implements OnInit {
   }
 
   //display additional value
-  getAdditionalValue(colName: string): string {
-    if (this.tissue.additionalValues != null) {
-      if (this.tissue.additionalValues[colName] != undefined && this.tissue.additionalValues[colName] != null) {
+  getAdditionalValue (colName: string): string {
+    if ( this.tissue.additionalValues != null ) {
+      if ( this.tissue.additionalValues[colName] != undefined && this.tissue.additionalValues[colName] != null ) {
         return this.tissue.additionalValues[colName];
       }
     }
     return null;
   }
 
-  valueChanged(value: any, parameterName: string) {
+  valueChanged (value: any, parameterName: string) {
     let v;
-    if (parameterName === "additionalValues") {
+    if ( parameterName === "additionalValues" ) {
       v = JSON.stringify(value);
     }
-    else if (typeof value === "string") {
+    else if ( typeof value === "string" ) {
       v = value;
     }
     else {
-      if (value.srcElement != null && typeof value.srcElement.value === "string") {
+      if ( value.srcElement != null && typeof value.srcElement.value === "string" ) {
         v = value.srcElement.value;
       }
-      else if (value.value != null) {
+      else if ( value.value != null ) {
         v = value.value;
       }
-      else if (value.checked != null) {
+      else if ( value.checked != null ) {
         v = value.checked;
       }
     }
-    if (v !== null) {
-      if (parameterName !== "additionalValues") {
-        for (let oncTissue of this.oncHistoryDetail.tissues) {
-          if (oncTissue.tissueId == this.tissue.tissueId) {
+    if ( v !== null ) {
+      if ( parameterName !== "additionalValues" ) {
+        for ( let oncTissue of this.oncHistoryDetail.tissues ) {
+          if ( oncTissue.tissueId == this.tissue.tissueId ) {
             oncTissue[parameterName] = v;
           }
         }
@@ -127,7 +127,7 @@ export class TissueComponent implements OnInit {
       let patch1 = new PatchUtil(this.tissue.tissueId, this.role.userMail(),
         {
           name: parameterName,
-          value: v
+          value: v,
         }, null, "oncHistoryDetailId", this.tissue.oncHistoryDetailId, Statics.TISSUE_ALIAS);
       let patch = patch1.getPatch();
       this.patchFinished = false;
@@ -135,14 +135,13 @@ export class TissueComponent implements OnInit {
       this.dsmService.patchParticipantRecord(JSON.stringify(patch)).subscribe(// need to subscribe, otherwise it will not send!
         data => {
           let result = Result.parse(data);
-          if (result.code == 200 && result.body != null && result.body !== "" && this.tissue.tissueId == null) {
+          if ( result.code == 200 && result.body != null && result.body !== "" && this.tissue.tissueId == null ) {
             let jsonData: any | any[] = JSON.parse(result.body);
-            console.log(jsonData);
             this.tissue.tissueId = jsonData.tissueId;
             this.patchFinished = true;
             this.currentPatchField = null;
             this.dup = false;
-            if (jsonData instanceof Array) {
+            if ( jsonData instanceof Array ) {
               jsonData.forEach((val) => {
                 let nameValue = NameValue.parse(val);
                 this.oncHistoryDetail[nameValue.name] = nameValue.value;
@@ -150,13 +149,13 @@ export class TissueComponent implements OnInit {
             }
 
           }
-          else if (result.code === 500 && result.body != null) {
+          else if ( result.code === 500 && result.body != null ) {
             this.dup = true;
           }
-          else if (result.code === 200) {
-            if (result.body != null && result.body !== "") {
+          else if ( result.code === 200 ) {
+            if ( result.body != null && result.body !== "" ) {
               let jsonData: any | any[] = JSON.parse(result.body);
-              if (jsonData instanceof Array) {
+              if ( jsonData instanceof Array ) {
                 jsonData.forEach((val) => {
                   let nameValue = NameValue.parse(val);
                   this.oncHistoryDetail[nameValue.name] = nameValue.value;
@@ -169,20 +168,20 @@ export class TissueComponent implements OnInit {
           }
         },
         err => {
-          if (err._body === Auth.AUTHENTICATION_ERROR) {
-            this.router.navigate([Statics.HOME_URL]);
+          if ( err._body === Auth.AUTHENTICATION_ERROR ) {
+            this.router.navigate([ Statics.HOME_URL ]);
           }
-        }
+        },
       );
     }
   }
 
-  deleteTissue() {
+  deleteTissue () {
     this.tissue.deleted = true;
   }
 
-  public getStyleDisplay() {
-    if (this.collaboratorS != null) {
+  public getStyleDisplay () {
+    if ( this.collaboratorS != null ) {
       return Statics.DISPLAY_BLOCK;
     }
     else {
@@ -190,10 +189,10 @@ export class TissueComponent implements OnInit {
     }
   }
 
-  public checkCollaboratorId() {
+  public checkCollaboratorId () {
     let jsonData: any[];
-    if (this.collaboratorS == null && (this.tissue.collaboratorSampleId == null || this.tissue.collaboratorSampleId === "")) {
-      this.dsmService.lookupCollaboratorId("tCollab", this.participant.participant.participantId, this.participant.data.profile["hruid"], localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(// need to subscribe, otherwise it will not send!
+    if ( this.collaboratorS == null && (this.tissue.collaboratorSampleId == null || this.tissue.collaboratorSampleId === "") ) {
+      this.dsmService.lookupCollaboratorId("tCollab", this.participant.participant.ddpParticipantId, this.participant.data.profile["hruid"], localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(// need to subscribe, otherwise it will not send!
         data => {
           //          console.log(`received: ${JSON.stringify(data, null, 2)}`);
           jsonData = data;
@@ -203,29 +202,29 @@ export class TissueComponent implements OnInit {
           });
         },
         err => {
-          if (err._body === Auth.AUTHENTICATION_ERROR) {
-            this.router.navigate([Statics.HOME_URL]);
+          if ( err._body === Auth.AUTHENTICATION_ERROR ) {
+            this.router.navigate([ Statics.HOME_URL ]);
           }
-        }
+        },
       );
     }
   }
 
-  public setLookup() {
+  public setLookup () {
     this.tissue.collaboratorSampleId = this.collaboratorS;
     this.collaboratorS = null;
     this.collaboratorSampleIdInputField.nativeElement.focus();
   }
 
-  isPatchedCurrently(field: string): boolean {
-    if (this.currentPatchField === field) {
+  isPatchedCurrently (field: string): boolean {
+    if ( this.currentPatchField === field ) {
       return true;
     }
     return false;
   }
 
-  currentField(field: string) {
-    if (field != null || (field == null && this.patchFinished)) {
+  currentField (field: string) {
+    if ( field != null || (field == null && this.patchFinished) ) {
       this.currentPatchField = field;
     }
   }

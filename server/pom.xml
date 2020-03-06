@@ -94,7 +94,7 @@
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>elasticsearch-rest-high-level-client</artifactId>
-            <version>6.6.2</version>
+            <version>6.8.2</version>
         </dependency>
 
         <!-- test dependencies -->
@@ -125,16 +125,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
     </dependencies>
-
-    <distributionManagement>
-        <snapshotRepository>
-            <id>broad.artifactory</id>
-            <name>artifactory-snapshots</name>
-            <url>http://artifactory.broadinstitute.org/artifactory/libs-release-local</url>
-        </snapshotRepository>
-    </distributionManagement>
 
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>

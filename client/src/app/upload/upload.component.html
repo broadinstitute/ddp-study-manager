@@ -120,11 +120,17 @@
 
   <app-modal>
     <div class="app-modal-header">
-      Kit already exists in DSM.
-      Please select the participant for which you want to upload a new one.<br>
+        Please select the participant for which you want to upload a new one.<br>
     </div>
     <div class="app-modal-body">
           <div *ngFor="let duplicateParticipant of duplicateParticipants">
+            Participant already has a kit.
+            <md-checkbox color="primary" [checked]="duplicateParticipant.selected" (change)="duplicateParticipant.selected = $event.checked" disableRipple>
+              {{duplicateParticipant.participantId}} {{duplicateParticipant.shortId}} {{duplicateParticipant.firstName}} {{duplicateParticipant.lastName}}
+            </md-checkbox>
+          </div>
+          <div *ngFor="let duplicateParticipant of specialKits">
+            {{specialMessage}}
             <md-checkbox color="primary" [checked]="duplicateParticipant.selected" (change)="duplicateParticipant.selected = $event.checked" disableRipple>
               {{duplicateParticipant.participantId}} {{duplicateParticipant.shortId}} {{duplicateParticipant.firstName}} {{duplicateParticipant.lastName}}
             </md-checkbox>
@@ -132,7 +138,7 @@
     </div>
     <div class="app-modal-footer">
       <button type="button" class="btn btn-default" (click)="forgetDuplicate()">Close</button>
-      <button type="button" class="btn btn-primary" (click)="uploadDuplicate()">Upload New One</button>
+      <button type="button" class="btn btn-primary" (click)="uploadDuplicate()">Upload Kit</button>
     </div>
   </app-modal>
 </div>

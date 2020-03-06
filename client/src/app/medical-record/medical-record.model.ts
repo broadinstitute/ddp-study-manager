@@ -135,7 +135,6 @@ export class MedicalRecord {
     else if (this.INITIALBIOPSY === this.type) {
       return "Initial Biopsy";
     }
-    console.log( this.type );
     return "";
   }
 

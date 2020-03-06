@@ -6,7 +6,7 @@ import com.typesafe.config.ConfigValueFactory;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.exception.FileColumnMissing;
 import org.broadinstitute.dsm.route.KitUploadRoute;
-import org.broadinstitute.dsm.util.KitUtil;
+import org.broadinstitute.dsm.util.NotificationUtil;
 import org.broadinstitute.dsm.util.TestUtil;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -42,8 +42,8 @@ public class KitUploadRouteTest {
         TransactionWrapper.reset(TestUtil.UNIT_TEST);
         TransactionWrapper.init(cfg.getInt("portal.maxConnections"), cfg.getString("portal.dbUrl"), cfg, false);
 
-        KitUtil kitUtil = new KitUtil();
-        route = new KitUploadRoute();
+        NotificationUtil notificationUtil = new NotificationUtil(cfg);
+        route = new KitUploadRoute(notificationUtil);
     }
 
     @Test

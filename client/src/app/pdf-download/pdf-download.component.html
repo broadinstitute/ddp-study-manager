@@ -10,43 +10,75 @@
 </div>
 
 <div *ngIf="additionalMessage == null">
-  <p>Select a pdf type and enter the participant participant ID to download the pdf</p>
-  <p>If your participant is a migrated one and has a altPID please use that ID for the PDF download, otherwise use the GUID</p>
-
-<span [hidden]="!loading" class="Width--100">
+  <span [hidden]="!loading" class="Width--100">
     <div align="center" class="Width--100 Height--100">
       <i class="fas fa-spinner fa-spin fa-5x Color--primary"></i>
     </div>
   </span>
 
-<div *ngIf="allowedToSeeInformation">
-  <br/>
-  <div *ngIf="realm != null" class="Width--60">
-    <div *ngIf="possiblePDFs.length === 0">
-      <h4>There are no PDFs setup for that realm </h4>
-    </div>
-
-    <div *ngIf="possiblePDFs.length > 0">
-      <md-select placeholder="PDF" class="Input--Bigger-WIDTH"
-                 [(ngModel)]="selectedPDF">
-        <md-option *ngFor="let pdf of possiblePDFs"
-                   [value]="pdf">
-          {{ pdf | titlecase }}
-        </md-option>
-      </md-select>
-    </div>
-
-    <div *ngIf="realm != null && selectedPDF != null" class="Width--80">
-      <br/>
-      <md-input-container>
-        <input maxlength="200" style="width: 10cm" mdInput type="text"  placeholder="Participant ID"
-               [(ngModel)]="participantId">
-      </md-input-container>
-      <button md-raised-button type="button" color="primary"
-              (click)="downloadPDF()"
-              [disabled]="participantId == null || downloading">Download PDF</button>
-    </div>
+  <div *ngIf="allowedToSeeInformation">
     <br/>
+    <div *ngIf="realm != null" class="Width--60">
+      <ng-container *ngIf="hasParticipantSpecificPDFs">
+        <p>If your participant is a migrated one and has a altPID please use that ID for the PDF download, otherwise use the GUID</p>
+
+        <md-input-container>
+          <input maxlength="200" style="width: 10cm" mdInput type="text" placeholder="Participant ID"
+                 [(ngModel)]="participantId">
+        </md-input-container>
+        <button md-raised-button type="button" color="primary"
+                (click)="getParticipantsPDFs()"
+                [disabled]="participantId == null || loading">Get List of PDFs for Participant
+        </button>
+
+        <div *ngIf="participantPDFs != null && participantPDFs.length != 0">
+          <md-select placeholder="Select PDF" class="Input--Abstraction" [(ngModel)]="selectedPDF">
+            <md-option *ngFor="let e of participantPDFs" [value]="e.configName">
+              {{e.displayName}}
+            </md-option>
+          </md-select>
+          <br/>
+          <br/>
+          <button md-raised-button color="primary"
+                  [disabled]="selectedPDF == null || selectedPDF === ''"
+                  (click)="downloadPDFs(selectedPDF)">Download selected PDF
+          </button>
+        </div>
+
+      </ng-container>
+
+
+      <ng-container *ngIf="!hasParticipantSpecificPDFs">
+        <p>Select a pdf type and enter the participant participant ID to download the pdf</p>
+        <p>If your participant is a migrated one and has a altPID please use that ID for the PDF download, otherwise use the GUID</p>
+
+        <div *ngIf="possiblePDFs.length === 0">
+          <h4>There are no PDFs setup for that realm </h4>
+        </div>
+
+        <div *ngIf="possiblePDFs.length > 0">
+          <md-select placeholder="PDF" class="Input--Bigger-WIDTH"
+                     [(ngModel)]="selectedPDF">
+            <md-option *ngFor="let pdf of possiblePDFs"
+                       [value]="pdf">
+              {{ pdf | titlecase }}
+            </md-option>
+          </md-select>
+        </div>
+
+        <div *ngIf="realm != null && selectedPDF != null" class="Width--80">
+          <br/>
+          <md-input-container>
+            <input maxlength="200" style="width: 10cm" mdInput type="text" placeholder="Participant ID"
+                   [(ngModel)]="participantId">
+          </md-input-container>
+          <button md-raised-button type="button" color="primary"
+                  (click)="downloadPDF()"
+                  [disabled]="participantId == null || loading">Download PDF
+          </button>
+        </div>
+      </ng-container>
+      <br/>
+    </div>
   </div>
-</div>
 </div>

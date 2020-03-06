@@ -203,6 +203,7 @@ public class DSMServer extends BasicServer {
                 }
             }
         });
+        setupDDPConfigurationLookup(cfg.getString(ApplicationConfigConstants.DDP));
 
         AuthenticationRoute authenticationRoute = new AuthenticationRoute(auth0Util,
                 jwtSecret, cookieSalt, cookieName, userUtil, cfg.getString("portal.environment"));
@@ -223,8 +224,6 @@ public class DSMServer extends BasicServer {
             logger.error("Couldn't setup ruby for MBC decryption");
         }
 
-        setupDDPConfigurationLookup(cfg.getString(ApplicationConfigConstants.DDP));
-
         DDPRequestUtil ddpRequestUtil = new DDPRequestUtil();
         PatchUtil patchUtil = new PatchUtil();
 
@@ -232,15 +231,15 @@ public class DSMServer extends BasicServer {
         // setupExternalShipperLookup(cfg.getString(ApplicationConfigConstants.EXTERNAL_SHIPPER));
         // GBFRequestUtil gbfRequestUtil = new GBFRequestUtil();
 
-        setupShippingRoutes(ddpRequestUtil, notificationUtil, auth0Util, userUtil);
+        setupShippingRoutes(notificationUtil, auth0Util, userUtil);
 
         setupMedicalRecordRoutes(cfg, notificationUtil, patchUtil);
 
         setupMRAbstractionRoutes();
 
-        setupMiscellaneousRoutes();
+        setupMiscellaneousRoutes(notificationUtil);
 
-        setupSharedRoutes(kitUtil, userUtil, notificationUtil, patchUtil, container, receiver);
+        setupSharedRoutes(kitUtil, notificationUtil, patchUtil, container, receiver);
 
         //no GET for USER_SETTINGS_REQUEST because UI gets them per AuthenticationRoute
         patch(UI_ROOT + RoutePath.USER_SETTINGS_REQUEST, new UserSettingRoute(), new JsonTransformer());
@@ -266,9 +265,8 @@ public class DSMServer extends BasicServer {
         }
     }
 
-    private void setupShippingRoutes(@NonNull DDPRequestUtil ddpRequestUtil, @NonNull NotificationUtil notificationUtil,
-                                     @NonNull Auth0Util auth0Util, @NonNull UserUtil userUtil) {
-        get(UI_ROOT + RoutePath.KIT_REQUESTS_PATH, new KitRequestRoute(ddpRequestUtil), new JsonTransformer());
+    private void setupShippingRoutes(@NonNull NotificationUtil notificationUtil, @NonNull Auth0Util auth0Util, @NonNull UserUtil userUtil) {
+        get(UI_ROOT + RoutePath.KIT_REQUESTS_PATH, new KitRequestRoute(), new JsonTransformer());
 
         KitStatusChangeRoute kitStatusChangeRoute = new KitStatusChangeRoute();
         post(UI_ROOT + RoutePath.FINAL_SCAN_REQUEST, kitStatusChangeRoute, new JsonTransformer());
@@ -276,7 +274,7 @@ public class DSMServer extends BasicServer {
         post(UI_ROOT + RoutePath.SENT_KIT_REQUEST, kitStatusChangeRoute, new JsonTransformer());
         post(UI_ROOT + RoutePath.RECEIVED_KIT_REQUEST, kitStatusChangeRoute, new JsonTransformer());
 
-        KitDeactivationRoute kitDeactivationRoute = new KitDeactivationRoute(ddpRequestUtil);
+        KitDeactivationRoute kitDeactivationRoute = new KitDeactivationRoute(notificationUtil);
         patch(UI_ROOT + RoutePath.DEACTIVATE_KIT_REQUEST, kitDeactivationRoute, new JsonTransformer());
         patch(UI_ROOT + RoutePath.ACTIVATE_KIT_REQUEST, kitDeactivationRoute, new JsonTransformer());
 
@@ -288,7 +286,7 @@ public class DSMServer extends BasicServer {
         get(UI_ROOT + RoutePath.LABEL_SETTING_REQUEST, labelSettingRoute, new JsonTransformer());
         patch(UI_ROOT + RoutePath.LABEL_SETTING_REQUEST, labelSettingRoute, new JsonTransformer());
 
-        post(UI_ROOT + RoutePath.KIT_UPLOAD_REQUEST, new KitUploadRoute(), new JsonTransformer());
+        post(UI_ROOT + RoutePath.KIT_UPLOAD_REQUEST, new KitUploadRoute(notificationUtil), new JsonTransformer());
 
         KitLabelRoute kitLabelRoute = new KitLabelRoute();
         get(UI_ROOT + RoutePath.KIT_LABEL_REQUEST, kitLabelRoute, new JsonTransformer());
@@ -319,7 +317,7 @@ public class DSMServer extends BasicServer {
         post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.COVER_PDF + RoutePath.ROUTE_SEPARATOR + RequestParameter.MEDICALRECORDID, pdfRoute, new JsonTransformer());
         post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.REQUEST_PDF, pdfRoute, new JsonTransformer());
         post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.PDF, pdfRoute, new JsonTransformer());
-        get(UI_ROOT + RoutePath.PDF_TYPE_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, pdfRoute, new JsonTransformer());
+        get(UI_ROOT + DownloadPDFRoute.PDF, pdfRoute, new JsonTransformer());
 
         patch(UI_ROOT + RoutePath.ASSIGN_PARTICIPANT_REQUEST, new AssignParticipantRoute(
                 cfg.getString(ApplicationConfigConstants.GET_DDP_PARTICIPANT_ID),
@@ -370,7 +368,7 @@ public class DSMServer extends BasicServer {
         post(UI_ROOT + RoutePath.ABSTRACTION, new AbstractionRoute(), new JsonTransformer());
     }
 
-    private void setupMiscellaneousRoutes() {
+    private void setupMiscellaneousRoutes(@NonNull NotificationUtil notificationUtil) {
         MailingListRoute mailingListRoute = new MailingListRoute();
         get(UI_ROOT + RoutePath.MAILING_LIST_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, mailingListRoute, new JsonTransformer());
 
@@ -388,11 +386,10 @@ public class DSMServer extends BasicServer {
         get(UI_ROOT + RoutePath.PARTICIPANT_EVENTS + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, participantEventRoute, new JsonTransformer());
         post(UI_ROOT + RoutePath.SKIP_PARTICIPANT_EVENTS, participantEventRoute, new JsonTransformer());
 
-        post(UI_ROOT + RoutePath.KIT_UPLOAD_REQUEST, new KitUploadRoute(), new JsonTransformer());
         post(UI_ROOT + RoutePath.NDI_REQUEST, new NDIRoute(), new JsonTransformer());
     }
 
-    private void setupSharedRoutes(@NonNull KitUtil kitUtil, @NonNull UserUtil userUtil, @NonNull NotificationUtil notificationUtil,
+    private void setupSharedRoutes(@NonNull KitUtil kitUtil, @NonNull NotificationUtil notificationUtil,
                                    @NonNull PatchUtil patchUtil, @NonNull ScriptingContainer container, @NonNull Object receiver) {
         DashboardRoute dashboardRoute = new DashboardRoute(kitUtil, container, receiver);
         get(UI_ROOT + RoutePath.DASHBOARD_REQUEST, dashboardRoute, new JsonTransformer());
@@ -418,7 +415,7 @@ public class DSMServer extends BasicServer {
                 schedulerName = scheduler.getSchedulerName();
                 createDDPRequestScheduledJobs(scheduler, DDPRequestJob.class, "DDPREQUEST_JOB",
                         cfg.getInt(ApplicationConfigConstants.QUARTZ_DDP_REQUEST_JOB_INTERVAL_SEC),
-                        new DDPRequestTriggerListener(), container, receiver);
+                        new DDPRequestTriggerListener(), container, receiver, notificationUtil);
 
                 createScheduledJob(scheduler, cfg,
                         NotificationJob.class, "NOTIFICATION_JOB",
@@ -467,7 +464,7 @@ public class DSMServer extends BasicServer {
     public static void createDDPRequestScheduledJobs(@NonNull Scheduler scheduler, @NonNull Class<? extends Job> jobClass,
                                                      @NonNull String identity, @NonNull int jobIntervalInSeconds,
                                                      BasicTriggerListener triggerListener, @NonNull ScriptingContainer container,
-                                                     @NonNull Object receiver) throws SchedulerException {
+                                                     @NonNull Object receiver, @NonNull NotificationUtil notificationUtil) throws SchedulerException {
         //create job
         JobDetail job = JobBuilder.newJob(jobClass)
                 .withIdentity(identity, BasicTriggerListener.NO_CONCURRENCY_GROUP + ".DSM").build();
@@ -475,6 +472,7 @@ public class DSMServer extends BasicServer {
         //pass parameters to JobDataMap for JobDetail
         job.getJobDataMap().put(CONTAINER, container);
         job.getJobDataMap().put(RECEIVER, receiver);
+        job.getJobDataMap().put(NOTIFICATION_UTIL, notificationUtil);
 
         //create trigger
         TriggerKey triggerKey = new TriggerKey(identity + "_TRIGGER", "DDP");

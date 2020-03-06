@@ -1,5 +1,4 @@
 import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
-import {forEach} from "@angular/router/src/utils/collection";
 import {Value} from "../utils/value.model";
 
 @Component( {
@@ -19,6 +18,10 @@ export class FieldMultiTypeComponent implements OnInit {
   @Input() patchFinished: boolean;
   @Output() multiTypeChanged = new EventEmitter();
 
+  multiOptions: string = "multi_options";
+  options: string = "options";
+  other: string = "other";
+
   _multiType: { [ k: string ]: string | string[] } = {};
   showDelete: boolean = false;
   currentPatchField: string;
@@ -37,20 +40,20 @@ export class FieldMultiTypeComponent implements OnInit {
       this._multiType = this.multiType;
       if (this.values != null) {
         this.values.forEach( value => {
-            if (( value.type === "multi_options" || value.type2 === "multi_options" )) {
+            if (( value.type === this.multiOptions || value.type2 === this.multiOptions )) {
               let v: any = this.multiType[ value.value ];
               if (typeof v === "string" && !v.startsWith( "[" )) {
                 //type was changed to multi_select afterwards
                 let array: string[] = [];
                 array.push( v );
                 this._multiType[ value.value ] = array;
-                if (array.includes( "other" )) {
+                if (array.includes( this.other )) {
                   this._other[ value.value ] = "";
                 }
               }
               else if (v instanceof Array) {
                 this._multiType[ value.value ] = v;
-                if (v.includes( "other" )) {
+                if (v.includes( this.other )) {
                   this._other[ value.value ] = "";
                 }
               }
@@ -59,7 +62,7 @@ export class FieldMultiTypeComponent implements OnInit {
                 this._multiType[ value.value ] = array;
               }
             }
-            else if (( value.type === "options" || value.type2 === "options" )) {
+            else if (( value.type === this.options || value.type2 === this.options )) {
               this.setOther( value.value );
             }
           }
@@ -72,14 +75,14 @@ export class FieldMultiTypeComponent implements OnInit {
           this._multiType = JSON.parse( this.json );
         }
         this.values.forEach( value => {
-          if (value.type === "multi_options" || value.type2 === "multi_options") {
+          if (value.type === this.multiOptions || value.type2 === this.multiOptions) {
             if (this.json != null) {
               let o: any = JSON.parse( this.json );
               this._multiType[ value.value ] = o[ value.value ];
-              if (this._multiType[ value.value ] != null && this._multiType[ value.value ].includes( "other" )) {
+              if (this._multiType[ value.value ] != null && this._multiType[ value.value ].includes( this.other )) {
                 this._other[ value.value ] = "";
-                if (this._multiType[ "other" ] != null) {
-                  this._other[ value.value ] = String( this._multiType[ "other" ] );
+                if (this._multiType[ this.other ] != null) {
+                  this._other[ value.value ] = String( this._multiType[ this.other ] );
                 }
               }
             }
@@ -88,7 +91,7 @@ export class FieldMultiTypeComponent implements OnInit {
               this._multiType[ value.value ] = array;
             }
           }
-          else if (( value.type === "options" || value.type2 === "options" )) {
+          else if (( value.type === this.options || value.type2 === this.options )) {
             this.setOther( value.value );
           }
         } );
@@ -97,20 +100,8 @@ export class FieldMultiTypeComponent implements OnInit {
   }
 
   setOther( value: string ) {
-    if (this._multiType[ "other" ] != null && this._multiType[ "other" ] instanceof Array) {
-      for (let other of this._multiType[ "other" ]) {
-        if (other.hasOwnProperty( value )) {
-          if (other[ value ] != null && other[ value ] != "") {
-            this._other[ value ] = other[ value ];
-          }
-        }
-        else if (this._multiType[ value ] === "other") {
-          this._other[ value ] = "";
-        }
-      }
-    }
-    else if (this._multiType[ value ] === "other") {
-      this._other[ value ] = "";
+    if (this._multiType[ value ] === this.other && this._multiType[ this.other ] != null && this._multiType[ this.other ] [ value ] != null) {
+      this._other[ value ] = this._multiType[ this.other ] [ value ];
     }
     else {
       this._other[ value ] = null;
@@ -140,34 +131,18 @@ export class FieldMultiTypeComponent implements OnInit {
     multiType[ displayName ] = v;
     this.currentPatchField = displayName;
 
-    if (displayName === "other") {
-      let array: { [ k: string ]: string }[] = [];
-      for (let source of Object.keys( this._other )) {
-        let other: { [ k: string ]: string } = {};
-        other[ source ] = this._other[ source ];
-        array.push( other );
-      }
-      multiType[ "other" ] = array;
+    if (displayName === this.other) {
+      multiType[ this.other ] = this._other;
+      this.currentPatchField = this.other + "_" + displayName;
     }
-    else if (val.type === "multi_options" || val.type2 === "multi_options" || val.type === "options" || val.type2 === "options") {
-      if (multiType[ displayName ].indexOf( "other" ) > -1) {
-        if (this._other[ val.value ] !== "" && this._other[ val.value ] != null) {
-          let array: { [ k: string ]: string }[] = [];
-          for (let source of Object.keys( this._other )) {
-            let other: { [ k: string ]: string } = {};
-            other[ source ] = this._other[ source ];
-            array.push( other );
-          }
-          multiType[ "other" ] = array;
-        }
-        else {
-          this._other[ val.value ] = "";
-        }
+    else if (val.type === this.multiOptions || val.type2 === this.multiOptions || val.type === this.options || val.type2 === this.options) {
+      if (multiType[ displayName ] === this.other) {
+        this._other[ val.value ] = "";
       }
       else {
         this._other[ val.value ] = null;
-        // delete multiType[ "other" ];
       }
+      multiType[ this.other ] = this._other;
     }
     this.multiTypeChanged.emit( JSON.stringify( multiType ) );
   }
@@ -177,10 +152,17 @@ export class FieldMultiTypeComponent implements OnInit {
   }
 
   isPatchedCurrently( field: string ): boolean {
-    if (this.currentPatchField === field && !this.patchFinished) {
+    if (this.currentPatchField === field) {
       return true;
     }
     return false;
+  }
+
+  isCheckboxPatchedCurrently( field: string ): string {
+    if (this.currentPatchField === field) {
+      return "warn";
+    }
+    return "primary";
   }
 
   currentField( field: string ) {

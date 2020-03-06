@@ -23,6 +23,9 @@ import org.junit.*;
 import java.io.IOException;
 import java.util.*;
 
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
+
 public class RouteInfoTest extends TestHelper {
 
     private static final String SQL_SELECT_MR_STATUS = "SELECT UNIX_TIMESTAMP(str_to_date(min(med.fax_sent), '%Y-%m-%d')) as mrRequested, " +
@@ -42,12 +45,26 @@ public class RouteInfoTest extends TestHelper {
     public static void first() throws Exception {
         setupDB();
         startDSMServer();
+        startMockServer();
         setupUtils();
+
+        setupMock();
         addTestMigratedParticipant();
         ddpAuthApi = new AuthAPI(cfg.getString(ApplicationConfigConstants.AUTH0_ACCOUNT), cfg.getString(ApplicationConfigConstants.AUTH0_CLIENT_KEY), cfg.getString(ApplicationConfigConstants.AUTH0_SECRET));
         AuthRequest request = ddpAuthApi.requestToken(cfg.getString(ApplicationConfigConstants.AUTH0_AUDIENCE));
         TokenHolder tokenHolder = request.execute();
         accessToken = tokenHolder.getAccessToken();
+    }
+
+    private static void setupMock() throws Exception {
+        setupDDPMRRoutes();
+    }
+
+    private static void setupDDPMRRoutes() throws Exception {
+        String messageParticipant = TestUtil.readFile("ddpResponses/ParticipantInstitutions.json");
+        mockDDP.when(
+                request().withPath("/dsm/studies/migratedDDP/ddp/participantinstitutions"))
+                .respond(response().withStatusCode(200).withBody(messageParticipant));
     }
 
     @AfterClass
@@ -122,7 +139,7 @@ public class RouteInfoTest extends TestHelper {
     private String constructEscapedAdditionalValues(@NonNull List<String> names, @NonNull List<String> values) {
         String additionalValues = constructValueForAdditionalValues(names, values);
         String escapedPart1 = additionalValues.replaceAll("\\\"", "\\\\\"");
-        return "\"nameValue\":{\"name\":\"additionalValues\",\"value\":\"" + escapedPart1 + "\"}";
+        return "\"nameValue\":{\"name\":\"oD.additionalValues\",\"value\":\"" + escapedPart1 + "\"}";
     }
 
     @Test
@@ -224,10 +241,8 @@ public class RouteInfoTest extends TestHelper {
         DashboardInformation ddps = new Gson().fromJson(message, DashboardInformation.class);
 
         Assert.assertNotNull(ddps);
-        int returned = ddps.getDashboardValues().get("request.returned.oD");
+        int returned = ddps.getDashboardValues().get("request.returned");
         Assert.assertEquals(returned, 1); //former getTissueReturned()
-        returned = ddps.getDashboardValues().get("request.returned");
-        Assert.assertEquals(returned, 1); // former getTissueReturnedParticipants
 
         //to test it changes back
         changeTissueValue(tissueId, oncHistoryId, "t.tissueReturnDate", "", "return_date");
@@ -235,23 +250,25 @@ public class RouteInfoTest extends TestHelper {
         Assert.assertNotNull(request);
         Assert.assertEquals(request, "sent");
 
-        changeOncHistoryValue(oncHistoryId, participantId, "t.tissueReceived", testReturnDate, "tissue_received");
+        changeOncHistoryValue(oncHistoryId, participantId, "oD.tissueReceived", testReturnDate, "tissue_received");
         changeTissueValue(tissueId, oncHistoryId, "t.tissueReturnDate", testReturnDate, "return_date");
+        request = getTestOncHistoryInfo("request", oncHistoryId);
+        Assert.assertEquals(request, "returned");
         changeTissueValue(tissueId, oncHistoryId, "t.tissueReturnDate", "", "return_date");
-        request = getTestOncHistoryInfo("oD.request", oncHistoryId);
+        request = getTestOncHistoryInfo("request", oncHistoryId);
         Assert.assertNotNull(request);
         Assert.assertEquals(request, "received");
-        changeOncHistoryValue(oncHistoryId, participantId, "t.tissueReceived", "", "tissue_received");
-        String returnFId = getTestTissueInfo("t.return_fedex_id", tissueId);
+        changeOncHistoryValue(oncHistoryId, participantId, "oD.tissueReceived", "", "tissue_received");
+        String returnFId = getTestTissueInfo("return_fedex_id", tissueId);
         Assert.assertNotNull(returnFId);
         Assert.assertEquals(returnFId, testReturnFedexId);
 
 
-        String firstSmId = getTestTissueInfo("t.first_sm_id", tissueId);
+        String firstSmId = getTestTissueInfo("first_sm_id", tissueId);
         Assert.assertNotNull(firstSmId);
         Assert.assertEquals(firstSmId, testFirstSmId);
 
-        String shlWork = getTestTissueInfo("t.shl_work_number", tissueId);
+        String shlWork = getTestTissueInfo("shl_work_number", tissueId);
         Assert.assertNotNull(testSHLWorkNumber);
         Assert.assertEquals(shlWork, testSHLWorkNumber);
 
@@ -263,7 +280,7 @@ public class RouteInfoTest extends TestHelper {
         String oncHistoryId = addOncHistoryDetails(participantId);
         String testReceivedDate = "2019-03-11";
 
-        changeOncHistoryValue(oncHistoryId, participantId, "t.tissueReceived", testReceivedDate, "tissue_received");
+        changeOncHistoryValue(oncHistoryId, participantId, "oD.tissueReceived", testReceivedDate, "tissue_received");
         String request = getTestOncHistoryInfo("request", oncHistoryId);
         Assert.assertNotNull(request);
         Assert.assertEquals(request, "received");
@@ -275,10 +292,8 @@ public class RouteInfoTest extends TestHelper {
         DashboardInformation ddps = new Gson().fromJson(message, DashboardInformation.class);
 
         Assert.assertNotNull(ddps);
-        int received = ddps.getDashboardValues().get("tissueReceived.oD");
+        int received = ddps.getDashboardValues().get("request.received");
         Assert.assertEquals(received, 1); // former getReceivedTissue()
-        received = ddps.getDashboardValues().get("tissueReceived");
-        Assert.assertEquals(received, 1); // former getReceivedTissueParticipants()
     }
 
     @Test
@@ -294,7 +309,7 @@ public class RouteInfoTest extends TestHelper {
         String testValue = "21";
 
         String json =
-                "{\"id\":\"" + tissueId + "\",\"parentId\":\"" + oncHistoryId + "\",\"parent\":\"oncHistoryDetailId\",\"user\":\"ptaheri@broadinstitute.org\",\"nameValue\":{\"name\":\"additionalValues\",\"value\":\"{\\\"" + name.get(0) + "\\\":\\\"" + testValue + "\\\"}\"}}";
+                "{\"id\":\"" + tissueId + "\",\"parentId\":\"" + oncHistoryId + "\",\"parent\":\"oncHistoryDetailId\",\"user\":\"ptaheri@broadinstitute.org\",\"nameValue\":{\"name\":\"t.additionalValues\",\"value\":\"{\\\"" + name.get(0) + "\\\":\\\"" + testValue + "\\\"}\"}}";
         HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/" + "patch"), json, testUtil.buildAuthHeaders()).returnResponse();
 
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());

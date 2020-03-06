@@ -58,7 +58,7 @@ export class OncHistoryDetailComponent implements OnInit {
 
   ngOnInit() {
     this.triggerSort = this.triggerSort + 1;
-    if (this.participant.data.status.indexOf( Statics.EXITED ) == -1) {
+    if (this.participant.data.status === undefined || this.participant.data.status.indexOf(Statics.EXITED) == -1) {
       this.participantExited = false;
     }
   }
@@ -139,10 +139,8 @@ export class OncHistoryDetailComponent implements OnInit {
     this.dsmService.patchParticipantRecord( JSON.stringify( patch ) ).subscribe(// need to subscribe, otherwise it will not send!
       data => {
         let result = Result.parse( data );
-        // console.log(result);
         if (result.code === 200 && result.body != null && result.body !== "") {
           let jsonData: any | any[] = JSON.parse( result.body );
-          // console.log(jsonData);
           if (jsonData instanceof Array) {
             jsonData.forEach( ( val ) => {
               let nameValue = NameValue.parse( val );
@@ -374,7 +372,7 @@ export class OncHistoryDetailComponent implements OnInit {
         this.oncHistory[ index ].histology = object.field1.value;
         let patch1 = new PatchUtil( this.oncHistory[ index ].oncHistoryDetailId, this.role.userMail(),
           {
-            name: "typePX",
+            name: "histology",
             value: object.field1.value
           }, null, "participantId", this.oncHistory[ index ].participantId, Statics.ONCDETAIL_ALIAS );
         let patch = patch1.getPatch();

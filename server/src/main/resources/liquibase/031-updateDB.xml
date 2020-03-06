@@ -4,6 +4,30 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <changeSet author="simone" id="DDP-4318_coverPDF">
+        <createTable tableName="instance_settings">
+            <column autoIncrement="true" name="instance_settings_id" type="INT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="ddp_instance_id" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mr_cover_pdf" type="VARCHAR(1000)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="simone" id="DDP-4374_pdfDownloadRole">
+        <insert tableName="instance_role">
+            <column name="name" value="pdf_download"></column>
+        </insert>
+    </changeSet>
+    <changeSet author="simone" id="DDP-4374_pediatricConsent">
+        <addColumn tableName="instance_settings">
+            <column name="kit_behavior_change" type="VARCHAR(1000)">
+            </column>
+        </addColumn>
+    </changeSet>
     <changeSet author="diane" id="12122019">
         <insert tableName="access_role">
             <column name="name" value="drug_list_edit"/>

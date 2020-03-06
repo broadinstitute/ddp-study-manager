@@ -18,14 +18,14 @@ import {NameValue} from "../utils/name-value.model";
 import {FollowUp} from "../follow-up/follow-up.model";
 import {PatchUtil} from "../utils/patch.model";
 import {MedicalRecord} from "./medical-record.model";
-import {PDFModel} from "./model/pdf.model";
+import {PDFModel} from "../pdf-download/pdf-download.model";
 
 var fileSaver = require( "file-saver/filesaver.js" );
 
 @Component( {
   selector: "app-medical-record",
   templateUrl: "./medical-record.component.html",
-  styleUrls: [ "./medical-record.component.css" ]
+  styleUrls: [ "./medical-record.component.css" ],
 } )
 export class MedicalRecordComponent implements OnInit {
 
@@ -38,6 +38,7 @@ export class MedicalRecordComponent implements OnInit {
   @Input() participant: Participant;
   @Input() medicalRecord: MedicalRecord;
   @Input() settings;
+  @Input() mrCoverPdfSettings;
   @Output() leaveMedicalRecord = new EventEmitter();
   @Output() leaveParticipant = new EventEmitter();
 
@@ -65,13 +66,6 @@ export class MedicalRecordComponent implements OnInit {
 
   startDate: string;
   endDate: string;
-  notesCb: boolean = true;
-  treatmentCb: boolean = true;
-  pathologyCb: boolean = true;
-  operativeCb: boolean = true;
-  referralsCb: boolean = true;
-  exchangeCb: boolean = true;
-  geneticCb: boolean = true;
   showFollowUp: boolean = false;
   pdfs: Array<PDFModel> = [];
   selectedPDF: string;
@@ -95,12 +89,12 @@ export class MedicalRecordComponent implements OnInit {
     if (this.medicalRecord != null && this.participant != null) {
       this.loadLogs();
       // otherwise something went horrible wrong!
-      if (localStorage.getItem(ComponentService.MENU_SELECTED_REALM).toLowerCase() === "mbc") {//TODO - needs to change when MBC gets migrated
+      if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ).toLowerCase() === "mbc") {//TODO - needs to change when MBC gets migrated
         this.disableDownloadConsent = true;
         this.disableDownloadRelease = true;
         this.hideDownloadButtons = true;
       }
-      if (this.participant.data.status.indexOf( Statics.EXITED ) == -1) {
+      if (this.participant.data == undefined || this.participant.data.status.indexOf( Statics.EXITED ) == -1) {
         this.participantExited = false;
       }
       if (this.participant.data != null && this.participant.data.dsm != null && this.participant.data.dsm[ "pdfs" ] != null) {
@@ -158,7 +152,7 @@ export class MedicalRecordComponent implements OnInit {
     }
     if (v !== null) {
       let patch1 = new PatchUtil( this.medicalRecord.medicalRecordId, this.role.userMail(),
-        {name: parameterName, value: v}, null, null, null, Statics.MR_ALIAS );
+        { name: parameterName, value: v }, null, null, null, Statics.MR_ALIAS );
       let patch = patch1.getPatch();
       this.patchFinished = false;
       if (parameterName != "followUps") {
@@ -186,7 +180,7 @@ export class MedicalRecordComponent implements OnInit {
             this.router.navigate( [ Statics.HOME_URL ] );
           }
           this.additionalMessage = "Error - Saving paper C/R changes \n" + err;
-        }
+        },
       );
     }
   }
@@ -218,7 +212,7 @@ export class MedicalRecordComponent implements OnInit {
           this.auth.logout();
         }
         this.errorMessage = "Error - Loading mr log\nPlease contact your DSM developer";
-      }
+      },
     );
   }
 
@@ -237,7 +231,7 @@ export class MedicalRecordComponent implements OnInit {
             this.router.navigate( [ Statics.HOME_URL ] );
           }
           this.additionalMessage = "Error - Saving log data\nPlease contact your DSM developer";
-        }
+        },
       );
     }
     else {
@@ -253,8 +247,7 @@ export class MedicalRecordComponent implements OnInit {
     else {
       this.disableDownloadCover = true;
       this.dsmService.downloadCoverPDFs( this.participant.participant.ddpParticipantId, this.medicalRecord.medicalRecordId,
-        this.startDate, this.endDate, this.notesCb, this.treatmentCb, this.pathologyCb, this.operativeCb, this.referralsCb,
-        this.exchangeCb, this.geneticCb, localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(
+        this.startDate, this.endDate, this.mrCoverPdfSettings, localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) ).subscribe(
         data => {
           // console.info(data);
           this.downloadFile( data, "_MRRequest_" + this.medicalRecord.name );
@@ -267,7 +260,7 @@ export class MedicalRecordComponent implements OnInit {
           }
           this.additionalMessage = "Error - Downloading cover pdf file\nPlease contact your DSM developer";
           this.disableDownloadCover = false;
-        }
+        },
       );
     }
     this.modal.hide();
@@ -281,11 +274,10 @@ export class MedicalRecordComponent implements OnInit {
     return value;
   }
 
-  downloadPDFs(configName: string) {
+  downloadPDFs( configName: string ) {
     this.disableDownloadConsent = true;
-    this.dsmService.downloadPDF(this.participant.participant.ddpParticipantId, this.compService.getRealm(), configName).subscribe(
+    this.dsmService.downloadPDF( this.participant.participant.ddpParticipantId, this.compService.getRealm(), configName ).subscribe(
       data => {
-        console.info( data );
         this.downloadFile( data, "_" + configName );
         this.disableDownloadConsent = false;
       },
@@ -295,15 +287,14 @@ export class MedicalRecordComponent implements OnInit {
         }
         this.additionalMessage = "Error - Downloading consent pdf file\nPlease contact your DSM developer";
         this.disableDownloadConsent = false;
-      }
+      },
     );
   }
 
   downloadConsentPDFs() {
     this.disableDownloadConsent = true;
-    this.dsmService.downloadConsentPDFs(this.participant.participant.ddpParticipantId, localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(
+    this.dsmService.downloadConsentPDFs( this.participant.participant.ddpParticipantId, localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) ).subscribe(
       data => {
-        console.info( data );
         this.downloadFile( data, "_Consent" );
         this.disableDownloadConsent = false;
       },
@@ -313,13 +304,13 @@ export class MedicalRecordComponent implements OnInit {
         }
         this.additionalMessage = "Error - Downloading consent pdf file\nPlease contact your DSM developer";
         this.disableDownloadConsent = false;
-      }
+      },
     );
   }
 
   downloadReleasePDFs() {
     this.disableDownloadRelease = true;
-    this.dsmService.downloadReleasePDFs(this.participant.participant.ddpParticipantId, localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(
+    this.dsmService.downloadReleasePDFs( this.participant.participant.ddpParticipantId, localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) ).subscribe(
       data => {
         this.downloadFile( data, "_Release" );
         this.disableDownloadRelease = false;
@@ -330,12 +321,12 @@ export class MedicalRecordComponent implements OnInit {
         }
         this.additionalMessage = "Error - Downloading release pdf file\nPlease contact your DSM developer";
         this.disableDownloadRelease = false;
-      }
+      },
     );
   }
 
   downloadFile( data: Response, type: string ) {
-    var blob = new Blob( [ data ], {type: "application/pdf"} );
+    var blob = new Blob( [ data ], { type: "application/pdf" } );
     fileSaver.saveAs( blob, this.participant.data.profile[ "hruid" ] + type + Statics.PDF_FILE_EXTENSION );
   }
 
@@ -428,7 +419,7 @@ export class MedicalRecordComponent implements OnInit {
   }
 
   currentField( field: string ) {
-    if (field != null || ( field == null && this.patchFinished )) {
+    if (field != null || (field == null && this.patchFinished)) {
       this.currentPatchField = field;
     }
   }
@@ -447,7 +438,7 @@ export class MedicalRecordComponent implements OnInit {
   }
 
   isCoverDownloadDisabled() {
-    return !( this.medicalRecord.name != null && !this.disableDownloadCover );
+    return !(this.medicalRecord.name != null && !this.disableDownloadCover);
   }
 
   deleteFollowUp( i: number ) {
@@ -460,39 +451,42 @@ export class MedicalRecordComponent implements OnInit {
     if (this.participant != null && this.participant.data != null
       && this.participant.data.profile != null && this.participant.data.medicalProviders != null) {
       let medicalProvider = this.participant.data.medicalProviders.find( medicalProvider => {
-        return medicalProvider.guid === ddpInstitutionId;
+        let tmpId = medicalProvider.legacyGuid != null && medicalProvider.legacyGuid !== 0 ? medicalProvider.legacyGuid : medicalProvider.guid;
+        return tmpId === ddpInstitutionId;
       } );
 
-
-      let address: string = "";
-      if (medicalProvider.physicianName) {
-        address += medicalProvider.physicianName;
-      }
-      if (medicalProvider.institutionName) {
-        address += this.addLineBreak( address );
-        address += medicalProvider.institutionName;
-      }
-      if (medicalProvider.street) {
-        address += this.addLineBreak( address );
-        address += medicalProvider.street;
-      }
-      if (medicalProvider.city && medicalProvider.state) {
-        //both are not empty, so add them both
-        address += this.addLineBreak( address );
-        address += medicalProvider.city + " " + medicalProvider.state;
-      }
-      else {
-        //one is not empty, so add that one
-        if (medicalProvider.city) {
-          address += this.addLineBreak( address );
-          address += medicalProvider.city;
+      if( medicalProvider != null) {
+        let address: string = "";
+        if (medicalProvider.physicianName) {
+          address += medicalProvider.physicianName;
         }
-        if (medicalProvider.state) {
+        if (medicalProvider.institutionName) {
           address += this.addLineBreak( address );
-          address += medicalProvider.state;
+          address += medicalProvider.institutionName;
         }
+        if (medicalProvider.street) {
+          address += this.addLineBreak( address );
+          address += medicalProvider.street;
+        }
+        if (medicalProvider.city && medicalProvider.state) {
+          //both are not empty, so add them both
+          address += this.addLineBreak( address );
+          address += medicalProvider.city + " " + medicalProvider.state;
+        }
+        else {
+          //one is not empty, so add that one
+          if (medicalProvider.city) {
+            address += this.addLineBreak( address );
+            address += medicalProvider.city;
+          }
+          if (medicalProvider.state) {
+            address += this.addLineBreak( address );
+            address += medicalProvider.state;
+          }
+        }
+        return address;
       }
-      return address;
+      return "";
     }
   }
 

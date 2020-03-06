@@ -15,6 +15,7 @@ import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.PatchUtil;
 import org.broadinstitute.dsm.util.UserUtil;
 import org.slf4j.Logger;
@@ -159,8 +160,18 @@ public class FilterRoute extends RequestHandler {
                 // get pt for selected tissue (@ tissue list)
                 Map<String, String> queryConditions = new HashMap<>();
                 queryConditions.put("p", " AND p.ddp_participant_id = '" + ddpParticipantId + "'");
-                queryConditions.put("ES", " AND profile.guid = '" + ddpParticipantId + "'");
-                return ParticipantWrapper.getFilteredList(instance, queryConditions);
+                queryConditions.put("ES", ElasticSearchUtil.BY_GUID + ddpParticipantId);
+                List<ParticipantWrapper> ptList = ParticipantWrapper.getFilteredList(instance, queryConditions);
+                if (!ptList.isEmpty()) {
+                    return ptList;
+                }
+                else if (instance.isMigratedDDP()) {
+                    queryConditions = new HashMap<>();
+                    queryConditions.put("p", " AND p.ddp_participant_id = '" + ddpParticipantId + "'");
+                    queryConditions.put("ES", ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId);
+                    return ParticipantWrapper.getFilteredList(instance, queryConditions);
+                }
+                throw new RuntimeException("Participant Id was not found " + ddpParticipantId);
             }
             else if (request.url().contains(RoutePath.FILTER_LIST)) {
                 String defaultFilter = null;
@@ -208,9 +219,7 @@ public class FilterRoute extends RequestHandler {
         }
     }
 
-
     public Object doFiltering(String json, DDPInstance instance, String filterName, String parent, Filter[] savedFilters) {
-
         ViewFilter requestForFiltering = null;
         String filterQuery = "";
         Filter[] filters = null;
@@ -219,11 +228,10 @@ public class FilterRoute extends RequestHandler {
             requestForFiltering = new Gson().fromJson(json, ViewFilter.class);
             if (requestForFiltering.getFilters() == null && StringUtils.isNotBlank(requestForFiltering.getFilterQuery())) {
                 filterQuery = ViewFilter.changeFieldsInQuery(requestForFiltering.getFilterQuery());
-                logger.info(filterQuery);
                 requestForFiltering = ViewFilter.parseFilteringQuery(filterQuery, requestForFiltering);
             }
             filters = requestForFiltering.getFilters();
-            quickFilterName = requestForFiltering.quickFilterName;
+            quickFilterName = requestForFiltering == null? null: requestForFiltering.getQuickFilterName();
         }
         else if (savedFilters != null) {
             filters = savedFilters;
@@ -241,8 +249,7 @@ public class FilterRoute extends RequestHandler {
 
     }
 
-    public static List<?> filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap,
-                                                @NonNull DDPInstance instance) {
+    public static List<?> filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap, @NonNull DDPInstance instance) {
         Map<String, String> queryConditions = new HashMap<>();
         if (filters != null && columnNameMap != null && !columnNameMap.isEmpty()) {
             for (Filter filter : filters) {
@@ -301,9 +308,10 @@ public class FilterRoute extends RequestHandler {
                 if (queryCondition.indexOf(DBConstants.DDP_PARTICIPANT_RECORD_ALIAS + DBConstants.ALIAS_DELIMITER) > 0
                         || queryCondition.indexOf(DBConstants.DDP_ONC_HISTORY_ALIAS + DBConstants.ALIAS_DELIMITER) > 0
                         || queryCondition.indexOf(DBConstants.DDP_PARTICIPANT_EXIT_ALIAS + DBConstants.ALIAS_DELIMITER) > 0
-                        || queryCondition.indexOf(DBConstants.DDP_PARTICIPANT_ALIAS + DBConstants.ALIAS_DELIMITER) > 0 ||
-                        queryCondition.indexOf(DBConstants.DDP_MEDICAL_RECORD_ALIAS + DBConstants.ALIAS_DELIMITER) > 0 ||
-                        queryCondition.indexOf(DBConstants.DDP_KIT_REQUEST_ALIAS + DBConstants.ALIAS_DELIMITER) > 0) {
+                        || queryCondition.indexOf(DBConstants.DDP_PARTICIPANT_ALIAS + DBConstants.ALIAS_DELIMITER) > 0
+                        || queryCondition.indexOf(DBConstants.DDP_MEDICAL_RECORD_ALIAS + DBConstants.ALIAS_DELIMITER) > 0
+                        || queryCondition.indexOf(DBConstants.DDP_KIT_REQUEST_ALIAS + DBConstants.ALIAS_DELIMITER) > 0
+                        || queryCondition.indexOf(DBConstants.DDP_ABSTRACTION_ALIAS + DBConstants.ALIAS_DELIMITER) > 0) {
                     throw new RuntimeException(" Filtering for pt or medical record is not allowed in Tissue List");
                 }
                 else if (queryCondition.indexOf(DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS + DBConstants.ALIAS_DELIMITER) > 0) {
@@ -363,9 +371,7 @@ public class FilterRoute extends RequestHandler {
             List<TissueList> tissueLists = TissueList.getAllTissueListsForRealm(realm, TissueList.SQL_SELECT_ALL_ONC_HISTORY_TISSUE_FOR_REALM + (queryString != null ? queryString : "") + query);
             List<TissueListWrapper> wrapperList = TissueListWrapper.getTissueListData(instance, filters, tissueLists);
             return wrapperList;
-
         }
         return null;
-
     }
 }

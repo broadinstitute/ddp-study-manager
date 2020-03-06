@@ -61,6 +61,10 @@ public class KitRequestShipping extends KitRequest {
             "k.deactivated_date, k.deactivation_reason, k.dsm_kit_request_id, k.easypost_address_id_to, k.dsm_kit_id FROM ddp_kit k INNER JOIN( " +
             "SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id FROM ddp_kit GROUP BY dsm_kit_request_id) groupedtt ON k.dsm_kit_request_id = groupedtt.dsm_kit_request_id " +
             "AND k.dsm_kit_id = groupedtt.kit_id) AS wtf) AS kit ON kit.dsm_kit_request_id = request.dsm_kit_request_id WHERE request.dsm_kit_request_id = ?";
+    private static final String UPDATE_KIT_DEACTIVATION = "UPDATE ddp_kit kit INNER JOIN(SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit " +
+            "ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id AND kit.dsm_kit_id = groupedKit.kit_id SET deactivated_date = ?, " +
+            "deactivation_reason = ?, deactivated_by = ? WHERE kit.dsm_kit_request_id = ?";
+    private static final String INSERT_KIT = "INSERT INTO ddp_kit (dsm_kit_request_id, easypost_address_id_to,  error, message) VALUES (?,?,?,?)";
 
     public static final String DEACTIVATION_REASON = "Generated Express";
 
@@ -99,7 +103,7 @@ public class KitRequestShipping extends KitRequest {
     private final String collaboratorParticipantId;
 
     @ColumnName (DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID)
-    private final String collaboratorSampleId;
+    private final String bspCollaboratorSampleId;
     private final String easypostAddressId;
     private final String realm;
 
@@ -146,7 +150,7 @@ public class KitRequestShipping extends KitRequest {
     }
 
     // shippingId = ddp_label !!!
-    public KitRequestShipping(String participantId, String collaboratorParticipantId, String collaboratorSampleId, String shippingId, String realm,
+    public KitRequestShipping(String participantId, String collaboratorParticipantId, String bspCollaboratorSampleId, String shippingId, String realm,
                               String kitType, String dsmKitRequestId, String dsmKitId, String labelUrlTo, String labelUrlReturn,
                               String trackingNumberTo, String trackingNumberReturn, String scannedTrackingNumber,
                               String trackingUrlTo, String trackingUrlReturn, long scanDate, boolean error, String message,
@@ -155,7 +159,7 @@ public class KitRequestShipping extends KitRequest {
                               String externalOrderNumber, boolean noReturn, String externalOrderStatus, String createdBy) {
         super(dsmKitRequestId, participantId, null, shippingId, externalOrderNumber, null, externalOrderStatus, null);
         this.collaboratorParticipantId = collaboratorParticipantId;
-        this.collaboratorSampleId = collaboratorSampleId;
+        this.bspCollaboratorSampleId = bspCollaboratorSampleId;
         this.realm = realm;
         this.kitType = kitType;
         this.dsmKitId = dsmKitId;
@@ -327,26 +331,28 @@ public class KitRequestShipping extends KitRequest {
      * @return List<KitRequestShipping>
      * @throws Exception
      */
-    public static List<KitRequestShipping> getKitRequestsByRealm(@NonNull String realm, String target, String kitType, DDPRequestUtil ddpRequestUtil) {
+    public static List<KitRequestShipping> getKitRequestsByRealm(@NonNull String realm, String target, String kitType) {
         if (StringUtils.isNotBlank(realm) && StringUtils.isNotBlank(kitType)) {
             List<KitSubKits> subKits = KitSubKits.getSubKits(realm, kitType);
             //selected kit type has sub kits, so query for them
             if (subKits != null && !subKits.isEmpty()) {
                 List<KitRequestShipping> wholeList = new ArrayList<>();
                 for (KitSubKits kit : subKits) {
-                    Collection<List<KitRequestShipping>> kits = getAllKitRequestsByRealm(realm, target, kit.getKitName(), ddpRequestUtil, false).values();
+                    Collection<List<KitRequestShipping>> kits = getAllKitRequestsByRealm(realm, target, kit.getKitName(), false).values();
                     for (List<KitRequestShipping> kitRequestList : kits) {
                         wholeList.addAll(kitRequestList);
                     }
                 }
+
                 return wholeList;
             }
         }
         List<KitRequestShipping> wholeList = new ArrayList<>();
-        Collection<List<KitRequestShipping>> kits = getAllKitRequestsByRealm(realm, target, kitType, ddpRequestUtil, false).values();
+        Collection<List<KitRequestShipping>> kits = getAllKitRequestsByRealm(realm, target, kitType, false).values();
         for (List<KitRequestShipping> kitRequestList : kits) {
             wholeList.addAll(kitRequestList);
         }
+
         return wholeList;
     }
 
@@ -378,10 +384,10 @@ public class KitRequestShipping extends KitRequest {
         return kitRequests;
     }
 
-    public static Map<String, List<KitRequestShipping>> getAllKitRequestsByRealm(@NonNull String realm, String target, String kitType, DDPRequestUtil ddpRequestUtil, boolean getAll) {
+    public static Map<String, List<KitRequestShipping>> getAllKitRequestsByRealm(@NonNull String realm, String target, String kitType, boolean getAll) {
         logger.info("Collecting kit information");
         Map<String, List<KitRequestShipping>> kitRequests = getKitRequests(realm, target, kitType, getAll);
-        if (!kitRequests.isEmpty() && !getAll && ddpRequestUtil != null) {
+        if (!kitRequests.isEmpty() && !getAll) {
             if (StringUtils.isBlank(realm)) {
                 logger.info("Found " + kitRequests.size() + " " + target + " KitRequests across all realms ");
             }
@@ -530,7 +536,7 @@ public class KitRequestShipping extends KitRequest {
     public static void deactivateKitRequest(@NonNull String kitRequestId, @NonNull String reason, @NonNull String easypostApiKey, @NonNull String userId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.UPDATE_KIT_DEACTIVATION))) {
+            try (PreparedStatement stmt = conn.prepareStatement(UPDATE_KIT_DEACTIVATION)) {
                 stmt.setLong(1, System.currentTimeMillis());
                 stmt.setString(2, reason);
                 stmt.setString(3, userId);
@@ -601,7 +607,7 @@ public class KitRequestShipping extends KitRequest {
                     errorMessage += "collaboratorParticipantId was too long ";
                 }
                 if (collaboratorSampleId == null) {
-                    errorMessage += "collaboratorSampleId was too long ";
+                    errorMessage += "bspCollaboratorSampleId was too long ";
                 }
             }
             writeRequest(instanceId, kitDetail.getKitRequestId(), kitTypeId, kitDetail.getParticipantId(), collaboratorParticipantId, collaboratorSampleId,
@@ -658,7 +664,7 @@ public class KitRequestShipping extends KitRequest {
 
     private static SimpleResult writeNewKit(Connection conn, String kitRequestId, String addressIdTo, String errorMessage) {
         SimpleResult dbVals = new SimpleResult();
-        try (PreparedStatement insertKit = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.INSERT_UPLOADED_KIT))) {
+        try (PreparedStatement insertKit = conn.prepareStatement(INSERT_KIT)) {
             insertKit.setString(1, kitRequestId);
             if (StringUtils.isNotBlank(addressIdTo)) {
                 insertKit.setString(2, addressIdTo);
@@ -666,7 +672,7 @@ public class KitRequestShipping extends KitRequest {
             else {
                 insertKit.setString(2, null);
             }
-            if (StringUtils.isNotBlank(errorMessage)) {
+            if (StringUtils.isNotBlank(errorMessage) && !KitUtil.IGNORE_AUTO_DEACTIVATION.equals(errorMessage)) {
                 insertKit.setInt(3, 1);
             }
             else {
@@ -1028,7 +1034,7 @@ public class KitRequestShipping extends KitRequest {
 
     private static Shipment getEasyPostShipment(@NonNull EasyPostUtil easyPostUtil, String carrier, String carrierId, String service, String billingReference, @NonNull Address toAddress,
                                                 @NonNull Address senderAddress, @NonNull Parcel parcel, CustomsInfo customsInfo) throws Exception {
-        if (carrier != null && service != null) {
+        if (carrier != null) {
             String billingRef = null;
             if (CARRIER_FEDEX.equals(carrier) && billingReference != null) {
                 billingRef = billingReference;
@@ -1095,6 +1101,10 @@ public class KitRequestShipping extends KitRequest {
     }
 
     public static void reactivateKitRequest(@NonNull String kitRequestId) {
+        reactivateKitRequest(kitRequestId, null);
+    }
+
+    public static void reactivateKitRequest(@NonNull String kitRequestId, String message) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KIT + QueryExtension.KIT_DEACTIVATED)) {
@@ -1128,7 +1138,7 @@ public class KitRequestShipping extends KitRequest {
         }
         if (results.resultValue != null) {
             KitRequestShipping kitRequestShipping = (KitRequestShipping) results.resultValue;
-            KitRequestShipping.writeNewKit(kitRequestId, kitRequestShipping.getEasypostAddressId(), kitRequestShipping.getMessage());
+            KitRequestShipping.writeNewKit(kitRequestId, kitRequestShipping.getEasypostAddressId(), message);
         }
     }
 

@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.route;
 
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.handlers.util.Result;
@@ -29,16 +30,16 @@ public class InstitutionRoute extends RequestHandler {
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
+        String requestBody = request.body();
+        JSONObject jsonObject = new JSONObject(requestBody);
+        String user = String.valueOf(jsonObject.get(RequestParameter.USER_ID));
+        if (!userId.equals(user)) {
+            throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + user);
+        }
         if (RoutePath.RequestMethod.POST.toString().equals(request.requestMethod())) {
-            String requestBody = request.body();
             if (StringUtils.isNotBlank(requestBody)) {
-                JSONObject jsonObject = new JSONObject(requestBody);
                 String ddpParticipantId = (String) jsonObject.get(RequestParameter.DDP_PARTICIPANT_ID);
                 String realm = (String) jsonObject.get(RequestParameter.DDP_REALM);
-                String user = (String) jsonObject.get(RequestParameter.USER_ID);
-                if (!userId.equals(user)) {
-                    throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + user);
-                }
                 if (UserUtil.checkUserAccess(realm, userId, "mr_view")) {
                     if (StringUtils.isNotBlank(ddpParticipantId) && StringUtils.isNotBlank(realm)) {
                         DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRoleByDDPParticipantAndRealm(realm, ddpParticipantId, DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
@@ -51,7 +52,7 @@ public class InstitutionRoute extends RequestHandler {
                             }
                         }
                     }
-                    logger.warn("Error missing ddpParticipantId " + ddpParticipantId + " or realm " + realm + " user " + user);
+                    logger.warn("Error missing ddpParticipantId " + ddpParticipantId + " or realm " + realm + " w/ userId " + user);
                 }
                 else {
                     response.status(500);
@@ -60,18 +61,14 @@ public class InstitutionRoute extends RequestHandler {
             }
         }
         else if (RoutePath.RequestMethod.PATCH.toString().equals(request.requestMethod())) {
-            JSONObject jsonObject = new JSONObject(request.body());
             String policy = "";
             if (jsonObject.has(RequestParameter.POLICY)) {
                 policy = String.valueOf(jsonObject.get(RequestParameter.POLICY));
             }
-            String user = String.valueOf(jsonObject.get(RequestParameter.USER_ID));
-            if (!userId.equals(user)) {
-                throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + user);
-            }
             if (UserUtil.checkUserAccess(null, userId, "mr_request")) {
                 String facility = String.valueOf(jsonObject.get(RequestParameter.FACILITY));
-                applyDestructionPolicy(user, facility, policy);
+                String userMail = String.valueOf(jsonObject.get(RequestParameter.USER_MAIL));
+                applyDestructionPolicy(userMail, facility, policy);
                 return new Result(200);
             }
             else {
@@ -84,7 +81,7 @@ public class InstitutionRoute extends RequestHandler {
         return new Result(500, UserErrorMessages.CONTACT_DEVELOPER);
     }
 
-    private void applyDestructionPolicy(String user, String facility, String policy) {
+    private void applyDestructionPolicy(@NonNull String user, String facility, String policy) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(APPLY_DESTRUCTION_POLICY)) {

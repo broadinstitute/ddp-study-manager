@@ -102,8 +102,7 @@ public class DashboardRoute extends RequestHandler {
                 return new Result(500, UserErrorMessages.NO_RIGHTS);
             }
         }
-        catch (
-                Exception e) {
+        catch (Exception e) {
             logger.error("Couldn't get dashboard information ", e);
             return new Result(500, UserErrorMessages.CONTACT_DEVELOPER);
         }
@@ -214,7 +213,7 @@ public class DashboardRoute extends RequestHandler {
         Map<String, Participant> participants = Participant.getParticipants(realm);
         Map<String, List<MedicalRecord>> medicalRecords = MedicalRecord.getMedicalRecords(realm);
         Map<String, List<OncHistoryDetail>> oncHistoryDetails = OncHistoryDetail.getOncHistoryDetails(realm);
-        Map<String, List<KitRequestShipping>> kitRequests = KitRequestShipping.getAllKitRequestsByRealm(realm, null, null, null, true);
+        Map<String, List<KitRequestShipping>> kitRequests = KitRequestShipping.getAllKitRequestsByRealm(realm, null, null, true);
         Map<String, List<AbstractionActivity>> abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(realm);
         Map<String, List<AbstractionGroup>> abstractionSummary = AbstractionFinal.getAbstractionFinal(realm);
 
@@ -285,19 +284,19 @@ public class DashboardRoute extends RequestHandler {
 
             Set<String> foundAtPt = new HashSet<>();
             Set<String> foundAtPtPeriod = new HashSet<>();
-            if (wrapper.getMedicalRecords() != null) {
+            if (wrapper.getMedicalRecords() != null && !wrapper.getMedicalRecords().isEmpty()) {
                 countMedicalRecordData(wrapper.getMedicalRecords(), foundAtPt, foundAtPtPeriod, dashboardValuesDetailed, dashboardValuesPeriodDetailed, start, end);
             }
-            if (wrapper.getOncHistoryDetails() != null) {
+            if (wrapper.getOncHistoryDetails() != null && !wrapper.getOncHistoryDetails().isEmpty()) {
                 countOncHistoryData(wrapper.getOncHistoryDetails(), foundAtPt, foundAtPtPeriod, dashboardValuesDetailed, dashboardValuesPeriodDetailed, start, end);
             }
-            if (wrapper.getKits() != null) {
+            if (wrapper.getKits() != null && !wrapper.getKits().isEmpty()) {
                 countKits(wrapper.getKits(), foundAtPt, foundAtPtPeriod, dashboardValuesDetailed, dashboardValuesPeriodDetailed, start, end);
             }
 
-            if (wrapper.getAbstractionActivities() != null) {
+            if (wrapper.getAbstractionActivities() != null && !wrapper.getAbstractionActivities().isEmpty()) {
                 for (AbstractionActivity activity : wrapper.getAbstractionActivities()) {
-                    if (AbstractionUtil.ACTIVITY_FINAL.equals(activity.getActivity()) && AbstractionUtil.STATUS_DONE.equals(activity.getStatus())) {
+                    if (AbstractionUtil.ACTIVITY_FINAL.equals(activity.getActivity()) && AbstractionUtil.STATUS_DONE.equals(activity.getAStatus())) {
                         incrementCounter(dashboardValues, "abstraction.done");
                         incrementCounterPeriod(dashboardValuesPeriod, "abstraction.done", activity.getLastChanged(), start, end);
                     }
@@ -310,7 +309,6 @@ public class DashboardRoute extends RequestHandler {
             for (String found : foundAtPtPeriod) {
                 incrementCounter(dashboardValuesPeriod, found);
             }
-
         }
         logger.info("Done calculating dashboard. Returning map now");
         return new DashboardInformation(dashboardValues, dashboardValuesDetailed, dashboardValuesPeriod, dashboardValuesPeriodDetailed);
@@ -319,7 +317,6 @@ public class DashboardRoute extends RequestHandler {
     private void countMedicalRecordData(@NonNull List<MedicalRecord> medicalRecordList, @NonNull Set<String> foundAtPT, @NonNull Set<String> foundAtPtPeriod,
                                         @NonNull Map<String, Integer> dashboardValuesDetailed, @NonNull Map<String, Integer> dashboardValuesPeriodDetailed,
                                         long start, long end) {
-
         for (MedicalRecord medicalRecord : medicalRecordList) {
             if (medicalRecord.isDuplicate()) {
                 incrementCounter(dashboardValuesDetailed, "duplicateMedicalRecord");
@@ -465,7 +462,7 @@ public class DashboardRoute extends RequestHandler {
                 incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitType() + ".sent", foundAtPT);
                 incrementCounterPeriod(dashboardValuesPeriodDetailed, "kit." + kit.getKitType() + ".sent", kit.getScanDate(), start, end, foundAtPtPeriod);
             }
-            else {
+            else if (kit.getDeactivatedDate() == 0) {
                 incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitType() + ".waiting", foundAtPT);
             }
             if (kit.getReceiveDate() != 0) {
@@ -591,7 +588,7 @@ public class DashboardRoute extends RequestHandler {
         if (dashboardValues.containsKey(dashboardValueName)) {
             counter = dashboardValues.get(dashboardValueName);
         }
-        if (date >= start && date <= end) {
+        if (date != 0 && date >= start && date <= end) {
             counter = counter + 1;
             if (foundAtPtPeriod != null) {
                 foundAtPtPeriod.add(dashboardValueName);

@@ -35,9 +35,12 @@ public class SystemUtil {
         return sdf.format(date);
     }
 
-    public static long getLongFromDateString(@NonNull String dateString) {
-        SimpleDateFormat sdf = new SimpleDateFormat(SystemUtil.DATE_FORMAT);
-        return getLong(dateString, sdf);
+    public static long getLongFromDateString(String dateString) {
+        if (StringUtils.isNotBlank(dateString)) {
+            SimpleDateFormat sdf = new SimpleDateFormat(SystemUtil.DATE_FORMAT);
+            return getLong(dateString, sdf);
+        }
+        return 0;
     }
 
     public static long getLongFromDetailDateString(@NonNull String dateString) {
@@ -90,6 +93,9 @@ public class SystemUtil {
             }
             catch (ParseException e1) {
                 SimpleDateFormat sdf = new SimpleDateFormat(SystemUtil.YEAR_DATE_FORMAT);
+                if (dateString.length() != 4) {
+                    throw new ParseException("String " + dateString + " is not a year", 0);
+                }
                 Date date = sdf.parse(dateString);
                 return date.getTime();
             }

@@ -672,8 +672,8 @@ public class DBTestUtil {
     }
 
     public static void insertLatestKitRequest(String insertKitRequestQuery, String insertKitQuery, String suffix, int kitType, String instanceId, String ddpParticipantId) {
-        String testAddress = "adr_b2f2aefea2f6499980675c95150cedbf";
-        String testShipment = "shp_f06a23f9caef4d93b74531a044bd392f";
+        String testAddress = "adr_268d35a1c9d149afa5be5c8e1d9a564d";
+        String testShipment = "shp_47b910a0738943aa9e5cf838de3e67ac";
         if (TestHelper.INSTANCE_ID_2 == instanceId) {
             testAddress = "adr_3633293dc8db49c99e962ca251a0eab4";
             testShipment = "shp_529711e853f048bb9c0cbc527204c7d4";

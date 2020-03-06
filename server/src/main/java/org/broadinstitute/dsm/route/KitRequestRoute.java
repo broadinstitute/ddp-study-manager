@@ -1,6 +1,5 @@
 package org.broadinstitute.dsm.route;
 
-import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.KitRequestShipping;
@@ -8,7 +7,6 @@ import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
-import org.broadinstitute.dsm.util.DDPRequestUtil;
 import org.broadinstitute.dsm.util.UserUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,12 +17,6 @@ import spark.Response;
 public class KitRequestRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(KitRequestRoute.class);
-
-    private final DDPRequestUtil ddpRequestUtil;
-
-    public KitRequestRoute(@NonNull DDPRequestUtil ddpRequestUtil) {
-        this.ddpRequestUtil = ddpRequestUtil;
-    }
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
@@ -47,7 +39,7 @@ public class KitRequestRoute extends RequestHandler {
             if (queryParams.value(RoutePath.KIT_TYPE) != null) {
                 kitType = queryParams.get(RoutePath.KIT_TYPE).value();
             }
-            return KitRequestShipping.getKitRequestsByRealm(realm, target, kitType, ddpRequestUtil);
+            return KitRequestShipping.getKitRequestsByRealm(realm, target, kitType);
         }
         else {
             response.status(500);

@@ -37,7 +37,7 @@ public class TestHelper {
     public static final String SELECT_EMAILQUEUE_QUERY = "select * from EMAIL_QUEUE where EMAIL_RECORD_ID = ? and REMINDER_TYPE = ? and EMAIL_DATE_PROCESSED is null";
     public static final String SELECT_USER_SETTING = "select * from user_settings settings, access_user user where user.user_id = settings.user_id and user.is_active = 1 and user.name = ?";
 
-    public static final String TEST_DDP = "testDDP";
+    public static final String TEST_DDP = "TestDDP";
     public static final String TEST_DDP_2 = "anotherDDP";
     public static final String TEST_DDP_MIGRATED = "migratedDDP";
     public static final String DDP_PROMISE = "promise";
@@ -129,11 +129,19 @@ public class TestHelper {
             DBTestUtil.executeQuery("INSERT INTO ddp_group set name = \"test\", description=\"Unit Test\"");
         }
         //setting roles for test user for test group
-        List<String> roles = UserUtil.getUserRolesPerRealm(UserUtil.SQL_USER_ROLES_PER_REALM, "1", TEST_DDP);
+        List<String> roles = UserUtil.getUserRolesPerRealm("SELECT role.name FROM  access_user_role_group roleGroup LEFT JOIN ddp_instance_group gr on (gr.ddp_group_id = roleGroup.group_id) " +
+                "LEFT JOIN access_user user on (roleGroup.user_id = user.user_id) LEFT JOIN ddp_instance realm on (realm.ddp_instance_id = gr.ddp_instance_id) " +
+                "LEFT JOIN access_role role on (role.role_id = roleGroup.role_id) WHERE user.name = ? and instance_name = ?", "THE UNIT TESTER 1", TEST_DDP);
+        //setting roles for test user for test group
+        List<String> roles2 = UserUtil.getUserRolesPerRealm("SELECT role.name FROM  access_user_role_group roleGroup LEFT JOIN ddp_instance_group gr on (gr.ddp_group_id = roleGroup.group_id) " +
+                "LEFT JOIN access_user user on (roleGroup.user_id = user.user_id) LEFT JOIN ddp_instance realm on (realm.ddp_instance_id = gr.ddp_instance_id) " +
+                "LEFT JOIN access_role role on (role.role_id = roleGroup.role_id) WHERE user.name = ? and instance_name = ?", "THE UNIT TESTER 1", "angio");
         String testGroup = DBTestUtil.getQueryDetail("SELECT * FROM ddp_group where name = ?", "test", "group_id");
+        String testGroup2 = DBTestUtil.getQueryDetail("SELECT * FROM ddp_group where name = ?", "cmi", "group_id");
         String testUser = DBTestUtil.getQueryDetail("SELECT * FROM access_user where name = ?", "THE UNIT TESTER 1", "user_id");
 
         checkRole("mr_view", roles, testUser, testGroup);
+        checkRole("mr_view", roles2, testUser, testGroup2);
         checkRole("mr_request", roles, testUser, testGroup);
         checkRole("ndi_download", roles, testUser, testGroup);
         checkRole("mr_abstraction_admin", roles, testUser, testGroup);
@@ -152,6 +160,12 @@ public class TestHelper {
         checkRole("participant_event", roles, testUser, testGroup);
         checkRole("participant_exit", roles, testUser, testGroup);
         checkRole("survey_creation", roles, testUser, testGroup);
+        checkRole("field_settings", roles, testUser, testGroup);
+
+        //adding instance setting
+        if (!DBTestUtil.checkIfValueExists("SELECT * from instance_settings where ddp_instance_id = (SELECT ddp_instance_id from ddp_instance where instance_name = ?) ", TEST_DDP)) {
+            DBTestUtil.executeQuery("INSERT INTO instance_settings set mr_cover_pdf = \"[{\\\"value\\\":\\\"exchange_cb\\\", \\\"name\\\":\\\"MD to MD exchange\\\", \\\"type\\\":\\\"checkbox\\\"}]\", ddp_instance_id = (SELECT ddp_instance_id from ddp_instance where instance_name = \"" + TEST_DDP + "\") ");
+        }
 
         DBTestUtil.executeQuery("UPDATE ddp_instance set is_active = 1 where instance_name = \"" + TEST_DDP_MIGRATED + "\"");
 
@@ -254,7 +268,7 @@ public class TestHelper {
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
         String valueFromDB = DBTestUtil.getQueryDetail(SELECT_DATA_MEDICALRECORD_QUERY, medicalRecordId, columnName);
 
-        if (!valueName.equals("m.followUps")) {//because difference in Json parsing this will be checked in a separate test TODO Pegah - where?
+        if (!valueName.equals("m.followUps")) {
             Assert.assertEquals(value, valueFromDB);
         }
 

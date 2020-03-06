@@ -50,15 +50,12 @@ public class TissueList {
     }
 
     public static List<TissueList> getAllTissueListsForRealm(String realm, String query) {
-        logger.info(query);
         List<TissueList> results = new ArrayList<>();
         SimpleResult result = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, realm);
                 try (ResultSet rs = stmt.executeQuery()) {
-                    String oncHistoryDetailId = "";
-                    List<Tissue> tissues = new ArrayList<>();
                     OncHistoryDetail oncHistory = null;
                     String ptId = null;
                     while (rs.next()) {
@@ -72,7 +69,6 @@ public class TissueList {
                         }
                         results.add(tissueList);
                     }
-
                     dbVals.resultValue = results;
                 }
                 catch (Exception e) {
@@ -89,7 +85,6 @@ public class TissueList {
         }
         List<TissueList> finalResult = (List<TissueList>) result.resultValue;
         logger.info("Got " + finalResult.size() + " TissueLists");
-
         return finalResult;
     }
 }

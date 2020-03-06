@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.db;
+package org.broadinstitute.dsm.model;
 
 import lombok.Data;
 
