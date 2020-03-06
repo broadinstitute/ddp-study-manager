@@ -76,32 +76,35 @@ public class ParticipantWrapper {
             List<String> baseList = null;
             //filter the lists depending on filter
             for (String source : filters.keySet()) {
-                if (DBConstants.DDP_PARTICIPANT_ALIAS.equals(source)) {
-                    participants = Participant.getParticipants(instance.getName(), filters.get(source));
-                    baseList = getCommonEntries(baseList, new ArrayList<>(participants.keySet()));
-                }
-                else if (DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(source)) {
-                    medicalRecords = MedicalRecord.getMedicalRecords(instance.getName(), filters.get(source));
-                    baseList = getCommonEntries(baseList, new ArrayList<>(medicalRecords.keySet()));
-                }
-                else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(source)) {
-                    oncHistories = OncHistoryDetail.getOncHistoryDetails(instance.getName(), filters.get(source));
-                    baseList = getCommonEntries(baseList, new ArrayList<>(oncHistories.keySet()));
-                }
-                else if (DBConstants.DDP_KIT_REQUEST_ALIAS.equals(source)) {
-                    kitRequests = KitRequestShipping.getKitRequests(instance.getName(), filters.get(source));
-                    baseList = getCommonEntries(baseList, new ArrayList<>(kitRequests.keySet()));
-                }
-                else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
-                    abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName(), filters.get(source));
-                    baseList = getCommonEntries(baseList, new ArrayList<>(abstractionActivities.keySet()));
-                }
-                //                else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
-                //                    abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName(), filters.get(source));
-                //                    baseList = getCommonEntries(baseList, new ArrayList<>(abstractionSummary.keySet()));
-                //                }
-                else {
-                    participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filters.get(source));
+                if (StringUtils.isNotBlank(filters.get(source))) {
+                    if (DBConstants.DDP_PARTICIPANT_ALIAS.equals(source)) {
+                        participants = Participant.getParticipants(instance.getName(), filters.get(source));
+                        baseList = getCommonEntries(baseList, new ArrayList<>(participants.keySet()));
+                    }
+                    else if (DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(source)) {
+                        medicalRecords = MedicalRecord.getMedicalRecords(instance.getName(), filters.get(source));
+                        baseList = getCommonEntries(baseList, new ArrayList<>(medicalRecords.keySet()));
+                    }
+                    else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(source)) {
+                        oncHistories = OncHistoryDetail.getOncHistoryDetails(instance.getName(), filters.get(source));
+                        baseList = getCommonEntries(baseList, new ArrayList<>(oncHistories.keySet()));
+                    }
+                    else if (DBConstants.DDP_KIT_REQUEST_ALIAS.equals(source)) {
+                        kitRequests = KitRequestShipping.getKitRequests(instance.getName(), filters.get(source));
+                        baseList = getCommonEntries(baseList, new ArrayList<>(kitRequests.keySet()));
+                    }
+                    else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
+                        abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName(), filters.get(source));
+                        baseList = getCommonEntries(baseList, new ArrayList<>(abstractionActivities.keySet()));
+                    }
+                    //                else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
+                    //                    abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName(), filters.get(source));
+                    //                    baseList = getCommonEntries(baseList, new ArrayList<>(abstractionSummary.keySet()));
+                    //                }
+                    else {
+                        participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filters.get(source));
+                        baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
+                    }
                 }
             }
             //get all the list which were not filtered

@@ -496,11 +496,11 @@ public class ElasticSearchUtil {
                 }
                 else {
                     //activity user entered
-                    activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID, surveyParam[1]).operator(Operator.AND));
+                    activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID, surveyParam[1]));
                     try {
                         //todo check date search
                         SystemUtil.getLongFromString(userEntered);
-                        activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_DATE, userEntered).operator(Operator.AND));
+                        activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_DATE, userEntered));
                     }
                     catch (ParseException e) {
                         //was no date string so go for normal text
@@ -514,12 +514,12 @@ public class ElasticSearchUtil {
                         }
                         else {
                             if (must) {
-                                activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered).operator(Operator.AND));
+                                activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
                             }
                             else {
                                 QueryBuilder tmpBuilder = findQueryBuilderForFieldName(activityAnswer, ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
                                 if (tmpBuilder != null) {
-                                    ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered).operator(Operator.OR));
+                                    ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
                                 }
                                 else {
                                     activityAnswer.should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
