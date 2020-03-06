@@ -25,17 +25,14 @@ export class ViewFilter {
     let currentFilter = null;
     let parsedColumns: {} = Filter.parseToColumnArray( columns, allColumns );
     if (json.userId !== "System" && json.filters != undefined) {
-      let s = "";
-      currentFilter = Filter.parseToCurrentFilterArray(json, allColumns, s);
+      currentFilter = Filter.parseToCurrentFilterArray(json, allColumns);
       let p = {};
       for (let key of Object.keys( parsedColumns )) {
         let tmp = new Array<Filter>();
         for (let f of parsedColumns[ key ]) {
-          //          console.log(f);
           let filteredColumn = currentFilter.find( filter => {
             return filter.participantColumn.name === f.participantColumn.name && filter.participantColumn.tableAlias === key;
           } );
-          //          console.log(filteredColumn);
           if (filteredColumn == undefined) {
             tmp.push( f );
           }

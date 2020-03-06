@@ -24,10 +24,11 @@ public abstract class PDFProcessor implements BasicProcessor {
 
     /**
      * Loads pdf form template, fills in some values, and creates new stream with completed form.
-     * @param fields text fields to complete
-     * @param bytes byte[] of template file
-     * @return stream with complete form as ByteArrayInputStream
      *
+     * @param fields text fields to complete
+     * @param bytes  byte[] of template file
+     * @return stream with complete form as ByteArrayInputStream
+     * <p>
      * IMPORTANT: This method returns ByteArrayInputStream. So you should NOT use this class if you have large pdf files you want
      * to generate!
      */
@@ -64,7 +65,9 @@ public abstract class PDFProcessor implements BasicProcessor {
                 }
             }
 
-            if (flatten) acroForm.flatten(); //converts from pdf form to regular pdf
+            if (flatten) {
+                acroForm.flatten(); //converts from pdf form to regular pdf
+            }
 
             //save the completed form
             ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -104,12 +107,19 @@ public abstract class PDFProcessor implements BasicProcessor {
             String bucketName = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_CONFIG_BUCKET);
             try {
                 if (GoogleBucket.bucketExists(gcpCreds, gcpName, bucketName)) {
+                    logger.info("Downloading template " + fileName + " from bucket " + bucketName);
                     return GoogleBucket.downloadFile(gcpCreds, gcpName, bucketName, fileName);
+                }
+                else {
+                    logger.error("Google bucket " + bucketName + " does not exist");
                 }
             }
             catch (Exception e) {
-                throw new RuntimeException("Couldn't save consent pdf in google bucket ", e);
+                throw new RuntimeException("Couldn't get template from google bucket ", e);
             }
+        }
+        else {
+            logger.error("Credentials missing to download pdf template");
         }
         return null;
     }

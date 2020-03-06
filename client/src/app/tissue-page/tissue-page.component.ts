@@ -68,7 +68,7 @@ export class TissuePageComponent implements OnInit {
 
   ngOnInit() {
     //    console.log(this.oncHistoryDetail.additionalValues);
-    if (this.participant != null && this.participant.data.status.indexOf(Statics.EXITED) == -1) {
+    if ((this.participant != null && this.participant.data.status.indexOf(Statics.EXITED) == -1)) {
       this.participantExited = false;
       //      console.log("*");
     }
@@ -146,7 +146,6 @@ export class TissuePageComponent implements OnInit {
           value: v
         }, null, "participantId", this.participant.participant.ddpParticipantId, Statics.ONCDETAIL_ALIAS);
       let patch = patch1.getPatch();
-      console.log(patch);
       this.patchFinished = false;
       this.currentPatchField = parameterName;
       this.dsmService.patchParticipantRecord(JSON.stringify(patch)).subscribe(// need to subscribe, otherwise it will not send!
@@ -157,7 +156,6 @@ export class TissuePageComponent implements OnInit {
             if (result.body != null) {
               let jsonData: any | any[] = JSON.parse(result.body);
               if (jsonData instanceof Array) {
-                console.log(jsonData);
                 jsonData.forEach((val) => {
                   let nameValue = NameValue.parse(val);
                   this.oncHistoryDetail[nameValue.name.substr(nameValue.name.indexOf(".") + 1)] = nameValue.value;
@@ -170,7 +168,6 @@ export class TissuePageComponent implements OnInit {
           this.currentPatchField = null;
         },
         err => {
-          //todo error message?!
         }
       );
     }
@@ -193,7 +190,8 @@ export class TissuePageComponent implements OnInit {
     let data = {
       "facility": this.oncHistoryDetail.facility,
       "policy": destructionPolicy,
-      "userId": this.role.userMail()
+      "userId": this.role.userID(),
+      "userMail": this.role.userMail()
     };
     this.dsmService.applyDestructionPolicyToAll(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), JSON.stringify(data)).subscribe(data => {
         let result = Result.parse(data);

@@ -4,9 +4,15 @@ import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.util.TestUtil;
 import org.broadinstitute.dsm.util.tools.ParticipantMedicalRecordTool;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class ParticipantMedicalRecordToolTest extends TestHelper {
+
+    @BeforeClass
+    public static void first() {
+        setupDB();
+    }
 
     @Test
     public void testParticipantMedicalRecordTool() {

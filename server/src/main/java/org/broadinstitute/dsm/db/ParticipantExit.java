@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.db;
 
 import lombok.Data;
 import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
@@ -9,6 +10,7 @@ import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.DDPRequestUtil;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +47,10 @@ public class ParticipantExit {
     }
 
     public static Map<String, ParticipantExit> getExitedParticipants(@NonNull String realm) {
+        return getExitedParticipants(realm, true);
+    }
+
+    public static Map<String, ParticipantExit> getExitedParticipants(@NonNull String realm, boolean addParticipantInformation) {
         Map<String, ParticipantExit> exitedParticipants = new HashMap<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -67,12 +73,31 @@ public class ParticipantExit {
         });
 
         if (results.resultException != null) {
-            logger.error("Couldn't exited participants for " + realm, results.resultException);
+            logger.error("Couldn't get exited participants for " + realm, results.resultException);
         }
         else {
-            DDPInstance instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
-            if (!instance.isHasRole()) {
-                for (ParticipantExit exitParticipant : exitedParticipants.values()) {
+            if (addParticipantInformation) {
+                addParticipantInformation(realm, exitedParticipants.values());
+            }
+        }
+        return exitedParticipants;
+    }
+
+    private static void addParticipantInformation(@NonNull String realm, @NonNull Collection<ParticipantExit> exitedParticipants) {
+        DDPInstance instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
+        if (!instance.isHasRole()) {
+            if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
+                Map<String, Map<String, Object>> participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(realm, instance.getParticipantIndexES());
+                for (ParticipantExit exitParticipant : exitedParticipants) {
+                    DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData, exitParticipant.getParticipantId());
+                    if (ddpParticipant != null) {
+                        exitParticipant.setShortId(ddpParticipant.getShortId());
+                        exitParticipant.setLegacyShortId(ddpParticipant.getLegacyShortId());
+                    }
+                }
+            }
+            else {
+                for (ParticipantExit exitParticipant : exitedParticipants) {
                     if (exitParticipant.isInDDP()) {
                         String sendRequest = instance.getBaseUrl() + RoutePath.DDP_PARTICIPANTS_PATH + "/" + exitParticipant.getParticipantId();
                         try {
@@ -92,7 +117,6 @@ public class ParticipantExit {
                 }
             }
         }
-        return exitedParticipants;
     }
 
     public static void exitParticipant(@NonNull String ddpParticipantId, @NonNull long currentTime, @NonNull String userId,

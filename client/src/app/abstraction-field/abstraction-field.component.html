@@ -38,9 +38,9 @@
     <td [ngClass]="{'Width--15': true, 'TD--Padding': true, 'Abstraction-Background-Oki': field.qcWrapper.equals && (type === 'abstraction' || type === 'review'), 'Abstraction-Background-Warning': !field.qcWrapper.equals && (type === 'abstraction' || type === 'review'),
           'Abstraction-Background-Check': field.qcWrapper.check && (type === 'abstraction' || type === 'review'), 'Cell--Bottom-Border': field.type === 'medication' || field.type === 'recurrence'}">
       <b>{{field.displayName}}</b>
-      <div *ngIf="participant[activityOfField].colorNotFinished && (!field.fieldValue.noData
+      <div *ngIf="participant[activityOfField] != null && participant[activityOfField].colorNotFinished && (!field.fieldValue.noData
       && (field.fieldValue.value === ''|| field.fieldValue.value === null || field.fieldValue.value == undefined))"
-            class="Color--warn"><b>Field not completed</b></div>
+           class="Color--warn"><b>Field not completed</b></div>
       <a href="#" *ngIf="field.helpText != null && field.helpText !== '' && (type !== 'abstraction' && type !== 'review')"
          [attr.aria-expanded]="field.viewHelpText" [attr.aria-controls]="field.displayName+'_Help'"
          (click)="field.viewHelpText = !field.viewHelpText; doNothing()">

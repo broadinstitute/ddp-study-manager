@@ -113,7 +113,7 @@
           <br/>
           <br/>
           <button md-raised-button color="primary"
-                  [disabled]="selectedPDF == null || selectedPDF === ''"
+                  [disabled]="selectedPDF == null || selectedPDF === '' || disableDownloadConsent"
                   (click)="downloadPDFs(selectedPDF)">Download selected PDF
           </button>
         </ng-container>
@@ -313,7 +313,7 @@
         </td>
       </tr>
       <tr>
-        <td>Fax Sent</td>
+        <td>Initial MR Request</td>
         <td>
           <app-field-datepicker [colorDuringPatch]="isPatchedCurrently('faxSent')" [disabled]="participantExited"
                                 [dateString]="medicalRecord.faxSent" (dateChanged)="valueChanged($event, 'faxSent')"></app-field-datepicker>
@@ -347,7 +347,7 @@
         </td>
       </tr>
       <tr *ngIf="medicalRecord.faxSent != null">
-        <td>MR Received</td>
+        <td>Initial MR Received</td>
         <td colspan="3">
           <app-field-datepicker [dateString]="medicalRecord.mrReceived" (dateChanged)="valueChanged($event, 'mrReceived')"
                                 [colorDuringPatch]="isPatchedCurrently('mrReceived')" [disabled]="participantExited"></app-field-datepicker>
@@ -355,7 +355,7 @@
       </tr>
       <ng-container *ngFor="let followup of medicalRecord.followUps; let i = index;">
         <tr>
-          <td class="Width--20">Follow-Up {{i + 1}} Requested</td>
+          <td class="Width--20">{{i + 1}} Follow-Up MR Request</td>
           <td>
             <app-field-datepicker [colorDuringPatch]="isPatchedCurrently('fRequest1' + i)"
                                   [dateString]="followup.fRequest1" [disabled]="participantExited"
@@ -451,7 +451,7 @@
         <td colspan="3">
           <br/>
           <md-input-container *ngIf="fieldSetting.displayType === 'TEXT' || fieldSetting.displayType === ''|| fieldSetting.displayType == null"
-                              [ngClass]="{'Width--100': true, 'Input--Min-WIDTH': true, 'Color--Field--Patched': isPatchedCurrently(col.columnName)}">
+                              [ngClass]="{'Width--100': true, 'Input--Min-WIDTH': true, 'Color--Field--Patched': isPatchedCurrently(fieldSetting.columnName)}">
             <input mdInput maxlength="200" [disabled]="participantExited"
                    value="{{getAdditionalValue(fieldSetting.columnName)}}" placeholder="{{fieldSetting.columnDisplay}}"
                    (change)="onAdditionalValueChange($event, fieldSetting.columnName)"
@@ -501,7 +501,7 @@
       <tbody>
       <tr>
         <td class="Width--20">
-          Start date
+          Start date (MM/dd/yyyy)
         </td>
         <td class="Width--80">
           <app-field-datepicker [dateString]="startDate" [allowUnknownDay]="true" (dateChanged)="startDateChanged($event)"></app-field-datepicker>
@@ -509,67 +509,18 @@
       </tr>
       <tr>
         <td>
-          End date
+          End date (MM/dd/yyyy)
         </td>
         <td>
           <app-field-datepicker [dateString]="endDate" (dateChanged)="endDateChanged($event)"></app-field-datepicker>
         </td>
       </tr>
-      <tr>
+      <tr *ngFor="let mrCoverSetting of mrCoverPdfSettings">
         <td>
-          <md-checkbox [(ngModel)]="notesCb" color="primary"></md-checkbox>
+          <md-checkbox [(ngModel)]="mrCoverSetting.selected" color="primary"></md-checkbox>
         </td>
         <td>
-          All clinic notes from treating providers, including medical oncologists, residents, fellows, radiation oncologists, surgeons, nurse practitioners,
-          etc.
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <md-checkbox [(ngModel)]="treatmentCb" color="primary"></md-checkbox>
-        </td>
-        <td>
-          Cancer treatment data (including radiation, chemotherapy and hormonal therapy).
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <md-checkbox [(ngModel)]="pathologyCb" color="primary"></md-checkbox>
-        </td>
-        <td>
-          Pathology reports
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <md-checkbox [(ngModel)]="operativeCb" color="primary"></md-checkbox>
-        </td>
-        <td>
-          Operative reports
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <md-checkbox [(ngModel)]="referralsCb" color="primary"></md-checkbox>
-        </td>
-        <td>
-          Referrals
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <md-checkbox [(ngModel)]="exchangeCb" color="primary"></md-checkbox>
-        </td>
-        <td>
-          MD to MD exchange
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <md-checkbox [(ngModel)]="geneticCb" color="primary"></md-checkbox>
-        </td>
-        <td>
-          Genetic testing reports
+          {{mrCoverSetting.name}}
         </td>
       </tr>
       </tbody>

@@ -9,16 +9,12 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
-import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.util.DBTestUtil;
 import org.broadinstitute.dsm.util.EasyPostUtil;
 import org.broadinstitute.dsm.util.TestUtil;
-import org.broadinstitute.dsm.util.tools.util.DBUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.HashMap;
 
 public class CreateLabelTool {
 
@@ -40,15 +36,20 @@ public class CreateLabelTool {
 
         TransactionWrapper.reset(TestUtil.UNIT_TEST);
         TransactionWrapper.init(cfg.getInt("portal.maxConnections"), cfg.getString("portal.dbUrl"), cfg, false);
-        createEasyPostLabel();
+
+        //select the method you want to run!
+//        createEasyPostLabel();
+//        getAddressFromID();
+//        verifyAddress();
     }
 
     /**
      * Method to create label for shipping
-     *
+     * <p>
      * change name and address of participant
      * change API_KEY__EASYPOST to the key you want to use!
      * change BILLING_REF to the billing reference or use null if you don't want one
+     *
      * @throws Exception
      */
     public static void createEasyPostLabel() {
@@ -78,6 +79,42 @@ public class CreateLabelTool {
             Shipment shipment2Participant = easyPostUtil.buyShipment(carrier, carrierID, service,
                     toAddress, returnAddress, parcel, billingRef, null);
             logger.info(shipment2Participant.getLabelUrl());
+        }
+        catch (EasyPostException e) {
+            logger.error(e.toString());
+        }
+    }
+
+    public static void getAddressFromID() {
+        String apiKey = "API_KEY__EASYPOST";
+        String easyPostAddressId = "ADDRESS_ID";
+        try {
+            EasyPostUtil easyPostUtil = new EasyPostUtil(null, apiKey);
+            Address address = easyPostUtil.getAddress(easyPostAddressId);
+            logger.info(address.getName());
+        }
+        catch (EasyPostException e) {
+            logger.error(e.toString());
+        }
+    }
+
+    public static void verifyAddress() {
+        String apiKey = "API_KEY__EASYPOST";
+
+        DDPParticipant participant = new DDPParticipant();
+        participant.setFirstName("S");
+        participant.setLastName("M");
+        participant.setStreet1("415 Main St");
+        participant.setStreet2("Floor 7");
+        participant.setPostalCode("02142");
+        participant.setCity("Cambridge");
+        participant.setState("MA");
+        participant.setCountry("USA");
+        try {
+            EasyPostUtil easyPostUtil = new EasyPostUtil(null, apiKey);
+            Address address = easyPostUtil.createAddress(participant, "617-714-8952");
+            Address veri = address.verify(apiKey);
+            logger.info(veri.getName());
         }
         catch (EasyPostException e) {
             logger.error(e.toString());

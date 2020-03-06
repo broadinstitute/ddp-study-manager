@@ -21,6 +21,7 @@ public class RequestParameter {
     public static final String LOOKUP_FIELD = "field";
     public static final String LOOKUP_VALUE = "value";
     public static final String USER_ID = "userId";
+    public static final String USER_MAIL = "userMail";
     public static final String CONFIG_NAME = "configName";
 
     public static final String POLICY = "policy";

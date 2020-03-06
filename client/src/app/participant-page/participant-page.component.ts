@@ -14,6 +14,7 @@ import {Statics} from "../utils/statics";
 import {OncHistoryDetail} from "../onc-history-detail/onc-history-detail.model";
 import {ModalComponent} from "../modal/modal.component";
 import {Tissue} from "../tissue/tissue.model";
+import {Value} from "../utils/value.model";
 import {DDPParticipantInformation} from "./participant-page.model";
 import {Result} from "../utils/result.model";
 import {NameValue} from "../utils/name-value.model";
@@ -40,6 +41,7 @@ export class ParticipantPageComponent implements OnInit {
   @Input() activeTab: string;
   @Input() activityDefinitions: Array<ActivityDefinition>;
   @Input() settings: {};
+  @Input() mrCoverPdfSettings: Value[];
   @Input() oncHistoryId: string;
   @Input() mrId: string;
   @Output() leaveParticipant = new EventEmitter();
@@ -80,6 +82,7 @@ export class ParticipantPageComponent implements OnInit {
   finalFields: Array<AbstractionGroup>;
 
   gender: string;
+  counterReceived: number = 0;
 
   constructor( private auth: Auth, private compService: ComponentService, private dsmService: DSMService, private router: Router,
                private role: RoleService, private util: Utils, private route: ActivatedRoute ) {
@@ -90,7 +93,7 @@ export class ParticipantPageComponent implements OnInit {
       let realm = params[ DSMService.REALM ] || null;
       if (realm != null) {
         //        this.compService.realmMenu = realm;
-        this.leaveParticipant.emit( true );
+        this.leaveParticipant.emit( null );
       }
     } );
   }
@@ -114,10 +117,10 @@ export class ParticipantPageComponent implements OnInit {
 
   private loadInstitutions() {
     if (this.participant.data != null) {
-      if (this.participant.data.status.indexOf( Statics.EXITED ) == -1) {
+      if (this.participant.data.status === undefined || this.participant.data.status.indexOf(Statics.EXITED) == -1) {
         this.participantExited = false;
       }
-      if (this.participant.data.status.indexOf( Statics.CONSENT_SUSPENDED ) == -1) {
+      if (this.participant.data.status === undefined || this.participant.data.status.indexOf(Statics.CONSENT_SUSPENDED) == -1) {
         this.participantNotConsented = false;
       }
       //if surveys is null then it is a gen2 participant > go and get institution information
@@ -127,11 +130,10 @@ export class ParticipantPageComponent implements OnInit {
         }
         this.loadingParticipantPage = true;
         let ddpParticipantId = this.participant.data.profile[ "guid" ];
-        this.dsmService.getMedicalRecordData(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), ddpParticipantId).subscribe(
+        this.dsmService.getMedicalRecordData( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), ddpParticipantId ).subscribe(
           data => {
             let ddpInformation = DDPParticipantInformation.parse( data );
             if (ddpInformation != null) {
-              console.log( ddpInformation );
               this.participant.data.dsm[ "dateOfBirth" ] = ddpInformation.dob;
               let tmp = ddpInformation.dateOfDiagnosis;
               if (tmp != null && tmp.indexOf( "/" ) > -1) {
@@ -147,7 +149,6 @@ export class ParticipantPageComponent implements OnInit {
                 this.participant.data.dsm[ "hasConsentedToTissueSample" ] = true;
               }
 
-              let counterReceived: number = 0;
               let medicalRecords = this.participant.medicalRecords;
               for (let mr of medicalRecords) {
                 if (mr.mrDocumentFileNames != null) {
@@ -174,13 +175,10 @@ export class ParticipantPageComponent implements OnInit {
                   }
                 }
                 //add that here in case a mr was received but participant object does not know it
-                let receivedMedicalRecord = -1;
-                if (receivedMedicalRecord < 1) {
-                  if (mr.mrReceived != null && mr.mrReceived !== "") {
-                    counterReceived = counterReceived + 1;
-                  }
+                if (mr.mrReceived != null && mr.mrReceived !== "") {
+                  this.counterReceived = this.counterReceived + 1;
                 }
-                if (counterReceived > 0) {
+                if (this.counterReceived > 0) {
                   if (this.hasRole().isAbstracter() || this.hasRole().isQC()) {
                     this.loadAbstractionValues();
                   }
@@ -198,12 +196,12 @@ export class ParticipantPageComponent implements OnInit {
               this.auth.logout();
             }
             this.loadingParticipantPage = false;
-            this.additionalMessage = "Error - Saving loading participant information\nPlease contact your DSM developer";
+            this.additionalMessage = "Error - Loading participant institution information\nPlease contact your DSM developer";
           }
         );
       }
       else {// don't need to load institution data
-        let counterReceived: number = 0;
+        this.counterReceived = 0;
         let medicalRecords = this.participant.medicalRecords;
         for (let mr of medicalRecords) {
           if (mr.mrDocumentFileNames != null) {
@@ -218,13 +216,10 @@ export class ParticipantPageComponent implements OnInit {
             this.showParticipantRecord = true;
           }
           //add that here in case a mr was received but participant object does not know it
-          let receivedMedicalRecord = -1;
-          if (receivedMedicalRecord < 1) {
-            if (mr.mrReceived != null && mr.mrReceived !== "") {
-              counterReceived = counterReceived + 1;
-            }
+          if (mr.mrReceived != null && mr.mrReceived !== "") {
+            this.counterReceived = this.counterReceived + 1;
           }
-          if (counterReceived > 0) {
+          if (this.counterReceived > 0) {
             if (this.hasRole().isAbstracter() || this.hasRole().isQC()) {
               this.loadAbstractionValues();
             }
@@ -251,8 +246,8 @@ export class ParticipantPageComponent implements OnInit {
           }
           else {
             if (this.gender != oncHis.gender && oncHis.gender != undefined && oncHis.gender != null) {
-              console.log( this.gender );
-              console.log( oncHis.gender );
+              // console.log( this.gender );
+              // console.log( oncHis.gender );
               this.gender = "Discrepancy in gender between the different oncHistories";
             }
           }
@@ -320,7 +315,7 @@ export class ParticipantPageComponent implements OnInit {
       let patch = patch1.getPatch();
       this.currentPatchField = parameterName;
       this.patchFinished = false;
-      console.log( JSON.stringify( patch ) );
+      // console.log( JSON.stringify( patch ) );
       this.dsmService.patchParticipantRecord( JSON.stringify( patch ) ).subscribe(// need to subscribe, otherwise it will not send!
         data => {
           let result = Result.parse( data );
@@ -377,7 +372,6 @@ export class ParticipantPageComponent implements OnInit {
             if (jsonData instanceof Array) {
               jsonData.forEach( ( val ) => {
                 let nameValue = NameValue.parse( val );
-                console.log( nameValue );
                 oncHis[ nameValue.name.substr( 3 ) ] = nameValue.value;
               } );
             }
@@ -395,17 +389,15 @@ export class ParticipantPageComponent implements OnInit {
   }
 
   public leavePage(): boolean {
-    this.participant = null;
     this.medicalRecord = null;
     this.compService.justReturning = true;
-    this.leaveParticipant.emit( true );
+    this.leaveParticipant.emit( this.participant );
+    this.participant = null;
     return false;
   }
 
   openTissue( object: any ) {
-    console.info( object );
     if (object != null) {
-      console.info( "yes" );
       this.oncHistoryDetail = object;
       this.showTissue = true;
     }
@@ -501,7 +493,7 @@ export class ParticipantPageComponent implements OnInit {
 
     this.dsmService.patchParticipantRecord( JSON.stringify( patch ) ).subscribe(// need to subscribe, otherwise it will not send!
       data => {
-        console.info( `response saving data: ${JSON.stringify( data, null, 2 )}` );
+        // console.info( `response saving data: ${JSON.stringify( data, null, 2 )}` );
       },
       err => {
         if (err._body === Auth.AUTHENTICATION_ERROR) {
@@ -516,7 +508,7 @@ export class ParticipantPageComponent implements OnInit {
 
   downloadRequestPDF( requestOncHistoryList: Array<OncHistoryDetail> ) {
     let map: { name: string, value: any }[] = [];
-    map.push({name: DSMService.REALM, value: localStorage.getItem(ComponentService.MENU_SELECTED_REALM)});
+    map.push( {name: DSMService.REALM, value: localStorage.getItem( ComponentService.MENU_SELECTED_REALM )} );
     for (let onc of requestOncHistoryList) {
       map.push( {name: "requestId", value: onc.oncHistoryDetailId} );
     }
@@ -632,7 +624,7 @@ export class ParticipantPageComponent implements OnInit {
       // this.summaryFields = [];
       this.loadingParticipantPage = true;
       let ddpParticipantId = this.participant.participant.ddpParticipantId;
-      this.dsmService.getAbstractionValues(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), ddpParticipantId).subscribe(
+      this.dsmService.getAbstractionValues( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), ddpParticipantId ).subscribe(
         data => {
           let jsonData: any | any[];
           if (data != null) {
@@ -680,8 +672,9 @@ export class ParticipantPageComponent implements OnInit {
   }
 
   lockParticipant( abstraction: Abstraction ) {
+    this.loadingParticipantPage = true;
     let ddpParticipantId = this.participant.participant.ddpParticipantId;
-    this.dsmService.changeMedicalRecordAbstractionStatus(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), ddpParticipantId, "in_progress", abstraction).subscribe(// need to subscribe, otherwise it will not send!
+    this.dsmService.changeMedicalRecordAbstractionStatus( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), ddpParticipantId, "in_progress", abstraction ).subscribe(// need to subscribe, otherwise it will not send!
       data => {
         let result = Result.parse( data );
         if (result.code != 200) {
@@ -693,11 +686,24 @@ export class ParticipantPageComponent implements OnInit {
             let abstraction: Abstraction = Abstraction.parse( jsonData );
             this.participant[ abstraction.activity ] = abstraction;
             this.activeTab = abstraction.activity;
+            let activity = this.participant.abstractionActivities.find( activity => activity.activity === abstraction.activity );
+            if (activity != null) {
+              let index = this.participant.abstractionActivities.indexOf( activity );
+              if (index != -1) {
+                activity.aStatus = abstraction.aStatus;
+                this.participant.abstractionActivities[ index ] = activity;
+              }
+            }
+            else {
+              this.participant.abstractionActivities.push( abstraction );
+            }
+            this.additionalMessage = null;
           }
           else {
             this.additionalMessage = "Error";
           }
         }
+        this.loadingParticipantPage = false;
       },
       err => {
         if (err._body === Auth.AUTHENTICATION_ERROR) {
@@ -709,7 +715,7 @@ export class ParticipantPageComponent implements OnInit {
 
   breakLockParticipant( abstraction: Abstraction ) {
     let ddpParticipantId = this.participant.participant.ddpParticipantId;
-    this.dsmService.changeMedicalRecordAbstractionStatus(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), ddpParticipantId, "clear", abstraction).subscribe(// need to subscribe, otherwise it will not send!
+    this.dsmService.changeMedicalRecordAbstractionStatus( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), ddpParticipantId, "clear", abstraction ).subscribe(// need to subscribe, otherwise it will not send!
       data => {
         let result = Result.parse( data );
         if (result.code != 200) {
@@ -720,6 +726,15 @@ export class ParticipantPageComponent implements OnInit {
             let jsonData: any | any[] = JSON.parse( result.body );
             let abstraction: Abstraction = Abstraction.parse( jsonData );
             this.participant[ abstraction.activity ] = abstraction;
+            let activity = this.participant.abstractionActivities.find( activity => activity.activity === abstraction.activity );
+            if (activity != null) {
+              let index = this.participant.abstractionActivities.indexOf( activity );
+              if (index != -1) {
+                activity.aStatus = abstraction.aStatus;
+                this.participant.abstractionActivities[ index ] = activity;
+              }
+            }
+            this.additionalMessage = null;
           }
           else {
             this.additionalMessage = "Error";
@@ -736,7 +751,7 @@ export class ParticipantPageComponent implements OnInit {
 
   submitParticipant( abstraction: Abstraction ) {
     let ddpParticipantId = this.participant.participant.ddpParticipantId;
-    this.dsmService.changeMedicalRecordAbstractionStatus(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), ddpParticipantId, "submit", abstraction).subscribe(// need to subscribe, otherwise it will not send!
+    this.dsmService.changeMedicalRecordAbstractionStatus( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), ddpParticipantId, "submit", abstraction ).subscribe(// need to subscribe, otherwise it will not send!
       data => {
         let result = Result.parse( data );
         if (result.code != 200 && result.body != null) {
@@ -747,6 +762,14 @@ export class ParticipantPageComponent implements OnInit {
           let jsonData: any | any[] = JSON.parse( result.body );
           let abstraction: Abstraction = Abstraction.parse( jsonData );
           this.participant[ abstraction.activity ] = abstraction;
+          let activity = this.participant.abstractionActivities.find( activity => activity.activity === abstraction.activity );
+          if (activity != null) {
+            let index = this.participant.abstractionActivities.indexOf( activity );
+            if (index != -1) {
+              activity.aStatus = abstraction.aStatus;
+              this.participant.abstractionActivities[ index ] = activity;
+            }
+          }
           this.additionalMessage = null;
           abstraction.colorNotFinished = false;
         }
@@ -768,7 +791,7 @@ export class ParticipantPageComponent implements OnInit {
     this.currentPatchField = "filesUsed";
     this.patchFinished = false;
     let ddpParticipantId = this.participant.participant.ddpParticipantId;
-    this.dsmService.changeMedicalRecordAbstractionStatus(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), ddpParticipantId, null, abstraction).subscribe(// need to subscribe, otherwise it will not send!
+    this.dsmService.changeMedicalRecordAbstractionStatus( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), ddpParticipantId, null, abstraction ).subscribe(// need to subscribe, otherwise it will not send!
       data => {
         let result = Result.parse( data );
         if (result.code != 200 && result.body != null) {
@@ -832,14 +855,15 @@ export class ParticipantPageComponent implements OnInit {
   getMedicalRecordName( name: string, ddpInstitutionId: string ) {
     if (this.participant.data != null && this.participant.data.profile != null && this.participant.data.medicalProviders != null) {
       let medicalProvider = this.participant.data.medicalProviders.find( medicalProvider => {
-        return medicalProvider.guid === ddpInstitutionId;
+        let tmpId = medicalProvider.legacyGuid != null && medicalProvider.legacyGuid !== 0 ? medicalProvider.legacyGuid : medicalProvider.guid;
+        return tmpId === ddpInstitutionId;
       } );
-      if (name) {
+      if (name != undefined && name != null && name !== "") {
         return name;
       }
       else {
         if (medicalProvider != null) {
-          if ("PHYSICIAN" === medicalProvider.institutionType) {
+          if ("PHYSICIAN" === medicalProvider.type) {
             return medicalProvider.physicianName;
           }
           else {

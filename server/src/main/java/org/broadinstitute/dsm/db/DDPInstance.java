@@ -1,10 +1,11 @@
 package org.broadinstitute.dsm.db;
 
+import com.google.gson.Gson;
 import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.dsm.exception.DuplicateException;
+import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
 import org.slf4j.Logger;
@@ -13,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,6 +30,10 @@ public class DDPInstance {
             "FROM ddp_instance realm, ddp_instance_role inRol, instance_role role WHERE realm.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id AND role.name = ? " +
             "AND realm.ddp_instance_id = main.ddp_instance_id) AS 'has_role', mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients FROM ddp_instance main " +
             "WHERE is_active = 1";
+    private static final String SQL_SELECT_INSTANCE_WITH_KIT_BEHAVIOR = "SELECT main.ddp_instance_id, instance_name, base_url, collaborator_id_prefix, migrated_ddp, billing_reference, " +
+            "es_participant_index, es_activity_definition_index, mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients, kit_behavior_change " +
+            "FROM ddp_instance main, instance_settings setting WHERE main.ddp_instance_id = setting.ddp_instance_id " +
+            "AND main.is_active = 1 AND setting.kit_behavior_change IS NOT NULL";
     public static final String SQL_SELECT_ALL_ACTIVE_REALMS = "SELECT ddp_instance_id, instance_name, base_url, collaborator_id_prefix, es_participant_index, es_activity_definition_index, " +
             "mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients, migrated_ddp, billing_reference FROM ddp_instance WHERE is_active = 1";
     private static final String SQL_SELECT_ACTIVE_REALMS_WITH_ROLE_INFORMATION_BY_PARTICIPANT_ID = "SELECT main.ddp_instance_id, main.instance_name, main.base_url, " +
@@ -58,6 +62,8 @@ public class DDPInstance {
     private final String billingReference;
     private final String participantIndexES;
     private final String activityDefinitionIndexES;
+
+    private InstanceSettings instanceSettings;
 
     public DDPInstance(String ddpInstanceId, String name, String baseUrl, String collaboratorIdPrefix, boolean hasRole,
                        int daysMrAttentionNeeded, int daysTissueAttentionNeeded, boolean hasAuth0Token, List<String> notificationRecipient,
@@ -325,5 +331,32 @@ public class DDPInstance {
             throw new RuntimeException("Couldn't get realm information for " + realm, results.resultException);
         }
         return (DDPInstance) results.resultValue;
+    }
+
+    public static List<DDPInstance> getDDPInstanceListWithKitBehavior() {
+        List<DDPInstance> ddpInstances = new ArrayList<>();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement bspStatement = conn.prepareStatement(SQL_SELECT_INSTANCE_WITH_KIT_BEHAVIOR)) {
+                try (ResultSet rs = bspStatement.executeQuery()) {
+                    while (rs.next()) {
+                        DDPInstance ddpInstance = getDDPInstanceFormResultSet(rs);
+                        List<Value> kitBehavior = Arrays.asList(new Gson().fromJson(rs.getString(DBConstants.KIT_BEHAVIOR_CHANGE), Value[].class));
+                        InstanceSettings instanceSettings = new InstanceSettings(null, kitBehavior);
+                        ddpInstance.setInstanceSettings(instanceSettings);
+                        ddpInstances.add(ddpInstance);
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting ddpInstances ", results.resultException);
+        }
+        return ddpInstances;
     }
 }

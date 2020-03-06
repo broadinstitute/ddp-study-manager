@@ -2,6 +2,7 @@ import {Injectable} from "@angular/core";
 import {Headers, Http, RequestOptions, Response, ResponseContentType, URLSearchParams} from "@angular/http";
 import {JwtHelper} from "angular2-jwt";
 import {Observable} from "rxjs";
+import {Value} from "../utils/value.model";
 import {SessionService} from "./session.service";
 import {RoleService} from "./role.service";
 import {Router} from "@angular/router";
@@ -197,26 +198,22 @@ export class DSMService {
     return this.http.patch( url, json, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
-  public downloadCoverPDFs( ddpParticipantId: string, medicalRecordId: string, startDate: string, endDate: string, notesCb: boolean,
-                            treatmentCb: boolean, pathologyCb: boolean, operativeCb: boolean, referralsCb: boolean, exchangeCb: boolean,
-                            geneticCb: boolean, realm: string ) {
+  public downloadCoverPDFs(ddpParticipantId: string, medicalRecordId: string, startDate: string, endDate: string, mrCoverPdfSettings: Value[],
+                           realm: string) {
     let url = this.baseUrl + DSMService.UI + "downloadPDF/cover/" + medicalRecordId;
     let map: { name: string, value: any }[] = [];
     map.push( {name: DSMService.REALM, value: realm} );
-    let json = {
+    let json: { [k: string]: any } = {};
+    json = {
       ddpParticipantId: ddpParticipantId,
       startDate: startDate,
       endDate: endDate,
-      notesCb: notesCb,
-      treatmentCb: treatmentCb,
-      pathologyCb: pathologyCb,
-      operativeCb: operativeCb,
-      referralsCb: referralsCb,
-      exchangeCb: exchangeCb,
-      geneticCb: geneticCb,
       userId: this.role.userID()
     };
-    // console.log(json);
+    for (let mrSetting of mrCoverPdfSettings) {
+      json[mrSetting.value] = mrSetting.selected;
+    }
+    // console.log( json );
     return this.http.post( url, JSON.stringify( json ), this.buildQueryPDFHeader( map ) ).map( ( res: Response ) => res.blob() ).catch( this.handleError );
   }
 
@@ -404,7 +401,7 @@ export class DSMService {
     map.push( {name: DSMService.REALM, value: realm} );
     map.push( {name: "kitType", value: kitType} );
     map.push( {name: "userId", value: this.role.userID()} );
-    map.push( {name: "uploadDuplicate", value: true} );
+    map.push( {name: "uploadAnyway", value: true} );
     return this.http.post( url, jsonParticipants, this.buildQueryUploadHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
@@ -477,8 +474,18 @@ export class DSMService {
   }
 
   public getPossiblePDFs( realm: string ): Observable<any> {
-    let url = this.baseUrl + DSMService.UI + "pdfs/" + realm;
-    return this.http.get( url, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
+    let url = this.baseUrl + DSMService.UI + "pdf";
+    let map: { name: string, value: any }[] = [];
+    map.push( {name: DSMService.REALM, value: realm} );
+    return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
+  }
+
+  public getParticipantsPDFs( realm: string, ddpParticipantId: string ): Observable<any> {
+    let url = this.baseUrl + DSMService.UI + "pdf";
+    let map: { name: string, value: any }[] = [];
+    map.push( {name: DSMService.REALM, value: realm} );
+    map.push( {name: "ddpParticipantId", value: ddpParticipantId} );
+    return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public getSkippedParticipantEvents( realm: string ): Observable<any> {
@@ -584,9 +591,12 @@ export class DSMService {
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
-  public activateKitRequest( kitRequestId: string ): Observable<any> {
+  public activateKitRequest( kitRequestId: string, activate: boolean ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "activateKit/" + kitRequestId;
-    return this.http.patch( url, null, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
+    let map: { name: string, value: any }[] = [];
+    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( {name: "activate", value: activate} );
+    return this.http.patch( url, null, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public saveUserSettings( json: string ) {
@@ -746,6 +756,11 @@ export class DSMService {
 
   private checkCookieBeforeCall(): boolean {
     if (this.sessionService.getDSMToken() == null || this.sessionService.getDSMToken() == undefined) {
+      this.sessionService.logout();
+      this.router.navigate( [ Statics.HOME_URL ] );
+      return false;
+    }
+    else {
       let jwtHelper: JwtHelper = new JwtHelper();
       let expirationDate: Date = jwtHelper.getTokenExpirationDate( this.sessionService.getDSMToken() );
       let myDate = new Date();
@@ -760,7 +775,7 @@ export class DSMService {
         this.router.navigate( [ Statics.HOME_URL ] );
         return false;
       }
+      return true;
     }
-    return true;
   }
 }

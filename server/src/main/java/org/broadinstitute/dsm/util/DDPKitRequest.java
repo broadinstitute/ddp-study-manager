@@ -65,7 +65,7 @@ public class DDPKitRequest {
                                         if (StringUtils.isNotBlank(latestKit.getParticipantIndexES())) {
                                             //without order list, that was only added for promise and currently is not used!
                                             if (participantsESData != null && !participantsESData.isEmpty()) {
-                                                Map<String, Object> participantESData = participantsESData.get(key);
+                                                Map<String, Object> participantESData = participantsESData.get(kitDetail.getParticipantId());
                                                 if (participantESData != null && !participantESData.isEmpty()) {
                                                     Map<String, Object> profile = (Map<String, Object>) participantESData.get("profile");
                                                     if (profile != null && !profile.isEmpty()) {

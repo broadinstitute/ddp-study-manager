@@ -69,6 +69,7 @@ public class RouteTestSample extends TestHelper {
         DBTestUtil.deleteAllKitData("POBOX");
         DBTestUtil.deleteAllKitData("PepperParticipant");
         DBTestUtil.deleteAllKitData("OtherPepperParticipant");
+        DBTestUtil.deleteAllKitData("CheapLabelPT");
         DBTestUtil.deleteAllKitData("8899777882");
         DBTestUtil.deleteAllKitData("9889938837");
         DBTestUtil.deleteAllKitData("33837748499");
@@ -176,6 +177,9 @@ public class RouteTestSample extends TestHelper {
                 .respond(response().withStatusCode(200).withBody(messageParticipant));
         mockDDP.when(
                 request().withPath("/ddp/participants/" + FAKE_DDP_PARTICIPANT_ID))
+                .respond(response().withStatusCode(200).withBody(messageParticipant));
+        mockDDP.when(
+                request().withPath("/ddp/participants/CheapLabelPT"))
                 .respond(response().withStatusCode(200).withBody(messageParticipant));
 
         messageParticipant = TestUtil.readFile("ddpResponses/ParticipantsWithIdWithNewField.json");
@@ -295,14 +299,14 @@ public class RouteTestSample extends TestHelper {
     @Test
     public void labelNormalUSParticipant() throws Exception {
         DDPParticipant participant = DDPParticipant.getDDPParticipant(DDP_BASE_URL, TEST_DDP, FAKE_BSP_TEST, false);
-        Address toAddress = easyPost(participant);
+        Address toAddress = easyPost(INSTANCE_ID, TEST_DDP, participant, false);
         Assert.assertEquals("Karl Lejon", toAddress.getName());
     }
 
     @Test
     public void labelPepperParticipant() throws Exception {
         DDPParticipant participant = DDPParticipant.getDDPParticipant(DDP_BASE_URL, TEST_DDP, "PepperParticipant", false);
-        Address toAddress = easyPost(participant);
+        Address toAddress = easyPost(INSTANCE_ID, TEST_DDP, participant, false);
         Assert.assertEquals("Bob Barker", toAddress.getName());
         Assert.assertNotEquals("Karl Lejon", toAddress.getName());
     }
@@ -310,29 +314,35 @@ public class RouteTestSample extends TestHelper {
     @Test
     public void labelPepperParticipantMailToNameNull() throws Exception {
         DDPParticipant participant = DDPParticipant.getDDPParticipant(DDP_BASE_URL, TEST_DDP, "OtherPepperParticipant", false);
-        Address toAddress = easyPost(participant);
+        Address toAddress = easyPost(INSTANCE_ID, TEST_DDP, participant, false);
         Assert.assertEquals("Karl Lejon", toAddress.getName());
         Assert.assertNotEquals("Bob Barker", toAddress.getName());
+    }
+
+    @Test
+    public void cheapLabel() throws Exception {
+        DDPParticipant participant = DDPParticipant.getDDPParticipant(DDP_BASE_URL, TEST_DDP_MIGRATED, "CheapLabelPT", false);
+        Address toAddress = easyPost(INSTANCE_ID_MIGRATED, TEST_DDP_MIGRATED, participant, true);
+        Assert.assertEquals("Karl Lejon", toAddress.getName());
     }
 
     @Test
     @Ignore ("No shipping to PO Box participants")
     public void labelPOBoxUSParticipant() throws Exception {
         DDPParticipant participant = DDPParticipant.getDDPParticipant(DDP_BASE_URL, TEST_DDP, "POBOX", false);
-        easyPost(participant);
+        easyPost(INSTANCE_ID, TEST_DDP, participant, false);
     }
 
     @Test
-    @Ignore ("No shipping to Canadian participants")
+    //    @Ignore ("No shipping to Canadian participants")
     public void labelCAParticipant() throws Exception {
         DDPParticipant participant = DDPParticipant.getDDPParticipant(DDP_BASE_URL, TEST_DDP, "CA", false);
-        easyPost(participant);
+        easyPost(INSTANCE_ID, TEST_DDP, participant, false);
     }
 
-    public Address easyPost(DDPParticipant participant) throws Exception {
-        HashMap<Integer, KitRequestSettings> carrierServiceMap = KitRequestSettings.getKitRequestSettings(
-                INSTANCE_ID);
-        EasyPostUtil easyPostUtil = new EasyPostUtil(TEST_DDP);
+    public Address easyPost(String instanceId, String instanceName, DDPParticipant participant, boolean notFEDEX2DAY) throws Exception {
+        HashMap<Integer, KitRequestSettings> carrierServiceMap = KitRequestSettings.getKitRequestSettings(instanceId);
+        EasyPostUtil easyPostUtil = new EasyPostUtil(instanceName);
         Address toAddress = easyPostUtil.createAddress(participant, "617-714-8952");
         Address returnAddress = easyPostUtil.createBroadAddress("Broad Institute", "320 Charles St - Lab 181", "Attn. Broad Genomics",
                 "Cambridge", "02141", "MA", "US", "617-714-8952");
@@ -342,7 +352,7 @@ public class RouteTestSample extends TestHelper {
             customs = easyPostUtil.createCustomsInfo(CUSTOMS_JSON);
         }
         KitRequestSettings kitRequestSettings = carrierServiceMap.get(1);
-        if (kitRequestSettings.getCarrierTo() != null && kitRequestSettings.getServiceTo() != null) {
+        if (kitRequestSettings.getCarrierTo() != null) {
             double start = System.currentTimeMillis();
             try {
                 Shipment shipment2Participant = easyPostUtil.buyShipment(kitRequestSettings.getCarrierTo(),
@@ -350,11 +360,17 @@ public class RouteTestSample extends TestHelper {
                         kitRequestSettings.getServiceTo(), toAddress, returnAddress, parcel, FAKE_BILLING_REF, customs);
                 double end = System.currentTimeMillis();
                 logger.info("took " + (end - start) / 1000 + " seconds");
+                if (notFEDEX2DAY) {
+                    Assert.assertNotEquals("FEDEX_2_DAY", shipment2Participant.getSelectedRate().getService());
+                }
+                else {
+                    Assert.assertEquals("FEDEX_2_DAY", shipment2Participant.getSelectedRate().getService());
+                }
                 printShipmentInfos(shipment2Participant);
                 doAsserts(shipment2Participant);
             }
             catch (RateNotAvailableException e) {
-                logger.warn("Rate was not available");
+                Assert.fail("Rate was not available " + e.getMessage());
             }
         }
         else {
@@ -473,6 +489,17 @@ public class RouteTestSample extends TestHelper {
         strings.add("1_3"); //Mother
         String bspCollaboratorIdMotherKit2 = DBTestUtil.getStringFromQuery(KIT_QUERY, strings, "bsp_collaborator_sample_id");
         Assert.assertEquals("TestProject_1_3", bspCollaboratorIdMotherKit2);
+    }
+
+    @Test
+    //double check that your user 26 has role kit_upload for osteo
+    public void uploadOsteoBloodKitAOM() throws Exception {
+        String kitType = "BLOOD";
+        //upload kits for one type
+        String csvContent = TestUtil.readFile("SpecialKitOsteo.txt");
+        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "kitUpload?realm=osteo&kitType=BLOOD&userId=26"), csvContent, testUtil.buildAuthHeaders()).returnResponse();
+        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+        //TODO check db for kit
     }
 
     @Test
@@ -934,7 +961,7 @@ public class RouteTestSample extends TestHelper {
         strings.add(FAKE_LATEST_KIT + "_deactivate");
         strings.add(FAKE_DDP_PARTICIPANT_ID + "_deactivate");
         String kitRequestId = DBTestUtil.getStringFromQuery(SELECT_KITREQUEST_QUERY, strings, "dsm_kit_request_id");
-        HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/" + "activateKit/" + kitRequestId), null, testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/" + "activateKit/" + kitRequestId + "?userId=26"), null, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
         Assert.assertNull(DBTestUtil.getQueryDetail("select * from(select req.ddp_participant_id, req.dsm_kit_request_id from kit_type kt, ddp_kit_request req, ddp_instance ddp_site where req.ddp_instance_id = ddp_site.ddp_instance_id and req.kit_type_id = kt.kit_type_id) as request left join (select * from (SELECT kit.dsm_kit_request_id, kit.error, kit.message, kit.deactivated_date FROM ddp_kit kit INNER JOIN( SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id AND kit.dsm_kit_id = groupedKit.kit_id LEFT JOIN ddp_kit_tracking tracking ON (kit.kit_label = tracking.kit_label))as wtf) as kit on kit.dsm_kit_request_id = request.dsm_kit_request_id where request.dsm_kit_request_id = ?", kitRequestId, "deactivated_date"));
     }
@@ -943,7 +970,7 @@ public class RouteTestSample extends TestHelper {
     // will throw error because it won't be able to refund the test shipment (was just added into db and not by creating of a new label,
     // therefore easypost doesn't know anything about that shipment id)
     public void reactivateKitRequestBeforeLabelCreation() throws Exception {
-        deactivateKitRequest(true,"_deactivate2");
+        deactivateKitRequest(true, "_deactivate2");
 
         ArrayList strings = new ArrayList<>();
         strings.add(FAKE_LATEST_KIT + "_deactivate2");
@@ -952,7 +979,7 @@ public class RouteTestSample extends TestHelper {
         if (StringUtils.isBlank(kitRequestId)) {
             Assert.fail("Didn't find kit");
         }
-        HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/" + "activateKit/" + kitRequestId), null, testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/" + "activateKit/" + kitRequestId + "?userId=26"), null, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
         Assert.assertNull(DBTestUtil.getQueryDetail("select * from(select req.ddp_participant_id, req.dsm_kit_request_id from kit_type kt, ddp_kit_request req, ddp_instance ddp_site where req.ddp_instance_id = ddp_site.ddp_instance_id and req.kit_type_id = kt.kit_type_id) as request left join (select * from (SELECT kit.dsm_kit_request_id, kit.error, kit.message, kit.deactivated_date FROM ddp_kit kit INNER JOIN( SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id AND kit.dsm_kit_id = groupedKit.kit_id LEFT JOIN ddp_kit_tracking tracking ON (kit.kit_label = tracking.kit_label))as wtf) as kit on kit.dsm_kit_request_id = request.dsm_kit_request_id where request.dsm_kit_request_id = ?", kitRequestId, "deactivated_date"));
     }
@@ -1536,7 +1563,7 @@ public class RouteTestSample extends TestHelper {
 
         //upload duplicates
         String dupParticipants = TestUtil.readFile("KitUploadMigratedDDP.json");
-        response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "kitUpload?realm=" + TEST_DDP_MIGRATED + "&kitType=SALIVA&userId=26&uploadDuplicate=true"), dupParticipants, testUtil.buildAuthHeaders()).returnResponse();
+        response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "kitUpload?realm=" + TEST_DDP_MIGRATED + "&kitType=SALIVA&userId=26&uploadAnyway=true"), dupParticipants, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
         List<String> strings = new ArrayList<>();
         strings.add(TEST_DDP_MIGRATED);

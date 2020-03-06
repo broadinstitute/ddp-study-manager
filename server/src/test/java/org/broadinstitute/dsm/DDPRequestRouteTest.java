@@ -15,6 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
@@ -130,18 +131,24 @@ public class DDPRequestRouteTest extends TestHelper {
     public void readKitRequest() {
         String realm = TEST_DDP;
         try {
-            KitRequestRoute route = new KitRequestRoute(ddpRequestUtil);
+            KitRequestRoute route = new KitRequestRoute();
             inTransaction((conn) -> {
                 try (PreparedStatement stmt = conn.prepareStatement(DDPInstance.SQL_SELECT_ALL_ACTIVE_REALMS + QueryExtension.BY_INSTANCE_NAME)) {
                     stmt.setString(1, realm);
                     try (ResultSet rs = stmt.executeQuery()) {
                         if (rs.next()) {
-                            List<KitRequestShipping> kitRequestList = KitRequestShipping.getKitRequestsByRealm(realm, "uploaded", "SALIVA", ddpRequestUtil);
+                            List<KitRequestShipping> kitRequestList = KitRequestShipping.getKitRequestsByRealm(realm, "uploaded", "SALIVA");
 
                             Assert.assertEquals(counter, kitRequestList.size());
 
                             logger.info("result of ddp_kit_request with name and address of participants:");
                             int x = 0;
+                            kitRequestList.sort(new Comparator<KitRequestShipping>() {
+                                @Override
+                                public int compare(KitRequestShipping o1, KitRequestShipping o2) {
+                                    return Integer.parseInt(o1.getDsmKitId()) - Integer.parseInt(o2.getDsmKitId());
+                                }
+                            });
                             for (KitRequestShipping kit : kitRequestList) {
                                 Assert.assertEquals(kit.getParticipantId(), kitRequestTestList.get(x).getParticipantId());
                                 x++;
