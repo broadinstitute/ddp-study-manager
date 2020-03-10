@@ -164,36 +164,52 @@
       <ng-container *ngFor="let drug of mf.data; let i = index">
         <tr> <!-- For all columns, show as editable if user has permission, otherwise read only -->
           <td>
-            <md-input-container class="Input" *ngIf="hasRole().allowedToEditDrugList()">
-              <input mdInput class="Input--Min-WIDTH" maxlength="45"
-                     [(ngModel)]="drug.displayName" (change)="checkDisplayName(i); changed(i)">
+            <md-input-container *ngIf="hasRole().allowedToEditDrugList()"
+                                [ngClass]="{'Input': true, 'Color--Field--Patched': isPatchedCurrently('displayName', i)}">
+              <input mdInput class="Input--Min-WIDTH" maxlength="45" autocomplete="off"
+                     [(ngModel)]="drug.displayName"
+                     (change)="valueChanged($event, 'displayName', i)"
+                     (blur)="currentField(null, null)" (focus)="currentField('displayName', i)">
               <md-hint class="ErrorMessageForm" *ngIf="drug.notUniqueError">Name not unique</md-hint>
             </md-input-container>
             <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.displayName}}</div>
           </td>
 
           <td>
-            <md-input-container *ngIf="hasRole().allowedToEditDrugList()">
-              <input mdInput type="text" [(ngModel)]="drug.genericName" (change)="checkDuplicatedNames(i); changed(i)" class="Width--100" maxlength="100">
+            <md-input-container *ngIf="hasRole().allowedToEditDrugList()"
+                                [ngClass]="{'Input': true, 'Color--Field--Patched': isPatchedCurrently('genericName', i)}">
+              <input mdInput type="text" class="Width--100" maxlength="100" autocomplete="off"
+                     [(ngModel)]="drug.genericName"
+                     (change)="valueChanged($event, 'genericName', i)"
+                     (blur)="currentField(null, null)" (focus)="currentField('genericName', i)">
               <md-hint class="ErrorMessageForm" *ngIf="drug.duplicatedNamesError">Generic/Brand combo is not new</md-hint>
             </md-input-container>
             <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.genericName}}</div>
           </td>
           <td>
-            <md-input-container *ngIf="hasRole().allowedToEditDrugList()">
-              <input mdInput type="text" [(ngModel)]="drug.brandName" (change)="checkDuplicatedNames(i); changed(i)" class="Width--100" maxlength="100">
+            <md-input-container *ngIf="hasRole().allowedToEditDrugList()"
+                                [ngClass]="{'Input': true, 'Color--Field--Patched': isPatchedCurrently('brandName', i)}">
+              <input mdInput type="text" class="Width--100" maxlength="100" autocomplete="off"
+                     [(ngModel)]="drug.brandName"
+                     (change)="valueChanged($event, 'brandName', i)"
+                     (blur)="currentField(null, null)" (focus)="currentField('brandName', i)">
               <md-hint class="ErrorMessageForm" *ngIf="drug.duplicatedNamesError">Generic/Brand combo is not new</md-hint>
             </md-input-container>
             <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.brandName}}</div>
           </td>
           <td>
-            <md-input-container *ngIf="hasRole().allowedToEditDrugList()">
-              <input mdInput type="text" [(ngModel)]="drug.chemocat" (change)="changed(i)" class="Width--100" maxlength="100">
+            <md-input-container *ngIf="hasRole().allowedToEditDrugList()"
+                                [ngClass]="{'Input': true, 'Color--Field--Patched': isPatchedCurrently('chemocat', i)}">
+              <input mdInput type="text" class="Width--100" maxlength="100" autocomplete="off"
+                     [(ngModel)]="drug.chemocat"
+                     (change)="valueChanged($event, 'chemocat', i)"
+                     (blur)="currentField(null, null)" (focus)="currentField('chemocat', i)">
             </md-input-container>
             <div *ngIf="!hasRole().allowedToEditDrugList()">{{drug.chemocat}}</div>
           </td>
           <td>
-            <md-select class="Input--Min-WIDTH" [(ngModel)]="drug.chemoType" (change)="changed(i)" [disabled]="!hasRole().allowedToEditDrugList()">
+            <md-select class="Input--Min-WIDTH" [(ngModel)]="drug.chemoType"
+                       (change)="valueChanged($event, 'chemoType', i)" [disabled]="!hasRole().allowedToEditDrugList()">
               <md-option value="A"> A</md-option>
               <md-option value="H"> H</md-option>
               <md-option value="O"> O</md-option>
@@ -202,12 +218,13 @@
             </md-select>
           </td>
           <td>
-            <md-checkbox color="primary" [checked]="drug.studyDrug" (change)="drug.studyDrug = $event.checked; changed(i)"
+            <md-checkbox color="primary" [checked]="drug.studyDrug" (change)="drug.studyDrug = $event.checked; valueChanged($event, 'studyDrug', i)"
                          [disabled]="!hasRole().allowedToEditDrugList()"
                          disableRipple></md-checkbox>
           </td>
           <td>
-            <md-select class="Input--Min-WIDTH" [(ngModel)]="drug.treatmentType" (change)="changed(i)" [disabled]="!hasRole().allowedToEditDrugList()">
+            <md-select [ngClass]="{'Input': true, 'Color--Field--Patched': isPatchedCurrently('treatmentType', i)}"
+                       [(ngModel)]="drug.treatmentType" (change)="valueChanged($event, 'treatmentType', i)" [disabled]="!hasRole().allowedToEditDrugList()">
               <md-option value="H"> H</md-option>
               <md-option value="B"> B</md-option>
               <md-option value="O"> O</md-option>
@@ -217,13 +234,14 @@
             </md-select>
           </td>
           <td>
-            <md-select class="Input--Min-WIDTH" [(ngModel)]="drug.chemotherapy" (change)="changed(i)" [disabled]="!hasRole().allowedToEditDrugList()">
+            <md-select [ngClass]="{'Input': true, 'Color--Field--Patched': isPatchedCurrently('chemotherapy', i)}"
+                       [(ngModel)]="drug.chemotherapy" (change)="valueChanged($event, 'chemotherapy', i)" [disabled]="!hasRole().allowedToEditDrugList()">
               <md-option value="Y"> Yes</md-option>
               <md-option value="N"> No</md-option>
             </md-select>
           </td>
           <td>
-            <md-checkbox color="primary" [checked]="drug.active" (change)="drug.active = $event.checked; changed(i)"
+            <md-checkbox color="primary" [checked]="drug.active" (change)="drug.active = $event.checked; valueChanged($event, 'active', i)"
                          [disabled]="!hasRole().allowedToEditDrugList()"
                          disableRipple></md-checkbox>
           </td>
@@ -239,6 +257,5 @@
       </tfoot>
     </table>
     <br/>
-    <button type="button" *ngIf="hasRole().allowedToEditDrugList()" class="btn btn-primary" (click)="saveDrugList()">Save Changes</button>
   </div>
 </div>

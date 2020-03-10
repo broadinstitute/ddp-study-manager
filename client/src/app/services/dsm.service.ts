@@ -159,7 +159,7 @@ export class DSMService {
     return this.http.get( url, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
-  public saveDrugs( json: string ): Observable<any> {
+  public saveDrug( json: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "drugList";
     let map: { name: string, value: any }[] = [];
     map.push( {name: "userId", value: this.role.userID()} );
