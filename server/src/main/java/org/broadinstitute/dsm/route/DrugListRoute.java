@@ -24,9 +24,11 @@ public class DrugListRoute extends RequestHandler {
         if (RoutePath.RequestMethod.PATCH.toString().equals(request.requestMethod())) {
             if (UserUtil.checkUserAccess(null, userId, "drug_list_edit")) {
                 String requestBody = request.body();
-                Drug[] drugUpdateValues = new Gson().fromJson(requestBody, Drug[].class);
-                Drug.saveDrugListings(userId, drugUpdateValues);
-                return new Result(200);
+                Drug drugUpdateValues = new Gson().fromJson(requestBody, Drug.class);
+                if (drugUpdateValues != null) {
+                    Drug.addDrug(userId, drugUpdateValues);
+                    return new Result(200);
+                }
             }
             else {
                 response.status(500);

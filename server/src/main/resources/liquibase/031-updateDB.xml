@@ -39,4 +39,10 @@
             </column>
         </addColumn>
     </changeSet>
+    <changeSet author="simone" id="03092020">
+    <renameColumn columnDataType="BIGINT(20)"
+                  newColumnName="last_changed"
+                  oldColumnName="date_updated"
+                  tableName="drug_list"/>
+</changeSet>
 </databaseChangeLog>
