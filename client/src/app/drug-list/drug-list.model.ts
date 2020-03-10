@@ -32,7 +32,7 @@ export class DrugList {
   static removeUnchangedDrugs( array: Array<DrugList> ): Array<DrugList> {
     let cleanedDrugList: Array<DrugList> = [];
     for (let drug of array) {
-      if (drug.changed) {
+      if (drug.changed || drug.addedNew) {
         if (drug.displayName == null || drug.displayName === "") {
           drug.displayName = drug.displayName;
         }
