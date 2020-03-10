@@ -432,9 +432,10 @@ public class RouteTest extends TestHelper {
         DashboardInformation ddps = new Gson().fromJson(message, DashboardInformation.class);
         Assert.assertNotNull(ddps);
         Map<String, Integer> map = new HashMap<>();
-        map.put("all", 1);
-        map.put("status.ENROLLED", 1);
-        Assert.assertEquals(map, ddps.getDashboardValues()); // TODO Simone - getMrReceivedFollowUpParticipant()
+        //3 pf the pt in db are known to the mock server
+        map.put("all", 3);
+        map.put("status.ENROLLED", 3);
+        Assert.assertEquals(map, ddps.getDashboardValues());
 
         mrId = editMedicalRecord(TEST_DDP, "NEW_TEST_PARTICIPANT", "TEST_INSTITUTION", "m.followUpRequired", "1", "followup_required");
         String followupRequired = DBTestUtil.getQueryDetail("SELECT * from ddp_medical_record where medical_record_id = ? ", mrId, "followup_required");
@@ -1344,11 +1345,42 @@ public class RouteTest extends TestHelper {
     }
 
     @Test
-    public void patchDrugList() throws Exception {
-        String json = "[{\"drugId\": 9, \"displayName\": \"ABARELIX (PLENAXIS)\", \"brandName\": \"PLENAXIS\", \"chemocat\": \"ABARELIX\", \"chemoType\": \"R\", \"studyDrug\": false, \"treatmentType\": \"H\", \"chemotherapy\": \"N\", \"active\": true}]";
+    public void addNewDrug() throws Exception {
+        String oldDrugId = DBTestUtil.getStringFromQuery("select drug_id from drug_list where display_name = \'DRUG (TEST)\'", null, "drug_id");
+        DBTestUtil.executeQuery("DELETE FROM drug_list WHERE drug_id = " + oldDrugId);
+
+        String json = "{\"displayName\": \"DRUG (TEST)\", \"brandName\": \"DRUG\", \"chemocat\": \"TEST\", \"chemoType\": \"R\", \"studyDrug\": false, \"treatmentType\": \"H\", \"chemotherapy\": \"N\", \"active\": true}";
 
         HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/drugList"), json, testUtil.buildAuthHeaders()).returnResponse();
         assertEquals(200, response.getStatusLine().getStatusCode());
+
+        String drugId = DBTestUtil.getStringFromQuery("select drug_id from drug_list where display_name = \'DRUG (TEST)\'", null, "drug_id");
+        Assert.assertNotNull(drugId);
+
+        DBTestUtil.executeQuery("DELETE FROM drug_list WHERE drug_id = " + drugId);
+    }
+
+    @Test
+    public void changeDrug() throws Exception {
+        String drugId = DBTestUtil.getStringFromQuery("select drug_id from drug_list where display_name = \'ABARELIX (PLENAXIS)\'", null, "drug_id");
+
+        //change value
+        String json = "{\"id\":\"" + drugId + "\",\"user\":\"simone+1@broadinstitute.org\",\"nameValue\":{\"name\":\"" + "d.treatmentType" + "\",\"value\":\"" + "R" + "\"}}";
+        HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/patch"), json, testUtil.buildAuthHeaders()).returnResponse();
+
+        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+        String treatmentType = DBTestUtil.getStringFromQuery("select treatment_type from drug_list where display_name = \'ABARELIX (PLENAXIS)\'", null, "treatment_type");
+
+        Assert.assertEquals("R", treatmentType);
+
+        //change value back
+        json = "{\"id\":\"" + drugId + "\",\"user\":\"simone+1@broadinstitute.org\",\"nameValue\":{\"name\":\"" + "d.treatmentType" + "\",\"value\":\"" + "H" + "\"}}";
+        response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/patch"), json, testUtil.buildAuthHeaders()).returnResponse();
+
+        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+        treatmentType = DBTestUtil.getStringFromQuery("select treatment_type from drug_list where display_name = \'ABARELIX (PLENAXIS)\'", null, "treatment_type");
+
+        Assert.assertEquals("H", treatmentType);
     }
 
     @Test

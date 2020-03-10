@@ -35,6 +35,7 @@ public class PatchUtil {
         getColumnNames(AbstractionActivity.class);
         getColumnNames(ViewFilter.class);
         getColumnNames(KitRequestShipping.class);
+        getColumnNames(Drug.class);
         logger.info("Loaded patch utils");
     }
 
