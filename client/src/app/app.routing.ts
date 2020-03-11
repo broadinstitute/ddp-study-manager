@@ -14,6 +14,7 @@ import {Statics} from "./utils/statics";
 import {SurveyComponent} from "./survey/survey.component";
 import {ShippingReportComponent} from "./shipping-report/shipping-report.component";
 import {LabelSettingsComponent} from "./label-settings/label-settings.component";
+import {DrugListComponent} from "./drug-list/drug-list.component";
 import {ParticipantEventComponent} from "./participant-event/participant-event.component";
 import {ShippingSearchComponent} from "./shipping-search/shipping-search.component";
 import {DiscardSampleComponent} from "./discard-sample/discard-sample.component";
@@ -53,6 +54,7 @@ export const AppRoutes = [
   {path: "discardList", component: DiscardSampleComponent, canActivate: [ AuthGuard ]},
   {path: "discardSample", component: DiscardSamplePageComponent, canActivate: [ AuthGuard ]},
   {path: "labelSettings", component: LabelSettingsComponent, canActivate: [ AuthGuard ]},
+  {path: "drugList", component: DrugListComponent, canActivate: [ AuthGuard ]},
 
   //Study
   {path: Statics.MEDICALRECORD_DASHBOARD, component: DashboardComponent, canActivate: [ AuthGuard ]},

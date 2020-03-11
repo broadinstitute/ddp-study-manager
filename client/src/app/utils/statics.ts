@@ -64,6 +64,7 @@ export class Statics {
   public static ES_ALIAS = "data";
   public static PT_ALIAS = "p";
   public static MR_ALIAS = "m";
+  public static DRUG_ALIAS = "d";
   public static DELIMITER_ALIAS = ".";
 
   public static EXITED = "EXITED";

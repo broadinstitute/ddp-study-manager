@@ -161,6 +161,7 @@ public class TestHelper {
         checkRole("participant_exit", roles, testUser, testGroup);
         checkRole("survey_creation", roles, testUser, testGroup);
         checkRole("field_settings", roles, testUser, testGroup);
+        checkRole("drug_list_edit", roles, testUser, testGroup);
 
         //adding instance setting
         if (!DBTestUtil.checkIfValueExists("SELECT * from instance_settings where ddp_instance_id = (SELECT ddp_instance_id from ddp_instance where instance_name = ?) ", TEST_DDP)) {

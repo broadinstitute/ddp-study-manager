@@ -10,6 +10,7 @@ public class DBConstants {
     public static final String DDP_PARTICIPANT_RECORD = "ddp_participant_record";
     public static final String DDP_PARTICIPANT = "ddp_participant";
     public static final String DDP_PARTICIPANT_EXIT = "ddp_participant_exit";
+    public static final String DRUG_LIST = "drug_list";
 
     public static final String DDP_PARTICIPANT_ID = "ddp_participant_id";
     public static final String DDP_KIT_REQUEST = "ddp_kit_request";
@@ -24,6 +25,7 @@ public class DBConstants {
     public static final String DDP_TISSUE_ALIAS = "t";
     public static final String DDP_KIT_REQUEST_ALIAS = "k";
     public static final String DDP_ABSTRACTION_ALIAS = "a";
+    public static final String DRUG_ALIAS = "d";
     public static final String ALIAS_DELIMITER = ".";
 
     //ddp instance
@@ -334,6 +336,17 @@ public class DBConstants {
     // drug list: list uses display_name, test uses generic_name
     public static final String DISPLAY_NAME = "display_name";
     public static final String GENERIC_NAME = "generic_name";
+    public static final String DRUG_ID = "drug_id";
+    public static final String BRAND_NAME = "brand_name";
+    public static final String CHEMOCAT = "chemocat2";
+    public static final String CHEMO_TYPE = "chemo_type";
+    public static final String STUDY_DRUG = "study_drug";
+    public static final String TREATMENT_TYPE = "treatment_type";
+    public static final String CHEMOTHERAPY = "chemotherapy";
+    public static final String DATE_CREATED = "date_created";
+    public static final String ACTIVE = "active";
+    public static final String DATE_UPDATED = "date_updated";
+
 
     // survey trigger
     public static final String SURVEY_TRIGGER_ID = "survey_trigger_id";
