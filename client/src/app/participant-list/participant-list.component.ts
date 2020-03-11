@@ -320,7 +320,7 @@ export class ParticipantListComponent implements OnInit {
             }
           } );
           this.savedFilters.sort( ( a, b ) => a.filterName.localeCompare( b.filterName ) );
-
+          console.log(this.savedFilters);
         }
         if (jsonData.mrCoverPDF != null) {
           jsonData.mrCoverPDF.forEach( ( val ) => {
@@ -388,7 +388,7 @@ export class ParticipantListComponent implements OnInit {
 
   private getData() {
     //find viewFilter by filterName
-    let defaultFilter = null;
+    let defaultFilter : ViewFilter = null;
     if (this.role.getUserSetting().defaultParticipantFilter != null) {
       defaultFilter = this.savedFilters.find( filter => {
         return filter.filterName === this.role.getUserSetting().defaultParticipantFilter;
@@ -398,7 +398,10 @@ export class ParticipantListComponent implements OnInit {
           return filter.filterName === this.role.getUserSetting().defaultParticipantFilter;
         } );
       }
+      console.log(this.savedFilters);
+      console.log(defaultFilter);
       if (defaultFilter != null && defaultFilter != undefined) {
+        console.log(defaultFilter.filters);
         this.selectFilter( defaultFilter );
       }
       else if (this.role.getUserSetting().defaultParticipantFilter !== "" && this.role.getUserSetting().defaultParticipantFilter !== null && this.role.getUserSetting().defaultParticipantFilter !== undefined) {
@@ -446,6 +449,7 @@ export class ParticipantListComponent implements OnInit {
     else {
       this.filtered = false;
     }
+    console.log(viewFilter);
     this.dsmService.applyFilter( viewFilter, localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), this.parent, null ).subscribe(
       data => {
         if (data != null) {
@@ -485,7 +489,7 @@ export class ParticipantListComponent implements OnInit {
                 f.selected = false;
               }
             }
-            if (viewFilter != null && viewFilter.filters != null) {
+            if (viewFilter.filters != null) {
               for (let filter of viewFilter.filters) {
                 if (filter.type === Filter.OPTION_TYPE) {
                   filter.selectedOptions = filter.getSelectedOptionsBoolean();
@@ -546,6 +550,7 @@ export class ParticipantListComponent implements OnInit {
           }
         } );
         this.savedFilters.sort( ( f1, f2 ) => f1.filterName.localeCompare( f2.filterName ) );
+        console.log(this.savedFilters);
       },
       err => {
         this.showSavedFilters = false;
@@ -761,7 +766,7 @@ export class ParticipantListComponent implements OnInit {
           else {
             this.additionalMessage = "Something went wrong while filtering - List was not filtered!";
           }
-
+          console.log(this.savedFilters);
         },
         err => {
           this.loadingParticipants = null;
