@@ -350,6 +350,7 @@ export class Filter {
     if ( json.filters == undefined ) {
       return null;
     }
+    console.log(json);
     let filters: Filter[] = [];
     for ( let filter of json.filters ) {
       if ( allColumns[filter.participantColumn.tableAlias] != undefined ) {
@@ -416,6 +417,7 @@ export class Filter {
       }
 
     }
+    console.log(filters);
     return filters;
   }
 

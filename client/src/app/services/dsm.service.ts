@@ -38,30 +38,30 @@ export class DSMService {
       url += "finalScan";
     }
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.post( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public setKitReceivedRequest( json: string ) {
     let url = this.baseUrl + DSMService.UI + "receivedKits";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.post( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public setKitSentRequest( json: string ) {
     let url = this.baseUrl + DSMService.UI + "sentKits";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.post( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public getKitRequests( realm: string, target: string, name: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "kitRequests";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: DSMService.TARGET, value: target} );
-    map.push( {name: "kitType", value: name} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: DSMService.TARGET, value: target } );
+    map.push( { name: "kitType", value: name } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
@@ -69,32 +69,32 @@ export class DSMService {
     let url = this.baseUrl + DSMService.UI + "getFilters";
     let map: { name: string, value: any }[] = [];
     let userId = this.role.userID();
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "userId", value: userId} );
-    map.push( {name: "parent", value: parent} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "userId", value: userId } );
+    map.push( { name: "parent", value: parent } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public setDefaultFilter( json: string, filterName: string, parent: string, realm ) {
     let url = this.baseUrl + DSMService.UI + "defaultFilter";
     let map: { name: string, value: any }[] = [];
-    map.push({name: "filterName", value: filterName});
-    map.push({name: "parent", value: parent});
-    map.push({name: "userId", value: this.role.userID()});
-    map.push({name: "userMail", value: this.role.userMail()});
-    map.push({name: DSMService.REALM, value: realm});
-    return this.http.patch(url, json, this.buildQueryHeader(map)).map((res: Response) => res.json()).catch(this.handleError);
+    map.push( { name: "filterName", value: filterName } );
+    map.push( { name: "parent", value: parent } );
+    map.push( { name: "userId", value: this.role.userID() } );
+    map.push( { name: "userMail", value: this.role.userMail() } );
+    map.push( { name: DSMService.REALM, value: realm } );
+    return this.http.patch( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
 
   public filterData( realm: string, json: string, parent: string, defaultFilter: boolean ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "filterList";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "parent", value: parent} );
-    map.push( {name: "userId", value: this.role.userID()} );
-    map.push( {name: "userMail", value: this.role.userMail()} );
-    map.push( {name: "defaultFilter", value: defaultFilter == true ? "1" : defaultFilter != null ? "0" : ""} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "parent", value: parent } );
+    map.push( { name: "userId", value: this.role.userID() } );
+    map.push( { name: "userMail", value: this.role.userMail() } );
+    map.push( { name: "defaultFilter", value: defaultFilter == true ? "1" : defaultFilter != null ? "0" : "" } );
     return this.http.patch( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
@@ -102,9 +102,9 @@ export class DSMService {
     let url = this.baseUrl + DSMService.UI + "saveFilter";
     let userId = this.role.userID();
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "parent", value: parent} );
-    map.push( {name: "userId", value: userId} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "parent", value: parent } );
+    map.push( { name: "userId", value: userId } );
     return this.http.patch( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
@@ -116,20 +116,23 @@ export class DSMService {
         }
       }
     }
+    if (json != null) {
+      console.log( json.filters );
+    }
     let url = this.baseUrl + DSMService.UI + "applyFilter";
     let userId = this.role.userID();
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "userId", value: userId} );
-    map.push( {name: "parent", value: parent} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "userId", value: userId } );
+    map.push( { name: "parent", value: parent } );
     if (filterQuery != null) {
-      map.push( {name: "filterQuery", value: filterQuery} );
+      map.push( { name: "filterQuery", value: filterQuery } );
     }
     else if (json == null || json.filters == undefined || json.filters == null) {
-      map.push( {name: "filterName", value: json == null ? null : json.filterName} );
+      map.push( { name: "filterName", value: json == null ? null : json.filterName } );
     }
     else {
-      map.push( {name: "filters", value: JSON.stringify( json.filters )} );
+      map.push( { name: "filters", value: JSON.stringify( json.filters ) } );
     }
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
@@ -138,18 +141,18 @@ export class DSMService {
     let url = this.baseUrl + DSMService.UI + "getParticipant";
     let map: { name: string, value: any }[] = [];
     let userId = this.role.userID();
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "ddpParticipantId", value: ddpParticipantId} );
-    map.push( {name: "userId", value: userId} );
-    map.push( {name: "parent", value: parent} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "ddpParticipantId", value: ddpParticipantId } );
+    map.push( { name: "userId", value: userId } );
+    map.push( { name: "parent", value: parent } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public getSettings( realm: string, parent: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "displaySettings/" + realm;
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "userId", value: this.role.userID()} );
-    map.push( {name: "parent", value: parent} );
+    map.push( { name: "userId", value: this.role.userID() } );
+    map.push( { name: "parent", value: parent } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
@@ -163,7 +166,7 @@ export class DSMService {
     let json = {
       ddpParticipantId: ddpParticipantId,
       realm: realm,
-      userId: this.role.userID()
+      userId: this.role.userID(),
     };
     return this.http.post( url, JSON.stringify( json ), this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
@@ -171,12 +174,12 @@ export class DSMService {
   public assignParticipant( realm: string, assignMR: boolean, assignTissue: boolean, json: string ) {
     let url = this.baseUrl + DSMService.UI + "assignParticipant";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
+    map.push( { name: DSMService.REALM, value: realm } );
     if (assignMR) {
-      map.push( {name: "assignMR", value: assignMR} );
+      map.push( { name: "assignMR", value: assignMR } );
     }
     if (assignTissue) {
-      map.push( {name: "assignTissue", value: assignTissue} );
+      map.push( { name: "assignTissue", value: assignTissue } );
     }
     return this.http.patch( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
@@ -186,20 +189,20 @@ export class DSMService {
     return this.http.patch( url, json, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
-  public downloadCoverPDFs(ddpParticipantId: string, medicalRecordId: string, startDate: string, endDate: string, mrCoverPdfSettings: Value[],
-                           realm: string) {
+  public downloadCoverPDFs( ddpParticipantId: string, medicalRecordId: string, startDate: string, endDate: string, mrCoverPdfSettings: Value[],
+                            realm: string ) {
     let url = this.baseUrl + DSMService.UI + "downloadPDF/cover/" + medicalRecordId;
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    let json: { [k: string]: any } = {};
+    map.push( { name: DSMService.REALM, value: realm } );
+    let json: { [ k: string ]: any } = {};
     json = {
       ddpParticipantId: ddpParticipantId,
       startDate: startDate,
       endDate: endDate,
-      userId: this.role.userID()
+      userId: this.role.userID(),
     };
     for (let mrSetting of mrCoverPdfSettings) {
-      json[mrSetting.value] = mrSetting.selected;
+      json[ mrSetting.value ] = mrSetting.selected;
     }
     // console.log( json );
     return this.http.post( url, JSON.stringify( json ), this.buildQueryPDFHeader( map ) ).map( ( res: Response ) => res.blob() ).catch( this.handleError );
@@ -208,11 +211,11 @@ export class DSMService {
   public downloadPDF( ddpParticipantId: string, realm: string, configName: string ) {
     let url = this.baseUrl + DSMService.UI + "downloadPDF/pdf";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
+    map.push( { name: DSMService.REALM, value: realm } );
     let json = {
       ddpParticipantId: ddpParticipantId,
       configName: configName,
-      userId: this.role.userID()
+      userId: this.role.userID(),
     };
     return this.http.post( url, JSON.stringify( json ), this.buildQueryPDFHeader( map ) ).map( ( res: Response ) => res.blob() ).catch( this.handleError );
   }
@@ -220,10 +223,10 @@ export class DSMService {
   public downloadConsentPDFs( ddpParticipantId: string, realm: string ) {
     let url = this.baseUrl + DSMService.UI + "downloadPDF/consentpdf";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
+    map.push( { name: DSMService.REALM, value: realm } );
     let json = {
       ddpParticipantId: ddpParticipantId,
-      userId: this.role.userID()
+      userId: this.role.userID(),
     };
     return this.http.post( url, JSON.stringify( json ), this.buildQueryPDFHeader( map ) ).map( ( res: Response ) => res.blob() ).catch( this.handleError );
   }
@@ -231,10 +234,10 @@ export class DSMService {
   public downloadReleasePDFs( ddpParticipantId: string, realm: string ) {
     let url = this.baseUrl + DSMService.UI + "downloadPDF/releasepdf";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
+    map.push( { name: DSMService.REALM, value: realm } );
     let json = {
       ddpParticipantId: ddpParticipantId,
-      userId: this.role.userID()
+      userId: this.role.userID(),
     };
     return this.http.post( url, JSON.stringify( json ), this.buildQueryPDFHeader( map ) ).map( ( res: Response ) => res.blob() ).catch( this.handleError );
   }
@@ -243,7 +246,7 @@ export class DSMService {
     let url = this.baseUrl + DSMService.UI + "downloadPDF/requestpdf";
     let json = {
       ddpParticipantId: ddpParticipantId,
-      userId: this.role.userID()
+      userId: this.role.userID(),
     };
     return this.http.post( url, JSON.stringify( json ), this.buildQueryPDFHeader( map ) ).map( ( res: Response ) => res.blob() ).catch( this.handleError );
   }
@@ -251,7 +254,7 @@ export class DSMService {
   public getParticipant( participantId: string, realm: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "participant/" + participantId;
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
+    map.push( { name: DSMService.REALM, value: realm } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
@@ -273,47 +276,47 @@ export class DSMService {
   public getMedicalRecordDashboard( realm: string, startDate: string, endDate: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "ddpInformation/" + startDate + "/" + endDate;
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public getShippingReportOverview(): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "sampleReport";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public getShippingReport( startDate: string, endDate: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "sampleReport/" + startDate + "/" + endDate;
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public getShippingOverview(): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "ddpInformation";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public getShippingDashboard( realm: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "ddpInformation";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public getKit( field: string, value: string, realms: string[] ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "searchKit";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "field", value: field} );
-    map.push( {name: "value", value: value} );
+    map.push( { name: "field", value: field } );
+    map.push( { name: "value", value: value } );
     for (var i of realms) {
-      map.push( {name: "realm", value: i} );
+      map.push( { name: "realm", value: i } );
     }
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
@@ -334,13 +337,13 @@ export class DSMService {
   public lookup( field: string, lookupValue: string, realm: string, shortId: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "lookup";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "field", value: field} );
-    map.push( {name: "value", value: lookupValue} );
+    map.push( { name: "field", value: field } );
+    map.push( { name: "value", value: lookupValue } );
     if (realm != null) {
-      map.push( {name: "realm", value: realm} );
+      map.push( { name: "realm", value: realm } );
     }
     if (shortId != null) {
-      map.push( {name: "shortId", value: shortId} );
+      map.push( { name: "shortId", value: shortId } );
     }
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
@@ -354,58 +357,58 @@ export class DSMService {
     let url = this.baseUrl + DSMService.UI + "realmsAllowed";
     let map: { name: string, value: any }[] = [];
     if (menu != null) {
-      map.push( {name: "menu", value: menu} );
+      map.push( { name: "menu", value: menu } );
     }
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public getKitTypes( realm: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "kitTypes/" + realm;
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public uploadTxtFile( realm: string, kitType: string, file: File ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "kitUpload";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "kitType", value: kitType} );
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "kitType", value: kitType } );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.post( url, file, this.buildQueryUploadHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public uploadNdiFile( file: File ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "ndiRequest";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.post( url, file, this.buildQueryUploadHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public uploadDuplicateParticipant( realm: string, kitType: string, jsonParticipants: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "kitUpload";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "kitType", value: kitType} );
-    map.push( {name: "userId", value: this.role.userID()} );
-    map.push( {name: "uploadAnyway", value: true} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "kitType", value: kitType } );
+    map.push( { name: "userId", value: this.role.userID() } );
+    map.push( { name: "uploadAnyway", value: true } );
     return this.http.post( url, jsonParticipants, this.buildQueryUploadHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public kitLabel( realm: string, kitType: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "kitLabel";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "kitType", value: kitType} );
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "kitType", value: kitType } );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.post( url, null, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public singleKitLabel( kitJson: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "kitLabel";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.post( url, kitJson, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
@@ -427,32 +430,32 @@ export class DSMService {
   public getSurveyStatus( realm: string, survey: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "triggerSurvey/" + realm;
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "surveyName", value: survey} );
+    map.push( { name: "surveyName", value: survey } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public triggerSurvey( realm: string, surveyName: string, surveyType: string, comment: string, isFileUpload: boolean, payload: any ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "triggerSurvey";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "surveyName", value: surveyName} );
-    map.push( {name: "surveyType", value: surveyType} );
-    map.push( {name: "userId", value: this.role.userID()} );
-    map.push( {name: "comment", value: comment} );
-    map.push( {name: "isFileUpload", value: isFileUpload} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "surveyName", value: surveyName } );
+    map.push( { name: "surveyType", value: surveyType } );
+    map.push( { name: "userId", value: this.role.userID() } );
+    map.push( { name: "comment", value: comment } );
+    map.push( { name: "isFileUpload", value: isFileUpload } );
     return this.http.post( url, payload, this.buildQueryUploadHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public triggerAgain( realm: string, surveyName: string, surveyType: string, comment: string, jsonParticipants: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "triggerSurvey";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "surveyName", value: surveyName} );
-    map.push( {name: "surveyType", value: surveyType} );
-    map.push( {name: "userId", value: this.role.userID()} );
-    map.push( {name: "comment", value: comment} );
-    map.push( {name: "triggerAgain", value: true} );
-    map.push( {name: "isFileUpload", value: false} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "surveyName", value: surveyName } );
+    map.push( { name: "surveyType", value: surveyType } );
+    map.push( { name: "userId", value: this.role.userID() } );
+    map.push( { name: "comment", value: comment } );
+    map.push( { name: "triggerAgain", value: true } );
+    map.push( { name: "isFileUpload", value: false } );
     return this.http.post( url, jsonParticipants, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
@@ -464,15 +467,15 @@ export class DSMService {
   public getPossiblePDFs( realm: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "pdf";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
+    map.push( { name: DSMService.REALM, value: realm } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public getParticipantsPDFs( realm: string, ddpParticipantId: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "pdf";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "ddpParticipantId", value: ddpParticipantId} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "ddpParticipantId", value: ddpParticipantId } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
@@ -494,103 +497,103 @@ export class DSMService {
   public getKitExitedParticipants( realm: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "discardSamples";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
+    map.push( { name: DSMService.REALM, value: realm } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public setKitDiscardAction( realm: string, json: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "discardSamples";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
+    map.push( { name: DSMService.REALM, value: realm } );
     return this.http.patch( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public showUpload( realm: string, json: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "showUpload";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
+    map.push( { name: DSMService.REALM, value: realm } );
     return this.http.patch( url, json, this.buildQueryPDFHeader( map ) ).map( ( res: Response ) => res.blob() ).catch( this.handleError );
   }
 
   public setKitDiscarded( realm: string, json: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "discardSamples";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.patch( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public uploadFile( realm: string, kitDiscardId: string, pathName: string, payload: File ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "discardUpload";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "kitDiscardId", value: kitDiscardId} );
-    map.push( {name: pathName, value: payload.name} );
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "kitDiscardId", value: kitDiscardId } );
+    map.push( { name: pathName, value: payload.name } );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.post( url, payload, this.buildQueryUploadHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public deleteFile( realm: string, kitDiscardId: string, pathName: string, path: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "discardUpload";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "kitDiscardId", value: kitDiscardId} );
-    map.push( {name: "delete", value: true} );
-    map.push( {name: pathName, value: path} );
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "kitDiscardId", value: kitDiscardId } );
+    map.push( { name: "delete", value: true } );
+    map.push( { name: pathName, value: path } );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.post( url, null, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public saveNote( realm: string, kitDiscardId: string, note: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "discardUpload";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
-    map.push( {name: "kitDiscardId", value: kitDiscardId} );
-    map.push( {name: "note", value: note} );
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( { name: "kitDiscardId", value: kitDiscardId } );
+    map.push( { name: "note", value: note } );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.post( url, null, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public confirm( realm: string, payload: String ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "discardConfirm";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
+    map.push( { name: DSMService.REALM, value: realm } );
     return this.http.post( url, payload, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public deactivateKitRequest( kitRequestId: string, json: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "deactivateKit/" + kitRequestId;
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.patch( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public expressLabel( kitRequestId: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "expressKit/" + kitRequestId;
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.patch( url, null, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public rateOfExpressLabel( kitRequestId: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "expressKit/" + kitRequestId;
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public activateKitRequest( kitRequestId: string, activate: boolean ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "activateKit/" + kitRequestId;
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "userId", value: this.role.userID()} );
-    map.push( {name: "activate", value: activate} );
+    map.push( { name: "userId", value: this.role.userID() } );
+    map.push( { name: "activate", value: activate } );
     return this.http.patch( url, null, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public saveUserSettings( json: string ) {
     let url = this.baseUrl + DSMService.UI + "userSettings";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.patch( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
@@ -598,7 +601,7 @@ export class DSMService {
     let url = this.baseUrl + DSMService.UI + "emailEvent/" + source;
     let map: { name: string, value: any }[] = [];
     if (target != null && target !== "") {
-      map.push( {name: DSMService.TARGET, value: target} );
+      map.push( { name: DSMService.TARGET, value: target } );
     }
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
@@ -616,7 +619,7 @@ export class DSMService {
   public followUpEmailEvent( source: string, json: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "followUpEmailEvent/" + source;
     let map: { name: string, value: any }[] = [];
-    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( { name: "userId", value: this.role.userID() } );
     return this.http.patch( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
@@ -638,14 +641,14 @@ export class DSMService {
   public getMedicalRecordAbstractionFormControls( realm: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "abstractionformcontrols";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
+    map.push( { name: DSMService.REALM, value: realm } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public saveMedicalRecordAbstractionFormControls( realm: string, json: string ): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "abstractionformcontrols";
     let map: { name: string, value: any }[] = [];
-    map.push( {name: DSMService.REALM, value: realm} );
+    map.push( { name: DSMService.REALM, value: realm } );
     return this.http.patch( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
@@ -653,7 +656,7 @@ export class DSMService {
     let url = this.baseUrl + DSMService.UI + "abstraction";
     let json = {
       ddpParticipantId: ddpParticipantId,
-      realm: realm
+      realm: realm,
     };
     return this.http.post( url, JSON.stringify( json ), this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
@@ -665,7 +668,7 @@ export class DSMService {
       realm: realm,
       status: status,
       userId: this.role.userID(),
-      abstraction: abstraction
+      abstraction: abstraction,
     };
     return this.http.post( url, JSON.stringify( json ), this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
@@ -686,14 +689,14 @@ export class DSMService {
   }
 
   private buildHeader(): RequestOptions {
-    return new RequestOptions( {headers: this.buildJsonAuthHeader(), withCredentials: true} );
+    return new RequestOptions( { headers: this.buildJsonAuthHeader(), withCredentials: true } );
   }
 
   private buildPDFHeader(): RequestOptions {
     return new RequestOptions( {
       headers: this.buildJsonAuthHeader(),
       withCredentials: true,
-      responseType: ResponseContentType.Blob
+      responseType: ResponseContentType.Blob,
     } );
   }
 
@@ -706,7 +709,7 @@ export class DSMService {
       headers: this.buildJsonAuthHeader(),
       withCredentials: true,
       responseType: ResponseContentType.Blob,
-      search: params
+      search: params,
     } );
   }
 
@@ -715,7 +718,7 @@ export class DSMService {
     for (let i in map) {
       params.append( map[ i ].name, map[ i ].value );
     }
-    return new RequestOptions( {headers: this.buildJsonAuthHeader(), withCredentials: true, search: params} );
+    return new RequestOptions( { headers: this.buildJsonAuthHeader(), withCredentials: true, search: params } );
   }
 
   private buildQueryUploadHeader( map: any[] ): RequestOptions {
@@ -723,12 +726,12 @@ export class DSMService {
     for (let i in map) {
       params.append( map[ i ].name, map[ i ].value );
     }
-    return new RequestOptions( {headers: this.uploadHeader(), withCredentials: true, search: params} );
+    return new RequestOptions( { headers: this.uploadHeader(), withCredentials: true, search: params } );
   }
 
   private buildJsonAuthHeader(): Headers {
     if (this.checkCookieBeforeCall()) {
-      let headers = new Headers( {"Content-Type": "application/json", "Accept": "application/json"} );
+      let headers = new Headers( { "Content-Type": "application/json", "Accept": "application/json" } );
       headers.append( "Authorization", this.sessionService.getAuthBearerHeaderValue() );
       return headers;
     }
@@ -736,7 +739,7 @@ export class DSMService {
 
   private uploadHeader(): Headers {
     if (this.checkCookieBeforeCall()) {
-      let headers = new Headers( {"Content-Type": "multipart/form-data", "Accept": "application/json"} );
+      let headers = new Headers( { "Content-Type": "multipart/form-data", "Accept": "application/json" } );
       headers.append( "Authorization", this.sessionService.getAuthBearerHeaderValue() );
       return headers;
     }

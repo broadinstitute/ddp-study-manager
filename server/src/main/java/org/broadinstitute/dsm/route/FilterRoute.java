@@ -365,7 +365,7 @@ public class FilterRoute extends RequestHandler {
             String query = " ";
             for (String filter : tableFilters) {
                 if (StringUtils.isNotBlank(filter)) {
-                    if (!filter.contains("profile.")) {
+                    if (!filter.contains("profile.") && !filter.contains("data.")) {
                         query += "AND " + filter + " ";
                     }
                     else {

@@ -27,10 +27,10 @@ public class FieldSettings {
             "setting.column_display, setting.field_type, setting.display_type, setting.possible_values FROM field_settings setting, ddp_instance realm WHERE " +
             "realm.ddp_instance_id = setting.ddp_instance_id AND NOT (setting.deleted <=>1) AND realm.instance_name=?";
     public static final String UPDATE_FIELD_SETTINGS_TABLE = "UPDATE field_settings SET column_name = ?, " +
-            "column_display = ?, deleted = ?, field_type = ?, display_type = ?, possible_values = ? WHERE field_settings_id = ?";
+            "column_display = ?, deleted = ?, field_type = ?, display_type = ?, possible_values = ?, changed_by = ?, last_changed = ? WHERE field_settings_id = ?";
     public static final String INSERT_FIELD_SETTINGS = "INSERT INTO field_settings SET column_name = ?, " +
             "column_display = ?, field_type = ?, display_type = ?, possible_values = ?, ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance " +
-            "WHERE instance_name = ?)";
+            "WHERE instance_name = ?), changed_by = ?, last_changed = ?";
 
     private static final Logger logger = LoggerFactory.getLogger(FieldSettings.class);
     private final String fieldSettingId; //Value of field_settings_id for the setting
@@ -108,7 +108,7 @@ public class FieldSettings {
      * @param fieldSettingsLists Map of fields type names to lists of fields
      */
     public static void saveFieldSettings(@NonNull String realm,
-                                         @NonNull Map<String, Collection<FieldSettings>> fieldSettingsLists){
+                                         @NonNull Map<String, Collection<FieldSettings>> fieldSettingsLists, @NonNull String userId){
         //Settings are organized by type, so need to go through each list of settings
         for (String settingType : fieldSettingsLists.keySet()){
             Collection<FieldSettings> settingsOfType = fieldSettingsLists.get(settingType);
@@ -120,10 +120,10 @@ public class FieldSettings {
                 String settingId = fieldSetting.getFieldSettingId();
                 try {
                     if (StringUtils.isNotBlank(settingId)){
-                        updateFieldSetting(settingId, fieldSetting);
+                        updateFieldSetting(settingId, fieldSetting, userId);
                     }
                     else {
-                        addFieldSetting(realm, fieldSetting);
+                        addFieldSetting(realm, fieldSetting, userId);
                     }
                 }
                 catch (RuntimeException e){
@@ -152,7 +152,7 @@ public class FieldSettings {
         }
     }
 
-    private static void updateFieldSetting(@NonNull String fieldSettingId, @NonNull FieldSettings fieldSetting){
+    private static void updateFieldSetting(@NonNull String fieldSettingId, @NonNull FieldSettings fieldSetting, @NonNull String userId){
         String possibleValues = new GsonBuilder().create().toJson(fieldSetting.getPossibleValues(), ArrayList.class);
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -162,13 +162,16 @@ public class FieldSettings {
                 stmt.setBoolean(3, fieldSetting.isDeleted());
                 stmt.setString(4, fieldSetting.getFieldType());
                 stmt.setString(5, fieldSetting.getDisplayType());
+
                 if (possibleValues != null && !possibleValues.equals("null")){
                     stmt.setString(6, possibleValues);
                 }
                 else {
                     stmt.setString(6, null);
                 }
-                stmt.setString(7, fieldSetting.getFieldSettingId());
+                stmt.setString(7, userId);
+                stmt.setLong(8, System.currentTimeMillis());
+                stmt.setString(9, fieldSetting.getFieldSettingId());
                 int result = stmt.executeUpdate();
                 if (result == 1){
                     logger.info("Updated field setting with id " + fieldSettingId);
@@ -188,7 +191,7 @@ public class FieldSettings {
         }
     }
 
-    private static void addFieldSetting(@NonNull String realm, @NonNull FieldSettings fieldSetting){
+    private static void addFieldSetting(@NonNull String realm, @NonNull FieldSettings fieldSetting, @NonNull String userId){
         Gson gson = new Gson();
         String possibleValues = gson.toJson(fieldSetting.getPossibleValues(), ArrayList.class);
         SimpleResult results = inTransaction(conn -> {
@@ -200,6 +203,8 @@ public class FieldSettings {
                 stmt.setString(4, fieldSetting.getDisplayType());
                 stmt.setString(5, possibleValues != null && !"null".equals(possibleValues) ? possibleValues : null);
                 stmt.setString(6, realm);
+                stmt.setString(7, userId);
+                stmt.setLong(8, System.currentTimeMillis());
                 int result = stmt.executeUpdate();
                 if (result == 1){
                     logger.info("Added new setting for " + realm);
