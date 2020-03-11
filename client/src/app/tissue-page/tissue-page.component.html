@@ -63,8 +63,12 @@
           <td>{{participant.data.profile['firstName']}} {{participant.data.profile['lastName']}}</td>
         </tr>
         <tr *ngIf="participant.data.dsm != null">
-          <td>DOB</td>
+          <td>Date of Birth</td>
           <td>{{getUtil().getDateFormatted(participant.data.dsm['dateOfBirth'])}}</td>
+        </tr>
+        <tr *ngIf="participant.data.dsm != null && participant.data.dsm['dateOfMajority'] != null">
+          <td>Date of Majority</td>
+          <td>{{getUtil().getDateFormatted(participant.data.dsm['dateOfMajority'])}}</td>
         </tr>
         <tr *ngIf="participant.data.dsm != null">
           <td>Date Of Diagnosis</td>
