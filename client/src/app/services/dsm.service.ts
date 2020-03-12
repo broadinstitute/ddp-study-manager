@@ -78,11 +78,11 @@ export class DSMService {
   public setDefaultFilter( json: string, filterName: string, parent: string, realm ) {
     let url = this.baseUrl + DSMService.UI + "defaultFilter";
     let map: { name: string, value: any }[] = [];
-    map.push( { name: "filterName", value: filterName } );
-    map.push( { name: "parent", value: parent } );
-    map.push( { name: "userId", value: this.role.userID() } );
-    map.push( { name: "userMail", value: this.role.userMail() } );
-    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( {name: "filterName", value: filterName} );
+    map.push( {name: "parent", value: parent} );
+    map.push( {name: "userId", value: this.role.userID()} );
+    map.push( {name: "userMail", value: this.role.userMail()} );
+    map.push( {name: DSMService.REALM, value: realm} );
     return this.http.patch( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
@@ -156,9 +156,17 @@ export class DSMService {
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
+  // returns drug list entries with all fields
   public getDrugs(): Observable<any> {
-    let url = this.baseUrl + DSMService.UI + "drugs";
+    let url = this.baseUrl + DSMService.UI + "drugList";
     return this.http.get( url, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
+  }
+
+  public saveDrug( json: string ): Observable<any> {
+    let url = this.baseUrl + DSMService.UI + "drugList";
+    let map: { name: string, value: any }[] = [];
+    map.push( {name: "userId", value: this.role.userID()} );
+    return this.http.patch( url, json, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
   public getMedicalRecordData( realm: string, ddpParticipantId: string ): Observable<any> {
@@ -193,7 +201,7 @@ export class DSMService {
                             realm: string ) {
     let url = this.baseUrl + DSMService.UI + "downloadPDF/cover/" + medicalRecordId;
     let map: { name: string, value: any }[] = [];
-    map.push( { name: DSMService.REALM, value: realm } );
+    map.push( {name: DSMService.REALM, value: realm} );
     let json: { [ k: string ]: any } = {};
     json = {
       ddpParticipantId: ddpParticipantId,
