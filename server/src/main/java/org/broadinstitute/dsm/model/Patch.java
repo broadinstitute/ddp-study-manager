@@ -37,6 +37,7 @@ public class Patch {
     private String fieldName; //for questions at abstraction
     private String user;
     private NameValue nameValue;
+    private String tableAlias;
     private List<NameValue> nameValues;
     private Boolean isUnique;
 
