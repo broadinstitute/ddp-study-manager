@@ -73,6 +73,7 @@
           <li *ngIf="hasRole().allowedToCreateSurveys()"><a href="#" [routerLink]="['/survey']"> Follow-Up Survey </a></li>
           <li *ngIf="hasRole().allowedToDownloadPDF()"><a href="#" [routerLink]="['/downloadPDF']"> Download PDF </a></li>
           <li *ngIf="hasRole().allowedToDownloadNDI()"><a href="#" [routerLink]="['/ndi']"> NDI Download </a></li>
+          <li ><a href="#" [routerLink]="['/drugList']"> Drug List </a></li>
         </ul>
       </li>
     </ul>
