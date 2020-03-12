@@ -28,4 +28,21 @@
             </column>
         </addColumn>
     </changeSet>
+    <changeSet author="diane" id="12122019">
+        <insert tableName="access_role">
+            <column name="name" value="drug_list_edit"/>
+        </insert>
+    </changeSet>
+    <changeSet author="simone" id="03062020">
+        <addColumn tableName="drug_list">
+            <column name="changed_by" type="VARCHAR(45)">
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet author="simone" id="03092020">
+    <renameColumn columnDataType="BIGINT(20)"
+                  newColumnName="last_changed"
+                  oldColumnName="date_updated"
+                  tableName="drug_list"/>
+</changeSet>
 </databaseChangeLog>
