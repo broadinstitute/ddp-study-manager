@@ -48,8 +48,6 @@ public class KitUploadRoute extends RequestHandler {
             "LEFT JOIN ddp_participant_exit ex on (ex.ddp_instance_id = request.ddp_instance_id AND ex.ddp_participant_id = request.ddp_participant_id) WHERE ex.ddp_participant_exit_id is null " +
             "AND kit.deactivated_date is null AND request.ddp_instance_id = ? AND request.kit_type_id = ? AND request.ddp_participant_id = ?";
 
-    public static final String UPLOADED_KIT_REQUEST = "UPLOADED_";
-
     private static final String PARTICIPANT_ID = "participantId";
     private static final String ORDER_NUMBER = "orderNumber";
     private static final String SHORT_ID = "shortId";
@@ -291,7 +289,7 @@ public class KitUploadRoute extends RequestHandler {
             }
         }
         try {
-            String shippingId = UPLOADED_KIT_REQUEST + KitRequestShipping.createRandom(20);
+            String shippingId = DDPKitRequest.UPLOADED_KIT_REQUEST + KitRequestShipping.createRandom(20);
             Address address = easyPostUtil.getAddress(((KitUploadObject) kit).getEasyPostAddressId());
             String addressId = null;
             if (address != null) {
