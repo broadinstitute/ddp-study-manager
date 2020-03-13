@@ -23,6 +23,8 @@ public class DDPKitRequest {
 
     private static final Logger logger = LoggerFactory.getLogger(DDPKitRequest.class);
 
+    public static final String UPLOADED_KIT_REQUEST = "UPLOADED_";
+
     /**
      * Requesting 'new' DDPKitRequests and write them into ddp_kit_request
      *
@@ -57,72 +59,75 @@ public class DDPKitRequest {
                             for (KitDetail kitDetail : kitDetails) {
                                 if (kitDetail != null && kitDetail.getParticipantId() != null && kitDetail.getKitRequestId() != null
                                         && kitDetail.getKitType() != null) {
-                                    String key = kitDetail.getKitType() + "_" + latestKit.getInstanceID();
-                                    KitType kitType = kitTypes.get(key);
-                                    if (kitType != null) {
-                                        KitRequestSettings kitRequestSettings = kitRequestSettingsMap.get(kitType.getKitTypeId());
+                                    //ignore kits from the ddp which starts with internal upload prefix (mainly for mbc migration)
+                                    if (StringUtils.isNotBlank(kitDetail.getKitRequestId()) && !kitDetail.getKitRequestId().startsWith(UPLOADED_KIT_REQUEST)) {
+                                        String key = kitDetail.getKitType() + "_" + latestKit.getInstanceID();
+                                        KitType kitType = kitTypes.get(key);
+                                        if (kitType != null) {
+                                            KitRequestSettings kitRequestSettings = kitRequestSettingsMap.get(kitType.getKitTypeId());
 
-                                        if (StringUtils.isNotBlank(latestKit.getParticipantIndexES())) {
-                                            //without order list, that was only added for promise and currently is not used!
-                                            if (participantsESData != null && !participantsESData.isEmpty()) {
-                                                Map<String, Object> participantESData = participantsESData.get(kitDetail.getParticipantId());
-                                                if (participantESData != null && !participantESData.isEmpty()) {
-                                                    Map<String, Object> profile = (Map<String, Object>) participantESData.get("profile");
-                                                    if (profile != null && !profile.isEmpty()) {
-                                                        String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(latestKit.getBaseURL(), latestKit.getInstanceID(), latestKit.isMigrated(),
-                                                                latestKit.getCollaboratorIdPrefix(), (String) profile.get("guid"), (String) profile.get("hruid"), kitRequestSettings.getCollaboratorParticipantLengthOverwrite());
+                                            if (StringUtils.isNotBlank(latestKit.getParticipantIndexES())) {
+                                                //without order list, that was only added for promise and currently is not used!
+                                                if (participantsESData != null && !participantsESData.isEmpty()) {
+                                                    Map<String, Object> participantESData = participantsESData.get(kitDetail.getParticipantId());
+                                                    if (participantESData != null && !participantESData.isEmpty()) {
+                                                        Map<String, Object> profile = (Map<String, Object>) participantESData.get("profile");
+                                                        if (profile != null && !profile.isEmpty()) {
+                                                            String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(latestKit.getBaseURL(), latestKit.getInstanceID(), latestKit.isMigrated(),
+                                                                    latestKit.getCollaboratorIdPrefix(), (String) profile.get("guid"), (String) profile.get("hruid"), kitRequestSettings.getCollaboratorParticipantLengthOverwrite());
 
+                                                            KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, kitType.getKitTypeId(),
+                                                                    kitRequestSettings, collaboratorParticipantId);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            else {
+                                                DDPParticipant participant = DDPParticipant.getDDPParticipant(latestKit.getBaseURL(), latestKit.getInstanceName(), kitDetail.getParticipantId(), latestKit.isHasAuth0Token());
+                                                if (participant != null) {
+                                                    // if the kit type has sub kits > like for promise
+                                                    boolean kitHasSubKits = kitRequestSettings.getHasSubKits() != 0;
+
+                                                    ArrayList<KitRequest> orderKit = kitsToOrder.get(kitRequestSettings);
+                                                    if (orderKit == null) {
+                                                        orderKit = new ArrayList<>();
+                                                    }
+
+                                                    String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(latestKit.getBaseURL(), latestKit.getInstanceID(), latestKit.isMigrated(),
+                                                            latestKit.getCollaboratorIdPrefix(), participant.getParticipantId(), participant.getShortId(), kitRequestSettings.getCollaboratorParticipantLengthOverwrite());
+                                                    //only promise for now
+                                                    if (kitHasSubKits) {
+                                                        List<KitSubKits> subKits = kitRequestSettings.getSubKits();
+                                                        for (KitSubKits subKit : subKits) {
+                                                            for (int i = 0; i < subKit.getKitCount(); i++) {
+                                                                KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, subKit.getKitTypeId(),
+                                                                        kitRequestSettings, collaboratorParticipantId);
+                                                            }
+                                                        }
+                                                        if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
+                                                            orderKit.add(new KitRequest(kitDetail.getParticipantId(), participant.getShortId(), participant));
+                                                        }
+                                                    }
+                                                    else {
+                                                        // all other ddps
                                                         KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, kitType.getKitTypeId(),
                                                                 kitRequestSettings, collaboratorParticipantId);
+                                                        if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
+                                                            orderKit.add(new KitRequest(kitDetail.getParticipantId(), participant.getShortId(), participant));
+                                                        }
                                                     }
+                                                    if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
+                                                        kitsToOrder.put(kitRequestSettings, orderKit);
+                                                    }
+                                                }
+                                                else {
+                                                    throw new RuntimeException("No participant returned w/ " + kitDetail.getParticipantId() + " for " + latestKit.getInstanceName());
                                                 }
                                             }
                                         }
                                         else {
-                                            DDPParticipant participant = DDPParticipant.getDDPParticipant(latestKit.getBaseURL(), latestKit.getInstanceName(), kitDetail.getParticipantId(), latestKit.isHasAuth0Token());
-                                            if (participant != null) {
-                                                // if the kit type has sub kits > like for promise
-                                                boolean kitHasSubKits = kitRequestSettings.getHasSubKits() != 0;
-
-                                                ArrayList<KitRequest> orderKit = kitsToOrder.get(kitRequestSettings);
-                                                if (orderKit == null) {
-                                                    orderKit = new ArrayList<>();
-                                                }
-
-                                                String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(latestKit.getBaseURL(), latestKit.getInstanceID(), latestKit.isMigrated(),
-                                                        latestKit.getCollaboratorIdPrefix(), participant.getParticipantId(), participant.getShortId(), kitRequestSettings.getCollaboratorParticipantLengthOverwrite());
-                                                //only promise for now
-                                                if (kitHasSubKits) {
-                                                    List<KitSubKits> subKits = kitRequestSettings.getSubKits();
-                                                    for (KitSubKits subKit : subKits) {
-                                                        for (int i = 0; i < subKit.getKitCount(); i++) {
-                                                            KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, subKit.getKitTypeId(),
-                                                                    kitRequestSettings, collaboratorParticipantId);
-                                                        }
-                                                    }
-                                                    if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
-                                                        orderKit.add(new KitRequest(kitDetail.getParticipantId(), participant.getShortId(), participant));
-                                                    }
-                                                }
-                                                else {
-                                                    // all other ddps
-                                                    KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, kitType.getKitTypeId(),
-                                                            kitRequestSettings, collaboratorParticipantId);
-                                                    if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
-                                                        orderKit.add(new KitRequest(kitDetail.getParticipantId(), participant.getShortId(), participant));
-                                                    }
-                                                }
-                                                if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
-                                                    kitsToOrder.put(kitRequestSettings, orderKit);
-                                                }
-                                            }
-                                            else {
-                                                throw new RuntimeException("No participant returned w/ " + kitDetail.getParticipantId() + " for " + latestKit.getInstanceName());
-                                            }
+                                            throw new RuntimeException("KitTypeId is not in kit_type table. KitTypeId " + kitDetail.getKitType());
                                         }
-                                    }
-                                    else {
-                                        throw new RuntimeException("KitTypeId is not in kit_type table. KitTypeId " + kitDetail.getKitType());
                                     }
                                 }
                                 else {

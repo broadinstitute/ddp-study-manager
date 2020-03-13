@@ -7,10 +7,7 @@ import org.broadinstitute.ddp.handlers.util.Institution;
 import org.broadinstitute.ddp.handlers.util.InstitutionRequest;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.model.mbc.MBC;
-import org.broadinstitute.dsm.model.mbc.MBCInstitution;
-import org.broadinstitute.dsm.model.mbc.MBCParticipant;
-import org.broadinstitute.dsm.model.mbc.MBCParticipantInstitution;
+import org.broadinstitute.dsm.model.mbc.*;
 import org.broadinstitute.dsm.db.MedicalRecordLog;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
@@ -122,6 +119,7 @@ public class DDPMedicalRecordDataRequest {
                                     //load participant and institution lists
                                     MBCParticipant.getParticipantsFromDB(ddpInstance.getName(), dbUrl, container, receiver);
                                     MBCInstitution.getAllPhysiciansInformationFromDB(ddpInstance.getName(), dbUrl, container, receiver);
+                                    MBCHospital.getAllHospitalInformationFromDB(ddpInstance.getName(), dbUrl, container, receiver);
                                     alreadyAddedOnServerStart = true;//so to not decrypt values again, which where just added
                                 }
                                 Map<String, MBCParticipantInstitution> mbcDataMap = MBCParticipantInstitution.getPhysiciansFromDB(
@@ -129,15 +127,38 @@ public class DDPMedicalRecordDataRequest {
                                 lastTimeChecked = System.currentTimeMillis();
                                 if (mbcDataMap != null && !mbcDataMap.isEmpty()) {
                                     inTransaction((conn) -> {
-                                        int maxPhysicianId = -1;
+                                        int maxId = -1;
                                         Iterator it = mbcDataMap.entrySet().iterator();
                                         while (it.hasNext()) {
                                             Map.Entry pair = (Map.Entry) it.next();
                                             MBCParticipantInstitution mbcData = ((MBCParticipantInstitution) pair.getValue());
-                                            writePhysiciansIntoDb(conn, ddpInstance.getDdpInstanceId(), mbcData);
-                                            maxPhysicianId = Math.max(maxPhysicianId, Integer.parseInt(mbcData.getMbcInstitution().getPhysicianId()));
+                                            writePhysiciansIntoDb(conn, ddpInstance.getDdpInstanceId(), mbcData.getMbcParticipant().getParticipantId(),
+                                                    mbcData.getMbcParticipant().getUpdatedAt(), mbcData.getMbcInstitution().getInstitution(),
+                                                    mbcData.getMbcInstitution().isChangedSinceLastChecked());
+                                            maxId = Math.max(maxId, Integer.parseInt(mbcData.getMbcInstitution().getPhysicianId()));
                                         }
-                                        DBUtil.updateBookmark(conn, maxPhysicianId, ddpInstance.getDdpInstanceId());
+                                        DBUtil.updateBookmark(maxId, ddpInstance.getDdpInstanceId());
+                                        return null;
+                                    });
+                                }
+                                else {
+                                    logger.info("No new institutions from " + ddpInstance.getName());
+                                }
+                                Map<String, MBCParticipantHospital> mbcDataMap2 = MBCParticipantHospital.getHospitalsFromDB(
+                                        ddpInstance.getName().toLowerCase(), dbUrl, value, lastTimeChecked, container, receiver, alreadyAddedOnServerStart);
+                                if (mbcDataMap2 != null && !mbcDataMap2.isEmpty()) {
+                                    inTransaction((conn) -> {
+                                        int maxId = -1;
+                                        Iterator it = mbcDataMap2.entrySet().iterator();
+                                        while (it.hasNext()) {
+                                            Map.Entry pair = (Map.Entry) it.next();
+                                            MBCParticipantHospital mbcData = ((MBCParticipantHospital) pair.getValue());
+                                            writePhysiciansIntoDb(conn, ddpInstance.getDdpInstanceId(), mbcData.getMbcParticipant().getParticipantId(),
+                                                    mbcData.getMbcParticipant().getUpdatedAt(), mbcData.getMbcHospital().getHospitalId(),
+                                                    mbcData.getMbcHospital().isChangedSinceLastChecked());
+                                            maxId = Math.max(maxId, Integer.parseInt(mbcData.getMbcHospital().getHospitalId()));
+                                        }
+                                        DBUtil.updateBookmark(maxId, ddpInstance.getDdpInstanceId());
                                         return null;
                                     });
                                 }
@@ -187,29 +208,30 @@ public class DDPMedicalRecordDataRequest {
         }
     }
 
-    public void writePhysiciansIntoDb(@NonNull Connection conn, @NonNull String instanceId, @NonNull MBCParticipantInstitution mbcData) {
-        if (!MedicalRecordUtil.isParticipantInDB(conn, mbcData.getMbcParticipant().getParticipantId(), instanceId)) {
+    public void writePhysiciansIntoDb(@NonNull Connection conn, @NonNull String instanceId, @NonNull String participantId, @NonNull String ptLastUpdated,
+                                      @NonNull String institutionId, @NonNull boolean institutionChangedSinceLastChecked) {
+        if (!MedicalRecordUtil.isParticipantInDB(conn, participantId, instanceId)) {
             //new participant
-            MedicalRecordUtil.writeParticipantIntoDB(conn, mbcData.getMbcParticipant().getParticipantId(), instanceId,
-                    0, mbcData.getMbcParticipant().getUpdatedAt(), MedicalRecordUtil.SYSTEM);
-            MedicalRecordUtil.writeNewRecordIntoDb(conn, SQL_INSERT_ONC_HISTORY, mbcData.getMbcParticipant().getParticipantId(), instanceId);
-            MedicalRecordUtil.writeNewRecordIntoDb(conn, SQL_INSERT_PARTICIPANT_RECORD, mbcData.getMbcParticipant().getParticipantId(), instanceId);
+            MedicalRecordUtil.writeParticipantIntoDB(conn, participantId, instanceId,
+                    0, ptLastUpdated, MedicalRecordUtil.SYSTEM);
+            MedicalRecordUtil.writeNewRecordIntoDb(conn, SQL_INSERT_ONC_HISTORY, participantId, instanceId);
+            MedicalRecordUtil.writeNewRecordIntoDb(conn, SQL_INSERT_PARTICIPANT_RECORD, participantId, instanceId);
         }
         else {
             //pt already exists
-            Number lastVersion = MedicalRecordUtil.getParticipantLastVersion(conn, mbcData.getMbcParticipant().getParticipantId(), instanceId);
+            Number lastVersion = MedicalRecordUtil.getParticipantLastVersion(conn, participantId, instanceId);
             long newVersion = lastVersion.longValue() + 1;
-            MedicalRecordUtil.updateParticipant(conn, mbcData.getMbcParticipant().getParticipantId(), instanceId, newVersion, mbcData.getMbcParticipant().getUpdatedAt(), MedicalRecordUtil.SYSTEM);
+            MedicalRecordUtil.updateParticipant(conn, participantId, instanceId, newVersion, ptLastUpdated, MedicalRecordUtil.SYSTEM);
         }
         //new physician
-        Number medicalRecordId = MedicalRecordUtil.isInstitutionInDB(conn, mbcData.getMbcParticipant().getParticipantId(), mbcData.getMbcInstitution().getPhysicianId(), instanceId);
+        Number medicalRecordId = MedicalRecordUtil.isInstitutionInDB(conn, participantId, institutionId, instanceId);
         if (medicalRecordId == null) {
-            MedicalRecordUtil.writeInstitutionIntoDb(conn, mbcData.getMbcParticipant().getParticipantId(), instanceId,
-                    mbcData.getMbcInstitution().getPhysicianId(), MBCInstitution.PHYSICIAN);
+            MedicalRecordUtil.writeInstitutionIntoDb(conn, participantId, instanceId,
+                    institutionId, MBCInstitution.PHYSICIAN);
         }
         else {
             //physician already exists, so insert mr id into log table
-            if (mbcData.getMbcInstitution().isChangedSinceLastChecked()) {
+            if (institutionChangedSinceLastChecked) {
                 if (shouldHaveMedicalRecordLog(conn, medicalRecordId)) {
                     writingMedicalRecordLogIntoDb(conn, medicalRecordId);
                 }

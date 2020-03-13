@@ -11,6 +11,7 @@ import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.model.FollowUp;
+import org.broadinstitute.dsm.model.mbc.MBCHospital;
 import org.broadinstitute.dsm.model.mbc.MBCInstitution;
 import org.broadinstitute.dsm.model.mbc.MBCParticipant;
 import org.broadinstitute.dsm.statics.*;
@@ -314,10 +315,12 @@ public class MedicalRecord {
     public static MedicalInfo getInstitutionInfoFromDB(@NonNull String realm, @NonNull String ddpParticipantId) {
         MedicalInfo medicalInfo = new MedicalInfo();
         Map<String, MBCInstitution> mbcInstitutions = DSMServer.getMbcInstitutions();
+        Map<String, MBCHospital> mbcHospitals = DSMServer.getMbcHospitals();
         Map<String, MBCParticipant> mbcParticipants = DSMServer.getMbcParticipants();
         MBCParticipant mbcParticipant = mbcParticipants.get(ddpParticipantId);
         if (mbcParticipant != null && mbcInstitutions != null && !mbcInstitutions.isEmpty()) {
             logger.info(mbcInstitutions.size() + " institutions in MBC cached list");
+            logger.info(mbcHospitals.size() + " hospitals in MBC cached list");
             ArrayList<InstitutionDetail> institutionDetails = new ArrayList<>();
             List<MedicalRecord> medicalRecords = getInstitutions(realm, ddpParticipantId);
             Integer tissueConsent = null;
@@ -332,6 +335,13 @@ public class MedicalRecord {
                         //TODO how to handle if it changed?
                         tissueConsent = (!mbcInstitution.isFromBloodRelease()) ? 1 : 0;
                     }
+                }
+                MBCHospital mbcHospital = mbcHospitals.get(medicalRecord.getDdpInstitutionId());
+                if (mbcHospital != null) {
+                    InstitutionDetail institutionDetail = new InstitutionDetail(mbcHospital.getHospitalId(),
+                            mbcHospital.getName(), null, mbcHospital.getCity(),
+                            mbcHospital.getState(), MBCHospital.INSTITUTION);
+                    institutionDetails.add(institutionDetail);
                 }
             }
 
