@@ -47,7 +47,7 @@ public class AbstractionGroup {
         return group;
     }
 
-    public void addField (AbstractionField field) {
+    public void addField(AbstractionField field) {
         if (fields != null) {
             fields.add(field);
         }
@@ -55,35 +55,37 @@ public class AbstractionGroup {
 
     public static void saveFormControls(@NonNull String realm, @NonNull AbstractionGroup[] receivedAbstractionGroups) {
         for (AbstractionGroup group : receivedAbstractionGroups) {
-            if (group.isNewAdded()) {
-                int abstractionGroupId = AbstractionGroup.insertNewGroup(realm, group);
-                if (group.getFields() != null) {
-                    for (AbstractionField field : group.getFields()) {
-                        AbstractionField.insertNewField(realm, abstractionGroupId, field);
-                    }
-                }
-            }
-            else if (group.isDeleted()) {
-                AbstractionGroup.deleteView(group.getAbstractionGroupId());
-                if (group.getFields() != null) {
-                    for (AbstractionField field : group.getFields()) {
-                        AbstractionField.deleteField(field);
-                    }
-                }
-            }
-            else {
-                //for group only the order_number can be changed
-                AbstractionGroup.updateOrderNumber(group);
-                if (group.getFields() != null) {
-                    for (AbstractionField field : group.getFields()) {
-                        if (field.isNewAdded()){
-                            AbstractionField.insertNewField(realm, group.getAbstractionGroupId(), field);
+            if (group.getFields() != null && !group.getFields().isEmpty()) {
+                if (group.isNewAdded()) {
+                    int abstractionGroupId = AbstractionGroup.insertNewGroup(realm, group);
+                    if (group.getFields() != null) {
+                        for (AbstractionField field : group.getFields()) {
+                            AbstractionField.insertNewField(realm, abstractionGroupId, field);
                         }
-                        else if (field.isDeleted()) {
+                    }
+                }
+                else if (group.isDeleted()) {
+                    AbstractionGroup.deleteView(group.getAbstractionGroupId());
+                    if (group.getFields() != null) {
+                        for (AbstractionField field : group.getFields()) {
                             AbstractionField.deleteField(field);
                         }
-                        else {
-                            AbstractionField.updateField(field);
+                    }
+                }
+                else {
+                    //for group only the order_number can be changed
+                    AbstractionGroup.updateOrderNumber(group);
+                    if (group.getFields() != null) {
+                        for (AbstractionField field : group.getFields()) {
+                            if (field.isNewAdded()) {
+                                AbstractionField.insertNewField(realm, group.getAbstractionGroupId(), field);
+                            }
+                            else if (field.isDeleted()) {
+                                AbstractionField.deleteField(field);
+                            }
+                            else {
+                                AbstractionField.updateField(field);
+                            }
                         }
                     }
                 }
@@ -172,8 +174,12 @@ public class AbstractionGroup {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         AbstractionGroup that = (AbstractionGroup) o;
         return Objects.equals(displayName, that.displayName);
     }
