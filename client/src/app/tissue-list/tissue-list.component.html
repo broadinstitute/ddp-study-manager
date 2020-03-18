@@ -94,7 +94,7 @@
                     <md-checkbox
                       color="primary"
                       (change)="addOrRemoveColumn(oncColumn, source)"
-                      [checked]="selectedColumns[source]!= undefined && selectedColumns[source].includes(oncColumn)">{{oncColumn.participantColumn.display}}</md-checkbox>
+                      [checked]="selectedColumns[source]!= undefined  && hasThisColumnSelected(selectedColumns[source], oncColumn)">{{oncColumn.participantColumn.display}}</md-checkbox>
                   </ng-container>
                 </li>
               </ul>

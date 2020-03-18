@@ -93,7 +93,7 @@
                 <li *ngFor="let column of sourceColumns[key]">
                   <md-checkbox color="primary" disableRipple
                                (change)="addOrRemoveColumn(column, key)"
-                               [checked]="selectedColumns[key] != null && selectedColumns[key].includes(column)">{{column.participantColumn.display}}
+                               [checked]="selectedColumns[key] != null && hasThisColumnSelected(selectedColumns[key],column)">{{column.participantColumn.display}}
                   </md-checkbox>
                 </li>
               </ul>
