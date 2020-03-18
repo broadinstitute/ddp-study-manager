@@ -1,4 +1,4 @@
-import { Value } from "../utils/value.model";
+import {Value} from "../utils/value.model";
 
 export class AbstractionField {
 
@@ -9,9 +9,9 @@ export class AbstractionField {
   viewHelpText: boolean = false;
   copiedActivity: string = "";
 
-  constructor(public medicalRecordAbstractionFieldId: number, public displayName: string, public type: string, public helpText: string, public orderNumber: number,
-              public possibleValues: Value[], public additionalType: string, public hide: boolean,
-              public fieldValue: AbstractionFieldValue, public qcWrapper: QCWrapper) { //last line are value fields!
+  constructor( public medicalRecordAbstractionFieldId: number, public displayName: string, public type: string, public helpText: string, public orderNumber: number,
+               public possibleValues: Value[], public additionalType: string, public hide: boolean,
+               public fieldValue: AbstractionFieldValue, public qcWrapper: QCWrapper ) { //last line are value fields!
     this.medicalRecordAbstractionFieldId = medicalRecordAbstractionFieldId;
     this.displayName = displayName;
     this.helpText = helpText;
@@ -23,30 +23,43 @@ export class AbstractionField {
     this.qcWrapper = qcWrapper;
   }
 
-  static parse(json): AbstractionField {
+  static parse( json ): AbstractionField {
     let fValue: AbstractionFieldValue = json.fieldValue;
     if (fValue == undefined || fValue == null) {
-      fValue = new AbstractionFieldValue(null, null, "", 0,"","", false, false,null, "");
+      fValue = new AbstractionFieldValue( null, null, "", 0, "", "", false, false, null, "" );
     }
     let wrapper: QCWrapper = json.qcWrapper;
     if (wrapper == undefined || wrapper == null) {
-      let fieldValue: AbstractionFieldValue = new AbstractionFieldValue(null, null, "", 0,"", "", false, false, null, "");
-      wrapper = new QCWrapper(fieldValue, fieldValue, false, false);
+      let fieldValue: AbstractionFieldValue = new AbstractionFieldValue( null, null, "", 0, "", "", false, false, null, "" );
+      wrapper = new QCWrapper( fieldValue, fieldValue, false, false );
     }
-    return new AbstractionField(json.medicalRecordAbstractionFieldId, json.displayName, json.type, json.helpText, json.orderNumber, json.possibleValues, json.additionalType, json.hide, fValue, wrapper);
+    return new AbstractionField( json.medicalRecordAbstractionFieldId, json.displayName, json.type, json.helpText, json.orderNumber, json.possibleValues, json.additionalType, json.hide, fValue, wrapper );
   }
 
-  static removeUnchangedSetting(array: Array<AbstractionField>): Array<AbstractionField> {
+  static removeUnchangedSetting( array: Array<AbstractionField> ): Array<AbstractionField> {
     let cleanedSettings: Array<AbstractionField> = [];
     for (let setting of array) {
       if (setting.changed) {
-        if (!(setting.newAdded && setting.deleted)) {
+        if (!( setting.newAdded && setting.deleted )) {
           if (setting.possibleValues != null && setting.possibleValues.length > 0) {
-            setting.possibleValues.forEach( (item, index) => {
-              if (item.value == null || item.value === "") setting.possibleValues.splice(index,1);
-            });
+            setting.possibleValues.forEach( ( item, index ) => {
+              if (item.value == null || item.value === "") {
+                setting.possibleValues.splice( index, 1 );
+              }
+              else if (item.values != null) {
+                if (item.values.length > 0) {
+                  let possibleValues = [];
+                  item.values.forEach( ( value ) => {
+                    if (value.value !== null && value.value != undefined && value.value !== "" && value.value.trim() !== "") {
+                      possibleValues.push( value );
+                    }
+                  } );
+                  item.values = possibleValues;
+                }
+              }
+            } );
           }
-          cleanedSettings.push(setting);
+          cleanedSettings.push( setting );
         }
       }
     }
@@ -55,9 +68,9 @@ export class AbstractionField {
 }
 
 export class AbstractionFieldValue {
-  constructor (public medicalRecordAbstractionFieldId: number, public primaryKeyId: number, public value: string | string[], public valueCounter: number,
-               public note: string,public question: string, public noData: boolean, public doubleCheck: boolean, public filePage: string,
-               public fileName: string) {
+  constructor( public medicalRecordAbstractionFieldId: number, public primaryKeyId: number, public value: string | string[], public valueCounter: number,
+               public note: string, public question: string, public noData: boolean, public doubleCheck: boolean, public filePage: string,
+               public fileName: string ) {
     this.medicalRecordAbstractionFieldId = medicalRecordAbstractionFieldId;
     this.primaryKeyId = primaryKeyId;
     this.value = value;
@@ -70,21 +83,21 @@ export class AbstractionFieldValue {
     this.fileName = fileName;
   }
 
-  static parse(json): AbstractionFieldValue {
-    return new AbstractionFieldValue(json.medicalRecordAbstractionFieldId, json.primaryKeyId, json.value, json.valueCounter, json.note, json.question,
-      json.noData, json.doubleCheck, json.filePage, json.fileName);
+  static parse( json ): AbstractionFieldValue {
+    return new AbstractionFieldValue( json.medicalRecordAbstractionFieldId, json.primaryKeyId, json.value, json.valueCounter, json.note, json.question,
+      json.noData, json.doubleCheck, json.filePage, json.fileName );
   }
 }
 
 export class QCWrapper {
-  constructor (public abstraction: AbstractionFieldValue, public review: AbstractionFieldValue, public equals: Boolean, public check: Boolean) {
+  constructor( public abstraction: AbstractionFieldValue, public review: AbstractionFieldValue, public equals: Boolean, public check: Boolean ) {
     this.abstraction = abstraction;
     this.review = review;
     this.equals = equals;
     this.check = check;
   }
 
-  static parse(json): QCWrapper {
-    return new QCWrapper(json.abstraction, json.review, json.equals, json.check);
+  static parse( json ): QCWrapper {
+    return new QCWrapper( json.abstraction, json.review, json.equals, json.check );
   }
 }
