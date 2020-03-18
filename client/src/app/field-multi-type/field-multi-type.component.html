@@ -1,5 +1,5 @@
 <span class="Display--Inline-Block">
-  <ng-container *ngFor="let v of values">
+  <div *ngFor="let v of values">
 
     <ng-container *ngIf="v.type === 'drugs'">
       <md-select placeholder="{{v.value}}" *ngIf="v.type2 === options"
@@ -76,6 +76,8 @@
               (change)="multiTypeValueChanged($event, _multiType, v.value, v)"
               (blur)="currentField(null)" (focus)="currentField(v.value)"></textarea>
 
+    <b *ngIf="v.type === 'button_select'">{{v.value}}</b>
+
     <md-button-toggle-group *ngIf="v.type === 'button_select'"
                             [ngClass]="{'Color--Button-Select--Patched': isPatchedCurrently(v.value)}"
                             [disabled]="disabled" [(ngModel)]="_multiType[v.value]">
@@ -95,7 +97,8 @@
       <md-option value="other"> Other</md-option>
     </md-select>
 
-    <md-select *ngIf="v.type === multiOptions" [ngClass]="{'TD--Padding-Top': true, 'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(v.value)}"
+    <md-select *ngIf="v.type === multiOptions"
+               [ngClass]="{'TD--Padding-Top': true, 'Input--Abstraction': true, 'Color--Field--Patched': isPatchedCurrently(v.value)}"
                placeholder="{{v.value}}"
                [(ngModel)]="_multiType[v.value]" [disabled]="disabled"
                (change)="multiTypeValueChanged($event, _multiType, v.value, v)" multiple>
@@ -119,7 +122,7 @@
                  (change)="multiTypeValueChanged($event, _multiType, v.value, v)">{{v.value}}
     </md-checkbox>
 
-  </ng-container>
+  </div>
   <ng-container *ngIf="showDelete">
     <button md-mini-fab color="warn" [disabled]="disabled" tooltip="Delete {{fieldName}}"
             (click)="delete()">
