@@ -72,7 +72,7 @@ export class TissueListComponent implements OnInit {
   defaultFilterName: string;
   defaultFilter: ViewFilter;
   isDefaultFilter: boolean = false;
-  hasESData: boolean = false;
+  hasESData: boolean = true;
   realm: string;
   allColumns = {};
   allAdditionalColumns = {};
@@ -497,9 +497,9 @@ export class TissueListComponent implements OnInit {
     }
   }
 
-  public reload( bool ) {
+  public reload( defaultFilter ) {
     this.resetEverything( true );
-    this.checkRight( bool );
+    this.checkRight( defaultFilter );
   }
 
   public clearFilters() {
@@ -1482,7 +1482,7 @@ export class TissueListComponent implements OnInit {
           let index = this.allColumns[ t ].indexOf( f );
           if (index !== -1) {
             this.allColumns[ t ].splice( index, 1 );
-            this.allColumns[ t ].push( filter );
+            this.allColumns[ t ].push( filter.copy() );
             break;
           }
         }
@@ -1494,12 +1494,20 @@ export class TissueListComponent implements OnInit {
     this.hasESData = false;
     jsonData.forEach( ( val ) => {
       let tissueListWrapper = TissueListWrapper.parse( val );
+      console.log( tissueListWrapper.data.dsm );
       if (tissueListWrapper.data.dsm !== undefined) {
         this.hasESData = true;
       }
       this.tissueListWrappers.push( tissueListWrapper );
     } );
+    console.log( this.hasESData );
     return this.tissueListWrappers;
   }
 
+  hasThisColumnSelected( selectedColumnArray: Array<Filter>, oncColumn: Filter ): boolean {
+    let f = selectedColumnArray.find( f => {
+      return f.participantColumn.tableAlias === oncColumn.participantColumn.tableAlias && f.participantColumn.name === oncColumn.participantColumn.name;
+    } );
+    return f !== undefined;
+  }
 }

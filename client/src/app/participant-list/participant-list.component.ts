@@ -498,7 +498,15 @@ export class ParticipantListComponent implements OnInit {
             }
             this.selectedFilterName = viewFilter.filterName;
             this.filterQuery = viewFilter.queryItems.replace( ",", "" );
-            this.selectedColumns = viewFilter.columns;
+            // this.selectedColumns = viewFilter.columns;
+            let c = {};
+            for (let key of Object.keys( viewFilter.columns )) {
+              c[ key ] = [];
+              for (let column of viewFilter.columns[ key ]) {
+                c[ key ].push( column.copy() );
+              }
+            }
+            this.selectedColumns = c;
             if (!this.hasESData) {
               this.filterClientSide( viewFilter );
             }
@@ -621,6 +629,7 @@ export class ParticipantListComponent implements OnInit {
         }
       }
     } );
+    console.log( this.savedFilters );
   }
 
   public setSelectedFilterName( filterName ) {
@@ -1379,6 +1388,7 @@ export class ParticipantListComponent implements OnInit {
                   let last = value.lastIndexOf( "\"" );
                   value = value.substring( first + 1, last );
                 }
+                console.log( filterText );
                 if (value != null && value !== "") {
                   this.copyParticipantList = this.copyParticipantList.filter( participant =>
                     participant.data !== null &&
@@ -1428,6 +1438,13 @@ export class ParticipantListComponent implements OnInit {
       }
     }
     return didClientSearch;
+  }
+
+  hasThisColumnSelected( selectedColumnArray: Array<Filter>, oncColumn: Filter ): boolean {
+    let f = selectedColumnArray.find( f => {
+      return f.participantColumn.tableAlias === oncColumn.participantColumn.tableAlias && f.participantColumn.name === oncColumn.participantColumn.name;
+    } );
+    return f !== undefined;
   }
 
 

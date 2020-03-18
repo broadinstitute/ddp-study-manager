@@ -86,4 +86,6 @@ export class FilterColumnComponent implements OnInit {
     //set value to selected
     this.dataFilter.selectedOptions[ event.value ] = true;
   }
+
+
 }
