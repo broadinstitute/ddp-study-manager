@@ -22,18 +22,22 @@ public class MBCParticipantHospital {
 
     private static final Logger logger = LoggerFactory.getLogger(MBCParticipantHospital.class);
 
+    private final int participantId;
+    private final int hospitalId;
     private final MBCParticipant mbcParticipant;
     private final MBCHospital mbcHospital;
 
-    private static SimpleDateFormat sdf  = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    public MBCParticipantHospital(MBCParticipant mbcParticipant, MBCHospital mbcHospital) {
+    public MBCParticipantHospital(int participantId, int hospitalId, MBCParticipant mbcParticipant, MBCHospital mbcHospital) {
+        this.participantId = participantId;
+        this.hospitalId = hospitalId;
         this.mbcParticipant = mbcParticipant;
         this.mbcHospital = mbcHospital;
     }
 
     public static Map<String, MBCParticipantHospital> getHospitalsFromDB(@NonNull String ddpInstanceName, @NonNull String url, long value, long timeLastCheck,
-                                                                          @NonNull ScriptingContainer container, @NonNull Object receiver, boolean alreadyAddedOnServerStart) {
+                                                                         @NonNull ScriptingContainer container, @NonNull Object receiver, boolean alreadyAddedOnServerStart) {
         Map<String, MBCParticipantHospital> mbcDataChanges = new HashMap<>();
         Connection conn = null;
         try {
@@ -68,13 +72,13 @@ public class MBCParticipantHospital {
                                     rs.getString(DBConstants.ENCRYPTED_BIRTHDAY),
                                     rs.getString(DBConstants.ENCRYPTED_BD_BIRTHDAY),
                                     rs.getString(DBConstants.PT_UPDATED_AT));
-                            MBCHospital hostpital = new MBCHospital(hospitalId,
+                            MBCHospital hospital = new MBCHospital(hospitalId,
                                     rs.getString(DBConstants.ENCRYPTED_NAME),
                                     rs.getString(DBConstants.ENCRYPTED_CITY),
                                     rs.getString(DBConstants.ENCRYPTED_STATE),
                                     institutionLastChanged,
-                                    updatedAt != null && timeLastCheck < updatedAt ? true :  false);
-                            mbcDataChanges.put(hospitalId, new MBCParticipantHospital(participant, hostpital));
+                                    updatedAt != null && timeLastCheck < updatedAt ? true : false);
+                            mbcDataChanges.put(hospitalId, new MBCParticipantHospital(Integer.parseInt(participantId), Integer.parseInt(hospitalId), participant, hospital));
                             counter++;
                         }
                         logger.info("Got " + counter + " new/updated hospitals from " + ddpInstanceName + " bookmark was " + value + " lastTimeChecked " + timeLastCheck);
