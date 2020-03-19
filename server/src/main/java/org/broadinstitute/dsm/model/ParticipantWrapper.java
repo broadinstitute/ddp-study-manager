@@ -101,7 +101,7 @@ public class ParticipantWrapper {
                     //                    abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName(), filters.get(source));
                     //                    baseList = getCommonEntries(baseList, new ArrayList<>(abstractionSummary.keySet()));
                     //                }
-                    else {
+                    else if (StringUtils.isNotBlank(instance.getParticipantIndexES())){
                         participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filters.get(source));
                         baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
                     }

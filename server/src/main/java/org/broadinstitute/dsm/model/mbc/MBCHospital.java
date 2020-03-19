@@ -20,6 +20,7 @@ public class MBCHospital {
     private static final Logger logger = LoggerFactory.getLogger(MBCHospital.class);
 
     public static final String INSTITUTION = "INSTITUTION";
+    public static final String INITIAL_BIOPSY = "INITIAL_BIOPSY";
 
     private String hospitalId;
     private String name;
