@@ -350,11 +350,9 @@ export class Filter {
     if (json.filters == undefined) {
       return null;
     }
-    console.log( json );
+    console.log( json.filterName );
     let filters: Filter[] = [];
     for (let filter of json.filters) {
-      console.log( filter );
-      console.log( allColumns[ filter.participantColumn.tableAlias ] );
       if (allColumns[ filter.participantColumn.tableAlias ] != undefined) {
         let f = allColumns[ filter.participantColumn.tableAlias ].find( f => {
           return f.participantColumn.tableAlias === filter.participantColumn.tableAlias && f.participantColumn.name === filter.participantColumn.name;
@@ -368,7 +366,6 @@ export class Filter {
               selectedOptions.push( filter.selectedOptions.includes( o.name ) );
             }
           }
-          console.log( selectedOptions );
           if (filter.filter1 == undefined) {
             filter.filter1 = new NameValue( f.participantColumn.name, null );
           }
@@ -452,11 +449,10 @@ export class Filter {
   }
 
   public static getFilterText( filter: Filter, parent: string ): {} {
-
     let filterText = {};
     if (filter.type === Filter.TEXT_TYPE || filter.type === Filter.NUMBER_TYPE || filter.type === Filter.DATE_TYPE || filter.type === Filter.EPOCH_DATE_TYPE
       || filter.type === Filter.COMPOSITE_TYPE || filter.type === Filter.SHORT_DATE_TYPE) {
-      if ((filter.value1 !== null && filter.value1 !== "" && filter.value1 !== undefined) ||
+      if ((filter.value1 !== null && filter.value1 !== undefined && filter.value1 != "") ||
         (filter.range && filter.value2 != null && filter.value2 != "" && filter.value2 !== undefined) || (filter.empty || filter.notEmpty)) {
         if (filter.value2 != undefined && filter.value2 != null) {
           if (filter.filter2 != undefined && filter.filter2 != null) {
@@ -577,7 +573,7 @@ export class Filter {
 
     let f: Filter = new Filter( this.participantColumn, this.type, Object.assign( [], this.options ),
       filter2, this.range, this.exactMatch, filter1,
-      selectedOptions, Object.assign( "", this.value1 ), Object.assign( "", this.value2 ), this.sortAsc, this.empty, this.notEmpty, this.singleOption,
+      selectedOptions, this.value1 == null ? null : (" " + this.value1).slice( 1 ), this.value2 == null ? null : (" " + this.value2).slice( 1 ), this.sortAsc, this.empty, this.notEmpty, this.singleOption,
       this.additionalType, this.parentName );
 
     return f;

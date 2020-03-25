@@ -26,7 +26,6 @@ export class FilterColumnComponent implements OnInit {
           break;
         }
       }
-      console.log(this.selected);
     }
   }
 

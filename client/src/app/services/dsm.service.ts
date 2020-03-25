@@ -116,9 +116,6 @@ export class DSMService {
         }
       }
     }
-    if (json != null) {
-      console.log( json.filters );
-    }
     let url = this.baseUrl + DSMService.UI + "applyFilter";
     let userId = this.role.userID();
     let map: { name: string, value: any }[] = [];
