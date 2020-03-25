@@ -398,10 +398,7 @@ export class ParticipantListComponent implements OnInit {
           return filter.filterName === this.role.getUserSetting().defaultParticipantFilter;
         } );
       }
-      console.log(this.savedFilters);
-      console.log(defaultFilter);
       if (defaultFilter != null && defaultFilter != undefined) {
-        console.log(defaultFilter.filters);
         this.selectFilter( defaultFilter );
       }
       else if (this.role.getUserSetting().defaultParticipantFilter !== "" && this.role.getUserSetting().defaultParticipantFilter !== null && this.role.getUserSetting().defaultParticipantFilter !== undefined) {
@@ -445,6 +442,7 @@ export class ParticipantListComponent implements OnInit {
     this.currentView = JSON.stringify( viewFilter );
     if (viewFilter != null) {
       this.filtered = true;
+      console.log(viewFilter.filters);
     }
     else {
       this.filtered = false;
@@ -733,6 +731,7 @@ export class ParticipantListComponent implements OnInit {
         this.createFilterJson( json, key );
       }
     );
+    console.log(json);
     //nothing to filter on the server
     if (json.length != 0) {
       this.filterQuery = null;

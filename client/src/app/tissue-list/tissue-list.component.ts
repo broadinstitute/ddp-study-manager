@@ -1413,7 +1413,6 @@ export class TissueListComponent implements OnInit {
         let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
         let filterText = Filter.getFilterText( filter, tmp );
         if (filterText != null) {
-          console.log( filterText );
           if (filter.type === "TEXT") {
             let value = filterText[ "filter1" ][ "value" ];
             if (value !== null) {
@@ -1450,7 +1449,7 @@ export class TissueListComponent implements OnInit {
             }
           }
           else if (filterText[ "type" ] === "OPTIONS") {
-            console.log( this.copyTissueListWrappers );
+            // console.log( this.copyTissueListWrappers );
             let results: TissueListWrapper[] = new Array();
             let temp: TissueListWrapper[] = new Array();
             for (let option of filterText[ "selectedOptions" ]) {// status
@@ -1494,13 +1493,11 @@ export class TissueListComponent implements OnInit {
     this.hasESData = false;
     jsonData.forEach( ( val ) => {
       let tissueListWrapper = TissueListWrapper.parse( val );
-      console.log( tissueListWrapper.data.dsm );
       if (tissueListWrapper.data.dsm !== undefined) {
         this.hasESData = true;
       }
       this.tissueListWrappers.push( tissueListWrapper );
     } );
-    console.log( this.hasESData );
     return this.tissueListWrappers;
   }
 

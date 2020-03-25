@@ -168,7 +168,7 @@ public class DBConstants {
     public static final String ABSTRACTION_READY = "abstraction_ready";
 
     //oncHistoryDetails
-    public static final String ONC_HISTORY_PREFIX = "oncDetail";
+    public static final String ONC_HISTORY_PREFIX = "oD";
     public static final String ONC_HISTORY_DETAIL_ID = "onc_history_detail_id";
     public static final String DATE_PX = "date_px";
     public static final String TYPE_PX = "type_px";
