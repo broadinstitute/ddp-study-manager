@@ -555,6 +555,7 @@ export class Filter {
       "notEmpty": notEmpty,
       "participantColumn": participantColumn,
     };
+    console.log( filterText );
     return filterText;
   }
 
