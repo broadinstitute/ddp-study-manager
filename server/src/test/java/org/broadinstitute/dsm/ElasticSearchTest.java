@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
@@ -104,54 +105,30 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void searchPTByActivityDte() throws Exception {
-        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
-            int scrollSize = 1000;
-            Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-brain");
-            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            SearchResponse response = null;
-            int i = 0;
-            while (response == null || response.getHits().getHits().length != 0) {
-                BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
-                activityAnswer.must(QueryBuilders.matchQuery("activities.questionsAnswers.stableId", "CONSENT_DOB"));
-                activityAnswer.must(QueryBuilders.matchQuery("activities.questionsAnswers.date", "2011-11-11"));
-                NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery("activities.questionsAnswers", activityAnswer, ScoreMode.Avg);
-
-                BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
-                queryBuilder.must(QueryBuilders.matchQuery("activities.activityCode", "CONSENT").operator(Operator.AND));
-                queryBuilder.must(queryActivityAnswer);
-                NestedQueryBuilder query = QueryBuilders.nestedQuery("activities", queryBuilder, ScoreMode.Avg);
-
-                searchSourceBuilder.query(query);
-                searchSourceBuilder.size(scrollSize);
-                searchSourceBuilder.from(i * scrollSize);
-                searchRequest.source(searchSourceBuilder);
-
-                response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
-                i++;
-            }
-            Assert.assertNotEquals(0, esData.size());
-        }
+        activityAnswer("participants_structured.cmi.cmi-brain", "CONSENT", "CONSENT_DOB", "2011-11-11");
     }
 
     @Test
     public void searchPTByActivityAnswer() throws Exception {
+        activityAnswer("participants_structured.cmi.cmi-brain", "PREQUAL", "PREQUAL_SELF_DESCRIBE", "DIAGNOSED");
+    }
+
+    public Map<String, Map<String, Object>> activityAnswer(String index, String activityCode, String stableId, String answer) throws Exception {
+        Map<String, Map<String, Object>> esData = new HashMap<>();
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
-            Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-brain");
+            SearchRequest searchRequest = new SearchRequest(index);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
             while (response == null || response.getHits().getHits().length != 0) {
                 BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
-                activityAnswer.must(QueryBuilders.matchQuery("activities.questionsAnswers.stableId", "PREQUAL_SELF_DESCRIBE"));
-                activityAnswer.must(QueryBuilders.matchQuery("activities.questionsAnswers.answer", "DIAGNOSED"));
+                activityAnswer.must(QueryBuilders.matchQuery("activities.questionsAnswers.stableId", stableId));
+                activityAnswer.must(QueryBuilders.matchQuery("activities.questionsAnswers.answer", answer));
                 NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery("activities.questionsAnswers", activityAnswer, ScoreMode.Avg);
 
                 BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
-                queryBuilder.must(QueryBuilders.matchQuery("activities.activityCode", "PREQUAL").operator(Operator.AND));
+                queryBuilder.must(QueryBuilders.matchQuery("activities.activityCode", activityCode).operator(Operator.AND));
                 queryBuilder.must(queryActivityAnswer);
                 NestedQueryBuilder query = QueryBuilders.nestedQuery("activities", queryBuilder, ScoreMode.Avg);
 
@@ -166,26 +143,60 @@ public class ElasticSearchTest extends TestHelper {
             }
             Assert.assertNotEquals(0, esData.size());
         }
+        return esData;
     }
 
     @Test
-    public void searchPTByActivityAnswers() throws Exception {
+    public void searchPTByORActivityAnswers() throws Exception {
+        compareSearches("participants_structured.cmi.angio", "ANGIORELEASE", "MAILING_ADDRESS", "US", "CA");
+    }
+
+    @Test
+    public void searchPTByORActivityAnswers2() throws Exception {
+        compareSearches("participants_structured.cmi.angio", "ANGIOABOUTYOU", "COUNTRY", "US", "CA");
+    }
+
+    @Test
+    public void searchPTByORActivityAnswers3() throws Exception {
+        compareSearches("participants_structured.cmi.angio", "PREQUAL", "PREQUAL_SELF_DESCRIBE", "MAILING_LIST", "LOVED_ONE");
+    }
+
+    public void compareSearches(String index, String activityCode, String stableId, String answer1, String answer2) throws Exception {
+        Map<String, Map<String, Object>> or = orActivityAnswers(index, activityCode, stableId, answer1, answer2);
+        Map<String, Map<String, Object>> answerMap1 = activityAnswer(index, activityCode, stableId, answer1);
+        Map<String, Map<String, Object>> answerMap2 = activityAnswer(index, activityCode, stableId, answer2);
+        Assert.assertEquals((answerMap1.size() + answerMap2.size()), or.size());
+
+        answerMap1.forEach((key, value) -> {
+            if (or.containsKey(key)) {
+                or.remove(key);
+            }
+        });
+        answerMap2.forEach((key, value) -> {
+            if (or.containsKey(key)) {
+                or.remove(key);
+            }
+        });
+        Assert.assertEquals(0, or.size());
+    }
+
+    public Map<String, Map<String, Object>> orActivityAnswers(String index, String activityCode, String stableId, String answer1, String answer2) throws Exception {
+        Map<String, Map<String, Object>> esData = new HashMap<>();
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
-            Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.angio");
+            SearchRequest searchRequest = new SearchRequest(index);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
             while (response == null || response.getHits().getHits().length != 0) {
                 BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
-                activityAnswer.must(QueryBuilders.matchQuery("activities.questionsAnswers.stableId", "MAILING_ADDRESS"));
-                activityAnswer.should(QueryBuilders.matchQuery("activities.questionsAnswers.answer", "US"));
-                activityAnswer.should(QueryBuilders.matchQuery("activities.questionsAnswers.answer", "CA"));
+                activityAnswer.must(QueryBuilders.matchQuery("activities.questionsAnswers.stableId", stableId));
+                activityAnswer.should(QueryBuilders.matchQuery("activities.questionsAnswers.answer", answer1));
+                activityAnswer.should(QueryBuilders.matchQuery("activities.questionsAnswers.answer", answer2));
                 NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery("activities.questionsAnswers", activityAnswer, ScoreMode.Avg);
 
                 BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
-                queryBuilder.must(QueryBuilders.matchQuery("activities.activityCode", "ANGIORELEASE").operator(Operator.AND));
+                queryBuilder.must(QueryBuilders.matchQuery("activities.activityCode", activityCode).operator(Operator.AND));
                 queryBuilder.must(queryActivityAnswer);
                 NestedQueryBuilder query = QueryBuilders.nestedQuery("activities", queryBuilder, ScoreMode.Avg);
 
@@ -200,6 +211,7 @@ public class ElasticSearchTest extends TestHelper {
             }
             Assert.assertNotEquals(0, esData.size());
         }
+        return esData;
     }
 
     @Test
