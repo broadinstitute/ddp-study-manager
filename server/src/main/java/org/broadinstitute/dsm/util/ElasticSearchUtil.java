@@ -447,15 +447,20 @@ public class ElasticSearchUtil {
                 userEntered = userEntered.replaceAll("%", "").trim();
             }
             if ((nameValue[0].startsWith(PROFILE) || nameValue[0].startsWith(ADDRESS))) {
-                try {
-                    long start = SystemUtil.getLongFromString(userEntered);
-                    //set endDate to midnight of that date
-                    String endDate = userEntered + " 23:59:59";
-                    long end = SystemUtil.getLongFromDetailDateString(endDate);
-                    rangeQueryBuilder(finalQuery, nameValue[0], start, end, must);
-                }
-                catch (ParseException e) {
+                if (nameValue[0].trim().endsWith(GUID) || nameValue[0].trim().endsWith(LEGACY_ALT_PID)) {
                     valueQueryBuilder(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
+                }
+                else {
+                    try {
+                        long start = SystemUtil.getLongFromString(userEntered);
+                        //set endDate to midnight of that date
+                        String endDate = userEntered + " 23:59:59";
+                        long end = SystemUtil.getLongFromDetailDateString(endDate);
+                        rangeQueryBuilder(finalQuery, nameValue[0], start, end, must);
+                    }
+                    catch (ParseException e) {
+                        valueQueryBuilder(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
+                    }
                 }
             }
             else if (nameValue[0].startsWith(DSM)) {
