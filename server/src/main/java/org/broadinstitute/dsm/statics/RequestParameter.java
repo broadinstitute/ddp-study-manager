@@ -23,6 +23,8 @@ public class RequestParameter {
     public static final String USER_ID = "userId";
     public static final String USER_MAIL = "userMail";
     public static final String CONFIG_NAME = "configName";
+    public static final String FILTERS = "filters";
+    public static final String FILTER_NAME = "filterName";
 
     public static final String POLICY = "policy";
     public static final String FACILITY = "facility";
