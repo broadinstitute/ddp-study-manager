@@ -147,11 +147,10 @@ public class DownloadPDFRoute extends RequestHandler {
                         if (participantESData != null && !participantESData.isEmpty()) {
                             return returnPDFS(participantESData, ddpParticipantId);
                         }
-                        else if (instance.isMigratedDDP()) {
+                        else {
                             participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId);
                             return returnPDFS(participantESData, ddpParticipantId);
                         }
-                        return null;
                     }
                     else {
                         return getPDFs(realm);
