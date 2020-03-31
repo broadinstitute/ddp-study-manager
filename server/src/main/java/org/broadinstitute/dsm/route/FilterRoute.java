@@ -165,13 +165,12 @@ public class FilterRoute extends RequestHandler {
                 if (!ptList.isEmpty()) {
                     return ptList;
                 }
-                else if (instance.isMigratedDDP()) {
+                else {
                     queryConditions = new HashMap<>();
                     queryConditions.put("p", " AND p.ddp_participant_id = '" + ddpParticipantId + "'");
                     queryConditions.put("ES", ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId);
                     return ParticipantWrapper.getFilteredList(instance, queryConditions);
                 }
-                throw new RuntimeException("Participant Id was not found " + ddpParticipantId);
             }
             else if (request.url().contains(RoutePath.FILTER_LIST)) {
                 String defaultFilter = null;
