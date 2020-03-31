@@ -248,6 +248,9 @@ public class FilterRoute extends RequestHandler {
                         || DBConstants.DDP_PARTICIPANT_EXIT_ALIAS.equals(filter) || DBConstants.DDP_ONC_HISTORY_ALIAS.equals(filter)) {
                     mergeConditions.merge(DBConstants.DDP_PARTICIPANT_ALIAS, queryConditions.get(filter), String::concat);
                 }
+                else if (DBConstants.DDP_INSTITUTION_ALIAS.equals(filter)) {
+                    mergeConditions.merge(DBConstants.DDP_MEDICAL_RECORD_ALIAS, queryConditions.get(filter), String::concat);
+                }
                 else if (DBConstants.DDP_TISSUE_ALIAS.equals(filter)) {
                     mergeConditions.merge(DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS, queryConditions.get(filter), String::concat);
                 }
@@ -286,6 +289,7 @@ public class FilterRoute extends RequestHandler {
             for (String queryCondition : queryConditionsFilter) {
                 if (queryCondition.indexOf(DBConstants.DDP_PARTICIPANT_RECORD_ALIAS + DBConstants.ALIAS_DELIMITER) > 0
                         || queryCondition.indexOf(DBConstants.DDP_ONC_HISTORY_ALIAS + DBConstants.ALIAS_DELIMITER) > 0
+                        || queryCondition.indexOf(DBConstants.DDP_INSTITUTION_ALIAS + DBConstants.ALIAS_DELIMITER) > 0
                         || queryCondition.indexOf(DBConstants.DDP_PARTICIPANT_EXIT_ALIAS + DBConstants.ALIAS_DELIMITER) > 0
                         || queryCondition.indexOf(DBConstants.DDP_PARTICIPANT_ALIAS + DBConstants.ALIAS_DELIMITER) > 0
                         || queryCondition.indexOf(DBConstants.DDP_MEDICAL_RECORD_ALIAS + DBConstants.ALIAS_DELIMITER) > 0

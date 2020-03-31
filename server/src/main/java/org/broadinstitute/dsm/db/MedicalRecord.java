@@ -27,11 +27,6 @@ import java.util.*;
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 @Data
-@TableName (
-        name = DBConstants.DDP_MEDICAL_RECORD,
-        alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
-        primaryKey = DBConstants.MEDICAL_RECORD_ID,
-        columnPrefix = "")
 public class MedicalRecord {
 
     private static final Logger logger = LoggerFactory.getLogger(MedicalRecord.class);
@@ -54,94 +49,247 @@ public class MedicalRecord {
     private final String medicalRecordId;
     private String institutionId;
     private String ddpInstitutionId;
+
+
+    @TableName (
+            name = DBConstants.DDP_INSTITUTION,
+            alias = DBConstants.DDP_INSTITUTION_ALIAS,
+            primaryKey = DBConstants.INSTITUTION_ID,
+            columnPrefix = "")
+    @ColumnName (DBConstants.TYPE)
     private String type;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.NAME)
     private String name;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.CONTACT)
     private String contact;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.PHONE)
     private String phone;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.FAX)
     private String fax;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.FAX_SENT)
     private String faxSent;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.FAX_SENT_BY)
     private String faxSentBy;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.FAX_CONFIRMED)
     private String faxConfirmed;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.FAX_SENT_2)
     private String faxSent2;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.FAX_SENT_2_BY)
     private String faxSent2By;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.FAX_CONFIRMED_2)
     private String faxConfirmed2;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.FAX_SENT_3)
     private String faxSent3;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.FAX_SENT_3_BY)
     private String faxSent3By;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.FAX_CONFIRMED_3)
     private String faxConfirmed3;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.MR_RECEIVED)
     private String mrReceived;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.MR_DOCUMENT)
     private String mrDocument;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.MR_DOCUMENT_FILE_NAMES)
     private String mrDocumentFileNames;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.MR_PROBLEM)
     private boolean mrProblem;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.MR_PROBLEM_TEXT)
     private String mrProblemText;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.MR_UNABLE_OBTAIN)
     private boolean unableObtain;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.MR_UNABLE_OBTAIN_TEXT)
     private String mrUnableToObtainText;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.FOLLOWUP_REQUIRED)
     private boolean followUpRequired;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.FOLLOWUP_REQUIRED_TEXT)
     private String followUpRequiredText;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.DUPLICATE)
     private boolean duplicate;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.INTERNATIONAL)
     private boolean international;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.CR_REQUIRED)
     private boolean crRequired;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.NOTES)
     private String mrNotes;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.FOLLOW_UP_REQUESTS)
     private FollowUp[] followUps;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.ADDITIONAL_VALUES)
     private String additionalValues;
 
     private boolean reviewMedicalRecord;
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
     @ColumnName (DBConstants.PATHOLOGY_PRESENT)
     private String pathologyPresent;
 
