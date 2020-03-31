@@ -35,6 +35,29 @@ public class DBUtil {
         return (Long) results.resultValue;
     }
 
+    public static String getEnvironment(@NonNull Connection conn, String bookmarkName) {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_BOOKMARK)) {
+                stmt.setString(1, bookmarkName);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    rs.last();
+                    int count = rs.getRow();
+                    rs.beforeFirst();
+                    if (count == 1 && rs.next()) {
+                        dbVals.resultValue = rs.getString(DBConstants.VALUE);
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+
+        if (dbVals.resultException != null) {
+            throw new RuntimeException("Error getting bookmark ", dbVals.resultException);
+        }
+        return (String) dbVals.resultValue;
+    }
+
     public static Long getBookmark(Connection conn, String bookmarkName) {
         if (conn != null) {
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_BOOKMARK)) {
@@ -89,7 +112,7 @@ public class DBUtil {
         }
     }
 
-    public static String getFinalQuery (@NonNull String query, String additionalQuery) {
+    public static String getFinalQuery(@NonNull String query, String additionalQuery) {
         if (StringUtils.isNotBlank(additionalQuery)) {
             query = query.concat(additionalQuery);
         }

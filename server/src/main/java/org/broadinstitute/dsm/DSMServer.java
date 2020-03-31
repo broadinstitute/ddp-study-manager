@@ -15,7 +15,6 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.broadinstitute.ddp.BasicServer;
-import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.security.Auth0Util;
 import org.broadinstitute.ddp.security.CookieUtil;
 import org.broadinstitute.ddp.util.BasicTriggerListener;
@@ -79,6 +78,8 @@ public class DSMServer extends BasicServer {
 
     private static Auth0Util auth0Util;
 
+    private static Config conf;
+
     public static void main(String[] args) {
         //config without secrets
         Config cfg = ConfigFactory.load();
@@ -89,24 +90,11 @@ public class DSMServer extends BasicServer {
             System.setProperty("GOOGLE_APPLICATION_CREDENTIALS", cfg.getString("portal.googleProjectCredentials"));
         }
 
-        TransactionWrapper.configureSslProperties(cfg.getString("portal.dbSslKeyStore"),
-                cfg.getString("portal.dbSslKeyStorePwd"),
-                cfg.getString("portal.dbSslTrustStore"),
-                cfg.getString("portal.dbSslTrustStorePwd"));
         DSMServer server = new DSMServer();
+        conf = cfg;
 
-        File test = new File(cfg.getString("portal.dbSslTrustStore"));
-        if (test.exists()) {
-            logger.info("TrustStore does exist");
-            server.configureServer(cfg);
-
-            //            server.setupCustomDB(cfg);
-
-            logger.info("Server configuration complete.");
-        }
-        else {
-            logger.error("TrustStore does not exist");
-        }
+        server.configureServer(cfg);
+        logger.info("Server configuration complete.");
     }
 
     protected void configureServer(@NonNull Config config) {
@@ -115,8 +103,28 @@ public class DSMServer extends BasicServer {
         threadPool(-1, -1, 30000);
         logger.info("On port " + config.getInt("portal.port"));
         port(config.getInt("portal.port"));
+
+        checkDB(config);
         setupDB(config);
         setupRouting(config);
+    }
+
+    private void checkDB(@NonNull Config cfg) {
+        String dbEnvironment = null;
+
+        String extraVariables = (cfg.getBoolean("portal.dbSkipSsl") ? "" : "&verifyServerCertificate=true&useSSL=true&requireSSL=true")
+                + "&sessionVariables=innodb_strict_mode=on,tx_isolation='READ-COMMITTED',sql_mode='TRADITIONAL'";
+
+        try (Connection conn = DriverManager.getConnection(cfg.getString("portal.dbUrl") + extraVariables)) {
+            dbEnvironment = DBUtil.getEnvironment(conn, "portal.environment");
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Failed to check DB environment in bookmark table.", e);
+        }
+
+        if (!(StringUtils.isNotBlank(cfg.getString("portal.environment")) && cfg.getString("portal.environment").equals(dbEnvironment))) {
+            throw new RuntimeException("DB environments do not match! Trying to connect to \"" + dbEnvironment + "\" instead of \"" + cfg.getString("portal.environment") + "\"");
+        }
     }
 
     protected void setupCustomRouting(@NonNull Config cfg) {
@@ -227,10 +235,6 @@ public class DSMServer extends BasicServer {
         DDPRequestUtil ddpRequestUtil = new DDPRequestUtil();
         PatchUtil patchUtil = new PatchUtil();
 
-        // currently not needed anymore but might come back
-        // setupExternalShipperLookup(cfg.getString(ApplicationConfigConstants.EXTERNAL_SHIPPER));
-        // GBFRequestUtil gbfRequestUtil = new GBFRequestUtil();
-
         setupShippingRoutes(notificationUtil, auth0Util, userUtil);
 
         setupMedicalRecordRoutes(cfg, notificationUtil, patchUtil);
@@ -252,8 +256,10 @@ public class DSMServer extends BasicServer {
     protected void updateDB(@NonNull String dbUrl) {
         logger.info("Running DB update...");
 
-        try (Connection conn = DriverManager.getConnection(dbUrl + "&verifyServerCertificate=true&useSSL=true&requireSSL=true"
-                + "&sessionVariables=innodb_strict_mode=on,tx_isolation='READ-COMMITTED',sql_mode='TRADITIONAL'")) {
+        String extraVariables = (conf.getBoolean("portal.dbSkipSsl") ? "" : "&verifyServerCertificate=true&useSSL=true&requireSSL=true")
+                + "&sessionVariables=innodb_strict_mode=on,tx_isolation='READ-COMMITTED',sql_mode='TRADITIONAL'";
+
+        try (Connection conn = DriverManager.getConnection(dbUrl + extraVariables)) {
             Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(conn));
 
             Liquibase liquibase = new liquibase.Liquibase("master-changelog.xml", new ClassLoaderResourceAccessor(), database);
