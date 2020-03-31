@@ -1476,6 +1476,9 @@ export class TissueListComponent implements OnInit {
       if (t === "r" || t === "o" || t === "ex") {
         t = "p";
       }
+      else if (t === "inst") {
+        t = "m";
+      }
       for (let f of this.allColumns[ t ]) {
         if (f.participantColumn.name === filter.participantColumn.name) {
           let index = this.allColumns[ t ].indexOf( f );

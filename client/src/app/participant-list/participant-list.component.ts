@@ -355,6 +355,9 @@ export class ParticipantListComponent implements OnInit {
       if (filter.participantColumn.tableAlias === "o" || filter.participantColumn.tableAlias === "ex" || filter.participantColumn.tableAlias === "r") {
         this.sourceColumns[ "p" ].push( filter );
       }
+      else if (filter.participantColumn.tableAlias === "inst") {
+        this.sourceColumns[ "m" ].push( filter );
+      }
       else if (this.sourceColumns[ filter.participantColumn.tableAlias ] != null && this.sourceColumns[ filter.participantColumn.tableAlias ] != undefined) {
         //TODO - can be changed to add all after all DDPs are migrated
         if (this.hasESData) {
@@ -456,6 +459,9 @@ export class ParticipantListComponent implements OnInit {
               let t = filter.participantColumn.tableAlias;
               if (t === "r" || t === "o" || t === "ex") {
                 t = "p";
+              }
+              else if (t === "inst") {
+                t = "m";
               }
               for (let f of this.sourceColumns[ t ]) {
                 if (f.participantColumn.name === filter.participantColumn.name) {
