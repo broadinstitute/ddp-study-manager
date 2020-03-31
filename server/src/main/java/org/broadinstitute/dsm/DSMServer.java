@@ -22,6 +22,7 @@ import org.broadinstitute.ddp.util.BasicTriggerListener;
 import org.broadinstitute.ddp.util.JsonTransformer;
 import org.broadinstitute.ddp.util.Utility;
 import org.broadinstitute.dsm.jobs.*;
+import org.broadinstitute.dsm.model.mbc.MBCHospital;
 import org.broadinstitute.dsm.model.mbc.MBCInstitution;
 import org.broadinstitute.dsm.model.mbc.MBCParticipant;
 import org.broadinstitute.dsm.route.*;
@@ -73,6 +74,7 @@ public class DSMServer extends BasicServer {
 
     private static Map<String, MBCParticipant> mbcParticipants = new HashMap<>();
     private static Map<String, MBCInstitution> mbcInstitutions = new HashMap<>();
+    private static Map<String, MBCHospital> mbcHospitals = new HashMap<>();
     private static Map<String, JsonElement> ddpConfigurationLookup = new HashMap<>();
 
     private static Auth0Util auth0Util;
@@ -581,6 +583,14 @@ public class DSMServer extends BasicServer {
 
     public static Map<String, MBCInstitution> getMbcInstitutions() {
         return mbcInstitutions;
+    }
+
+    public static synchronized void putMBCHospital(@NonNull String hospitalId, @NonNull MBCHospital mbcHospital) {
+        mbcHospitals.put(hospitalId, mbcHospital);
+    }
+
+    public static Map<String, MBCHospital> getMbcHospitals() {
+        return mbcHospitals;
     }
 
     public static synchronized void putMBCParticipant(@NonNull String participantId, @NonNull MBCParticipant mbcParticipant) {

@@ -316,6 +316,7 @@ public class DBConstants {
     public static final String ID = "id";
     public static final String UPDATED_AT = "updated_at";
     public static final String PHY_UPDATED_AT = "phy_updated_at";
+    public static final String HP_UPDATED_AT = "hp_updated_at";
     public static final String PT_UPDATED_AT = "pt_updated_at";
     public static final String ENCRYPTED_NAME = "encrypted_name";
     public static final String ENCRYPTED_PHONE = "encrypted_phone";
