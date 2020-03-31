@@ -27,7 +27,7 @@ public class MedicalRecordUtil {
     private static final String SQL_SELECT_PARTICIPANT_EXISTS = "SELECT count(ddp_participant_id) as participantCount FROM ddp_participant WHERE ddp_participant_id = ? AND ddp_instance_id = ?";
     private static final String SQL_SELECT_PARTICIPANT_LAST_VERSION = "SELECT last_version FROM ddp_participant WHERE ddp_participant_id = ? AND ddp_instance_id = ?";
     private static final String SQL_SELECT_MEDICAL_RECORD_ID_FOR_PARTICIPANT = "SELECT rec.medical_record_id FROM ddp_institution inst, ddp_participant part, ddp_medical_record rec " +
-            "WHERE part.participant_id = inst.participant_id AND rec.institution_id = inst.institution_id AND part.ddp_participant_id = ? AND inst.ddp_institution_id = ? AND part.ddp_instance_id = ?";
+            "WHERE part.participant_id = inst.participant_id AND rec.institution_id = inst.institution_id AND part.ddp_participant_id = ? AND inst.ddp_institution_id = ? AND part.ddp_instance_id = ? AND inst.type = ?";
     private static final String SQL_SELECT_MEDICAL_RECORD_ID_AND_TYPE_FOR_PARTICIPANT = "SELECT rec.medical_record_id, inst.type FROM ddp_institution inst, ddp_participant part, ddp_medical_record rec " +
             "WHERE part.participant_id = inst.participant_id AND rec.institution_id = inst.institution_id AND part.participant_id = ? AND inst.type = ?";
 
@@ -88,11 +88,12 @@ public class MedicalRecordUtil {
     }
 
     public static Number isInstitutionInDB(@NonNull Connection conn, @NonNull String participantId, @NonNull String institutionId,
-                                           @NonNull String instanceId) {
+                                           @NonNull String instanceId, @NonNull String type) {
         try (PreparedStatement checkParticipant = conn.prepareStatement(SQL_SELECT_MEDICAL_RECORD_ID_FOR_PARTICIPANT)) {
             checkParticipant.setString(1, participantId);
             checkParticipant.setString(2, institutionId);
             checkParticipant.setString(3, instanceId);
+            checkParticipant.setString(4, type);
             try (ResultSet rs = checkParticipant.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(DBConstants.MEDICAL_RECORD_ID);
@@ -121,7 +122,7 @@ public class MedicalRecordUtil {
                 }
                 else if (result == 1) {
                     logger.info("Inserted new institution for participant w/ id " + participantId);
-                    insertInstitution(conn, insertInstitution, participantId);
+                    insertInstitution(conn, insertInstitution, participantId, false);
                 }
                 else {
                     throw new RuntimeException("Error updating row");
@@ -139,6 +140,11 @@ public class MedicalRecordUtil {
 
     public static void writeInstitutionIntoDb(@NonNull Connection conn, @NonNull String ddpParticipantId, @NonNull String instanceId,
                                               @NonNull String ddpInstitutionId, @NonNull String type) {
+        writeInstitutionIntoDb(conn, ddpParticipantId, instanceId, ddpInstitutionId, type, false);
+    }
+
+    public static void writeInstitutionIntoDb(@NonNull Connection conn, @NonNull String ddpParticipantId, @NonNull String instanceId,
+                                              @NonNull String ddpInstitutionId, @NonNull String type, boolean setDuplicateFlag) {
         if (conn != null) {
             long currentMilli = System.currentTimeMillis();
             try (PreparedStatement insertInstitution = conn.prepareStatement(SQL_INSERT_INSTITUTION, Statement.RETURN_GENERATED_KEYS)) {
@@ -155,7 +161,7 @@ public class MedicalRecordUtil {
                 }
                 else if (result == 1) {
                     logger.info("Inserted new institution for participant w/ id " + ddpParticipantId);
-                    insertInstitution(conn, insertInstitution, ddpParticipantId);
+                    insertInstitution(conn, insertInstitution, ddpParticipantId, setDuplicateFlag);
                 }
                 else {
                     throw new RuntimeException("Error updating row");
@@ -170,13 +176,18 @@ public class MedicalRecordUtil {
         }
     }
 
-    private static void insertInstitution(@NonNull Connection conn, @NonNull PreparedStatement insertInstitution, @NonNull String id) {
+    private static void insertInstitution(@NonNull Connection conn, @NonNull PreparedStatement insertInstitution, @NonNull String id, boolean setDuplicateFlag) {
         try (ResultSet rs = insertInstitution.getGeneratedKeys()) {
             if (rs.next()) { //no next if no generated return key -> update of institution timestamp does not return new key
                 String institutionId = rs.getString(1);
                 if (StringUtils.isNotBlank(institutionId)) {
                     logger.info("Added institution w/ id " + institutionId + " for participant w/ id " + id);
-                    MedicalRecordUtil.writeNewMedicalRecordIntoDb(conn, SQL_INSERT_MEDICAL_RECORD, institutionId);
+                    String query = SQL_INSERT_MEDICAL_RECORD;
+                    //TODO can be removed after mbc migration
+                    if (setDuplicateFlag) {
+                        query = query + ", duplicate = 1";
+                    }
+                    MedicalRecordUtil.writeNewMedicalRecordIntoDb(conn, query, institutionId);
                 }
             }
         }

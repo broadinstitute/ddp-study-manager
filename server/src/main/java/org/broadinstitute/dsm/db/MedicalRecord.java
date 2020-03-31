@@ -11,6 +11,7 @@ import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.model.FollowUp;
+import org.broadinstitute.dsm.model.mbc.MBCHospital;
 import org.broadinstitute.dsm.model.mbc.MBCInstitution;
 import org.broadinstitute.dsm.model.mbc.MBCParticipant;
 import org.broadinstitute.dsm.statics.*;
@@ -144,10 +145,11 @@ public class MedicalRecord {
     @ColumnName (DBConstants.PATHOLOGY_PRESENT)
     private String pathologyPresent;
 
-    public MedicalRecord(String medicalRecordId, String institutionId, String ddpInstitutionId) {
+    public MedicalRecord(String medicalRecordId, String institutionId, String ddpInstitutionId, String type) {
         this.medicalRecordId = medicalRecordId;
         this.institutionId = institutionId;
         this.ddpInstitutionId = ddpInstitutionId;
+        this.type = type;
     }
 
     public MedicalRecord(String medicalRecordId, String institutionId, String ddpInstitutionId, String type,
@@ -314,23 +316,38 @@ public class MedicalRecord {
     public static MedicalInfo getInstitutionInfoFromDB(@NonNull String realm, @NonNull String ddpParticipantId) {
         MedicalInfo medicalInfo = new MedicalInfo();
         Map<String, MBCInstitution> mbcInstitutions = DSMServer.getMbcInstitutions();
+        Map<String, MBCHospital> mbcHospitals = DSMServer.getMbcHospitals();
         Map<String, MBCParticipant> mbcParticipants = DSMServer.getMbcParticipants();
         MBCParticipant mbcParticipant = mbcParticipants.get(ddpParticipantId);
         if (mbcParticipant != null && mbcInstitutions != null && !mbcInstitutions.isEmpty()) {
             logger.info(mbcInstitutions.size() + " institutions in MBC cached list");
+            logger.info(mbcHospitals.size() + " hospitals in MBC cached list");
             ArrayList<InstitutionDetail> institutionDetails = new ArrayList<>();
             List<MedicalRecord> medicalRecords = getInstitutions(realm, ddpParticipantId);
             Integer tissueConsent = null;
             for (MedicalRecord medicalRecord : medicalRecords) {
-                MBCInstitution mbcInstitution = mbcInstitutions.get(medicalRecord.getDdpInstitutionId());
-                if (mbcInstitution != null) {
-                    InstitutionDetail institutionDetail = new InstitutionDetail(mbcInstitution.getPhysicianId(),
-                            mbcInstitution.getName(), mbcInstitution.getInstitution(), mbcInstitution.getCity(),
-                            mbcInstitution.getState(), MBCInstitution.PHYSICIAN);
-                    institutionDetails.add(institutionDetail);
-                    if (tissueConsent == null || tissueConsent == 1) {
-                        //TODO how to handle if it changed?
-                        tissueConsent = (!mbcInstitution.isFromBloodRelease()) ? 1 : 0;
+                if (StringUtils.isNotBlank(medicalRecord.getType())) {
+                    if (MBCInstitution.PHYSICIAN.equals(medicalRecord.getType())) {
+                        MBCInstitution mbcInstitution = mbcInstitutions.get(medicalRecord.getDdpInstitutionId());
+                        if (mbcInstitution != null) {
+                            InstitutionDetail institutionDetail = new InstitutionDetail(mbcInstitution.getPhysicianId(),
+                                    mbcInstitution.getName(), mbcInstitution.getInstitution(), mbcInstitution.getCity(),
+                                    mbcInstitution.getState(), medicalRecord.getType());
+                            institutionDetails.add(institutionDetail);
+                            if (tissueConsent == null || tissueConsent == 1) {
+                                //TODO how to handle if it changed?
+                                tissueConsent = (!mbcInstitution.isFromBloodRelease()) ? 1 : 0;
+                            }
+                        }
+                    }
+                    else {
+                        MBCHospital mbcHospital = mbcHospitals.get(medicalRecord.getDdpInstitutionId());
+                        if (mbcHospital != null) {
+                            InstitutionDetail institutionDetail = new InstitutionDetail(mbcHospital.getHospitalId(),
+                                    null, mbcHospital.getName(), mbcHospital.getCity(),
+                                    mbcHospital.getState(), medicalRecord.getType());
+                            institutionDetails.add(institutionDetail);
+                        }
                     }
                 }
             }
@@ -379,7 +396,8 @@ public class MedicalRecord {
                         medicalRecords.add(new MedicalRecord(
                                 rs.getString(DBConstants.MEDICAL_RECORD_ID),
                                 rs.getString(DBConstants.INSTITUTION_ID),
-                                rs.getString(DBConstants.DDP_INSTITUTION_ID)));
+                                rs.getString(DBConstants.DDP_INSTITUTION_ID),
+                                rs.getString(DBConstants.TYPE)));
                     }
                 }
             }
