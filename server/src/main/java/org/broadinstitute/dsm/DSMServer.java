@@ -323,25 +323,20 @@ public class DSMServer extends BasicServer {
                 cfg.getString(ApplicationConfigConstants.GET_DDP_PARTICIPANT_ID),
                 cfg.getString(ApplicationConfigConstants.EMAIL_FRONTEND_URL_FOR_LINKS), notificationUtil), new JsonTransformer());
 
-        FilterRoute filterRoute = new FilterRoute(patchUtil);
-        patch(UI_ROOT + RoutePath.FILTER_LIST, filterRoute, new JsonTransformer());
-        patch(UI_ROOT + RoutePath.FILTER_DEFAULT, filterRoute, new JsonTransformer());
-
+        ViewFilterRoute viewFilterRoute = new ViewFilterRoute(patchUtil);
+        //gets filter names for user for this realm (shared filters and user's filters
+        get(UI_ROOT + RoutePath.GET_FILTERS, viewFilterRoute, new JsonTransformer());
+        get(UI_ROOT + RoutePath.GET_DEFAULT_FILTERS, viewFilterRoute, new JsonTransformer());
         //saves the current Filter Parameters with a name for future use
-        patch(UI_ROOT + RoutePath.SAVE_FILTER, filterRoute, new JsonTransformer());
+        patch(UI_ROOT + RoutePath.SAVE_FILTER, viewFilterRoute, new JsonTransformer());
+        patch(UI_ROOT + RoutePath.FILTER_DEFAULT, viewFilterRoute, new JsonTransformer());
 
+        FilterRoute filterRoute = new FilterRoute(patchUtil);
         //returns List[] that is filtered based on the filterName
         get(UI_ROOT + RoutePath.APPLY_FILTER, filterRoute, new JsonTransformer());
-
+        patch(UI_ROOT + RoutePath.FILTER_LIST, filterRoute, new JsonTransformer());
         //gets the participant to go to the tissue that was clicked on
         get(UI_ROOT + RoutePath.GET_PARTICIPANT, filterRoute, new JsonTransformer());
-
-        //gets filter names for user for this realm (shared filters and user's filters
-        get(UI_ROOT + RoutePath.GET_FILTERS, filterRoute, new JsonTransformer());
-        get(UI_ROOT + "getFiltersDefault", filterRoute, new JsonTransformer());
-
-        //gets filter parameters that were associated with this selected filter
-        get(UI_ROOT + RoutePath.GET_PARSED_FILTERS, filterRoute, new JsonTransformer());
 
         MedicalRecordLogRoute medicalRecordLogRoute = new MedicalRecordLogRoute();
         get(UI_ROOT + RoutePath.MEDICAL_RECORD_LOG_REQUEST, medicalRecordLogRoute, new JsonTransformer());
