@@ -119,7 +119,7 @@ public class MedicalRecordMigrationTool {
                             MedicalRecordUtil.writeNewRecordIntoDb(conn, DDPMedicalRecordDataRequest.SQL_INSERT_PARTICIPANT_RECORD,
                                     ddpParticipantId, instanceId);
                         }
-                        if (MedicalRecordUtil.isInstitutionInDB(conn, ddpParticipantId, ddpInstitutionId, instanceId) == null) {
+                        if (MedicalRecordUtil.isInstitutionInDB(conn, ddpParticipantId, ddpInstitutionId, instanceId, MBCInstitution.PHYSICIAN) == null) {
                             MedicalRecordUtil.writeInstitutionIntoDb(conn, ddpParticipantId, instanceId,
                                     ddpInstitutionId, MBCInstitution.PHYSICIAN);
                         }

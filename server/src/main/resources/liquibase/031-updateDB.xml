@@ -45,4 +45,10 @@
                       oldColumnName="date_updated"
                       tableName="drug_list"/>
     </changeSet>
+    <changeSet author="simone" id="03182020">
+        <insert tableName="bookmark">
+            <column name="instance" value="mbc_hospital_migration"/>
+            <column name="value" value="0"/>
+        </insert>
+    </changeSet>
 </databaseChangeLog>

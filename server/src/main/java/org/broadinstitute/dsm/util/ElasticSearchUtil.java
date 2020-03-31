@@ -447,15 +447,20 @@ public class ElasticSearchUtil {
                 userEntered = userEntered.replaceAll("%", "").trim();
             }
             if ((nameValue[0].startsWith(PROFILE) || nameValue[0].startsWith(ADDRESS))) {
-                try {
-                    long start = SystemUtil.getLongFromString(userEntered);
-                    //set endDate to midnight of that date
-                    String endDate = userEntered + " 23:59:59";
-                    long end = SystemUtil.getLongFromDetailDateString(endDate);
-                    rangeQueryBuilder(finalQuery, nameValue[0], start, end, must);
-                }
-                catch (ParseException e) {
+                if (nameValue[0].trim().endsWith(GUID) || nameValue[0].trim().endsWith(LEGACY_ALT_PID)) {
                     valueQueryBuilder(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
+                }
+                else {
+                    try {
+                        long start = SystemUtil.getLongFromString(userEntered);
+                        //set endDate to midnight of that date
+                        String endDate = userEntered + " 23:59:59";
+                        long end = SystemUtil.getLongFromDetailDateString(endDate);
+                        rangeQueryBuilder(finalQuery, nameValue[0], start, end, must);
+                    }
+                    catch (ParseException e) {
+                        valueQueryBuilder(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
+                    }
                 }
             }
             else if (nameValue[0].startsWith(DSM)) {
@@ -496,11 +501,11 @@ public class ElasticSearchUtil {
                 }
                 else {
                     //activity user entered
-                    activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID, surveyParam[1]).operator(Operator.AND));
+                    activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID, surveyParam[1]));
                     try {
                         //todo check date search
                         SystemUtil.getLongFromString(userEntered);
-                        activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_DATE, userEntered).operator(Operator.AND));
+                        activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_DATE, userEntered));
                     }
                     catch (ParseException e) {
                         //was no date string so go for normal text
@@ -514,12 +519,12 @@ public class ElasticSearchUtil {
                         }
                         else {
                             if (must) {
-                                activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered).operator(Operator.AND));
+                                activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
                             }
                             else {
                                 QueryBuilder tmpBuilder = findQueryBuilderForFieldName(activityAnswer, ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
                                 if (tmpBuilder != null) {
-                                    ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered).operator(Operator.OR));
+                                    ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
                                 }
                                 else {
                                     activityAnswer.should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));

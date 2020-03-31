@@ -272,11 +272,6 @@ public class DashboardRoute extends RequestHandler {
             }
 
             if (wrapper.getParticipant() != null) {
-                Long exitDate = wrapper.getParticipant().getExitDate();
-                if (exitDate != null && exitDate != 0) {
-                    incrementCounter(dashboardValues, "Withdrawn per DSM");
-                    incrementCounterPeriod(dashboardValuesPeriod, "Withdrawn per DSM", exitDate, start, end);
-                }
                 if (wrapper.getParticipant().isMinimalMR()) {
                     incrementCounter(dashboardValues, "minimalMR");
                 }
@@ -353,14 +348,14 @@ public class DashboardRoute extends RequestHandler {
 
             countRequestsReceive(dashboardValuesDetailed, dashboardValuesPeriodDetailed, foundAtPT, foundAtPtPeriod, medicalRecord.getFaxSent3(),
                     medicalRecord.getFaxSent2(), medicalRecord.getFaxSent(), medicalRecord.getMrReceived(), start, end,
-                    "notRequested", "faxSent", "mrReceived");
+                    "notRequested", "faxSent", "mrReceived", medicalRecord.isDuplicate());
 
             if (medicalRecord.getFollowUps() != null) {
                 int index = 1;
                 for (FollowUp followUp : medicalRecord.getFollowUps()) {
                     countRequestsReceive(dashboardValuesDetailed, dashboardValuesPeriodDetailed, foundAtPT, foundAtPtPeriod, followUp.getFRequest3(),
                             followUp.getFRequest2(), followUp.getFRequest1(), followUp.getFReceived(), start, end,
-                            null, "followUpSent." + index + ".", "followUpReceived" + index);
+                            null, "followUpSent." + index + ".", "followUpReceived" + index, false);
                     index++;
                 }
             }
@@ -450,7 +445,7 @@ public class DashboardRoute extends RequestHandler {
             }
             countRequestsReceive(dashboardValuesDetailed, dashboardValuesPeriodDetailed, foundAtPT, foundAtPtPeriod, oncHistoryDetail.getTFaxSent3(),
                     oncHistoryDetail.getTFaxSent2(), oncHistoryDetail.getTFaxSent(), oncHistoryDetail.getTissueReceived(),
-                    start, end, null, "tFaxSent", "tissueReceived");
+                    start, end, null, "tFaxSent", "tissueReceived", false);
         }
     }
 
@@ -481,7 +476,8 @@ public class DashboardRoute extends RequestHandler {
 
     private void countRequestsReceive(@NonNull Map<String, Integer> dashboardValuesDetailed, @NonNull Map<String, Integer> dashboardValuesPeriodDetailed,
                                       @NonNull Set<String> foundAtPT, @NonNull Set<String> foundAtPtPeriod, String faxSent3, String faxSent2, String faxSent, String received,
-                                      long start, long end, String dashboardValueNameWaiting, @NonNull String dashboardValueNameSent, @NonNull String dashboardValueNameReceived) {
+                                      long start, long end, String dashboardValueNameWaiting, @NonNull String dashboardValueNameSent, @NonNull String dashboardValueNameReceived,
+                                      boolean isDuplicate) {
         //count fax sent
         if (StringUtils.isNotBlank(faxSent3)) {
             //was requested 3 times
@@ -514,9 +510,11 @@ public class DashboardRoute extends RequestHandler {
                     SystemUtil.getLongFromDateString(faxSent), start, end, foundAtPtPeriod);
         }
         else {
-            //not requested yet
-            if (dashboardValueNameWaiting != null) {
-                incrementCounter(dashboardValuesDetailed, dashboardValueNameWaiting, foundAtPT);
+            //not requested yet - only if they are not flagged as duplicate
+            if (!isDuplicate) {
+                if (dashboardValueNameWaiting != null) {
+                    incrementCounter(dashboardValuesDetailed, dashboardValueNameWaiting, foundAtPT);
+                }
             }
         }
         if (StringUtils.isNotBlank(received)) {
