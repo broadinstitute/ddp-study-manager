@@ -395,6 +395,12 @@ export class DashboardComponent implements OnInit {
         }
         this.sourceColumns[ "p" ].push( filter );
       }
+      if (filter.participantColumn.tableAlias === "inst") {
+        if (this.sourceColumns[ "m" ] == null) {
+          this.sourceColumns[ "m" ] = [];
+        }
+        this.sourceColumns[ "p" ].push( filter );
+      }
       if (this.sourceColumns[ filter.participantColumn.tableAlias ] != null && this.sourceColumns[ filter.participantColumn.tableAlias ] != undefined) {
         this.sourceColumns[ filter.participantColumn.tableAlias ].push( filter );
       }

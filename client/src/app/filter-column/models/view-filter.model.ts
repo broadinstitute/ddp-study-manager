@@ -39,9 +39,11 @@ export class ViewFilter {
             tmp.push( filteredColumn );
           }
         }
-        if (key === "o" || key === "ex"
-          || key === "r") {
+        if (key === "o" || key === "ex" || key === "r") {
           p[ "p" ] = tmp;
+        }
+        else if (key === "inst") {
+          p[ "m" ] = tmp;
         }
         else {
           p[ key ] = tmp;
