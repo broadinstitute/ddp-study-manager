@@ -30,9 +30,9 @@ public class RouteInfoTest extends TestHelper {
 
     private static final String SQL_SELECT_MR_STATUS = "SELECT UNIX_TIMESTAMP(str_to_date(min(med.fax_sent), '%Y-%m-%d')) as mrRequested, " +
             "UNIX_TIMESTAMP(str_to_date(min(med.mr_received), '%Y-%m-%d')) as mrReceived, " +
-            "UNIX_TIMESTAMP(str_to_date(min(onc.fax_sent), '%Y-%m-%d')) as tissueRequested," +
-            " UNIX_TIMESTAMP(str_to_date(min(onc.tissue_received), '%Y-%m-%d')) as tissueReceived," +
-            " UNIX_TIMESTAMP(str_to_date(min(tis.sent_gp), '%Y-%m-%d')) as tissueSent " +
+            "UNIX_TIMESTAMP(str_to_date(min(onc.fax_sent), '%Y-%m-%d')) as tissueRequested, " +
+            "UNIX_TIMESTAMP(str_to_date(min(onc.tissue_received), '%Y-%m-%d')) as tissueReceived, " +
+            "UNIX_TIMESTAMP(str_to_date(min(tis.sent_gp), '%Y-%m-%d')) as tissueSent " +
             "FROM ddp_medical_record med " +
             "LEFT JOIN ddp_institution inst on (med.institution_id = inst.institution_id) LEFT JOIN ddp_participant as part on (part.participant_id = inst.participant_id) " +
             "LEFT JOIN ddp_onc_history_detail onc on (med.medical_record_id = onc.medical_record_id) LEFT JOIN ddp_tissue tis on (tis.onc_history_detail_id = onc.onc_history_detail_id) " +
@@ -210,7 +210,6 @@ public class RouteInfoTest extends TestHelper {
         Assert.assertNotNull(gp); // check that fax sent is not null
     }
 
-
     @Test
     public void checkReturnStatus() throws Exception {
         String participantId = DBTestUtil.getParticipantIdOfTestParticipant("FAKE_MIGRATED_PARTICIPANT_ID");
@@ -263,7 +262,6 @@ public class RouteInfoTest extends TestHelper {
         Assert.assertNotNull(returnFId);
         Assert.assertEquals(returnFId, testReturnFedexId);
 
-
         String firstSmId = getTestTissueInfo("first_sm_id", tissueId);
         Assert.assertNotNull(firstSmId);
         Assert.assertEquals(firstSmId, testFirstSmId);
@@ -271,7 +269,6 @@ public class RouteInfoTest extends TestHelper {
         String shlWork = getTestTissueInfo("shl_work_number", tissueId);
         Assert.assertNotNull(testSHLWorkNumber);
         Assert.assertEquals(shlWork, testSHLWorkNumber);
-
     }
 
     @Test
@@ -326,7 +323,7 @@ public class RouteInfoTest extends TestHelper {
     public void participantStatus() throws Exception {
         //insert a kit for pt of migrated ddp (will be uploaded with legacy shortId)
         DBTestUtil.insertLatestKitRequest(cfg.getString("portal.insertKitRequest"), cfg.getString("portal.insertKit"), "M1", 1, INSTANCE_ID_MIGRATED,
-                "adr_0951aa28cad146e3802225be549e3a1f", "shp_e6c942f2e1844ec2b26676ddaea6a491", "1112321.22-698-965-659-666");
+                "adr_6c3ace20442b49bd8fae9a661e481c9e", "shp_f470591c3fb441a68dbb9b76ecf3bb3d", "1112321.22-698-965-659-666");
         //change bsp_collaborator_ids
         DBTestUtil.executeQuery("UPDATE ddp_kit_request set bsp_collaborator_participant_id = \"MigratedProject_0011\", bsp_collaborator_sample_id =\"MigratedProject_0011_SALIVA\" where ddp_participant_id = \"1112321.22-698-965-659-666\"");
 
@@ -351,7 +348,7 @@ public class RouteInfoTest extends TestHelper {
     public void poBoxParticipantStatus() throws Exception {
         //insert a kit for pt of migrated ddp (will be uploaded with legacy shortId)
         DBTestUtil.insertLatestKitRequest(cfg.getString("portal.insertKitRequest"), cfg.getString("portal.insertKit"), "M1", 1, INSTANCE_ID_MIGRATED,
-                "adr_43c7a5b7760d498eb77b692eb81e491f", null, "1112321.22-698-965-659-666");
+                "adr_6c3ace20442b49bd8fae9a661e481c9e", null, "1112321.22-698-965-659-666");
 
         //create label an therefore collaborator id
         RouteTestSample.triggerLabelCreationAndWaitForLabel(TEST_DDP_MIGRATED, "SALIVA", 60);
@@ -411,18 +408,15 @@ public class RouteInfoTest extends TestHelper {
     public String getTestOncHistoryInfo(String columnToReturn, String ondHistoryId) {
         List strings = new ArrayList<>();
         strings.add(ondHistoryId);
-        String value = DBTestUtil.getStringFromQuery("SELECT *" +
-                " FROM  ddp_onc_history_detail onc" +
-                "            WHERE onc.onc_history_detail_id = ?;", strings, columnToReturn);
+        String value = DBTestUtil.getStringFromQuery("SELECT * FROM  ddp_onc_history_detail onc WHERE onc.onc_history_detail_id = ?;",
+                strings, columnToReturn);
         return value;
     }
 
     public String getTestTissueInfo(String columnToReturn, String tissueId) {
         List strings = new ArrayList<>();
         strings.add(tissueId);
-        String value = DBTestUtil.getStringFromQuery("SELECT *" +
-                " FROM  ddp_tissue" +
-                "            WHERE tissue_id = ?;", strings, columnToReturn);
+        String value = DBTestUtil.getStringFromQuery("SELECT * FROM  ddp_tissue WHERE tissue_id = ?;", strings, columnToReturn);
         return value;
     }
 
