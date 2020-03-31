@@ -45,7 +45,7 @@ public class ElasticSearchUtil {
     private static final String ACTIVITIES_QUESTIONS_ANSWER_DATE = "activities.questionsAnswers.date";
     private static final String ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID = "activities.questionsAnswers.stableId";
     public static final String PROFILE = "profile";
-    private static final String DATA = "data";
+    public static final String DATA = "data";
     public static final String DSM = "dsm";
     private static final String ACTIVITY_CODE = "activityCode";
     public static final String ADDRESS = "address";
