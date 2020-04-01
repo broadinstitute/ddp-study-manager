@@ -50,6 +50,7 @@ server/config/staging-gcloud-creds.json
 server/config/prod-gcloud-creds.json
 
 server/src/test/resources/output
+server/app-deploy
 
 client/src/assets/js/ddp_config.js
 
