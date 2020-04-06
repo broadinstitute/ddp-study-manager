@@ -15,6 +15,7 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.broadinstitute.ddp.BasicServer;
+import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.security.Auth0Util;
 import org.broadinstitute.ddp.security.CookieUtil;
 import org.broadinstitute.ddp.util.BasicTriggerListener;
@@ -84,15 +85,33 @@ public class DSMServer extends BasicServer {
         //config without secrets
         Config cfg = ConfigFactory.load();
         //secrets from vault in a config file
-        cfg = cfg.withFallback(ConfigFactory.parseFile(new File("config/vault.conf")));
+//        String configFileName = System.getenv("config_file");
+        String configFileName = "vault.conf";
+        logger.info(configFileName);
+
+        cfg = cfg.withFallback(ConfigFactory.load(configFileName));
 
         if (StringUtils.isNotBlank(cfg.getString("portal.googleProjectCredentials"))) {
             System.setProperty("GOOGLE_APPLICATION_CREDENTIALS", cfg.getString("portal.googleProjectCredentials"));
         }
 
+        if (!cfg.getBoolean("portal.useCloudSqlProxy")) {
+            TransactionWrapper.configureSslProperties(cfg.getString("portal.dbSslKeyStore"),
+                    cfg.getString("portal.dbSslKeyStorePwd"),
+                    cfg.getString("portal.dbSslTrustStore"),
+                    cfg.getString("portal.dbSslTrustStorePwd"));
+        }
         DSMServer server = new DSMServer();
         conf = cfg;
-
+        if (!cfg.getBoolean("portal.useCloudSqlProxy")) {
+            File test = new File(cfg.getString("portal.dbSslTrustStore"));
+            if (test.exists()) {
+                logger.info("TrustStore does exist");
+            }
+            else {
+                logger.error("TrustStore does not exist");
+            }
+        }
         server.configureServer(cfg);
         logger.info("Server configuration complete.");
     }

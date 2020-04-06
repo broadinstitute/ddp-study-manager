@@ -135,6 +135,19 @@
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
             </resource>
+            <resource>
+                <directory>app-deploy</directory>
+                <includes>
+                    <include>vault.conf</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>config</directory>
+                <includes>
+                    <include>dev-keystore2</include>
+                    <include>dev-truststore2</include>
+                </includes>
+            </resource>
         </resources>
         <testResources>
             <testResource>
