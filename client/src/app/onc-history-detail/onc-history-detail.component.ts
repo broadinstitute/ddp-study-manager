@@ -282,10 +282,9 @@ export class OncHistoryDetailComponent implements OnInit {
   }
 
   openTissuePage( oncHis: OncHistoryDetail ) {
-    if (oncHis != null &&
-      ( ( oncHis.request === "sent" ) || ( oncHis.request === "received" ) || ( oncHis.request === "returned" ) || ( oncHis.request === "unableToObtain" ) )) {
+    if (oncHis != null) {
       this.oncHistoryDetail = oncHis;
-      this.compService.editable = this.editable;
+      this.compService.editable = ((oncHis.request === "sent") || (oncHis.request === "received") || (oncHis.request === "returned") || (oncHis.request === "unableToObtain"));
       this.showTissue = true;
       this.openTissue.emit( oncHis );
     }

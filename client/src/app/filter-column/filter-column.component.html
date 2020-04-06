@@ -5,7 +5,8 @@
 </div>
 <ng-container
   *ngIf="dataFilter.type === 'DATE' || dataFilter.type === 'EPOCHDATE' ||  dataFilter.type === 'DATE_SHORT' || (dataFilter.type === 'ADDITIONALVALUE' && dataFilter.additionalType === 'DATE')">
-  <app-field-datepicker [allowFutureDate]="true" [showNAButton]="true" [dateString]="dataFilter.value1" [allowUnknownDay]="true"
+  <app-field-datepicker [allowFutureDate]="true" [showNAButton]="dataFilter.participantColumn.name === 'expectedReturn'"
+                        [dateString]="dataFilter.value1" [allowUnknownDay]="true"
                         (dateChanged)="dateChange($event, 1)" [disabled]="!editable"></app-field-datepicker>
   <ng-container *ngIf="dataFilter.range">
     <app-field-datepicker [allowFutureDate]="true" [showNAButton]="true" (dateChanged)="dateChange($event, 2)" [allowUnknownDay]="true"

@@ -61,6 +61,7 @@ export class TissuePageComponent implements OnInit {
         //        this.compService.realmMenu = realm;
         this.leaveTissue.emit(true);
         this.leaveParticipant.emit(true);
+        this.setEditable();
         this.additionalMessage = null;
       }
     });
@@ -166,6 +167,7 @@ export class TissuePageComponent implements OnInit {
           // console.info(`response saving data: ${JSON.stringify(data, null, 2)}`);
           this.patchFinished = true;
           this.currentPatchField = null;
+          this.setEditable();
         },
         err => {
         }
@@ -220,6 +222,11 @@ export class TissuePageComponent implements OnInit {
 
   getUtil(): Utils {
     return this.util;
+  }
+
+  private setEditable() {
+    let b = this.oncHistoryDetail.request === "received" || this.oncHistoryDetail.request === "sent" || this.oncHistoryDetail.request === "returned";
+    this.editable = b;
   }
 
   getRole(): RoleService {

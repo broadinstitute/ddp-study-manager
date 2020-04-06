@@ -56,7 +56,7 @@
                        [(ngModel)]="oncHis.selected" (change)="selected(i)" [disabled]="!editable || participantExited">
           </md-checkbox>
           <button
-            *ngIf="oncHis.request === 'received' || oncHis.request === 'sent' || oncHis.request === 'returned' || oncHis.request === 'unableToObtain'"
+
             md-mini-fab [color]="getNoteButtonColorStyle(oncHis.tissueReceived)"
             (click)="openTissuePage(oncHis)" tooltip="Tissue information">
             <i class="fas fa-vial fa-lg"></i>
