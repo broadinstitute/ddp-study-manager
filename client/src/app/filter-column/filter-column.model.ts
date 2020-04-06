@@ -56,6 +56,11 @@ export class Filter {
   public static EXIT_DATE = new Filter( ParticipantColumn.EXIT_DATE, Filter.DATE_TYPE );
 
   //mr columns
+  public static MR_TYPE = new Filter( ParticipantColumn.MR_TYPE, Filter.OPTION_TYPE, [
+    new NameValue( "PHYSICIAN", "Physician" ),
+    new NameValue( "INSTITUTION", "Institution" ),
+    new NameValue( "INITIAL_BIOPSY", "Initial Biopsy" )
+  ] );
   public static MR_INSTITUTION_NAME = new Filter( ParticipantColumn.MR_INSTITUTION_NAME, Filter.TEXT_TYPE );
   public static MR_INSTITUTION_CONTACT = new Filter( ParticipantColumn.MR_INSTITUTION_CONTACT, Filter.TEXT_TYPE );
   public static MR_INSTITUTION_PHONE = new Filter( ParticipantColumn.MR_INSTITUTION_PHONE, Filter.TEXT_TYPE );
@@ -199,7 +204,7 @@ export class Filter {
     Filter.DIAGNOSIS_MONTH, Filter.DIAGNOSIS_YEAR,
     Filter.ONC_HISTORY_CREATED, Filter.ONC_HISTORY_REVIEWED, Filter.PAPER_CR_SENT, Filter.PAPER_CR_RECEIVED,
     Filter.PARTICIPANT_NOTES, Filter.MINIMAL_RECORDS, Filter.ABSTRACTION_READY, Filter.ASSIGNEE_MR, Filter.ASSIGNEE_TISSUE, Filter.EXIT_DATE,
-    Filter.MR_INSTITUTION_NAME, Filter.MR_INSTITUTION_CONTACT, Filter.MR_INSTITUTION_PHONE, Filter.MR_INSTITUTION_FAX,
+    Filter.MR_TYPE, Filter.MR_INSTITUTION_NAME, Filter.MR_INSTITUTION_CONTACT, Filter.MR_INSTITUTION_PHONE, Filter.MR_INSTITUTION_FAX,
     Filter.MR_FAX_SENT, Filter.MR_FAX_SENT_2, Filter.MR_FAX_SENT_3, Filter.MR_RECEIVED,
     Filter.MR_DOCUMENT, Filter.MR_DOCUMENT_FILES, Filter.MR_PROBLEM, Filter.MR_PROBLEM_TEXT, Filter.MR_UNABLE_TO_OBTAIN,
     Filter.MR_DUPLICATE, Filter.MR_INTERNATIONAL, Filter.MR_PAPER_CR, Filter.PATHOLOGY_RESENT, Filter.MR_NOTES, Filter.MR_REVIEW,

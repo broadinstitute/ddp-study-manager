@@ -109,24 +109,27 @@ export class DSMService {
   }
 
   public applyFilter( json: ViewFilter, realm: string, parent: string, filterQuery: string ): Observable<any> {
-    let viewFilterCopy = json.copy();
-    if (json != null && json.filters != null) {
-      for (let filter of json.filters) {
-        if (filter.type === Filter.OPTION_TYPE) {
-          filter.selectedOptions = filter.getSelectedOptionsName();
+    let viewFilterCopy = null;
+    if (json != null) {
+      viewFilterCopy = json.copy();
+      if (json != null && json.filters != null) {
+        for (let filter of json.filters) {
+          if (filter.type === Filter.OPTION_TYPE) {
+            filter.selectedOptions = filter.getSelectedOptionsName();
+          }
         }
       }
-    }
-    if (viewFilterCopy != null && viewFilterCopy.filters != null) {
-      for (let filter of viewFilterCopy.filters) {
-        if (filter.type === Filter.OPTION_TYPE) {
-          filter.selectedOptions = filter.getSelectedOptionsName();
-          filter.options = null;
+      if (viewFilterCopy != null && viewFilterCopy.filters != null) {
+        for (let filter of viewFilterCopy.filters) {
+          if (filter.type === Filter.OPTION_TYPE) {
+            filter.selectedOptions = filter.getSelectedOptionsName();
+            filter.options = null;
+          }
         }
       }
+      console.log( json );
+      console.log( viewFilterCopy );
     }
-    console.log( json );
-    console.log( viewFilterCopy );
     let url = this.baseUrl + DSMService.UI + "applyFilter";
     let userId = this.role.userID();
     let map: { name: string, value: any }[] = [];
@@ -139,7 +142,7 @@ export class DSMService {
     else if (json == null || json.filters == undefined || json.filters == null) {
       map.push( { name: "filterName", value: json == null ? null : json.filterName } );
     }
-    else {
+    else if (viewFilterCopy != null) {
       map.push( { name: "filters", value: JSON.stringify( viewFilterCopy.filters ) } );
     }
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
