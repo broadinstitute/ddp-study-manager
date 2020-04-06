@@ -101,7 +101,7 @@
       <td colspan="3">
         <app-field-datepicker [dateString]="tissue.tissueReturnDate"
                               [allowFutureDate]="true"
-                              (dateChanged)="valueChanged($event, 'tissueReturnDate')" [disabled]="!editable"
+                              (dateChanged)="valueChanged($event, 'tissueReturnDate')" [disabled]="false"
                               [colorDuringPatch]="isPatchedCurrently('tissueReturnDate')"></app-field-datepicker>
       </td>
     </tr>
