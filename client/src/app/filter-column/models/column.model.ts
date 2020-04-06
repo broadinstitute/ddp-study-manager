@@ -32,6 +32,7 @@ export class ParticipantColumn {
   public static EXIT_DATE = new ParticipantColumn("Date Withdrawn", "exitDate", "ex");
 
   //mr columns
+  public static MR_TYPE = new ParticipantColumn("Type", "type", "inst");
   public static MR_INSTITUTION_NAME = new ParticipantColumn("Institution Name", "name", "m");
   public static MR_INSTITUTION_CONTACT = new ParticipantColumn("Institution Contact", "contact", "m");
   public static MR_INSTITUTION_PHONE = new ParticipantColumn("Institution Phone", "phone", "m");
