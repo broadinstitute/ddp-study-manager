@@ -639,8 +639,13 @@ export class ParticipantListComponent implements OnInit {
     if (this.selectedColumns[ parent ] == null) {
       this.selectedColumns[ parent ] = [];
     }
-    if (this.selectedColumns[ parent ].includes( column )) {
-      let index = this.selectedColumns[ parent ].indexOf( column );
+    if (this.hasThisColumnSelected( this.selectedColumns[ parent ], column )) {
+      console.log( this.selectedColumns[ parent ] );
+      let f = this.selectedColumns[ parent ].find( f => {
+        return f.participantColumn.tableAlias === column.participantColumn.tableAlias && f.participantColumn.name === column.participantColumn.name;
+      } );
+      let index = this.selectedColumns[ parent ].indexOf( f );
+      console.log( index );
       this.selectedColumns[ parent ].splice( index, 1 );
     }
     else {
