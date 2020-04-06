@@ -15,14 +15,14 @@ import {ModalComponent} from "../modal/modal.component";
 import {Utils} from "../utils/utils";
 import {PatchUtil} from "../utils/patch.model";
 
-@Component({
+@Component( {
   selector: "app-tissue-page",
   templateUrl: "./tissue-page.component.html",
-  styleUrls: ["./tissue-page.component.css"]
-})
+  styleUrls: [ "./tissue-page.component.css" ],
+} )
 export class TissuePageComponent implements OnInit {
 
-  @ViewChild(ModalComponent)
+  @ViewChild( ModalComponent )
   public applyToAllModal: ModalComponent;
 
   @Input() participant: Participant;
@@ -50,63 +50,64 @@ export class TissuePageComponent implements OnInit {
   patchFinished: boolean = true;
   indefinitely: boolean;
 
-  constructor(private auth: Auth, private router: Router, private route: ActivatedRoute, private compService: ComponentService, private dsmService: DSMService,
-              private role: RoleService, private util: Utils) {
+  constructor( private auth: Auth, private router: Router, private route: ActivatedRoute, private compService: ComponentService, private dsmService: DSMService,
+               private role: RoleService, private util: Utils ) {
     if (!auth.authenticated()) {
       auth.logout();
     }
-    this.route.queryParams.subscribe(params => {
-      let realm = params[DSMService.REALM] || null;
+    this.route.queryParams.subscribe( params => {
+      let realm = params[ DSMService.REALM ] || null;
       if (realm != null) {
         //        this.compService.realmMenu = realm;
-        this.leaveTissue.emit(true);
-        this.leaveParticipant.emit(true);
-        this.setEditable();
+        this.leaveTissue.emit( true );
+        this.leaveParticipant.emit( true );
+
         this.additionalMessage = null;
       }
-    });
+    } );
   }
 
   ngOnInit() {
     //    console.log(this.oncHistoryDetail.additionalValues);
-    if ((this.participant != null && this.participant.data.status.indexOf(Statics.EXITED) == -1)) {
+    if ((this.participant != null && this.participant.data.status.indexOf( Statics.EXITED ) == -1)) {
       this.participantExited = false;
       //      console.log("*");
     }
     if (this.oncHistoryDetail != null) {
       this.editable = this.compService.editable;
       this.indefinitely = this.oncHistoryDetail.destructionPolicy === "indefinitely";
+      this.setEditable();
     }
     else {
       this.errorMessage = "Error - Information is missing";
     }
-    window.scrollTo(0, 0);
+    window.scrollTo( 0, 0 );
   }
 
   public leavePage(): boolean {
-    this.leaveTissue.emit(true);
+    this.leaveTissue.emit( true );
     return false;
   }
 
   public backToList(): boolean {
-    this.leaveParticipant.emit(true);
+    this.leaveParticipant.emit( true );
     return false;
   }
 
   addTissue() {
-    this.oncHistoryDetail.tissues.push(new Tissue(null, this.oncHistoryDetail.oncHistoryDetailId, null, null, null, null,
+    this.oncHistoryDetail.tissues.push( new Tissue( null, this.oncHistoryDetail.oncHistoryDetailId, null, null, null, null,
       null, null, null, null, null, null, null, null, null, null, null, null,
-      null, null, null, null, null, null, null, null, null));
+      null, null, null, null, null, null, null, null, null ) );
   }
 
-  isPatchedCurrently(field: string): boolean {
+  isPatchedCurrently( field: string ): boolean {
     if (this.currentPatchField === field) {
       return true;
     }
     return false;
   }
 
-  currentField(field: string) {
+  currentField( field: string ) {
     if (field != null || (field == null && this.patchFinished)) {
       this.currentPatchField = field;
     }
@@ -116,7 +117,7 @@ export class TissuePageComponent implements OnInit {
     }
   }
 
-  valueChanged(value: any, parameterName: string) {
+  valueChanged( value: any, parameterName: string ) {
     let v;
     if (parameterName === "indefinitely" && value.checked != null) {
       v = value.checked ? "indefinitely" : "";
@@ -125,7 +126,7 @@ export class TissuePageComponent implements OnInit {
     }
     else {
       if (typeof value === "string") {
-        this.oncHistoryDetail[parameterName] = value;
+        this.oncHistoryDetail[ parameterName ] = value;
         v = value;
       }
       else {
@@ -141,26 +142,26 @@ export class TissuePageComponent implements OnInit {
       }
     }
     if (v !== null) {
-      let patch1 = new PatchUtil(this.oncHistoryDetail.oncHistoryDetailId, this.role.userMail(),
+      let patch1 = new PatchUtil( this.oncHistoryDetail.oncHistoryDetailId, this.role.userMail(),
         {
           name: parameterName,
-          value: v
-        }, null, "participantId", this.participant.participant.ddpParticipantId, Statics.ONCDETAIL_ALIAS);
+          value: v,
+        }, null, "participantId", this.participant.participant.ddpParticipantId, Statics.ONCDETAIL_ALIAS );
       let patch = patch1.getPatch();
       this.patchFinished = false;
       this.currentPatchField = parameterName;
-      this.dsmService.patchParticipantRecord(JSON.stringify(patch)).subscribe(// need to subscribe, otherwise it will not send!
+      this.dsmService.patchParticipantRecord( JSON.stringify( patch ) ).subscribe(// need to subscribe, otherwise it will not send!
         data => {
-          let result = Result.parse(data);
+          let result = Result.parse( data );
           if (result.code === 200) {
-            this.oncHistoryDetail[parameterName] = v;
+            this.oncHistoryDetail[ parameterName ] = v;
             if (result.body != null) {
-              let jsonData: any | any[] = JSON.parse(result.body);
+              let jsonData: any | any[] = JSON.parse( result.body );
               if (jsonData instanceof Array) {
-                jsonData.forEach((val) => {
-                  let nameValue = NameValue.parse(val);
-                  this.oncHistoryDetail[nameValue.name.substr(nameValue.name.indexOf(".") + 1)] = nameValue.value;
-                });
+                jsonData.forEach( ( val ) => {
+                  let nameValue = NameValue.parse( val );
+                  this.oncHistoryDetail[ nameValue.name.substr( nameValue.name.indexOf( "." ) + 1 ) ] = nameValue.value;
+                } );
               }
             }
           }
@@ -170,12 +171,12 @@ export class TissuePageComponent implements OnInit {
           this.setEditable();
         },
         err => {
-        }
+        },
       );
     }
   }
 
-  isCheckboxPatchedCurrently(field: string): string {
+  isCheckboxPatchedCurrently( field: string ): string {
     if (this.currentPatchField === field) {
       return "warn";
     }
@@ -188,15 +189,15 @@ export class TissuePageComponent implements OnInit {
     this.applyToAllModal.show();
   }
 
-  public doRequest(destructionPolicy) {
+  public doRequest( destructionPolicy ) {
     let data = {
       "facility": this.oncHistoryDetail.facility,
       "policy": destructionPolicy,
       "userId": this.role.userID(),
-      "userMail": this.role.userMail()
+      "userMail": this.role.userMail(),
     };
-    this.dsmService.applyDestructionPolicyToAll(localStorage.getItem(ComponentService.MENU_SELECTED_REALM), JSON.stringify(data)).subscribe(data => {
-        let result = Result.parse(data);
+    this.dsmService.applyDestructionPolicyToAll( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), JSON.stringify( data ) ).subscribe( data => {
+        let result = Result.parse( data );
         if (result.code == 200) {
           for (let oncHis of this.participant.oncHistoryDetails) {
             if (oncHis.facility === this.oncHistoryDetail.facility) {
@@ -216,7 +217,7 @@ export class TissuePageComponent implements OnInit {
         this._showWarningModal = true;
         this._warningMessage = this._warningUnsuccessfulMessage;
         this.applyToAllModal.show();
-      });
+      } );
 
   }
 
@@ -225,8 +226,10 @@ export class TissuePageComponent implements OnInit {
   }
 
   private setEditable() {
-    let b = this.oncHistoryDetail.request === "received" || this.oncHistoryDetail.request === "sent" || this.oncHistoryDetail.request === "returned";
-    this.editable = b;
+    if (this.oncHistoryDetail != null && this.oncHistoryDetail.request != null) {
+      let b = this.oncHistoryDetail.request === "received" || this.oncHistoryDetail.request === "sent" || this.oncHistoryDetail.request === "returned";
+      this.editable = b;
+    }
   }
 
   getRole(): RoleService {
