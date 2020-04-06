@@ -45,12 +45,12 @@ export class ParticipantColumn {
   public static MR_DOCUMENT_FILES = new ParticipantColumn("MR Document File Names", "mrDocumentFileNames", "m");
   public static MR_PROBLEM = new ParticipantColumn("MR Problem", "mrProblem", "m");
   public static MR_PROBLEM_TEXT = new ParticipantColumn("MR Problem Text", "mrProblemText", "m");
-  public static MR_UNABLE_TO_OBTAIN = new ParticipantColumn("Unable to Obtain", "unableObtain", "m");
+  public static MR_UNABLE_TO_OBTAIN = new ParticipantColumn("MR Unable to Obtain", "unableObtain", "m");
   public static MR_DUPLICATE = new ParticipantColumn("Duplicate", "duplicate", "m");
   public static MR_INTERNATIONAL = new ParticipantColumn("International", "international", "m");
   public static MR_PAPER_CR = new ParticipantColumn("Paper C/R required", "crRequired", "m");
   public static PATHOLOGY_RESENT = new ParticipantColumn("Pathology Present", "pathologyPresent", "m");
-  public static MR_NOTES = new ParticipantColumn("Notes", "mrNotes", "m");
+  public static MR_NOTES = new ParticipantColumn("MR Notes", "mrNotes", "m");
   public static MR_REVIEW = new ParticipantColumn("MR Review", "reviewMedicalRecord", "m");
   public static MR_FOLLOW_UP = new ParticipantColumn("Follow-Up ", "followUps", "m");
   public static MR_FOLLOW_REQUIRED = new ParticipantColumn("Follow-Up required", "followUpRequired", "m");
@@ -65,7 +65,7 @@ export class ParticipantColumn {
   public static FACILITY_FAX = new ParticipantColumn("Facility Fax", "fFax", "oD");
   public static HISTOLOGY = new ParticipantColumn("Histology", "histology", "oD");
   public static LOCATION_PX = new ParticipantColumn("Location of PX", "locationPX", "oD");
-  public static ONC_HISTORY_NOTES = new ParticipantColumn("Notes", "oncHisNotes", "oD");
+  public static ONC_HISTORY_NOTES = new ParticipantColumn("OncHistory Notes", "oncHisNotes", "oD");
   public static ONC_HISTORY_REQUEST = new ParticipantColumn("Request Status", "request", "oD");
   public static TISSUE_FAX = new ParticipantColumn("Tissue Request Date", "tFaxSent", "oD");
   public static TISSUE_FAX_2 = new ParticipantColumn("Tissue Request Date 2", "tFaxSent2", "oD");
@@ -78,7 +78,7 @@ export class ParticipantColumn {
 
   //tissue column
   public static COUNT_RECEIVED = new ParticipantColumn("Count Received", "countReceived", "t");
-  public static TISSUE_NOTES = new ParticipantColumn("Notes", "tNotes", "t");
+  public static TISSUE_NOTES = new ParticipantColumn("Tissue Notes", "tNotes", "t");
   public static TISSUE_TYPE = new ParticipantColumn("Tissue Type", "tissueType", "t");
   public static TISSUE_SITE = new ParticipantColumn("Tissue Site", "tissueSite", "t");
   public static TUMOR_TYPE = new ParticipantColumn("Tumor Type", "tumorType", "t");
