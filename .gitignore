@@ -44,11 +44,13 @@ server/config/staging-keystore
 server/config/prod-keystore
 server/config/prod-keystore2
 server/config/dev-gcloud-creds.json
+server/config/dev-gcloud-creds-sql.json
 server/config/test-gcloud-creds.json
 server/config/staging-gcloud-creds.json
 server/config/prod-gcloud-creds.json
 
 server/src/test/resources/output
+server/app-deploy
 
 client/src/assets/js/ddp_config.js
 
