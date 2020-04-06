@@ -486,7 +486,13 @@
                                 </ng-container>
                               </ng-container>
                               <ng-container
-                                *ngIf="col.type === 'DATE'">{{getUtil().getDateFormatted(tissue[col.participantColumn.name])}}
+                                *ngIf="col.type === 'DATE'">
+                                <ng-container *ngIf="tissue[col.participantColumn.name] === 'N/A'">
+                                  {{tissue[col.participantColumn.name]}}
+                                </ng-container>
+                                <ng-container *ngIf="tissue[col.participantColumn.name] !== 'N/A'">
+                                  {{getUtil().getDateFormatted(tissue[col.participantColumn.name])}}
+                                </ng-container>
                               </ng-container>
                               <ng-container
                                 *ngIf="col.type === 'OPTIONS'">{{getOptionDisplay(col.options, tissue[col.participantColumn.name])}}

@@ -225,8 +225,10 @@ export class TissuePageComponent implements OnInit {
   }
 
   private setEditable() {
-    let b = this.oncHistoryDetail.request === "received" || this.oncHistoryDetail.request === "sent" || this.oncHistoryDetail.request === "returned";
-    this.editable = b;
+    if (this.oncHistoryDetail != null && this.oncHistoryDetail.request != null) {
+      let b = this.oncHistoryDetail.request === "received" || this.oncHistoryDetail.request === "sent" || this.oncHistoryDetail.request === "returned";
+      this.editable = b;
+    }
   }
 
   getRole(): RoleService {
