@@ -87,7 +87,7 @@
       </td>
     </tr>
     <tr *ngIf="tissue.tissueType != null && tissue.tissueType === 'block' ">
-      <td class="TD--Padding">Expected return date</td>
+      <td class="TD--Padding">Expected Return Date</td>
       <td colspan="3">
         <app-field-datepicker [dateString]="tissue.expectedReturn"
                               [showNAButton]="true"
@@ -97,7 +97,7 @@
       </td>
     </tr>
     <tr *ngIf="tissue.tissueType!= null && tissue.tissueType ==='block' ">
-      <td class="TD--Padding">Return date</td>
+      <td class="TD--Padding">Return Date</td>
       <td colspan="3">
         <app-field-datepicker [dateString]="tissue.tissueReturnDate"
                               [allowFutureDate]="true"
