@@ -88,12 +88,8 @@
             <td>Date of Birth</td>
             <td>{{getUtil().getDateFormatted(participant.data.dsm['dateOfBirth'])}}</td>
           </tr>
-          <tr *ngIf="participant.data.dsm['dateOfMajority'] != null">
+          <tr *ngIf="participant.data.dsm != null && participant.data.dsm['dateOfMajority'] != null">
             <td>Date of Majority</td>
-            <td>{{getUtil().getDateFormatted(participant.data.dsm['dateOfMajority'])}}</td>
-          </tr>
-          <tr *ngIf="participant.data.dsm != null">
-            <td>Date Of Majority</td>
             <td>{{getUtil().getDateFormatted(participant.data.dsm['dateOfMajority'])}}</td>
           </tr>
           <tr>
@@ -263,7 +259,7 @@
           </tr>
           <ng-container *ngIf="showParticipantRecord">
             <tr>
-              <td>Paper C/R sent</td>
+              <td>Paper C/R Sent</td>
               <td>
                 <div class="Float--left">
                   <app-field-datepicker [dateString]="participant.participant.paperCRSent"
@@ -272,7 +268,7 @@
                                         (dateChanged)="valueChanged($event, 'paperCRSent', 'r')"></app-field-datepicker>
                 </div>
                 <div *ngIf="participant.participant.paperCRSent != null" class="Float--left Router--Outlet">Paper C/R
-                  received
+                  Received
                   <app-field-datepicker [dateString]="participant.participant.paperCRReceived"
                                         [disabled]="participantExited"
                                         [colorDuringPatch]="isPatchedCurrently('paperCRReceived')"
