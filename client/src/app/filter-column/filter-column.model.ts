@@ -86,7 +86,9 @@ export class Filter {
   public static MR_REVIEW = new Filter( ParticipantColumn.MR_REVIEW, Filter.OPTION_TYPE, [
     new NameValue( "yes", "Yes" ),
     new NameValue( "no", "No" ) ] );
-  public static MR_FOLLOW_UP = new Filter( ParticipantColumn.MR_FOLLOW_UP, Filter.CHECKBOX_TYPE );
+  // public static MR_FOLLOW_UP = new Filter( ParticipantColumn.MR_FOLLOW_UP, Filter.CHECKBOX_TYPE ); //TODO wrong Type
+  public static MR_FOLLOW_REQUIRED = new Filter( ParticipantColumn.MR_FOLLOW_REQUIRED, Filter.CHECKBOX_TYPE );
+  public static MR_FOLLOW_REQUIRED_TEXT = new Filter( ParticipantColumn.MR_FOLLOW_REQUIRED_TEXT, Filter.TEXT_TYPE );
 
   //oncHistory columns
   public static ACCESSION_NUMBER = new Filter( ParticipantColumn.ACCESSION_NUMBER, Filter.TEXT_TYPE );
@@ -208,7 +210,7 @@ export class Filter {
     Filter.MR_FAX_SENT, Filter.MR_FAX_SENT_2, Filter.MR_FAX_SENT_3, Filter.MR_RECEIVED,
     Filter.MR_DOCUMENT, Filter.MR_DOCUMENT_FILES, Filter.MR_PROBLEM, Filter.MR_PROBLEM_TEXT, Filter.MR_UNABLE_TO_OBTAIN,
     Filter.MR_DUPLICATE, Filter.MR_INTERNATIONAL, Filter.MR_PAPER_CR, Filter.PATHOLOGY_RESENT, Filter.MR_NOTES, Filter.MR_REVIEW,
-    Filter.MR_FOLLOW_UP,
+    Filter.MR_FOLLOW_REQUIRED, Filter.MR_FOLLOW_REQUIRED_TEXT,
     Filter.ACCESSION_NUMBER, Filter.DATE_PX, Filter.FACILITY, Filter.FACILITY_PHONE,
     Filter.FACILITY_FAX, Filter.HISTOLOGY, Filter.LOCATION_PX, Filter.ONC_HISTORY_NOTES,
     Filter.ONC_HISTORY_REQUEST, Filter.TISSUE_FAX, Filter.TISSUE_FAX_2, Filter.TISSUE_FAX_3,
