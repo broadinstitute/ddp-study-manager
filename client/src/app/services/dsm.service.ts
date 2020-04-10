@@ -111,8 +111,8 @@ export class DSMService {
   public applyFilter( json: ViewFilter, realm: string, parent: string, filterQuery: string ): Observable<any> {
     let viewFilterCopy = null;
     if (json != null) {
-      viewFilterCopy = json.copy();
       if (json != null && json.filters != null) {
+        viewFilterCopy = json.copy();
         for (let filter of json.filters) {
           if (filter.type === Filter.OPTION_TYPE) {
             filter.selectedOptions = filter.getSelectedOptionsName();
@@ -127,8 +127,6 @@ export class DSMService {
           }
         }
       }
-      console.log( json );
-      console.log( viewFilterCopy );
     }
     let url = this.baseUrl + DSMService.UI + "applyFilter";
     let userId = this.role.userID();
