@@ -9,7 +9,8 @@
                         [dateString]="dataFilter.value1" [allowUnknownDay]="true"
                         (dateChanged)="dateChange($event, 1)" [disabled]="!editable"></app-field-datepicker>
   <ng-container *ngIf="dataFilter.range">
-    <app-field-datepicker [allowFutureDate]="true" [showNAButton]="true" (dateChanged)="dateChange($event, 2)" [allowUnknownDay]="true"
+    <app-field-datepicker [allowFutureDate]="true" [showNAButton]="dataFilter.participantColumn.name === 'expectedReturn'"
+                          (dateChanged)="dateChange($event, 2)" [allowUnknownDay]="true"
                           [dateString]="dataFilter.value2" [disabled]="!editable"></app-field-datepicker>
   </ng-container>
 </ng-container>
