@@ -16,7 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.broadinstitute.ddp.BasicServer;
 import org.broadinstitute.ddp.db.TransactionWrapper;
-import org.broadinstitute.ddp.security.Auth0Util;
 import org.broadinstitute.ddp.security.CookieUtil;
 import org.broadinstitute.ddp.util.BasicTriggerListener;
 import org.broadinstitute.ddp.util.JsonTransformer;
@@ -205,8 +204,7 @@ public class DSMServer extends BasicServer {
         });
         setupDDPConfigurationLookup(cfg.getString(ApplicationConfigConstants.DDP));
 
-        AuthenticationRoute authenticationRoute = new AuthenticationRoute(auth0Util,
-                jwtSecret, cookieSalt, cookieName, userUtil, cfg.getString("portal.environment"));
+        AuthenticationRoute authenticationRoute = new AuthenticationRoute(auth0Util, jwtSecret, userUtil);
         post(UI_ROOT + RoutePath.AUTHENTICATION_REQUEST, authenticationRoute, new JsonTransformer());
 
         KitUtil kitUtil = new KitUtil();

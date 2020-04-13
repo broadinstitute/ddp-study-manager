@@ -1,15 +1,15 @@
 package org.broadinstitute.dsm.route;
 
+import com.auth0.jwt.interfaces.Claim;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.ddp.security.Auth0Util;
-import org.broadinstitute.ddp.security.CookieUtil;
 import org.broadinstitute.ddp.security.SecurityHelper;
 import org.broadinstitute.dsm.db.User;
 import org.broadinstitute.dsm.db.UserSettings;
+import org.broadinstitute.dsm.util.Auth0Util;
 import org.broadinstitute.dsm.util.UserUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +17,6 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 
-import javax.servlet.http.Cookie;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,22 +36,15 @@ public class AuthenticationRoute implements Route {
     private final Auth0Util auth0Util;
 
     private final String jwtSecret;
-    private final String cookieSalt;
-    private final String cookieName;
     private final UserUtil userUtil;
-    private final String environment;
 
-    public AuthenticationRoute(@NonNull Auth0Util auth0Util, @NonNull String jwtSecret, @NonNull String cookieSalt,
-                               @NonNull String cookieName, @NonNull UserUtil userUtil, String environment) {
-        if (StringUtils.isBlank(jwtSecret) || StringUtils.isBlank(cookieSalt) || StringUtils.isBlank(cookieName)) {
+    public AuthenticationRoute(@NonNull Auth0Util auth0Util, @NonNull String jwtSecret, @NonNull UserUtil userUtil) {
+        if (StringUtils.isBlank(jwtSecret)) {
             throw new RuntimeException("Browser security information is missing");
         }
         this.auth0Util = auth0Util;
         this.jwtSecret = jwtSecret;
-        this.cookieSalt = cookieSalt;
-        this.cookieName = cookieName;
         this.userUtil = userUtil;
-        this.environment = environment;
     }
 
     @Override
@@ -62,6 +54,9 @@ public class AuthenticationRoute implements Route {
         String auth0Token = jsonObject.get(payloadToken).getAsString();
         if (StringUtils.isNotBlank(auth0Token)) {
             // checking if Auth0 knows that token
+            Map<String, Claim> auth0Claims = auth0Util.verifyAndParseAuth0TokenClaims(auth0Token);
+            String auth0UserId = ((Claim) auth0Claims.get("sub")).asString();
+
             Auth0Util.Auth0UserInfo auth0UserInfo = auth0Util.getAuth0UserInfo(auth0Token);
             if (auth0UserInfo != null) {
                 String email = auth0UserInfo.getEmail();

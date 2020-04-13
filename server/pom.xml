@@ -59,7 +59,7 @@
         <dependency>
             <groupId>com.auth0</groupId>
             <artifactId>auth0</artifactId>
-            <version>1.2.0</version>
+            <version>1.14.3</version>
         </dependency>
 
         <!-- for mbc decryption -->
