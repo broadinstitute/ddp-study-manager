@@ -357,7 +357,7 @@ export class Filter {
     if (json.filters == undefined) {
       return null;
     }
-    console.log( json.filterName );
+    // console.log( json.filterName );
     let filters: Filter[] = [];
     for (let filter of json.filters) {
       if (allColumns[ filter.participantColumn.tableAlias ] != undefined) {
@@ -423,7 +423,7 @@ export class Filter {
       }
 
     }
-    console.log( filters );
+    // console.log( filters );
     return filters;
   }
 
@@ -562,7 +562,7 @@ export class Filter {
       "notEmpty": notEmpty,
       "participantColumn": participantColumn,
     };
-    console.log( filterText );
+    // console.log( filterText );
     return filterText;
   }
 

@@ -17,17 +17,40 @@
               <td class="Abstraction--Setup--TD Width--10">
                 <md-select class="Input--Min-WIDTH" placeholder="Field Type" [(ngModel)]="field.type" (change)="formChanged(field)" [disabled]="!field.newAdded">
                   <md-option value="button_select"> Button-Select</md-option>
-                  <md-option value="checkbox"> Checkbox</md-option>
-                  <md-option value="cancers"> Cancers</md-option>
-                  <md-option value="date"> Date</md-option>
-                  <md-option value="drugs"> Drugs</md-option>
-                  <md-option value="multi_options"> Multi-Select</md-option>
+                  <md-option value="checkbox">
+                    <md-icon>
+                      <i class="fas fa-check-square fa-sm"></i>
+                    </md-icon>
+                    Checkbox</md-option>
+                  <md-option value="cancers">
+                    <md-icon>
+                      <i class="fas fa-disease fa-sm"></i>
+                    </md-icon>Cancers</md-option>
+                  <md-option value="date">
+                    <md-icon>
+                      <i class="fas fa-calendar-alt fa-sm"></i>
+                    </md-icon>
+                    Date</md-option>
+                  <md-option value="drugs">
+                    <md-icon>
+                      <i class="fas fa-prescription-bottle fa-sm"></i>
+                    </md-icon>
+                    Drugs</md-option>
+                  <md-option value="multi_options">
+                    <md-icon>
+                      <i class="fas fa-list fa-sm"></i>
+                    </md-icon>
+                    Multi-Select</md-option>
                   <md-option value="textarea"> Multiline-Text</md-option>
                   <md-option value="multi_type"> Multi</md-option>
                   <md-option value="multi_type_array"> Multi-Array</md-option>
                   <md-option value="number"> Number</md-option>
                   <md-option value="options"> Select</md-option>
-                  <md-option value="text"> Text</md-option>
+                  <md-option value="text">
+                    <md-icon>
+                      <i class="fas fa-window-minimize fa-sm"></i>
+                    </md-icon>
+                    Text</md-option>
                 </md-select>
               </td>
               <td class="Abstraction--Setup--TD Width--70">
@@ -64,15 +87,37 @@
                     <md-select class="Input--Abstraction" placeholder="Field Type" [(ngModel)]="value.type" (change)="createMultiValue(value)"
                                [disabled]="!field.newAdded">
                       <md-option value="button_select"> Button-Select</md-option>
-                      <md-option value="checkbox"> Checkbox</md-option>
-                      <md-option value="cancers"> Cancers</md-option>
-                      <md-option value="date"> Date</md-option>
-                      <md-option value="drugs"> Drugs</md-option>
-                      <md-option value="multi_options"> Multi-Select</md-option>
+                      <md-option value="checkbox">
+                        <md-icon>
+                          <i class="fas fa-check-square fa-sm"></i>
+                        </md-icon>
+                        Checkbox</md-option>
+                      <md-option value="cancers">
+                        <md-icon>
+                          <i class="fas fa-disease fa-sm"></i>
+                        </md-icon>Cancers</md-option>
+                      <md-option value="date">
+                        <md-icon>
+                          <i class="fas fa-calendar-alt fa-sm"></i>
+                        </md-icon>
+                        Date</md-option>
+                      <md-option value="drugs">
+                        <md-icon>
+                          <i class="fas fa-prescription-bottle fa-sm"></i>
+                        </md-icon>Drugs</md-option>
+                      <md-option value="multi_options">
+                        <md-icon>
+                          <i class="fas fa-list fa-sm"></i>
+                        </md-icon>
+                        Multi-Select</md-option>
                       <md-option value="textarea"> Multiline-Text</md-option>
                       <md-option value="number"> Number</md-option>
                       <md-option value="options"> Select</md-option>
-                      <md-option value="text"> Text</md-option>
+                      <md-option value="text">
+                        <md-icon>
+                          <i class="fas fa-window-minimize fa-sm"></i>
+                        </md-icon>
+                        Text</md-option>
                     </md-select>
                     <ng-container *ngIf="value.type === 'cancers' || value.type === 'drugs'">
                       <md-select class="Input--Min-WIDTH" placeholder="Input Type" [(ngModel)]="value.type2" (change)="formChanged(field)" [disabled]="!field.newAdded">
@@ -128,17 +173,39 @@
 
             <md-select class="Input--Abstraction" placeholder="Field Type" [(ngModel)]="newType">
               <md-option value="button_select"> Button-Select</md-option>
-              <md-option value="checkbox"> Checkbox</md-option>
-              <md-option value="cancers"> Cancers</md-option>
-              <md-option value="date"> Date</md-option>
-              <md-option value="drugs"> Drugs</md-option>
-              <md-option value="multi_options"> Multi-Select</md-option>
+              <md-option value="checkbox">
+                <md-icon>
+                  <i class="fas fa-check-square fa-sm"></i>
+                </md-icon>
+                Checkbox</md-option>
+              <md-option value="cancers">
+                <md-icon>
+                  <i class="fas fa-disease fa-sm"></i>
+                </md-icon>Cancers</md-option>
+              <md-option value="date">
+                <md-icon>
+                  <i class="fas fa-calendar-alt fa-sm"></i>
+                </md-icon>
+                Date</md-option>
+              <md-option value="drugs">
+                <md-icon>
+                  <i class="fas fa-prescription-bottle fa-sm"></i>
+                </md-icon>Drugs</md-option>
+              <md-option value="multi_options">
+                <md-icon>
+                  <i class="fas fa-list fa-sm"></i>
+                </md-icon>
+                Multi-Select</md-option>
               <md-option value="textarea"> Multiline-Text</md-option>
               <md-option value="multi_type"> Multi</md-option>
               <md-option value="multi_type_array"> Multi-Array</md-option>
               <md-option value="number"> Number</md-option>
               <md-option value="options"> Select</md-option>
-              <md-option value="text"> Text</md-option>
+              <md-option value="text">
+                <md-icon>
+                  <i class="fas fa-window-minimize fa-sm"></i>
+                </md-icon>
+                Text</md-option>
             </md-select>
 
             <button md-mini-fab color="primary" tooltip="Add Field"

@@ -41,7 +41,7 @@
                   <div *ngFor="let answer of questionAnswer.answer; let i = index">
                     <div *ngFor="let cQ of qDef.childQuestions; let i = index" class="TD--Padding-Left-Bigger">
                       <b *ngIf="cQ.questionType === 'DATE' && answer[i] != null">
-                        {{getUtil().getNiceUserText(answer[i])}} DATE 2
+                        {{getUtil().getNiceUserText(answer[i])}}
                       </b>
                       <b *ngIf="cQ.questionType === 'PICKLIST' && answer[i] != null">
                         {{getUtil().getOptionText(cQ.options, answer[i])}}
