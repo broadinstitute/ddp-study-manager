@@ -320,7 +320,7 @@ export class ParticipantListComponent implements OnInit {
             }
           } );
           this.savedFilters.sort( ( a, b ) => a.filterName.localeCompare( b.filterName ) );
-          console.log(this.savedFilters);
+          // console.log(this.savedFilters);
         }
         if (jsonData.mrCoverPDF != null) {
           jsonData.mrCoverPDF.forEach( ( val ) => {
@@ -445,12 +445,12 @@ export class ParticipantListComponent implements OnInit {
     this.currentView = JSON.stringify( viewFilter );
     if (viewFilter != null) {
       this.filtered = true;
-      console.log(viewFilter.filters);
+      // console.log(viewFilter.filters);
     }
     else {
       this.filtered = false;
     }
-    console.log(viewFilter);
+    // console.log(viewFilter);
     this.dsmService.applyFilter( viewFilter, localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), this.parent, null ).subscribe(
       data => {
         if (data != null) {
@@ -562,7 +562,7 @@ export class ParticipantListComponent implements OnInit {
           }
         } );
         this.savedFilters.sort( ( f1, f2 ) => f1.filterName.localeCompare( f2.filterName ) );
-        console.log(this.savedFilters);
+        // console.log(this.savedFilters);
       },
       err => {
         this.showSavedFilters = false;
@@ -633,7 +633,7 @@ export class ParticipantListComponent implements OnInit {
         }
       }
     } );
-    console.log( this.savedFilters );
+    // console.log( this.savedFilters );
   }
 
   public setSelectedFilterName( filterName ) {
@@ -646,12 +646,12 @@ export class ParticipantListComponent implements OnInit {
       this.selectedColumns[ parent ] = [];
     }
     if (this.hasThisColumnSelected( this.selectedColumns[ parent ], column )) {
-      console.log( this.selectedColumns[ parent ] );
+      // console.log( this.selectedColumns[ parent ] );
       let f = this.selectedColumns[ parent ].find( f => {
         return f.participantColumn.tableAlias === column.participantColumn.tableAlias && f.participantColumn.name === column.participantColumn.name;
       } );
       let index = this.selectedColumns[ parent ].indexOf( f );
-      console.log( index );
+      // console.log( index );
       this.selectedColumns[ parent ].splice( index, 1 );
     }
     else {
@@ -742,7 +742,7 @@ export class ParticipantListComponent implements OnInit {
         this.createFilterJson( json, key );
       }
     );
-    console.log(json);
+    // console.log(json);
     //nothing to filter on the server
     if (json.length != 0) {
       this.filterQuery = null;
@@ -785,7 +785,7 @@ export class ParticipantListComponent implements OnInit {
           else {
             this.additionalMessage = "Something went wrong while filtering - List was not filtered!";
           }
-          console.log(this.savedFilters);
+          // console.log(this.savedFilters);
         },
         err => {
           this.loadingParticipants = null;
@@ -1398,7 +1398,7 @@ export class ParticipantListComponent implements OnInit {
                   let last = value.lastIndexOf( "\"" );
                   value = value.substring( first + 1, last );
                 }
-                console.log( filterText );
+                // console.log( filterText );
                 if (value != null && value !== "") {
                   this.copyParticipantList = this.copyParticipantList.filter( participant =>
                     participant.data !== null &&

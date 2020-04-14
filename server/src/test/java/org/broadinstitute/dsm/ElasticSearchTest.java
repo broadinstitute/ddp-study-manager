@@ -1,6 +1,5 @@
 package org.broadinstitute.dsm;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
@@ -21,7 +20,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.*;
 
 public class ElasticSearchTest extends TestHelper {
@@ -270,11 +268,20 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
-    public void searchPTByNotEmptyField() throws Exception {
+    public void searchPTByNotEmptyActivityField() throws Exception {
+        notEmptyActivity("participants_structured.cmi.cmi-brain", "SURGICAL_PROCEDURES", "POSTCONSENT");
+    }
+
+    @Test
+    public void searchPTByCompositeNotEmpty() throws Exception {
+        notEmptyActivity("participants_structured.cmi.angio", "PHYSICIAN", "ANGIORELEASE");
+    }
+
+    public void notEmptyActivity(String index, String stableId, String activityCode) throws Exception {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-brain");
+            SearchRequest searchRequest = new SearchRequest(index);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
@@ -282,11 +289,11 @@ public class ElasticSearchTest extends TestHelper {
                 BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
                 ExistsQueryBuilder existsQuery = new ExistsQueryBuilder("activities.questionsAnswers.answer");
                 activityAnswer.must(existsQuery);
-                activityAnswer.must(QueryBuilders.matchQuery("activities.questionsAnswers.stableId", "SURGICAL_PROCEDURES"));
+                activityAnswer.must(QueryBuilders.matchQuery("activities.questionsAnswers.stableId", stableId));
                 NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery("activities.questionsAnswers", activityAnswer, ScoreMode.Avg);
 
                 BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
-                queryBuilder.must(QueryBuilders.matchQuery("activities.activityCode", "POSTCONSENT").operator(Operator.AND));
+                queryBuilder.must(QueryBuilders.matchQuery("activities.activityCode", activityCode).operator(Operator.AND));
                 queryBuilder.must(queryActivityAnswer);
                 NestedQueryBuilder query = QueryBuilders.nestedQuery("activities", queryBuilder, ScoreMode.Avg);
 
@@ -304,27 +311,23 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
-    public void searchPTByCompositeNotEmpty() throws Exception {
+    public void searchNotEmptyCompletedAt() throws Exception {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.angio");
+            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-brain");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
             while (response == null || response.getHits().getHits().length != 0) {
+
                 BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
-                ExistsQueryBuilder existsQuery = new ExistsQueryBuilder("activities.questionsAnswers.answer");
+                ExistsQueryBuilder existsQuery = new ExistsQueryBuilder("activities.completedAt");
                 activityAnswer.must(existsQuery);
-                activityAnswer.must(QueryBuilders.matchQuery("activities.questionsAnswers.stableId", "PHYSICIAN"));
-                NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery("activities.questionsAnswers", activityAnswer, ScoreMode.Avg);
+                activityAnswer.must(QueryBuilders.matchQuery("activities.activityCode", "POSTCONSENT"));
+                NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery("activities", activityAnswer, ScoreMode.Avg);
 
-                BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
-                queryBuilder.must(QueryBuilders.matchQuery("activities.activityCode", "ANGIORELEASE").operator(Operator.AND));
-                queryBuilder.must(queryActivityAnswer);
-                NestedQueryBuilder query = QueryBuilders.nestedQuery("activities", queryBuilder, ScoreMode.Avg);
-
-                searchSourceBuilder.query(query);
+                searchSourceBuilder.query(queryActivityAnswer);
                 searchSourceBuilder.size(scrollSize);
                 searchSourceBuilder.from(i * scrollSize);
                 searchRequest.source(searchSourceBuilder);
@@ -359,32 +362,6 @@ public class ElasticSearchTest extends TestHelper {
                 NestedQueryBuilder query = QueryBuilders.nestedQuery("activities", queryBuilder, ScoreMode.Avg);
 
                 searchSourceBuilder.query(query);
-                searchSourceBuilder.size(scrollSize);
-                searchSourceBuilder.from(i * scrollSize);
-                searchRequest.source(searchSourceBuilder);
-
-                response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
-                i++;
-            }
-            Assert.assertNotEquals(0, esData.size());
-        }
-    }
-
-    @Test
-    public void searchPTByProfileData() throws Exception {
-        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
-            int scrollSize = 1000;
-            Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.angio");
-            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            SearchResponse response = null;
-            int i = 0;
-            while (response == null || response.getHits().getHits().length != 0) {
-                //                searchSourceBuilder.query(QueryBuilders.matchQuery("profile.hruid", "P694FH")); //works! (cmi-brain)
-                //                searchSourceBuilder.query(QueryBuilders.matchQuery("profile.firstName", "foo")); //works!
-                searchSourceBuilder.query(QueryBuilders.matchQuery("profile.guid", "DT1QLG4VTH4GIKPYTYRN")); //works!
-
                 searchSourceBuilder.size(scrollSize);
                 searchSourceBuilder.from(i * scrollSize);
                 searchRequest.source(searchSourceBuilder);
@@ -483,40 +460,33 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
+    public void searchPTByProfileData() throws Exception {
+//        searchProfileValue("participants_structured.cmi.angio", "profile.guid", "DT1QLG4VTH4GIKPYTYRN");
+//        searchProfileValue("participants_structured.cmi.cmi-brain", "profile.hruid", "P694FH");
+        searchProfileValue("participants_structured.cmi.cmi-osteo", "profile.hruid", "PPBNBN");
+//        searchProfileValue("participants_structured.cmi.angio", "profile.firstname", "foo");
+    }
+
+    @Test
     public void mbcLegacyPTGUID() throws Exception {
-        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
-            int scrollSize = 1000;
-            Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-mbc");
-            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            SearchResponse response = null;
-            int i = 0;
-            while (response == null || response.getHits().getHits().length != 0) {
-                searchSourceBuilder.query(QueryBuilders.matchQuery("profile.guid", "R0RR2K62F1D4JT2NUF0D")); //works!
-
-                searchSourceBuilder.size(scrollSize);
-                searchSourceBuilder.from(i * scrollSize);
-                searchRequest.source(searchSourceBuilder);
-
-                response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
-                i++;
-            }
-            Assert.assertNotEquals(0, esData.size());
-        }
+        searchProfileValue("participants_structured.cmi.cmi-mbc", "profile.guid", "R0RR2K62F1D4JT2NUF0D");
     }
 
     @Test
     public void mbcLegacyPTAltPID() throws Exception {
+        searchProfileValue("participants_structured.cmi.cmi-mbc", "profile.legacyAltPid", "8315_v3");
+    }
+
+    public void searchProfileValue(String index, String field, String value) throws Exception {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-mbc");
+            SearchRequest searchRequest = new SearchRequest(index);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
             while (response == null || response.getHits().getHits().length != 0) {
-                searchSourceBuilder.query(QueryBuilders.matchQuery("profile.legacyAltPid", "8315_v3")); //works!
+                searchSourceBuilder.query(QueryBuilders.matchQuery(field, value)); //works!
 
                 searchSourceBuilder.size(scrollSize);
                 searchSourceBuilder.from(i * scrollSize);

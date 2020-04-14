@@ -244,7 +244,28 @@ public class ElasticSearchUtil {
                             }
                         }
                         else {
-
+                            String[] surveyParam = nameValue[0].split("\\.");
+                            if ("createdAt".equals(surveyParam[1]) || "completedAt".equals(surveyParam[1]) || "lastUpdatedAt".equals(surveyParam[1])) {
+                                QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, surveyParam[1]);
+                                try {
+                                    long date = SystemUtil.getLongFromString(userEntered);
+                                    if (tmpBuilder != null) {
+                                        ((RangeQueryBuilder) tmpBuilder).gte(date);
+                                    }
+                                    else {
+                                        tmpBuilder = new BoolQueryBuilder();
+                                        ((BoolQueryBuilder) tmpBuilder).must(QueryBuilders.rangeQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1]).gte(date));
+                                        BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
+                                        activityAnswer.must(tmpBuilder);
+                                        activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + ACTIVITY_CODE, surveyParam[0]).operator(Operator.AND));
+                                        NestedQueryBuilder query = QueryBuilders.nestedQuery(ACTIVITIES, activityAnswer, ScoreMode.Avg);
+                                        finalQuery.must(query);
+                                    }
+                                }
+                                catch (ParseException e) {
+                                    logger.error("range was not date. user entered: " + userEntered);
+                                }
+                            }
                         }
                     }
                     else {
@@ -293,6 +314,28 @@ public class ElasticSearchUtil {
                             }
                         }
                         else {
+                            String[] surveyParam = nameValue[0].split("\\.");
+                            if ("createdAt".equals(surveyParam[1]) || "completedAt".equals(surveyParam[1]) || "lastUpdatedAt".equals(surveyParam[1])) {
+                                QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, surveyParam[1]);
+                                try {
+                                    long date = SystemUtil.getLongFromString(userEntered);
+                                    if (tmpBuilder != null) {
+                                        ((RangeQueryBuilder) tmpBuilder).gte(date);
+                                    }
+                                    else {
+                                        tmpBuilder = new BoolQueryBuilder();
+                                        ((BoolQueryBuilder) tmpBuilder).must(QueryBuilders.rangeQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1]).lte(date));
+                                        BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
+                                        activityAnswer.must(tmpBuilder);
+                                        activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + ACTIVITY_CODE, surveyParam[0]).operator(Operator.AND));
+                                        NestedQueryBuilder query = QueryBuilders.nestedQuery(ACTIVITIES, activityAnswer, ScoreMode.Avg);
+                                        finalQuery.must(query);
+                                    }
+                                }
+                                catch (ParseException e) {
+                                    logger.error("range was not date. user entered: " + userEntered);
+                                }
+                            }
                         }
                     }
                     else {
@@ -313,18 +356,27 @@ public class ElasticSearchUtil {
                         }
                         else {
                             String[] surveyParam = nameValue[0].split("\\.");
+                            if ("createdAt".equals(surveyParam[1]) || "completedAt".equals(surveyParam[1]) || "lastUpdatedAt".equals(surveyParam[1]) || "status".equals(surveyParam[1])) {
+                                BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
+                                ExistsQueryBuilder existsQuery = new ExistsQueryBuilder(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1]);
+                                activityAnswer.must(existsQuery);
+                                activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + ACTIVITY_CODE, surveyParam[0].trim()));
+                                NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery(ACTIVITIES, activityAnswer, ScoreMode.Avg);
+                                finalQuery.must(queryActivityAnswer);
+                            }
+                            else {
+                                BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
+                                ExistsQueryBuilder existsQuery = new ExistsQueryBuilder(ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
+                                activityAnswer.must(existsQuery);
+                                activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID, surveyParam[1].trim()));
+                                NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery(ACTIVITIES_QUESTIONS_ANSWER, activityAnswer, ScoreMode.Avg);
 
-                            BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
-                            ExistsQueryBuilder existsQuery = new ExistsQueryBuilder(ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
-                            activityAnswer.must(existsQuery);
-                            activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID, surveyParam[1].trim()));
-                            NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery(ACTIVITIES_QUESTIONS_ANSWER, activityAnswer, ScoreMode.Avg);
-
-                            BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
-                            queryBuilder.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + ACTIVITY_CODE, surveyParam[0].trim()).operator(Operator.AND));
-                            queryBuilder.must(queryActivityAnswer);
-                            NestedQueryBuilder query = QueryBuilders.nestedQuery(ACTIVITIES, queryBuilder, ScoreMode.Avg);
-                            finalQuery.must(query);
+                                BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
+                                queryBuilder.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + ACTIVITY_CODE, surveyParam[0].trim()).operator(Operator.AND));
+                                queryBuilder.must(queryActivityAnswer);
+                                NestedQueryBuilder query = QueryBuilders.nestedQuery(ACTIVITIES, queryBuilder, ScoreMode.Avg);
+                                finalQuery.must(query);
+                            }
                         }
                     }
                     else {
@@ -493,11 +545,11 @@ public class ElasticSearchUtil {
                         //set endDate to midnight of that date
                         String endDate = userEntered + " 23:59:59";
                         long end = SystemUtil.getLongFromDetailDateString(endDate);
-                        rangeQueryBuilder(finalQuery, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1], start, end, must);
+                        rangeQueryBuilder(queryBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1], start, end, must);
                     }
                     catch (ParseException e) {
                         //activity status
-                        valueQueryBuilder(finalQuery, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered, wildCard, must);
+                        valueQueryBuilder(queryBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered, wildCard, must);
                     }
                 }
                 else {
