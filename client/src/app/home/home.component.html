@@ -8,5 +8,9 @@
 </span>
 
 <span *ngIf="auth.authenticated()">
-  <h1>Welcome to the DDP Study Management System</h1>
+  <h1>Welcome to the DDP Study Manager</h1>
+  <span *ngIf="hasRole().hasNoPermissions()">
+    <h3 class="Color--primary">Please contact your DDP Study Manager Person to give you permissions to see things</h3>
+  </span>
 </span>
+
