@@ -7,8 +7,6 @@ import com.google.gson.JsonParser;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.security.SecurityHelper;
-import org.broadinstitute.dsm.db.User;
-import org.broadinstitute.dsm.db.UserSettings;
 import org.broadinstitute.dsm.util.Auth0Util;
 import org.broadinstitute.dsm.util.UserUtil;
 import org.slf4j.Logger;
@@ -17,8 +15,8 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class AuthenticationRoute implements Route {
@@ -63,21 +61,12 @@ public class AuthenticationRoute implements Route {
                 logger.info("User (" + email + ") was found ");
                 Gson gson = new Gson();
                 Map<String, String> claims = new HashMap<>();
-                User user = User.getUser(email);
-                if (user == null) {
-                    userUtil.insertUser(email, email);
-                    user = User.getUser(email);
-                    claims.put(userAccessRoles, "user needs roles and groups");
-                }
-                else {
-                    String userSetting = gson.toJson(userUtil.getUserAccessRoles(email), ArrayList.class);
-                    claims.put(userAccessRoles, userSetting);
-                    logger.info(userSetting);
-                    claims.put(userSettings, gson.toJson(UserSettings.getUserSettings(email), UserSettings.class));
-                }
-                claims.put(authUserId, user.getId());
-                claims.put(authUserName, user.getName());
-                claims.put(authUserEmail, email);
+//                    String userSetting = gson.toJson(userUtil.getUserAccessRoles(email), ArrayList.class);
+//                    claims.put(userSettings, gson.toJson(UserSettings.getUserSettings(email), UserSettings.class));
+                claims.put(authUserId, auth0UserInfo.getUserId());
+                claims.put(authUserEmail, auth0UserInfo.getEmail());
+                List<String> permissions = auth0Util.getUserPermissions(auth0UserInfo.getUserId(), auth0UserInfo.getEmail());
+                claims.put(userAccessRoles, gson.toJson(permissions, List.class));
 
                 long auth0Expiration = auth0UserInfo.getTokenExpiration();
                 int cookieAgeInSeconds = new Long(auth0Expiration - new Double(System.currentTimeMillis() / 1000d).intValue()).intValue();

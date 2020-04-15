@@ -2,11 +2,9 @@ package org.broadinstitute.dsm.util;
 
 import com.auth0.client.auth.AuthAPI;
 import com.auth0.client.mgmt.ManagementAPI;
-import com.auth0.client.mgmt.filter.UserFilter;
 import com.auth0.json.auth.TokenHolder;
 import com.auth0.json.mgmt.Permission;
 import com.auth0.json.mgmt.PermissionsPage;
-import com.auth0.json.mgmt.users.User;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -23,30 +21,27 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Auth0Util {
     private static final Logger logger = LoggerFactory.getLogger(Auth0Util.class);
     private byte[] decodedSecret;
     private final String account;
-    private final String ddpKey;
-    private final String ddpSecret;
     private final String mgtApiUrl;
     private AuthAPI ddpAuthApi;
     private AuthAPI mgtAuthApi;
-    private final List<String> connections;
-    private boolean emailVerificationRequired;
+    private ManagementAPI mgmtApi;
     private String audience;
     private String token;
     private Long expiresAt;
 
-    public Auth0Util(@NonNull String account, @NonNull List<String> connections, boolean secretEncoded, @NonNull String ddpKey, @NonNull String ddpSecret, @NonNull String mgtKey, @NonNull String mgtSecret, @NonNull String mgtApiUrl, boolean emailVerificationRequired, String audience) {
+    public Auth0Util(@NonNull String account, boolean secretEncoded, @NonNull String ddpKey, @NonNull String ddpSecret, @NonNull String mgtKey,
+                     @NonNull String mgtSecret, @NonNull String mgtApiUrl, String audience) {
         this.ddpAuthApi = null;
         this.mgtAuthApi = null;
         if (account == null) {
             throw new NullPointerException("account");
-        }
-        else if (connections == null) {
-            throw new NullPointerException("connections");
         }
         else if (ddpKey == null) {
             throw new NullPointerException("ddpKey");
@@ -64,22 +59,34 @@ public class Auth0Util {
             throw new NullPointerException("mgtApiUrl");
         }
         else {
-            this.ddpSecret = ddpSecret;
             byte[] tempSecret = ddpSecret.getBytes();
             if (secretEncoded) {
                 tempSecret = Base64.decodeBase64(ddpSecret);
             }
-
             this.decodedSecret = tempSecret;
             this.account = account;
-            this.ddpKey = ddpKey;
-            this.connections = connections;
             this.ddpAuthApi = new AuthAPI(account, ddpKey, ddpSecret);
             this.mgtAuthApi = new AuthAPI(account, mgtKey, mgtSecret);
-            this.mgtApiUrl = mgtApiUrl;
-            this.emailVerificationRequired = emailVerificationRequired;
             this.audience = audience;
+            this.mgtApiUrl = mgtApiUrl;
+            this.mgmtApi = this.configManagementApi();
         }
+    }
+
+    private ManagementAPI configManagementApi() {
+        TokenHolder tokenHolder = null;
+        try {
+            AuthRequest requestToken = this.mgtAuthApi.requestToken(this.mgtApiUrl);
+            tokenHolder = requestToken.execute();
+            if (tokenHolder.getAccessToken() == null) {
+                throw new RuntimeException("Unable to retrieve access token.");
+            }
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Unable to generate token using management client.", e);
+        }
+        String mgmtToken = tokenHolder.getAccessToken();
+        return new ManagementAPI(this.account, mgmtToken);
     }
 
     public Auth0Util.Auth0UserInfo getAuth0UserInfo(@NonNull String idToken) {
@@ -88,31 +95,13 @@ public class Auth0Util {
         }
         else {
             Map<String, Claim> auth0Claims = this.verifyAndParseAuth0TokenClaims(idToken);
-            Auth0Util.Auth0UserInfo userInfo = new Auth0Util.Auth0UserInfo(((Claim) auth0Claims.get("email")).asString(), ((Claim) auth0Claims.get("exp")).asInt());
-            this.getUserPermissions(((Claim) auth0Claims.get("sub")).asString(), userInfo.getEmail());
+            Auth0Util.Auth0UserInfo userInfo = new Auth0Util.Auth0UserInfo((auth0Claims.get("sub")).asString(), (auth0Claims.get("email")).asString(), (auth0Claims.get("exp")).asInt());
             return userInfo;
         }
     }
 
-    private ManagementAPI configManagementApi() {
-        TokenHolder tokenHolder = null;
-
-        try {
-            AuthRequest requestToken = this.mgtAuthApi.requestToken(this.mgtApiUrl);
-            tokenHolder = (TokenHolder) requestToken.execute();
-            if (tokenHolder.getAccessToken() == null) {
-                throw new RuntimeException("Unable to retrieve access token.");
-            }
-        }
-        catch (Exception var3) {
-            throw new RuntimeException("Unable to generate token using management client.", var3);
-        }
-
-        String mgmtToken = tokenHolder.getAccessToken();
-        return new ManagementAPI(this.account, mgmtToken);
-    }
-
-    public List<Permission>  getUserPermissions(@NonNull String userId, @NonNull String email) {
+    public List<String> getUserPermissions(@NonNull String userId, @NonNull String email) {
+        logger.info("Getting user permissions");
         if (userId == null) {
             throw new NullPointerException("userId");
         }
@@ -121,14 +110,20 @@ public class Auth0Util {
         }
         else {
             try {
-                ManagementAPI mgmtApi = this.configManagementApi();
-                Request<PermissionsPage> permissionsPageRequest = mgmtApi.users().listPermissions(userId, null);
+                if (this.mgmtApi == null) {
+                    this.mgmtApi = this.configManagementApi();
+                }
+                Request<PermissionsPage> permissionsPageRequest = this.mgmtApi.users().listPermissions(userId, null);
                 PermissionsPage permissionsPage = permissionsPageRequest.execute();
-                List<Permission> permissions = permissionsPage.getItems();
+                List<Permission> permissionsList = permissionsPage.getItems();
+                List<String> permissions = permissionsList.stream()
+                        .map(object -> Objects.toString(object.getName(), null))
+                        .collect(Collectors.toList());
+                logger.info("Returning user permissions");
                 return permissions;
             }
-            catch (Exception var6) {
-                throw new RuntimeException("User connection verification failed for user " + email, var6);
+            catch (Exception e) {
+                throw new RuntimeException("User connection verification failed for user " + email, e);
             }
         }
     }
@@ -143,13 +138,14 @@ public class Auth0Util {
             Map<String, Claim> auth0Claims = jwt.getClaims();
             return auth0Claims;
         }
-        catch (Exception var6) {
-            throw new RuntimeException("Could not verify auth0 token.", var6);
+        catch (Exception e) {
+            throw new RuntimeException("Could not verify auth0 token.", e);
         }
     }
 
     /**
      * Auth0 token for pepper communication
+     *
      * @return
      */
     public String getAccessToken() {
@@ -181,20 +177,29 @@ public class Auth0Util {
     }
 
     public static class Auth0UserInfo {
+        private String userId;
         private String email;
         private long expirationTime;
 
-        public Auth0UserInfo(@NonNull Object emailObj, @NonNull Object expirationTimeObj) {
-            if (emailObj == null) {
+        public Auth0UserInfo(@NonNull Object userObj, @NonNull Object emailObj, @NonNull Object expirationTimeObj) {
+            if (userObj == null) {
+                throw new NullPointerException("userObj");
+            }
+            else if (emailObj == null) {
                 throw new NullPointerException("emailObj");
             }
             else if (expirationTimeObj == null) {
                 throw new NullPointerException("expirationTimeObj");
             }
             else {
+                this.userId = userObj.toString();
                 this.email = emailObj.toString();
                 this.expirationTime = Long.parseLong(expirationTimeObj.toString());
             }
+        }
+
+        public String getUserId() {
+            return this.userId;
         }
 
         public String getEmail() {
