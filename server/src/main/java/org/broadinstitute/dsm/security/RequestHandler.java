@@ -12,11 +12,12 @@ public abstract class RequestHandler implements Route {
     public Object handle(Request request, Response response) throws Exception {
         //get the token if it is there
         String userId = SecurityUtil.getUserId(request);
+        String userMail = SecurityUtil.getUserMail(request);
         if (StringUtils.isNotBlank(userId)) {
-            return processRequest(request, response, userId);
+            return processRequest(request, response, userId, userMail);
         }
         throw new RuntimeException("Error user_id was missing from token");
     }
 
-    protected abstract Object processRequest(Request request, Response response, String userId) throws Exception;
+    protected abstract Object processRequest(Request request, Response response, String userId, String userMail) throws Exception;
 }

@@ -73,6 +73,10 @@ public class Auth0Util {
         }
     }
 
+    public ManagementAPI getMgmtApi() {
+        return mgmtApi;
+    }
+
     private ManagementAPI configManagementApi() {
         TokenHolder tokenHolder = null;
         try {

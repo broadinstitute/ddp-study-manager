@@ -161,8 +161,6 @@ public class DSMServer extends BasicServer {
         get(appRoute + RoutePath.CANCER_LIST_REQUEST, cancerRoute, new JsonTransformer());
         get(UI_ROOT + RoutePath.CANCER_LIST_REQUEST, cancerRoute, new JsonTransformer());
 
-        UserUtil userUtil = new UserUtil();
-
         auth0Util = new Auth0Util(cfg.getString(ApplicationConfigConstants.AUTH0_ACCOUNT),
                 cfg.getBoolean(ApplicationConfigConstants.AUTH0_IS_BASE_64_ENCODED),
                 cfg.getString(ApplicationConfigConstants.AUTH0_CLIENT_KEY),
@@ -171,6 +169,8 @@ public class DSMServer extends BasicServer {
                 cfg.getString(ApplicationConfigConstants.AUTH0_MGT_SECRET),
                 cfg.getString(ApplicationConfigConstants.AUTH0_MGT_API_URL),
                 cfg.getString(ApplicationConfigConstants.AUTH0_AUDIENCE));
+
+        UserUtil userUtil = new UserUtil(auth0Util.getMgmtApi());
 
         before("/info/" + RoutePath.PARTICIPANT_STATUS_REQUEST, (req, res) -> {
             String tokenFromHeader = Utility.getTokenFromHeader(req);
@@ -230,7 +230,7 @@ public class DSMServer extends BasicServer {
 
         setupShippingRoutes(notificationUtil, auth0Util, userUtil);
 
-        setupMedicalRecordRoutes(cfg, notificationUtil, patchUtil);
+        setupMedicalRecordRoutes(cfg, notificationUtil, patchUtil, auth0Util);
 
         setupMRAbstractionRoutes();
 
@@ -300,7 +300,7 @@ public class DSMServer extends BasicServer {
     }
 
     //Routes used by medical record
-    private void setupMedicalRecordRoutes(@NonNull Config cfg, @NonNull NotificationUtil notificationUtil, @NonNull PatchUtil patchUtil) {
+    private void setupMedicalRecordRoutes(@NonNull Config cfg, @NonNull NotificationUtil notificationUtil, @NonNull PatchUtil patchUtil, @NonNull Auth0Util auth0Util) {
         //Medical Record
         get(UI_ROOT + RoutePath.ASSIGNEE_REQUEST, new AssigneeRoute(), new JsonTransformer());
 
@@ -320,7 +320,7 @@ public class DSMServer extends BasicServer {
                 cfg.getString(ApplicationConfigConstants.GET_DDP_PARTICIPANT_ID),
                 cfg.getString(ApplicationConfigConstants.EMAIL_FRONTEND_URL_FOR_LINKS), notificationUtil), new JsonTransformer());
 
-        FilterRoute filterRoute = new FilterRoute(patchUtil);
+        FilterRoute filterRoute = new FilterRoute(patchUtil, auth0Util);
         patch(UI_ROOT + RoutePath.FILTER_LIST, filterRoute, new JsonTransformer());
         patch(UI_ROOT + RoutePath.FILTER_DEFAULT, filterRoute, new JsonTransformer());
 

@@ -15,6 +15,7 @@ import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
+import org.broadinstitute.dsm.util.Auth0Util;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.PatchUtil;
 import org.broadinstitute.dsm.util.UserUtil;
@@ -34,13 +35,15 @@ public class FilterRoute extends RequestHandler {
     public static final String TISSUE_LIST_PARENT = "tissueList";
 
     private PatchUtil patchUtil;
+    private Auth0Util auth0Util;
 
-    public FilterRoute(@NonNull PatchUtil patchUtil) {
+    public FilterRoute(@NonNull PatchUtil patchUtil, @NonNull Auth0Util auth0Util) {
         this.patchUtil = patchUtil;
+        this.auth0Util = auth0Util;
     }
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         if (patchUtil.getColumnNameMap() == null) {
             throw new RuntimeException("ColumnNameMap is null!");
         }
@@ -58,7 +61,9 @@ public class FilterRoute extends RequestHandler {
         else {
             throw new RuntimeException("No realm is sent!");
         }
-        if (UserUtil.checkUserAccess(realm, userId, "mr_view")) {
+        //        if (UserUtil.checkUserAccess(realm, userId, "mr_view")) {
+        List<String> permissions = auth0Util.getUserPermissions(userId, userMail);
+        if (permissions.contains("mr:view")) {
             String json = request.body();
             String userIdRequest = null;
             if (queryParams.value(UserUtil.USER_ID) != null) {
@@ -206,7 +211,6 @@ public class FilterRoute extends RequestHandler {
                 if (StringUtils.isBlank(parent)) {
                     throw new RuntimeException("No parent was sent in the request.");
                 }
-                String userMail = queryParams.get("userMail").value();
                 String filterName = queryParams.get("filterName").value();
                 return ViewFilter.setDefaultFilter(filterName, userMail, parent);
             }
@@ -230,7 +234,7 @@ public class FilterRoute extends RequestHandler {
                 requestForFiltering = ViewFilter.parseFilteringQuery(filterQuery, requestForFiltering);
             }
             filters = requestForFiltering.getFilters();
-            quickFilterName = requestForFiltering == null? null: requestForFiltering.getQuickFilterName();
+            quickFilterName = requestForFiltering == null ? null : requestForFiltering.getQuickFilterName();
         }
         else if (savedFilters != null) {
             filters = savedFilters;

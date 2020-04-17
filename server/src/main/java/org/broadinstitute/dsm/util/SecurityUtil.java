@@ -13,7 +13,6 @@ import org.apache.http.ssl.TrustStrategy;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import lombok.NonNull;
 import org.broadinstitute.ddp.security.SecurityHelper;
@@ -164,6 +163,18 @@ public class SecurityUtil {
         Map<String, Claim> claims = getClaims(request);
         if (claims != null && !claims.isEmpty() && claims.containsKey("USER_ID")) {
             Object userIdObj = claims.get("USER_ID").asString();
+            if (userIdObj != null) {
+                userId = (String) userIdObj;
+            }
+        }
+        return userId;
+    }
+
+    public static String getUserMail(@NonNull Request request) {
+        String userId = null;
+        Map<String, Claim> claims = getClaims(request);
+        if (claims != null && !claims.isEmpty() && claims.containsKey("USER_MAIL")) {
+            Object userIdObj = claims.get("USER_MAIL").asString();
             if (userIdObj != null) {
                 userId = (String) userIdObj;
             }

@@ -47,6 +47,7 @@ public class DashboardRoute extends RequestHandler {
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         try {
+
             if (UserUtil.checkUserAccess(null, userId, "kit_shipping") || UserUtil.checkUserAccess(null, userId, "kit_shipping_view")
                     || UserUtil.checkUserAccess(null, userId, "mr_view")) {
                 String userIdRequest = UserUtil.getUserId(request);
