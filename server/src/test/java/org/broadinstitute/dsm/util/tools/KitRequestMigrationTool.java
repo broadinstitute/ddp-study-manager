@@ -8,10 +8,10 @@ import com.typesafe.config.ConfigFactory;
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.KitRequestShipping;
-import org.broadinstitute.dsm.db.LatestKitRequest;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.util.DBTestUtil;
+import org.broadinstitute.dsm.util.DDPKitRequest;
 import org.broadinstitute.dsm.util.KitUtil;
 import org.broadinstitute.dsm.util.TestUtil;
 import org.broadinstitute.dsm.util.tools.util.DBUtil;
@@ -204,7 +204,7 @@ public class KitRequestMigrationTool {
                 try (PreparedStatement stmt = conn.prepareStatement(insertKitRequestQuery)) {
                     String ddpLabel = KitRequestShipping.generateDdpLabelID();
                     stmt.setString(1, realm);
-                    stmt.setString(2, LatestKitRequest.MIGRATED_KIT_REQUEST + KitRequestShipping.createRandom(20));
+                    stmt.setString(2, DDPKitRequest.MIGRATED_KIT_REQUEST + KitRequestShipping.createRandom(20));
                     stmt.setString(3, typeId);
                     stmt.setString(4, ddpParticipantId);
                     stmt.setString(5, bspCollaboratorParticipantId);
