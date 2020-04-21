@@ -71,7 +71,7 @@ public class FilterRoute extends RequestHandler {
             if (request.url().contains(RoutePath.APPLY_FILTER)) {
                 String filterQuery = queryParams.get("filterQuery").value();
                 if (filterQuery != null) {
-                    filterQuery = " " + ViewFilter.changeFieldsInQuery(filterQuery);
+                    filterQuery = " " + ViewFilter.changeFieldsInQuery(filterQuery, false);
                     if (StringUtils.isBlank(parent)) {
                         throw new RuntimeException("No parent was sent in the request.");
                     }
@@ -197,7 +197,7 @@ public class FilterRoute extends RequestHandler {
         if (json != null) {
             requestForFiltering = new Gson().fromJson(json, ViewFilter.class);
             if (requestForFiltering.getFilters() == null && StringUtils.isNotBlank(requestForFiltering.getFilterQuery())) {
-                filterQuery = ViewFilter.changeFieldsInQuery(requestForFiltering.getFilterQuery());
+                filterQuery = ViewFilter.changeFieldsInQuery(requestForFiltering.getFilterQuery(), false);
                 requestForFiltering = ViewFilter.parseFilteringQuery(filterQuery, requestForFiltering);
             }
             filters = requestForFiltering.getFilters();

@@ -191,7 +191,7 @@ public class ViewFilter {
             query = newQueryCondition;
         }
         else {
-            query = changeFieldsInQuery(viewFilter.getQueryItems());
+            query = changeFieldsInQuery(viewFilter.getQueryItems(), true);
         }
         StringBuilder columnsString = new StringBuilder();
         if (viewFilter.getColumnsToSave() != null) {
@@ -914,7 +914,7 @@ public class ViewFilter {
                     LocalDateTime today = LocalDateTime.now();     //Today
                     LocalDateTime tomorrow = today.plusDays(numberOfDays);
                     date = getDate(tomorrow);
-                    queryWords[i + 1] = "";
+                    queryWords[i + 1] = "";// today
                     queryWords[i + 2] = "";
                 }
                 queryWords[i] = "'" + date + "'";
@@ -924,7 +924,7 @@ public class ViewFilter {
         return String.join(" ", queryWords);
     }
 
-    public static String changeFieldsInQuery(String filterQuery) {
+    public static String changeFieldsInQuery(String filterQuery, boolean savingFilter) {
         String[] words = filterQuery.split("\\s+");
         for (int i = 0; i < words.length; i++) {
             String word = words[i];
@@ -946,7 +946,9 @@ public class ViewFilter {
         }
 
         String query = String.join(" ", words);
-        query = fixTodayInQuery(query);
+        if (!savingFilter) {
+            query = fixTodayInQuery(query);
+        }
         return query;
     }
 
