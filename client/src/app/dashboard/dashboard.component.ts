@@ -97,11 +97,11 @@ export class DashboardComponent implements OnInit {
     if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) != null) {
       this.allowedToSeeInformation = false;
       this.loadingDDPData = true;
-      this.ddp = null;
       if (version === Statics.MEDICALRECORD_DASHBOARD) {
         let jsonData: any[];
         this.dsmService.getRealmsAllowed( Statics.MEDICALRECORD ).subscribe(
           data => {
+            this.ddp = null;
             jsonData = data;
             jsonData.forEach( ( val ) => {
               if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) === val) {
