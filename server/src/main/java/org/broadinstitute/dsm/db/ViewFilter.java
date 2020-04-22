@@ -489,6 +489,7 @@ public class ViewFilter {
             Boolean exact = false;
             Boolean longWord = false;
             Boolean f2 = false;
+            Boolean f1 = false;
             NameValue filter2 = null;
             NameValue filter1 = null;
             String[] words = condition.split("(\\s+)");
@@ -528,6 +529,9 @@ public class ViewFilter {
                                 state = 4;
                                 if (word.equals(Filter.SMALLER_EQUALS_TRIMMED)) {
                                     f2 = true;
+                                }
+                                else {
+                                    f1 = true;
                                 }
                                 break;
                             }
@@ -805,7 +809,12 @@ public class ViewFilter {
                 }
                 filter.range = true;
                 if (StringUtils.isNotBlank(value)) {
-                    filter.filter2 = new NameValue(columnName, value);
+                    if (f1) {
+                        filter.filter1 = new NameValue(columnName, value);
+                    }
+                    else {
+                        filter.filter2 = new NameValue(columnName, value);
+                    }
                 }
                 filter.notEmpty = notEmpty;
                 filter.empty = empty;
@@ -828,14 +837,16 @@ public class ViewFilter {
                     filter.participantColumn = new ParticipantColumn(path, tableName);
                 }
                 if (!Filter.CHECKBOX.equals(type)) {
-                    if (!f2) {
+                    if (f1) {
                         filter.filter1 = new NameValue(columnName, value);
                     }
                     if (path != null && !f2) {
                         filter.filter2 = new NameValue(path, "");
                     }
                     if (f2) {
-                        filter.filter1 = new NameValue(columnName, null);
+                        if (filter.filter1 == null) {
+                            filter.filter1 = new NameValue(columnName, null);
+                        }
                         filter.filter2 = new NameValue(columnName, value);
                     }
                 }
