@@ -49,7 +49,7 @@ public class MedicalRecord {
     private final String medicalRecordId;
     private String institutionId;
     private String ddpInstitutionId;
-
+    private String ddpParticipantId;
 
     @TableName (
             name = DBConstants.DDP_INSTITUTION,
@@ -309,7 +309,7 @@ public class MedicalRecord {
                          String mrProblemText, boolean unableObtain, boolean duplicate, boolean international, boolean crRequired,
                          String pathologyPresent, String mrNotes, boolean reviewMedicalRecord,
                          FollowUp[] followUps, boolean followUpRequired, String followUpRequiredText, String additionalValues,
-                         String mrUnableToObtainText) {
+                         String mrUnableToObtainText, String ddpParticipantId) {
         this.medicalRecordId = medicalRecordId;
         this.institutionId = institutionId;
         this.ddpInstitutionId = ddpInstitutionId;
@@ -344,6 +344,7 @@ public class MedicalRecord {
         this.followUpRequiredText = followUpRequiredText;
         this.additionalValues = additionalValues;
         this.mrUnableToObtainText = mrUnableToObtainText;
+        this.ddpParticipantId = ddpParticipantId;
     }
 
     public static MedicalRecord getMedicalRecord(@NonNull ResultSet rs) throws SQLException {
@@ -381,7 +382,8 @@ public class MedicalRecord {
                 rs.getBoolean(DBConstants.FOLLOWUP_REQUIRED),
                 rs.getString(DBConstants.FOLLOWUP_REQUIRED_TEXT),
                 rs.getString(DBConstants.ADDITIONAL_VALUES),
-                rs.getString(DBConstants.MR_UNABLE_OBTAIN_TEXT)
+                rs.getString(DBConstants.MR_UNABLE_OBTAIN_TEXT),
+                rs.getString(DBConstants.DDP_PARTICIPANT_ID)
         );
         return medicalRecord;
     }
