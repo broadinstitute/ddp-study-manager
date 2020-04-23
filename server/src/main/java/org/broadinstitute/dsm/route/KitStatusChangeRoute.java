@@ -34,7 +34,7 @@ public class KitStatusChangeRoute extends RequestHandler {
     private static final Logger logger = LoggerFactory.getLogger(KitStatusChangeRoute.class);
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         if (UserUtil.checkUserAccess(null, userId, "kit_shipping") || UserUtil.checkUserAccess(null, userId, "kit_receiving")) {
             String requestBody = request.body();
             String userIdRequest = UserUtil.getUserId(request);

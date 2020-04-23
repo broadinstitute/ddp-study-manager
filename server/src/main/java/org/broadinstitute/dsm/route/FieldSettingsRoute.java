@@ -24,7 +24,7 @@ public class FieldSettingsRoute extends RequestHandler {
     private static final Logger logger = LoggerFactory.getLogger(FieldSettingsRoute.class);
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         String realm = request.params(RequestParameter.REALM);
         if (StringUtils.isNotBlank(realm)) {
             if (RoutePath.RequestMethod.GET.toString().equals(request.requestMethod())) {
@@ -32,7 +32,6 @@ public class FieldSettingsRoute extends RequestHandler {
                     return FieldSettings.getFieldSettings(realm);
                 }
                 else {
-                    response.status(500);
                     return new Result(500, UserErrorMessages.NO_RIGHTS);
                 }
             }
@@ -53,7 +52,6 @@ public class FieldSettingsRoute extends RequestHandler {
                     }
                 }
                 else {
-                    response.status(500);
                     return new Result(500, UserErrorMessages.NO_RIGHTS);
                 }
             }

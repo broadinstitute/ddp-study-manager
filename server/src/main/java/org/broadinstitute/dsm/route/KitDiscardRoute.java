@@ -42,7 +42,7 @@ public class KitDiscardRoute extends RequestHandler {
     }
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         QueryParamsMap queryParams = request.queryMap();
         String realm;
         if (queryParams.value(RoutePath.REALM) != null) {
@@ -57,7 +57,6 @@ public class KitDiscardRoute extends RequestHandler {
                 return KitDiscard.getExitedKits(realm);
             }
             else {
-                response.status(500);
                 return new Result(500, UserErrorMessages.NO_RIGHTS);
             }
         }

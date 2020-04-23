@@ -17,7 +17,7 @@ public class DrugListRoute extends RequestHandler {
     private static final Logger logger = LoggerFactory.getLogger(DrugListRoute.class);
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         if (RoutePath.RequestMethod.GET.toString().equals(request.requestMethod())) {
             return Drug.getDrugListALL();
         }

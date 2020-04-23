@@ -34,7 +34,7 @@ public class MedicalRecordLogRoute extends RequestHandler {
     private static final String SQL_UPDATE_MR_LOG = "UPDATE ddp_medical_record_log SET date = ?, comments = ?, last_changed = ? WHERE medical_record_log_id = ?";
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         if (UserUtil.checkUserAccess(null, userId, "mr_view")) {
             String medicalRecordId = request.params(RequestParameter.MEDICALRECORDID);
             if (StringUtils.isNotBlank(medicalRecordId)) {

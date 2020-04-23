@@ -19,7 +19,7 @@ public class KitRequestRoute extends RequestHandler {
     private static final Logger logger = LoggerFactory.getLogger(KitRequestRoute.class);
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         if (UserUtil.checkUserAccess(null, userId, "kit_shipping") || UserUtil.checkUserAccess(null, userId, "kit_shipping_view")) {
             logger.info("Getting list of kit requests");
             QueryParamsMap queryParams = request.queryMap();

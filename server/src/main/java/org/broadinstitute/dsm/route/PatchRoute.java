@@ -43,7 +43,7 @@ public class PatchRoute extends RequestHandler {
     }
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         if (patchUtil.getColumnNameMap() == null) {
             return new RuntimeException("ColumnNameMap is null!");
         }

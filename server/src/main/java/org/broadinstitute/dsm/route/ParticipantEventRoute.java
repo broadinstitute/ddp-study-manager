@@ -20,7 +20,7 @@ public class ParticipantEventRoute extends RequestHandler {
     private static final Logger logger = LoggerFactory.getLogger(ParticipantEventRoute.class);
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         String requestBody = request.body();
 
         String realm = request.params(RequestParameter.REALM);
@@ -29,7 +29,6 @@ public class ParticipantEventRoute extends RequestHandler {
                 return ParticipantEvent.getSkippedParticipantEvents(realm);
             }
             else {
-                response.status(500);
                 return new Result(500, UserErrorMessages.NO_RIGHTS);
             }
         }

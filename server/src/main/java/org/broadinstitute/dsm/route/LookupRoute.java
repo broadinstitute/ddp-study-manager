@@ -63,7 +63,7 @@ public class LookupRoute extends RequestHandler {
     private static final String SHORT_ID = "shortId";
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         QueryParamsMap queryParams = request.queryMap();
         String field = null;
         if (queryParams.value(RequestParameter.LOOKUP_FIELD) != null) {

@@ -33,7 +33,7 @@ public class NDIRoute extends RequestHandler {
     private static final String DAY = "Day";
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         if (UserUtil.checkUserAccess(null, userId, "ndi_download")) {
             HttpServletRequest rawRequest = request.raw();
             String content = SystemUtil.getBody(rawRequest);

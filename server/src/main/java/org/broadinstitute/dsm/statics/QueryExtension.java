@@ -29,8 +29,6 @@ public class QueryExtension {
 
     public static final String ORDER_PARTICIPANT = " order by par.participant_id, med.medical_record_id, oncDetail.onc_history_detail_id";
 
-    public static final String BY_USER_EMAIL = " AND user.email = ?";
-
     public static final String BY_USER_ID = " AND user.user_id = ?";
     public static final String ORDER_BY_KIT_TYPE_ID = " order by type.kit_type_id";
 

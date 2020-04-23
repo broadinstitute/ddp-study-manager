@@ -148,8 +148,8 @@ public class DSMServer extends BasicServer {
         }
 
         String jwtSecret = cfg.getString(ApplicationConfigConstants.BROWSER_JWT_SECRET);
-        String cookieSalt = cfg.getString(ApplicationConfigConstants.BROWSER_COOKIE_SALT);
-        String cookieName = cfg.getString(ApplicationConfigConstants.BROWSER_COOKIE_NAME);
+//        String cookieSalt = cfg.getString(ApplicationConfigConstants.BROWSER_COOKIE_SALT);
+//        String cookieName = cfg.getString(ApplicationConfigConstants.BROWSER_COOKIE_NAME);
         new SecurityUtil(jwtSecret);
 
         // path is: /app/drugs (this gets the list of display names)
@@ -170,7 +170,7 @@ public class DSMServer extends BasicServer {
                 cfg.getString(ApplicationConfigConstants.AUTH0_MGT_API_URL),
                 cfg.getString(ApplicationConfigConstants.AUTH0_AUDIENCE));
 
-        UserUtil userUtil = new UserUtil(auth0Util.getMgmtApi());
+        UserUtil userUtil = new UserUtil();
 
         before("/info/" + RoutePath.PARTICIPANT_STATUS_REQUEST, (req, res) -> {
             String tokenFromHeader = Utility.getTokenFromHeader(req);
@@ -184,6 +184,7 @@ public class DSMServer extends BasicServer {
         get("/info/" + RoutePath.PARTICIPANT_STATUS_REQUEST, new ParticipantStatusRoute(), new JsonNullTransformer());
 
         // requests from frontend
+        JWTRouteFilter jwtRouteFilter = new JWTRouteFilter(jwtSecret, null);
         before(UI_ROOT + "*", (req, res) -> {
             if (!"OPTIONS".equals(req.requestMethod())) {
                 if (!req.pathInfo().contains(RoutePath.AUTHENTICATION_REQUEST)) {
@@ -191,19 +192,22 @@ public class DSMServer extends BasicServer {
 
                     boolean isTokenValid = false;
                     if (StringUtils.isNotBlank(tokenFromHeader)) {
-                        isTokenValid = new CookieUtil().isCookieValid(req.cookie(cookieName), cookieSalt.getBytes(), tokenFromHeader, jwtSecret);
-                        isTokenValid = new JWTRouteFilter(jwtSecret, null).isAccessAllowed(req);
-
+//                        isTokenValid = new CookieUtil().isCookieValid(req.cookie(cookieName), cookieSalt.getBytes(), tokenFromHeader, jwtSecret);
+                        isTokenValid = jwtRouteFilter.isAccessAllowed(req);
                     }
                     if (!isTokenValid) {
                         halt(401, SecurityUtil.ResultType.AUTHENTICATION_ERROR.toString());
+                    }
+                    else {
+                        //update access if exp
+                        AuthenticationRoute.checkToken(req, jwtSecret, auth0Util, AuthenticationRoute.USER_ACCESS_ROLE, AuthenticationRoute.AUTH_USER_ID, AuthenticationRoute.AUTH_USER_MAIL);
                     }
                 }
             }
         });
         setupDDPConfigurationLookup(cfg.getString(ApplicationConfigConstants.DDP));
 
-        AuthenticationRoute authenticationRoute = new AuthenticationRoute(auth0Util, jwtSecret, userUtil);
+        AuthenticationRoute authenticationRoute = new AuthenticationRoute(auth0Util, jwtSecret);
         post(UI_ROOT + RoutePath.AUTHENTICATION_REQUEST, authenticationRoute, new JsonTransformer());
 
         KitUtil kitUtil = new KitUtil();
@@ -354,7 +358,7 @@ public class DSMServer extends BasicServer {
         get(UI_ROOT + RoutePath.FIELD_SETTINGS_ROUTE, fieldSettingsRoute, new JsonTransformer());
         patch(UI_ROOT + RoutePath.FIELD_SETTINGS_ROUTE, fieldSettingsRoute, new JsonTransformer());
 
-        get(UI_ROOT + RoutePath.DISPLAY_SETTINGS_ROUTE, new DisplaySettingsRoute(patchUtil), new JsonTransformer());
+        get(UI_ROOT + RoutePath.DISPLAY_SETTINGS_ROUTE, new DisplaySettingsRoute(patchUtil, auth0Util), new JsonTransformer());
     }
 
     private void setupMRAbstractionRoutes() {
@@ -398,7 +402,7 @@ public class DSMServer extends BasicServer {
         get(UI_ROOT + RoutePath.SAMPLE_REPORT_REQUEST, dashboardRoute, new JsonTransformer());
         get(UI_ROOT + RoutePath.SAMPLE_REPORT_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.START + RoutePath.ROUTE_SEPARATOR + RequestParameter.END, dashboardRoute, new JsonTransformer());
 
-        get(UI_ROOT + RoutePath.ALLOWED_REALMS_REQUEST, new AllowedRealmsRoute(), new JsonTransformer());
+        get(UI_ROOT + RoutePath.ALLOWED_REALMS_REQUEST, new AllowedRealmsRoute(auth0Util), new JsonTransformer());
 
         get(UI_ROOT + RoutePath.KIT_TYPES_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, new KitTypeRoute(kitUtil), new JsonTransformer());
 

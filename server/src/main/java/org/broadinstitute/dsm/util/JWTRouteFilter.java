@@ -5,13 +5,18 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.model.auth.Access;
+import org.broadinstitute.dsm.model.auth.AccessRole;
+import org.broadinstitute.dsm.route.AuthenticationRoute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -55,7 +60,6 @@ public class JWTRouteFilter {
         if (allowedRoles != null && !allowedRoles.isEmpty()) {
             this.expectedRoles.addAll(allowedRoles);
         }
-
     }
 
     /**

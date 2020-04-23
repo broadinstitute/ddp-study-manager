@@ -17,7 +17,7 @@ public class EventTypeRoute extends RequestHandler {
     private static final Logger logger = LoggerFactory.getLogger(EventTypeRoute.class);
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         String realm = request.params(RequestParameter.REALM);
         if (StringUtils.isNotBlank(realm)) {
             if (UserUtil.checkUserAccess(realm, userId, "participant_event")) {

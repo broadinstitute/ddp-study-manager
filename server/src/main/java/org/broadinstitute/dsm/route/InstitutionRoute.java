@@ -29,7 +29,7 @@ public class InstitutionRoute extends RequestHandler {
             "WHERE something.facility = ?)";
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         String requestBody = request.body();
         JSONObject jsonObject = new JSONObject(requestBody);
         String user = String.valueOf(jsonObject.get(RequestParameter.USER_ID));
@@ -67,7 +67,6 @@ public class InstitutionRoute extends RequestHandler {
             }
             if (UserUtil.checkUserAccess(null, userId, "mr_request")) {
                 String facility = String.valueOf(jsonObject.get(RequestParameter.FACILITY));
-                String userMail = String.valueOf(jsonObject.get(RequestParameter.USER_MAIL));
                 applyDestructionPolicy(userMail, facility, policy);
                 return new Result(200);
             }

@@ -43,7 +43,7 @@ public class TriggerSurveyRoute extends RequestHandler {
     private static final String NO_SURVEY_STATUS = "NO_SURVEY_STATUS";
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         if (request.requestMethod().equals(RoutePath.RequestMethod.GET.toString())) {
             String realm = request.params(RequestParameter.REALM);
             if (UserUtil.checkUserAccess(realm, userId, "survey_creation")) {
@@ -93,7 +93,6 @@ public class TriggerSurveyRoute extends RequestHandler {
                 }
             }
             else {
-                response.status(500);
                 return new Result(500, UserErrorMessages.NO_RIGHTS);
             }
         }
@@ -236,7 +235,6 @@ public class TriggerSurveyRoute extends RequestHandler {
                 }
             }
             else {
-                response.status(500);
                 return new Result(500, UserErrorMessages.NO_RIGHTS);
             }
         }

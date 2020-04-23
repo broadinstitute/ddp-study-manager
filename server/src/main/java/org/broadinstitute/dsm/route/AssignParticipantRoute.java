@@ -57,7 +57,7 @@ public class AssignParticipantRoute extends RequestHandler {
     }
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         String realm = RoutePath.getRealm(request);
         if (UserUtil.checkUserAccess(realm, userId, "mr_request")) {
             String requestBody = request.body();

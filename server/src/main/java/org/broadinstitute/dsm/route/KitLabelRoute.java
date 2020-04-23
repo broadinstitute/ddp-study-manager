@@ -17,7 +17,7 @@ import spark.Response;
 public class KitLabelRoute extends RequestHandler {
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         if (RoutePath.RequestMethod.GET.toString().equals(request.requestMethod())) {
             return new Result(200, String.valueOf(DBUtil.getBookmark(KitUtil.BOOKMARK_LABEL_CREATION_RUNNING)));
         }

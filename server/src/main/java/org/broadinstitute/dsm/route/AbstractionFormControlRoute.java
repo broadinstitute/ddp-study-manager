@@ -20,7 +20,7 @@ public class AbstractionFormControlRoute extends RequestHandler {
     private static final Logger logger = LoggerFactory.getLogger(AbstractionFormControlRoute.class);
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         QueryParamsMap queryParams = request.queryMap();
         String realm;
         if (queryParams.value(RoutePath.REALM) != null) {

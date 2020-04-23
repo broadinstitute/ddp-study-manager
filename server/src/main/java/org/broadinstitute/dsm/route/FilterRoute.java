@@ -62,8 +62,8 @@ public class FilterRoute extends RequestHandler {
             throw new RuntimeException("No realm is sent!");
         }
         //        if (UserUtil.checkUserAccess(realm, userId, "mr_view")) {
-        List<String> permissions = auth0Util.getUserPermissions(userId, userMail);
-        if (permissions.contains("mr:view")) {
+        List<String> permissions = auth0Util.getUserPermissions(userId, userMail, realm);
+        if (permissions != null && !permissions. isEmpty() && permissions.contains("mr:view")) {
             String json = request.body();
             String userIdRequest = null;
             if (queryParams.value(UserUtil.USER_ID) != null) {
@@ -217,7 +217,6 @@ public class FilterRoute extends RequestHandler {
             throw new RuntimeException("Path was not known");
         }
         else {
-            response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
         }
     }

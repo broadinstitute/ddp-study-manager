@@ -7,10 +7,7 @@ import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
-import org.broadinstitute.dsm.util.AbstractionUtil;
-import org.broadinstitute.dsm.util.ElasticSearchUtil;
-import org.broadinstitute.dsm.util.PatchUtil;
-import org.broadinstitute.dsm.util.UserUtil;
+import org.broadinstitute.dsm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.QueryParamsMap;
@@ -18,6 +15,7 @@ import spark.Request;
 import spark.Response;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class DisplaySettingsRoute extends RequestHandler {
@@ -25,13 +23,15 @@ public class DisplaySettingsRoute extends RequestHandler {
     private static final Logger logger = LoggerFactory.getLogger(DisplaySettingsRoute.class);
 
     private PatchUtil patchUtil;
+    private Auth0Util auth0Util;
 
-    public DisplaySettingsRoute(@NonNull PatchUtil patchUtil) {
+    public DisplaySettingsRoute(@NonNull PatchUtil patchUtil, @NonNull Auth0Util auth0Util) {
         this.patchUtil = patchUtil;
+        this.auth0Util = auth0Util;
     }
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         if (patchUtil.getColumnNameMap() == null) {
             throw new RuntimeException("ColumnNameMap is null!");
         }
@@ -49,7 +49,8 @@ public class DisplaySettingsRoute extends RequestHandler {
         if (!userId.equals(userIdRequest)) {
             throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
         }
-        if (UserUtil.checkUserAccess(realm, userId, "mr_view")) {
+        List<String> permissions = auth0Util.getUserPermissions(userId, userMail, realm);
+        if (permissions != null && !permissions. isEmpty() && permissions.contains("mr:view")) {
             String parent = queryParams.get("parent").value();
             if (StringUtils.isBlank(parent)) {
                 logger.error("Parent is empty");
@@ -77,7 +78,6 @@ public class DisplaySettingsRoute extends RequestHandler {
         }
         else {
             logger.warn(UserErrorMessages.NO_RIGHTS);
-            response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
         }
         logger.warn(UserErrorMessages.CONTACT_DEVELOPER);

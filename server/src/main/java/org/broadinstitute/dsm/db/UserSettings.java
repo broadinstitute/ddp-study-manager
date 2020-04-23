@@ -21,7 +21,7 @@ public class UserSettings {
     private static final Logger logger = LoggerFactory.getLogger(UserSettings.class);
 
     private static final String SQL_UPDATE_USER_SETTINGS = "UPDATE user_settings SET rows_on_page = ?, rows_set_0 = ?, rows_set_1 = ?, rows_set_2 = ?, date_format = ? WHERE user_id = ?";
-    private static final String SQL_SELECT_USER_SETTINGS = "SELECT rows_on_page, rows_set_0, rows_set_1, rows_set_2, date_format FROM user_settings settings, access_user user WHERE user.user_id = settings.user_id AND user.is_active = 1";
+    private static final String SQL_SELECT_USER_SETTINGS = "SELECT rows_on_page, rows_set_0, rows_set_1, rows_set_2, date_format FROM user_settings settings WHERE settings.user_id = ?";
     private static final String SQL_INSERT_USER_SETTINGS = "INSERT INTO user_settings SET user_id = ?";
 
     private static final String USER_ID = "userId";
@@ -73,11 +73,11 @@ public class UserSettings {
         }
     }
 
-    public static UserSettings getUserSettings(@NonNull String email) {
+    public static UserSettings getUserSettings(@NonNull String userId, @NonNull String userMail) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_USER_SETTINGS + QueryExtension.BY_USER_EMAIL)) {
-                stmt.setString(1, email);
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_USER_SETTINGS)) {
+                stmt.setString(1, userId);
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         dbVals.resultValue = new UserSettings(rs.getInt(DBConstants.ROWS_ON_PAGE),
@@ -87,6 +87,9 @@ public class UserSettings {
                                 rs.getString(DBConstants.DATE_FORMAT)
                         );
                     }
+                    else {
+                        insertUserSetting(conn, userId);
+                    }
                 }
             }
             catch (SQLException ex) {
@@ -95,16 +98,17 @@ public class UserSettings {
             return dbVals;
         });
         UserSettings us = (UserSettings) results.resultValue;
-        ;
-        us.defaultTissueFilter = ViewFilter.getDefaultFilterForUser(email, "tissueList");
-        us.defaultParticipantFilter = ViewFilter.getDefaultFilterForUser(email, "participantList");
-        logger.info("UserSettings for user w/ email " + email);
+        if(us != null) {
+            us.defaultTissueFilter = ViewFilter.getDefaultFilterForUser(userMail, "tissueList");
+            us.defaultParticipantFilter = ViewFilter.getDefaultFilterForUser(userMail, "participantList");
+        }
+        logger.info("UserSettings for user w/ email " + userMail);
         return us;
     }
 
-    public static void insertUserSetting(Connection conn, int userId) {
+    public static void insertUserSetting(@NonNull Connection conn, @NonNull String userId) {
         try (PreparedStatement insertKit = conn.prepareStatement(SQL_INSERT_USER_SETTINGS)) {
-            insertKit.setInt(1, userId);
+            insertKit.setString(1, userId);
             insertKit.executeUpdate();
         }
         catch (SQLException e) {

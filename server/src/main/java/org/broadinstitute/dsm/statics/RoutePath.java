@@ -50,7 +50,6 @@ public class RoutePath {
     public static final String ASSIGN_PARTICIPANT_REQUEST = "assignParticipant";
     public static final String INSTITUTION_REQUEST = "institutions";
     public static final String DOWNLOAD_PDF = "downloadPDF";
-    public static final String PDF_TYPE_REQUEST = "pdfs";
     public static final String PERMALINK_PARTICIPANT_REQUEST = "participant/" + RequestParameter.PARTICIPANTID;
     public static final String PERMALINK_INSTITUTION_REQUEST = "participant/" + RequestParameter.PARTICIPANTID + "/institution/" +RequestParameter.MEDICALRECORDID;
     public static final String MEDICAL_RECORD_LOG_REQUEST = "medicalRecord/" + RequestParameter.MEDICALRECORDID + "/log";
@@ -59,7 +58,6 @@ public class RoutePath {
     public static final String DASHBOARD_REQUEST = "ddpInformation";
     public static final String SAMPLE_REPORT_REQUEST = "sampleReport";
     public static final String LOOKUP = "lookup";
-    public static final String PARTICIPANT_MEDICAL_RECORD_REQUEST = "rawData/";
     public static final String MAILING_LIST_REQUEST = "mailingList";
     public static final String ALLOWED_REALMS_REQUEST = "realmsAllowed";
     public static final String KIT_TYPES_REQUEST = "kitTypes";
@@ -81,7 +79,6 @@ public class RoutePath {
     public static final String DISCARD_UPLOAD = "discardUpload";
     public static final String DISCARD_SHOW_UPLOAD = "showUpload";
     public static final String DISCARD_CONFIRM = "discardConfirm";
-    public static final String VIEWS = "views";
     public static final String PATCH = "patch";
     public static final String FILTER_LIST = "filterList";
     public static final String FILTER_DEFAULT = "defaultFilter";
@@ -90,7 +87,6 @@ public class RoutePath {
     public static final String GET_FILTERS = "getFilters";
     public static final String GET_PARSED_FILTERS = "getParsedFilters";
     public static final String GET_PARTICIPANT = "getParticipant";
-    public static final String TISSUE_LIST = "tissueList";
     public static final String NDI_REQUEST = "ndiRequest";
     public static final String ABSTRACTION_FORM_CONTROLS = "abstractionformcontrols";
     public static final String ABSTRACTION = "abstraction";

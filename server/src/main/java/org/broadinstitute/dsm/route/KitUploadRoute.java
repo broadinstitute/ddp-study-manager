@@ -63,7 +63,7 @@ public class KitUploadRoute extends RequestHandler {
     private static final String COUNTRY = "country";
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         QueryParamsMap queryParams = request.queryMap();
         String realm;
         if (queryParams.value(RoutePath.REALM) != null) {
@@ -176,7 +176,6 @@ public class KitUploadRoute extends RequestHandler {
             }
         }
         else {
-            response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
         }
     }

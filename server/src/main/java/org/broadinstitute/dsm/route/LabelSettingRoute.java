@@ -17,7 +17,7 @@ public class LabelSettingRoute extends RequestHandler {
     private static final Logger logger = LoggerFactory.getLogger(LabelSettingRoute.class);
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         if (RoutePath.RequestMethod.GET.toString().equals(request.requestMethod())) {
             if (UserUtil.checkUserAccess(null, userId, "kit_shipping") || UserUtil.checkUserAccess(null, userId, "kit_shipping_view")) {
                 return LabelSettings.getLabelSettings();
@@ -35,7 +35,6 @@ public class LabelSettingRoute extends RequestHandler {
                 return new Result(200);
             }
             else {
-                response.status(500);
                 return new Result(500, UserErrorMessages.NO_RIGHTS);
             }
         }

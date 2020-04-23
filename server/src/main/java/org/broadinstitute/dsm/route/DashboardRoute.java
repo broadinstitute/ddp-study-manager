@@ -45,7 +45,7 @@ public class DashboardRoute extends RequestHandler {
     }
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         try {
 
             if (UserUtil.checkUserAccess(null, userId, "kit_shipping") || UserUtil.checkUserAccess(null, userId, "kit_shipping_view")
@@ -99,7 +99,6 @@ public class DashboardRoute extends RequestHandler {
                 }
             }
             else {
-                response.status(500);
                 return new Result(500, UserErrorMessages.NO_RIGHTS);
             }
         }
@@ -107,7 +106,6 @@ public class DashboardRoute extends RequestHandler {
             logger.error("Couldn't get dashboard information ", e);
             return new Result(500, UserErrorMessages.CONTACT_DEVELOPER);
         }
-        //        return new Result(500, UserErrorMessages.CONTACT_DEVELOPER);
     }
 
 

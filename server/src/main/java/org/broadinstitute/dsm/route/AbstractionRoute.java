@@ -23,7 +23,7 @@ import java.util.Set;
 public class AbstractionRoute extends RequestHandler {
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         String requestBody = request.body();
         if (StringUtils.isNotBlank(requestBody)) {
             JSONObject jsonObject = new JSONObject(requestBody);

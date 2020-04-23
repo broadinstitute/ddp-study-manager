@@ -44,7 +44,7 @@ public class KitExpressRoute extends RequestHandler {
     }
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         if (UserUtil.checkUserAccess(null, userId, "kit_express")) {
             String kitRequestId = request.params(RequestParameter.KITREQUESTID);
             if (StringUtils.isNotBlank(kitRequestId)) {

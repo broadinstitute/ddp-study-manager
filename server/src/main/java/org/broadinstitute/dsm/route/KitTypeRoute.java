@@ -21,7 +21,7 @@ public class KitTypeRoute extends RequestHandler {
     }
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         String realm = request.params(RequestParameter.REALM);
         if (UserUtil.checkUserAccess(realm, userId, "kit_shipping") || UserUtil.checkUserAccess(realm, userId, "kit_shipping_view")) {
             if (StringUtils.isNotBlank(realm)) {
@@ -33,7 +33,6 @@ public class KitTypeRoute extends RequestHandler {
             }
         }
         else {
-            response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
         }
         throw new RuntimeException("Realm is missing");

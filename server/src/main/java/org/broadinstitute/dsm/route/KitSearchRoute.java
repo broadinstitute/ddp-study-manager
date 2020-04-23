@@ -17,7 +17,7 @@ public class KitSearchRoute extends RequestHandler {
     public static final String SEARCH_VALUE = "value";
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         if (UserUtil.checkUserAccess(null, userId, "kit_shipping") || UserUtil.checkUserAccess(null, userId, "kit_shipping_view")) {
             QueryParamsMap queryParams = request.queryMap();
             String field = null;
@@ -38,7 +38,6 @@ public class KitSearchRoute extends RequestHandler {
             return KitRequestShipping.findKitRequest(field, value, realms);
         }
         else {
-            response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
         }
     }

@@ -62,7 +62,7 @@ public class DownloadPDFRoute extends RequestHandler {
     private static final String JSON_END_DATE = "endDate";
 
     @Override
-    public Object processRequest(Request request, Response response, String userId) throws Exception {
+    public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         if (request.url().contains(RoutePath.DOWNLOAD_PDF)) {
             String realm = null;
             QueryParamsMap queryParams = request.queryMap();
@@ -124,7 +124,6 @@ public class DownloadPDFRoute extends RequestHandler {
                 }
             }
             else {
-                response.status(500);
                 return new Result(500, UserErrorMessages.NO_RIGHTS);
             }
         }
@@ -158,7 +157,6 @@ public class DownloadPDFRoute extends RequestHandler {
                 }
             }
             else {
-                response.status(500);
                 return new Result(500, UserErrorMessages.NO_RIGHTS);
             }
         }
