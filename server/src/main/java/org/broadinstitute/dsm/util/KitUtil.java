@@ -144,7 +144,7 @@ public class KitUtil {
                         KitRequestShipping.updateRequest(kitLabelTriggered, ddpParticipant, kitLabelTriggered.getKitTyp(), kitLabelTriggered.getKitRequestSettings());
                     }
                     else {
-                        throw new RuntimeException("Didn't find participant " + kitLabelTriggered.getDdpParticipantId());
+                        logger.error("Didn't find participant " + kitLabelTriggered.getDdpParticipantId());
                     }
                 }
                 else {
