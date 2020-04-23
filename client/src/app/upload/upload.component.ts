@@ -60,24 +60,7 @@ export class UploadComponent implements OnInit {
   private checkRight() {
     this.allowedToSeeInformation = false;
     this.additionalMessage = null;
-    let jsonData: any[];
-    this.dsmService.getRealmsAllowed( Statics.SHIPPING ).subscribe(
-      data => {
-        jsonData = data;
-        jsonData.forEach( ( val ) => {
-          if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) === val) {
-            this.allowedToSeeInformation = true;
-            this.getPossibleKitType();
-          }
-        } );
-        if (!this.allowedToSeeInformation) {
-          this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
-        }
-      },
-      err => {
-        return null;
-      }
-    );
+    this.getPossibleKitType();
   }
 
   ngOnInit() {
@@ -96,12 +79,21 @@ export class UploadComponent implements OnInit {
       let jsonData: any[];
       this.dsmService.getKitTypes( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) ).subscribe(
         data => {
-          this.kitTypes = [];
-          jsonData = data;
-          jsonData.forEach( ( val ) => {
-            let kitType = KitType.parse( val );
-            this.kitTypes.push( kitType );
-          } );
+          let result = Result.parse( data );
+          if (result.code === 500) {
+            this.allowedToSeeInformation = false;
+            this.errorMessage = "";
+            this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
+          }
+          else {
+            this.allowedToSeeInformation = true;
+            this.kitTypes = [];
+            jsonData = data;
+            jsonData.forEach( ( val ) => {
+              let kitType = KitType.parse( val );
+              this.kitTypes.push( kitType );
+            } );
+          }
           // console.info(`${this.kitTypes.length} kit types received: ${JSON.stringify(data, null, 2)}`);
           this.loading = false;
         },
@@ -213,12 +205,12 @@ export class UploadComponent implements OnInit {
     let array: UploadParticipant[] = [];
     for (let i = this.duplicateParticipants.length - 1; i >= 0; i--) {
       if (this.duplicateParticipants[ i ].selected) {
-        array.push(this.duplicateParticipants[i]);
+        array.push( this.duplicateParticipants[ i ] );
       }
     }
     for (let i = this.specialKits.length - 1; i >= 0; i--) {
       if (this.specialKits[ i ].selected) {
-        array.push(this.specialKits[i]);
+        array.push( this.specialKits[ i ] );
       }
     }
     let jsonParticipants = JSON.stringify( array );

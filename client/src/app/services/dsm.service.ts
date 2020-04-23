@@ -358,12 +358,9 @@ export class DSMService {
     return this.http.get( url, this.buildHeader() ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }
 
-  public getRealmsAllowed( menu: string ): Observable<any> {
+  public getRealmsAllowed(): Observable<any> {
     let url = this.baseUrl + DSMService.UI + "realmsAllowed";
     let map: { name: string, value: any }[] = [];
-    if (menu != null) {
-      map.push( {name: "menu", value: menu} );
-    }
     map.push( {name: "userId", value: this.role.userID()} );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
   }

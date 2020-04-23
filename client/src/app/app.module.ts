@@ -62,16 +62,10 @@ import {UploadComponent} from "./upload/upload.component";
 import {ParticipantExitComponent} from "./participant-exit/participant-exit.component";
 import {ParticipantExitSortPipe} from "./pipe/participant-exit-sort.pipe";
 import {UserSettingComponent} from "./user-setting/user-setting.component";
-import {EmailEventComponent} from "./email-event/email-event.component";
-import {EelSettingComponent} from "./eel-setting/eel-setting.component";
-import {EelSettingSortPipe} from "./pipe/eel-setting-sort.pipe";
 import {Statics} from "./utils/statics";
 import {ScanValueComponent} from "./scan-value/scan-value.component";
 import {BannerComponent} from "./banner/banner.component";
 import {FieldDatepickerComponent} from "./field-datepicker/field-datepicker.component";
-import {EmailTemplateSortPipe} from "./pipe/email-template-sort.pipe";
-import {EmailEventSortPipe} from "./pipe/email-event-sort.pipe";
-import {EmailEmailSortPipe} from "./pipe/email-email-sort.pipe";
 import {OncHistoryDetailComponent} from "./onc-history-detail/onc-history-detail.component";
 import {TissuePageComponent} from "./tissue-page/tissue-page.component";
 import {TissueComponent} from "./tissue/tissue.component";
@@ -129,8 +123,6 @@ import {FieldSettingsComponent} from "./field-settings/field-settings.component"
     UploadComponent,
     ParticipantExitComponent,
     UserSettingComponent,
-    EmailEventComponent,
-    EelSettingComponent,
     ScanValueComponent,
     BannerComponent,
     FieldDatepickerComponent,
@@ -150,10 +142,6 @@ import {FieldSettingsComponent} from "./field-settings/field-settings.component"
     KitRequestSortPipe,
     KitRequestFilterPipe,
     ParticipantExitSortPipe,
-    EelSettingSortPipe,
-    EmailEventSortPipe,
-    EmailEmailSortPipe,
-    EmailTemplateSortPipe,
     OncHistoryDetailSortPipe,
     ButtonSelectTitleCasePipe,
     OrdinalPipe,

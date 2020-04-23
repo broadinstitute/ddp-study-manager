@@ -4,14 +4,15 @@ import {ComponentService} from "../services/component.service";
 import {DSMService} from "../services/dsm.service";
 import {Auth} from "../services/auth.service";
 import {RoleService} from "../services/role.service";
+import {Result} from "../utils/result.model";
 import {Statics} from "../utils/statics";
 import {DiscardSample} from "./discard-sample.model";
 
-@Component({
-  selector: 'app-discard-sample',
-  templateUrl: './discard-sample.component.html',
-  styleUrls: ['./discard-sample.component.css']
-})
+@Component( {
+  selector: "app-discard-sample",
+  templateUrl: "./discard-sample.component.html",
+  styleUrls: [ "./discard-sample.component.css" ]
+} )
 export class DiscardSampleComponent implements OnInit {
 
   errorMessage: string;
@@ -23,59 +24,42 @@ export class DiscardSampleComponent implements OnInit {
 
   samples: Array<DiscardSample> = [];
 
-  constructor(private dsmService: DSMService, private auth: Auth, private router: Router, private role: RoleService,
-              private compService: ComponentService, private route: ActivatedRoute) {
+  constructor( private dsmService: DSMService, private auth: Auth, private router: Router, private role: RoleService,
+               private compService: ComponentService, private route: ActivatedRoute ) {
     if (!auth.authenticated()) {
       auth.logout();
     }
-    this.route.queryParams.subscribe(params => {
-      this.realm = params[DSMService.REALM] || null;
+    this.route.queryParams.subscribe( params => {
+      this.realm = params[ DSMService.REALM ] || null;
       if (this.realm != null) {
         //        this.compService.realmMenu = this.realm;
         this.checkRight();
       }
-    });
+    } );
   }
 
   private checkRight() {
     this.allowedToSeeInformation = false;
     this.additionalMessage = null;
     this.samples = [];
-    let jsonData: any[];
-    this.dsmService.getRealmsAllowed(Statics.DISCARD_SAMPLES).subscribe(
-      data => {
-        jsonData = data;
-        jsonData.forEach((val) => {
-          if (this.realm === val) {
-            this.allowedToSeeInformation = true;
-            this.getSamples();
-          }
-        });
-        if (!this.allowedToSeeInformation) {
-          this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
-        }
-      },
-      err => {
-        return null;
-      }
-    );
+    this.getSamples();
   }
 
   ngOnInit() {
-    if (localStorage.getItem(ComponentService.MENU_SELECTED_REALM) != null) {
-      this.realm = localStorage.getItem(ComponentService.MENU_SELECTED_REALM);
+    if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) != null) {
+      this.realm = localStorage.getItem( ComponentService.MENU_SELECTED_REALM );
       this.checkRight();
     }
     else {
       this.additionalMessage = "Please select a realm";
     }
-    window.scrollTo(0,0);
+    window.scrollTo( 0, 0 );
   }
 
-  openSample(sample: DiscardSample) {
+  openSample( sample: DiscardSample ) {
     if (sample != null && sample.receivedDate != 0 && sample.action !== "hold") {
       this.compService.discardSample = sample;
-      this.router.navigate(["/discardSample"]);
+      this.router.navigate( [ "/discardSample" ] );
     }
   }
 
@@ -85,15 +69,24 @@ export class DiscardSampleComponent implements OnInit {
       this.additionalMessage = null;
       this.loading = true;
       let jsonData: any[];
-      this.dsmService.getKitExitedParticipants(this.realm).subscribe(
+      this.dsmService.getKitExitedParticipants( this.realm ).subscribe(
         data => {
-          this.samples = [];
-          // console.info(`received: ${JSON.stringify(data, null, 2)}`);
-          jsonData = data;
-          jsonData.forEach((val) => {
-            let sample = DiscardSample.parse(val);
-            this.samples.push(sample);
-          });
+          let result = Result.parse( data );
+          if (result.code === 500) {
+            this.allowedToSeeInformation = false;
+            this.errorMessage = "";
+            this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
+          }
+          else {
+            this.allowedToSeeInformation = true;
+            this.samples = [];
+            // console.info(`received: ${JSON.stringify(data, null, 2)}`);
+            jsonData = data;
+            jsonData.forEach( ( val ) => {
+              let sample = DiscardSample.parse( val );
+              this.samples.push( sample );
+            } );
+          }
           this.loading = false;
         },
         err => {
@@ -111,19 +104,19 @@ export class DiscardSampleComponent implements OnInit {
     return this.role;
   }
 
-  triggerAction(index: number) {
+  triggerAction( index: number ) {
     if (this.realm != null) {
       this.errorMessage = null;
       this.additionalMessage = null;
       this.loading = true;
       let payload = {
-        'kitRequestId': this.samples[index].kitRequestId,
-        'kitDiscardId': this.samples[index].kitDiscardId,
-        'action': this.samples[index].action
+        "kitRequestId": this.samples[ index ].kitRequestId,
+        "kitDiscardId": this.samples[ index ].kitDiscardId,
+        "action": this.samples[ index ].action
       };
-      this.dsmService.setKitDiscardAction(this.realm, JSON.stringify(payload)).subscribe(
+      this.dsmService.setKitDiscardAction( this.realm, JSON.stringify( payload ) ).subscribe(
         data => {
-          console.info(`received: ${JSON.stringify(data, null, 2)}`);
+          console.info( `received: ${JSON.stringify( data, null, 2 )}` );
           this.getSamples();
         },
         err => {

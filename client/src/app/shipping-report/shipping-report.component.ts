@@ -1,56 +1,69 @@
-import { Component, OnInit } from '@angular/core';
-import { Utils } from "../utils/utils";
-import { Auth } from "../services/auth.service";
-import { DSMService } from "../services/dsm.service";
-import { ShippingReport } from "./shipping-report.model";
+import {Component, OnInit} from "@angular/core";
+import {Utils} from "../utils/utils";
+import {Auth} from "../services/auth.service";
+import {DSMService} from "../services/dsm.service";
+import {ShippingReport} from "./shipping-report.model";
 import {KitType} from "../utils/kit-type.model";
 import {Result} from "../utils/result.model";
 import {Statics} from "../utils/statics";
 
-@Component({
-  selector: 'app-shipping-report',
-  templateUrl: './shipping-report.component.html',
-  styleUrls: ['./shipping-report.component.css']
-})
+@Component( {
+  selector: "app-shipping-report",
+  templateUrl: "./shipping-report.component.html",
+  styleUrls: [ "./shipping-report.component.css" ]
+} )
 export class ShippingReportComponent implements OnInit {
 
   errorMessage: string;
+  additionalMessage: string;
+  allowedToSeeInformation: boolean = false;
   loadingReport: boolean = false;
   startDate: string;
   endDate: string;
   reportData: any[];
 
-  constructor(private dsmService: DSMService, private auth: Auth) {
+  constructor( private dsmService: DSMService, private auth: Auth ) {
     if (!auth.authenticated()) {
       auth.logout();
     }
   }
 
   ngOnInit() {
+    this.additionalMessage = "";
+    this.errorMessage = "";
     let start = new Date();
-    start.setDate(start.getDate() - 7);
-    this.startDate = Utils.getFormattedDate(start);
+    start.setDate( start.getDate() - 7 );
+    this.startDate = Utils.getFormattedDate( start );
     let end = new Date();
-    this.endDate = Utils.getFormattedDate(end);
-    this.reload()
+    this.endDate = Utils.getFormattedDate( end );
+    this.reload();
   }
 
-  private loadReport(startDate: string, endDate: string) {
+  private loadReport( startDate: string, endDate: string ) {
     this.loadingReport = true;
     let jsonData: any[];
-    this.dsmService.getShippingReport(startDate, endDate).subscribe(
+    this.dsmService.getShippingReport( startDate, endDate ).subscribe(
       data => {
-        this.reportData = [];
-        let result = Result.parse(data);
-        if (result.code != null && result.code !== 200) {
-          this.errorMessage = "Error - Loading Sample Report\nPlease contact your DSM developer";
+        let result = Result.parse( data );
+        if (result.code === 500) {
+          this.allowedToSeeInformation = false;
+          this.errorMessage = "";
+          this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
         }
         else {
-          jsonData = data;
-          jsonData.forEach((val) => {
-            let kitType = ShippingReport.parse(val);
-            this.reportData.push(kitType);
-          });
+          this.allowedToSeeInformation = true;
+          this.reportData = [];
+          let result = Result.parse( data );
+          if (result.code != null && result.code !== 200) {
+            this.errorMessage = "Error - Loading Sample Report\nPlease contact your DSM developer";
+          }
+          else {
+            jsonData = data;
+            jsonData.forEach( ( val ) => {
+              let kitType = ShippingReport.parse( val );
+              this.reportData.push( kitType );
+            } );
+          }
         }
         this.loadingReport = false;
       },
@@ -65,14 +78,14 @@ export class ShippingReportComponent implements OnInit {
   }
 
   public reload(): void {
-    this.loadReport(this.startDate, this.endDate);
+    this.loadReport( this.startDate, this.endDate );
   }
 
-  startChanged(date: string) {
+  startChanged( date: string ) {
     this.startDate = date;
   }
 
-  endChanged(date: string) {
+  endChanged( date: string ) {
     this.endDate = date;
   }
 
@@ -82,17 +95,17 @@ export class ShippingReportComponent implements OnInit {
     this.dsmService.getShippingReportOverview().subscribe(
       data => {
         // console.info(`received: ${JSON.stringify(data, null, 2)}`);
-        let result = Result.parse(data);
+        let result = Result.parse( data );
         if (result.code != null && result.code !== 200) {
           this.errorMessage = "Error - Downloading Sample Report\nPlease contact your DSM developer";
         }
         else {
           jsonData = data;
-          jsonData.forEach((val) => {
-            let kitType = ShippingReport.parse(val);
-            downloadData.push(kitType);
-          });
-          this.saveReport(downloadData);
+          jsonData.forEach( ( val ) => {
+            let kitType = ShippingReport.parse( val );
+            downloadData.push( kitType );
+          } );
+          this.saveReport( downloadData );
         }
       },
       err => {
@@ -105,28 +118,30 @@ export class ShippingReportComponent implements OnInit {
     );
   }
 
-  saveReport(downloadData: any[]){
+  saveReport( downloadData: any[] ) {
     let map: { kitType: string, month: string, ddpName: string, sent: number, received: number }[] = [];
     if (downloadData != null) {
       for (var i = 0; i < downloadData.length; i++) {
-        if (downloadData[i].summaryKitTypeList != null) {
-          for (var j = 0; j < downloadData[i].summaryKitTypeList.length; j++) {
-            map.push({kitType: downloadData[i].summaryKitTypeList[j].kitType,
-              month: downloadData[i].summaryKitTypeList[j].month,
-              ddpName: downloadData[i].ddpName,
-              sent: downloadData[i].summaryKitTypeList[j].sent,
-              received: downloadData[i].summaryKitTypeList[j].received});
+        if (downloadData[ i ].summaryKitTypeList != null) {
+          for (var j = 0; j < downloadData[ i ].summaryKitTypeList.length; j++) {
+            map.push( {
+              kitType: downloadData[ i ].summaryKitTypeList[ j ].kitType,
+              month: downloadData[ i ].summaryKitTypeList[ j ].month,
+              ddpName: downloadData[ i ].ddpName,
+              sent: downloadData[ i ].summaryKitTypeList[ j ].sent,
+              received: downloadData[ i ].summaryKitTypeList[ j ].received
+            } );
           }
         }
       }
       if (map.length > 0) {
-        var fields = [{ label: "Material Type", value: "kitType" },
-          { label: "Month", value: "month" },
-          { label: "Project", value: "ddpName" },
-          { label: "Number of Samples Shipped", value: "sent" },
-          { label: "Number of Samples Received", value: "received" }];
+        var fields = [ {label: "Material Type", value: "kitType"},
+          {label: "Month", value: "month"},
+          {label: "Project", value: "ddpName"},
+          {label: "Number of Samples Shipped", value: "sent"},
+          {label: "Number of Samples Received", value: "received"} ];
         var date = new Date();
-        Utils.createCSV(fields, map, "GP_Report_" + Utils.getDateFormatted(date, Utils.DATE_STRING_CVS) + Statics.CSV_FILE_EXTENSION);
+        Utils.createCSV( fields, map, "GP_Report_" + Utils.getDateFormatted( date, Utils.DATE_STRING_CVS ) + Statics.CSV_FILE_EXTENSION );
       }
     }
   }

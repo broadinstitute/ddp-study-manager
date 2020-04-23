@@ -5,6 +5,11 @@
   <br/>
 </div>
 
+<div *ngIf="additionalMessage != null">
+  <h3 class="Color--primary Line--Break">{{additionalMessage}}</h3>
+  <br/>
+</div>
+
 <span [hidden]="!loadingReport" class="Width--100">
     <div align="center" class="Width--100 Height--100">
       <i class="fas fa-spinner fa-spin fa-5x Color--primary"></i>
@@ -13,7 +18,7 @@
     </div>
   </span>
 
-<div class="Width--100">
+<div class="Width--100" *ngIf="allowedToSeeInformation">
   <b>
   Start date of period
   <app-field-datepicker [dateString]="startDate" (dateChanged)="startChanged($event)"></app-field-datepicker>

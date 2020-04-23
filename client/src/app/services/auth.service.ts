@@ -209,7 +209,7 @@ export class Auth {
       if (this.loadRealmsSubscription != null) {
         this.loadRealmsSubscription.unsubscribe();
       }
-      this.loadRealmsSubscription = this.dsmService.getRealmsAllowed( null ).subscribe(
+      this.loadRealmsSubscription = this.dsmService.getRealmsAllowed().subscribe(
         data => {
           jsonData = data;
           jsonData.forEach( ( val ) => {

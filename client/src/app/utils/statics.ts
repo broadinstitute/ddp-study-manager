@@ -7,7 +7,7 @@ export class Statics {
   public static PERMALINK: string = "permalink";
   public static URL: string = "/";
 
-  public static MEDICALRECORD: string = "medicalRecord";
+  public static MEDICALRECORD: string = "mr:view";
   public static TISSUELIST: string = "tissueList";
 
   public static SHIPPING: string = "shipping";
@@ -69,5 +69,7 @@ export class Statics {
 
   public static EXITED = "EXITED";
   public static CONSENT_SUSPENDED = "CONSENT_SUSPENDED";
+
+  public static ERROR_MESSAGE_NO_RIGHTS = "You don't have the right to access that information";
 
 }

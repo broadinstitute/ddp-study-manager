@@ -12,8 +12,6 @@ export class ComponentService {
   //  realmMenu: string;
   justReturning: boolean = false;
 
-  customViews: any;
-
   editable: boolean;
 
   discardSample: DiscardSample;

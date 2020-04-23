@@ -47,9 +47,9 @@ export class AppComponent implements OnInit {
 
   shouldSeeRealmSelection(): boolean {
     if (this.role.allowedToHandleSamples() || this.role.allowedToViewMedicalRecords() ||
-      this.role.allowedToViewMailingList() || this.role.allowedToViewEELData() ||
-      this.role.allowedToExitParticipant() || this.role.allowedToSkipParticipantEvents() ||
-      this.role.allowedToDiscardSamples() || this.role.allowToViewSampleLists()) {
+      this.role.allowedToViewMailingList() || this.role.allowedToExitParticipant() ||
+      this.role.allowedToSkipParticipantEvents() || this.role.allowedToDiscardSamples() ||
+      this.role.allowToViewSampleLists()) {
       return true;
     }
     return false;

@@ -177,32 +177,14 @@ export class TissueListComponent implements OnInit {
   }
 
   private checkRight( defaultFilter: boolean ) {
-    let allowedToSeeInformation = false;
     this.resetEverything( true );
-    let jsonData: any[];
     this.isDefaultFilter = defaultFilter;
-    this.dsmService.getRealmsAllowed( Statics.MEDICALRECORD ).subscribe(
-      data => {
-        jsonData = data;
-        jsonData.forEach( ( val ) => {
-          if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) === val) {
-            allowedToSeeInformation = true;
-            this.defaultFilterName = this.role.getUserSetting().defaultTissueFilter;
-            this.clearFilters();
-            this.setAllColumns();
-            this.getDefaultFilterName();
-            this.getAllFilters( true );
-            this.getTissueListData( defaultFilter );
-          }
-        } );
-        if (!allowedToSeeInformation) {
-          this.errorMessage = "You are not allowed to see information of the selected realm at that category";
-        }
-      },
-      err => {
-        return null;
-      }
-    );
+    this.defaultFilterName = this.role.getUserSetting().defaultTissueFilter;
+    this.clearFilters();
+    this.setAllColumns();
+    this.getDefaultFilterName();
+    this.getAllFilters( true );
+    this.getTissueListData( defaultFilter );
   }
 
   ngOnInit() {
@@ -224,7 +206,6 @@ export class TissueListComponent implements OnInit {
       for (let source of this.dataSources) {
         this.selectedColumns[ source ] = [];
       }
-
       this.checkRight( true );
     }
   }
@@ -232,75 +213,80 @@ export class TissueListComponent implements OnInit {
 
   public onclickDropDown( e ) {
     e.stopPropagation();
-
   }
 
   private getFieldSettings() {
     this.dsmService.getFieldSettings( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) ).subscribe(
       data => {
-        console.log( data );
-        this.allAdditionalColumns = {};
-        this.settings = {};
-        for (let source of this.dataSources) {
-          this.allColumns[ source ] = [];
+        let result = Result.parse( data );
+        if (result.code === 500) {
+          this.errorMessage = "";
+          this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
         }
-        Object.keys( this.dataSourceNames ).forEach( ( key ) => {
-          if (data[ key ] != undefined) {
-            for (let fieldSetting of data[ key ]) {
-              if (this.settings[ key ] == undefined || this.settings[ key ] == null) {
-                this.settings[ key ] = [];
-              }
-              this.settings[ key ].push( FieldSettings.parse( fieldSetting ) );
-              if (this.allAdditionalColumns[ key ] == null || this.allAdditionalColumns[ key ] == undefined) {
-                this.allAdditionalColumns[ key ] = [];
-                this.allColumns[ key ] = [];
-              }
-              let f = Filter.parseFieldSettingsToColumns( fieldSetting, key );
-              this.allAdditionalColumns[ key ].push( f );
-              this.allColumns[ key ].push( f );
-            }
+        else {
+          this.allAdditionalColumns = {};
+          this.settings = {};
+          for (let source of this.dataSources) {
+            this.allColumns[ source ] = [];
           }
-          for (let filter of Filter.ALL_COLUMNS) {
-            if (filter.participantColumn.tableAlias === key) {
-              //TODO - can be changed to add all after all DDPs are migrated
-              if (this.hasESData) {
-                this.allColumns[ key ].push( filter );
-                if (filter.participantColumn.tableAlias !== "data") {
-                  let t = filter.participantColumn.object !== null && filter.participantColumn.object !== undefined ? filter.participantColumn.object : filter.participantColumn.tableAlias;
-                  this.allFieldNames.add( t + Statics.DELIMITER_ALIAS + filter.participantColumn.name );
+          Object.keys( this.dataSourceNames ).forEach( ( key ) => {
+            if (data[ key ] != undefined) {
+              for (let fieldSetting of data[ key ]) {
+                if (this.settings[ key ] == undefined || this.settings[ key ] == null) {
+                  this.settings[ key ] = [];
                 }
+                this.settings[ key ].push( FieldSettings.parse( fieldSetting ) );
+                if (this.allAdditionalColumns[ key ] == null || this.allAdditionalColumns[ key ] == undefined) {
+                  this.allAdditionalColumns[ key ] = [];
+                  this.allColumns[ key ] = [];
+                }
+                let f = Filter.parseFieldSettingsToColumns( fieldSetting, key );
+                this.allAdditionalColumns[ key ].push( f );
+                this.allColumns[ key ].push( f );
               }
-              else {
-                if (filter.participantColumn.tableAlias === "data" && ( filter.participantColumn.object === "profile" || filter.participantColumn.object === "address" )) {
-                  if (filter.participantColumn.name !== "doNotContact" && filter.participantColumn.name !== "email" && filter.participantColumn.name !== "legacyShortId"
-                    && filter.participantColumn.name !== "legacyAltPid" && filter.participantColumn.name !== "createdAt") {
+            }
+            for (let filter of Filter.ALL_COLUMNS) {
+              if (filter.participantColumn.tableAlias === key) {
+                //TODO - can be changed to add all after all DDPs are migrated
+                if (this.hasESData) {
+                  this.allColumns[ key ].push( filter );
+                  if (filter.participantColumn.tableAlias !== "data") {
+                    let t = filter.participantColumn.object !== null && filter.participantColumn.object !== undefined ? filter.participantColumn.object : filter.participantColumn.tableAlias;
+                    this.allFieldNames.add( t + Statics.DELIMITER_ALIAS + filter.participantColumn.name );
+                  }
+                }
+                else {
+                  if (filter.participantColumn.tableAlias === "data" && ( filter.participantColumn.object === "profile" || filter.participantColumn.object === "address" )) {
+                    if (filter.participantColumn.name !== "doNotContact" && filter.participantColumn.name !== "email" && filter.participantColumn.name !== "legacyShortId"
+                      && filter.participantColumn.name !== "legacyAltPid" && filter.participantColumn.name !== "createdAt") {
+                      this.allColumns[ key ].push( filter );
+                      let t = filter.participantColumn.object !== null && filter.participantColumn.object !== undefined ? filter.participantColumn.object : filter.participantColumn.tableAlias;
+                      this.allFieldNames.add( t + Statics.DELIMITER_ALIAS + filter.participantColumn.name );
+                    }
+                  }
+                  else if (filter.participantColumn.tableAlias !== "data") {
                     this.allColumns[ key ].push( filter );
                     let t = filter.participantColumn.object !== null && filter.participantColumn.object !== undefined ? filter.participantColumn.object : filter.participantColumn.tableAlias;
                     this.allFieldNames.add( t + Statics.DELIMITER_ALIAS + filter.participantColumn.name );
                   }
                 }
-                else if (filter.participantColumn.tableAlias !== "data") {
-                  this.allColumns[ key ].push( filter );
-                  let t = filter.participantColumn.object !== null && filter.participantColumn.object !== undefined ? filter.participantColumn.object : filter.participantColumn.tableAlias;
-                  this.allFieldNames.add( t + Statics.DELIMITER_ALIAS + filter.participantColumn.name );
-                }
               }
             }
-          }
-        } );
-        // for ( let col of this.allColumns[Statics.TISSUE_ALIAS] ) {
-        //   this.allFieldNames.add(col.participantColumn.tableAlias + Statics.DELIMITER_ALIAS + col.participantColumn.name);
-        // }
-        // for ( let col of this.allColumns[Statics.ONCDETAIL_ALIAS] ) {
-        //   this.allFieldNames.add(col.participantColumn.tableAlias + Statics.DELIMITER_ALIAS + col.participantColumn.name);
-        // }
-        // for ( let col of this.allColumns["data"] ) {
-        //   let t = col.participantColumn.object !== null && col.participantColumn.object !== undefined ? col.participantColumn.object :
-        // col.participantColumn.tableAlias; this.allFieldNames.add(t + Statics.DELIMITER_ALIAS + col.participantColumn.name); }
-        for (let data of this.dataSources) {
-          this.allColumns[ data ].sort( ( a, b ) => {
-            return a.participantColumn.display.localeCompare( b.participantColumn.display );
           } );
+          // for ( let col of this.allColumns[Statics.TISSUE_ALIAS] ) {
+          //   this.allFieldNames.add(col.participantColumn.tableAlias + Statics.DELIMITER_ALIAS + col.participantColumn.name);
+          // }
+          // for ( let col of this.allColumns[Statics.ONCDETAIL_ALIAS] ) {
+          //   this.allFieldNames.add(col.participantColumn.tableAlias + Statics.DELIMITER_ALIAS + col.participantColumn.name);
+          // }
+          // for ( let col of this.allColumns["data"] ) {
+          //   let t = col.participantColumn.object !== null && col.participantColumn.object !== undefined ? col.participantColumn.object :
+          // col.participantColumn.tableAlias; this.allFieldNames.add(t + Statics.DELIMITER_ALIAS + col.participantColumn.name); }
+          for (let data of this.dataSources) {
+            this.allColumns[ data ].sort( ( a, b ) => {
+              return a.participantColumn.display.localeCompare( b.participantColumn.display );
+            } );
+          }
         }
       },
       err => {
@@ -364,54 +350,61 @@ export class TissueListComponent implements OnInit {
     if (defaultFilter && this.defaultFilter != undefined) {
       this.dsmService.applyFilter( this.defaultFilter, localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), this.parent, null ).subscribe(
         data => {
-          if (this.defaultFilter != null && this.defaultFilter != undefined && this.defaultFilter.filters != null) {
-            this.adjustAllColumns( this.defaultFilter );
+          let result = Result.parse( data );
+          if (result.code === 500) {
+            this.errorMessage = "";
+            this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
           }
-          let date = new Date();
-          this.loadedTimeStamp = Utils.getDateFormatted( date, Utils.DATE_STRING_IN_EVENT_CVS );
-          let jsonData: any[];
-          this.tissueListWrappers = [];
-          this.originalTissueListWrappers = [];
-          this.copyTissueListWrappers = [];
-          this.tissueListsMap = {};
-          this.tissueListOncHistories = [];
-          jsonData = data;
-          jsonData.forEach( ( val ) => {
-            let tissueListWrapper = TissueListWrapper.parse( val );
-            this.tissueListWrappers.push( tissueListWrapper );
-          } );
-          console.log( this.tissueListWrappers );
-          this.originalTissueListWrappers = this.tissueListWrappers;
-          this.currentFilter = this.defaultFilter.filters;
-          this.selectedFilterName = this.defaultFilter.filterName;
-          this.selectedColumns = this.defaultFilter.columns;
-          if (this.defaultFilter != null && this.defaultFilter.filters != null) {
-            for (let filter of this.defaultFilter.filters) {
-              if (filter.type === Filter.OPTION_TYPE) {
-                filter.selectedOptions = filter.getSelectedOptionsBoolean();
+          else {
+            if (this.defaultFilter != null && this.defaultFilter != undefined && this.defaultFilter.filters != null) {
+              this.adjustAllColumns( this.defaultFilter );
+            }
+            let date = new Date();
+            this.loadedTimeStamp = Utils.getDateFormatted( date, Utils.DATE_STRING_IN_EVENT_CVS );
+            let jsonData: any[];
+            this.tissueListWrappers = [];
+            this.originalTissueListWrappers = [];
+            this.copyTissueListWrappers = [];
+            this.tissueListsMap = {};
+            this.tissueListOncHistories = [];
+            jsonData = data;
+            jsonData.forEach( ( val ) => {
+              let tissueListWrapper = TissueListWrapper.parse( val );
+              this.tissueListWrappers.push( tissueListWrapper );
+            } );
+            console.log( this.tissueListWrappers );
+            this.originalTissueListWrappers = this.tissueListWrappers;
+            this.currentFilter = this.defaultFilter.filters;
+            this.selectedFilterName = this.defaultFilter.filterName;
+            this.selectedColumns = this.defaultFilter.columns;
+            if (this.defaultFilter != null && this.defaultFilter.filters != null) {
+              for (let filter of this.defaultFilter.filters) {
+                if (filter.type === Filter.OPTION_TYPE) {
+                  filter.selectedOptions = filter.getSelectedOptionsBoolean();
+                }
               }
             }
-          }
-          for (let dataSource of this.dataSources) {
-            if (this.selectedColumns[ dataSource ] == undefined) {
-              this.selectedColumns[ dataSource ] = [];
+            for (let dataSource of this.dataSources) {
+              if (this.selectedColumns[ dataSource ] == undefined) {
+                this.selectedColumns[ dataSource ] = [];
+              }
             }
-          }
-          if (!this.hasESData) {
-            this.filterProfileForNoESRelams( this.defaultFilter );
-          }
-          for (let tissueList of this.tissueListWrappers) {
-            this.tissueListsMap[ tissueList.tissueList.oncHistoryDetails.oncHistoryDetailId ] = tissueList;
-          }
-          for (let key of Object.keys( this.tissueListsMap )) {
-            this.tissueListOncHistories.push( this.tissueListsMap[ key ] );
-          }
-          this.edit = true;
-          this.filterQuery = this.defaultFilter.queryItems;
-          this.textQuery = this.defaultFilter.queryItems;
-          this.loading = false;
-          if (this.defaultFilter.quickFilterName !== undefined && this.defaultFilter.quickFilterName !== null && this.defaultFilter.quickFilterName !== "") {
-            this.additionalMessage = "This filters is based on the quick filter " + this.defaultFilter.quickFilterName;
+            if (!this.hasESData) {
+              this.filterProfileForNoESRelams( this.defaultFilter );
+            }
+            for (let tissueList of this.tissueListWrappers) {
+              this.tissueListsMap[ tissueList.tissueList.oncHistoryDetails.oncHistoryDetailId ] = tissueList;
+            }
+            for (let key of Object.keys( this.tissueListsMap )) {
+              this.tissueListOncHistories.push( this.tissueListsMap[ key ] );
+            }
+            this.edit = true;
+            this.filterQuery = this.defaultFilter.queryItems;
+            this.textQuery = this.defaultFilter.queryItems;
+            this.loading = false;
+            if (this.defaultFilter.quickFilterName !== undefined && this.defaultFilter.quickFilterName !== null && this.defaultFilter.quickFilterName !== "") {
+              this.additionalMessage = "This filters is based on the quick filter " + this.defaultFilter.quickFilterName;
+            }
           }
         },
         err => {
@@ -698,56 +691,62 @@ export class TissueListComponent implements OnInit {
 
   getAllFilters( applyDefault: boolean ) {
     this.dsmService.getFiltersForUserForRealm( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), this.parent ).subscribe( data => {
-        //        console.log("received: " + JSON.stringify(data, null, 2));
-        this.savedFilters = [];
-        this.quickFilters = [];
-        let jsonData = data;
-        jsonData.forEach( ( val ) => {
-          let view: ViewFilter;
-          view = ViewFilter.parseFilter( val, this.allColumns );
+        let result = Result.parse( data );
+        if (result.code === 500) {
+          this.errorMessage = "";
+          this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
+        }
+        else {
+          //        console.log("received: " + JSON.stringify(data, null, 2));
+          this.savedFilters = [];
+          this.quickFilters = [];
+          let jsonData = data;
+          jsonData.forEach( ( val ) => {
+            let view: ViewFilter;
+            view = ViewFilter.parseFilter( val, this.allColumns );
 
-          if (val.userId.includes( "System" )) {
-            this.quickFilters.push( view );
-          }
-          else {
-            this.savedFilters.push( view );
-          }
-        } );
-        this.savedFilters.sort( ( vf1, vf2 ) => vf1.filterName.localeCompare( vf2.filterName ) );
-        if (this.isDefaultFilter && applyDefault) {
-          this.selectedFilterName = this.defaultFilterName;
-          this.defaultFilter = this.savedFilters.find( f => {
-            return f.filterName === this.defaultFilterName;
+            if (val.userId.includes( "System" )) {
+              this.quickFilters.push( view );
+            }
+            else {
+              this.savedFilters.push( view );
+            }
           } );
-          if (this.defaultFilter == undefined) {
-            this.defaultFilter = this.quickFilters.find( f => {
+          this.savedFilters.sort( ( vf1, vf2 ) => vf1.filterName.localeCompare( vf2.filterName ) );
+          if (this.isDefaultFilter && applyDefault) {
+            this.selectedFilterName = this.defaultFilterName;
+            this.defaultFilter = this.savedFilters.find( f => {
               return f.filterName === this.defaultFilterName;
             } );
-          }
-          if (this.defaultFilter != undefined) {
-            this.currentFilter = this.defaultFilter.filters;
-            this.selectedColumns = this.defaultFilter.columns;
-            for (let dataSource of this.dataSources) {
-              if (this.selectedColumns[ dataSource ] == undefined) {
-                this.selectedColumns[ dataSource ] = [];
+            if (this.defaultFilter == undefined) {
+              this.defaultFilter = this.quickFilters.find( f => {
+                return f.filterName === this.defaultFilterName;
+              } );
+            }
+            if (this.defaultFilter != undefined) {
+              this.currentFilter = this.defaultFilter.filters;
+              this.selectedColumns = this.defaultFilter.columns;
+              for (let dataSource of this.dataSources) {
+                if (this.selectedColumns[ dataSource ] == undefined) {
+                  this.selectedColumns[ dataSource ] = [];
+                }
+              }
+              this.edit = true;
+              this.filterQuery = this.defaultFilter.queryItems;
+              this.textQuery = this.defaultFilter.queryItems;
+              this.loading = false;
+              if (this.defaultFilter.quickFilterName !== undefined && this.defaultFilter.quickFilterName !== null && this.defaultFilter.quickFilterName !== "") {
+                this.additionalMessage = "This filters is based on the quick filter " + this.defaultFilter.quickFilterName;
               }
             }
-            this.edit = true;
-            this.filterQuery = this.defaultFilter.queryItems;
-            this.textQuery = this.defaultFilter.queryItems;
-            this.loading = false;
-            if (this.defaultFilter.quickFilterName !== undefined && this.defaultFilter.quickFilterName !== null && this.defaultFilter.quickFilterName !== "") {
-              this.additionalMessage = "This filters is based on the quick filter " + this.defaultFilter.quickFilterName;
-            }
-          }
-          else if (this.defaultFilterName !== "" && this.defaultFilterName !== null && this.defaultFilterName !== undefined) {
-            this.setDefaultColumns( false );
-            if (this.isDefaultFilter) {
-              this.additionalMessage = "The default filter seems to be deleted, however it is still the default filter as long as not changed in the user settings.";
+            else if (this.defaultFilterName !== "" && this.defaultFilterName !== null && this.defaultFilterName !== undefined) {
+              this.setDefaultColumns( false );
+              if (this.isDefaultFilter) {
+                this.additionalMessage = "The default filter seems to be deleted, however it is still the default filter as long as not changed in the user settings.";
+              }
             }
           }
         }
-
       },
       err => {
         this.errorMessage = "Error getting all the filters. Please contact your DSM developer\n " + err;
@@ -1373,9 +1372,6 @@ export class TissueListComponent implements OnInit {
   public getDefaultFilterName() {
     this.defaultFilterName = this.role.getUserSetting().defaultTissueFilter;
   }
-
-  //  }
-
 
   private getRequestStatusDisplay( request: string ): string {
     switch (request) {

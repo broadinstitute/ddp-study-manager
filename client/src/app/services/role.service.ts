@@ -1,4 +1,6 @@
 import {Injectable} from "@angular/core";
+import {AccessRole} from "../utils/access-role.model";
+import {Access} from "../utils/access.model";
 import {SessionService} from "./session.service";
 import {UserSetting} from "../user-setting/user-setting.model";
 
@@ -13,7 +15,6 @@ export class RoleService {
   private _isUpload: boolean = false;
   private _isExitParticipant: boolean = false;
   private _isDeactivation: boolean = false;
-  private _isViewingEEL: boolean = false;
   private _isReceiving: boolean = false;
   private _isExpressKit: boolean = false;
   private _isTriggeringSurveyCreation: boolean = false;
@@ -42,80 +43,83 @@ export class RoleService {
   public setRoles( token: string ) {
     if (token != null) {
       var obj: any = this.sessionService.getDSMClaims( token );
-      let accessRoles: string = obj.USER_ACCESS_ROLE;
-      if (accessRoles != null) {
-        let roles: string[] = JSON.parse( accessRoles );
-        for (let entry of roles) {
-          this._noPermissions = false;
-          console.log( entry );
-          // only special kit_shipping_xxx rights should get added here, not the overall only kit_shipping_view
-          if (entry.startsWith( "kit_shipping" ) && entry !== "kit_shipping_view") {
-            this._isShipping = true;
+      let access: Access;
+      if (obj.USER_ACCESS_ROLE != null && obj.USER_ACCESS_ROLE !== "null") {
+        access = Access.parse( JSON.parse( obj.USER_ACCESS_ROLE ) );
+      }
+      if (access != null && access.accessRoles != null) {
+        access.accessRoles.forEach( ( accessRole: AccessRole ) => {
+          if (accessRole != null && accessRole.permissions != null) {
+            accessRole.permissions.forEach( ( permission: string ) => {
+              this._noPermissions = false;
+              console.log( permission );
+              // only special kit_shipping_xxx rights should get added here, not the overall only kit_shipping_view
+              if (permission.startsWith( "kit:shipping" ) && permission !== "kit:view") {
+                this._isShipping = true;
+              }
+              else if (permission === "mr:request") {
+                this._isMRRequesting = true;
+              }
+              else if (permission === "mr:view") {
+                this._isMRView = true;
+              }
+              else if (permission === "mailingList_view") {
+                this._isMailingList = true;
+              }
+              else if (permission === "kit:upload") {
+                this._isUpload = true;
+              }
+              else if (permission === "participant:exit") {
+                this._isExitParticipant = true;
+              }
+              else if (permission === "kit:deactivation") {
+                this._isDeactivation = true;
+              }
+              else if (permission === "kit:receiving") {
+                this._isReceiving = true;
+              }
+              else if (permission === "kit:express") {
+                this._isExpressKit = true;
+              }
+              else if (permission === "participant:survey") {
+                this._isTriggeringSurveyCreation = true;
+              }
+              else if (permission === "participant:event") {
+                this._isSkipParticipant = true;
+              }
+              else if (permission === "discard_sample") {
+                this._isDiscardingSamples = true;
+              }
+              else if (permission === "kit:view") {
+                this._isSampleListView = true;
+              }
+              else if (permission === "participant:pdf") {
+                this._isDownloadPDF = true;
+              }
+              else if (permission === "ndi_download") {
+                this._isDownloadNDI = true;
+              }
+              else if (permission === "mr_no_request_tissue") {
+                this._noTissueRequest = true;
+              }
+              else if (permission === "study:fields") {
+                this._fieldSettings = true;
+              }
+              else if (permission === "mr:abstraction") {
+                this._isAbstracter = true;
+              }
+              else if (permission === "mr:qc") {
+                this._isQC = true;
+              }
+              else if (permission === "study:abstraction") {
+                this._isAbstractionAdmin = true;
+              }
+              else if (permission === "drug_list_edit") {
+                this._canEditDrugList = true;
+              }
+            } );
           }
-          else if (entry === "mr_request") {
-            this._isMRRequesting = true;
-          }
-          else if (entry === "mr_view") {
-            this._isMRView = true;
-          }
-          else if (entry === "mailingList_view") {
-            this._isMailingList = true;
-          }
-          else if (entry === "kit_upload") {
-            this._isUpload = true;
-          }
-          else if (entry === "participant_exit") {
-            this._isExitParticipant = true;
-          }
-          else if (entry === "kit_deactivation") {
-            this._isDeactivation = true;
-          }
-          else if (entry === "eel_view") {
-            this._isViewingEEL = true;
-          }
-          else if (entry === "kit_receiving") {
-            this._isReceiving = true;
-          }
-          else if (entry === "kit_express") {
-            this._isExpressKit = true;
-          }
-          else if (entry === "survey_creation") {
-            this._isTriggeringSurveyCreation = true;
-          }
-          else if (entry === "participant_event") {
-            this._isSkipParticipant = true;
-          }
-          else if (entry === "discard_sample") {
-            this._isDiscardingSamples = true;
-          }
-          else if (entry === "kit_shipping_view") {
-            this._isSampleListView = true;
-          }
-          else if (entry === "pdf_download") {
-            this._isDownloadPDF = true;
-          }
-          else if (entry === "ndi_download") {
-            this._isDownloadNDI = true;
-          }
-          else if (entry === "mr_no_request_tissue") {
-            this._noTissueRequest = true;
-          }
-          else if (entry === "field_settings") {
-            this._fieldSettings = true;
-          }
-          else if (entry === "mr_abstracter") {
-            this._isAbstracter = true;
-          }
-          else if (entry === "mr_qc") {
-            this._isQC = true;
-          }
-          else if (entry === "mr_abstraction_admin") {
-            this._isAbstractionAdmin = true;
-          }
-          else if (entry === "drug_list_edit") {
-            this._canEditDrugList = true;
-          }
-        }
+        } );
       }
       let userSettings: any = obj.USER_SETTINGS;
       if (userSettings != null && userSettings !== "null") {
@@ -124,7 +128,6 @@ export class RoleService {
       this._userId = obj.USER_ID;
       this._user = obj.USER_NAME;
       this._userEmail = obj.USER_MAIL;
-      // console.log(obj);
     }
   }
 
@@ -166,10 +169,6 @@ export class RoleService {
 
   public allowedToDeactivateKits() {
     return this._isDeactivation;
-  }
-
-  public allowedToViewEELData() {
-    return this._isViewingEEL;
   }
 
   public allowedToViewReceivingPage() {

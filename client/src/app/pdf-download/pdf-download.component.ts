@@ -4,6 +4,7 @@ import {DSMService} from "../services/dsm.service";
 import {Auth} from "../services/auth.service";
 import {ComponentService} from "../services/component.service";
 import {ActivatedRoute, Router} from "@angular/router";
+import {Result} from "../utils/result.model";
 import {Statics} from "../utils/statics";
 import {Response} from "@angular/http";
 import {PDFModel} from "./pdf-download.model";
@@ -59,26 +60,7 @@ export class PdfDownloadComponent implements OnInit {
   }
 
   private checkRight() {
-    this.additionalMessage = null;
-    this.allowedToSeeInformation = false;
-    let jsonData: any[];
-    this.dsmService.getRealmsAllowed( Statics.PDF_DOWNLOAD_MENU ).subscribe(
-      data => {
-        jsonData = data;
-        jsonData.forEach( ( val ) => {
-          if (this.realm === val) {
-            this.getListOfPossiblePDFs();
-            this.allowedToSeeInformation = true;
-          }
-        } );
-        if (!this.allowedToSeeInformation) {
-          this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
-        }
-      },
-      err => {
-        return null;
-      }
-    );
+    this.getListOfPossiblePDFs();
   }
 
   //TODO can be changed after all DDPs are migrated
@@ -90,19 +72,28 @@ export class PdfDownloadComponent implements OnInit {
       let jsonData: any[];
       this.dsmService.getPossiblePDFs( this.realm ).subscribe(
         data => {
-          this.possiblePDFs = [];
-          // console.info(`received: ${JSON.stringify(data, null, 2)}`);
-          jsonData = data;
-          jsonData.forEach( ( val ) => {
-            let role: string = val;
-            var roleParts: string[] = role.split( "_" );
-            if (roleParts.length == 3) {
-              this.possiblePDFs.push( roleParts[ 2 ] );
-            }
-            else if (role === "pdf_download") {
-              this.hasParticipantSpecificPDFs = true;
-            }
-          } );
+          let result = Result.parse( data );
+          if (result.code === 500) {
+            this.allowedToSeeInformation = false;
+            this.errorMessage = "";
+            this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
+          }
+          else {
+            this.allowedToSeeInformation = true;
+            this.possiblePDFs = [];
+            // console.info(`received: ${JSON.stringify(data, null, 2)}`);
+            jsonData = data;
+            jsonData.forEach( ( val ) => {
+              let role: string = val;
+              let roleParts: string[] = role.split( "_" );
+              if (roleParts.length == 3) {
+                this.possiblePDFs.push( roleParts[ 2 ] );
+              }
+              else if (role === "pdf_download") {
+                this.hasParticipantSpecificPDFs = true;
+              }
+            } );
+          }
           this.loading = false;
         },
         err => {
@@ -123,17 +114,25 @@ export class PdfDownloadComponent implements OnInit {
       this.loading = true;
       this.dsmService.getParticipantsPDFs( this.realm, this.participantId ).subscribe(
         data => {
-          this.participantPDFs = [];
-          // console.info( `received: ${JSON.stringify( data, null, 2 )}` );
-          let jsonData: any[];
-          jsonData = data;
-          if (jsonData != null) {
-            jsonData.forEach( ( val ) => {
-              let participantPdf = PDFModel.parse(val);
-              this.participantPDFs.push(participantPdf);
-            } );
+          let result = Result.parse( data );
+          if (result.code === 500) {
+            this.allowedToSeeInformation = false;
+            this.errorMessage = "";
+            this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
           }
-          console.log(this.participantPDFs);
+          else {
+            this.allowedToSeeInformation = true;
+            this.participantPDFs = [];
+            // console.info( `received: ${JSON.stringify( data, null, 2 )}` );
+            let jsonData: any[];
+            jsonData = data;
+            if (jsonData != null) {
+              jsonData.forEach( ( val ) => {
+                let participantPdf = PDFModel.parse( val );
+                this.participantPDFs.push( participantPdf );
+              } );
+            }
+          }
           this.loading = false;
         },
         err => {
@@ -151,7 +150,6 @@ export class PdfDownloadComponent implements OnInit {
     this.loading = true;
     this.dsmService.downloadPDF( this.participantId, this.compService.getRealm(), configName ).subscribe(
       data => {
-        console.info( data );
         this.downloadFile( data, "_" + configName );
         this.loading = false;
       },
@@ -182,7 +180,6 @@ export class PdfDownloadComponent implements OnInit {
   downloadConsentPDFs() {
     this.dsmService.downloadConsentPDFs( this.participantId, this.realm ).subscribe(
       data => {
-        console.info( data );
         this.downloadFile( data, "_Consent" );
         this.loading = false;
       },

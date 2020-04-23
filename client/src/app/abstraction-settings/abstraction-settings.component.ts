@@ -5,7 +5,7 @@ import {DSMService} from "../services/dsm.service";
 import {Auth} from "../services/auth.service";
 import {RoleService} from "../services/role.service";
 import {ComponentService} from "../services/component.service";
-import {Statics} from "../utils/statics";
+import {Result} from "../utils/result.model";
 import {AbstractionGroup} from "../abstraction-group/abstraction-group.model";
 
 @Component({
@@ -54,26 +54,7 @@ export class AbstractionSettingsComponent implements OnInit {
   }
 
   private checkRight() {
-    this.allowedToSeeInformation = false;
-    this.additionalMessage = null;
-    let jsonData: any[];
-    this.dsmService.getRealmsAllowed(Statics.MEDICALRECORD).subscribe(
-      data => {
-        jsonData = data;
-        jsonData.forEach((val) => {
-          if (this.realm === val) {
-            this.allowedToSeeInformation = true;
-            this.loadAbstractionFormControls();
-          }
-        });
-        if (!this.allowedToSeeInformation) {
-          this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
-        }
-      },
-      err => {
-        return null;
-      }
-    );
+    this.loadAbstractionFormControls();
   }
 
   loadAbstractionFormControls() {
@@ -81,12 +62,22 @@ export class AbstractionSettingsComponent implements OnInit {
     let jsonData: any[];
     this.dsmService.getMedicalRecordAbstractionFormControls(localStorage.getItem(ComponentService.MENU_SELECTED_REALM)).subscribe(
       data => {
-        this.abstractionFormControls = [];
-        jsonData = data;
-        jsonData.forEach((val) => {
-          let medicalRecordAbstractionGroup = AbstractionGroup.parse(val);
-          this.abstractionFormControls.push(medicalRecordAbstractionGroup);
-        });
+        let result = Result.parse( data );
+        if (result.code === 500) {
+          this.allowedToSeeInformation = false;
+          this.errorMessage = "";
+          this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
+        }
+        else {
+          this.allowedToSeeInformation = true;
+          this.additionalMessage = "";
+          this.abstractionFormControls = [];
+          jsonData = data;
+          jsonData.forEach( ( val ) => {
+            let medicalRecordAbstractionGroup = AbstractionGroup.parse( val );
+            this.abstractionFormControls.push( medicalRecordAbstractionGroup );
+          } );
+        }
         this.loading = false;
       },
       err => {

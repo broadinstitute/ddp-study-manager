@@ -121,49 +121,40 @@ export class ShippingComponent implements OnInit {
   }
 
   private checkRight() {
-    this.allowedToSeeInformation = false;
     this.additionalMessage = null;
     this.kitType = null;
     this.kitRequests = [];
     this.kitTypes = [];
+    this.getPossibleKitType();
     let jsonData: any[];
-    this.dsmService.getRealmsAllowed( Statics.SHIPPING ).subscribe(
-      data => {
-        jsonData = data;
-        jsonData.forEach( ( val ) => {
-          if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) === val) {
-            this.allowedToSeeInformation = true;
-            this.getPossibleKitType();
-          }
-        } );
-        if (!this.allowedToSeeInformation) {
-          this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
-        }
-      },
-      err => {
-        return null;
-      }
-    );
-
     this.dsmService.getLabelSettings().subscribe(
       data => {
-        jsonData = data;
-        jsonData.forEach( ( val ) => {
-          this.labelSettings = [];
-          this.labelNames = [];
-          this.selectedSetting = null;
-          this.selectedLabel = null;
+        let result = Result.parse( data );
+        if (result.code === 500) {
+          this.allowedToSeeInformation = false;
+          this.errorMessage = "";
+          this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
+        }
+        else {
+          this.allowedToSeeInformation = true;
           jsonData = data;
           jsonData.forEach( ( val ) => {
-            let labelSetting = LabelSetting.parse( val );
-            if (labelSetting.defaultPage) {
-              this.selectedSetting = labelSetting;
-              this.selectedLabel = labelSetting.name;
-            }
-            this.labelNames.push( labelSetting.name );
-            this.labelSettings.push( labelSetting );
+            this.labelSettings = [];
+            this.labelNames = [];
+            this.selectedSetting = null;
+            this.selectedLabel = null;
+            jsonData = data;
+            jsonData.forEach( ( val ) => {
+              let labelSetting = LabelSetting.parse( val );
+              if (labelSetting.defaultPage) {
+                this.selectedSetting = labelSetting;
+                this.selectedLabel = labelSetting.name;
+              }
+              this.labelNames.push( labelSetting.name );
+              this.labelSettings.push( labelSetting );
+            } );
           } );
-        } );
+        }
       },
       err => {
         return null;
@@ -215,12 +206,21 @@ export class ShippingComponent implements OnInit {
       this.loading = true;
       this.dsmService.getKitTypes( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) ).subscribe(
         data => {
-          this.kitTypes = [];
-          jsonData = data;
-          jsonData.forEach( ( val ) => {
-            let kitType = KitType.parse( val );
-            this.kitTypes.push( kitType );
-          } );
+          let result = Result.parse( data );
+          if (result.code === 500) {
+            this.allowedToSeeInformation = false;
+            this.errorMessage = "";
+            this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
+          }
+          else {
+            this.allowedToSeeInformation = true;
+            this.kitTypes = [];
+            jsonData = data;
+            jsonData.forEach( ( val ) => {
+              let kitType = KitType.parse( val );
+              this.kitTypes.push( kitType );
+            } );
+          }
           this.loading = false;
           // console.info(`${this.kitTypes.length} kit types received: ${JSON.stringify(data, null, 2)}`);
         },

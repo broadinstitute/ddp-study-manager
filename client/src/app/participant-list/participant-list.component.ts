@@ -130,211 +130,201 @@ export class ParticipantListComponent implements OnInit {
     this.setSelectedFilterName( "" );
     this.currentFilter = null;
     this.filterQuery = null;
-    let allowedToSeeInformation = false;
     this.errorMessage = null;
     this.participantList = null;
-    let jsonData: any[];
-    this.dsmService.getRealmsAllowed( Statics.MEDICALRECORD ).subscribe(
-      data => {
-        jsonData = data;
-        jsonData.forEach( ( val ) => {
-          if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) === val) {
-            allowedToSeeInformation = true;
-            this.loadSettings();
-          }
-        } );
-        if (!allowedToSeeInformation) {
-          this.loadingParticipants = null;
-          this.compService.customViews = null;
-          this.errorMessage = "You are not allowed to see information of the selected realm at that category";
-        }
-      },
-      err => {
-        this.loadingParticipants = null;
-        return null;
-      }
-    );
+    this.loadSettings();
   }
 
   loadSettings() {
     let jsonData: any;
     this.dsmService.getSettings( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), this.parent ).subscribe(
       data => {
-        this.assignees = [];
-        this.drugs = [];
-        this.cancers = [];
-        this.activityDefinitionList = [];
-        this.quickFilters = [];
-        this.savedFilters = [];
-        this.mrCoverPdfSettings = [];
-        this.assignees.push( new Assignee( "-1", "Remove Assignee", "" ) );
-        jsonData = data;
-        this.dataSources = new Map( [
-          [ "data", "Participant" ],
-          [ "p", "Participant - DSM" ],
-          [ "m", "Medical Record" ],
-          [ "oD", "Onc History" ],
-          [ "t", "Tissue" ],
-          [ "k", "Sample" ],
-          [ "a", "Abstraction" ] ] );
-        this.sourceColumns = {};
-        this.selectedColumns = {};
-        this.settings = {};
-        this.dataSources.forEach( ( value: string, key: string ) => {
-          this.selectedColumns[ key ] = [];
-          this.sourceColumns[ key ] = [];
-        } );
-        if (jsonData.assignees != null) {
-          jsonData.assignees.forEach( ( val ) => {
-            this.assignees.push( Assignee.parse( val ) );
-          } );
-        }
-        if (jsonData.drugs != null) {
-          jsonData.drugs.forEach( ( val ) => {
-            this.drugs.push( val );
-          } );
-        }
-        if (jsonData.cancers != null) {
-          jsonData.cancers.forEach( ( val ) => {
-            this.cancers.push( val );
-          } );
-        }
-        if (jsonData.fieldSettings != null) {
-          Object.keys( jsonData.fieldSettings ).forEach( ( key ) => {
-            jsonData.fieldSettings[ key ].forEach( ( fieldSetting: FieldSettings ) => {
-              let options: Array<NameValue> = null;
-              if (fieldSetting.displayType === "OPTIONS") {
-                options = new Array<NameValue>();
-                fieldSetting.possibleValues.forEach( ( value: Value ) => {
-                  options.push( new NameValue( value.value, value.value ) );
-                } );
-              }
-              let filter = new Filter( new ParticipantColumn( fieldSetting.columnDisplay, fieldSetting.columnName, key ), Filter.ADDITIONAL_VALUE_TYPE, options, new NameValue( fieldSetting.columnName, null ),
-                false, true, null, null, null, null, false, false, false, false, fieldSetting.displayType );
-              if (this.settings[ key ] == null || this.settings[ key ] == undefined) {
-                this.settings[ key ] = [];
-              }
-              if (key === "r") {
-                if (this.sourceColumns[ "p" ] == null || this.sourceColumns[ "p" ] == undefined) {
-                  this.sourceColumns[ "p" ] = [];
-                }
-                this.sourceColumns[ "p" ].push( filter );
-              }
-              else {
-                if (this.sourceColumns[ key ] == null || this.sourceColumns[ key ] == undefined) {
-                  this.sourceColumns[ key ] = [];
-                }
-                this.sourceColumns[ key ].push( filter );
-              }
-              this.settings[ key ].push( fieldSetting );
-              this.allFieldNames.add( filter.participantColumn.tableAlias + "." + filter.participantColumn.name );
-            } );
-          } );
-        }
-        this.hasESData = false;
-        if (jsonData.activityDefinitions != null) {
-          Object.keys( jsonData.activityDefinitions ).forEach( ( key ) => {
-            this.hasESData = true;
-            let activityDefinition: ActivityDefinition = ActivityDefinition.parse( jsonData.activityDefinitions[ key ] );
-            let possibleColumns: Array<Filter> = [];
-            possibleColumns.push( new Filter( new ParticipantColumn( "Survey Created", "createdAt", activityDefinition.activityCode, null, true ), Filter.DATE_TYPE ) );
-            possibleColumns.push( new Filter( new ParticipantColumn( "Survey Completed", "completedAt", activityDefinition.activityCode, null, true ), Filter.DATE_TYPE ) );
-            possibleColumns.push( new Filter( new ParticipantColumn( "Survey Last Updated", "lastUpdatedAt", activityDefinition.activityCode, null, true ), Filter.DATE_TYPE ) );
-            possibleColumns.push( new Filter( new ParticipantColumn( "Survey Status", "status", activityDefinition.activityCode, null, true ), Filter.OPTION_TYPE, [
-              new NameValue( "COMPLETE", "Done" ),
-              new NameValue( "CREATED", "Not Started" ),
-              new NameValue( "IN_PROGRESS", "In Progress" ) ] ) );
-            if (activityDefinition != null && activityDefinition.questions != null) {
-              for (let question of activityDefinition.questions) {
-                if (question.stableId != null) {
-                  let options: Array<NameValue> = null;
-                  let type: string = question.questionType;
-                  if (question.questionType === "PICKLIST") {
-                    options = new Array<NameValue>();
-                    type = Filter.OPTION_TYPE;
-                    question.options.forEach( ( value: Option ) => {
-                      options.push( new NameValue( value.optionStableId, value.optionText ) );
-                    } );
-                  }
-                  else if (question.questionType === "NUMERIC") {
-                    type = Filter.NUMBER_TYPE;
-                  }
-                  let displayName = this.getQuestionOrStableId( question );
-                  let filter = new Filter( new ParticipantColumn( displayName, question.stableId, activityDefinition.activityCode, null, true ), type, options );
-                  possibleColumns.push( filter );
-                }
-              }
-              let name = activityDefinition.activityName == undefined || activityDefinition.activityName === "" ? activityDefinition.activityCode : activityDefinition.activityName;
-              this.dataSources.set( activityDefinition.activityCode, name );
-;             this.sourceColumns[ activityDefinition.activityCode ] = possibleColumns;
-              this.selectedColumns[ activityDefinition.activityCode ] = [];
-              //add now all these columns to allFieldsName for the search-bar
-              possibleColumns.forEach( filter => {
-                let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
-                this.allFieldNames.add( tmp + "." + filter.participantColumn.name );
-              } );
-            }
-            this.activityDefinitionList.push( activityDefinition );
-          } );
-        }
-        this.getSourceColumnsFromFilterClass();
-        if (jsonData.abstractionFields != null && jsonData.abstractionFields.length > 0) {
-          //only add abstraction columns if there is a abstraction form setup
-          jsonData.abstractionFields.forEach( ( key ) => {
-            let abstractionGroup = AbstractionGroup.parse( key );
-            abstractionGroup.fields.forEach( ( field ) => {
-              let tmp: string = field.medicalRecordAbstractionFieldId.toString();
-              let tmpValues: NameValue[] = [];
-              let tmpType = Filter.TEXT_TYPE;
-              if (( field.type === "button_select" || field.type === "options" || field.type === "multi_options" )
-                && field.possibleValues != null) {
-                tmpType = Filter.OPTION_TYPE;
-                field.possibleValues.forEach( ( value ) => {
-                  tmpValues.push( new NameValue( value.value, value.value ) );
-                } );
-              }
-              else if (field.type === "multi_type" || field.type === "multi_type_array") {
-                tmpType = field.type;
-              }
-              this.sourceColumns[ "a" ].push( new Filter( new ParticipantColumn( field.displayName, tmp, abstractionGroup.abstractionGroupId.toString(), "final" ), tmpType, tmpValues, new NameValue( tmp, null ) ) );
-            } );
-          } );
-          //add now all these columns to allFieldsName for the search-bar
-          this.sourceColumns[ "a" ].forEach( filter => {
-            let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
-            //add when abstraction is searchable
-            // this.allFieldNames.add( tmp + "." + filter.participantColumn.name );
-          } );
+        let result = Result.parse( data );
+        if (result.code === 500) {
+          this.loadingParticipants = null;
+          this.errorMessage = "";
+          this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
         }
         else {
-          this.dataSources.delete( "a" );
-        }
-        if (jsonData.filters != null) {
-          jsonData.filters.forEach( ( val ) => {
-            let view: ViewFilter = ViewFilter.parseFilter( val, this.sourceColumns );
-            if (val.userId.includes( "System" )) {
-              this.quickFilters.push( view );
-            }
-            else {
-              this.savedFilters.push( view );
-            }
+          jsonData = data;
+          this.assignees = [];
+          this.drugs = [];
+          this.cancers = [];
+          this.activityDefinitionList = [];
+          this.quickFilters = [];
+          this.savedFilters = [];
+          this.mrCoverPdfSettings = [];
+          this.assignees.push( new Assignee( "-1", "Remove Assignee", "" ) );
+          this.dataSources = new Map( [
+            [ "data", "Participant" ],
+            [ "p", "Participant - DSM" ],
+            [ "m", "Medical Record" ],
+            [ "oD", "Onc History" ],
+            [ "t", "Tissue" ],
+            [ "k", "Sample" ],
+            [ "a", "Abstraction" ] ] );
+          this.sourceColumns = {};
+          this.selectedColumns = {};
+          this.settings = {};
+          this.dataSources.forEach( ( value: string, key: string ) => {
+            this.selectedColumns[ key ] = [];
+            this.sourceColumns[ key ] = [];
           } );
-          this.savedFilters.sort( ( a, b ) => a.filterName.localeCompare( b.filterName ) );
+          if (jsonData.assignees != null) {
+            jsonData.assignees.forEach( ( val ) => {
+              this.assignees.push( Assignee.parse( val ) );
+            } );
+          }
+          if (jsonData.drugs != null) {
+            jsonData.drugs.forEach( ( val ) => {
+              this.drugs.push( val );
+            } );
+          }
+          if (jsonData.cancers != null) {
+            jsonData.cancers.forEach( ( val ) => {
+              this.cancers.push( val );
+            } );
+          }
+          if (jsonData.fieldSettings != null) {
+            Object.keys( jsonData.fieldSettings ).forEach( ( key ) => {
+              jsonData.fieldSettings[ key ].forEach( ( fieldSetting: FieldSettings ) => {
+                let options: Array<NameValue> = null;
+                if (fieldSetting.displayType === "OPTIONS") {
+                  options = new Array<NameValue>();
+                  fieldSetting.possibleValues.forEach( ( value: Value ) => {
+                    options.push( new NameValue( value.value, value.value ) );
+                  } );
+                }
+                let filter = new Filter( new ParticipantColumn( fieldSetting.columnDisplay, fieldSetting.columnName, key ), Filter.ADDITIONAL_VALUE_TYPE, options, new NameValue( fieldSetting.columnName, null ),
+                  false, true, null, null, null, null, false, false, false, false, fieldSetting.displayType );
+                if (this.settings[ key ] == null || this.settings[ key ] == undefined) {
+                  this.settings[ key ] = [];
+                }
+                if (key === "r") {
+                  if (this.sourceColumns[ "p" ] == null || this.sourceColumns[ "p" ] == undefined) {
+                    this.sourceColumns[ "p" ] = [];
+                  }
+                  this.sourceColumns[ "p" ].push( filter );
+                }
+                else {
+                  if (this.sourceColumns[ key ] == null || this.sourceColumns[ key ] == undefined) {
+                    this.sourceColumns[ key ] = [];
+                  }
+                  this.sourceColumns[ key ].push( filter );
+                }
+                this.settings[ key ].push( fieldSetting );
+                this.allFieldNames.add( filter.participantColumn.tableAlias + "." + filter.participantColumn.name );
+              } );
+            } );
+          }
+          this.hasESData = false;
+          if (jsonData.activityDefinitions != null) {
+            Object.keys( jsonData.activityDefinitions ).forEach( ( key ) => {
+              this.hasESData = true;
+              let activityDefinition: ActivityDefinition = ActivityDefinition.parse( jsonData.activityDefinitions[ key ] );
+              let possibleColumns: Array<Filter> = [];
+              possibleColumns.push( new Filter( new ParticipantColumn( "Survey Created", "createdAt", activityDefinition.activityCode, null, true ), Filter.DATE_TYPE ) );
+              possibleColumns.push( new Filter( new ParticipantColumn( "Survey Completed", "completedAt", activityDefinition.activityCode, null, true ), Filter.DATE_TYPE ) );
+              possibleColumns.push( new Filter( new ParticipantColumn( "Survey Last Updated", "lastUpdatedAt", activityDefinition.activityCode, null, true ), Filter.DATE_TYPE ) );
+              possibleColumns.push( new Filter( new ParticipantColumn( "Survey Status", "status", activityDefinition.activityCode, null, true ), Filter.OPTION_TYPE, [
+                new NameValue( "COMPLETE", "Done" ),
+                new NameValue( "CREATED", "Not Started" ),
+                new NameValue( "IN_PROGRESS", "In Progress" ) ] ) );
+              if (activityDefinition != null && activityDefinition.questions != null) {
+                for (let question of activityDefinition.questions) {
+                  if (question.stableId != null) {
+                    let options: Array<NameValue> = null;
+                    let type: string = question.questionType;
+                    if (question.questionType === "PICKLIST") {
+                      options = new Array<NameValue>();
+                      type = Filter.OPTION_TYPE;
+                      question.options.forEach( ( value: Option ) => {
+                        options.push( new NameValue( value.optionStableId, value.optionText ) );
+                      } );
+                    }
+                    else if (question.questionType === "NUMERIC") {
+                      type = Filter.NUMBER_TYPE;
+                    }
+                    let displayName = this.getQuestionOrStableId( question );
+                    let filter = new Filter( new ParticipantColumn( displayName, question.stableId, activityDefinition.activityCode, null, true ), type, options );
+                    possibleColumns.push( filter );
+                  }
+                }
+                let name = activityDefinition.activityName == undefined || activityDefinition.activityName === "" ? activityDefinition.activityCode : activityDefinition.activityName;
+                this.dataSources.set( activityDefinition.activityCode, name );
+                ;this.sourceColumns[ activityDefinition.activityCode ] = possibleColumns;
+                this.selectedColumns[ activityDefinition.activityCode ] = [];
+                //add now all these columns to allFieldsName for the search-bar
+                possibleColumns.forEach( filter => {
+                  let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
+                  this.allFieldNames.add( tmp + "." + filter.participantColumn.name );
+                } );
+              }
+              this.activityDefinitionList.push( activityDefinition );
+            } );
+          }
+          this.getSourceColumnsFromFilterClass();
+          if (jsonData.abstractionFields != null && jsonData.abstractionFields.length > 0) {
+            //only add abstraction columns if there is a abstraction form setup
+            jsonData.abstractionFields.forEach( ( key ) => {
+              let abstractionGroup = AbstractionGroup.parse( key );
+              abstractionGroup.fields.forEach( ( field ) => {
+                let tmp: string = field.medicalRecordAbstractionFieldId.toString();
+                let tmpValues: NameValue[] = [];
+                let tmpType = Filter.TEXT_TYPE;
+                if (( field.type === "button_select" || field.type === "options" || field.type === "multi_options" )
+                  && field.possibleValues != null) {
+                  tmpType = Filter.OPTION_TYPE;
+                  field.possibleValues.forEach( ( value ) => {
+                    tmpValues.push( new NameValue( value.value, value.value ) );
+                  } );
+                }
+                else if (field.type === "multi_type" || field.type === "multi_type_array") {
+                  tmpType = field.type;
+                }
+                this.sourceColumns[ "a" ].push( new Filter( new ParticipantColumn( field.displayName, tmp, abstractionGroup.abstractionGroupId.toString(), "final" ), tmpType, tmpValues, new NameValue( tmp, null ) ) );
+              } );
+            } );
+            //add now all these columns to allFieldsName for the search-bar
+            this.sourceColumns[ "a" ].forEach( filter => {
+              let tmp = filter.participantColumn.object != null ? filter.participantColumn.object : filter.participantColumn.tableAlias;
+              //add when abstraction is searchable
+              // this.allFieldNames.add( tmp + "." + filter.participantColumn.name );
+            } );
+          }
+          else {
+            this.dataSources.delete( "a" );
+          }
+          if (jsonData.filters != null) {
+            jsonData.filters.forEach( ( val ) => {
+              let view: ViewFilter = ViewFilter.parseFilter( val, this.sourceColumns );
+              if (val.userId.includes( "System" )) {
+                this.quickFilters.push( view );
+              }
+              else {
+                this.savedFilters.push( view );
+              }
+            } );
+            this.savedFilters.sort( ( a, b ) => a.filterName.localeCompare( b.filterName ) );
 
+          }
+          if (jsonData.mrCoverPDF != null) {
+            jsonData.mrCoverPDF.forEach( ( val ) => {
+              let value: Value = Value.parse( val );
+              this.mrCoverPdfSettings.push( value );
+            } );
+          }
+          this.orderColumns();
+          this.getData();
         }
-        if (jsonData.mrCoverPDF != null) {
-          jsonData.mrCoverPDF.forEach( ( val ) => {
-            let value: Value = Value.parse( val );
-            this.mrCoverPdfSettings.push( value );
-          } );
-        }
-        this.orderColumns();
-        this.getData();
       },
       err => {
         if (err._body === Auth.AUTHENTICATION_ERROR) {
           this.auth.logout();
         }
+        this.loadingParticipants = null;
+        this.additionalMessage = "";
+        this.errorMessage = "Error - Loading Participant List, Please contact your DSM developer";
         throw "Error - Loading display settings" + err;
       }
     );
@@ -389,7 +379,7 @@ export class ParticipantListComponent implements OnInit {
   private getData() {
     //find viewFilter by filterName
     let defaultFilter = null;
-    if (this.role.getUserSetting().defaultParticipantFilter != null) {
+    if (this.role.getUserSetting() != null && this.role.getUserSetting().defaultParticipantFilter != null) {
       defaultFilter = this.savedFilters.find( filter => {
         return filter.filterName === this.role.getUserSetting().defaultParticipantFilter;
       } );
@@ -400,6 +390,7 @@ export class ParticipantListComponent implements OnInit {
       }
       if (defaultFilter != null && defaultFilter != undefined) {
         this.selectFilter( defaultFilter );
+        this.additionalMessage = "";
       }
       else if (this.role.getUserSetting().defaultParticipantFilter !== "" && this.role.getUserSetting().defaultParticipantFilter !== null && this.role.getUserSetting().defaultParticipantFilter !== undefined) {
         this.additionalMessage = "The default filter seems to be deleted, however it is still the default filter as long as not changed in the user settings.";

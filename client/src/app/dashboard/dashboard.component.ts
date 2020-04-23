@@ -99,85 +99,69 @@ export class DashboardComponent implements OnInit {
       this.loadingDDPData = true;
       this.ddp = null;
       if (version === Statics.MEDICALRECORD_DASHBOARD) {
-        let jsonData: any[];
-        this.dsmService.getRealmsAllowed( Statics.MEDICALRECORD ).subscribe(
+        this.allowedToSeeInformation = true;
+        this.dsmService.getMedicalRecordDashboard( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), startDate, endDate ).subscribe(
           data => {
-            jsonData = data;
-            jsonData.forEach( ( val ) => {
-              if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) === val) {
-                this.allowedToSeeInformation = true;
-                this.dsmService.getMedicalRecordDashboard( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), startDate, endDate ).subscribe(
-                  data => {
-                    let result = Result.parse( data );
-                    if (result.code != null && result.code !== 200) {
-                      this.errorMessage = "Error - Getting all participant numbers\nPlease contact your DSM developer";
-                    }
-                    else {
-                      this.ddp = DDPInformation.parse( data );
-                      this.activityKeys = this.getActivityKeys( this.ddp.dashboardValues );
-                      this.activityKeys.forEach( value => this.showActivityDetails[ value ] = false );
-                      this.getSourceColumnsFromFilterClass();
-                      this.loadSettings();
-                    }
-                    this.loadingDDPData = false;
-                  },
-                  err => {
-                    if (err._body === Auth.AUTHENTICATION_ERROR) {
-                      this.auth.logout();
-                    }
-                    this.loadingDDPData = false;
-                    this.errorMessage = "Error - Loading ddp information\nPlease contact your DSM developer";
-                  }
-                );
+            let result = Result.parse( data );
+            if (result.code === 500) {
+              if (result.body === Statics.ERROR_MESSAGE_NO_RIGHTS) {
+                this.allowedToSeeInformation = false;
+                this.loadingDDPData = false;
+                this.errorMessage = "";
+                this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
               }
-            } );
-            if (!this.allowedToSeeInformation) {
-              this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
-              this.loadingDDPData = false;
+              else {
+                this.additionalMessage = "";
+                this.errorMessage = "Error - Getting all participant numbers\nPlease contact your DSM developer";
+              }
             }
             else {
-              this.additionalMessage = null;
-            }
-          },
-          err => {
-            return null;
-          }
-        );
-      }
-      else if (version === Statics.SHIPPING_DASHBOARD) {
-        let jsonData: any[];
-        this.dsmService.getRealmsAllowed( Statics.SHIPPING ).subscribe(
-          data => {
-            jsonData = data;
-            jsonData.forEach( ( val ) => {
-              if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) === val) {
-                this.allowedToSeeInformation = true;
-                this.dsmService.getShippingDashboard( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) ).subscribe(
-                  data => {
-                    this.ddp = DDPInformation.parse( data );
-                    this.loadingDDPData = false;
-                  },
-                  err => {
-                    if (err._body === Auth.AUTHENTICATION_ERROR) {
-                      this.auth.logout();
-                    }
-                    this.errorMessage = "Error - Loading ddp information\nPlease contact your DSM developer";
-                    this.loadingDDPData = false;
-                  }
-                );
-              }
-            } );
-            if (!this.allowedToSeeInformation) {
-              this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
-              this.loadingDDPData = false;
-            }
-            else {
-              this.additionalMessage = null;
+              this.allowedToSeeInformation = true;
+              this.ddp = DDPInformation.parse( data );
+              this.activityKeys = this.getActivityKeys( this.ddp.dashboardValues );
+              this.activityKeys.forEach( value => this.showActivityDetails[ value ] = false );
+              this.getSourceColumnsFromFilterClass();
+              this.loadSettings();
             }
             this.loadingDDPData = false;
           },
           err => {
-            return null;
+            if (err._body === Auth.AUTHENTICATION_ERROR) {
+              this.auth.logout();
+            }
+            this.loadingDDPData = false;
+            this.errorMessage = "Error - Loading ddp information\nPlease contact your DSM developer";
+          }
+        );
+      }
+      else if (version === Statics.SHIPPING_DASHBOARD) {
+        this.dsmService.getShippingDashboard( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) ).subscribe(
+          data => {
+            let result = Result.parse( data );
+            if (result.code === 500) {
+              if (result.body === Statics.ERROR_MESSAGE_NO_RIGHTS) {
+                this.allowedToSeeInformation = false;
+                this.loadingDDPData = false;
+                this.errorMessage = "";
+                this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
+              }
+              else {
+                this.additionalMessage = "";
+                this.errorMessage = "Error - Getting all participant numbers\nPlease contact your DSM developer";
+              }
+            }
+            else {
+              this.allowedToSeeInformation = true;
+              this.ddp = DDPInformation.parse( data );
+              this.loadingDDPData = false;
+            }
+          },
+          err => {
+            if (err._body === Auth.AUTHENTICATION_ERROR) {
+              this.auth.logout();
+            }
+            this.errorMessage = "Error - Loading ddp information\nPlease contact your DSM developer";
+            this.loadingDDPData = false;
           }
         );
       }
@@ -214,7 +198,19 @@ export class DashboardComponent implements OnInit {
     this.dsmService.getLabelCreationStatus().subscribe(
       data => {
         let result = Result.parse( data );
-        if (result.code == 200 && result.body != null && result.body !== "0") {
+        if (result.code === 500) {
+          if (result.body === Statics.ERROR_MESSAGE_NO_RIGHTS) {
+            this.allowedToSeeInformation = false;
+            this.loadingDDPData = false;
+            this.errorMessage = "";
+            this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
+          }
+          else {
+            this.additionalMessage = "";
+            this.errorMessage = "Error - Getting all participant numbers\nPlease contact your DSM developer";
+          }
+        }
+        else if (result.code === 200 && result.body != null && result.body !== "0") {
           this.isCreatingLabels = Number( result.body );
         }
         else {
@@ -246,15 +242,30 @@ export class DashboardComponent implements OnInit {
     this.allowedToSeeInformation = true;
     this.dsmService.getShippingOverview().subscribe(
       data => {
-        this.kitsNoLabel = false;
-        this.ddp = DDPInformation.parse( data );
-        for (let kit of this.ddp.kits) {
-          if (kit.kitsNoLabel !== "0") {
-            this.kitsNoLabel = true;
-            break;
+        let result = Result.parse( data );
+        if (result.code === 500) {
+          if (result.body === Statics.ERROR_MESSAGE_NO_RIGHTS) {
+            this.allowedToSeeInformation = false;
+            this.loadingDDPData = false;
+            this.errorMessage = "";
+            this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
+          }
+          else {
+            this.additionalMessage = "";
+            this.errorMessage = "Error - Getting all participant numbers\nPlease contact your DSM developer";
           }
         }
-        this.loadingDDPData = false;
+        else {
+          this.kitsNoLabel = false;
+          this.ddp = DDPInformation.parse( data );
+          for (let kit of this.ddp.kits) {
+            if (kit.kitsNoLabel !== "0") {
+              this.kitsNoLabel = true;
+              break;
+            }
+          }
+          this.loadingDDPData = false;
+        }
       },
       err => {
         if (err._body === Auth.AUTHENTICATION_ERROR) {

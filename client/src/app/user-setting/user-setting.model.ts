@@ -30,7 +30,6 @@ export class UserSetting {
     }
     this.defaultParticipantFilter = defaultParticipantFilter;
     this.defaultTissueFilter = defaultTissueFilter;
-    console.log(defaultTissueFilter);
   }
 
 

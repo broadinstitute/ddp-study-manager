@@ -1,4 +1,5 @@
 import {ChangeDetectorRef, Component, OnInit} from "@angular/core";
+import {Result} from "../utils/result.model";
 import {FieldSettings} from "./field-settings.model";
 import {ActivatedRoute} from "@angular/router";
 import {ComponentService} from "../services/component.service";
@@ -54,8 +55,8 @@ export class FieldSettingsComponent implements OnInit {
   }
 
   ngOnInit() {
-    if (localStorage.getItem(ComponentService.MENU_SELECTED_REALM) != null) {
-      this.realm = localStorage.getItem(ComponentService.MENU_SELECTED_REALM);
+    if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) != null) {
+      this.realm = localStorage.getItem( ComponentService.MENU_SELECTED_REALM );
       this.checkRight();
     }
     else {
@@ -65,28 +66,9 @@ export class FieldSettingsComponent implements OnInit {
   }
 
   private checkRight() {
-    this.allowedToSeeInformation = false;
-    this.additionalMessage = null;
     this.selectedType = null;
     this.settingsOfSelectedType = [];
-    let jsonData: any[];
-    this.dsmService.getRealmsAllowed( Statics.MEDICALRECORD ).subscribe(
-      data => {
-        jsonData = data;
-        jsonData.forEach( ( val ) => {
-          if (this.realm === val) {
-            this.allowedToSeeInformation = true;
-            this.loadFieldSettings();
-          }
-        } );
-        if (!this.allowedToSeeInformation) {
-          this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
-        }
-      },
-      err => {
-        return null;
-      }
-    );
+    this.loadFieldSettings();
   }
 
   typeChecked( type: FieldType ) {
@@ -129,28 +111,37 @@ export class FieldSettingsComponent implements OnInit {
 
     this.dsmService.getFieldSettings( this.realm ).subscribe(
       data => {
-        this.fieldSettings = new Map<string, Array<FieldSettings>>();
-        jsonData = data;
-
-        for (const [ key, value ] of Object.entries( jsonData )) {
-          let type = this.possibleTypes.find( x => x.tableAlias === key );
-          for (let setting of value) {
-            let event = FieldSettings.parse( setting );
-            FieldSettings.addSettingWithType( this.fieldSettings, event, type );
-          }
+        let result = Result.parse( data );
+        if (result.code === 500) {
+          this.allowedToSeeInformation = false;
+          this.errorMessage = "";
+          this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
         }
-        if (this.selectedType) {
-          this.settingsOfSelectedType = [];
-          if (this.fieldSettings.has( this.selectedType.name )) {
-            let existingList: Array<FieldSettings> = this.fieldSettings.get( this.selectedType.name );
-            for (let setting of existingList) {
-              this.settingsOfSelectedType.push( setting );
+        else {
+          this.allowedToSeeInformation = true;
+          this.fieldSettings = new Map<string, Array<FieldSettings>>();
+          jsonData = data;
+
+          for (const [ key, value ] of Object.entries( jsonData )) {
+            let type = this.possibleTypes.find( x => x.tableAlias === key );
+            for (let setting of value) {
+              let event = FieldSettings.parse( setting );
+              FieldSettings.addSettingWithType( this.fieldSettings, event, type );
             }
           }
-          let newSetting: FieldSettings = new FieldSettings( null, null, null, this.selectedType.name,
-            null, null );
-          newSetting.addedNew = true;
-          this.settingsOfSelectedType.push( newSetting );
+          if (this.selectedType) {
+            this.settingsOfSelectedType = [];
+            if (this.fieldSettings.has( this.selectedType.name )) {
+              let existingList: Array<FieldSettings> = this.fieldSettings.get( this.selectedType.name );
+              for (let setting of existingList) {
+                this.settingsOfSelectedType.push( setting );
+              }
+            }
+            let newSetting: FieldSettings = new FieldSettings( null, null, null, this.selectedType.name,
+              null, null );
+            newSetting.addedNew = true;
+            this.settingsOfSelectedType.push( newSetting );
+          }
         }
         this.loading = false;
       },
