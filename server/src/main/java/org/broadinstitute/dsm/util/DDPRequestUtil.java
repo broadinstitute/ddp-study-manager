@@ -14,6 +14,7 @@ import org.broadinstitute.ddp.util.GoogleBucket;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.exception.SurveyNotCreated;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
+import org.broadinstitute.dsm.route.DownloadPDFRoute;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
@@ -141,7 +142,7 @@ public class DDPRequestUtil {
      * Getting all participants of a ddp back
      *
      * @param instance DDPInstance object (information of the ddp like url, token)
-     * @return HashMap<String                                                               ,                                                                                                                               DDPParticipant>
+     * @return HashMap<String                                                                                                                                                                                                                                                               ,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               DDPParticipant>
      * Key: (String) ddp_participant_id
      * Value: DDPParticipant (Information of participant from the ddp)
      */
@@ -239,13 +240,13 @@ public class DDPRequestUtil {
         }
     }
 
-    public static void makePDF(@NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId, @NonNull String userId, @NonNull String reason) {
+    public static void makeStandardPDF(@NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId, @NonNull String userId, @NonNull String reason) {
         DDPInstance instanceRole = DDPInstance.getDDPInstanceWithRole(ddpInstance.getName(), DBConstants.PDF_DOWNLOAD_RELEASE);
-        makePDF(ddpInstance.isHasRole(), instanceRole.isHasRole(), ddpInstance.getBaseUrl(), ddpInstance.getName(), ddpParticipantId, ddpInstance.isHasAuth0Token(), userId, reason);
+        makeStandardPDF(ddpInstance.isHasRole(), instanceRole.isHasRole(), ddpInstance.getBaseUrl(), ddpInstance.getName(), ddpParticipantId, ddpInstance.isHasAuth0Token(), userId, reason);
     }
 
-    public static void makePDF(@NonNull boolean hasConsentEndpoints, @NonNull boolean hasReleaseEndpoints, @NonNull String baseUrl, @NonNull String instanceName, @NonNull String ddpParticipantId,
-                               @NonNull boolean hasAuth0Token, @NonNull String userId, @NonNull String reason) {
+    public static void makeStandardPDF(@NonNull boolean hasConsentEndpoints, @NonNull boolean hasReleaseEndpoints, @NonNull String baseUrl, @NonNull String instanceName, @NonNull String ddpParticipantId,
+                                       @NonNull boolean hasAuth0Token, @NonNull String userId, @NonNull String reason) {
         // save consent in bucket, if ddpInstance has endpoint
         long time = System.currentTimeMillis();
         if (hasConsentEndpoints) {
@@ -264,6 +265,30 @@ public class DDPRequestUtil {
             catch (RuntimeException e) {
                 logger.error("Couldn't download consent pdf ", e);
             }
+        }
+    }
+
+    public static void makeNonStandardPDF(@NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId, @NonNull String userId, @NonNull String reason) {
+        //get pdf info from ES (get participant)
+        Map<String, Map<String, Object>> participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
+                ElasticSearchUtil.BY_GUID + ddpParticipantId);
+        if (participantESData != null && !participantESData.isEmpty()) {
+            makeNonStandardPDF(participantESData, ddpInstance, ddpParticipantId, userId, reason);
+        }
+        else {
+            participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance, ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId);
+            if (participantESData != null && !participantESData.isEmpty()) {
+                makeNonStandardPDF(participantESData, ddpInstance, ddpParticipantId, userId, reason);
+            }
+        }
+    }
+
+    private static void makeNonStandardPDF(@NonNull Map<String, Map<String, Object>> participantESData, @NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId, @NonNull String userId, @NonNull String reason) {
+        Object pdfs = DownloadPDFRoute.returnPDFS(participantESData, ddpParticipantId);
+        List<Map<String, String>> pdfList = (List<Map<String, String>>) pdfs;
+        long time = System.currentTimeMillis();
+        for (Map<String, String> pdf : pdfList) {
+            DDPRequestUtil.savePDFsInBucket(ddpInstance.getBaseUrl(), ddpInstance.getName(), ddpParticipantId, ddpInstance.isHasAuth0Token(), "/pdfs/" + pdf.get("configName"), time, userId, reason);
         }
     }
 }
