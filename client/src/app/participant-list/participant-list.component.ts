@@ -424,6 +424,11 @@ export class ParticipantListComponent implements OnInit {
               this.loadedTimeStamp = Utils.getDateFormatted( date, Utils.DATE_STRING_IN_EVENT_CVS );
             }
             this.loadingParticipants = null;
+            this.dataSources.forEach( ( value: string, key: string ) => {
+              this.selectedColumns[ key ] = [];
+            } );
+            this.selectedColumns[ "data" ] = this.defaultColumns;
+            // this.selectedColumns = {};
           },
           err => {
             if (err._body === Auth.AUTHENTICATION_ERROR) {
