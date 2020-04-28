@@ -833,21 +833,28 @@ public class ViewFilter {
                 if (isValidDate(value, false)) {
                     type = Filter.DATE;
                 }
-                if (Filter.ADDITIONAL_VALUES.equals(type)) {
+                if (Filter.ADDITIONAL_VALUES.equals(filter.type)) {
                     filter.participantColumn = new ParticipantColumn(path, tableName);
                 }
-                if (!Filter.CHECKBOX.equals(type)) {
-                    if (f1) {
+                else if (Filter.TEXT.equals(filter.type)) {
+                    filter.filter1 = new NameValue(columnName, value);
+                }
+                else if (!Filter.CHECKBOX.equals(filter.type)) {
+                    if (f1) {// first in range
                         filter.filter1 = new NameValue(columnName, value);
                     }
-                    if (path != null && !f2) {
+                    if (path != null && !f2) {//additional field
                         filter.filter2 = new NameValue(path, "");
                     }
-                    if (f2) {
+                    if (f2) {// maximum set in a range filter
                         if (filter.filter1 == null) {
                             filter.filter1 = new NameValue(columnName, null);
                         }
                         filter.filter2 = new NameValue(columnName, value);
+                    }
+                    else if (StringUtils.isBlank(value)) {// no values
+                        filter.filter1 = new NameValue(columnName, null);
+                        filter.filter2 = new NameValue(columnName, null);
                     }
                 }
                 else {

@@ -359,6 +359,10 @@ export class TissueListComponent implements OnInit {
         data => {
           if (this.defaultFilter != null && this.defaultFilter != undefined && this.defaultFilter.filters != null) {
             this.adjustAllColumns( this.defaultFilter );
+          }else{
+            this.currentFilter = null;
+            this.selectedFilterName = "";
+            this.selectedColumns = this.createDefaultColumns();
           }
           let date = new Date();
           this.loadedTimeStamp = Utils.getDateFormatted( date, Utils.DATE_STRING_IN_EVENT_CVS );
@@ -372,10 +376,11 @@ export class TissueListComponent implements OnInit {
           this.tissueListWrappers = this.parseTissueListWrapperData( jsonData );
           console.log( this.tissueListWrappers );
           this.originalTissueListWrappers = this.tissueListWrappers;
-          this.currentFilter = this.defaultFilter.filters;
-          this.selectedFilterName = this.defaultFilter.filterName;
-          this.selectedColumns = this.defaultFilter.columns;
+
           if (this.defaultFilter != null && this.defaultFilter.filters != null) {
+            this.currentFilter = this.defaultFilter.filters;
+            this.selectedFilterName = this.defaultFilter.filterName;
+            this.selectedColumns = this.defaultFilter.columns;
             for (let filter of this.defaultFilter.filters) {
               if (filter.type === Filter.OPTION_TYPE) {
                 filter.selectedOptions = filter.getSelectedOptionsBoolean();
@@ -773,6 +778,7 @@ export class TissueListComponent implements OnInit {
   }
 
   public selectFilter( savedFilter ) {
+    this.additionalMessage = "";
     this.loading = true;
     this.sortParent = null;
     this.sortColumn = null;
@@ -788,6 +794,7 @@ export class TissueListComponent implements OnInit {
         }
       }
     }
+    console.log(savedFilter);
     let filters: Filter[];
     this.dsmService.applyFilter( savedFilter, this.realm, this.parent, null ).subscribe(
       data => {
@@ -845,6 +852,7 @@ export class TissueListComponent implements OnInit {
   }
 
   public applyQuickFilter( quickFilter ) {
+    this.additionalMessage = "";
     this.loading = true;
     this.currentQuickFilterName = quickFilter.name;
     this.currentView = JSON.stringify( quickFilter );
@@ -1517,5 +1525,12 @@ export class TissueListComponent implements OnInit {
       return f.participantColumn.tableAlias === oncColumn.participantColumn.tableAlias && f.participantColumn.name === oncColumn.participantColumn.name;
     } );
     return f !== undefined;
+  }
+
+  createDefaultColumns(){
+    this.selectedColumns["data"]=this.defaultESColumns;
+    this.selectedColumns["oD"]=this.defaultOncHistoryColumns;
+    this.selectedColumns["t"]=this.defaultTissueColumns;
+    return this.selectedColumns;
   }
 }
