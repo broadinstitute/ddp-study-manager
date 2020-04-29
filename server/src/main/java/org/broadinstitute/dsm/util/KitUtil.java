@@ -144,6 +144,7 @@ public class KitUtil {
                         KitRequestShipping.updateRequest(kitLabelTriggered, ddpParticipant, kitLabelTriggered.getKitTyp(), kitLabelTriggered.getKitRequestSettings());
                     }
                     else {
+                        KitRequestShipping.deactivateKitRequest(kitLabelTriggered.getDsmKitRequestId(), "Participant not found", null, "System");
                         logger.error("Didn't find participant " + kitLabelTriggered.getDdpParticipantId());
                     }
                 }
