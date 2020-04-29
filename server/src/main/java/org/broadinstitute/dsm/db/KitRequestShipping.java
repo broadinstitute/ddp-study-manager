@@ -65,6 +65,9 @@ public class KitRequestShipping extends KitRequest {
             "ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id AND kit.dsm_kit_id = groupedKit.kit_id SET deactivated_date = ?, " +
             "deactivation_reason = ?, deactivated_by = ? WHERE kit.dsm_kit_request_id = ?";
     private static final String INSERT_KIT = "INSERT INTO ddp_kit (dsm_kit_request_id, easypost_address_id_to,  error, message) VALUES (?,?,?,?)";
+    private static final String UPDATE_KIT = "UPDATE ddp_kit SET label_url_to = ?, label_url_return = ?, easypost_to_id = ?, easypost_return_id = ?, tracking_to_id = ?, " +
+            "tracking_return_id = ?, easypost_tracking_to_url = ?, easypost_tracking_return_url = ?, error = ?, message = ?, easypost_address_id_to = ?, express = ? " +
+            "WHERE dsm_kit_id = ?";
 
     public static final String DEACTIVATION_REASON = "Generated Express";
 
@@ -533,7 +536,7 @@ public class KitRequestShipping extends KitRequest {
         }
     }
 
-    public static void deactivateKitRequest(@NonNull String kitRequestId, @NonNull String reason, @NonNull String easypostApiKey, @NonNull String userId) {
+    public static void deactivateKitRequest(@NonNull String kitRequestId, @NonNull String reason, String easypostApiKey, @NonNull String userId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(UPDATE_KIT_DEACTIVATION)) {
@@ -559,7 +562,9 @@ public class KitRequestShipping extends KitRequest {
             throw new RuntimeException("Error setting kitRequest to deactivated w/ dsm_kit_request_id " + kitRequestId, results.resultException);
         }
         else {
-            KitRequestShipping.refundKit(kitRequestId, easypostApiKey);
+            if (easypostApiKey != null) {
+                KitRequestShipping.refundKit(kitRequestId, easypostApiKey);
+            }
         }
     }
 
@@ -737,7 +742,7 @@ public class KitRequestShipping extends KitRequest {
                                  String errorMessage, Address toAddress, boolean isExpress) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.UPDATE_UPLOADED_KIT))) {
+            try (PreparedStatement stmt = conn.prepareStatement(UPDATE_KIT)) {
                 if (participantShipment != null) {
                     PostageLabel participantLabel = participantShipment.getPostageLabel();
                     Tracker participantTracker = participantShipment.getTracker();
