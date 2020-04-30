@@ -157,7 +157,7 @@ public class FilterRoute extends RequestHandler {
                 if (queryParams.value(RoutePath.FILTER_DEFAULT) != null) {
                     defaultFilter = queryParams.get(RoutePath.FILTER_DEFAULT).value();
                 }
-                if (StringUtils.isNotBlank(defaultFilter)) {
+                if (TISSUE_LIST_PARENT.equals(parent) && StringUtils.isNotBlank(defaultFilter)) {
                     List<TissueList> tissueListList = new ArrayList<>();
                     List<TissueListWrapper> wrapperList = null;
                     if ("0".equals(defaultFilter)) {
@@ -174,7 +174,6 @@ public class FilterRoute extends RequestHandler {
                             tissueListList = TissueList.getAllTissueListsForRealmNoFilter(realm);
                             wrapperList = TissueListWrapper.getTissueListData(instance, null, tissueListList);
                         }
-
                     }
                     logger.info("Found " + wrapperList.size() + " tissues for Tissue View");
                     return wrapperList;
