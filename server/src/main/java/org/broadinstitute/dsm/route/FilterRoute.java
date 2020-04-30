@@ -189,17 +189,18 @@ public class FilterRoute extends RequestHandler {
     }
 
     public Object doFiltering(String json, DDPInstance instance, String filterName, String parent, Filter[] savedFilters) {
-        ViewFilter requestForFiltering = null;
         String filterQuery = "";
         Filter[] filters = null;
         String quickFilterName = "";
         if (json != null) {
-            requestForFiltering = new Gson().fromJson(json, ViewFilter.class);
-            if (requestForFiltering.getFilters() == null && StringUtils.isNotBlank(requestForFiltering.getFilterQuery())) {
-                filterQuery = ViewFilter.changeFieldsInQuery(requestForFiltering.getFilterQuery(), false);
-                requestForFiltering = ViewFilter.parseFilteringQuery(filterQuery, requestForFiltering);
+            ViewFilter requestForFiltering = new Gson().fromJson(json, ViewFilter.class);
+            if (requestForFiltering != null) {
+                if (requestForFiltering.getFilters() == null && StringUtils.isNotBlank(requestForFiltering.getFilterQuery())) {
+                    filterQuery = ViewFilter.changeFieldsInQuery(requestForFiltering.getFilterQuery(), false);
+                    requestForFiltering = ViewFilter.parseFilteringQuery(filterQuery, requestForFiltering);
+                }
+                filters = requestForFiltering.getFilters();
             }
-            filters = requestForFiltering.getFilters();
             quickFilterName = requestForFiltering == null ? null : requestForFiltering.getQuickFilterName();
         }
         else if (savedFilters != null) {
