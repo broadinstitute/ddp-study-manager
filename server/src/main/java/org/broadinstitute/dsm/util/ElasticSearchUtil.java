@@ -181,7 +181,6 @@ public class ElasticSearchUtil {
     }
 
     private static AbstractQueryBuilder<? extends AbstractQueryBuilder<?>> createESQuery(@NonNull String filter) {
-        logger.info("Creating ES query");
         String[] filters = filter.split(Filter.AND);
         BoolQueryBuilder finalQuery = new BoolQueryBuilder();
 
@@ -513,7 +512,6 @@ public class ElasticSearchUtil {
     }
 
     private static void createQuery(@NonNull BoolQueryBuilder finalQuery, @NonNull String filterPart, boolean must) {
-        logger.info("Create Query");
         boolean wildCard = false;
         String[] nameValue = filterPart.split(Filter.EQUALS);
         if (nameValue.length == 1) { //didn't contain EQUALS -> split LIKE
