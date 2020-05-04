@@ -157,7 +157,7 @@ public class FilterRoute extends RequestHandler {
                 if (queryParams.value(RoutePath.FILTER_DEFAULT) != null) {
                     defaultFilter = queryParams.get(RoutePath.FILTER_DEFAULT).value();
                 }
-                if (StringUtils.isNotBlank(defaultFilter)) {
+                if (TISSUE_LIST_PARENT.equals(parent) && StringUtils.isNotBlank(defaultFilter)) {
                     List<TissueList> tissueListList = new ArrayList<>();
                     List<TissueListWrapper> wrapperList = null;
                     if ("0".equals(defaultFilter)) {
@@ -174,7 +174,6 @@ public class FilterRoute extends RequestHandler {
                             tissueListList = TissueList.getAllTissueListsForRealmNoFilter(realm);
                             wrapperList = TissueListWrapper.getTissueListData(instance, null, tissueListList);
                         }
-
                     }
                     logger.info("Found " + wrapperList.size() + " tissues for Tissue View");
                     return wrapperList;
@@ -190,17 +189,18 @@ public class FilterRoute extends RequestHandler {
     }
 
     public Object doFiltering(String json, DDPInstance instance, String filterName, String parent, Filter[] savedFilters) {
-        ViewFilter requestForFiltering = null;
         String filterQuery = "";
         Filter[] filters = null;
         String quickFilterName = "";
         if (json != null) {
-            requestForFiltering = new Gson().fromJson(json, ViewFilter.class);
-            if (requestForFiltering.getFilters() == null && StringUtils.isNotBlank(requestForFiltering.getFilterQuery())) {
-                filterQuery = ViewFilter.changeFieldsInQuery(requestForFiltering.getFilterQuery(), false);
-                requestForFiltering = ViewFilter.parseFilteringQuery(filterQuery, requestForFiltering);
+            ViewFilter requestForFiltering = new Gson().fromJson(json, ViewFilter.class);
+            if (requestForFiltering != null) {
+                if (requestForFiltering.getFilters() == null && StringUtils.isNotBlank(requestForFiltering.getFilterQuery())) {
+                    filterQuery = ViewFilter.changeFieldsInQuery(requestForFiltering.getFilterQuery(), false);
+                    requestForFiltering = ViewFilter.parseFilteringQuery(filterQuery, requestForFiltering);
+                }
+                filters = requestForFiltering.getFilters();
             }
-            filters = requestForFiltering.getFilters();
             quickFilterName = requestForFiltering == null ? null : requestForFiltering.getQuickFilterName();
         }
         else if (savedFilters != null) {

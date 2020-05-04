@@ -319,8 +319,8 @@
           <td></td>
         </tr>
 
-        <ng-container *ngIf="ddp.dashboardValuesDetailed['faxSent'] !== null && ddp.dashboardValuesDetailed['faxSent'] !== undefined
-          && ddp.dashboardValuesDetailed['notRequested'] !== null && ddp.dashboardValuesDetailed['notRequested'] !== undefined">
+        <ng-container *ngIf="ddp.dashboardValuesDetailed['readyToRequest'] !== null && ddp.dashboardValuesDetailed['notRequested'] !== null
+          && ddp.dashboardValuesDetailed['faxSent'] !== null ">
           <tr>
             <td>MR ready to request</td>
             <td>
