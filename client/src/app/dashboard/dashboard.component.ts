@@ -97,11 +97,11 @@ export class DashboardComponent implements OnInit {
     if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) != null) {
       this.allowedToSeeInformation = false;
       this.loadingDDPData = true;
-      this.ddp = null;
       if (version === Statics.MEDICALRECORD_DASHBOARD) {
         let jsonData: any[];
         this.dsmService.getRealmsAllowed( Statics.MEDICALRECORD ).subscribe(
           data => {
+            this.ddp = null;
             jsonData = data;
             jsonData.forEach( ( val ) => {
               if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) === val) {
@@ -392,6 +392,12 @@ export class DashboardComponent implements OnInit {
         || filter.participantColumn.tableAlias === "r") {
         if (this.sourceColumns[ "p" ] == null) {
           this.sourceColumns[ "p" ] = [];
+        }
+        this.sourceColumns[ "p" ].push( filter );
+      }
+      if (filter.participantColumn.tableAlias === "inst") {
+        if (this.sourceColumns[ "m" ] == null) {
+          this.sourceColumns[ "m" ] = [];
         }
         this.sourceColumns[ "p" ].push( filter );
       }

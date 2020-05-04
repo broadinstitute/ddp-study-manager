@@ -179,7 +179,7 @@ export class MedicalRecordComponent implements OnInit {
           if (err._body === Auth.AUTHENTICATION_ERROR) {
             this.router.navigate( [ Statics.HOME_URL ] );
           }
-          this.additionalMessage = "Error - Saving paper C/R changes \n" + err;
+          this.additionalMessage = "Error - Saving changes \n" + err;
         },
       );
     }

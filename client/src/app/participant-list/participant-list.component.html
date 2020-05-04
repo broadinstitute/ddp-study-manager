@@ -93,7 +93,7 @@
                 <li *ngFor="let column of sourceColumns[key]">
                   <md-checkbox color="primary" disableRipple
                                (change)="addOrRemoveColumn(column, key)"
-                               [checked]="selectedColumns[key] != null && selectedColumns[key].includes(column)">{{column.participantColumn.display}}
+                               [checked]="selectedColumns[key] != null && hasThisColumnSelected(selectedColumns[key],column)">{{column.participantColumn.display}}
                   </md-checkbox>
                 </li>
               </ul>
@@ -327,6 +327,16 @@
                 <ng-container *ngIf="!col.participantColumn.esData">
                   <div *ngIf="alias === 'data' && pt.data != null">
                     <ng-container *ngIf="col.type === 'DATE'">
+                      <ng-container
+                        *ngIf="col.participantColumn.object != null && pt.data[col.participantColumn.object] != null">
+                        {{pt.data[col.participantColumn.object][col.participantColumn.name] | date:'medium'}}
+                      </ng-container>
+                      <ng-container
+                        *ngIf="col.participantColumn.object == null && pt.data[col.participantColumn.name] != null">
+                        {{pt.data[col.participantColumn.name] | date:'medium'}}
+                      </ng-container>
+                    </ng-container>
+                    <ng-container *ngIf="col.type === 'DATE'">
                       <ng-container *ngIf="col.participantColumn.object != null && pt.data[col.participantColumn.object] != null">
                         {{pt.data[col.participantColumn.object][col.participantColumn.name] | date:'medium'}}
                       </ng-container>
@@ -476,7 +486,13 @@
                                 </ng-container>
                               </ng-container>
                               <ng-container
-                                *ngIf="col.type === 'DATE'">{{getUtil().getDateFormatted(tissue[col.participantColumn.name])}}
+                                *ngIf="col.type === 'DATE'">
+                                <ng-container *ngIf="tissue[col.participantColumn.name] === 'N/A'">
+                                  {{tissue[col.participantColumn.name]}}
+                                </ng-container>
+                                <ng-container *ngIf="tissue[col.participantColumn.name] !== 'N/A'">
+                                  {{getUtil().getDateFormatted(tissue[col.participantColumn.name])}}
+                                </ng-container>
                               </ng-container>
                               <ng-container
                                 *ngIf="col.type === 'OPTIONS'">{{getOptionDisplay(col.options, tissue[col.participantColumn.name])}}

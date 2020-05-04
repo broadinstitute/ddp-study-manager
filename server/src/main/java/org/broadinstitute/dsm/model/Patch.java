@@ -10,10 +10,7 @@ import org.broadinstitute.dsm.exception.DuplicateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.sql.Types;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +22,7 @@ public class Patch {
     private static final Logger logger = LoggerFactory.getLogger(Patch.class);
 
     private static final String SQL_UPDATE_VALUES = "UPDATE $table SET $colName = ?, last_changed = ?, changed_by = ? WHERE $pk = ?";
+    public static final String SQL_CHECK_UNIQUE = "SELECT * FROM $table WHERE ($colName = ? ) and deleted <=> 0 ";
     public static final String TABLE = "$table";
     public static final String PK = "$pk";
     public static final String COL_NAME = "$colName";
@@ -41,6 +39,7 @@ public class Patch {
     private NameValue nameValue;
     private String tableAlias;
     private List<NameValue> nameValues;
+    private Boolean isUnique;
 
     //regular patch
     public Patch(String id, String parent, String parentId, String user, NameValue nameValue, List<NameValue> nameValues) {
@@ -50,6 +49,18 @@ public class Patch {
         this.user = user;
         this.nameValue = nameValue;
         this.nameValues = nameValues;
+        this.isUnique = false;
+    }
+
+    //unique field patch
+    public Patch(String id, String parent, String parentId, String user, NameValue nameValue, List<NameValue> nameValues, Boolean isUnique) {
+        this.id = id;
+        this.parent = parent;
+        this.parentId = parentId;
+        this.user = user;
+        this.nameValue = nameValue;
+        this.nameValues = nameValues;
+        this.isUnique = isUnique;
     }
 
     //abstraction patch
@@ -124,4 +135,38 @@ public class Patch {
         }
         return true;
     }
+
+    public static Boolean patchUniqueField(@NonNull String id, @NonNull String user, @NonNull NameValue nameValue, @NonNull DBElement dbElement){
+        if(!isValueUnique(dbElement)){
+            return false;
+        }
+        return patch(id, user, nameValue, dbElement);
+    }
+
+    public static Boolean isValueUnique(@NonNull DBElement dbElement){
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_CHECK_UNIQUE.
+                    replace(TABLE, dbElement.getTableName()).replace(COL_NAME, dbElement.getColumnName()))) {
+                try {
+                    ResultSet rs = stmt.executeQuery();
+                    if (rs.next()) {
+                        dbVals.resultValue = false;
+                    }
+                    else{
+                        dbVals.resultValue = true;
+                    }
+                }
+                catch (Exception e) {
+                    dbVals.resultException = e;
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+        return (Boolean) results.resultValue;
+    }
+
 }

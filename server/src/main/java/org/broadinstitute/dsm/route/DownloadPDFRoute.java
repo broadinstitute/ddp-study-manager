@@ -112,19 +112,21 @@ public class DownloadPDFRoute extends RequestHandler {
                             return new Result(200);
                         }
                         else {
+                            response.status(500);
                             throw new RuntimeException("Error missing pdf type");
                         }
                     }
                     else {
+                        response.status(500);
                         throw new RuntimeException("Error missing participantId");
                     }
                 }
                 else {
+                    response.status(500);
                     throw new RuntimeException("Error missing participantId");
                 }
             }
             else {
-                response.status(500);
                 return new Result(500, UserErrorMessages.NO_RIGHTS);
             }
         }
@@ -158,14 +160,14 @@ public class DownloadPDFRoute extends RequestHandler {
                 }
             }
             else {
-                response.status(500);
                 return new Result(500, UserErrorMessages.NO_RIGHTS);
             }
         }
+        response.status(500);
         throw new RuntimeException("Something went wrong");
     }
 
-    private Object returnPDFS(Map<String, Map<String, Object>> participantESData, @NonNull String ddpParticipantId) {
+    public static Object returnPDFS(Map<String, Map<String, Object>> participantESData, @NonNull String ddpParticipantId) {
         if (participantESData != null && !participantESData.isEmpty() && participantESData.size() == 1) {
             Map<String, Object> participantData = participantESData.get(ddpParticipantId);
             if (participantData != null) {
