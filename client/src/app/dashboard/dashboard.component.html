@@ -190,15 +190,6 @@
           </td>
           <td></td>
         </tr>
-        <!--<tr>-->
-        <!--<td>PT Enrolled</td>-->
-        <!--<td>-->
-        <!--<ng-container *ngIf="ddp.dashboardValues['status.ENROLLED'] !== null && ddp.dashboardValues['status.ENROLLED'] !== undefined">-->
-        <!--{{ddp.dashboardValues['status.ENROLLED']}} pts-->
-        <!--</ng-container>-->
-        <!--</td>-->
-        <!--<td></td>-->
-        <!--</tr>-->
         <tr>
           <td>PT w/ Blood Consent</td>
           <td>
@@ -213,15 +204,6 @@
           <td>
             <ng-container *ngIf="ddp.dashboardValues['tissueConsent'] !== null && ddp.dashboardValues['tissueConsent'] !== undefined">
               {{ddp.dashboardValues['tissueConsent']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>PT with minimal mr</td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValues['minimalMR'] !== null && ddp.dashboardValues['minimalMR'] !== undefined">
-              {{ddp.dashboardValues['minimalMR']}} pts
             </ng-container>
           </td>
           <td></td>
@@ -328,689 +310,719 @@
           </ng-container>
         </ng-container>
         <tr>
-          <td>Medical records not requested</td>
+          <td>PT with minimal mr</td>
           <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['notRequested'] !== null && ddp.dashboardValuesDetailed['notRequested'] !== undefined">
-              {{ddp.dashboardValuesDetailed['notRequested']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['notRequested'] !== null && ddp.dashboardValues['notRequested'] !== undefined">
-              {{ddp.dashboardValues['notRequested']}}
-              pts
+            <ng-container *ngIf="ddp.dashboardValues['minimalMR'] !== null && ddp.dashboardValues['minimalMR'] !== undefined">
+              {{ddp.dashboardValues['minimalMR']}} pts
             </ng-container>
           </td>
-          <td>
-          </td>
+          <td></td>
         </tr>
-        <tr>
-          <td>Initial MR Request
-            <ng-container *ngIf="showMedicalRecordRequestDetails">1</ng-container>
-          </td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['faxSent'] !== null && ddp.dashboardValuesDetailed['faxSent'] !== undefined">
-              {{ddp.dashboardValuesDetailed['faxSent']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['faxSent'] !== null && ddp.dashboardValues['faxSent'] !== undefined">{{ddp.dashboardValues['faxSent']}}
-              pts
-            </ng-container>
-          </td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesPeriodDetailed['faxSent'] !== null && ddp.dashboardValuesPeriodDetailed['faxSent'] !== undefined">
-              {{ddp.dashboardValuesPeriodDetailed['faxSent']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValuesPeriod['faxSent'] !== null && ddp.dashboardValuesPeriod['faxSent'] !== undefined">
-              {{ddp.dashboardValuesPeriod['faxSent']}} pts
-            </ng-container>
-          </td>
-          <td>
-            <ng-container *ngIf="!showMedicalRecordRequestDetails">
-              <button md-mini-fab color=""
-                      (click)="showMedicalRecordRequestDetails = !showMedicalRecordRequestDetails">
-                <i class="fas fa-plus fa-lg"></i>
-              </button>
-              <span>  Show MR Request Details</span>
-            </ng-container>
-            <ng-container *ngIf="showMedicalRecordRequestDetails">
-              <button md-mini-fab color=""
-                      (click)="showMedicalRecordRequestDetails = !showMedicalRecordRequestDetails">
-                <i class="fas fa-minus fa-lg"></i>
-              </button>
-              <span>  Hide MR Request Details</span>
-            </ng-container>
-          </td>
-        </tr>
-        <ng-container *ngIf="showMedicalRecordRequestDetails">
+
+        <ng-container *ngIf="ddp.dashboardValuesDetailed['readyToRequest'] !== null && ddp.dashboardValuesDetailed['notRequested'] !== null
+          && ddp.dashboardValuesDetailed['faxSent'] !== null ">
           <tr>
-            <td class="TD--Padding-BIG">Initial MR Request 2</td>
+            <td>MR ready to request</td>
             <td>
-              <ng-container *ngIf="ddp.dashboardValuesDetailed['faxSent2'] !== null && ddp.dashboardValuesDetailed['faxSent2'] !== undefined">
-                {{ddp.dashboardValuesDetailed['faxSent2']}} sets/
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['readyToRequest'] !== null && ddp.dashboardValuesDetailed['readyToRequest'] !== undefined">
+                {{ddp.dashboardValuesDetailed['readyToRequest']}} sets/
               </ng-container>
-              <ng-container *ngIf="ddp.dashboardValues['faxSent2'] !== null && ddp.dashboardValues['faxSent2'] !== undefined">
-                {{ddp.dashboardValues['faxSent2']}}
+              <ng-container *ngIf="ddp.dashboardValues['readyToRequest'] !== null && ddp.dashboardValues['readyToRequest'] !== undefined">
+                {{ddp.dashboardValues['readyToRequest']}}
                 pts
               </ng-container>
             </td>
             <td>
-              <ng-container *ngIf="ddp.dashboardValuesPeriodDetailed['faxSent2'] !== null && ddp.dashboardValuesPeriodDetailed['faxSent2'] !== undefined">
-                {{ddp.dashboardValuesPeriodDetailed['faxSent2']}} sets/
-              </ng-container>
-              <ng-container *ngIf="ddp.dashboardValuesPeriod['faxSent2'] !== null && ddp.dashboardValuesPeriod['faxSent2'] !== undefined">
-                {{ddp.dashboardValuesPeriod['faxSent2']}} pts
-              </ng-container>
             </td>
           </tr>
           <tr>
-            <td class="TD--Padding-BIG">Initial MR Request 3</td>
+            <td>Total requestable MR</td>
             <td>
-              <ng-container *ngIf="ddp.dashboardValuesDetailed['faxSent3'] !== null && ddp.dashboardValuesDetailed['faxSent3'] !== undefined">
-                {{ddp.dashboardValuesDetailed['faxSent3']}} sets/
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['notRequested'] !== null && ddp.dashboardValuesDetailed['notRequested'] !== undefined">
+                {{ddp.dashboardValuesDetailed['notRequested']}} sets/
               </ng-container>
-              <ng-container *ngIf="ddp.dashboardValues['faxSent3'] !== null && ddp.dashboardValues['faxSent3'] !== undefined">
-                {{ddp.dashboardValues['faxSent3']}}
+              <ng-container *ngIf="ddp.dashboardValues['notRequested'] !== null && ddp.dashboardValues['notRequested'] !== undefined">
+                {{ddp.dashboardValues['notRequested']}}
                 pts
               </ng-container>
             </td>
             <td>
-              <ng-container *ngIf="ddp.dashboardValuesPeriodDetailed['faxSent3'] !== null && ddp.dashboardValuesPeriodDetailed['faxSent3'] !== undefined">
-                {{ddp.dashboardValuesPeriodDetailed['faxSent3']}} sets/
+            </td>
+          </tr>
+          <tr>
+            <td>Initial MR Request
+              <ng-container *ngIf="showMedicalRecordRequestDetails">1</ng-container>
+            </td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['faxSent'] !== null && ddp.dashboardValuesDetailed['faxSent'] !== undefined">
+                {{ddp.dashboardValuesDetailed['faxSent']}} sets/
               </ng-container>
-              <ng-container *ngIf="ddp.dashboardValuesPeriod['faxSent3'] !== null && ddp.dashboardValuesPeriod['faxSent3'] !== undefined">
-                {{ddp.dashboardValuesPeriod['faxSent3']}} pts
+              <ng-container *ngIf="ddp.dashboardValues['faxSent'] !== null && ddp.dashboardValues['faxSent'] !== undefined">{{ddp.dashboardValues['faxSent']}}
+                pts
+              </ng-container>
+            </td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesPeriodDetailed['faxSent'] !== null && ddp.dashboardValuesPeriodDetailed['faxSent'] !== undefined">
+                {{ddp.dashboardValuesPeriodDetailed['faxSent']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValuesPeriod['faxSent'] !== null && ddp.dashboardValuesPeriod['faxSent'] !== undefined">
+                {{ddp.dashboardValuesPeriod['faxSent']}} pts
+              </ng-container>
+            </td>
+            <td>
+              <ng-container *ngIf="!showMedicalRecordRequestDetails">
+                <button md-mini-fab color=""
+                        (click)="showMedicalRecordRequestDetails = !showMedicalRecordRequestDetails">
+                  <i class="fas fa-plus fa-lg"></i>
+                </button>
+                <span>  Show MR Request Details</span>
+              </ng-container>
+              <ng-container *ngIf="showMedicalRecordRequestDetails">
+                <button md-mini-fab color=""
+                        (click)="showMedicalRecordRequestDetails = !showMedicalRecordRequestDetails">
+                  <i class="fas fa-minus fa-lg"></i>
+                </button>
+                <span>  Hide MR Request Details</span>
               </ng-container>
             </td>
           </tr>
-        </ng-container>
-        <tr>
-          <td>Initial MR Received</td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['mrReceived'] !== null && ddp.dashboardValuesDetailed['mrReceived'] !== undefined">
-              {{ddp.dashboardValuesDetailed['mrReceived']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['mrReceived'] !== null && ddp.dashboardValues['mrReceived'] !== undefined">
-              {{ddp.dashboardValues['mrReceived']}} pts
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['mrReceived'] !== null && ddp.dashboardValues['mrReceived'] !== undefined
-              && ddp.dashboardValuesDetailed['mrReceived'] !== null && ddp.dashboardValuesDetailed['mrReceived'] !== undefined
-              && ddp.dashboardValues['faxSent'] !== null && ddp.dashboardValues['faxSent'] !== undefined
-              && ddp.dashboardValuesDetailed['faxSent'] !== null && ddp.dashboardValuesDetailed['faxSent'] !== undefined">
-              ({{getPercentage(ddp.dashboardValuesDetailed['mrReceived'], ddp.dashboardValuesDetailed['faxSent'] )}}% sets/
-              {{getPercentage(ddp.dashboardValues['mrReceived'], ddp.dashboardValues['faxSent'] )}}% pts)
-            </ng-container>
-          </td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesPeriodDetailed['mrReceived'] !== null && ddp.dashboardValuesPeriodDetailed['mrReceived'] !== undefined">
-              {{ddp.dashboardValuesPeriodDetailed['mrReceived']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValuesPeriod['mrReceived'] !== null && ddp.dashboardValuesPeriod['mrReceived'] !== undefined">
-              {{ddp.dashboardValuesPeriod['mrReceived']}} pts
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValuesPeriod['mrReceived'] !== null && ddp.dashboardValuesPeriod['mrReceived'] !== undefined
-              && ddp.dashboardValuesPeriodDetailed['mrReceived'] !== null && ddp.dashboardValuesPeriodDetailed['mrReceived'] !== undefined
-              && ddp.dashboardValuesPeriod['faxSent'] !== null && ddp.dashboardValuesPeriod['faxSent'] !== undefined
-              && ddp.dashboardValuesPeriodDetailed['faxSent'] !== null && ddp.dashboardValuesPeriodDetailed['faxSent'] !== undefined">
-              ({{getPercentage(ddp.dashboardValuesPeriodDetailed['mrReceived'], ddp.dashboardValuesPeriodDetailed['faxSent'] )}}% sets/
-              {{getPercentage(ddp.dashboardValuesPeriod['mrReceived'], ddp.dashboardValuesPeriod['faxSent'] )}}% pts)
-            </ng-container>
-          </td>
-        </tr>
-        <tr *ngIf="showMedicalRecordRequestDetails">
-          <td class="TD--Padding-BIG">Medical records Follow-Up not requested</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesDetailed['followupNotRequested'] !== null && ddp.dashboardValuesDetailed['followupNotRequested'] !== undefined">
-              {{ddp.dashboardValuesDetailed['followupNotRequested']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['followupNotRequested'] !== null && ddp.dashboardValues['followupNotRequested'] !== undefined">
-              {{ddp.dashboardValues['followupNotRequested']}} pts
-            </ng-container>
-          </td>
-          <td>
-          </td>
-        </tr>
-        <ng-container *ngIf="getHighestFollowUp() > 0 && showMedicalRecordRequestDetails">
-          <ng-container *ngFor="let c of Arr(getHighestFollowUp()).fill(1); let i = index">
+          <ng-container *ngIf="showMedicalRecordRequestDetails">
             <tr>
-              <td class="TD--Padding-BIG">{{i+1 | ordinal}} Follow-Up MR Request</td>
+              <td class="TD--Padding-BIG">Initial MR Request 2</td>
               <td>
-                <ng-container
-                  *ngIf="ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.'] !== null && ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.'] !== undefined">
-                  {{ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.']}} sets/
+                <ng-container *ngIf="ddp.dashboardValuesDetailed['faxSent2'] !== null && ddp.dashboardValuesDetailed['faxSent2'] !== undefined">
+                  {{ddp.dashboardValuesDetailed['faxSent2']}} sets/
                 </ng-container>
-                <ng-container *ngIf="ddp.dashboardValues['followUpSent.'+(i+1)+'.'] !== null && ddp.dashboardValues['followUpSent.'+(i+1)+'.'] !== undefined">
-                  {{ddp.dashboardValues['followUpSent.'+(i+1)+'.']}} pts
+                <ng-container *ngIf="ddp.dashboardValues['faxSent2'] !== null && ddp.dashboardValues['faxSent2'] !== undefined">
+                  {{ddp.dashboardValues['faxSent2']}}
+                  pts
                 </ng-container>
               </td>
               <td>
-                <ng-container
-                  *ngIf="ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.'] !== null && ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.'] !== undefined">
-                  {{ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.']}} sets/
+                <ng-container *ngIf="ddp.dashboardValuesPeriodDetailed['faxSent2'] !== null && ddp.dashboardValuesPeriodDetailed['faxSent2'] !== undefined">
+                  {{ddp.dashboardValuesPeriodDetailed['faxSent2']}} sets/
                 </ng-container>
-                <ng-container
-                  *ngIf="ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.'] !== null && ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.'] !== undefined">
-                  {{ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.']}} pts
+                <ng-container *ngIf="ddp.dashboardValuesPeriod['faxSent2'] !== null && ddp.dashboardValuesPeriod['faxSent2'] !== undefined">
+                  {{ddp.dashboardValuesPeriod['faxSent2']}} pts
                 </ng-container>
               </td>
             </tr>
             <tr>
-              <td class="TD--Padding-BIG">{{i+1 | ordinal}} Follow-Up MR Request 2</td>
+              <td class="TD--Padding-BIG">Initial MR Request 3</td>
               <td>
-                <ng-container
-                  *ngIf="ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.2'] !== null && ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.2'] !== undefined">
-                  {{ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.2']}} sets/
+                <ng-container *ngIf="ddp.dashboardValuesDetailed['faxSent3'] !== null && ddp.dashboardValuesDetailed['faxSent3'] !== undefined">
+                  {{ddp.dashboardValuesDetailed['faxSent3']}} sets/
                 </ng-container>
-                <ng-container *ngIf="ddp.dashboardValues['followUpSent.'+(i+1)+'.2'] !== null && ddp.dashboardValues['followUpSent.'+(i+1)+'.2'] !== undefined">
-                  {{ddp.dashboardValues['followUpSent.'+(i+1)+'.2']}} pts
+                <ng-container *ngIf="ddp.dashboardValues['faxSent3'] !== null && ddp.dashboardValues['faxSent3'] !== undefined">
+                  {{ddp.dashboardValues['faxSent3']}}
+                  pts
                 </ng-container>
               </td>
               <td>
-                <ng-container
-                  *ngIf="ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.2'] !== null && ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.2'] !== undefined">
-                  {{ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.2']}} sets/
+                <ng-container *ngIf="ddp.dashboardValuesPeriodDetailed['faxSent3'] !== null && ddp.dashboardValuesPeriodDetailed['faxSent3'] !== undefined">
+                  {{ddp.dashboardValuesPeriodDetailed['faxSent3']}} sets/
                 </ng-container>
-                <ng-container
-                  *ngIf="ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.2'] !== null && ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.2'] !== undefined">
-                  {{ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.2']}} pts
-                </ng-container>
-              </td>
-            </tr>
-            <tr>
-              <td class="TD--Padding-BIG">{{i+1 | ordinal}} Follow-Up MR Request 3</td>
-              <td>
-                <ng-container
-                  *ngIf="ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.3'] !== null && ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.3'] !== undefined">
-                  {{ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.3']}} sets/
-                </ng-container>
-                <ng-container *ngIf="ddp.dashboardValues['followUpSent.'+(i+1)+'.3'] !== null && ddp.dashboardValues['followUpSent.'+(i+1)+'.3'] !== undefined">
-                  {{ddp.dashboardValues['followUpSent.'+(i+1)+'.3']}} pts
-                </ng-container>
-              </td>
-              <td>
-                <ng-container
-                  *ngIf="ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.3'] !== null && ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.3'] !== undefined">
-                  {{ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.3']}} sets/
-                </ng-container>
-                <ng-container
-                  *ngIf="ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.3'] !== null && ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.3'] !== undefined">
-                  {{ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.3']}} pts
-                </ng-container>
-              </td>
-            </tr>
-            <tr>
-              <td class="TD--Padding-BIG">{{i+1 | ordinal}} Follow-Up MR Received</td>
-              <td>
-                <ng-container
-                  *ngIf="ddp.dashboardValuesDetailed['followUpReceived'+(i+1)] !== null && ddp.dashboardValuesDetailed['followUpReceived'+(i+1)] !== undefined">
-                  {{ddp.dashboardValuesDetailed['followUpReceived'+(i+1)]}} sets/
-                </ng-container>
-                <ng-container *ngIf="ddp.dashboardValues['followUpReceived'+(i+1)] !== null && ddp.dashboardValues['followUpReceived'+(i+1)] !== undefined">
-                  {{ddp.dashboardValues['followUpReceived'+(i+1)]}} pts
-                </ng-container>
-              </td>
-              <td>
-                <ng-container
-                  *ngIf="ddp.dashboardValuesPeriodDetailed['followUpReceived'+(i+1)] !== null && ddp.dashboardValuesPeriodDetailed['followUpReceived'+(i+1)] !== undefined">
-                  {{ddp.dashboardValuesPeriodDetailed['followUpReceived'+(i+1)]}} sets/
-                </ng-container>
-                <ng-container
-                  *ngIf="ddp.dashboardValuesPeriod['followUpReceived'+(i+1)] !== null && ddp.dashboardValuesPeriod['followUpReceived'+(i+1)] !== undefined">
-                  {{ddp.dashboardValuesPeriod['followUpReceived'+(i+1)]}} pts
+                <ng-container *ngIf="ddp.dashboardValuesPeriod['faxSent3'] !== null && ddp.dashboardValuesPeriod['faxSent3'] !== undefined">
+                  {{ddp.dashboardValuesPeriod['faxSent3']}} pts
                 </ng-container>
               </td>
             </tr>
           </ng-container>
-        </ng-container>
-        <tr>
-          <td>Duplicate medical records</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesDetailed['duplicateMedicalRecord'] !== null && ddp.dashboardValuesDetailed['duplicateMedicalRecord'] !== undefined">
-              {{ddp.dashboardValuesDetailed['duplicateMedicalRecord']}} sets/
+          <tr>
+            <td>Initial MR Received</td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['mrReceived'] !== null && ddp.dashboardValuesDetailed['mrReceived'] !== undefined">
+                {{ddp.dashboardValuesDetailed['mrReceived']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['mrReceived'] !== null && ddp.dashboardValues['mrReceived'] !== undefined">
+                {{ddp.dashboardValues['mrReceived']}} pts
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['mrReceived'] !== null && ddp.dashboardValues['mrReceived'] !== undefined
+              && ddp.dashboardValuesDetailed['mrReceived'] !== null && ddp.dashboardValuesDetailed['mrReceived'] !== undefined
+              && ddp.dashboardValues['faxSent'] !== null && ddp.dashboardValues['faxSent'] !== undefined
+              && ddp.dashboardValuesDetailed['faxSent'] !== null && ddp.dashboardValuesDetailed['faxSent'] !== undefined">
+                ({{getPercentage(ddp.dashboardValuesDetailed['mrReceived'], ddp.dashboardValuesDetailed['faxSent'] )}}% sets/
+                {{getPercentage(ddp.dashboardValues['mrReceived'], ddp.dashboardValues['faxSent'] )}}% pts)
+              </ng-container>
+            </td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesPeriodDetailed['mrReceived'] !== null && ddp.dashboardValuesPeriodDetailed['mrReceived'] !== undefined">
+                {{ddp.dashboardValuesPeriodDetailed['mrReceived']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValuesPeriod['mrReceived'] !== null && ddp.dashboardValuesPeriod['mrReceived'] !== undefined">
+                {{ddp.dashboardValuesPeriod['mrReceived']}} pts
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValuesPeriod['mrReceived'] !== null && ddp.dashboardValuesPeriod['mrReceived'] !== undefined
+              && ddp.dashboardValuesPeriodDetailed['mrReceived'] !== null && ddp.dashboardValuesPeriodDetailed['mrReceived'] !== undefined
+              && ddp.dashboardValuesPeriod['faxSent'] !== null && ddp.dashboardValuesPeriod['faxSent'] !== undefined
+              && ddp.dashboardValuesPeriodDetailed['faxSent'] !== null && ddp.dashboardValuesPeriodDetailed['faxSent'] !== undefined">
+                ({{getPercentage(ddp.dashboardValuesPeriodDetailed['mrReceived'], ddp.dashboardValuesPeriodDetailed['faxSent'] )}}% sets/
+                {{getPercentage(ddp.dashboardValuesPeriod['mrReceived'], ddp.dashboardValuesPeriod['faxSent'] )}}% pts)
+              </ng-container>
+            </td>
+          </tr>
+          <tr *ngIf="showMedicalRecordRequestDetails">
+            <td class="TD--Padding-BIG">Medical records Follow-Up not requested</td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesDetailed['followupNotRequested'] !== null && ddp.dashboardValuesDetailed['followupNotRequested'] !== undefined">
+                {{ddp.dashboardValuesDetailed['followupNotRequested']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['followupNotRequested'] !== null && ddp.dashboardValues['followupNotRequested'] !== undefined">
+                {{ddp.dashboardValues['followupNotRequested']}} pts
+              </ng-container>
+            </td>
+            <td>
+            </td>
+          </tr>
+          <ng-container *ngIf="getHighestFollowUp() > 0 && showMedicalRecordRequestDetails">
+            <ng-container *ngFor="let c of Arr(getHighestFollowUp()).fill(1); let i = index">
+              <tr>
+                <td class="TD--Padding-BIG">{{i+1 | ordinal}} Follow-Up MR Request</td>
+                <td>
+                  <ng-container
+                    *ngIf="ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.'] !== null && ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.'] !== undefined">
+                    {{ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.']}} sets/
+                  </ng-container>
+                  <ng-container *ngIf="ddp.dashboardValues['followUpSent.'+(i+1)+'.'] !== null && ddp.dashboardValues['followUpSent.'+(i+1)+'.'] !== undefined">
+                    {{ddp.dashboardValues['followUpSent.'+(i+1)+'.']}} pts
+                  </ng-container>
+                </td>
+                <td>
+                  <ng-container
+                    *ngIf="ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.'] !== null && ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.'] !== undefined">
+                    {{ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.']}} sets/
+                  </ng-container>
+                  <ng-container
+                    *ngIf="ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.'] !== null && ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.'] !== undefined">
+                    {{ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.']}} pts
+                  </ng-container>
+                </td>
+              </tr>
+              <tr>
+                <td class="TD--Padding-BIG">{{i+1 | ordinal}} Follow-Up MR Request 2</td>
+                <td>
+                  <ng-container
+                    *ngIf="ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.2'] !== null && ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.2'] !== undefined">
+                    {{ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.2']}} sets/
+                  </ng-container>
+                  <ng-container
+                    *ngIf="ddp.dashboardValues['followUpSent.'+(i+1)+'.2'] !== null && ddp.dashboardValues['followUpSent.'+(i+1)+'.2'] !== undefined">
+                    {{ddp.dashboardValues['followUpSent.'+(i+1)+'.2']}} pts
+                  </ng-container>
+                </td>
+                <td>
+                  <ng-container
+                    *ngIf="ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.2'] !== null && ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.2'] !== undefined">
+                    {{ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.2']}} sets/
+                  </ng-container>
+                  <ng-container
+                    *ngIf="ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.2'] !== null && ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.2'] !== undefined">
+                    {{ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.2']}} pts
+                  </ng-container>
+                </td>
+              </tr>
+              <tr>
+                <td class="TD--Padding-BIG">{{i+1 | ordinal}} Follow-Up MR Request 3</td>
+                <td>
+                  <ng-container
+                    *ngIf="ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.3'] !== null && ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.3'] !== undefined">
+                    {{ddp.dashboardValuesDetailed['followUpSent.'+(i+1)+'.3']}} sets/
+                  </ng-container>
+                  <ng-container
+                    *ngIf="ddp.dashboardValues['followUpSent.'+(i+1)+'.3'] !== null && ddp.dashboardValues['followUpSent.'+(i+1)+'.3'] !== undefined">
+                    {{ddp.dashboardValues['followUpSent.'+(i+1)+'.3']}} pts
+                  </ng-container>
+                </td>
+                <td>
+                  <ng-container
+                    *ngIf="ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.3'] !== null && ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.3'] !== undefined">
+                    {{ddp.dashboardValuesPeriodDetailed['followUpSent.'+(i+1)+'.3']}} sets/
+                  </ng-container>
+                  <ng-container
+                    *ngIf="ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.3'] !== null && ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.3'] !== undefined">
+                    {{ddp.dashboardValuesPeriod['followUpSent.'+(i+1)+'.3']}} pts
+                  </ng-container>
+                </td>
+              </tr>
+              <tr>
+                <td class="TD--Padding-BIG">{{i+1 | ordinal}} Follow-Up MR Received</td>
+                <td>
+                  <ng-container
+                    *ngIf="ddp.dashboardValuesDetailed['followUpReceived'+(i+1)] !== null && ddp.dashboardValuesDetailed['followUpReceived'+(i+1)] !== undefined">
+                    {{ddp.dashboardValuesDetailed['followUpReceived'+(i+1)]}} sets/
+                  </ng-container>
+                  <ng-container *ngIf="ddp.dashboardValues['followUpReceived'+(i+1)] !== null && ddp.dashboardValues['followUpReceived'+(i+1)] !== undefined">
+                    {{ddp.dashboardValues['followUpReceived'+(i+1)]}} pts
+                  </ng-container>
+                </td>
+                <td>
+                  <ng-container
+                    *ngIf="ddp.dashboardValuesPeriodDetailed['followUpReceived'+(i+1)] !== null && ddp.dashboardValuesPeriodDetailed['followUpReceived'+(i+1)] !== undefined">
+                    {{ddp.dashboardValuesPeriodDetailed['followUpReceived'+(i+1)]}} sets/
+                  </ng-container>
+                  <ng-container
+                    *ngIf="ddp.dashboardValuesPeriod['followUpReceived'+(i+1)] !== null && ddp.dashboardValuesPeriod['followUpReceived'+(i+1)] !== undefined">
+                    {{ddp.dashboardValuesPeriod['followUpReceived'+(i+1)]}} pts
+                  </ng-container>
+                </td>
+              </tr>
             </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['duplicateMedicalRecord'] !== null && ddp.dashboardValues['duplicateMedicalRecord'] !== undefined">
-              {{ddp.dashboardValues['duplicateMedicalRecord']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>Problem medical records</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesDetailed['medicalRecordWithProblem'] !== null && ddp.dashboardValuesDetailed['medicalRecordWithProblem'] !== undefined">
-              {{ddp.dashboardValuesDetailed['medicalRecordWithProblem']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['medicalRecordWithProblem'] !== null && ddp.dashboardValues['medicalRecordWithProblem'] !== undefined">
-              {{ddp.dashboardValues['medicalRecordWithProblem']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>International medical records</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesDetailed['internationalMedicalRecord'] !== null && ddp.dashboardValuesDetailed['internationalMedicalRecord'] !== undefined">
-              {{ddp.dashboardValuesDetailed['internationalMedicalRecord']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['internationalMedicalRecord'] !== null && ddp.dashboardValues['internationalMedicalRecord'] !== undefined">
-              {{ddp.dashboardValues['internationalMedicalRecord']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>Unable to obtain medical records</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesDetailed['unableToObtainMedicalRecord'] !== null && ddp.dashboardValuesDetailed['unableToObtainMedicalRecord'] !== undefined">
-              {{ddp.dashboardValuesDetailed['unableToObtainMedicalRecord']}} sets/
-            </ng-container>
-            <ng-container
-              *ngIf="ddp.dashboardValues['unableToObtainMedicalRecord'] !== null && ddp.dashboardValues['unableToObtainMedicalRecord'] !== undefined">
-              {{ddp.dashboardValues['unableToObtainMedicalRecord']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>Follow-Up required medical records</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesDetailed['followupRequiredMedicalRecord'] !== null && ddp.dashboardValuesDetailed['followupRequiredMedicalRecord'] !== undefined">
-              {{ddp.dashboardValuesDetailed['followupRequiredMedicalRecord']}} sets/
-            </ng-container>
-            <ng-container
-              *ngIf="ddp.dashboardValues['followupRequiredMedicalRecord'] !== null && ddp.dashboardValues['followupRequiredMedicalRecord'] !== undefined">
-              {{ddp.dashboardValues['followupRequiredMedicalRecord']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>Paper c/r required</td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['paperCRRequired'] !== null && ddp.dashboardValuesDetailed['paperCRRequired'] !== undefined">
-              {{ddp.dashboardValuesDetailed['paperCRRequired']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['paperCRRequired'] !== null && ddp.dashboardValues['paperCRRequired'] !== undefined">
-              {{ddp.dashboardValues['paperCRRequired']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>Review required medical records</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesDetailed['reviewMedicalRecord'] !== null && ddp.dashboardValuesDetailed['reviewMedicalRecord'] !== undefined">
-              {{ddp.dashboardValuesDetailed['reviewMedicalRecord']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['reviewMedicalRecord'] !== null && ddp.dashboardValues['reviewMedicalRecord'] !== undefined">
-              {{ddp.dashboardValues['reviewMedicalRecord']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
+          </ng-container>
+          <tr>
+            <td>Duplicate medical records</td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesDetailed['duplicateMedicalRecord'] !== null && ddp.dashboardValuesDetailed['duplicateMedicalRecord'] !== undefined">
+                {{ddp.dashboardValuesDetailed['duplicateMedicalRecord']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['duplicateMedicalRecord'] !== null && ddp.dashboardValues['duplicateMedicalRecord'] !== undefined">
+                {{ddp.dashboardValues['duplicateMedicalRecord']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Problem medical records</td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesDetailed['medicalRecordWithProblem'] !== null && ddp.dashboardValuesDetailed['medicalRecordWithProblem'] !== undefined">
+                {{ddp.dashboardValuesDetailed['medicalRecordWithProblem']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['medicalRecordWithProblem'] !== null && ddp.dashboardValues['medicalRecordWithProblem'] !== undefined">
+                {{ddp.dashboardValues['medicalRecordWithProblem']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>International medical records</td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesDetailed['internationalMedicalRecord'] !== null && ddp.dashboardValuesDetailed['internationalMedicalRecord'] !== undefined">
+                {{ddp.dashboardValuesDetailed['internationalMedicalRecord']}} sets/
+              </ng-container>
+              <ng-container
+                *ngIf="ddp.dashboardValues['internationalMedicalRecord'] !== null && ddp.dashboardValues['internationalMedicalRecord'] !== undefined">
+                {{ddp.dashboardValues['internationalMedicalRecord']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Unable to obtain medical records</td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesDetailed['unableToObtainMedicalRecord'] !== null && ddp.dashboardValuesDetailed['unableToObtainMedicalRecord'] !== undefined">
+                {{ddp.dashboardValuesDetailed['unableToObtainMedicalRecord']}} sets/
+              </ng-container>
+              <ng-container
+                *ngIf="ddp.dashboardValues['unableToObtainMedicalRecord'] !== null && ddp.dashboardValues['unableToObtainMedicalRecord'] !== undefined">
+                {{ddp.dashboardValues['unableToObtainMedicalRecord']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Follow-Up required medical records</td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesDetailed['followupRequiredMedicalRecord'] !== null && ddp.dashboardValuesDetailed['followupRequiredMedicalRecord'] !== undefined">
+                {{ddp.dashboardValuesDetailed['followupRequiredMedicalRecord']}} sets/
+              </ng-container>
+              <ng-container
+                *ngIf="ddp.dashboardValues['followupRequiredMedicalRecord'] !== null && ddp.dashboardValues['followupRequiredMedicalRecord'] !== undefined">
+                {{ddp.dashboardValues['followupRequiredMedicalRecord']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Paper c/r required</td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['paperCRRequired'] !== null && ddp.dashboardValuesDetailed['paperCRRequired'] !== undefined">
+                {{ddp.dashboardValuesDetailed['paperCRRequired']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['paperCRRequired'] !== null && ddp.dashboardValues['paperCRRequired'] !== undefined">
+                {{ddp.dashboardValues['paperCRRequired']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Review required medical records</td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesDetailed['reviewMedicalRecord'] !== null && ddp.dashboardValuesDetailed['reviewMedicalRecord'] !== undefined">
+                {{ddp.dashboardValuesDetailed['reviewMedicalRecord']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['reviewMedicalRecord'] !== null && ddp.dashboardValues['reviewMedicalRecord'] !== undefined">
+                {{ddp.dashboardValues['reviewMedicalRecord']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
 
-        <tr>
-          <td>Tissue not requested</td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['tFaxNotSent'] !== null && ddp.dashboardValuesDetailed['tFaxNotSent'] !== undefined">
-              {{ddp.dashboardValuesDetailed['tFaxNotSent']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['tFaxNotSent'] !== null && ddp.dashboardValues['tFaxNotSent'] !== undefined">
-              {{ddp.dashboardValues['tFaxNotSent']}}
-              pts
-            </ng-container>
-          </td>
-          <td>
-          </td>
-        </tr>
-        <tr>
-          <td>Tissue Request
-            <ng-container *ngIf="showTissueRequestDetails">1</ng-container>
-          </td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['tFaxSent'] !== null && ddp.dashboardValuesDetailed['tFaxSent'] !== undefined">
-              {{ddp.dashboardValuesDetailed['tFaxSent']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['tFaxSent'] !== null && ddp.dashboardValues['tFaxSent'] !== undefined">{{ddp.dashboardValues['tFaxSent']}}
-              pts
-            </ng-container>
-          </td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesPeriodDetailed['tFaxSent'] !== null && ddp.dashboardValuesPeriodDetailed['tFaxSent'] !== undefined">
-              {{ddp.dashboardValuesPeriodDetailed['tFaxSent']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValuesPeriod['tFaxSent'] !== null && ddp.dashboardValuesPeriod['tFaxSent'] !== undefined">
-              {{ddp.dashboardValuesPeriod['tFaxSent']}} pts
-            </ng-container>
-          </td>
-          <td>
-            <ng-container *ngIf="!showTissueRequestDetails">
-              <button md-mini-fab color=""
-                      (click)="showTissueRequestDetails = !showTissueRequestDetails">
-                <i class="fas fa-plus fa-lg"></i>
-              </button>
-              <span>  Show Tissue Request Details</span>
-            </ng-container>
-            <ng-container *ngIf="showTissueRequestDetails">
-              <button md-mini-fab color=""
-                      (click)="showTissueRequestDetails = !showTissueRequestDetails">
-                <i class="fas fa-minus fa-lg"></i>
-              </button>
-              <span>  Hide Tissue Request Details</span>
-            </ng-container>
-          </td>
-        </tr>
-        <tr *ngIf="showTissueRequestDetails">
-          <td class="TD--Padding-BIG">Tissue Request 2</td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['tFaxSent2'] !== null && ddp.dashboardValuesDetailed['tFaxSent2'] !== undefined">
-              {{ddp.dashboardValuesDetailed['tFaxSent2']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['tFaxSent2'] !== null && ddp.dashboardValues['tFaxSent2'] !== undefined">
-              {{ddp.dashboardValues['tFaxSent2']}} pts
-            </ng-container>
-          </td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesPeriodDetailed['tFaxSent2'] !== null && ddp.dashboardValuesPeriodDetailed['tFaxSent2'] !== undefined">
-              {{ddp.dashboardValuesPeriodDetailed['tFaxSent2']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValuesPeriod['tFaxSent2'] !== null && ddp.dashboardValuesPeriod['tFaxSent2'] !== undefined">
-              {{ddp.dashboardValuesPeriod['tFaxSent2']}} pts
-            </ng-container>
-          </td>
-        </tr>
-        <tr *ngIf="showTissueRequestDetails">
-          <td class="TD--Padding-BIG">Tissue Request 3</td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['tFaxSent3'] !== null && ddp.dashboardValuesDetailed['tFaxSent3'] !== undefined">
-              {{ddp.dashboardValuesDetailed['tFaxSent3']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['tFaxSent3'] !== null && ddp.dashboardValues['tFaxSent3'] !== undefined">
-              {{ddp.dashboardValues['tFaxSent3']}} pts
-            </ng-container>
-          </td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesPeriodDetailed['tFaxSent3'] !== null && ddp.dashboardValuesPeriodDetailed['tFaxSent3'] !== undefined">
-              {{ddp.dashboardValuesPeriodDetailed['tFaxSent3']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValuesPeriod['tFaxSent3'] !== null && ddp.dashboardValuesPeriod['tFaxSent3'] !== undefined">
-              {{ddp.dashboardValuesPeriod['tFaxSent3']}} pts
-            </ng-container>
-          </td>
-        </tr>
-        <tr>
-          <td>Tissue Received</td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['tissueReceived'] !== null && ddp.dashboardValuesDetailed['tissueReceived'] !== undefined">
-              {{ddp.dashboardValuesDetailed['tissueReceived']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['tissueReceived'] !== null && ddp.dashboardValues['tissueReceived'] !== undefined">
-              {{ddp.dashboardValues['tissueReceived']}} pts
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['tissueReceived'] !== null && ddp.dashboardValues['tissueReceived'] !== undefined
+          <tr>
+            <td>Tissue not requested</td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['tFaxNotSent'] !== null && ddp.dashboardValuesDetailed['tFaxNotSent'] !== undefined">
+                {{ddp.dashboardValuesDetailed['tFaxNotSent']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['tFaxNotSent'] !== null && ddp.dashboardValues['tFaxNotSent'] !== undefined">
+                {{ddp.dashboardValues['tFaxNotSent']}}
+                pts
+              </ng-container>
+            </td>
+            <td>
+            </td>
+          </tr>
+          <tr>
+            <td>Tissue Request
+              <ng-container *ngIf="showTissueRequestDetails">1</ng-container>
+            </td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['tFaxSent'] !== null && ddp.dashboardValuesDetailed['tFaxSent'] !== undefined">
+                {{ddp.dashboardValuesDetailed['tFaxSent']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['tFaxSent'] !== null && ddp.dashboardValues['tFaxSent'] !== undefined">
+                {{ddp.dashboardValues['tFaxSent']}}
+                pts
+              </ng-container>
+            </td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesPeriodDetailed['tFaxSent'] !== null && ddp.dashboardValuesPeriodDetailed['tFaxSent'] !== undefined">
+                {{ddp.dashboardValuesPeriodDetailed['tFaxSent']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValuesPeriod['tFaxSent'] !== null && ddp.dashboardValuesPeriod['tFaxSent'] !== undefined">
+                {{ddp.dashboardValuesPeriod['tFaxSent']}} pts
+              </ng-container>
+            </td>
+            <td>
+              <ng-container *ngIf="!showTissueRequestDetails">
+                <button md-mini-fab color=""
+                        (click)="showTissueRequestDetails = !showTissueRequestDetails">
+                  <i class="fas fa-plus fa-lg"></i>
+                </button>
+                <span>  Show Tissue Request Details</span>
+              </ng-container>
+              <ng-container *ngIf="showTissueRequestDetails">
+                <button md-mini-fab color=""
+                        (click)="showTissueRequestDetails = !showTissueRequestDetails">
+                  <i class="fas fa-minus fa-lg"></i>
+                </button>
+                <span>  Hide Tissue Request Details</span>
+              </ng-container>
+            </td>
+          </tr>
+          <tr *ngIf="showTissueRequestDetails">
+            <td class="TD--Padding-BIG">Tissue Request 2</td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['tFaxSent2'] !== null && ddp.dashboardValuesDetailed['tFaxSent2'] !== undefined">
+                {{ddp.dashboardValuesDetailed['tFaxSent2']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['tFaxSent2'] !== null && ddp.dashboardValues['tFaxSent2'] !== undefined">
+                {{ddp.dashboardValues['tFaxSent2']}} pts
+              </ng-container>
+            </td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesPeriodDetailed['tFaxSent2'] !== null && ddp.dashboardValuesPeriodDetailed['tFaxSent2'] !== undefined">
+                {{ddp.dashboardValuesPeriodDetailed['tFaxSent2']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValuesPeriod['tFaxSent2'] !== null && ddp.dashboardValuesPeriod['tFaxSent2'] !== undefined">
+                {{ddp.dashboardValuesPeriod['tFaxSent2']}} pts
+              </ng-container>
+            </td>
+          </tr>
+          <tr *ngIf="showTissueRequestDetails">
+            <td class="TD--Padding-BIG">Tissue Request 3</td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['tFaxSent3'] !== null && ddp.dashboardValuesDetailed['tFaxSent3'] !== undefined">
+                {{ddp.dashboardValuesDetailed['tFaxSent3']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['tFaxSent3'] !== null && ddp.dashboardValues['tFaxSent3'] !== undefined">
+                {{ddp.dashboardValues['tFaxSent3']}} pts
+              </ng-container>
+            </td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesPeriodDetailed['tFaxSent3'] !== null && ddp.dashboardValuesPeriodDetailed['tFaxSent3'] !== undefined">
+                {{ddp.dashboardValuesPeriodDetailed['tFaxSent3']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValuesPeriod['tFaxSent3'] !== null && ddp.dashboardValuesPeriod['tFaxSent3'] !== undefined">
+                {{ddp.dashboardValuesPeriod['tFaxSent3']}} pts
+              </ng-container>
+            </td>
+          </tr>
+          <tr>
+            <td>Tissue Received</td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['tissueReceived'] !== null && ddp.dashboardValuesDetailed['tissueReceived'] !== undefined">
+                {{ddp.dashboardValuesDetailed['tissueReceived']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['tissueReceived'] !== null && ddp.dashboardValues['tissueReceived'] !== undefined">
+                {{ddp.dashboardValues['tissueReceived']}} pts
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['tissueReceived'] !== null && ddp.dashboardValues['tissueReceived'] !== undefined
               && ddp.dashboardValuesDetailed['tissueReceived'] !== null && ddp.dashboardValuesDetailed['tissueReceived'] !== undefined
               && ddp.dashboardValues['tFaxSent'] !== null && ddp.dashboardValues['tFaxSent'] !== undefined
               && ddp.dashboardValuesDetailed['tFaxSent'] !== null && ddp.dashboardValuesDetailed['tFaxSent'] !== undefined">
-              ({{getPercentage(ddp.dashboardValuesDetailed['tissueReceived'], ddp.dashboardValuesDetailed['tFaxSent'] )}}% sets/
-              {{getPercentage(ddp.dashboardValues['tissueReceived'], ddp.dashboardValues['tFaxSent'] )}}% pts)
-            </ng-container>
-          </td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesPeriodDetailed['tissueReceived'] !== null && ddp.dashboardValuesPeriodDetailed['tissueReceived'] !== undefined">
-              {{ddp.dashboardValuesPeriodDetailed['tissueReceived']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValuesPeriod['tissueReceived'] !== null && ddp.dashboardValuesPeriod['tissueReceived'] !== undefined">
-              {{ddp.dashboardValuesPeriod['tissueReceived']}} pts
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValuesPeriodDetailed['tissueReceived'] !== null && ddp.dashboardValuesPeriodDetailed['tissueReceived'] !== undefined
+                ({{getPercentage(ddp.dashboardValuesDetailed['tissueReceived'], ddp.dashboardValuesDetailed['tFaxSent'] )}}% sets/
+                {{getPercentage(ddp.dashboardValues['tissueReceived'], ddp.dashboardValues['tFaxSent'] )}}% pts)
+              </ng-container>
+            </td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesPeriodDetailed['tissueReceived'] !== null && ddp.dashboardValuesPeriodDetailed['tissueReceived'] !== undefined">
+                {{ddp.dashboardValuesPeriodDetailed['tissueReceived']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValuesPeriod['tissueReceived'] !== null && ddp.dashboardValuesPeriod['tissueReceived'] !== undefined">
+                {{ddp.dashboardValuesPeriod['tissueReceived']}} pts
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValuesPeriodDetailed['tissueReceived'] !== null && ddp.dashboardValuesPeriodDetailed['tissueReceived'] !== undefined
               && ddp.dashboardValuesDetailed['tissueReceived'] !== null && ddp.dashboardValuesDetailed['tissueReceived'] !== undefined
               && ddp.dashboardValuesPeriodDetailed['tFaxSent'] !== null && ddp.dashboardValuesPeriodDetailed['tFaxSent'] !== undefined
               && ddp.dashboardValuesDetailed['tFaxSent'] !== null && ddp.dashboardValuesDetailed['tFaxSent'] !== undefined">
-              ({{getPercentage(ddp.dashboardValuesPeriodDetailed['tissueReceived'], ddp.dashboardValuesPeriodDetailed['tFaxSent'] )}}% sets/
-              {{getPercentage(ddp.dashboardValuesPeriod['tissueReceived'], ddp.dashboardValuesPeriod['tFaxSent'] )}}% pts)
-            </ng-container>
-          </td>
-        </tr>
-        <tr>
-          <td>Tissue Status 'Needs Review'</td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['request.review'] !== null && ddp.dashboardValuesDetailed['request.review'] !== undefined">
-              {{ddp.dashboardValuesDetailed['request.review']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['request.review'] !== null && ddp.dashboardValues['request.review'] !== undefined">
-              {{ddp.dashboardValues['request.review']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>Tissue Status 'Don't Request'</td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['request.no'] !== null && ddp.dashboardValuesDetailed['request.no'] !== undefined">
-              {{ddp.dashboardValuesDetailed['request.no']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['request.no'] !== null && ddp.dashboardValues['request.no'] !== undefined">
-              {{ddp.dashboardValues['request.no']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>Tissue Status 'On Hold'</td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['request.hold'] !== null && ddp.dashboardValuesDetailed['request.hold'] !== undefined">
-              {{ddp.dashboardValuesDetailed['request.hold']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['request.hold'] !== null && ddp.dashboardValues['request.hold'] !== undefined">
-              {{ddp.dashboardValues['request.hold']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>Tissue Status 'Request'</td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['request.request'] !== null && ddp.dashboardValuesDetailed['request.request'] !== undefined">
-              {{ddp.dashboardValuesDetailed['request.request']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['request.request'] !== null && ddp.dashboardValues['request.request'] !== undefined">
-              {{ddp.dashboardValues['request.request']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>Tissue Status 'Unable To Obtain'</td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['request.unable'] !== null && ddp.dashboardValuesDetailed['request.unable'] !== undefined">
-              {{ddp.dashboardValuesDetailed['request.unable']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['request.unable'] !== null && ddp.dashboardValues['request.unable'] !== undefined">
-              {{ddp.dashboardValues['request.unable']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>Tissue Status 'Sent'</td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['request.sent'] !== null && ddp.dashboardValuesDetailed['request.sent'] !== undefined">
-              {{ddp.dashboardValuesDetailed['request.sent']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['request.sent'] !== null && ddp.dashboardValues['request.sent'] !== undefined">
-              {{ddp.dashboardValues['request.sent']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>Tissue Status 'Received'</td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['request.received'] !== null && ddp.dashboardValuesDetailed['request.received'] !== undefined">
-              {{ddp.dashboardValuesDetailed['request.received']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['request.received'] !== null && ddp.dashboardValues['request.received'] !== undefined">
-              {{ddp.dashboardValues['request.received']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>Tissue Status 'Returned'</td>
-          <td>
-            <ng-container *ngIf="ddp.dashboardValuesDetailed['request.returned'] !== null && ddp.dashboardValuesDetailed['request.returned'] !== undefined">
-              {{ddp.dashboardValuesDetailed['request.returned']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['request.returned'] !== null && ddp.dashboardValues['request.returned'] !== undefined">
-              {{ddp.dashboardValues['request.returned']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>Tissue Unable to Obtain</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesDetailed['unableToObtainTissue'] !== null && ddp.dashboardValuesDetailed['unableToObtainTissue'] !== undefined">
-              {{ddp.dashboardValuesDetailed['unableToObtainTissue']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['unableToObtainTissue'] !== null && ddp.dashboardValues['unableToObtainTissue'] !== undefined">
-              {{ddp.dashboardValues['unableToObtainTissue']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr>
-          <td>Tissue Problem</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesDetailed['tissueProblemOption'] !== null && ddp.dashboardValuesDetailed['tissueProblemOption'] !== undefined">
-              {{ddp.dashboardValuesDetailed['tissueProblemOption']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['tissueProblemOption'] !== null && ddp.dashboardValues['tissueProblemOption'] !== undefined">
-              {{ddp.dashboardValues['tissueProblemOption']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-          <td>
-            <ng-container *ngIf="!showTissueProblemDetails">
-              <button md-mini-fab color=""
-                      (click)="showTissueProblemDetails = !showTissueProblemDetails">
-                <i class="fas fa-plus fa-lg"></i>
-              </button>
-              <span>  Show Tissue Problem Details</span>
-            </ng-container>
-            <ng-container *ngIf="showTissueProblemDetails">
-              <button md-mini-fab color=""
-                      (click)="showTissueProblemDetails = !showTissueProblemDetails">
-                <i class="fas fa-minus fa-lg"></i>
-              </button>
-              <span>  Hide Tissue Problem Details</span>
-            </ng-container>
-          </td>
-        </tr>
-        <tr *ngIf="showTissueProblemDetails">
-          <td class="TD--Padding-BIG">Tissue Problem 'Insufficient material per path'</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesDetailed['tissueProblemOption.insufficientPath'] !== null && ddp.dashboardValuesDetailed['tissueProblemOption.insufficientPath'] !== undefined">
-              {{ddp.dashboardValuesDetailed['tissueProblemOption.insufficientPath']}} sets/
-            </ng-container>
-            <ng-container
-              *ngIf="ddp.dashboardValues['tissueProblemOption.insufficientPath'] !== null && ddp.dashboardValues['tissueProblemOption.insufficientPath'] !== undefined">
-              {{ddp.dashboardValues['tissueProblemOption.insufficientPath']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr *ngIf="showTissueProblemDetails">
-          <td class="TD--Padding-BIG">Tissue Problem 'Insufficient material per SHL'</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesDetailed['tissueProblemOption.insufficientSHL'] !== null && ddp.dashboardValuesDetailed['tissueProblemOption.insufficientSHL'] !== undefined">
-              {{ddp.dashboardValuesDetailed['tissueProblemOption.insufficientSHL']}} sets/
-            </ng-container>
-            <ng-container
-              *ngIf="ddp.dashboardValues['tissueProblemOption.insufficientSHL'] !== null && ddp.dashboardValues['tissueProblemOption.insufficientSHL'] !== undefined">
-              {{ddp.dashboardValues['tissueProblemOption.insufficientSHL']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr *ngIf="showTissueProblemDetails">
-          <td class="TD--Padding-BIG">Tissue Problem 'No e signatures'</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesDetailed['tissueProblemOption.noESign'] !== null && ddp.dashboardValuesDetailed['tissueProblemOption.noESign'] !== undefined">
-              {{ddp.dashboardValuesDetailed['tissueProblemOption.noESign']}} sets/
-            </ng-container>
-            <ng-container
-              *ngIf="ddp.dashboardValues['tissueProblemOption.noESign'] !== null && ddp.dashboardValues['tissueProblemOption.noESign'] !== undefined">
-              {{ddp.dashboardValues['tissueProblemOption.noESign']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr *ngIf="showTissueProblemDetails">
-          <td class="TD--Padding-BIG">Tissue Problem 'Path department policy'</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesDetailed['tissueProblemOption.pathPolicy'] !== null && ddp.dashboardValuesDetailed['tissueProblemOption.pathPolicy'] !== undefined">
-              {{ddp.dashboardValuesDetailed['tissueProblemOption.pathPolicy']}} sets/
-            </ng-container>
-            <ng-container
-              *ngIf="ddp.dashboardValues['tissueProblemOption.pathPolicy'] !== null && ddp.dashboardValues['tissueProblemOption.pathPolicy'] !== undefined">
-              {{ddp.dashboardValues['tissueProblemOption.pathPolicy']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr *ngIf="showTissueProblemDetails">
-          <td class="TD--Padding-BIG">Tissue Problem 'Path department unable to locate'</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesDetailed['tissueProblemOption.pathNoLocate'] !== null && ddp.dashboardValuesDetailed['tissueProblemOption.pathNoLocate'] !== undefined">
-              {{ddp.dashboardValuesDetailed['tissueProblemOption.pathNoLocate']}} sets/
-            </ng-container>
-            <ng-container
-              *ngIf="ddp.dashboardValues['tissueProblemOption.pathNoLocate'] !== null && ddp.dashboardValues['tissueProblemOption.pathNoLocate'] !== undefined">
-              {{ddp.dashboardValues['tissueProblemOption.pathNoLocate']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr *ngIf="showTissueProblemDetails">
-          <td class="TD--Padding-BIG">Tissue Problem 'Tissue destroyed'</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesDetailed['tissueProblemOption.destroyed'] !== null && ddp.dashboardValuesDetailed['tissueProblemOption.destroyed'] !== undefined">
-              {{ddp.dashboardValuesDetailed['tissueProblemOption.destroyed']}} sets/
-            </ng-container>
-            <ng-container
-              *ngIf="ddp.dashboardValues['tissueProblemOption.destroyed'] !== null && ddp.dashboardValues['tissueProblemOption.destroyed'] !== undefined">
-              {{ddp.dashboardValues['tissueProblemOption.destroyed']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-        <tr *ngIf="showTissueProblemDetails">
-          <td class="TD--Padding-BIG">Tissue Problem 'Other'</td>
-          <td>
-            <ng-container
-              *ngIf="ddp.dashboardValuesDetailed['tissueProblemOption.other'] !== null && ddp.dashboardValuesDetailed['tissueProblemOption.other'] !== undefined">
-              {{ddp.dashboardValuesDetailed['tissueProblemOption.other']}} sets/
-            </ng-container>
-            <ng-container *ngIf="ddp.dashboardValues['tissueProblemOption.other'] !== null && ddp.dashboardValues['tissueProblemOption.other'] !== undefined">
-              {{ddp.dashboardValues['tissueProblemOption.other']}} pts
-            </ng-container>
-          </td>
-          <td></td>
-        </tr>
-
+                ({{getPercentage(ddp.dashboardValuesPeriodDetailed['tissueReceived'], ddp.dashboardValuesPeriodDetailed['tFaxSent'] )}}% sets/
+                {{getPercentage(ddp.dashboardValuesPeriod['tissueReceived'], ddp.dashboardValuesPeriod['tFaxSent'] )}}% pts)
+              </ng-container>
+            </td>
+          </tr>
+          <tr>
+            <td>Tissue Status 'Needs Review'</td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['request.review'] !== null && ddp.dashboardValuesDetailed['request.review'] !== undefined">
+                {{ddp.dashboardValuesDetailed['request.review']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['request.review'] !== null && ddp.dashboardValues['request.review'] !== undefined">
+                {{ddp.dashboardValues['request.review']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Tissue Status 'Don't Request'</td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['request.no'] !== null && ddp.dashboardValuesDetailed['request.no'] !== undefined">
+                {{ddp.dashboardValuesDetailed['request.no']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['request.no'] !== null && ddp.dashboardValues['request.no'] !== undefined">
+                {{ddp.dashboardValues['request.no']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Tissue Status 'On Hold'</td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['request.hold'] !== null && ddp.dashboardValuesDetailed['request.hold'] !== undefined">
+                {{ddp.dashboardValuesDetailed['request.hold']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['request.hold'] !== null && ddp.dashboardValues['request.hold'] !== undefined">
+                {{ddp.dashboardValues['request.hold']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Tissue Status 'Request'</td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['request.request'] !== null && ddp.dashboardValuesDetailed['request.request'] !== undefined">
+                {{ddp.dashboardValuesDetailed['request.request']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['request.request'] !== null && ddp.dashboardValues['request.request'] !== undefined">
+                {{ddp.dashboardValues['request.request']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Tissue Status 'Unable To Obtain'</td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['request.unable'] !== null && ddp.dashboardValuesDetailed['request.unable'] !== undefined">
+                {{ddp.dashboardValuesDetailed['request.unable']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['request.unable'] !== null && ddp.dashboardValues['request.unable'] !== undefined">
+                {{ddp.dashboardValues['request.unable']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Tissue Status 'Sent'</td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['request.sent'] !== null && ddp.dashboardValuesDetailed['request.sent'] !== undefined">
+                {{ddp.dashboardValuesDetailed['request.sent']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['request.sent'] !== null && ddp.dashboardValues['request.sent'] !== undefined">
+                {{ddp.dashboardValues['request.sent']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Tissue Status 'Received'</td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['request.received'] !== null && ddp.dashboardValuesDetailed['request.received'] !== undefined">
+                {{ddp.dashboardValuesDetailed['request.received']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['request.received'] !== null && ddp.dashboardValues['request.received'] !== undefined">
+                {{ddp.dashboardValues['request.received']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Tissue Status 'Returned'</td>
+            <td>
+              <ng-container *ngIf="ddp.dashboardValuesDetailed['request.returned'] !== null && ddp.dashboardValuesDetailed['request.returned'] !== undefined">
+                {{ddp.dashboardValuesDetailed['request.returned']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['request.returned'] !== null && ddp.dashboardValues['request.returned'] !== undefined">
+                {{ddp.dashboardValues['request.returned']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Tissue Unable to Obtain</td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesDetailed['unableToObtainTissue'] !== null && ddp.dashboardValuesDetailed['unableToObtainTissue'] !== undefined">
+                {{ddp.dashboardValuesDetailed['unableToObtainTissue']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['unableToObtainTissue'] !== null && ddp.dashboardValues['unableToObtainTissue'] !== undefined">
+                {{ddp.dashboardValues['unableToObtainTissue']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Tissue Problem</td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesDetailed['tissueProblemOption'] !== null && ddp.dashboardValuesDetailed['tissueProblemOption'] !== undefined">
+                {{ddp.dashboardValuesDetailed['tissueProblemOption']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['tissueProblemOption'] !== null && ddp.dashboardValues['tissueProblemOption'] !== undefined">
+                {{ddp.dashboardValues['tissueProblemOption']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+            <td>
+              <ng-container *ngIf="!showTissueProblemDetails">
+                <button md-mini-fab color=""
+                        (click)="showTissueProblemDetails = !showTissueProblemDetails">
+                  <i class="fas fa-plus fa-lg"></i>
+                </button>
+                <span>  Show Tissue Problem Details</span>
+              </ng-container>
+              <ng-container *ngIf="showTissueProblemDetails">
+                <button md-mini-fab color=""
+                        (click)="showTissueProblemDetails = !showTissueProblemDetails">
+                  <i class="fas fa-minus fa-lg"></i>
+                </button>
+                <span>  Hide Tissue Problem Details</span>
+              </ng-container>
+            </td>
+          </tr>
+          <tr *ngIf="showTissueProblemDetails">
+            <td class="TD--Padding-BIG">Tissue Problem 'Insufficient material per path'</td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesDetailed['tissueProblemOption.insufficientPath'] !== null && ddp.dashboardValuesDetailed['tissueProblemOption.insufficientPath'] !== undefined">
+                {{ddp.dashboardValuesDetailed['tissueProblemOption.insufficientPath']}} sets/
+              </ng-container>
+              <ng-container
+                *ngIf="ddp.dashboardValues['tissueProblemOption.insufficientPath'] !== null && ddp.dashboardValues['tissueProblemOption.insufficientPath'] !== undefined">
+                {{ddp.dashboardValues['tissueProblemOption.insufficientPath']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr *ngIf="showTissueProblemDetails">
+            <td class="TD--Padding-BIG">Tissue Problem 'Insufficient material per SHL'</td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesDetailed['tissueProblemOption.insufficientSHL'] !== null && ddp.dashboardValuesDetailed['tissueProblemOption.insufficientSHL'] !== undefined">
+                {{ddp.dashboardValuesDetailed['tissueProblemOption.insufficientSHL']}} sets/
+              </ng-container>
+              <ng-container
+                *ngIf="ddp.dashboardValues['tissueProblemOption.insufficientSHL'] !== null && ddp.dashboardValues['tissueProblemOption.insufficientSHL'] !== undefined">
+                {{ddp.dashboardValues['tissueProblemOption.insufficientSHL']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr *ngIf="showTissueProblemDetails">
+            <td class="TD--Padding-BIG">Tissue Problem 'No e signatures'</td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesDetailed['tissueProblemOption.noESign'] !== null && ddp.dashboardValuesDetailed['tissueProblemOption.noESign'] !== undefined">
+                {{ddp.dashboardValuesDetailed['tissueProblemOption.noESign']}} sets/
+              </ng-container>
+              <ng-container
+                *ngIf="ddp.dashboardValues['tissueProblemOption.noESign'] !== null && ddp.dashboardValues['tissueProblemOption.noESign'] !== undefined">
+                {{ddp.dashboardValues['tissueProblemOption.noESign']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr *ngIf="showTissueProblemDetails">
+            <td class="TD--Padding-BIG">Tissue Problem 'Path department policy'</td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesDetailed['tissueProblemOption.pathPolicy'] !== null && ddp.dashboardValuesDetailed['tissueProblemOption.pathPolicy'] !== undefined">
+                {{ddp.dashboardValuesDetailed['tissueProblemOption.pathPolicy']}} sets/
+              </ng-container>
+              <ng-container
+                *ngIf="ddp.dashboardValues['tissueProblemOption.pathPolicy'] !== null && ddp.dashboardValues['tissueProblemOption.pathPolicy'] !== undefined">
+                {{ddp.dashboardValues['tissueProblemOption.pathPolicy']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr *ngIf="showTissueProblemDetails">
+            <td class="TD--Padding-BIG">Tissue Problem 'Path department unable to locate'</td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesDetailed['tissueProblemOption.pathNoLocate'] !== null && ddp.dashboardValuesDetailed['tissueProblemOption.pathNoLocate'] !== undefined">
+                {{ddp.dashboardValuesDetailed['tissueProblemOption.pathNoLocate']}} sets/
+              </ng-container>
+              <ng-container
+                *ngIf="ddp.dashboardValues['tissueProblemOption.pathNoLocate'] !== null && ddp.dashboardValues['tissueProblemOption.pathNoLocate'] !== undefined">
+                {{ddp.dashboardValues['tissueProblemOption.pathNoLocate']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr *ngIf="showTissueProblemDetails">
+            <td class="TD--Padding-BIG">Tissue Problem 'Tissue destroyed'</td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesDetailed['tissueProblemOption.destroyed'] !== null && ddp.dashboardValuesDetailed['tissueProblemOption.destroyed'] !== undefined">
+                {{ddp.dashboardValuesDetailed['tissueProblemOption.destroyed']}} sets/
+              </ng-container>
+              <ng-container
+                *ngIf="ddp.dashboardValues['tissueProblemOption.destroyed'] !== null && ddp.dashboardValues['tissueProblemOption.destroyed'] !== undefined">
+                {{ddp.dashboardValues['tissueProblemOption.destroyed']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+          <tr *ngIf="showTissueProblemDetails">
+            <td class="TD--Padding-BIG">Tissue Problem 'Other'</td>
+            <td>
+              <ng-container
+                *ngIf="ddp.dashboardValuesDetailed['tissueProblemOption.other'] !== null && ddp.dashboardValuesDetailed['tissueProblemOption.other'] !== undefined">
+                {{ddp.dashboardValuesDetailed['tissueProblemOption.other']}} sets/
+              </ng-container>
+              <ng-container *ngIf="ddp.dashboardValues['tissueProblemOption.other'] !== null && ddp.dashboardValues['tissueProblemOption.other'] !== undefined">
+                {{ddp.dashboardValues['tissueProblemOption.other']}} pts
+              </ng-container>
+            </td>
+            <td></td>
+          </tr>
+        </ng-container>
 
         <ng-container *ngFor="let dashboardValue of activityKeys">
           <ng-container *ngIf="getActivityName(dashboardValue) as activity">

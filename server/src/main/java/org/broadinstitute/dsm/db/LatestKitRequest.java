@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.db;
 import lombok.Data;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.DDPKitRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,8 +32,6 @@ public class LatestKitRequest {
             "(SELECT count(role.name) FROM ddp_instance realm, ddp_instance_role inRol, instance_role role WHERE realm.ddp_instance_id = inRol.ddp_instance_id " +
             "AND inRol.instance_role_id = role.instance_role_id AND role.name = ? AND realm.ddp_instance_id = site.ddp_instance_id) AS 'has_third_role'" +
             "FROM ddp_instance site WHERE site.is_active = 1";
-
-    public static final String MIGRATED_KIT_REQUEST = "MIGRATED_";
 
     private String latestDDPKitRequestID;
     private final String instanceID;
@@ -88,7 +87,7 @@ public class LatestKitRequest {
                                     rs.getString(DBConstants.ES_PARTICIPANT_INDEX));
                             if (latestKitRequest.getLatestDDPKitRequestID() != null) {
                                 logger.info("Found latestKitRequestID " + latestKitRequest.getLatestDDPKitRequestID() + " via " + latestKitRequest.getInstanceName());
-                                if (latestKitRequest.getLatestDDPKitRequestID().startsWith(MIGRATED_KIT_REQUEST)) {
+                                if (latestKitRequest.getLatestDDPKitRequestID().startsWith(DDPKitRequest.MIGRATED_KIT_REQUEST)) {
                                     //change the DDPKitRequest back to null (normal behaviour without migration (otherwise DDP will throw 500))
                                     latestKitRequest.setLatestDDPKitRequestID(null);
                                 }

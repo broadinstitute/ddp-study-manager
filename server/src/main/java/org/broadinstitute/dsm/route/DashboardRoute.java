@@ -280,7 +280,8 @@ public class DashboardRoute extends RequestHandler {
             Set<String> foundAtPt = new HashSet<>();
             Set<String> foundAtPtPeriod = new HashSet<>();
             if (wrapper.getMedicalRecords() != null && !wrapper.getMedicalRecords().isEmpty()) {
-                countMedicalRecordData(wrapper.getMedicalRecords(), foundAtPt, foundAtPtPeriod, dashboardValuesDetailed, dashboardValuesPeriodDetailed, start, end);
+                countMedicalRecordData(wrapper.getMedicalRecords(), foundAtPt, foundAtPtPeriod, dashboardValuesDetailed, dashboardValuesPeriodDetailed, start, end,
+                        kitRequests);
             }
             if (wrapper.getOncHistoryDetails() != null && !wrapper.getOncHistoryDetails().isEmpty()) {
                 countOncHistoryData(wrapper.getOncHistoryDetails(), foundAtPt, foundAtPtPeriod, dashboardValuesDetailed, dashboardValuesPeriodDetailed, start, end);
@@ -311,7 +312,7 @@ public class DashboardRoute extends RequestHandler {
 
     private void countMedicalRecordData(@NonNull List<MedicalRecord> medicalRecordList, @NonNull Set<String> foundAtPT, @NonNull Set<String> foundAtPtPeriod,
                                         @NonNull Map<String, Integer> dashboardValuesDetailed, @NonNull Map<String, Integer> dashboardValuesPeriodDetailed,
-                                        long start, long end) {
+                                        long start, long end, Map<String, List<KitRequestShipping>> kitRequests) {
         for (MedicalRecord medicalRecord : medicalRecordList) {
             if (medicalRecord.isDuplicate()) {
                 incrementCounter(dashboardValuesDetailed, "duplicateMedicalRecord");
@@ -349,6 +350,21 @@ public class DashboardRoute extends RequestHandler {
             countRequestsReceive(dashboardValuesDetailed, dashboardValuesPeriodDetailed, foundAtPT, foundAtPtPeriod, medicalRecord.getFaxSent3(),
                     medicalRecord.getFaxSent2(), medicalRecord.getFaxSent(), medicalRecord.getMrReceived(), start, end,
                     "notRequested", "faxSent", "mrReceived", medicalRecord.isDuplicate());
+
+            // MR ready to request (at least saliva or blood received and mr not flagged as "duplicate" or "problem" or "unable to obtain" and fax sent date is not entered)
+            if (!medicalRecord.isDuplicate() && !medicalRecord.isMrProblem() && !medicalRecord.isUnableObtain() && StringUtils.isBlank(medicalRecord.getFaxSent())) {
+                List<KitRequestShipping> kits = kitRequests.get(medicalRecord.getDdpParticipantId());
+                if (kits != null) {
+                    for (KitRequestShipping kit : kits) {
+                        if (kit.getReceiveDate() != 0) {
+                            // one kit was received
+                            incrementCounter(dashboardValuesDetailed, "readyToRequest");
+                            foundAtPT.add("readyToRequest");
+                            break;
+                        }
+                    }
+                }
+            }
 
             if (medicalRecord.getFollowUps() != null) {
                 int index = 1;
@@ -510,7 +526,7 @@ public class DashboardRoute extends RequestHandler {
                     SystemUtil.getLongFromDateString(faxSent), start, end, foundAtPtPeriod);
         }
         else {
-            //not requested yet - only if they are not flagged as duplicate
+            //Total requestable MR - only if they are not flagged as duplicate
             if (!isDuplicate) {
                 if (dashboardValueNameWaiting != null) {
                     incrementCounter(dashboardValuesDetailed, dashboardValueNameWaiting, foundAtPT);

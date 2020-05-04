@@ -8,6 +8,7 @@ public class DBConstants {
     public static final String DDP_ONC_HISTORY_DETAIL = "ddp_onc_history_detail";
     public static final String DDP_TISSUE = "ddp_tissue";
     public static final String DDP_PARTICIPANT_RECORD = "ddp_participant_record";
+    public static final String DDP_INSTITUTION = "ddp_institution";
     public static final String DDP_PARTICIPANT = "ddp_participant";
     public static final String DDP_PARTICIPANT_EXIT = "ddp_participant_exit";
     public static final String DRUG_LIST = "drug_list";
@@ -19,6 +20,7 @@ public class DBConstants {
     public static final String DDP_PARTICIPANT_ALIAS = "p";
     public static final String DDP_PARTICIPANT_RECORD_ALIAS = "r";
     public static final String DDP_PARTICIPANT_EXIT_ALIAS = "ex";
+    public static final String DDP_INSTITUTION_ALIAS = "inst";
     public static final String DDP_MEDICAL_RECORD_ALIAS = "m";
     public static final String DDP_ONC_HISTORY_ALIAS = "o";
     public static final String DDP_ONC_HISTORY_DETAIL_ALIAS = "oD";
@@ -168,7 +170,7 @@ public class DBConstants {
     public static final String ABSTRACTION_READY = "abstraction_ready";
 
     //oncHistoryDetails
-    public static final String ONC_HISTORY_PREFIX = "oncDetail";
+    public static final String ONC_HISTORY_PREFIX = "oD";
     public static final String ONC_HISTORY_DETAIL_ID = "onc_history_detail_id";
     public static final String DATE_PX = "date_px";
     public static final String TYPE_PX = "type_px";

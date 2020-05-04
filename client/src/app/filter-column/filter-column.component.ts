@@ -26,7 +26,6 @@ export class FilterColumnComponent implements OnInit {
           break;
         }
       }
-      console.log(this.selected);
     }
   }
 
@@ -86,4 +85,6 @@ export class FilterColumnComponent implements OnInit {
     //set value to selected
     this.dataFilter.selectedOptions[ event.value ] = true;
   }
+
+
 }

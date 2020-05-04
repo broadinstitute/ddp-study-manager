@@ -4,9 +4,9 @@ export class ViewFilter {
 
   selected: boolean = false;
 
-  constructor(public filters: Filter[], public filterName: string, public columns: {}, public shared: boolean,
-              public deleted: string, public userId: string, public id: string, public parent: string, public icon: string,
-              public quickFilterName: string, public queryItems: string, public message?: string) {
+  constructor( public filters: Filter[], public filterName: string, public columns: {}, public shared: boolean,
+               public deleted: string, public userId: string, public id: string, public parent: string, public icon: string,
+               public quickFilterName: string, public queryItems: string ) {
     this.filters = filters;
     this.filterName = filterName;
     this.columns = columns;
@@ -17,7 +17,6 @@ export class ViewFilter {
     this.parent = parent;
     this.quickFilterName = quickFilterName;
     this.queryItems = queryItems;
-    this.message = null;
   }
 
   public static parseFilter( json, allColumns: {} ): ViewFilter {
@@ -40,9 +39,11 @@ export class ViewFilter {
             tmp.push( filteredColumn );
           }
         }
-        if (key === "o" || key === "ex"
-          || key === "r") {
+        if (key === "o" || key === "ex" || key === "r") {
           p[ "p" ] = tmp;
+        }
+        else if (key === "inst") {
+          p[ "m" ] = tmp;
         }
         else {
           p[ key ] = tmp;
@@ -53,6 +54,24 @@ export class ViewFilter {
 
     return new ViewFilter( currentFilter, json.filterName, parsedColumns, json.shared === "1" ? true : false, json.fDeleted, json.userId, json.id,
       json.parent, json.icon, json.quickFilterName, json.queryItems);
+  }
+
+  public copy(): ViewFilter {
+    let f: Filter[] = [];
+    for (let filter of this.filters) {
+      f.push( filter.copy() );
+    }
+    let c = {};
+    for (let key of Object.keys( this.columns )) {
+      c[ key ] = [];
+      for (let column of this.columns[ key ]) {
+        c[ key ].push( column.copy() );
+      }
+    }
+    let v = new ViewFilter( f, Object.assign( "", this.filterName ), c, Object.assign( new Boolean(), this.shared ), Object.assign( new Boolean(), this.deleted ),
+      Object.assign( "", this.userId ), Object.assign( "", this.id ), Object.assign( "", this.parent ), Object.assign( "", this.icon ),
+      Object.assign( "", this.quickFilterName ), Object.assign( "", this.queryItems ) );
+    return v;
   }
 
 

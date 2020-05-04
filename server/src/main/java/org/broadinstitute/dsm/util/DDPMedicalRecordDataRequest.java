@@ -141,7 +141,7 @@ public class DDPMedicalRecordDataRequest {
                                             Map.Entry pair = (Map.Entry) it.next();
                                             MBCParticipantInstitution mbcData = ((MBCParticipantInstitution) pair.getValue());
                                             writePhysiciansIntoDb(conn, ddpInstance.getDdpInstanceId(), mbcData.getMbcParticipant().getParticipantId(),
-                                                    mbcData.getMbcParticipant().getUpdatedAt(), mbcData.getMbcInstitution().getInstitution(),
+                                                    mbcData.getMbcParticipant().getUpdatedAt(), mbcData.getMbcInstitution().getPhysicianId(),
                                                     mbcData.getMbcInstitution().isChangedSinceLastChecked(), MBCInstitution.PHYSICIAN, false);
                                             maxId = Math.max(maxId, Integer.parseInt(mbcData.getMbcInstitution().getPhysicianId()));
                                         }

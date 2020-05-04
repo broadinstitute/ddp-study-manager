@@ -94,7 +94,7 @@
                     <md-checkbox
                       color="primary"
                       (change)="addOrRemoveColumn(oncColumn, source)"
-                      [checked]="selectedColumns[source]!= undefined && selectedColumns[source].includes(oncColumn)">{{oncColumn.participantColumn.display}}</md-checkbox>
+                      [checked]="selectedColumns[source]!= undefined  && hasThisColumnSelected(selectedColumns[source], oncColumn)">{{oncColumn.participantColumn.display}}</md-checkbox>
                   </ng-container>
                 </li>
               </ul>
@@ -241,6 +241,9 @@
       <table id="mainTable" class="table table-striped Table--Hover Table--Foot Width--85" style="float: right;"
              *ngIf="!loading">
         <thead>
+        <th>
+          DDP
+        </th>
         <th *ngFor="let col of selectedColumns['data']" (click)="sortByColumnName(col, 'data')"
             [ngClass]="{'Table--Sticky': true, 'Color--blue': isSortField(col.participantColumn.name)}"
             tooltip="{{col.participantColumn.object === undefined? col.participantColumn.tableAlias : col.participantColumn.object}}.{{col.participantColumn.name}}">
@@ -288,6 +291,9 @@
             <!--<tr [ngClass]="'class'+i%2">-->
             <tr *ngIf="value != null && value != undefined">
               <ng-container>
+                <td>
+                  {{value.data['ddp']}}
+                </td>
                 <td *ngFor="let col of selectedColumns['data']" [height]="40" (click)="getParticipant(value, 'oD')">
                   <span *ngIf="col.participantColumn.object === null || col.participantColumn.object === undefined">
                     <span *ngIf="col.type ==='DATE' || col.type === 'EPOCHDATE'">
@@ -375,6 +381,9 @@
             *ngFor="let value of tissueListOncHistories| paginate: { itemsPerPage: hasRole().getUserSetting().getRowsPerPage(), currentPage: activePage }; let i=index">
             <!--<ng-container *ngFor="let value of this.tissueListOncHistories; let i=index;">-->
             <tr (click)="getParticipant(value, 'oD')">
+              <td>
+                {{value.data['ddp']}}
+              </td>
               <td *ngFor="let col of selectedColumns['data']" [height]="40" (click)="getParticipant(value, 'oD')">
                 <span *ngIf="col.participantColumn.object === null || col.participantColumn.object === undefined">
                   <span *ngIf="col.type ==='DATE' || col.type === 'EPOCHDATE'">
