@@ -189,8 +189,10 @@ public class ElasticSearchTest extends TestHelper {
             while (response == null || response.getHits().getHits().length != 0) {
                 BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
                 activityAnswer.must(QueryBuilders.matchQuery("activities.questionsAnswers.stableId", stableId));
-                activityAnswer.should(QueryBuilders.matchQuery("activities.questionsAnswers.answer", answer1));
-                activityAnswer.should(QueryBuilders.matchQuery("activities.questionsAnswers.answer", answer2));
+                BoolQueryBuilder orAnswers = new BoolQueryBuilder();
+                orAnswers.should(QueryBuilders.matchQuery("activities.questionsAnswers.answer", answer1));
+                orAnswers.should(QueryBuilders.matchQuery("activities.questionsAnswers.answer", answer2));
+                activityAnswer.must(orAnswers);
                 NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery("activities.questionsAnswers", activityAnswer, ScoreMode.Avg);
 
                 BoolQueryBuilder queryBuilder = new BoolQueryBuilder();

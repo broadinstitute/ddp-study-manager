@@ -98,7 +98,6 @@ public class ApplicationConfigConstants {
     public static final String INSERT_KIT_REQUEST = "portal.insertKitRequest";
     public static final String INSERT_KIT = "portal.insertKit";
     public static final String GET_COUNT_KITS_WITH_SAME_COLLABORATOR_SAMPLE_ID_AND_KIT_TYPE = "portal.counterCollaboratorSample";
-    public static final String UPDATE_UPLOADED_KIT = "portal.updateUploadKit";
     public static final String GET_UNSENT_KIT_REQUESTS_FOR_REALM = "portal.unsentKitRequestsPerRealmQuery";
     public static final String GET_UPLOADED_KITS = "portal.selectUploadedKits";
     public static final String GET_LABEL_SETTINGS = "portal.labelSettingsQuery";
