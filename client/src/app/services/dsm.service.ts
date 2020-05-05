@@ -158,8 +158,9 @@ export class DSMService {
   }
 
   public getSettings( realm: string, parent: string ): Observable<any> {
-    let url = this.baseUrl + DSMService.UI + "displaySettings/" + realm;
+    let url = this.baseUrl + DSMService.UI + "displaySettings";
     let map: { name: string, value: any }[] = [];
+    map.push( { name: DSMService.REALM, value: realm } );
     map.push( { name: "userId", value: this.role.userID() } );
     map.push( { name: "parent", value: parent } );
     return this.http.get( url, this.buildQueryHeader( map ) ).map( ( res: Response ) => res.json() ).catch( this.handleError );
