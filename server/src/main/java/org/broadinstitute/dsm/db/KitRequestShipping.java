@@ -599,10 +599,17 @@ public class KitRequestShipping extends KitRequest {
     //adding kit request to db (called by hourly job to add kits into DSM)
     public static void addKitRequests(@NonNull String instanceId, @NonNull KitDetail kitDetail, @NonNull int kitTypeId,
                                       @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId) {
+        addKitRequests(instanceId, kitDetail.getKitType(), kitDetail.getParticipantId(), kitDetail.getKitRequestId(), kitTypeId, kitRequestSettings,
+                collaboratorParticipantId);
+    }
+
+    //adding kit request to db (called by hourly job to add kits into DSM)
+    public static void addKitRequests(@NonNull String instanceId, @NonNull String kitType, @NonNull String participantId, @NonNull String kitRequestId,
+                                      @NonNull int kitTypeId, @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId) {
         inTransaction((conn) -> {
             String errorMessage = "";
             String collaboratorSampleId = null;
-            String bspCollaboratorSampleType = kitDetail.getKitType();
+            String bspCollaboratorSampleType = kitType;
             if (kitRequestSettings.getCollaboratorSampleTypeOverwrite() != null) {
                 bspCollaboratorSampleType = kitRequestSettings.getCollaboratorSampleTypeOverwrite();
             }
@@ -615,7 +622,7 @@ public class KitRequestShipping extends KitRequest {
                     errorMessage += "bspCollaboratorSampleId was too long ";
                 }
             }
-            writeRequest(instanceId, kitDetail.getKitRequestId(), kitTypeId, kitDetail.getParticipantId(), collaboratorParticipantId, collaboratorSampleId,
+            writeRequest(instanceId, kitRequestId, kitTypeId, participantId, collaboratorParticipantId, collaboratorSampleId,
                     "SYSTEM", null, errorMessage, null);
             return null;
         });
