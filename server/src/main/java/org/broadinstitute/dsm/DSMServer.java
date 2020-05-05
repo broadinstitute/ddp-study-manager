@@ -332,7 +332,7 @@ public class DSMServer extends BasicServer {
         patch(UI_ROOT + RoutePath.SAVE_FILTER, viewFilterRoute, new JsonTransformer());
         patch(UI_ROOT + RoutePath.FILTER_DEFAULT, viewFilterRoute, new JsonTransformer());
 
-        FilterRoute filterRoute = new FilterRoute(patchUtil);
+        FilterRoute filterRoute = new FilterRoute(patchUtil, auth0Util);
         //returns List[] that is filtered based on the filterName
         get(UI_ROOT + RoutePath.APPLY_FILTER, filterRoute, new JsonTransformer());
         patch(UI_ROOT + RoutePath.FILTER_LIST, filterRoute, new JsonTransformer());

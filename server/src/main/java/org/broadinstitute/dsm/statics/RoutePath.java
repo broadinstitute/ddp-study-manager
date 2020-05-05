@@ -54,7 +54,7 @@ public class RoutePath {
     public static final String PERMALINK_INSTITUTION_REQUEST = "participant/" + RequestParameter.PARTICIPANTID + "/institution/" +RequestParameter.MEDICALRECORDID;
     public static final String MEDICAL_RECORD_LOG_REQUEST = "medicalRecord/" + RequestParameter.MEDICALRECORDID + "/log";
     public static final String FIELD_SETTINGS_ROUTE = "fieldSettings/" + RequestParameter.REALM;
-    public static final String DISPLAY_SETTINGS_ROUTE = "displaySettings/" + RequestParameter.REALM;
+    public static final String DISPLAY_SETTINGS_ROUTE = "displaySettings";
     public static final String DASHBOARD_REQUEST = "ddpInformation";
     public static final String SAMPLE_REPORT_REQUEST = "sampleReport";
     public static final String LOOKUP = "lookup";
