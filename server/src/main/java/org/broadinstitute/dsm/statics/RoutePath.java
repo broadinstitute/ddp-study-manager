@@ -85,7 +85,7 @@ public class RoutePath {
     public static final String SAVE_FILTER = "saveFilter";
     public static final String APPLY_FILTER = "applyFilter";
     public static final String GET_FILTERS = "getFilters";
-    public static final String GET_PARSED_FILTERS = "getParsedFilters";
+    public static final String GET_DEFAULT_FILTERS = "getFiltersDefault";
     public static final String GET_PARTICIPANT = "getParticipant";
     public static final String NDI_REQUEST = "ndiRequest";
     public static final String ABSTRACTION_FORM_CONTROLS = "abstractionformcontrols";

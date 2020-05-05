@@ -112,6 +112,7 @@ export class UserSettingComponent implements OnInit {
           this.userSetting.defaultTissueFilter = filterName;
         }
         this.saving = false;
+        this.additionalMessage = "Default filter changed"
       },
       err => {
         if (err._body === Auth.AUTHENTICATION_ERROR) {

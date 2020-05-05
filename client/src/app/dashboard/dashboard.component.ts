@@ -97,11 +97,11 @@ export class DashboardComponent implements OnInit {
     if (localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) != null) {
       this.allowedToSeeInformation = false;
       this.loadingDDPData = true;
-      this.ddp = null;
       if (version === Statics.MEDICALRECORD_DASHBOARD) {
         this.allowedToSeeInformation = true;
         this.dsmService.getMedicalRecordDashboard( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ), startDate, endDate ).subscribe(
           data => {
+            this.ddp = null;
             let result = Result.parse( data );
             if (result.code === 500) {
               if (result.body === Statics.ERROR_MESSAGE_NO_RIGHTS) {
@@ -133,6 +133,13 @@ export class DashboardComponent implements OnInit {
             this.errorMessage = "Error - Loading ddp information\nPlease contact your DSM developer";
           }
         );
+        if (!this.allowedToSeeInformation) {
+          this.additionalMessage = "You are not allowed to see information of the selected realm at that category";
+          this.loadingDDPData = false;
+        }
+        else {
+          this.additionalMessage = null;
+        }
       }
       else if (version === Statics.SHIPPING_DASHBOARD) {
         this.dsmService.getShippingDashboard( localStorage.getItem( ComponentService.MENU_SELECTED_REALM ) ).subscribe(
@@ -403,6 +410,12 @@ export class DashboardComponent implements OnInit {
         || filter.participantColumn.tableAlias === "r") {
         if (this.sourceColumns[ "p" ] == null) {
           this.sourceColumns[ "p" ] = [];
+        }
+        this.sourceColumns[ "p" ].push( filter );
+      }
+      if (filter.participantColumn.tableAlias === "inst") {
+        if (this.sourceColumns[ "m" ] == null) {
+          this.sourceColumns[ "m" ] = [];
         }
         this.sourceColumns[ "p" ].push( filter );
       }

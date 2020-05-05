@@ -22,6 +22,7 @@ public class DDPKitRequest {
     private static final Logger logger = LoggerFactory.getLogger(DDPKitRequest.class);
 
     public static final String UPLOADED_KIT_REQUEST = "UPLOADED_";
+    public static final String MIGRATED_KIT_REQUEST = "MIGRATED_";
 
     /**
      * Requesting 'new' DDPKitRequests and write them into ddp_kit_request
@@ -58,7 +59,8 @@ public class DDPKitRequest {
                                 if (kitDetail != null && kitDetail.getParticipantId() != null && kitDetail.getKitRequestId() != null
                                         && kitDetail.getKitType() != null) {
                                     //ignore kits from the ddp which starts with internal upload prefix (mainly for mbc migration)
-                                    if (StringUtils.isNotBlank(kitDetail.getKitRequestId()) && !kitDetail.getKitRequestId().startsWith(UPLOADED_KIT_REQUEST)) {
+                                    if (StringUtils.isNotBlank(kitDetail.getKitRequestId()) && !kitDetail.getKitRequestId().startsWith(UPLOADED_KIT_REQUEST)
+                                            && !kitDetail.getKitRequestId().startsWith(MIGRATED_KIT_REQUEST)) {
                                         String key = kitDetail.getKitType() + "_" + latestKit.getInstanceID();
                                         KitType kitType = kitTypes.get(key);
                                         if (kitType != null) {
@@ -159,7 +161,7 @@ public class DDPKitRequest {
                     }
                 }
                 catch (Exception ex) {
-                    logger.error("Error requesting KitRequests form " + latestKit.getInstanceName(), ex);
+                    logger.error("Error requesting KitRequests from " + latestKit.getInstanceName(), ex);
                 }
             }
         }

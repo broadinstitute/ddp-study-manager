@@ -42,7 +42,7 @@ public class FieldSettingsRoute extends RequestHandler {
                         Type settingsType = new TypeToken<Map<String, Collection<FieldSettings>>>() {
                         }.getType();
                         Map<String, Collection<FieldSettings>> fieldSettingsLists = new Gson().fromJson(requestBody, settingsType);
-                        FieldSettings.saveFieldSettings(realm, fieldSettingsLists);
+                        FieldSettings.saveFieldSettings(realm, fieldSettingsLists, userId);
                         return new Result(200);
                     }
                     catch (Exception e) {

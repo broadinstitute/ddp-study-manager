@@ -99,8 +99,8 @@ public class UserSettings {
         });
         UserSettings us = (UserSettings) results.resultValue;
         if(us != null) {
-            us.defaultTissueFilter = ViewFilter.getDefaultFilterForUser(userMail, "tissueList");
-            us.defaultParticipantFilter = ViewFilter.getDefaultFilterForUser(userMail, "participantList");
+            us.defaultTissueFilter = ViewFilter.getDefaultFilterForUser(email, "tissueList");
+            us.defaultParticipantFilter = ViewFilter.getDefaultFilterForUser(email, "participantList");
         }
         logger.info("UserSettings for user w/ email " + userMail);
         return us;

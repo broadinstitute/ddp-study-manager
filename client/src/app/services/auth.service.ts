@@ -114,6 +114,7 @@ export class Auth {
     localStorage.removeItem( ComponentService.MENU_SELECTED_REALM );
     localStorage.clear();
     this.sessionService.logout();
+    this.selectedRealm = null;
     this.router.navigate( [ Statics.HOME_URL ] );
   }
 

@@ -45,7 +45,7 @@ public class ElasticSearchUtil {
     private static final String ACTIVITIES_QUESTIONS_ANSWER_DATE = "activities.questionsAnswers.date";
     private static final String ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID = "activities.questionsAnswers.stableId";
     public static final String PROFILE = "profile";
-    private static final String DATA = "data";
+    public static final String DATA = "data";
     public static final String DSM = "dsm";
     private static final String ACTIVITY_CODE = "activityCode";
     public static final String ADDRESS = "address";
@@ -82,8 +82,8 @@ public class ElasticSearchUtil {
                     SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
                     SearchResponse response = null;
                     int i = 0;
+                    searchSourceBuilder.query(QueryBuilders.matchAllQuery());
                     while (response == null || response.getHits().getHits().length != 0) {
-                        searchSourceBuilder.query(QueryBuilders.matchAllQuery());
                         searchSourceBuilder.size(scrollSize);
                         searchSourceBuilder.from(i * scrollSize);
                         searchRequest.source(searchSourceBuilder);
@@ -115,11 +115,11 @@ public class ElasticSearchUtil {
                     SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
                     SearchResponse response = null;
                     int i = 0;
+                    AbstractQueryBuilder query = createESQuery(filter);
+                    if (query == null) {
+                        throw new RuntimeException("Couldn't create query from filter " + filter);
+                    }
                     while (response == null || response.getHits().getHits().length != 0) {
-                        AbstractQueryBuilder query = createESQuery(filter);
-                        if (query == null) {
-                            throw new RuntimeException("Couldn't create query from filter " + filter);
-                        }
                         searchSourceBuilder.query(query);
                         searchSourceBuilder.size(scrollSize);
                         searchSourceBuilder.from(i * scrollSize);
@@ -244,7 +244,28 @@ public class ElasticSearchUtil {
                             }
                         }
                         else {
-
+                            String[] surveyParam = nameValue[0].split("\\.");
+                            if ("createdAt".equals(surveyParam[1]) || "completedAt".equals(surveyParam[1]) || "lastUpdatedAt".equals(surveyParam[1])) {
+                                QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, surveyParam[1]);
+                                try {
+                                    long date = SystemUtil.getLongFromString(userEntered);
+                                    if (tmpBuilder != null) {
+                                        ((RangeQueryBuilder) tmpBuilder).gte(date);
+                                    }
+                                    else {
+                                        tmpBuilder = new BoolQueryBuilder();
+                                        ((BoolQueryBuilder) tmpBuilder).must(QueryBuilders.rangeQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1]).gte(date));
+                                        BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
+                                        activityAnswer.must(tmpBuilder);
+                                        activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + ACTIVITY_CODE, surveyParam[0]).operator(Operator.AND));
+                                        NestedQueryBuilder query = QueryBuilders.nestedQuery(ACTIVITIES, activityAnswer, ScoreMode.Avg);
+                                        finalQuery.must(query);
+                                    }
+                                }
+                                catch (ParseException e) {
+                                    logger.error("range was not date. user entered: " + userEntered);
+                                }
+                            }
                         }
                     }
                     else {
@@ -293,6 +314,28 @@ public class ElasticSearchUtil {
                             }
                         }
                         else {
+                            String[] surveyParam = nameValue[0].split("\\.");
+                            if ("createdAt".equals(surveyParam[1]) || "completedAt".equals(surveyParam[1]) || "lastUpdatedAt".equals(surveyParam[1])) {
+                                QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, surveyParam[1]);
+                                try {
+                                    long date = SystemUtil.getLongFromString(userEntered);
+                                    if (tmpBuilder != null) {
+                                        ((RangeQueryBuilder) tmpBuilder).gte(date);
+                                    }
+                                    else {
+                                        tmpBuilder = new BoolQueryBuilder();
+                                        ((BoolQueryBuilder) tmpBuilder).must(QueryBuilders.rangeQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1]).lte(date));
+                                        BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
+                                        activityAnswer.must(tmpBuilder);
+                                        activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + ACTIVITY_CODE, surveyParam[0]).operator(Operator.AND));
+                                        NestedQueryBuilder query = QueryBuilders.nestedQuery(ACTIVITIES, activityAnswer, ScoreMode.Avg);
+                                        finalQuery.must(query);
+                                    }
+                                }
+                                catch (ParseException e) {
+                                    logger.error("range was not date. user entered: " + userEntered);
+                                }
+                            }
                         }
                     }
                     else {
@@ -313,18 +356,27 @@ public class ElasticSearchUtil {
                         }
                         else {
                             String[] surveyParam = nameValue[0].split("\\.");
+                            if ("createdAt".equals(surveyParam[1]) || "completedAt".equals(surveyParam[1]) || "lastUpdatedAt".equals(surveyParam[1]) || "status".equals(surveyParam[1])) {
+                                BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
+                                ExistsQueryBuilder existsQuery = new ExistsQueryBuilder(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1]);
+                                activityAnswer.must(existsQuery);
+                                activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + ACTIVITY_CODE, surveyParam[0].trim()));
+                                NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery(ACTIVITIES, activityAnswer, ScoreMode.Avg);
+                                finalQuery.must(queryActivityAnswer);
+                            }
+                            else {
+                                BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
+                                ExistsQueryBuilder existsQuery = new ExistsQueryBuilder(ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
+                                activityAnswer.must(existsQuery);
+                                activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID, surveyParam[1].trim()));
+                                NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery(ACTIVITIES_QUESTIONS_ANSWER, activityAnswer, ScoreMode.Avg);
 
-                            BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
-                            ExistsQueryBuilder existsQuery = new ExistsQueryBuilder(ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
-                            activityAnswer.must(existsQuery);
-                            activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID, surveyParam[1].trim()));
-                            NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery(ACTIVITIES_QUESTIONS_ANSWER, activityAnswer, ScoreMode.Avg);
-
-                            BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
-                            queryBuilder.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + ACTIVITY_CODE, surveyParam[0].trim()).operator(Operator.AND));
-                            queryBuilder.must(queryActivityAnswer);
-                            NestedQueryBuilder query = QueryBuilders.nestedQuery(ACTIVITIES, queryBuilder, ScoreMode.Avg);
-                            finalQuery.must(query);
+                                BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
+                                queryBuilder.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + ACTIVITY_CODE, surveyParam[0].trim()).operator(Operator.AND));
+                                queryBuilder.must(queryActivityAnswer);
+                                NestedQueryBuilder query = QueryBuilders.nestedQuery(ACTIVITIES, queryBuilder, ScoreMode.Avg);
+                                finalQuery.must(query);
+                            }
                         }
                     }
                     else {
@@ -345,6 +397,16 @@ public class ElasticSearchUtil {
         return null;
     }
 
+    private static QueryBuilder findQueryBuilderForOrAnswer(BoolQueryBuilder finalQuery, String fieldName) {
+        QueryBuilder tmpBuilder = findQueryBuilder(finalQuery.must(), fieldName);
+        if (tmpBuilder != null) {
+            return tmpBuilder;
+        }
+        else {
+            return findQueryBuilder(finalQuery.should(), fieldName);
+        }
+    }
+
     private static QueryBuilder findQueryBuilderForFieldName(BoolQueryBuilder finalQuery, String fieldName) {
         QueryBuilder tmpBuilder = findQueryBuilder(finalQuery.must(), fieldName);
         if (tmpBuilder != null) {
@@ -355,17 +417,32 @@ public class ElasticSearchUtil {
         }
     }
 
-    private static QueryBuilder findQueryBuilder(List<QueryBuilder> tmpFilters, String fieldName) {
+    private static QueryBuilder findQueryBuilder(List<QueryBuilder> tmpFilters, @NonNull String fieldName) {
         QueryBuilder tmpBuilder = null;
         if (!tmpFilters.isEmpty()) {
-            for (Iterator<QueryBuilder> iterator = tmpFilters.iterator(); iterator.hasNext(); ) {
+            for (Iterator<QueryBuilder> iterator = tmpFilters.iterator(); iterator.hasNext() && tmpBuilder == null; ) {
                 QueryBuilder builder = iterator.next();
                 if (builder instanceof RangeQueryBuilder && ((RangeQueryBuilder) builder).fieldName().equals(fieldName)) {
                     tmpBuilder = builder;
                 }
+                else if (builder instanceof NestedQueryBuilder) {
+                    return findQueryBuilder(((BoolQueryBuilder) ((NestedQueryBuilder) builder).query()).must(), fieldName);
+                }
                 else {
-                    if (builder.getName().equals(fieldName)) {
+                    String name = builder.getName();
+                    if (fieldName.equals(name)) {
                         tmpBuilder = builder;
+                    }
+                    else if (builder instanceof BoolQueryBuilder && ((BoolQueryBuilder) builder).should() != null) {
+                        List<QueryBuilder> shouldQueries = ((BoolQueryBuilder) builder).should();
+                        for (QueryBuilder should : shouldQueries) {
+                            if (should instanceof MatchQueryBuilder) {
+                                String otherName = ((MatchQueryBuilder) should).fieldName();
+                                if (StringUtils.isNotBlank(otherName) && fieldName.equals(otherName)) {
+                                    tmpBuilder = builder;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -447,7 +524,8 @@ public class ElasticSearchUtil {
                 userEntered = userEntered.replaceAll("%", "").trim();
             }
             if ((nameValue[0].startsWith(PROFILE) || nameValue[0].startsWith(ADDRESS))) {
-                if (nameValue[0].trim().endsWith(GUID) || nameValue[0].trim().endsWith(LEGACY_ALT_PID)) {
+                if (nameValue[0].trim().endsWith(HRUID) || nameValue[0].trim().endsWith("legacyShortId") ||
+                        nameValue[0].trim().endsWith(GUID) || nameValue[0].trim().endsWith(LEGACY_ALT_PID)) {
                     valueQueryBuilder(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
                 }
                 else {
@@ -485,6 +563,7 @@ public class ElasticSearchUtil {
                 BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
                 BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
 
+                boolean alreadyAdded = false;
                 if ("createdAt".equals(surveyParam[1]) || "completedAt".equals(surveyParam[1]) || "lastUpdatedAt".equals(surveyParam[1]) || "status".equals(surveyParam[1])) {
                     try {
                         //activity dates
@@ -492,11 +571,11 @@ public class ElasticSearchUtil {
                         //set endDate to midnight of that date
                         String endDate = userEntered + " 23:59:59";
                         long end = SystemUtil.getLongFromDetailDateString(endDate);
-                        rangeQueryBuilder(finalQuery, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1], start, end, must);
+                        rangeQueryBuilder(queryBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1], start, end, must);
                     }
                     catch (ParseException e) {
                         //activity status
-                        valueQueryBuilder(finalQuery, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered, wildCard, must);
+                        valueQueryBuilder(queryBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered, wildCard, must);
                     }
                 }
                 else {
@@ -522,22 +601,29 @@ public class ElasticSearchUtil {
                                 activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
                             }
                             else {
-                                QueryBuilder tmpBuilder = findQueryBuilderForFieldName(activityAnswer, ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
+                                QueryBuilder tmpBuilder = findQueryBuilderForOrAnswer(finalQuery, ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
                                 if (tmpBuilder != null) {
                                     ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
+                                    alreadyAdded = true;
                                 }
                                 else {
-                                    activityAnswer.should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
+                                    BoolQueryBuilder orAnswers = new BoolQueryBuilder();
+                                    orAnswers.should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
+                                    activityAnswer.must(orAnswers);
                                 }
                             }
                         }
                     }
-                    NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery(ACTIVITIES_QUESTIONS_ANSWER, activityAnswer, ScoreMode.Avg);
-                    queryBuilder.must(queryActivityAnswer);
+                    if (!alreadyAdded) {
+                        NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery(ACTIVITIES_QUESTIONS_ANSWER, activityAnswer, ScoreMode.Avg);
+                        queryBuilder.must(queryActivityAnswer);
+                    }
                 }
-                queryBuilder.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + ACTIVITY_CODE, surveyParam[0]).operator(Operator.AND));
-                NestedQueryBuilder query = QueryBuilders.nestedQuery(ACTIVITIES, queryBuilder, ScoreMode.Avg);
-                finalQuery.must(query);
+                if (!alreadyAdded) {
+                    queryBuilder.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + ACTIVITY_CODE, surveyParam[0]).operator(Operator.AND));
+                    NestedQueryBuilder query = QueryBuilders.nestedQuery(ACTIVITIES, queryBuilder, ScoreMode.Avg);
+                    finalQuery.must(query);
+                }
             }
         }
         else {

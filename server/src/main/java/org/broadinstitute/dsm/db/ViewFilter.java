@@ -191,7 +191,7 @@ public class ViewFilter {
             query = newQueryCondition;
         }
         else {
-            query = changeFieldsInQuery(viewFilter.getQueryItems());
+            query = changeFieldsInQuery(viewFilter.getQueryItems(), true);
         }
         StringBuilder columnsString = new StringBuilder();
         if (viewFilter.getColumnsToSave() != null) {
@@ -472,6 +472,9 @@ public class ViewFilter {
         String[] conditions = str.split("(and\\s*)|(AND\\s*)");
         Map<String, Filter> filters = new HashMap<>(conditions.length);
         for (String condition : conditions) {
+            if (StringUtils.isBlank(condition)) {
+                continue;
+            }
             int state = 0;
             String tableName = "";
             String columnName = "";
@@ -486,11 +489,9 @@ public class ViewFilter {
             Boolean exact = false;
             Boolean longWord = false;
             Boolean f2 = false;
+            Boolean f1 = false;
             NameValue filter2 = null;
             NameValue filter1 = null;
-            if (StringUtils.isBlank(condition)) {
-                continue;
-            }
             String[] words = condition.split("(\\s+)");
             for (String word : words) {
                 if (StringUtils.isNotBlank(word)) {
@@ -528,6 +529,9 @@ public class ViewFilter {
                                 state = 4;
                                 if (word.equals(Filter.SMALLER_EQUALS_TRIMMED)) {
                                     f2 = true;
+                                }
+                                else {
+                                    f1 = true;
                                 }
                                 break;
                             }
@@ -796,15 +800,21 @@ public class ViewFilter {
             if (StringUtils.isNotBlank(tableName)) {
                 columnKey = tableName.concat(DBConstants.ALIAS_DELIMITER).concat(columnName);
             }
-            columnName = PatchUtil.getDataBaseMap().containsKey(columnKey) ? PatchUtil.getDataBaseMap().get(columnKey) : columnName;
+            columnName = PatchUtil.getDataBaseMap().containsKey(columnKey) ? PatchUtil.getDataBaseMap().get(columnKey) : columnName;// to change from dbName to column name
             if (filters.containsKey(columnName) && (type == null || !type.equals(Filter.ADDITIONAL_VALUES))) {
+                // this is not the first time that field is in the query -> all related to the same filter
                 Filter filter = filters.get(columnName);
                 if (filter == null) {
                     throw new RuntimeException("Bad columnName! " + columnName);
                 }
                 filter.range = true;
                 if (StringUtils.isNotBlank(value)) {
-                    filter.filter2 = new NameValue(columnName, value);
+                    if (f1) {
+                        filter.filter1 = new NameValue(columnName, value);
+                    }
+                    else {
+                        filter.filter2 = new NameValue(columnName, value);
+                    }
                 }
                 filter.notEmpty = notEmpty;
                 filter.empty = empty;
@@ -823,26 +833,37 @@ public class ViewFilter {
                 if (isValidDate(value, false)) {
                     type = Filter.DATE;
                 }
-                if (Filter.ADDITIONAL_VALUES.equals(type)) {
+                if (Filter.ADDITIONAL_VALUES.equals(filter.type)) {
                     filter.participantColumn = new ParticipantColumn(path, tableName);
                 }
-                if (!Filter.CHECKBOX.equals(type)) {
-                    if (!f2) {
+                else if (Filter.TEXT.equals(filter.type)) {
+                    filter.filter1 = new NameValue(columnName, value);
+                }
+                else if (!Filter.CHECKBOX.equals(filter.type)) {
+                    if (f1) {// first in range
                         filter.filter1 = new NameValue(columnName, value);
                     }
-                    if (path != null && !f2) {
+                    if (path != null && !f2) {//additional field
                         filter.filter2 = new NameValue(path, "");
                     }
-                    if (f2) {
-                        filter.filter1 = new NameValue(columnName, null);
+                    if (f2) {// maximum set in a range filter
+                        if (filter.filter1 == null) {
+                            filter.filter1 = new NameValue(columnName, null);
+                        }
                         filter.filter2 = new NameValue(columnName, value);
+                    }
+                    else if (StringUtils.isBlank(value)) {// no values
+                        filter.filter1 = new NameValue(columnName, null);
+                        filter.filter2 = new NameValue(columnName, null);
                     }
                 }
                 else {
                     if (filter1 != null && !f2) {
+                        filter1.setName(columnName);// to change from dbName to column name
                         filter.filter1 = filter1;
                     }
                     else if (filter2 != null || f2) {
+                        filter2.setName(columnName);// to change from dbName to column name
                         filter.filter2 = filter2;
                     }
                 }
@@ -911,7 +932,7 @@ public class ViewFilter {
                     LocalDateTime today = LocalDateTime.now();     //Today
                     LocalDateTime tomorrow = today.plusDays(numberOfDays);
                     date = getDate(tomorrow);
-                    queryWords[i + 1] = "";
+                    queryWords[i + 1] = "";// today
                     queryWords[i + 2] = "";
                 }
                 queryWords[i] = "'" + date + "'";
@@ -921,15 +942,15 @@ public class ViewFilter {
         return String.join(" ", queryWords);
     }
 
-    public static String changeFieldsInQuery(String filterQuery) {
+    public static String changeFieldsInQuery(String filterQuery, boolean savingFilter) {
         String[] words = filterQuery.split("\\s+");
         for (int i = 0; i < words.length; i++) {
             String word = words[i];
             if (PatchUtil.getColumnNameMap().containsKey(word)) {
                 words[i] = PatchUtil.getColumnNameMap().get(word).tableAlias + DBConstants.ALIAS_DELIMITER + PatchUtil.getColumnNameMap().get(word).columnName;
             }
-            else if (word.contains("'") && word.charAt(0) == '\'' && word.charAt(word.length() - 1) == '\'') {
-                String temp = word.substring(1, word.length() - 1);
+            else if (word.contains("'") && (word.charAt(0) == '\'' || word.charAt(word.length() - 1) == '\'')) {
+                String temp = word.replace("'", "");
                 if (isValidDate(temp, true)) {
                     try {
                         words[i] = "'" + SystemUtil.changeDateFormat("MM/dd/yyyy", "yyyy-MM-dd", temp) + "'";
@@ -943,7 +964,9 @@ public class ViewFilter {
         }
 
         String query = String.join(" ", words);
-        query = fixTodayInQuery(query);
+        if (!savingFilter) {
+            query = fixTodayInQuery(query);
+        }
         return query;
     }
 
