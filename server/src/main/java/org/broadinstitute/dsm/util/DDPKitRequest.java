@@ -161,7 +161,7 @@ public class DDPKitRequest {
                     }
                 }
                 catch (Exception ex) {
-                    logger.error("Error requesting KitRequests form " + latestKit.getInstanceName(), ex);
+                    logger.error("Error requesting KitRequests from " + latestKit.getInstanceName(), ex);
                 }
             }
         }
