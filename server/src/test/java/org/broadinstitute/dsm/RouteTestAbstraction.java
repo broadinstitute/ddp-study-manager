@@ -154,12 +154,12 @@ public class RouteTestAbstraction extends TestHelper {
         String groups = DBTestUtil.getStringFromQuery("select count(*) from medical_record_abstraction_group where ddp_instance_id = (SELECT ddp_instance_id from ddp_instance where instance_name = ?)", strings, "count(*)");
 
         //adding a new group
-        String json = "[{\"newAdded\": true, \"displayName\": \"" + newGroup + "\", \"orderNumber\": 3}]";
+        String json = "[{\"newAdded\": true, \"displayName\": \"" + newGroup + "\"}]";
         HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/abstractionformcontrols?realm=" + TEST_DDP), json, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 
         //add a field to the group, so that the group is there for the next call to get the form (only groups with fields are returned)
-        addField(newGroup, "New Field in Group", "text");
+        addField(newGroup, "New Field in Group", "text", 4);
 
         //getting fields for realm
         response = TestUtil.performGet(DSM_BASE_URL, "/ui/abstractionformcontrols?realm=" + TEST_DDP, testUtil.buildAuthHeaders()).returnResponse();
@@ -175,10 +175,10 @@ public class RouteTestAbstraction extends TestHelper {
 
     @Test
     public void addField() throws Exception {
-        addField("Unit Test Group 3", "New Field", "text");
+        addField("Unit Test Group 3", "New Field", "text", 3);
     }
 
-    private void addField(@NonNull String groupName, @NonNull String fieldName, @NonNull String fieldType) throws Exception {
+    private void addField(@NonNull String groupName, @NonNull String fieldName, @NonNull String fieldType, int orderNumber) throws Exception {
         //get group id
         List strings = new ArrayList<>();
         strings.add(TEST_DDP);
@@ -189,7 +189,8 @@ public class RouteTestAbstraction extends TestHelper {
         String fields = DBTestUtil.getStringFromQuery("select count(*) from medical_record_abstraction_field where ddp_instance_id = (SELECT ddp_instance_id from ddp_instance where instance_name = ?) AND medical_record_abstraction_group_id = (select medical_record_abstraction_group_id from medical_record_abstraction_group where display_name = ?) ", strings, "count(*)");
 
         //adding a new field to the group
-        String json = "[{\"abstractionGroupId\":\"" + abstractionGroupId + "\", \"displayName\": \"" + groupName + "\", \"orderNumber\": 3, \"changed\": true, \"fields\": [{\"newAdded\":true, \"displayName\":\"" + fieldName + "\", \"helpText\":\"" + fieldName + " - Help Text\", \"type\":\"" + fieldType + "\"}]}]";
+        String groupID = abstractionGroupId == null ? "null, \"newAdded\":true " : ("\"" + abstractionGroupId + "\"");
+        String json = "[{\"abstractionGroupId\":" + groupID + ", \"displayName\": \"" + groupName + "\", \"orderNumber\": " + orderNumber + ", \"changed\": true, \"fields\": [{\"newAdded\":true, \"displayName\":\"" + fieldName + "\", \"helpText\":\"" + fieldName + " - Help Text\", \"type\":\"" + fieldType + "\"}]}]";
         HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/abstractionformcontrols?realm=" + TEST_DDP), json, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 
@@ -301,7 +302,7 @@ public class RouteTestAbstraction extends TestHelper {
         Collection<AbstractionGroup> abstractionGroups = abstractionWrapperChanged.getAbstraction();
         for (AbstractionGroup group : abstractionGroups) {
             for (AbstractionField field : group.getFields()) {
-                if (!field.getDisplayName().equals("DOB") || !field.getDisplayName().equals("Medication")) {//or do it with id
+                if (!field.getDisplayName().equals("DOB") && !field.getDisplayName().equals("Medication")) {//or do it with id
                     //now set all fields to no_data = true
                     strings = new ArrayList<>();
                     strings.add(field.getDisplayName());
@@ -363,10 +364,10 @@ public class RouteTestAbstraction extends TestHelper {
         strings.add(participantId);
         strings.add(activity);
         String activityId = DBTestUtil.getStringFromQuery("SELECT * FROM ddp_medical_record_abstraction_activities WHERE participant_id = ? AND activity = ?", strings, "medical_record_abstraction_activities_id");
-        String json = "{\"ddpParticipantId\":\"" + ddpParticipantId + "\", \"realm\": \"" + realm + "\", \"aStatus\": \"" + newStatus + "\", \"userId\": \"1\", \"abstraction\": {\"participantId\":\"" + participantId + "\",\"user\":\"Name of user\", \"activity\":\"" + activity + "\", \"aStatus\":\"" + currentStatus + "\"}}";
+        String json = "{\"ddpParticipantId\":\"" + ddpParticipantId + "\", \"realm\": \"" + realm + "\", \"status\": \"" + newStatus + "\", \"userId\": \"1\", \"abstraction\": {\"participantId\":\"" + participantId + "\",\"user\":\"Name of user\", \"activity\":\"" + activity + "\", \"aStatus\":\"" + currentStatus + "\"}}";
 
         if (activityId != null) {
-            json = "{\"ddpParticipantId\":\"" + ddpParticipantId + "\", \"realm\": \"" + realm + "\", \"aStatus\": \"" + newStatus + "\", \"userId\": \"1\", \"abstraction\": {\"participantId\":\"" + participantId + "\", \"medicalRecordAbstractionActivityId\":\"" + activityId + "\",\"user\":\"Name of user\", \"activity\":\"" + activity + "\", \"aStatus\":\"" + currentStatus + "\"}}";
+            json = "{\"ddpParticipantId\":\"" + ddpParticipantId + "\", \"realm\": \"" + realm + "\", \"status\": \"" + newStatus + "\", \"userId\": \"1\", \"abstraction\": {\"participantId\":\"" + participantId + "\", \"medicalRecordAbstractionActivityId\":\"" + activityId + "\",\"user\":\"Name of user\", \"activity\":\"" + activity + "\", \"aStatus\":\"" + currentStatus + "\"}}";
 
         }
         //change abstraction aStatus

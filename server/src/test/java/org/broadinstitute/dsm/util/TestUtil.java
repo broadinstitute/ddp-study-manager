@@ -38,7 +38,7 @@ public class TestUtil {
 
         Map<String, String> claims = new HashMap<>();
         claims.put("USER_ID", "26");
-        String jwtToken = new SecurityHelper().createToken(jwtSecret, (System.currentTimeMillis() / 1000) + (60 * 15), claims);
+        String jwtToken = new SecurityHelper().createToken(jwtSecret, (System.currentTimeMillis() / 1000) + (60 * 18), claims);
 
         CookieUtil cookieUtil = new CookieUtil();
         int cookieAgeInSeconds = 60;

@@ -36,7 +36,7 @@ public class ElasticSearchTest extends TestHelper {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-osteo");
+            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-brain");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
@@ -103,7 +103,7 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void searchPTByActivityDte() throws Exception {
-        activityAnswer("participants_structured.cmi.cmi-brain", "CONSENT", "CONSENT_DOB", "2011-11-11");
+        activityAnswer("participants_structured.cmi.cmi-brain", "CONSENT", "CONSENT_BLOOD", "true");
     }
 
     @Test
@@ -146,11 +146,6 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void searchPTByORActivityAnswers() throws Exception {
-        compareSearches("participants_structured.cmi.angio", "ANGIORELEASE", "MAILING_ADDRESS", "US", "CA");
-    }
-
-    @Test
-    public void searchPTByORActivityAnswers2() throws Exception {
         compareSearches("participants_structured.cmi.angio", "ANGIOABOUTYOU", "COUNTRY", "US", "CA");
     }
 
@@ -163,19 +158,35 @@ public class ElasticSearchTest extends TestHelper {
         Map<String, Map<String, Object>> or = orActivityAnswers(index, activityCode, stableId, answer1, answer2);
         Map<String, Map<String, Object>> answerMap1 = activityAnswer(index, activityCode, stableId, answer1);
         Map<String, Map<String, Object>> answerMap2 = activityAnswer(index, activityCode, stableId, answer2);
-        Assert.assertEquals((answerMap1.size() + answerMap2.size()), or.size());
+        Map<String, Map<String, Object>> orCopy = new HashMap<>(or);
+        Map<String, Map<String, Object>> answerMap1Copy = new HashMap<>(answerMap1);
+        Map<String, Map<String, Object>> answerMap2Copy = new HashMap<>(answerMap2);
 
         answerMap1.forEach((key, value) -> {
-            if (or.containsKey(key)) {
-                or.remove(key);
+            if (orCopy.containsKey(key)) {
+                orCopy.remove(key);
             }
         });
         answerMap2.forEach((key, value) -> {
-            if (or.containsKey(key)) {
-                or.remove(key);
+            if (orCopy.containsKey(key)) {
+                orCopy.remove(key);
             }
         });
-        Assert.assertEquals(0, or.size());
+
+        or.forEach((key, value) -> {
+            if (answerMap1Copy.containsKey(key)) {
+                answerMap1Copy.remove(key);
+            }
+        });
+
+        or.forEach((key, value) -> {
+            if (answerMap2Copy.containsKey(key)) {
+                answerMap2Copy.remove(key);
+            }
+        });
+
+        Assert.assertEquals(0, orCopy.size());
+        Assert.assertEquals((answerMap1.size() + answerMap2.size()), or.size());
     }
 
     public Map<String, Map<String, Object>> orActivityAnswers(String index, String activityCode, String stableId, String answer1, String answer2) throws Exception {
@@ -463,20 +474,20 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void searchPTByProfileData() throws Exception {
-//        searchProfileValue("participants_structured.cmi.angio", "profile.guid", "DT1QLG4VTH4GIKPYTYRN");
-//        searchProfileValue("participants_structured.cmi.cmi-brain", "profile.hruid", "P694FH");
+        //        searchProfileValue("participants_structured.cmi.angio", "profile.guid", "DT1QLG4VTH4GIKPYTYRN");
+        //        searchProfileValue("participants_structured.cmi.cmi-brain", "profile.hruid", "P694FH");
         searchProfileValue("participants_structured.cmi.cmi-osteo", "profile.hruid", "PPBNBN");
-//        searchProfileValue("participants_structured.cmi.angio", "profile.firstname", "foo");
+        //        searchProfileValue("participants_structured.cmi.angio", "profile.firstname", "foo");
     }
 
     @Test
     public void mbcLegacyPTGUID() throws Exception {
-        searchProfileValue("participants_structured.cmi.cmi-mbc", "profile.guid", "R0RR2K62F1D4JT2NUF0D");
+        searchProfileValue("participants_structured.cmi.cmi-mbc", "profile.guid", "SBUP2T5KCM57XHUU90VA");
     }
 
     @Test
     public void mbcLegacyPTAltPID() throws Exception {
-        searchProfileValue("participants_structured.cmi.cmi-mbc", "profile.legacyAltPid", "8315_v3");
+        searchProfileValue("participants_structured.cmi.cmi-mbc", "profile.legacyAltPid", "8195-A16");
     }
 
     public void searchProfileValue(String index, String field, String value) throws Exception {
