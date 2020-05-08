@@ -56,7 +56,7 @@ public class TestHelper {
     public static final String KIT_QUERY = "select * from ddp_kit_request, ddp_kit " +
             "where ddp_kit_request.dsm_kit_request_id = ddp_kit.dsm_kit_request_id and " +
             "ddp_instance_id = (select ddp_instance_id from ddp_instance where instance_name = ?) " +
-            "and kit_type_id = (select kit_type_id from kit_type where kit_type_name = ?) " +
+            "and kit_type_id = ? " +
             "and ddp_participant_id = ? order by ddp_kit_request.dsm_kit_request_id desc ";
 
     public static String INSTANCE_ID = null;
@@ -184,7 +184,7 @@ public class TestHelper {
         }
     }
 
-    private static void checkRole(String role, List<String> roles, String user, String group){
+    private static void checkRole(String role, List<String> roles, String user, String group) {
         if (!roles.contains(role)) {
             DBTestUtil.executeQuery("INSERT INTO access_user_role_group set user_id = " + user + ", group_id = " + group + ", role_id = (SELECT role_id from access_role where name = \"" + role + "\") ");
         }
@@ -317,6 +317,9 @@ public class TestHelper {
             else {
                 json = "{\"id\":null,\"parentId\":\"" + participantId + "\",\"parent\":\"" + parent + "\",\"user\":\"" + user + "\",\"fieldId\":\"" + fieldId + "\",\"nameValue\":{\"name\":\"" + field + "\",\"value\":\"" + value + "\"}}";
             }
+        }
+        if (String.valueOf(value).startsWith("[")) {//for abstraction value change
+            json = "{\"id\":null,\"parentId\":\"" + participantId + "\",\"parent\":\"" + parent + "\",\"user\":\"" + user + "\",\"fieldId\":\"" + fieldId + "\",\"nameValue\":{\"name\":\"" + field + "\",\"value\":" + value + "}}";
         }
         HttpResponse response = TestUtil.perform(Request.Patch(DSM_BASE_URL + "/ui/patch"), json, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());

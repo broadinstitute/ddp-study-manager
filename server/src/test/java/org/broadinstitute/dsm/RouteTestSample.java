@@ -439,6 +439,7 @@ public class RouteTestSample extends TestHelper {
 
     @Test
     public void bspCollaboratorSampleIdRGPStyle() {
+        DBTestUtil.deleteAllKitData("1_3");
         DDPInstance ddpInstance = DDPInstance.getDDPInstance(TEST_DDP);
 
         HashMap<String, KitType> kitTypes = org.broadinstitute.dsm.model.KitType.getKitLookup();
@@ -468,24 +469,30 @@ public class RouteTestSample extends TestHelper {
 
     @Test
     public void bspCollaboratorSampleIdRGPStyleMultipleKits() throws Exception {
-        String kitType = "TEST";
+        DBTestUtil.deleteAllKitData("1_3");
+        Map<String, KitType> kitTypes = KitType.getKitLookup();
+        String key = "SALIVA_" + INSTANCE_ID;
+        KitType kitType = kitTypes.get(key);
         //upload kits for one type
         String csvContent = TestUtil.readFile("KitUploadTestDDP.txt");
         HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "kitUpload?realm=" + TEST_DDP + "&kitType=SALIVA&userId=26"), csvContent, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
         List<String> strings = new ArrayList<>();
         strings.add(TEST_DDP);
-        strings.add("SALIVA");
+        strings.add(String.valueOf(kitType.getKitTypeId()));
         strings.add("1_3"); //Mother
         String bspCollaboratorIdMotherKit1 = DBTestUtil.getStringFromQuery(KIT_QUERY, strings, "bsp_collaborator_sample_id");
         Assert.assertEquals("TestProject_01_3_SALIVA", bspCollaboratorIdMotherKit1);
 
         //upload same kits for another type
-        response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "kitUpload?realm=" + TEST_DDP + "&kitType=" + kitType + "&userId=26"), csvContent, testUtil.buildAuthHeaders()).returnResponse();
+        String otherKitType = "TEST";
+        key = otherKitType + "_" + INSTANCE_ID;
+        kitType = kitTypes.get(key);
+        response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "kitUpload?realm=" + TEST_DDP + "&kitType=" + otherKitType + "&userId=26"), csvContent, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
         strings = new ArrayList<>();
         strings.add(TEST_DDP);
-        strings.add(kitType);
+        strings.add(String.valueOf(kitType.getKitTypeId()));
         strings.add("1_3"); //Mother
         String bspCollaboratorIdMotherKit2 = DBTestUtil.getStringFromQuery(KIT_QUERY, strings, "bsp_collaborator_sample_id");
         Assert.assertEquals("TestProject_1_3", bspCollaboratorIdMotherKit2);
@@ -516,9 +523,13 @@ public class RouteTestSample extends TestHelper {
 
         triggerLabelCreationAndWaitForLabel(TEST_DDP, null, 60);
 
+        Map<String, KitType> kitTypes = KitType.getKitLookup();
+        String key = "TEST_" + INSTANCE_ID;
+        KitType kitType = kitTypes.get(key);
+
         List<String> strings = new ArrayList<>();
         strings.add(TEST_DDP);
-        strings.add("TEST");
+        strings.add(String.valueOf(kitType.getKitTypeId()));
         strings.add("1_3");
         String easypostToId = DBTestUtil.getStringFromQuery(KIT_QUERY, strings, "easypost_to_id");
         Assert.assertNotNull(easypostToId); //changed from before were label was bought when kitrequest was added to db
@@ -527,9 +538,12 @@ public class RouteTestSample extends TestHelper {
         Address address = shipment.getFromAddress();
         Assert.assertEquals("6177147395", address.getPhone());
 
+        key = "SALIVA_" + INSTANCE_ID;
+        kitType = kitTypes.get(key);
+
         strings = new ArrayList<>();
         strings.add(TEST_DDP);
-        strings.add("SALIVA");
+        strings.add(String.valueOf(kitType.getKitTypeId()));
         strings.add("1_3");
         easypostToId = DBTestUtil.getStringFromQuery(KIT_QUERY, strings, "easypost_to_id");
         Assert.assertNotNull(easypostToId);
@@ -561,9 +575,14 @@ public class RouteTestSample extends TestHelper {
         String csvContent = TestUtil.readFile("KitUploadTestDDP.txt");
         HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "kitUpload?realm=" + TEST_DDP + "&kitType=TEST&userId=26"), csvContent, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+
+        Map<String, KitType> kitTypes = KitType.getKitLookup();
+        String key = "TEST_" + INSTANCE_ID;
+        KitType kitType = kitTypes.get(key);
+
         List<String> strings = new ArrayList<>();
         strings.add(TEST_DDP);
-        strings.add("TEST");
+        strings.add(String.valueOf(kitType.getKitTypeId()));
         strings.add("1_3"); //Mother
         String ddpParticipantId = DBTestUtil.getStringFromQuery(KIT_QUERY, strings, "ddp_participant_id");
         Assert.assertEquals("1_3", ddpParticipantId);
@@ -1562,12 +1581,16 @@ public class RouteTestSample extends TestHelper {
         DBTestUtil.executeQuery("UPDATE ddp_kit_request set bsp_collaborator_participant_id = \"MigratedProject_0012\", bsp_collaborator_sample_id =\"MigratedProject_0012_SALIVA\" where ddp_participant_id = \"1112321.22-698-965-659-667\"");
 
         //upload duplicates
+        Map<String, KitType> kitTypes = KitType.getKitLookup();
+        String key = "SALIVA_" + INSTANCE_ID_MIGRATED;
+        KitType kitType = kitTypes.get(key);
+
         String dupParticipants = TestUtil.readFile("KitUploadMigratedDDP.json");
         response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "kitUpload?realm=" + TEST_DDP_MIGRATED + "&kitType=SALIVA&userId=26&uploadAnyway=true"), dupParticipants, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
         List<String> strings = new ArrayList<>();
         strings.add(TEST_DDP_MIGRATED);
-        strings.add("SALIVA");
+        strings.add(String.valueOf(kitType.getKitTypeId()));
         strings.add("1112321.22-698-965-659-666");
         String uploadedCorrectShortId = DBTestUtil.getStringFromQuery(KIT_QUERY, strings, "bsp_collaborator_sample_id");
         //Gen2 with sample in dsm but uploaded with gen2 id -> should still have gen2 collaborator id
@@ -1575,7 +1598,7 @@ public class RouteTestSample extends TestHelper {
 
         strings = new ArrayList<>();
         strings.add(TEST_DDP_MIGRATED);
-        strings.add("SALIVA");
+        strings.add(String.valueOf(kitType.getKitTypeId()));
         strings.add("1112321.22-698-965-659-667");
         String uploadedWrongShortId = DBTestUtil.getStringFromQuery(KIT_QUERY, strings, "bsp_collaborator_sample_id");
         //Gen2 with sample in dsm but uploaded with pepper HRUID -> should get gen2 collaborator id
@@ -1583,7 +1606,7 @@ public class RouteTestSample extends TestHelper {
 
         strings = new ArrayList<>();
         strings.add(TEST_DDP_MIGRATED);
-        strings.add("SALIVA");
+        strings.add(String.valueOf(kitType.getKitTypeId()));
         strings.add("DLF90348FK65DIR88");
         String uploadedPepperPT = DBTestUtil.getStringFromQuery(KIT_QUERY, strings, "bsp_collaborator_sample_id");
         //Pepper participant should have pepper HRUID in collaborator id
@@ -1591,7 +1614,7 @@ public class RouteTestSample extends TestHelper {
 
         strings = new ArrayList<>();
         strings.add(TEST_DDP_MIGRATED);
-        strings.add("SALIVA");
+        strings.add(String.valueOf(kitType.getKitTypeId()));
         strings.add("1112321.22-698-965-659-668");
         String collabNull = DBTestUtil.getStringFromQuery(KIT_QUERY, strings, "bsp_collaborator_sample_id");
         //Gen2 but no sample in DSM so should ask Pepper for shortId when label gets created
@@ -1630,9 +1653,13 @@ public class RouteTestSample extends TestHelper {
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 
         //check collaborator sample id
+        Map<String, KitType> kitTypes = KitType.getKitLookup();
+        String key = "SALIVA_" + INSTANCE_ID_MIGRATED;
+        KitType kitType = kitTypes.get(key);
+
         List<String> strings = new ArrayList<>();
         strings.add(TEST_DDP_MIGRATED);
-        strings.add("SALIVA");
+        strings.add(String.valueOf(kitType.getKitTypeId()));
         strings.add("1112321.22-698-965-659-668");
         String collabSet = DBTestUtil.getStringFromQuery(KIT_QUERY, strings, "bsp_collaborator_participant_id");
         //Gen2 with tissue sample in DSM so should get Gen2 legacyShortId when label gets created
