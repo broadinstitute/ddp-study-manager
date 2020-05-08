@@ -95,27 +95,27 @@ public class EventQueueTool {
             if (kitInfo.getEventName().equals(eventName) && kitInfo.getInstanceName().equals(realm)) {
                 //add kits to ddp_participant_event
                 ParticipantEvent.skipParticipantEvent(kitInfo.getParticipantId(), currentTime, "SYSTEM", ddpInstance, eventName);
-                EventUtil.addEvent(eventType, ddpInstance.getDdpInstanceId(), kitInfo.getDsmKitRequestId(), false);
+                EventUtil.addEvent(eventName, ddpInstance.getDdpInstanceId(), kitInfo.getDsmKitRequestId(), false);
             }
         }
     }
 
-    private static Collection<KitDDPNotification> getKitsNotReceived(@NonNull String realm, @NonNull String skipEventName) {
+    private static Collection<KitDDPNotification> getKitsNotReceived(@NonNull String realmName, @NonNull String skipEventName) {
         ArrayList<KitDDPNotification> kitDDPNotifications = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(EventUtil.SQL_SELECT_KIT_FOR_REMINDER_EMAILS + " AND realm.instance_name = ?")) {
                 stmt.setString(1, DBConstants.KIT_PARTICIPANT_NOTIFICATIONS_ACTIVATED);
-                stmt.setString(2, realm);
+                stmt.setString(2, realmName);
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         String participantId = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
                         String instanceName = rs.getString(DBConstants.INSTANCE_NAME);
                         String eventName = rs.getString(DBConstants.EVENT_NAME);
-                        if (StringUtils.isNotBlank(instanceName) && instanceName.equals(realm) &&
-                                StringUtils.isNotBlank(eventType) && eventType.equals(skipEventName)) {
+                        if (StringUtils.isNotBlank(instanceName) && instanceName.equals(realmName) &&
+                                StringUtils.isNotBlank(eventName) && eventName.equals(skipEventName)) {
                             kitDDPNotifications.add(new KitDDPNotification(participantId,
-                                    rs.getString(DBConstants.DSM_KIT_REQUEST_ID), rs.getString(DBConstants.DDP_INSTANCE_ID), realm,
+                                    rs.getString(DBConstants.DSM_KIT_REQUEST_ID), rs.getString(DBConstants.DDP_INSTANCE_ID), realmName,
                                     rs.getString(DBConstants.BASE_URL), eventName,
                                     rs.getString(DBConstants.EVENT_TYPE), System.currentTimeMillis(),
                                     rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN)));
