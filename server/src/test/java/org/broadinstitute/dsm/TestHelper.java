@@ -112,6 +112,14 @@ public class TestHelper {
         TransactionWrapper.reset(TestUtil.UNIT_TEST);
         TransactionWrapper.init(cfg.getInt("portal.maxConnections"), cfg.getString("portal.dbUrl"), cfg, false);
 
+        DBTestUtil.executeQuery("UPDATE ddp_instance set is_active = 1 where instance_name = \"" + TEST_DDP_MIGRATED + "\"");
+
+        INSTANCE_ID = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TEST_DDP, DDP_INSTANCE_ID);
+        INSTANCE_ID_2 = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TEST_DDP_2, DDP_INSTANCE_ID);
+        INSTANCE_ID_MIGRATED = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TEST_DDP_MIGRATED, DDP_INSTANCE_ID);
+        DDP_BASE_URL = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TEST_DDP, DBConstants.BASE_URL);
+        PROMISE_INSTANCE_ID = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, DDP_PROMISE, DDP_INSTANCE_ID);
+
         DBTestUtil.executeQuery("UPDATE ddp_instance set is_active = 1 where instance_name = \"" + TEST_DDP + "\"");
         DBTestUtil.executeQuery("UPDATE ddp_instance set is_active = 1 where instance_name = \"" + TEST_DDP_2 + "\"");
         DBTestUtil.executeQuery("UPDATE ddp_instance set billing_reference = 'CO Test' where instance_name = \"" + TEST_DDP + "\"");
@@ -119,6 +127,10 @@ public class TestHelper {
             DBTestUtil.executeQuery("INSERT INTO ddp_instance set instance_name = \"" + TEST_DDP_MIGRATED + "\", base_url=\"https://localhost:6666\", collaborator_id_prefix = \"MigratedProject\", migrated_ddp = 1 ");
             String tmp = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TEST_DDP_MIGRATED, DDP_INSTANCE_ID);
             DBTestUtil.executeQuery("INSERT INTO ddp_kit_request_settings set ddp_instance_id = \"" + tmp + "\", kit_type_id = 1, kit_return_id = 1, carrier_service_to_id = 1, kit_dimension_id = 1 ");
+        }
+        //add second reminder
+        if (!DBTestUtil.checkIfValueExists("SELECT * from event_type where ddp_instance_id = " + INSTANCE_ID + " AND event_name = ?", "BLOOD_SENT_2WK")) {
+            DBTestUtil.executeQuery("INSERT INTO event_type set ddp_instance_id = " + INSTANCE_ID + ", event_name=\"BLOOD_SENT_2WK\", event_description=\"Blood kit - reminder email - 2 WKS\", kit_type_id=\"2\", event_type=\"REMINDER\", hours=\"336\"");
         }
         //adding test group
         if (!DBTestUtil.checkIfValueExists("SELECT * from access_user where name = ?", "THE UNIT TESTER 1")) {
@@ -168,13 +180,6 @@ public class TestHelper {
             DBTestUtil.executeQuery("INSERT INTO instance_settings set mr_cover_pdf = \"[{\\\"value\\\":\\\"exchange_cb\\\", \\\"name\\\":\\\"MD to MD exchange\\\", \\\"type\\\":\\\"checkbox\\\"}]\", ddp_instance_id = (SELECT ddp_instance_id from ddp_instance where instance_name = \"" + TEST_DDP + "\") ");
         }
 
-        DBTestUtil.executeQuery("UPDATE ddp_instance set is_active = 1 where instance_name = \"" + TEST_DDP_MIGRATED + "\"");
-
-        INSTANCE_ID = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TEST_DDP, DDP_INSTANCE_ID);
-        INSTANCE_ID_2 = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TEST_DDP_2, DDP_INSTANCE_ID);
-        INSTANCE_ID_MIGRATED = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TEST_DDP_MIGRATED, DDP_INSTANCE_ID);
-        DDP_BASE_URL = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TEST_DDP, DBConstants.BASE_URL);
-        PROMISE_INSTANCE_ID = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, DDP_PROMISE, DDP_INSTANCE_ID);
 
         String serverPort = cfg.getString("portal.port");
         DSM_BASE_URL = "http://localhost:" + serverPort;
