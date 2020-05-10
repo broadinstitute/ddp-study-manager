@@ -92,7 +92,6 @@ public class ParticipantEvent {
                 stmt.setLong(3, currentTime);
                 stmt.setString(4, userId);
                 stmt.setString(5, eventType);
-                logger.info(stmt.toString());
                 int result = stmt.executeUpdate();
                 if (result == 1) {
                     logger.info("Skip event " + eventType + " for participant w/ ddpParticipantId " + ddpParticipantId + " from " + instance.getName());

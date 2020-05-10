@@ -23,7 +23,7 @@ public class EventUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(EventUtil.class);
 
-    private static final String SQL_SELECT_KIT_FOR_REMINDER_EMAILS = "SELECT eve.event_name, eve.event_type, request.ddp_participant_id, request.dsm_kit_request_id, realm.instance_name, realm.base_url, " +
+    public static final String SQL_SELECT_KIT_FOR_REMINDER_EMAILS = "SELECT eve.event_name, eve.event_type, request.ddp_participant_id, request.dsm_kit_request_id, realm.instance_name, realm.base_url, " +
             "realm.ddp_instance_id, realm.auth0_token, realm.notification_recipients, kit.receive_date, kit.scan_date, (SELECT count(role.name) FROM ddp_instance realm2, ddp_instance_role inRol, instance_role role " +
             "WHERE realm2.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id AND role.name = ? AND realm2.ddp_instance_id = realm.ddp_instance_id) AS 'has_role' " +
             "FROM ddp_kit_request request LEFT JOIN ddp_kit kit ON (kit.dsm_kit_request_id = request.dsm_kit_request_id) LEFT JOIN ddp_instance realm ON (request.ddp_instance_id = realm.ddp_instance_id) " +
@@ -32,7 +32,7 @@ public class EventUtil {
             "LEFT JOIN EVENT_QUEUE queue ON (queue.DSM_KIT_REQUEST_ID = request.dsm_kit_request_id AND queue.EVENT_TYPE = eve.event_name) " +
             "WHERE ex.ddp_participant_exit_id IS NULL AND kit.scan_date IS NOT NULL " +
             "AND kit.scan_date <= (UNIX_TIMESTAMP(NOW())-(eve.hours*60*60))*1000 AND kit.receive_date IS NULL AND kit.deactivated_date IS NULL AND realm.is_active = 1 AND queue.EVENT_TYPE IS NULL";
-    private static final String SQL_INSERT_EVENT = "INSERT INTO EVENT_QUEUE SET EVENT_DATE_CREATED = ?, EVENT_TYPE = ?, DDP_INSTANCE_ID = ?, DSM_KIT_REQUEST_ID = ?";
+    private static final String SQL_INSERT_EVENT = "INSERT INTO EVENT_QUEUE SET EVENT_DATE_CREATED = ?, EVENT_TYPE = ?, DDP_INSTANCE_ID = ?, DSM_KIT_REQUEST_ID = ?, EVENT_TRIGGERED = ?";
 
     public void triggerReminder() {
         logger.info("Triggering reminder emails now");
@@ -85,6 +85,8 @@ public class EventUtil {
         }
         else {
             logger.info("Participant direct event was added in the participant_event table. DDP will not get triggered");
+            //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
+            addEvent(kitDDPNotification.getEventName(), kitDDPNotification.getDdpInstanceId(), kitDDPNotification.getDsmKitRequestId(), false);
         }
     }
 
@@ -97,10 +99,16 @@ public class EventUtil {
         }
         catch (IOException e) {
             logger.error("Failed to trigger DDP to notify participant about " + eventType);
+            //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
+            addEvent(eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId(), false);
         }
     }
 
     private static void addEvent(@NonNull String type, @NonNull String instanceID, @NonNull String requestId) {
+        addEvent(type, instanceID, requestId, true);
+    }
+
+    public static void addEvent(@NonNull String type, @NonNull String instanceID, @NonNull String requestId, boolean trigger) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_EVENT)) {
@@ -108,6 +116,7 @@ public class EventUtil {
                 stmt.setString(2, type);
                 stmt.setString(3, instanceID);
                 stmt.setString(4, requestId);
+                stmt.setBoolean(5, trigger);
                 int result = stmt.executeUpdate();
                 if (result != 1) {
                     throw new RuntimeException("Error could not add event for kit request " + requestId );
