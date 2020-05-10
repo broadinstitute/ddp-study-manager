@@ -482,7 +482,7 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void mbcLegacyPTGUID() throws Exception {
-        searchProfileValue("participants_structured.cmi.cmi-mbc", "profile.guid", "SBUP2T5KCM57XHUU90VA");
+        searchProfileValue("participants_structured.cmi.angio", "profile.guid", "XGCG6DDBB3ELX4OKKWKO");
     }
 
     @Test

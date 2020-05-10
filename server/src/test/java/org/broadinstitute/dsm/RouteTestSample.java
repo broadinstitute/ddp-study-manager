@@ -627,8 +627,10 @@ public class RouteTestSample extends TestHelper {
         DBTestUtil.executeQuery("insert into ddp_participant_event (event, ddp_participant_id, ddp_instance_id, date, done_by) values (\'BLOOD_SENT_2WK\', \'" + FAKE_DDP_PARTICIPANT_ID + "_tt3" + "\', \'" + INSTANCE_ID + "\', \'" + System.currentTimeMillis() + "\', \'1\')");
 
         eventUtil.triggerReminder();
-        Assert.assertNull(DBTestUtil.getQueryDetail("select * from EVENT_QUEUE queue, ddp_kit_request request where queue.DSM_KIT_REQUEST_ID = request.dsm_kit_request_id and request.ddp_label = ? and EVENT_TYPE='BLOOD_SENT_2WK'", "FAKE_DSM_LABEL_UID_tt3", "EVENT_ID"));
-        Assert.assertNotNull(DBTestUtil.getQueryDetail("select * from EVENT_QUEUE queue, ddp_kit_request request where queue.DSM_KIT_REQUEST_ID = request.dsm_kit_request_id and request.ddp_label = ? and EVENT_TYPE='BLOOD_SENT_4WK'", "FAKE_DSM_LABEL_UID_tt3", "EVENT_ID"));
+
+        //check if event_triggered = 1, which would mean it was sent
+        Assert.assertNull(DBTestUtil.getQueryDetail("select * from EVENT_QUEUE queue, ddp_kit_request request where queue.DSM_KIT_REQUEST_ID = request.dsm_kit_request_id and request.ddp_label = ? and EVENT_TYPE='BLOOD_SENT_2WK' AND queue.EVENT_TRIGGERED = 1", "FAKE_DSM_LABEL_UID_tt3", "EVENT_ID"));
+        Assert.assertNotNull(DBTestUtil.getQueryDetail("select * from EVENT_QUEUE queue, ddp_kit_request request where queue.DSM_KIT_REQUEST_ID = request.dsm_kit_request_id and request.ddp_label = ? and EVENT_TYPE='BLOOD_SENT_4WK' AND queue.EVENT_TRIGGERED = 1", "FAKE_DSM_LABEL_UID_tt3", "EVENT_ID"));
     }
 
     @Test
@@ -648,7 +650,8 @@ public class RouteTestSample extends TestHelper {
         Assert.assertEquals("Vacutainer Cell-Free DNA Tube Camo-Top [10mL]", bspMetaData.getReceptacleName());
         Assert.assertEquals("SC-123", bspMetaData.getSampleCollectionBarcode());
         Assert.assertEquals(1, bspMetaData.getOrganismClassificationId());
-        Assert.assertNull(DBTestUtil.getQueryDetail("select * from EVENT_QUEUE queue, ddp_kit_request request where queue.DSM_KIT_REQUEST_ID = request.dsm_kit_request_id and request.ddp_label = ?", "FAKE_DSM_LABEL_UID_tt4", "EVENT_ID"));
+        //check if event_triggered = 1, which would mean it was sent
+        Assert.assertNull(DBTestUtil.getQueryDetail("select * from EVENT_QUEUE queue, ddp_kit_request request where queue.DSM_KIT_REQUEST_ID = request.dsm_kit_request_id and request.ddp_label = ? AND queue.EVENT_TRIGGERED = 1", "FAKE_DSM_LABEL_UID_tt4", "EVENT_ID"));
     }
 
     @Test
@@ -1092,14 +1095,16 @@ public class RouteTestSample extends TestHelper {
     public void bspEndpointSkipDDPEventSalivaReceived() throws Exception {
         String suffix = "_tt9";
         bspKitEndpointSkipDDPEventTriggered(1, "SALIVA_RECEIVED", suffix, INSTANCE_ID);
-        Assert.assertNull(DBTestUtil.getQueryDetail("select * from EVENT_QUEUE queue, ddp_kit_request request where queue.DSM_KIT_REQUEST_ID = request.dsm_kit_request_id and request.ddp_label = ?", "FAKE_DSM_LABEL_UID" + suffix, "EVENT_ID"));
+        //check if event_triggered = 1, which would mean it was sent
+        Assert.assertNull(DBTestUtil.getQueryDetail("select * from EVENT_QUEUE queue, ddp_kit_request request where queue.DSM_KIT_REQUEST_ID = request.dsm_kit_request_id and request.ddp_label = ? AND queue.EVENT_TRIGGERED = 1", "FAKE_DSM_LABEL_UID" + suffix, "EVENT_ID"));
     }
 
     @Test
     public void bspEndpointSkipDDPEventBloodReceived() throws Exception {
         String suffix = "_tt2";
         bspKitEndpointSkipDDPEventTriggered(2, "BLOOD_RECEIVED", suffix, INSTANCE_ID);
-        Assert.assertNull(DBTestUtil.getQueryDetail("select * from EVENT_QUEUE queue, ddp_kit_request request where queue.DSM_KIT_REQUEST_ID = request.dsm_kit_request_id and request.ddp_label = ?", "FAKE_DSM_LABEL_UID" + suffix, "EVENT_ID"));
+        //check if event_triggered = 1, which would mean it was sent
+        Assert.assertNull(DBTestUtil.getQueryDetail("select * from EVENT_QUEUE queue, ddp_kit_request request where queue.DSM_KIT_REQUEST_ID = request.dsm_kit_request_id and request.ddp_label = ? AND queue.EVENT_TRIGGERED = 1", "FAKE_DSM_LABEL_UID" + suffix, "EVENT_ID"));
     }
 
     private void bspKitEndpointSkipDDPEventTriggered(int kitType, String eventName, String suffix, String ddpInstance) throws Exception {
@@ -1385,7 +1390,7 @@ public class RouteTestSample extends TestHelper {
         strings.add(FAKE_DDP_PARTICIPANT_ID + suffix);
         kitId = DBTestUtil.getStringFromQuery(RouteTest.SELECT_KITREQUEST_QUERY, strings, "dsm_kit_request_id");
         //check that kit is twice in table because of sent and reminder
-        Assert.assertEquals("2", DBTestUtil.getQueryDetail("select count(dsm_kit_request_id) from EVENT_QUEUE WHERE DSM_KIT_REQUEST_ID = ?", kitId, "count(dsm_kit_request_id)"));
+        Assert.assertEquals("2", DBTestUtil.getQueryDetail("select count(dsm_kit_request_id) from EVENT_QUEUE WHERE DSM_KIT_REQUEST_ID = ? AND EVENT_TRIGGERED = 1", kitId, "count(dsm_kit_request_id)"));
 
         eventUtil.triggerReminder();
         //check kit which is just 3 weeks old is in event table
@@ -1394,7 +1399,7 @@ public class RouteTestSample extends TestHelper {
         strings.add(FAKE_DDP_PARTICIPANT_ID + suffix);
         kitId = DBTestUtil.getStringFromQuery(RouteTest.SELECT_KITREQUEST_QUERY, strings, "dsm_kit_request_id");
         //check that kit is ONLY twice in table because of sent and reminder and was not added again!
-        Assert.assertEquals("2", DBTestUtil.getQueryDetail("select count(dsm_kit_request_id) from EVENT_QUEUE WHERE DSM_KIT_REQUEST_ID = ?", kitId, "count(dsm_kit_request_id)"));
+        Assert.assertEquals("2", DBTestUtil.getQueryDetail("select count(dsm_kit_request_id) from EVENT_QUEUE WHERE DSM_KIT_REQUEST_ID = ? AND EVENT_TRIGGERED = 1", kitId, "count(dsm_kit_request_id)"));
     }
 
     @Test
