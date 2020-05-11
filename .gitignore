@@ -43,8 +43,10 @@ server/config/dev-keystore3
 server/config/test-keystore
 server/config/test-keystore2
 server/config/staging-keystore
+server/config/staging-keystore2
 server/config/prod-keystore
 server/config/prod-keystore2
+server/config/prod-keystore3
 server/config/dev-gcloud-creds.json
 server/config/dev-gcloud-creds-sql.json
 server/config/test-gcloud-creds.json
