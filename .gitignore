@@ -54,6 +54,7 @@ config/prod-gcloud-creds.json
 
 src/test/resources/output
 target
+*/target/*
 app-deploy
 
 server/config/test-config.conf
