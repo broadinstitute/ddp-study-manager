@@ -16,7 +16,6 @@ import org.broadinstitute.dsm.util.externalShipper.ExternalShipper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.ws.soap.MTOM;
 import java.util.*;
 
 public class DDPKitRequest {
