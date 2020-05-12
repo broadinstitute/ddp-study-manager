@@ -9,9 +9,6 @@
 /client/tslint.json
 client/src/assets/js/ddp_config.js
 
-# server
-/target
-target
 
 # IDEs and editors
 .idea
@@ -56,6 +53,7 @@ config/staging-gcloud-creds.json
 config/prod-gcloud-creds.json
 src/test/resources/output
 app-deploy
+target
 
 server/config/test-config.conf
 server/config/vault.conf
