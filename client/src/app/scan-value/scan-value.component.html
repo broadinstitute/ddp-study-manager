@@ -1,8 +1,0 @@
-<md-input-container>
-  <input mdInput #scanValue name="scanValue" type="text" placeholder="{{scanValuePlaceholder}}" style="width: 8cm" (change)="nextValue(scanValue.value)" autocomplete="off">
-  <md-hint class="ErrorMessageForm" *ngIf="isScanValueDuplicate">Value already exists!</md-hint>
-</md-input-container>
-
-<button md-mini-fab type="button" (click)="removeMe()" color="primary" [disabled]="positionScanValue == countScanValue-1">-</button>
-<p style="vertical-align: text-bottom" class="Width--100 Color--warn Line--Break" *ngIf="hadErrorSending && errorMessage != null">Error occurred sending this scan pair!
-{{errorMessage}}</p>
