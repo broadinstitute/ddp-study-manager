@@ -55,6 +55,10 @@ public class ElasticSearchUtil {
     private static final String LEGACY_ALT_PID = "legacyAltPid";
     public static final String BY_GUID = " AND profile.guid = ";
     public static final String BY_LEGACY_ALTPID = " AND profile.legacyAltPid = ";
+    public static final String END_OF_DAY = " 23:59:59";
+    public static final String CREATED_AT = "createdAt";
+    public static final String COMPLETED_AT = "completedAt";
+    public static final String LAST_UPDATED = "lastUpdatedAt";
 
     public static RestHighLevelClient getClientForElasticsearchCloud(@NonNull String baseUrl, @NonNull String userName, @NonNull String password) throws MalformedURLException {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
@@ -245,7 +249,7 @@ public class ElasticSearchUtil {
                         }
                         else {
                             String[] surveyParam = nameValue[0].split("\\.");
-                            if ("createdAt".equals(surveyParam[1]) || "completedAt".equals(surveyParam[1]) || "lastUpdatedAt".equals(surveyParam[1])) {
+                            if (CREATED_AT.equals(surveyParam[1]) || COMPLETED_AT.equals(surveyParam[1]) || LAST_UPDATED.equals(surveyParam[1])) {
                                 QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, surveyParam[1]);
                                 try {
                                     long date = SystemUtil.getLongFromString(userEntered);
@@ -278,7 +282,7 @@ public class ElasticSearchUtil {
 
                     if (StringUtils.isNotBlank(nameValue[0])) {
                         if (nameValue[0].startsWith(PROFILE) || nameValue[0].startsWith(ADDRESS)) {
-                            String endDate = userEntered + " 23:59:59";
+                            String endDate = userEntered + END_OF_DAY;
                             long date = SystemUtil.getLongFromDetailDateString(endDate);
                             QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, nameValue[0]);
                             if (tmpBuilder != null) {
@@ -315,7 +319,7 @@ public class ElasticSearchUtil {
                         }
                         else {
                             String[] surveyParam = nameValue[0].split("\\.");
-                            if ("createdAt".equals(surveyParam[1]) || "completedAt".equals(surveyParam[1]) || "lastUpdatedAt".equals(surveyParam[1])) {
+                            if (CREATED_AT.equals(surveyParam[1]) || COMPLETED_AT.equals(surveyParam[1]) || LAST_UPDATED.equals(surveyParam[1])) {
                                 QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, surveyParam[1]);
                                 try {
                                     long date = SystemUtil.getLongFromString(userEntered);
@@ -356,7 +360,7 @@ public class ElasticSearchUtil {
                         }
                         else {
                             String[] surveyParam = nameValue[0].split("\\.");
-                            if ("createdAt".equals(surveyParam[1]) || "completedAt".equals(surveyParam[1]) || "lastUpdatedAt".equals(surveyParam[1]) || "status".equals(surveyParam[1])) {
+                            if (CREATED_AT.equals(surveyParam[1]) || COMPLETED_AT.equals(surveyParam[1]) || LAST_UPDATED.equals(surveyParam[1]) || "status".equals(surveyParam[1])) {
                                 BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
                                 ExistsQueryBuilder existsQuery = new ExistsQueryBuilder(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1]);
                                 activityAnswer.must(existsQuery);
@@ -523,7 +527,7 @@ public class ElasticSearchUtil {
             if (wildCard) {
                 userEntered = userEntered.replaceAll("%", "").trim();
             }
-            if ((nameValue[0].startsWith(PROFILE) || nameValue[0].startsWith(ADDRESS))) {
+            if (nameValue[0].startsWith(PROFILE)) {
                 if (nameValue[0].trim().endsWith(HRUID) || nameValue[0].trim().endsWith("legacyShortId") ||
                         nameValue[0].trim().endsWith(GUID) || nameValue[0].trim().endsWith(LEGACY_ALT_PID)) {
                     valueQueryBuilder(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
@@ -532,7 +536,7 @@ public class ElasticSearchUtil {
                     try {
                         long start = SystemUtil.getLongFromString(userEntered);
                         //set endDate to midnight of that date
-                        String endDate = userEntered + " 23:59:59";
+                        String endDate = userEntered + END_OF_DAY;
                         long end = SystemUtil.getLongFromDetailDateString(endDate);
                         rangeQueryBuilder(finalQuery, nameValue[0], start, end, must);
                     }
@@ -549,7 +553,7 @@ public class ElasticSearchUtil {
                 try {
                     long start = SystemUtil.getLongFromString(userEntered);
                     //set endDate to midnight of that date
-                    String endDate = userEntered + " 23:59:59";
+                    String endDate = userEntered + END_OF_DAY;
                     long end = SystemUtil.getLongFromDetailDateString(endDate);
                     rangeQueryBuilder(finalQuery, dataParam[1], start, end, must);
                 }
@@ -558,18 +562,34 @@ public class ElasticSearchUtil {
                     valueQueryBuilder(finalQuery, dataParam[1].trim(), userEntered, wildCard, must);
                 }
             }
+            else if (nameValue[0].startsWith(ADDRESS)) {
+                if (must) {
+                    valueQueryBuilder(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
+                }
+                else {
+                    QueryBuilder tmpBuilder = findQueryBuilderForOrAnswer(finalQuery, nameValue[0].trim());
+                    if (tmpBuilder != null) {
+                        ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(nameValue[0].trim(), userEntered));
+                    }
+                    else {
+                        BoolQueryBuilder orAnswers = new BoolQueryBuilder();
+                        orAnswers.should(QueryBuilders.matchQuery(nameValue[0].trim(), userEntered));
+                        finalQuery.must(orAnswers);
+                    }
+                }
+            }
             else {
                 String[] surveyParam = nameValue[0].split("\\.");
                 BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
                 BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
 
                 boolean alreadyAdded = false;
-                if ("createdAt".equals(surveyParam[1]) || "completedAt".equals(surveyParam[1]) || "lastUpdatedAt".equals(surveyParam[1]) || "status".equals(surveyParam[1])) {
+                if (CREATED_AT.equals(surveyParam[1]) || COMPLETED_AT.equals(surveyParam[1]) || LAST_UPDATED.equals(surveyParam[1]) || "status".equals(surveyParam[1])) {
                     try {
                         //activity dates
                         long start = SystemUtil.getLongFromString(userEntered);
                         //set endDate to midnight of that date
-                        String endDate = userEntered + " 23:59:59";
+                        String endDate = userEntered + END_OF_DAY;
                         long end = SystemUtil.getLongFromDetailDateString(endDate);
                         rangeQueryBuilder(queryBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1], start, end, must);
                     }
@@ -582,7 +602,6 @@ public class ElasticSearchUtil {
                     //activity user entered
                     activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID, surveyParam[1]));
                     try {
-                        //todo check date search
                         SystemUtil.getLongFromString(userEntered);
                         activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_DATE, userEntered));
                     }

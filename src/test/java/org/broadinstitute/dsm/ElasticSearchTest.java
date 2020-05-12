@@ -226,6 +226,57 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
+    public void searchPTByORActivityAnswers4() throws Exception {
+        orActivityAndAnotherAnswers("participants_structured.cmi.angio", "ANGIOABOUTYOU", "COUNTRY", "US", "CA");
+    }
+
+    public Map<String, Map<String, Object>> orActivityAndAnotherAnswers(String index, String activityCode, String stableId, String answer1, String answer2) throws Exception {
+        Map<String, Map<String, Object>> esData = new HashMap<>();
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
+            int scrollSize = 1000;
+            SearchRequest searchRequest = new SearchRequest(index);
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            SearchResponse response = null;
+            int i = 0;
+            while (response == null || response.getHits().getHits().length != 0) {
+                BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
+                activityAnswer.must(QueryBuilders.matchQuery("activities.questionsAnswers.stableId", stableId));
+                BoolQueryBuilder orAnswers = new BoolQueryBuilder();
+                orAnswers.should(QueryBuilders.matchQuery("activities.questionsAnswers.answer", answer1));
+                orAnswers.should(QueryBuilders.matchQuery("activities.questionsAnswers.answer", answer2));
+                activityAnswer.must(orAnswers);
+                NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery("activities.questionsAnswers", activityAnswer, ScoreMode.Avg);
+
+                BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
+                queryBuilder.must(QueryBuilders.matchQuery("activities.activityCode", activityCode).operator(Operator.AND));
+                queryBuilder.must(queryActivityAnswer);
+                NestedQueryBuilder query = QueryBuilders.nestedQuery("activities", queryBuilder, ScoreMode.Avg);
+
+                BoolQueryBuilder activityAnswer2 = new BoolQueryBuilder();
+                ExistsQueryBuilder existsQuery = new ExistsQueryBuilder("activities.completedAt");
+                activityAnswer2.must(existsQuery);
+                activityAnswer2.must(QueryBuilders.matchQuery("activities.activityCode", "ANGIORELEASE"));
+                NestedQueryBuilder queryActivityAnswer2 = QueryBuilders.nestedQuery("activities", activityAnswer2, ScoreMode.Avg);
+
+                BoolQueryBuilder activityAnswer3 = new BoolQueryBuilder();
+                activityAnswer3.must(queryActivityAnswer2);
+                activityAnswer3.must(query);
+
+                searchSourceBuilder.query(activityAnswer3);
+                searchSourceBuilder.size(scrollSize);
+                searchSourceBuilder.from(i * scrollSize);
+                searchRequest.source(searchSourceBuilder);
+
+                response = client.search(searchRequest, RequestOptions.DEFAULT);
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                i++;
+            }
+            Assert.assertNotEquals(0, esData.size());
+        }
+        return esData;
+    }
+
+    @Test
     public void searchPTByProfileFieldNotEmpty() throws Exception {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
@@ -254,7 +305,7 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     @Ignore
-    public void searchPTByProfileFieldEmpty() throws Exception { //TODO Simone - not working yet
+    public void searchPTByProfileFieldEmpty() throws Exception { //TODO - not working yet
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
@@ -354,7 +405,7 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
-    public void searchPTByEmptyField() throws Exception { //TODO Simone - not working yet
+    public void searchPTByEmptyField() throws Exception { //TODO - not working yet
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
@@ -474,10 +525,7 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void searchPTByProfileData() throws Exception {
-        //        searchProfileValue("participants_structured.cmi.angio", "profile.guid", "DT1QLG4VTH4GIKPYTYRN");
-        //        searchProfileValue("participants_structured.cmi.cmi-brain", "profile.hruid", "P694FH");
         searchProfileValue("participants_structured.cmi.cmi-osteo", "profile.hruid", "PPBNBN");
-        //        searchProfileValue("participants_structured.cmi.angio", "profile.firstname", "foo");
     }
 
     @Test
