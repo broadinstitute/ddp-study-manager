@@ -185,7 +185,6 @@ public class ElasticSearchUtil {
     }
 
     private static AbstractQueryBuilder<? extends AbstractQueryBuilder<?>> createESQuery(@NonNull String filter) {
-        logger.info(filter);
         String[] filters = filter.split(Filter.AND);
         BoolQueryBuilder finalQuery = new BoolQueryBuilder();
 
