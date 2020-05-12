@@ -305,7 +305,7 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     @Ignore
-    public void searchPTByProfileFieldEmpty() throws Exception { //TODO Simone - not working yet
+    public void searchPTByProfileFieldEmpty() throws Exception { //TODO - not working yet
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
@@ -405,7 +405,7 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
-    public void searchPTByEmptyField() throws Exception { //TODO Simone - not working yet
+    public void searchPTByEmptyField() throws Exception { //TODO - not working yet
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
