@@ -12,6 +12,7 @@ client/src/assets/js/ddp_config.js
 
 # IDEs and editors
 .idea
+target
 .project
 .classpath
 *.launch
@@ -84,5 +85,3 @@ logs
 *.pem
 *.env
 *.jks
-
-target
