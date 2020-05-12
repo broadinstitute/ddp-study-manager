@@ -11,6 +11,7 @@ client/src/assets/js/ddp_config.js
 
 # server
 /target
+target
 
 # IDEs and editors
 .idea
