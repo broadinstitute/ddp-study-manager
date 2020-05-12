@@ -1,15 +1,5 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
-# client
-/client/dist
-/client/tmp
-/client/dist
-/client/tmp
-/client/node_modules
-/client/tslint.json
-client/src/assets/js/ddp_config.js
-
-
 # IDEs and editors
 .idea
 target
@@ -56,27 +46,6 @@ config/prod-gcloud-creds.json
 src/test/resources/output
 target/
 app-deploy
-
-server/config/test-config.conf
-server/config/vault.conf
-server/config/dev-keystore
-server/config/dev-keystore2
-server/config/dev-keystore3
-server/config/test-keystore
-server/config/test-keystore2
-server/config/staging-keystore
-server/config/staging-keystore2
-server/config/prod-keystore
-server/config/prod-keystore2
-server/config/prod-keystore3
-server/config/dev-gcloud-creds.json
-server/config/dev-gcloud-creds-sql.json
-server/config/test-gcloud-creds.json
-server/config/staging-gcloud-creds.json
-server/config/prod-gcloud-creds.json
-
-server/src/test/resources/output
-server/app-deploy
 
 
 logs
