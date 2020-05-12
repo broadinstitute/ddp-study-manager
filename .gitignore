@@ -7,6 +7,7 @@
 /client/tmp
 /client/node_modules
 /client/tslint.json
+client/src/assets/js/ddp_config.js
 
 # server
 /server/target
@@ -35,6 +36,26 @@ testem.log
 Thumbs.db
 
 # DO NOT COMMIT RENDERED SECRETS INTO SOURCE CONTROL
+config/test-config.conf
+config/vault.conf
+config/dev-keystore
+config/dev-keystore2
+config/dev-keystore3
+config/test-keystore
+config/test-keystore2
+config/staging-keystore
+config/staging-keystore2
+config/prod-keystore
+config/prod-keystore2
+config/prod-keystore3
+config/dev-gcloud-creds.json
+config/dev-gcloud-creds-sql.json
+config/test-gcloud-creds.json
+config/staging-gcloud-creds.json
+config/prod-gcloud-creds.json
+src/test/resources/output
+app-deploy
+
 server/config/test-config.conf
 server/config/vault.conf
 server/config/dev-keystore
@@ -55,8 +76,6 @@ server/config/prod-gcloud-creds.json
 
 server/src/test/resources/output
 server/app-deploy
-
-client/src/assets/js/ddp_config.js
 
 
 logs
