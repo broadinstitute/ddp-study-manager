@@ -51,9 +51,10 @@ config/dev-gcloud-creds-sql.json
 config/test-gcloud-creds.json
 config/staging-gcloud-creds.json
 config/prod-gcloud-creds.json
+
 src/test/resources/output
-app-deploy
 target
+app-deploy
 
 server/config/test-config.conf
 server/config/vault.conf
