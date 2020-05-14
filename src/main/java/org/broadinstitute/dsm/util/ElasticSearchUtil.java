@@ -584,7 +584,7 @@ public class ElasticSearchUtil {
                 BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
 
                 boolean alreadyAdded = false;
-                if (CREATED_AT.equals(surveyParam[1]) || COMPLETED_AT.equals(surveyParam[1]) || LAST_UPDATED.equals(surveyParam[1]) || "status".equals(surveyParam[1])) {
+                if (CREATED_AT.equals(surveyParam[1]) || COMPLETED_AT.equals(surveyParam[1]) || LAST_UPDATED.equals(surveyParam[1])) {
                     try {
                         //activity dates
                         long start = SystemUtil.getLongFromString(userEntered);
@@ -596,6 +596,33 @@ public class ElasticSearchUtil {
                     catch (ParseException e) {
                         //activity status
                         valueQueryBuilder(queryBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered, wildCard, must);
+                    }
+                }
+                else if("status".equals(surveyParam[1])) {
+                    if (wildCard) {
+                        if (must) {
+                            queryBuilder.must(QueryBuilders.wildcardQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered + "*"));
+                        }
+                        else {
+                            queryBuilder.should(QueryBuilders.wildcardQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered + "*"));
+                        }
+                    }
+                    else {
+                        if (must) {
+                            queryBuilder.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered));
+                        }
+                        else {
+                            QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery,ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim());
+                            if (tmpBuilder != null) {
+                                ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered));
+                                alreadyAdded = true;
+                            }
+                            else {
+                                BoolQueryBuilder orAnswers = new BoolQueryBuilder();
+                                orAnswers.should(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered));
+                                queryBuilder.must(orAnswers);
+                            }
+                        }
                     }
                 }
                 else {
