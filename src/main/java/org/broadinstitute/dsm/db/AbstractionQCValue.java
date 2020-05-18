@@ -40,11 +40,15 @@ public class AbstractionQCValue {
     @ColumnName(DBConstants.FILE_NAME)
     private final String fileName;
 
+    @ColumnName(DBConstants.MATCH_PHRASE)
+    private final String matchPhrase;
+
     @ColumnName(DBConstants.NO_DATA)
     private final boolean noData;
 
     public AbstractionQCValue(Integer primaryKeyId, int medicalRecordAbstractionFieldId, String participantId,
-                              String value, int valueCounter, String note, String question, String filePage, String fileName, boolean noData) {
+                              String value, int valueCounter, String note, String question, String filePage, String fileName,
+                              String matchPhrase, boolean noData) {
         this.primaryKeyId = primaryKeyId;
         this.medicalRecordAbstractionFieldId = medicalRecordAbstractionFieldId;
         this.participantId = participantId;
@@ -54,6 +58,7 @@ public class AbstractionQCValue {
         this.question = question;
         this.filePage = filePage;
         this.fileName = fileName;
+        this.matchPhrase = matchPhrase;
         this.noData = noData;
     }
 }
