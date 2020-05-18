@@ -42,6 +42,7 @@ public class ElasticSearchUtil {
     private static final String ACTIVITIES = "activities";
     private static final String ACTIVITIES_QUESTIONS_ANSWER = "activities.questionsAnswers";
     private static final String ACTIVITIES_QUESTIONS_ANSWER_ANSWER = "activities.questionsAnswers.answer";
+    private static final String ACTIVITIES_QUESTIONS_ANSWER_DATE_FIELDS = "activities.questionsAnswers.dateFields";
     private static final String ACTIVITIES_QUESTIONS_ANSWER_DATE = "activities.questionsAnswers.date";
     private static final String ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID = "activities.questionsAnswers.stableId";
     public static final String PROFILE = "profile";
@@ -371,7 +372,11 @@ public class ElasticSearchUtil {
                             else {
                                 BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
                                 ExistsQueryBuilder existsQuery = new ExistsQueryBuilder(ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
-                                activityAnswer.must(existsQuery);
+                                ExistsQueryBuilder existsQuery2 = new ExistsQueryBuilder(ACTIVITIES_QUESTIONS_ANSWER_DATE_FIELDS);
+                                BoolQueryBuilder orAnswers = new BoolQueryBuilder();
+                                orAnswers.should(existsQuery);
+                                orAnswers.should(existsQuery2);
+                                activityAnswer.must(orAnswers);
                                 activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID, surveyParam[1].trim()));
                                 NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery(ACTIVITIES_QUESTIONS_ANSWER, activityAnswer, ScoreMode.Avg);
 
