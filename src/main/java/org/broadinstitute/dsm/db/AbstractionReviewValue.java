@@ -40,6 +40,9 @@ public class AbstractionReviewValue {
     @ColumnName(DBConstants.FILE_NAME)
     private final String fileName;
 
+    @ColumnName(DBConstants.MATCH_PHRASE)
+    private final String matchPhrase;
+
     @ColumnName(DBConstants.DOUBLE_CHECK)
     private final boolean doubleCheck;
 
@@ -47,7 +50,8 @@ public class AbstractionReviewValue {
     private final boolean noData;
 
     public AbstractionReviewValue(Integer primaryKeyId, int medicalRecordAbstractionFieldId, String participantId,
-                                  String value, int valueCounter, String note, String question, String filePage, String fileName, boolean doubleCheck, boolean noData) {
+                                  String value, int valueCounter, String note, String question, String filePage, String fileName, String matchPhrase,
+                                  boolean doubleCheck, boolean noData) {
         this.primaryKeyId = primaryKeyId;
         this.medicalRecordAbstractionFieldId = medicalRecordAbstractionFieldId;
         this.participantId = participantId;
@@ -57,6 +61,7 @@ public class AbstractionReviewValue {
         this.question = question;
         this.filePage = filePage;
         this.fileName = fileName;
+        this.matchPhrase = matchPhrase;
         this.doubleCheck = doubleCheck;
         this.noData = noData;
     }
