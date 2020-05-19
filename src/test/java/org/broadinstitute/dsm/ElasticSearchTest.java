@@ -338,7 +338,7 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void searchPTByCompositeNotEmpty() throws Exception {
-        notEmptyActivity("participants_structured.cmi.angio", "PHYSICIAN", "ANGIORELEASE");
+        notEmptyActivity("participants_structured.cmi.angio", "BIRTH_YEAR", "ANGIOABOUTYOU");
     }
 
     public void notEmptyActivity(String index, String stableId, String activityCode) throws Exception {
@@ -352,7 +352,13 @@ public class ElasticSearchTest extends TestHelper {
             while (response == null || response.getHits().getHits().length != 0) {
                 BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
                 ExistsQueryBuilder existsQuery = new ExistsQueryBuilder("activities.questionsAnswers.answer");
-                activityAnswer.must(existsQuery);
+                ExistsQueryBuilder existsQuery2 = new ExistsQueryBuilder("activities.questionsAnswers.dateFields");
+
+
+                BoolQueryBuilder orAnswers = new BoolQueryBuilder();
+                orAnswers.should(existsQuery);
+                orAnswers.should(existsQuery2);
+                activityAnswer.must(orAnswers);
                 activityAnswer.must(QueryBuilders.matchQuery("activities.questionsAnswers.stableId", stableId));
                 NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery("activities.questionsAnswers", activityAnswer, ScoreMode.Avg);
 
