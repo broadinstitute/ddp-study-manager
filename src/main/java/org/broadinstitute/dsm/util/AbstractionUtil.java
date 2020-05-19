@@ -31,7 +31,7 @@ public class AbstractionUtil {
             "ORDER BY cgroup.order_number, cfield.order_number ASC";
     public static final String SQL_SELECT_MEDICAL_RECORD_ABSTRACTION = "SELECT abs.participant_id, pt.ddp_participant_id, cgroup.medical_record_abstraction_group_id, cgroup.display_name, cgroup.order_number, " +
             "cfield.medical_record_abstraction_field_id, cfield.display_name, cfield.type, cfield.additional_type, cfield.possible_values, cfield.order_number, cfield.ddp_instance_id, cfield.help_text, abs.$pk, abs.value, abs.value_changed_counter, " +
-            "abs.note, abs.question, abs.file_page, abs.file_name, abs.double_check, abs.no_data FROM medical_record_abstraction_group cgroup " +
+            "abs.note, abs.question, abs.file_page, abs.file_name, abs.match_phrase, abs.double_check, abs.no_data FROM medical_record_abstraction_group cgroup " +
             "LEFT JOIN medical_record_abstraction_field cfield ON (cfield.medical_record_abstraction_group_id = cgroup.medical_record_abstraction_group_id) " +
             "LEFT JOIN ddp_instance realm ON (realm.ddp_instance_id = cgroup.ddp_instance_id OR realm.ddp_instance_id = cfield.ddp_instance_id) " +
             "LEFT JOIN ddp_participant pt ON (pt.ddp_participant_id = ?) " +
@@ -40,8 +40,8 @@ public class AbstractionUtil {
             "ORDER BY cgroup.order_number, cfield.order_number ASC";
     private static final String SQL_SELECT_QC_VALUES = "SELECT abs.participant_id, pt.ddp_participant_id, cgroup.medical_record_abstraction_group_id, cgroup.display_name, cgroup.order_number, " +
             "cfield.medical_record_abstraction_field_id, cfield.display_name, cfield.type, cfield.additional_type, cfield.possible_values, cfield.order_number, cfield.ddp_instance_id, cfield.help_text, abs.$pk, abs.value, " +
-            "abs.value_changed_counter, abs.note, abs.question, abs.file_page, abs.file_name, abs.double_check, abs.no_data, rev.$pk2, rev.value, rev.value_changed_counter, rev.note, rev.question, rev.file_page, rev.file_name, " +
-            "rev.double_check, rev.no_data, qc.$pk3, qc.value, qc.value_changed_counter, qc.note, qc.question, qc.file_page, qc.file_name, qc.no_data FROM medical_record_abstraction_group cgroup " +
+            "abs.value_changed_counter, abs.note, abs.question, abs.file_page, abs.file_name, abs.match_phrase, abs.double_check, abs.no_data, rev.$pk2, rev.value, rev.value_changed_counter, rev.note, rev.question, rev.file_page, rev.file_name, rev.match_phrase, " +
+            "rev.double_check, rev.no_data, qc.$pk3, qc.value, qc.value_changed_counter, qc.note, qc.question, qc.file_page, qc.file_name, qc.match_phrase, qc.no_data FROM medical_record_abstraction_group cgroup " +
             "LEFT JOIN medical_record_abstraction_field cfield ON (cfield.medical_record_abstraction_group_id = cgroup.medical_record_abstraction_group_id) " +
             "LEFT JOIN ddp_instance realm ON (realm.ddp_instance_id = cgroup.ddp_instance_id OR realm.ddp_instance_id = cfield.ddp_instance_id) " +
             "LEFT JOIN ddp_participant pt ON (pt.ddp_participant_id = ?) " +
@@ -233,13 +233,15 @@ public class AbstractionUtil {
                                             rs.getString("abs." + DBConstants.NOTE),
                                             rs.getString("abs." + DBConstants.QUESTION),
                                             rs.getString("abs." + DBConstants.FILE_PAGE),
-                                            rs.getString("abs." + DBConstants.FILE_NAME), absDoubleCheck, absNoData),
+                                            rs.getString("abs." + DBConstants.FILE_NAME),
+                                            rs.getString("abs." + DBConstants.MATCH_PHRASE), absDoubleCheck, absNoData),
                                     new AbstractionFieldValue(null, null, null,
                                             revValue, rs.getInt("rev." + DBConstants.VALUE_CHANGED_COUNTER),
                                             rs.getString("rev." + DBConstants.NOTE),
                                             rs.getString("rev." + DBConstants.QUESTION),
                                             rs.getString("rev." + DBConstants.FILE_PAGE),
-                                            rs.getString("rev." + DBConstants.FILE_NAME), revDoubleCheck, revNoData),
+                                            rs.getString("rev." + DBConstants.FILE_NAME),
+                                            rs.getString("rev." + DBConstants.MATCH_PHRASE), revDoubleCheck, revNoData),
                                     equal, check);
                             field.setQcWrapper(qcWrapper);
                         }
@@ -282,6 +284,7 @@ public class AbstractionUtil {
                 rs.getString(prefix + DBConstants.QUESTION),
                 rs.getString(prefix + DBConstants.FILE_PAGE),
                 rs.getString(prefix + DBConstants.FILE_NAME),
+                rs.getString(prefix + DBConstants.MATCH_PHRASE),
                 doubleCheck,
                 rs.getBoolean(prefix + DBConstants.NO_DATA));
         field.setFieldValue(fieldValue);
