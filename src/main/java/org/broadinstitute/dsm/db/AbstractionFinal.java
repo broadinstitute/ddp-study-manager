@@ -24,7 +24,7 @@ public class AbstractionFinal {
 
     public static final String SQL_SELECT_FINAL_MEDICAL_RECORD_ABSTRACTION = "SELECT abs.participant_id, p.ddp_participant_id, cgroup.medical_record_abstraction_group_id, cgroup.display_name, cgroup.order_number, " +
             "cfield.medical_record_abstraction_field_id, cfield.display_name, cfield.type, cfield.additional_type, cfield.possible_values, cfield.order_number, cfield.ddp_instance_id, cfield.help_text, abs.medical_record_final_id, abs.value, 0 as value_changed_counter, " +
-            "null as note, null as question, 0 as file_page, null as file_name, false as double_check, abs.no_data FROM medical_record_abstraction_group cgroup " +
+            "null as note, null as question, 0 as file_page, null as file_name, null as match_phrase, false as double_check, abs.no_data FROM medical_record_abstraction_group cgroup " +
             "LEFT JOIN medical_record_abstraction_field cfield ON (cfield.medical_record_abstraction_group_id = cgroup.medical_record_abstraction_group_id) " +
             "LEFT JOIN ddp_instance realm ON (realm.ddp_instance_id = cgroup.ddp_instance_id OR realm.ddp_instance_id = cfield.ddp_instance_id) " +
             "LEFT JOIN ddp_medical_record_final abs ON (abs.medical_record_abstraction_field_id = cfield.medical_record_abstraction_field_id) " +

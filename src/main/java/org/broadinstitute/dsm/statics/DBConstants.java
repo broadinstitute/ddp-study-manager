@@ -404,6 +404,7 @@ public class DBConstants {
     public static final String POSSIBLE_VALUE = "possible_values";
     public static final String FILE_PAGE = "file_page";
     public static final String FILE_NAME = "file_name";
+    public static final String MATCH_PHRASE = "match_phrase";
     public static final String DOUBLE_CHECK = "double_check";
     public static final String NO_DATA = "no_data";
     public static final String ACTIVITY= "activity";
