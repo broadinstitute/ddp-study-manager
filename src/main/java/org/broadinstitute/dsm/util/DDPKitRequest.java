@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.util;
 
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.KitRequestShipping;
@@ -66,6 +67,14 @@ public class DDPKitRequest {
                                         if (kitType != null) {
                                             KitRequestSettings kitRequestSettings = kitRequestSettingsMap.get(kitType.getKitTypeId());
 
+                                            ArrayList<KitRequest> orderKit = kitsToOrder.get(kitRequestSettings);
+                                            if (orderKit == null) {
+                                                orderKit = new ArrayList<>();
+                                            }
+
+                                            boolean kitHasSubKits = kitRequestSettings.getHasSubKits() != 0;
+
+                                            //kit requests from study-server
                                             if (StringUtils.isNotBlank(latestKit.getParticipantIndexES())) {
                                                 //without order list, that was only added for promise and currently is not used!
                                                 if (participantsESData != null && !participantsESData.isEmpty()) {
@@ -76,34 +85,38 @@ public class DDPKitRequest {
                                                             String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(latestKit.getBaseURL(), latestKit.getInstanceID(), latestKit.isMigrated(),
                                                                     latestKit.getCollaboratorIdPrefix(), (String) profile.get("guid"), (String) profile.get("hruid"), kitRequestSettings.getCollaboratorParticipantLengthOverwrite());
 
-                                                            KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, kitType.getKitTypeId(),
-                                                                    kitRequestSettings, collaboratorParticipantId);
+                                                            if (kitHasSubKits) {
+                                                                List<KitSubKits> subKits = kitRequestSettings.getSubKits();
+                                                                addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID());
+                                                                DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData, kitDetail.getParticipantId());
+                                                                if (ddpParticipant != null) {
+                                                                    if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
+                                                                        orderKit.add(new KitRequest(kitDetail.getParticipantId(), (String) profile.get("hruid"), ddpParticipant));
+                                                                    }
+                                                                }
+                                                            }
+                                                            else {
+                                                                KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, kitType.getKitTypeId(),
+                                                                        kitRequestSettings, collaboratorParticipantId);
+                                                            }
+                                                            if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
+                                                                kitsToOrder.put(kitRequestSettings, orderKit);
+                                                            }
                                                         }
                                                     }
                                                 }
                                             }
                                             else {
+                                                //kit requests from gen2 can be removed after all studies are migrated
                                                 DDPParticipant participant = DDPParticipant.getDDPParticipant(latestKit.getBaseURL(), latestKit.getInstanceName(), kitDetail.getParticipantId(), latestKit.isHasAuth0Token());
                                                 if (participant != null) {
                                                     // if the kit type has sub kits > like for promise
-                                                    boolean kitHasSubKits = kitRequestSettings.getHasSubKits() != 0;
-
-                                                    ArrayList<KitRequest> orderKit = kitsToOrder.get(kitRequestSettings);
-                                                    if (orderKit == null) {
-                                                        orderKit = new ArrayList<>();
-                                                    }
-
                                                     String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(latestKit.getBaseURL(), latestKit.getInstanceID(), latestKit.isMigrated(),
                                                             latestKit.getCollaboratorIdPrefix(), participant.getParticipantId(), participant.getShortId(), kitRequestSettings.getCollaboratorParticipantLengthOverwrite());
                                                     //only promise for now
                                                     if (kitHasSubKits) {
                                                         List<KitSubKits> subKits = kitRequestSettings.getSubKits();
-                                                        for (KitSubKits subKit : subKits) {
-                                                            for (int i = 0; i < subKit.getKitCount(); i++) {
-                                                                KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, subKit.getKitTypeId(),
-                                                                        kitRequestSettings, collaboratorParticipantId);
-                                                            }
-                                                        }
+                                                        addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID());
                                                         if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
                                                             orderKit.add(new KitRequest(kitDetail.getParticipantId(), participant.getShortId(), participant));
                                                         }
@@ -167,6 +180,20 @@ public class DDPKitRequest {
         }
         catch (Exception e) {
             throw new RuntimeException("Error getting KitRequests ", e);
+        }
+    }
+
+    private void addSubKits(@NonNull List<KitSubKits> subKits, @NonNull KitDetail kitDetail, @NonNull String collaboratorParticipantId,
+                            @NonNull KitRequestSettings kitRequestSettings, @NonNull String instanceId) {
+        int subCounter = 0;
+        for (KitSubKits subKit : subKits) {
+            for (int i = 0; i < subKit.getKitCount(); i++) {
+                //kitRequestId needs to stay unique -> add `_[SUB_COUNTER]` to it
+                KitRequestShipping.addKitRequests(instanceId, subKit.getKitName(), kitDetail.getParticipantId(),
+                        subCounter == 0 ? kitDetail.getKitRequestId() : kitDetail.getKitRequestId() + "_" + subCounter, subKit.getKitTypeId(), kitRequestSettings,
+                        collaboratorParticipantId);
+                subCounter = subCounter + 1;
+            }
         }
     }
 }
