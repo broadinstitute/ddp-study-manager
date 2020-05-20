@@ -16,7 +16,7 @@ import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
 import org.broadinstitute.dsm.model.bsp.BSPKitRegistration;
 import org.broadinstitute.dsm.model.bsp.BSPKitStatus;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
-import org.broadinstitute.dsm.route.KitStatusChangeRoute;
+//import org.broadinstitute.dsm.route.KitStatusChangeRoute;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.*;
 import org.broadinstitute.dsm.util.tools.util.DBUtil;
@@ -1285,122 +1285,122 @@ public class RouteTestSample extends TestHelper {
         Assert.assertEquals("hold", DBTestUtil.getQueryDetail("select * from ddp_kit_discard dis, ddp_kit kit where dis.dsm_kit_request_id = kit.dsm_kit_request_id and kit.kit_label = ?", "FAKE_KIT_exitKit_2", "action"));
     }
 
-    @Test
-    public void checkBloodKitIsInTrackingTable() throws Exception {
-        DBTestUtil.insertLatestKitRequest(cfg.getString("portal.insertKitRequest"), cfg.getString("portal.insertKit"),
-                "_BLOOD_TRACKING", 2, INSTANCE_ID);
-        //check kit which is just 3 weeks old is in event table
-        List<String> strings = new ArrayList<>();
-        strings.add(FAKE_LATEST_KIT + "_BLOOD_TRACKING");
-        strings.add(FAKE_DDP_PARTICIPANT_ID + "_BLOOD_TRACKING");
-        String kitId = DBTestUtil.getStringFromQuery(RouteTest.SELECT_KITREQUEST_QUERY, strings, "dsm_kit_request_id");
+//    @Test
+//    public void checkBloodKitIsInTrackingTable() throws Exception {
+//        DBTestUtil.insertLatestKitRequest(cfg.getString("portal.insertKitRequest"), cfg.getString("portal.insertKit"),
+//                "_BLOOD_TRACKING", 2, INSTANCE_ID);
+//        //check kit which is just 3 weeks old is in event table
+//        List<String> strings = new ArrayList<>();
+//        strings.add(FAKE_LATEST_KIT + "_BLOOD_TRACKING");
+//        strings.add(FAKE_DDP_PARTICIPANT_ID + "_BLOOD_TRACKING");
+//        String kitId = DBTestUtil.getStringFromQuery(RouteTest.SELECT_KITREQUEST_QUERY, strings, "dsm_kit_request_id");
+//
+//        //use endpoint to set kit to sent
+//        String json = "[{\"leftValue\":\"FAKE_MF_" + kitId + "\", \"rightValue\": \"" + FAKE_DSM_LABEL_UID + "_BLOOD_TRACKING" + "\"}]";
+//        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "finalScan?userId=26"), json, testUtil.buildAuthHeaders()).returnResponse();
+//        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+//        String message = DDPRequestUtil.getContentAsString(response);
+//        KitStatusChangeRoute.ScanError[] scanErrors = new GsonBuilder().create().fromJson(message, KitStatusChangeRoute.ScanError[].class);
+//        //check that kit came back as scan error
+//        Assert.assertTrue(scanErrors.length > 0);
+//
+//        //use endpoint to give kit tracking number
+//        json = "[{\"leftValue\":\"FAKE_TRACKING_" + kitId + "\", \"rightValue\": \"" + "FAKE_MF_" + kitId + "\"}]";
+//        response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "trackingScan?userId=26"), json, testUtil.buildAuthHeaders()).returnResponse();
+//        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+//
+//        //use endpoint to set kit to sent
+//        json = "[{\"leftValue\":\"FAKE_MF_" + kitId + "\", \"rightValue\": \"" + FAKE_DSM_LABEL_UID + "_BLOOD_TRACKING" + "\"}]";
+//        response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "finalScan?userId=26"), json, testUtil.buildAuthHeaders()).returnResponse();
+//        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+//        message = DDPRequestUtil.getContentAsString(response);
+//        scanErrors = new GsonBuilder().create().fromJson(message, KitStatusChangeRoute.ScanError[].class);
+//        //check that kit came NOT back as scan error
+//        Assert.assertTrue(scanErrors.length == 0);
+//    }
 
-        //use endpoint to set kit to sent
-        String json = "[{\"leftValue\":\"FAKE_MF_" + kitId + "\", \"rightValue\": \"" + FAKE_DSM_LABEL_UID + "_BLOOD_TRACKING" + "\"}]";
-        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "finalScan?userId=26"), json, testUtil.buildAuthHeaders()).returnResponse();
-        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
-        String message = DDPRequestUtil.getContentAsString(response);
-        KitStatusChangeRoute.ScanError[] scanErrors = new GsonBuilder().create().fromJson(message, KitStatusChangeRoute.ScanError[].class);
-        //check that kit came back as scan error
-        Assert.assertTrue(scanErrors.length > 0);
+//    @Test
+//    public void triggerBloodSentEmail() throws Exception {
+//        triggerBloodSentEmail("_BLOOD_SENT");
+//    }
+//
+//    private String triggerBloodSentEmail(String suffix) throws Exception {
+//
+//        DBTestUtil.insertLatestKitRequest(cfg.getString("portal.insertKitRequest"), cfg.getString("portal.insertKit"),
+//                suffix, 2, INSTANCE_ID);
+//
+//        //get kit ID
+//        List<String> strings = new ArrayList<>();
+//        strings.add(FAKE_LATEST_KIT + suffix);
+//        strings.add(FAKE_DDP_PARTICIPANT_ID + suffix);
+//        String kitId = DBTestUtil.getStringFromQuery(RouteTest.SELECT_KITREQUEST_QUERY, strings, "dsm_kit_request_id");
+//
+//        //use endpoint to give kit tracking number
+//        String json = "[{\"leftValue\":\"FAKE_TRACKING_" + kitId + "\", \"rightValue\": \"" + "FAKE_MF_" + kitId + "\"}]";
+//        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "trackingScan?userId=26"), json, testUtil.buildAuthHeaders()).returnResponse();
+//
+//        //use endpoint to set kit to sent
+//        json = "[{\"leftValue\":\"FAKE_MF_" + kitId + "\", \"rightValue\": \"" + FAKE_DSM_LABEL_UID + suffix + "\"}]";
+//        response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "finalScan?userId=26"), json, testUtil.buildAuthHeaders()).returnResponse();
+//        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+//        String message = DDPRequestUtil.getContentAsString(response);
+//        KitStatusChangeRoute.ScanError[] scanErrors = new GsonBuilder().create().fromJson(message, KitStatusChangeRoute.ScanError[].class);
+//        //check that kit came NOT back as scan error
+//        Assert.assertTrue(scanErrors.length == 0);
+//
+//        //check kit sent is in event queue
+//        Assert.assertNotNull(DBTestUtil.getQueryDetail("select * from EVENT_QUEUE WHERE DSM_KIT_REQUEST_ID = ?", kitId, "EVENT_ID"));
+//        return kitId;
+//    }
 
-        //use endpoint to give kit tracking number
-        json = "[{\"leftValue\":\"FAKE_TRACKING_" + kitId + "\", \"rightValue\": \"" + "FAKE_MF_" + kitId + "\"}]";
-        response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "trackingScan?userId=26"), json, testUtil.buildAuthHeaders()).returnResponse();
-        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
-
-        //use endpoint to set kit to sent
-        json = "[{\"leftValue\":\"FAKE_MF_" + kitId + "\", \"rightValue\": \"" + FAKE_DSM_LABEL_UID + "_BLOOD_TRACKING" + "\"}]";
-        response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "finalScan?userId=26"), json, testUtil.buildAuthHeaders()).returnResponse();
-        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
-        message = DDPRequestUtil.getContentAsString(response);
-        scanErrors = new GsonBuilder().create().fromJson(message, KitStatusChangeRoute.ScanError[].class);
-        //check that kit came NOT back as scan error
-        Assert.assertTrue(scanErrors.length == 0);
-    }
-
-    @Test
-    public void triggerBloodSentEmail() throws Exception {
-        triggerBloodSentEmail("_BLOOD_SENT");
-    }
-
-    private String triggerBloodSentEmail(String suffix) throws Exception {
-
-        DBTestUtil.insertLatestKitRequest(cfg.getString("portal.insertKitRequest"), cfg.getString("portal.insertKit"),
-                suffix, 2, INSTANCE_ID);
-
-        //get kit ID
-        List<String> strings = new ArrayList<>();
-        strings.add(FAKE_LATEST_KIT + suffix);
-        strings.add(FAKE_DDP_PARTICIPANT_ID + suffix);
-        String kitId = DBTestUtil.getStringFromQuery(RouteTest.SELECT_KITREQUEST_QUERY, strings, "dsm_kit_request_id");
-
-        //use endpoint to give kit tracking number
-        String json = "[{\"leftValue\":\"FAKE_TRACKING_" + kitId + "\", \"rightValue\": \"" + "FAKE_MF_" + kitId + "\"}]";
-        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "trackingScan?userId=26"), json, testUtil.buildAuthHeaders()).returnResponse();
-
-        //use endpoint to set kit to sent
-        json = "[{\"leftValue\":\"FAKE_MF_" + kitId + "\", \"rightValue\": \"" + FAKE_DSM_LABEL_UID + suffix + "\"}]";
-        response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "finalScan?userId=26"), json, testUtil.buildAuthHeaders()).returnResponse();
-        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
-        String message = DDPRequestUtil.getContentAsString(response);
-        KitStatusChangeRoute.ScanError[] scanErrors = new GsonBuilder().create().fromJson(message, KitStatusChangeRoute.ScanError[].class);
-        //check that kit came NOT back as scan error
-        Assert.assertTrue(scanErrors.length == 0);
-
-        //check kit sent is in event queue
-        Assert.assertNotNull(DBTestUtil.getQueryDetail("select * from EVENT_QUEUE WHERE DSM_KIT_REQUEST_ID = ?", kitId, "EVENT_ID"));
-        return kitId;
-    }
-
-    @Test
-    public void noSalivaSentTrigger() throws Exception {
-        DBTestUtil.insertLatestKitRequest(cfg.getString("portal.insertKitRequest"), cfg.getString("portal.insertKit"),
-                "_SALIVA_SENT", 1, INSTANCE_ID);
-
-        //check kit which is just 3 weeks old is in event table
-        List<String> strings = new ArrayList<>();
-        strings.add(FAKE_LATEST_KIT + "_SALIVA_SENT");
-        strings.add(FAKE_DDP_PARTICIPANT_ID + "_SALIVA_SENT");
-        String kitId = DBTestUtil.getStringFromQuery(RouteTest.SELECT_KITREQUEST_QUERY, strings, "dsm_kit_request_id");
-
-        //use endpoint to set kit to sent
-        String json = "[{\"leftValue\":\"FAKE_MF_" + kitId + "\", \"rightValue\": \"" + FAKE_DSM_LABEL_UID + "_SALIVA_SENT" + "\"}]";
-        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "finalScan?userId=26"), json, testUtil.buildAuthHeaders()).returnResponse();
-        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
-        String message = DDPRequestUtil.getContentAsString(response);
-        KitStatusChangeRoute.ScanError[] scanErrors = new GsonBuilder().create().fromJson(message, KitStatusChangeRoute.ScanError[].class);
-        //check that kit came NOT back as scan error
-        Assert.assertTrue(scanErrors.length == 0);
-
-        //check kit sent is in event queue
-        Assert.assertNull(DBTestUtil.getQueryDetail("select * from EVENT_QUEUE WHERE DSM_KIT_REQUEST_ID = ?", kitId, "EVENT_ID"));
-    }
-
-    @Test //test to check that reminder is not sent multiple times
-    public void triggerReminder() throws Exception {
-        String suffix = "_SENT_REMINDER_TEST";
-        String kitId = triggerBloodSentEmail(suffix);
-        DBTestUtil.setKitToSent("FAKE_MF_" + kitId, FAKE_DSM_LABEL_UID + suffix, System.currentTimeMillis() - (3 * DBTestUtil.WEEK));
-
-        eventUtil.triggerReminder();
-        //check kit which is just 3 weeks old is in event table
-        List<String> strings = new ArrayList<>();
-        strings.add(FAKE_LATEST_KIT + suffix);
-        strings.add(FAKE_DDP_PARTICIPANT_ID + suffix);
-        kitId = DBTestUtil.getStringFromQuery(RouteTest.SELECT_KITREQUEST_QUERY, strings, "dsm_kit_request_id");
-        //check that kit is twice in table because of sent and reminder
-        Assert.assertEquals("2", DBTestUtil.getQueryDetail("select count(dsm_kit_request_id) from EVENT_QUEUE WHERE DSM_KIT_REQUEST_ID = ? AND EVENT_TRIGGERED = 1", kitId, "count(dsm_kit_request_id)"));
-
-        eventUtil.triggerReminder();
-        //check kit which is just 3 weeks old is in event table
-        strings = new ArrayList<>();
-        strings.add(FAKE_LATEST_KIT + suffix);
-        strings.add(FAKE_DDP_PARTICIPANT_ID + suffix);
-        kitId = DBTestUtil.getStringFromQuery(RouteTest.SELECT_KITREQUEST_QUERY, strings, "dsm_kit_request_id");
-        //check that kit is ONLY twice in table because of sent and reminder and was not added again!
-        Assert.assertEquals("2", DBTestUtil.getQueryDetail("select count(dsm_kit_request_id) from EVENT_QUEUE WHERE DSM_KIT_REQUEST_ID = ? AND EVENT_TRIGGERED = 1", kitId, "count(dsm_kit_request_id)"));
-    }
+//    @Test
+//    public void noSalivaSentTrigger() throws Exception {
+//        DBTestUtil.insertLatestKitRequest(cfg.getString("portal.insertKitRequest"), cfg.getString("portal.insertKit"),
+//                "_SALIVA_SENT", 1, INSTANCE_ID);
+//
+//        //check kit which is just 3 weeks old is in event table
+//        List<String> strings = new ArrayList<>();
+//        strings.add(FAKE_LATEST_KIT + "_SALIVA_SENT");
+//        strings.add(FAKE_DDP_PARTICIPANT_ID + "_SALIVA_SENT");
+//        String kitId = DBTestUtil.getStringFromQuery(RouteTest.SELECT_KITREQUEST_QUERY, strings, "dsm_kit_request_id");
+//
+//        //use endpoint to set kit to sent
+//        String json = "[{\"leftValue\":\"FAKE_MF_" + kitId + "\", \"rightValue\": \"" + FAKE_DSM_LABEL_UID + "_SALIVA_SENT" + "\"}]";
+//        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "finalScan?userId=26"), json, testUtil.buildAuthHeaders()).returnResponse();
+//        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+//        String message = DDPRequestUtil.getContentAsString(response);
+//        KitStatusChangeRoute.ScanError[] scanErrors = new GsonBuilder().create().fromJson(message, KitStatusChangeRoute.ScanError[].class);
+//        //check that kit came NOT back as scan error
+//        Assert.assertTrue(scanErrors.length == 0);
+//
+//        //check kit sent is in event queue
+//        Assert.assertNull(DBTestUtil.getQueryDetail("select * from EVENT_QUEUE WHERE DSM_KIT_REQUEST_ID = ?", kitId, "EVENT_ID"));
+//    }
+//
+//    @Test //test to check that reminder is not sent multiple times
+//    public void triggerReminder() throws Exception {
+//        String suffix = "_SENT_REMINDER_TEST";
+//        String kitId = triggerBloodSentEmail(suffix);
+//        DBTestUtil.setKitToSent("FAKE_MF_" + kitId, FAKE_DSM_LABEL_UID + suffix, System.currentTimeMillis() - (3 * DBTestUtil.WEEK));
+//
+//        eventUtil.triggerReminder();
+//        //check kit which is just 3 weeks old is in event table
+//        List<String> strings = new ArrayList<>();
+//        strings.add(FAKE_LATEST_KIT + suffix);
+//        strings.add(FAKE_DDP_PARTICIPANT_ID + suffix);
+//        kitId = DBTestUtil.getStringFromQuery(RouteTest.SELECT_KITREQUEST_QUERY, strings, "dsm_kit_request_id");
+//        //check that kit is twice in table because of sent and reminder
+//        Assert.assertEquals("2", DBTestUtil.getQueryDetail("select count(dsm_kit_request_id) from EVENT_QUEUE WHERE DSM_KIT_REQUEST_ID = ? AND EVENT_TRIGGERED = 1", kitId, "count(dsm_kit_request_id)"));
+//
+//        eventUtil.triggerReminder();
+//        //check kit which is just 3 weeks old is in event table
+//        strings = new ArrayList<>();
+//        strings.add(FAKE_LATEST_KIT + suffix);
+//        strings.add(FAKE_DDP_PARTICIPANT_ID + suffix);
+//        kitId = DBTestUtil.getStringFromQuery(RouteTest.SELECT_KITREQUEST_QUERY, strings, "dsm_kit_request_id");
+//        //check that kit is ONLY twice in table because of sent and reminder and was not added again!
+//        Assert.assertEquals("2", DBTestUtil.getQueryDetail("select count(dsm_kit_request_id) from EVENT_QUEUE WHERE DSM_KIT_REQUEST_ID = ? AND EVENT_TRIGGERED = 1", kitId, "count(dsm_kit_request_id)"));
+//    }
 
     @Test
     public void uploadKitWriteConsentIntoBucket() throws Exception {

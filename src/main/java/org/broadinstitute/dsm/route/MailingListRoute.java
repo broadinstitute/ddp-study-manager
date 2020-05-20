@@ -1,13 +1,11 @@
 package org.broadinstitute.dsm.route;
 
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Contact;
-import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.security.RequestHandler;
-import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.RoutePath;
-import org.broadinstitute.dsm.statics.UserErrorMessages;
 import org.broadinstitute.dsm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,18 +19,22 @@ public class MailingListRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(MailingListRoute.class);
 
+    private static final String PERMISSION = "mailingList:view";
+
+    public MailingListRoute(@NonNull Auth0Util auth0Util) {
+        super(auth0Util, PERMISSION);
+    }
+
     @Override
     public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
-        String realm = request.params(RequestParameter.REALM);
-        if (StringUtils.isBlank(realm)) {
-            throw new RuntimeException("Realm missing");
-        }
-        if (UserUtil.checkUserAccess(realm, userId, "mailingList_view")) {
-            return getMailingListContacts(realm);
+        String realm = null;
+        if (StringUtils.isNotBlank(getRealm())) {
+            realm = getRealm();
         }
         else {
-            return new Result(500, UserErrorMessages.NO_RIGHTS);
+            throw new RuntimeException("No realm was sent!");
         }
+        return getMailingListContacts(realm);
     }
 
     public Collection<Contact> getMailingListContacts(String realm) {

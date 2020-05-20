@@ -14,7 +14,7 @@ import org.broadinstitute.ddp.util.GoogleBucket;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.exception.SurveyNotCreated;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
-import org.broadinstitute.dsm.route.DownloadPDFRoute;
+//import org.broadinstitute.dsm.route.DownloadPDFRoute;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
@@ -284,11 +284,11 @@ public class DDPRequestUtil {
     }
 
     private static void makeNonStandardPDF(@NonNull Map<String, Map<String, Object>> participantESData, @NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId, @NonNull String userId, @NonNull String reason) {
-        Object pdfs = DownloadPDFRoute.returnPDFS(participantESData, ddpParticipantId);
-        List<Map<String, String>> pdfList = (List<Map<String, String>>) pdfs;
-        long time = System.currentTimeMillis();
-        for (Map<String, String> pdf : pdfList) {
-            DDPRequestUtil.savePDFsInBucket(ddpInstance.getBaseUrl(), ddpInstance.getName(), ddpParticipantId, ddpInstance.isHasAuth0Token(), "/pdfs/" + pdf.get("configName"), time, userId, reason);
-        }
+//        Object pdfs = DownloadPDFRoute.returnPDFS(participantESData, ddpParticipantId);
+//        List<Map<String, String>> pdfList = (List<Map<String, String>>) pdfs;
+//        long time = System.currentTimeMillis();
+//        for (Map<String, String> pdf : pdfList) {
+//            DDPRequestUtil.savePDFsInBucket(ddpInstance.getBaseUrl(), ddpInstance.getName(), ddpParticipantId, ddpInstance.isHasAuth0Token(), "/pdfs/" + pdf.get("configName"), time, userId, reason);
+//        }
     }
 }

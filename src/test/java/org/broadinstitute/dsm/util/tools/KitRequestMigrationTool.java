@@ -113,7 +113,7 @@ public class KitRequestMigrationTool {
                     }
                     String bspCollaboratorParticipantLength = kitRequestSettings.getCollaboratorParticipantLengthOverwrite();
 
-                    migrateData(file, realmId, typeId, bspCollaboratorSampleType, collaboratorIdPrefix, fileFormat, bspCollaboratorParticipantLength, realm);
+//                    migrateData(file, realmId, typeId, bspCollaboratorSampleType, collaboratorIdPrefix, fileFormat, bspCollaboratorParticipantLength, realm);
                 }
                 else {
                     logger.error("Failed to get kit request settings for typeID " + typeId + " and realmID "+ realmId);
@@ -138,44 +138,44 @@ public class KitRequestMigrationTool {
 
         kitUtil = new KitUtil();
     }
-
-    private static void migrateData(@NonNull String jsonFile, @NonNull String realmId, @NonNull String typeId,
-                                    @NonNull String bspCollaboratorSampleType, String collaboratorIdPrefix, @NonNull String fileFormat,
-                                    String bspCollaboratorParticipantLength, String realmName) throws Exception {
-        // Request KitRequests
-        String fileContent = TestUtil.readFile(jsonFile);
-        if ("json".equals(fileFormat)) {
-            JsonArray scans = (JsonArray) (new JsonParser().parse(fileContent));
-            for (JsonElement scan : scans) {
-                String ddpParticipantId = scan.getAsJsonObject().get("ddpParticipantId").getAsString();
-                String shortId = scan.getAsJsonObject().get("shortId").getAsString();
-                String kitlabel = scan.getAsJsonObject().get("kitlabel").getAsString();
-                insertIntoDB(cfg.getString(ApplicationConfigConstants.INSERT_KIT_REQUEST), cfg.getString(ApplicationConfigConstants.INSERT_KIT),
-                        ddpParticipantId, shortId, realmId, typeId, kitlabel, bspCollaboratorParticipantLength,
-                        bspCollaboratorSampleType, collaboratorIdPrefix,
-                        null, null, null, null);
-            }
-        }
-        else {
-            List<Map<String, String>> content = FileUtil.readFileContent(fileContent);
-            for(Map<String, String> line : content) {
-                if (RGP.equals(realmName)) {
-                    insertIntoDB(cfg.getString(ApplicationConfigConstants.INSERT_KIT_REQUEST), cfg.getString(ApplicationConfigConstants.INSERT_KIT),
-                            line.get(DATSTAT_ALTPID), line.get(SHORTID), realmId, typeId, line.get(DBUtil.SM_ID),
-                            line.get(BSP_PARTICIPANT_ID), line.get(BSP_PARTICIPANT_ID) , DBUtil.getLong(line.get(SHIPPED)), DBUtil.getLong(line.get(DBUtil.RECEIVED)),
-                            line.get(TRACKING_TO), line.get(TRACKING_RETURN));
-
-                }
-                else {
-                    insertIntoDB(cfg.getString(ApplicationConfigConstants.INSERT_KIT_REQUEST), cfg.getString(ApplicationConfigConstants.INSERT_KIT),
-                            line.get(DATSTAT_ALTPID), line.get(DATSTAT_ALTPID), realmId, typeId, line.get(DBUtil.SM_ID),
-                            bspCollaboratorParticipantLength,
-                            bspCollaboratorSampleType, collaboratorIdPrefix, DBUtil.getLong(line.get(SHIPPED)), DBUtil.getLong(line.get(DBUtil.RECEIVED)),
-                            line.get(TRACKING_TO), line.get(TRACKING_RETURN));
-                }
-            }
-        }
-    }
+//
+//    private static void migrateData(@NonNull String jsonFile, @NonNull String realmId, @NonNull String typeId,
+//                                    @NonNull String bspCollaboratorSampleType, String collaboratorIdPrefix, @NonNull String fileFormat,
+//                                    String bspCollaboratorParticipantLength, String realmName) throws Exception {
+//        // Request KitRequests
+//        String fileContent = TestUtil.readFile(jsonFile);
+//        if ("json".equals(fileFormat)) {
+//            JsonArray scans = (JsonArray) (new JsonParser().parse(fileContent));
+//            for (JsonElement scan : scans) {
+//                String ddpParticipantId = scan.getAsJsonObject().get("ddpParticipantId").getAsString();
+//                String shortId = scan.getAsJsonObject().get("shortId").getAsString();
+//                String kitlabel = scan.getAsJsonObject().get("kitlabel").getAsString();
+//                insertIntoDB(cfg.getString(ApplicationConfigConstants.INSERT_KIT_REQUEST), cfg.getString(ApplicationConfigConstants.INSERT_KIT),
+//                        ddpParticipantId, shortId, realmId, typeId, kitlabel, bspCollaboratorParticipantLength,
+//                        bspCollaboratorSampleType, collaboratorIdPrefix,
+//                        null, null, null, null);
+//            }
+//        }
+//        else {
+//            List<Map<String, String>> content = FileUtil.readFileContent(fileContent);
+//            for(Map<String, String> line : content) {
+//                if (RGP.equals(realmName)) {
+//                    insertIntoDB(cfg.getString(ApplicationConfigConstants.INSERT_KIT_REQUEST), cfg.getString(ApplicationConfigConstants.INSERT_KIT),
+//                            line.get(DATSTAT_ALTPID), line.get(SHORTID), realmId, typeId, line.get(DBUtil.SM_ID),
+//                            line.get(BSP_PARTICIPANT_ID), line.get(BSP_PARTICIPANT_ID) , DBUtil.getLong(line.get(SHIPPED)), DBUtil.getLong(line.get(DBUtil.RECEIVED)),
+//                            line.get(TRACKING_TO), line.get(TRACKING_RETURN));
+//
+//                }
+//                else {
+//                    insertIntoDB(cfg.getString(ApplicationConfigConstants.INSERT_KIT_REQUEST), cfg.getString(ApplicationConfigConstants.INSERT_KIT),
+//                            line.get(DATSTAT_ALTPID), line.get(DATSTAT_ALTPID), realmId, typeId, line.get(DBUtil.SM_ID),
+//                            bspCollaboratorParticipantLength,
+//                            bspCollaboratorSampleType, collaboratorIdPrefix, DBUtil.getLong(line.get(SHIPPED)), DBUtil.getLong(line.get(DBUtil.RECEIVED)),
+//                            line.get(TRACKING_TO), line.get(TRACKING_RETURN));
+//                }
+//            }
+//        }
+//    }
 
     private static void insertIntoDB(String insertKitRequestQuery, String insertKitQuery, String ddpParticipantId, String shortId,
                                      String realm, String typeId, String kitLabel, String bspCollaboratorParticipantLength,

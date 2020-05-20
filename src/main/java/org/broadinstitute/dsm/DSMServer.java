@@ -16,7 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.broadinstitute.ddp.BasicServer;
 import org.broadinstitute.ddp.db.TransactionWrapper;
-import org.broadinstitute.ddp.security.CookieUtil;
 import org.broadinstitute.ddp.util.BasicTriggerListener;
 import org.broadinstitute.ddp.util.JsonTransformer;
 import org.broadinstitute.ddp.util.Utility;
@@ -37,6 +36,9 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.KeyMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import spark.Request;
+import spark.Response;
+import spark.Route;
 
 import java.io.File;
 import java.sql.Connection;
@@ -148,8 +150,8 @@ public class DSMServer extends BasicServer {
         }
 
         String jwtSecret = cfg.getString(ApplicationConfigConstants.BROWSER_JWT_SECRET);
-//        String cookieSalt = cfg.getString(ApplicationConfigConstants.BROWSER_COOKIE_SALT);
-//        String cookieName = cfg.getString(ApplicationConfigConstants.BROWSER_COOKIE_NAME);
+        //        String cookieSalt = cfg.getString(ApplicationConfigConstants.BROWSER_COOKIE_SALT);
+        //        String cookieName = cfg.getString(ApplicationConfigConstants.BROWSER_COOKIE_NAME);
         new SecurityUtil(jwtSecret);
 
         // path is: /app/drugs (this gets the list of display names)
@@ -192,15 +194,11 @@ public class DSMServer extends BasicServer {
 
                     boolean isTokenValid = false;
                     if (StringUtils.isNotBlank(tokenFromHeader)) {
-//                        isTokenValid = new CookieUtil().isCookieValid(req.cookie(cookieName), cookieSalt.getBytes(), tokenFromHeader, jwtSecret);
+                        //                        isTokenValid = new CookieUtil().isCookieValid(req.cookie(cookieName), cookieSalt.getBytes(), tokenFromHeader, jwtSecret);
                         isTokenValid = jwtRouteFilter.isAccessAllowed(req);
                     }
                     if (!isTokenValid) {
                         halt(401, SecurityUtil.ResultType.AUTHENTICATION_ERROR.toString());
-                    }
-                    else {
-                        //update access if exp
-                        AuthenticationRoute.checkToken(req, jwtSecret, auth0Util, AuthenticationRoute.USER_ACCESS_ROLE, AuthenticationRoute.AUTH_USER_ID, AuthenticationRoute.AUTH_USER_MAIL);
                     }
                 }
             }
@@ -209,6 +207,14 @@ public class DSMServer extends BasicServer {
 
         AuthenticationRoute authenticationRoute = new AuthenticationRoute(auth0Util, jwtSecret);
         post(UI_ROOT + RoutePath.AUTHENTICATION_REQUEST, authenticationRoute, new JsonTransformer());
+
+        get(UI_ROOT + "refreshAccess", new Route() {
+            @Override
+            public Object handle(Request request, Response response) throws Exception {
+                //update access if exp
+                return AuthenticationRoute.checkToken(request, jwtSecret, auth0Util);
+            }
+        }, new JsonTransformer());
 
         KitUtil kitUtil = new KitUtil();
 
@@ -243,7 +249,7 @@ public class DSMServer extends BasicServer {
         setupSharedRoutes(kitUtil, notificationUtil, patchUtil, container, receiver);
 
         //no GET for USER_SETTINGS_REQUEST because UI gets them per AuthenticationRoute
-        patch(UI_ROOT + RoutePath.USER_SETTINGS_REQUEST, new UserSettingRoute(), new JsonTransformer());
+        //        patch(UI_ROOT + RoutePath.USER_SETTINGS_REQUEST, new UserSettingRoute(), new JsonTransformer());
 
         setupJobs(cfg, kitUtil, notificationUtil, eventUtil, container, receiver);
 
@@ -267,141 +273,141 @@ public class DSMServer extends BasicServer {
     }
 
     private void setupShippingRoutes(@NonNull NotificationUtil notificationUtil, @NonNull Auth0Util auth0Util, @NonNull UserUtil userUtil) {
-        get(UI_ROOT + RoutePath.KIT_REQUESTS_PATH, new KitRequestRoute(), new JsonTransformer());
+        //        get(UI_ROOT + RoutePath.KIT_REQUESTS_PATH, new KitRequestRoute(), new JsonTransformer());
 
-        KitStatusChangeRoute kitStatusChangeRoute = new KitStatusChangeRoute();
-        post(UI_ROOT + RoutePath.FINAL_SCAN_REQUEST, kitStatusChangeRoute, new JsonTransformer());
-        post(UI_ROOT + RoutePath.TRACKING_SCAN_REQUEST, kitStatusChangeRoute, new JsonTransformer());
-        post(UI_ROOT + RoutePath.SENT_KIT_REQUEST, kitStatusChangeRoute, new JsonTransformer());
-        post(UI_ROOT + RoutePath.RECEIVED_KIT_REQUEST, kitStatusChangeRoute, new JsonTransformer());
+        //        KitStatusChangeRoute kitStatusChangeRoute = new KitStatusChangeRoute();
+        //        post(UI_ROOT + RoutePath.FINAL_SCAN_REQUEST, kitStatusChangeRoute, new JsonTransformer());
+        //        post(UI_ROOT + RoutePath.TRACKING_SCAN_REQUEST, kitStatusChangeRoute, new JsonTransformer());
+        //        post(UI_ROOT + RoutePath.SENT_KIT_REQUEST, kitStatusChangeRoute, new JsonTransformer());
+        //        post(UI_ROOT + RoutePath.RECEIVED_KIT_REQUEST, kitStatusChangeRoute, new JsonTransformer());
 
-        KitDeactivationRoute kitDeactivationRoute = new KitDeactivationRoute(notificationUtil);
-        patch(UI_ROOT + RoutePath.DEACTIVATE_KIT_REQUEST, kitDeactivationRoute, new JsonTransformer());
-        patch(UI_ROOT + RoutePath.ACTIVATE_KIT_REQUEST, kitDeactivationRoute, new JsonTransformer());
+        //        KitDeactivationRoute kitDeactivationRoute = new KitDeactivationRoute(notificationUtil);
+        //        patch(UI_ROOT + RoutePath.DEACTIVATE_KIT_REQUEST, kitDeactivationRoute, new JsonTransformer());
+        //        patch(UI_ROOT + RoutePath.ACTIVATE_KIT_REQUEST, kitDeactivationRoute, new JsonTransformer());
 
-        KitExpressRoute kitExpressRoute = new KitExpressRoute(notificationUtil);
-        get(UI_ROOT + RoutePath.EXPRESS_KIT_REQUEST, kitExpressRoute, new JsonTransformer());
-        patch(UI_ROOT + RoutePath.EXPRESS_KIT_REQUEST, kitExpressRoute, new JsonTransformer());
+        //        KitExpressRoute kitExpressRoute = new KitExpressRoute(notificationUtil);
+        //        get(UI_ROOT + RoutePath.EXPRESS_KIT_REQUEST, kitExpressRoute, new JsonTransformer());
+        //        patch(UI_ROOT + RoutePath.EXPRESS_KIT_REQUEST, kitExpressRoute, new JsonTransformer());
 
-        LabelSettingRoute labelSettingRoute = new LabelSettingRoute();
+        LabelSettingRoute labelSettingRoute = new LabelSettingRoute(auth0Util);
         get(UI_ROOT + RoutePath.LABEL_SETTING_REQUEST, labelSettingRoute, new JsonTransformer());
         patch(UI_ROOT + RoutePath.LABEL_SETTING_REQUEST, labelSettingRoute, new JsonTransformer());
 
-        post(UI_ROOT + RoutePath.KIT_UPLOAD_REQUEST, new KitUploadRoute(notificationUtil), new JsonTransformer());
+        post(UI_ROOT + RoutePath.KIT_UPLOAD_REQUEST, new KitUploadRoute(auth0Util, notificationUtil), new JsonTransformer());
 
-        KitLabelRoute kitLabelRoute = new KitLabelRoute();
-        get(UI_ROOT + RoutePath.KIT_LABEL_REQUEST, kitLabelRoute, new JsonTransformer());
-        post(UI_ROOT + RoutePath.KIT_LABEL_REQUEST, kitLabelRoute, new JsonTransformer());
+        //        KitLabelRoute kitLabelRoute = new KitLabelRoute();
+        //        get(UI_ROOT + RoutePath.KIT_LABEL_REQUEST, kitLabelRoute, new JsonTransformer());
+        //        post(UI_ROOT + RoutePath.KIT_LABEL_REQUEST, kitLabelRoute, new JsonTransformer());
 
-        get(UI_ROOT + RoutePath.SEARCH_KIT, new KitSearchRoute(), new JsonTransformer());
+        //        get(UI_ROOT + RoutePath.SEARCH_KIT, new KitSearchRoute(), new JsonTransformer());
 
-        KitDiscardRoute kitDiscardRoute = new KitDiscardRoute(auth0Util, userUtil);
-        get(UI_ROOT + RoutePath.DISCARD_SAMPLES, kitDiscardRoute, new JsonTransformer());
-        patch(UI_ROOT + RoutePath.DISCARD_SAMPLES, kitDiscardRoute, new JsonTransformer());
-        post(UI_ROOT + RoutePath.DISCARD_UPLOAD, kitDiscardRoute, new JsonTransformer());
-        patch(UI_ROOT + RoutePath.DISCARD_SHOW_UPLOAD, kitDiscardRoute, new JsonTransformer());
-        post(UI_ROOT + RoutePath.DISCARD_CONFIRM, kitDiscardRoute, new JsonTransformer());
+        //        KitDiscardRoute kitDiscardRoute = new KitDiscardRoute(auth0Util, userUtil);
+        //        get(UI_ROOT + RoutePath.DISCARD_SAMPLES, kitDiscardRoute, new JsonTransformer());
+        //        patch(UI_ROOT + RoutePath.DISCARD_SAMPLES, kitDiscardRoute, new JsonTransformer());
+        //        post(UI_ROOT + RoutePath.DISCARD_UPLOAD, kitDiscardRoute, new JsonTransformer());
+        //        patch(UI_ROOT + RoutePath.DISCARD_SHOW_UPLOAD, kitDiscardRoute, new JsonTransformer());
+        //        post(UI_ROOT + RoutePath.DISCARD_CONFIRM, kitDiscardRoute, new JsonTransformer());
     }
 
     //Routes used by medical record
     private void setupMedicalRecordRoutes(@NonNull Config cfg, @NonNull NotificationUtil notificationUtil, @NonNull PatchUtil patchUtil, @NonNull Auth0Util auth0Util) {
         //Medical Record
-        get(UI_ROOT + RoutePath.ASSIGNEE_REQUEST, new AssigneeRoute(), new JsonTransformer());
+        //        get(UI_ROOT + RoutePath.ASSIGNEE_REQUEST, new AssigneeRoute(), new JsonTransformer());
+        //
+        //        InstitutionRoute institutionRoute = new InstitutionRoute();
+        //        post(UI_ROOT + RoutePath.INSTITUTION_REQUEST, institutionRoute, new JsonTransformer());
+        //        patch(UI_ROOT + RoutePath.INSTITUTION_REQUEST, institutionRoute, new JsonTransformer());
+        //
+        //        DownloadPDFRoute pdfRoute = new DownloadPDFRoute();
+        //        post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.CONSENT_PDF, pdfRoute, new JsonTransformer());
+        //        post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.RELEASE_PDF, pdfRoute, new JsonTransformer());
+        //        post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.COVER_PDF + RoutePath.ROUTE_SEPARATOR + RequestParameter.MEDICALRECORDID, pdfRoute, new JsonTransformer());
+        //        post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.REQUEST_PDF, pdfRoute, new JsonTransformer());
+        //        post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.PDF, pdfRoute, new JsonTransformer());
+        //        get(UI_ROOT + DownloadPDFRoute.PDF, pdfRoute, new JsonTransformer());
+        //
+        //        patch(UI_ROOT + RoutePath.ASSIGN_PARTICIPANT_REQUEST, new AssignParticipantRoute(
+        //                cfg.getString(ApplicationConfigConstants.GET_DDP_PARTICIPANT_ID),
+        //                cfg.getString(ApplicationConfigConstants.EMAIL_FRONTEND_URL_FOR_LINKS), notificationUtil), new JsonTransformer());
+        //
+        //        ViewFilterRoute viewFilterRoute = new ViewFilterRoute(patchUtil);
+        //        //gets filter names for user for this realm (shared filters and user's filters
+        //        get(UI_ROOT + RoutePath.GET_FILTERS, viewFilterRoute, new JsonTransformer());
+        //        get(UI_ROOT + RoutePath.GET_DEFAULT_FILTERS, viewFilterRoute, new JsonTransformer());
+        //        //saves the current Filter Parameters with a name for future use
+        //        patch(UI_ROOT + RoutePath.SAVE_FILTER, viewFilterRoute, new JsonTransformer());
+        //        patch(UI_ROOT + RoutePath.FILTER_DEFAULT, viewFilterRoute, new JsonTransformer());
 
-        InstitutionRoute institutionRoute = new InstitutionRoute();
-        post(UI_ROOT + RoutePath.INSTITUTION_REQUEST, institutionRoute, new JsonTransformer());
-        patch(UI_ROOT + RoutePath.INSTITUTION_REQUEST, institutionRoute, new JsonTransformer());
-
-        DownloadPDFRoute pdfRoute = new DownloadPDFRoute();
-        post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.CONSENT_PDF, pdfRoute, new JsonTransformer());
-        post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.RELEASE_PDF, pdfRoute, new JsonTransformer());
-        post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.COVER_PDF + RoutePath.ROUTE_SEPARATOR + RequestParameter.MEDICALRECORDID, pdfRoute, new JsonTransformer());
-        post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.REQUEST_PDF, pdfRoute, new JsonTransformer());
-        post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.PDF, pdfRoute, new JsonTransformer());
-        get(UI_ROOT + DownloadPDFRoute.PDF, pdfRoute, new JsonTransformer());
-
-        patch(UI_ROOT + RoutePath.ASSIGN_PARTICIPANT_REQUEST, new AssignParticipantRoute(
-                cfg.getString(ApplicationConfigConstants.GET_DDP_PARTICIPANT_ID),
-                cfg.getString(ApplicationConfigConstants.EMAIL_FRONTEND_URL_FOR_LINKS), notificationUtil), new JsonTransformer());
-
-        ViewFilterRoute viewFilterRoute = new ViewFilterRoute(patchUtil, auth0Util);
-        //gets filter names for user for this realm (shared filters and user's filters
-        get(UI_ROOT + RoutePath.GET_FILTERS, viewFilterRoute, new JsonTransformer());
-        get(UI_ROOT + RoutePath.GET_DEFAULT_FILTERS, viewFilterRoute, new JsonTransformer());
-        //saves the current Filter Parameters with a name for future use
-        patch(UI_ROOT + RoutePath.SAVE_FILTER, viewFilterRoute, new JsonTransformer());
-        patch(UI_ROOT + RoutePath.FILTER_DEFAULT, viewFilterRoute, new JsonTransformer());
-
-        FilterRoute filterRoute = new FilterRoute(patchUtil, auth0Util);
+        FilterRoute filterRoute = new FilterRoute(auth0Util, patchUtil);
         //returns List[] that is filtered based on the filterName
         get(UI_ROOT + RoutePath.APPLY_FILTER, filterRoute, new JsonTransformer());
         patch(UI_ROOT + RoutePath.FILTER_LIST, filterRoute, new JsonTransformer());
         //gets the participant to go to the tissue that was clicked on
         get(UI_ROOT + RoutePath.GET_PARTICIPANT, filterRoute, new JsonTransformer());
 
-        MedicalRecordLogRoute medicalRecordLogRoute = new MedicalRecordLogRoute();
-        get(UI_ROOT + RoutePath.MEDICAL_RECORD_LOG_REQUEST, medicalRecordLogRoute, new JsonTransformer());
-        patch(UI_ROOT + RoutePath.MEDICAL_RECORD_LOG_REQUEST, medicalRecordLogRoute, new JsonTransformer());
-
-        PermalinkRoute permalinkRoute = new PermalinkRoute();
-        get(UI_ROOT + RoutePath.PERMALINK_PARTICIPANT_REQUEST, permalinkRoute, new JsonTransformer());
-        get(UI_ROOT + RoutePath.PERMALINK_INSTITUTION_REQUEST, permalinkRoute, new JsonTransformer());
-
-        get(UI_ROOT + RoutePath.LOOKUP, new LookupRoute(), new JsonTransformer());
-
-        FieldSettingsRoute fieldSettingsRoute = new FieldSettingsRoute();
-        get(UI_ROOT + RoutePath.FIELD_SETTINGS_ROUTE, fieldSettingsRoute, new JsonTransformer());
-        patch(UI_ROOT + RoutePath.FIELD_SETTINGS_ROUTE, fieldSettingsRoute, new JsonTransformer());
-
-        get(UI_ROOT + RoutePath.DISPLAY_SETTINGS_ROUTE, new DisplaySettingsRoute(patchUtil, auth0Util), new JsonTransformer());
+        //        MedicalRecordLogRoute medicalRecordLogRoute = new MedicalRecordLogRoute();
+        //        get(UI_ROOT + RoutePath.MEDICAL_RECORD_LOG_REQUEST, medicalRecordLogRoute, new JsonTransformer());
+        //        patch(UI_ROOT + RoutePath.MEDICAL_RECORD_LOG_REQUEST, medicalRecordLogRoute, new JsonTransformer());
+        //
+        //        PermalinkRoute permalinkRoute = new PermalinkRoute();
+        //        get(UI_ROOT + RoutePath.PERMALINK_PARTICIPANT_REQUEST, permalinkRoute, new JsonTransformer());
+        //        get(UI_ROOT + RoutePath.PERMALINK_INSTITUTION_REQUEST, permalinkRoute, new JsonTransformer());
+        //
+        //        get(UI_ROOT + RoutePath.LOOKUP, new LookupRoute(), new JsonTransformer());
+        //
+        //        FieldSettingsRoute fieldSettingsRoute = new FieldSettingsRoute();
+        //        get(UI_ROOT + RoutePath.FIELD_SETTINGS_ROUTE, fieldSettingsRoute, new JsonTransformer());
+        //        patch(UI_ROOT + RoutePath.FIELD_SETTINGS_ROUTE, fieldSettingsRoute, new JsonTransformer());
+        //
+        //        get(UI_ROOT + RoutePath.DISPLAY_SETTINGS_ROUTE, new DisplaySettingsRoute(patchUtil, auth0Util), new JsonTransformer());
     }
 
     private void setupMRAbstractionRoutes() {
-        AbstractionFormControlRoute abstractionFormControlRoute = new AbstractionFormControlRoute();
-        get(UI_ROOT + RoutePath.ABSTRACTION_FORM_CONTROLS, abstractionFormControlRoute, new JsonTransformer());
-        patch(UI_ROOT + RoutePath.ABSTRACTION_FORM_CONTROLS, abstractionFormControlRoute, new JsonTransformer());
-
-        post(UI_ROOT + RoutePath.ABSTRACTION, new AbstractionRoute(), new JsonTransformer());
+        //        AbstractionFormControlRoute abstractionFormControlRoute = new AbstractionFormControlRoute();
+        //        get(UI_ROOT + RoutePath.ABSTRACTION_FORM_CONTROLS, abstractionFormControlRoute, new JsonTransformer());
+        //        patch(UI_ROOT + RoutePath.ABSTRACTION_FORM_CONTROLS, abstractionFormControlRoute, new JsonTransformer());
+        //
+        //        post(UI_ROOT + RoutePath.ABSTRACTION, new AbstractionRoute(), new JsonTransformer());
     }
 
     private void setupMiscellaneousRoutes() {
-        MailingListRoute mailingListRoute = new MailingListRoute();
-        get(UI_ROOT + RoutePath.MAILING_LIST_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, mailingListRoute, new JsonTransformer());
-
-        ParticipantExitRoute participantExitRoute = new ParticipantExitRoute();
-        get(UI_ROOT + RoutePath.PARTICIPANT_EXIT_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, participantExitRoute, new JsonTransformer());
-        post(UI_ROOT + RoutePath.PARTICIPANT_EXIT_REQUEST, participantExitRoute, new JsonTransformer());
-
-        TriggerSurveyRoute triggerSurveyRoute = new TriggerSurveyRoute();
-        get(UI_ROOT + RoutePath.TRIGGER_SURVEY + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, triggerSurveyRoute, new JsonTransformer());
-        post(UI_ROOT + RoutePath.TRIGGER_SURVEY, triggerSurveyRoute, new JsonTransformer());
-
-        get(UI_ROOT + RoutePath.EVENT_TYPES + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, new EventTypeRoute(), new JsonTransformer());
-
-        ParticipantEventRoute participantEventRoute = new ParticipantEventRoute();
-        get(UI_ROOT + RoutePath.PARTICIPANT_EVENTS + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, participantEventRoute, new JsonTransformer());
-        post(UI_ROOT + RoutePath.SKIP_PARTICIPANT_EVENTS, participantEventRoute, new JsonTransformer());
-
-        post(UI_ROOT + RoutePath.NDI_REQUEST, new NDIRoute(), new JsonTransformer());
-
-        DrugListRoute drugListRoute = new DrugListRoute();
-        get(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, drugListRoute, new JsonTransformer());
-        patch(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, drugListRoute, new JsonTransformer());
+        MailingListRoute mailingListRoute = new MailingListRoute(auth0Util);
+        get(UI_ROOT + RoutePath.MAILING_LIST_REQUEST, mailingListRoute, new JsonTransformer());
+        //
+        //        ParticipantExitRoute participantExitRoute = new ParticipantExitRoute();
+        //        get(UI_ROOT + RoutePath.PARTICIPANT_EXIT_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, participantExitRoute, new JsonTransformer());
+        //        post(UI_ROOT + RoutePath.PARTICIPANT_EXIT_REQUEST, participantExitRoute, new JsonTransformer());
+        //
+        //        TriggerSurveyRoute triggerSurveyRoute = new TriggerSurveyRoute();
+        //        get(UI_ROOT + RoutePath.TRIGGER_SURVEY + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, triggerSurveyRoute, new JsonTransformer());
+        //        post(UI_ROOT + RoutePath.TRIGGER_SURVEY, triggerSurveyRoute, new JsonTransformer());
+        //
+        //        get(UI_ROOT + RoutePath.EVENT_TYPES + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, new EventTypeRoute(), new JsonTransformer());
+        //
+        //        ParticipantEventRoute participantEventRoute = new ParticipantEventRoute();
+        //        get(UI_ROOT + RoutePath.PARTICIPANT_EVENTS + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, participantEventRoute, new JsonTransformer());
+        //        post(UI_ROOT + RoutePath.SKIP_PARTICIPANT_EVENTS, participantEventRoute, new JsonTransformer());
+        //
+        //        post(UI_ROOT + RoutePath.NDI_REQUEST, new NDIRoute(), new JsonTransformer());
+        //
+        //        DrugListRoute drugListRoute = new DrugListRoute();
+        //        get(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, drugListRoute, new JsonTransformer());
+        //        patch(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, drugListRoute, new JsonTransformer());
     }
 
     private void setupSharedRoutes(@NonNull KitUtil kitUtil, @NonNull NotificationUtil notificationUtil,
                                    @NonNull PatchUtil patchUtil, @NonNull ScriptingContainer container, @NonNull Object receiver) {
-        DashboardRoute dashboardRoute = new DashboardRoute(kitUtil, container, receiver);
-        get(UI_ROOT + RoutePath.DASHBOARD_REQUEST, dashboardRoute, new JsonTransformer());
-        get(UI_ROOT + RoutePath.DASHBOARD_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.START + RoutePath.ROUTE_SEPARATOR + RequestParameter.END, dashboardRoute, new JsonTransformer());
-        get(UI_ROOT + RoutePath.SAMPLE_REPORT_REQUEST, dashboardRoute, new JsonTransformer());
-        get(UI_ROOT + RoutePath.SAMPLE_REPORT_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.START + RoutePath.ROUTE_SEPARATOR + RequestParameter.END, dashboardRoute, new JsonTransformer());
-
+        //        DashboardRoute dashboardRoute = new DashboardRoute(kitUtil, container, receiver);
+        //        get(UI_ROOT + RoutePath.DASHBOARD_REQUEST, dashboardRoute, new JsonTransformer());
+        //        get(UI_ROOT + RoutePath.DASHBOARD_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.START + RoutePath.ROUTE_SEPARATOR + RequestParameter.END, dashboardRoute, new JsonTransformer());
+        //        get(UI_ROOT + RoutePath.SAMPLE_REPORT_REQUEST, dashboardRoute, new JsonTransformer());
+        //        get(UI_ROOT + RoutePath.SAMPLE_REPORT_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.START + RoutePath.ROUTE_SEPARATOR + RequestParameter.END, dashboardRoute, new JsonTransformer());
+        //
         get(UI_ROOT + RoutePath.ALLOWED_REALMS_REQUEST, new AllowedRealmsRoute(auth0Util), new JsonTransformer());
-
-        get(UI_ROOT + RoutePath.KIT_TYPES_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, new KitTypeRoute(kitUtil), new JsonTransformer());
-
-        patch(UI_ROOT + RoutePath.PATCH, new PatchRoute(notificationUtil, patchUtil), new JsonTransformer());
+        //
+        //        get(UI_ROOT + RoutePath.KIT_TYPES_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, new KitTypeRoute(kitUtil), new JsonTransformer());
+        //
+        //        patch(UI_ROOT + RoutePath.PATCH, new PatchRoute(notificationUtil, patchUtil), new JsonTransformer());
     }
 
     private void setupJobs(@NonNull Config cfg, @NonNull KitUtil kitUtil,

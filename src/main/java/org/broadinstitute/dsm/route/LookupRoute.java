@@ -3,16 +3,13 @@ package org.broadinstitute.dsm.route;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.model.LookupResponse;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
-import org.broadinstitute.dsm.statics.RoutePath;
-import org.broadinstitute.dsm.statics.UserErrorMessages;
-import org.broadinstitute.dsm.util.UserUtil;
+import org.broadinstitute.dsm.util.Auth0Util;
 import spark.QueryParamsMap;
 import spark.Request;
 import spark.Response;
@@ -62,6 +59,12 @@ public class LookupRoute extends RequestHandler {
 
     private static final String SHORT_ID = "shortId";
 
+    private static final String PERMISSION = "mr:view";
+
+    public LookupRoute(@NonNull Auth0Util auth0Util) {
+        super(auth0Util, PERMISSION);
+    }
+
     @Override
     public Object processRequest(Request request, Response response, String userId, String userMail) throws Exception {
         QueryParamsMap queryParams = request.queryMap();
@@ -74,58 +77,52 @@ public class LookupRoute extends RequestHandler {
             value = queryParams.get(RequestParameter.LOOKUP_VALUE).value();
         }
         String realm = null;
-        String group = null;
-        if (queryParams.value(RoutePath.REALM) != null) {
-            realm = queryParams.get(RoutePath.REALM).value();
+        if (StringUtils.isNotBlank(getRealm())) {
+            realm = getRealm();
         }
         String shortId = null;
         if (queryParams.value(SHORT_ID) != null) {
             shortId = queryParams.get(SHORT_ID).value();
         }
+        String group = null;
         if (StringUtils.isNotBlank(field)) {
-            if (UserUtil.checkUserAccess(realm, userId, "mr_view")) {
-                String query = null;
-                if (MEDICAL_RECORD_CONTACT.equals(field)) {
-                    query = SQL_SELECT_CONTACT;
-                }
-                else if (TISSUE_FACILITY.equals(field)) {
-                    query = SQL_SELECT_FACILITY_IN_GROUP;
-                    group = DDPInstance.getDDPGroupId(realm);
-                }
-                else if (TISSUE_TYPE.equals(field)) {
-                    query = SQL_SELECT_TYPE;
-                    group = DDPInstance.getDDPGroupId(realm);
-                }
-                else if (TISSUE_HISTOLOGY.equals(field)) {
-                    query = SQL_SELECT_HISTOLOGY;
-                    if (StringUtils.isBlank(realm)) {
-                        throw new RuntimeException("Error getting histology, realm is missing ");
-                    }
-                }
-                else if (TISSUE_SITE.equals(field)) {
-                    query = SQL_SELECT_TISSUE_SITE;
-                }
-                else if (COLLABORATOR_ID.equals(field)) {
-                    query = SQL_SELECT_COLLABORATOR_PREFIX;
-                    if (StringUtils.isBlank(realm)) {
-                        throw new RuntimeException("Error getting collaboratorId, realm is missing ");
-                    }
-                    DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
-                    String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(ddpInstance.getBaseUrl(), ddpInstance.getDdpInstanceId(), ddpInstance.isMigratedDDP(),
-                            ddpInstance.getCollaboratorIdPrefix(), value, shortId, "4"); //4 was length of CMI in Gen2
-                    if (StringUtils.isNotBlank(collaboratorParticipantId)) {
-                        //if participant has already a sample collaborator participant id, return just the participant id
-                        List<LookupResponse> responseList = new ArrayList<>();
-                        responseList.add(new LookupResponse(collaboratorParticipantId));
-                        return responseList;
-                    }
-                }
-                return getLookupValue(field, query, value, realm, group);
+            String query = null;
+            if (MEDICAL_RECORD_CONTACT.equals(field)) {
+                query = SQL_SELECT_CONTACT;
             }
-            else {
-                response.status(500);
-                return new Result(500, UserErrorMessages.NO_RIGHTS);
+            else if (TISSUE_FACILITY.equals(field)) {
+                query = SQL_SELECT_FACILITY_IN_GROUP;
+                group = DDPInstance.getDDPGroupId(realm);
             }
+            else if (TISSUE_TYPE.equals(field)) {
+                query = SQL_SELECT_TYPE;
+                group = DDPInstance.getDDPGroupId(realm);
+            }
+            else if (TISSUE_HISTOLOGY.equals(field)) {
+                query = SQL_SELECT_HISTOLOGY;
+                if (StringUtils.isBlank(realm)) {
+                    throw new RuntimeException("Error getting histology, realm is missing ");
+                }
+            }
+            else if (TISSUE_SITE.equals(field)) {
+                query = SQL_SELECT_TISSUE_SITE;
+            }
+            else if (COLLABORATOR_ID.equals(field)) {
+                query = SQL_SELECT_COLLABORATOR_PREFIX;
+                if (StringUtils.isBlank(realm)) {
+                    throw new RuntimeException("Error getting collaboratorId, realm is missing ");
+                }
+                DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
+                String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(ddpInstance.getBaseUrl(), ddpInstance.getDdpInstanceId(), ddpInstance.isMigratedDDP(),
+                        ddpInstance.getCollaboratorIdPrefix(), value, shortId, "4"); //4 was length of CMI in Gen2
+                if (StringUtils.isNotBlank(collaboratorParticipantId)) {
+                    //if participant has already a sample collaborator participant id, return just the participant id
+                    List<LookupResponse> responseList = new ArrayList<>();
+                    responseList.add(new LookupResponse(collaboratorParticipantId));
+                    return responseList;
+                }
+            }
+            return getLookupValue(field, query, value, realm, group);
         }
         return null;
     }

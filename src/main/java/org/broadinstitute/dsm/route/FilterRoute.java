@@ -36,7 +36,7 @@ public class FilterRoute extends RequestHandler {
 
     private PatchUtil patchUtil;
 
-    public FilterRoute(@NonNull PatchUtil patchUtil, @NonNull Auth0Util auth0Util) {
+    public FilterRoute(@NonNull Auth0Util auth0Util, @NonNull PatchUtil patchUtil) {
         super(auth0Util, PERMISSION);
         this.patchUtil = patchUtil;
     }

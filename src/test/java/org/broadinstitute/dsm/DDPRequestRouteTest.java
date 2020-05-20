@@ -3,7 +3,7 @@ package org.broadinstitute.dsm;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
-import org.broadinstitute.dsm.route.KitRequestRoute;
+//import org.broadinstitute.dsm.route.KitRequestRoute;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
 import org.broadinstitute.dsm.util.*;
@@ -129,45 +129,45 @@ public class DDPRequestRouteTest extends TestHelper {
         }
     }
 
-    @Test
-    public void readKitRequest() {
-        String realm = TEST_DDP;
-        try {
-            KitRequestRoute route = new KitRequestRoute();
-            inTransaction((conn) -> {
-                try (PreparedStatement stmt = conn.prepareStatement(DDPInstance.SQL_SELECT_ALL_ACTIVE_REALMS + QueryExtension.BY_INSTANCE_NAME)) {
-                    stmt.setString(1, realm);
-                    try (ResultSet rs = stmt.executeQuery()) {
-                        if (rs.next()) {
-                            List<KitRequestShipping> kitRequestList = KitRequestShipping.getKitRequestsByRealm(realm, "uploaded", "SALIVA");
-
-                            Assert.assertEquals(counter, kitRequestList.size());
-
-                            logger.info("result of ddp_kit_request with name and address of participants:");
-                            int x = 0;
-                            kitRequestList.sort(new Comparator<KitRequestShipping>() {
-                                @Override
-                                public int compare(KitRequestShipping o1, KitRequestShipping o2) {
-                                    return Integer.parseInt(o1.getDsmKitId()) - Integer.parseInt(o2.getDsmKitId());
-                                }
-                            });
-                            for (KitRequestShipping kit : kitRequestList) {
-                                Assert.assertEquals(kit.getParticipantId(), kitRequestTestList.get(x).getParticipantId());
-                                x++;
-                            }
-                        }
-                    }
-                }
-                catch (SQLException e) {
-                    throw new RuntimeException("test_readKitRequest ", e);
-                }
-                return null;
-            });
-        }
-        catch (Exception e) {
-            logger.error("Starting up the blindTrustEverythingExecutor");
-        }
-    }
+//    @Test
+//    public void readKitRequest() {
+//        String realm = TEST_DDP;
+//        try {
+//            KitRequestRoute route = new KitRequestRoute();
+//            inTransaction((conn) -> {
+//                try (PreparedStatement stmt = conn.prepareStatement(DDPInstance.SQL_SELECT_ALL_ACTIVE_REALMS + QueryExtension.BY_INSTANCE_NAME)) {
+//                    stmt.setString(1, realm);
+//                    try (ResultSet rs = stmt.executeQuery()) {
+//                        if (rs.next()) {
+//                            List<KitRequestShipping> kitRequestList = KitRequestShipping.getKitRequestsByRealm(realm, "uploaded", "SALIVA");
+//
+//                            Assert.assertEquals(counter, kitRequestList.size());
+//
+//                            logger.info("result of ddp_kit_request with name and address of participants:");
+//                            int x = 0;
+//                            kitRequestList.sort(new Comparator<KitRequestShipping>() {
+//                                @Override
+//                                public int compare(KitRequestShipping o1, KitRequestShipping o2) {
+//                                    return Integer.parseInt(o1.getDsmKitId()) - Integer.parseInt(o2.getDsmKitId());
+//                                }
+//                            });
+//                            for (KitRequestShipping kit : kitRequestList) {
+//                                Assert.assertEquals(kit.getParticipantId(), kitRequestTestList.get(x).getParticipantId());
+//                                x++;
+//                            }
+//                        }
+//                    }
+//                }
+//                catch (SQLException e) {
+//                    throw new RuntimeException("test_readKitRequest ", e);
+//                }
+//                return null;
+//            });
+//        }
+//        catch (Exception e) {
+//            logger.error("Starting up the blindTrustEverythingExecutor");
+//        }
+//    }
 
     @After
     public void cleanTestSettings() {

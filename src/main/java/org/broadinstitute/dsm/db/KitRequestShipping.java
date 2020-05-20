@@ -68,6 +68,8 @@ public class KitRequestShipping extends KitRequest {
     private static final String UPDATE_KIT = "UPDATE ddp_kit SET label_url_to = ?, label_url_return = ?, easypost_to_id = ?, easypost_return_id = ?, tracking_to_id = ?, " +
             "tracking_return_id = ?, easypost_tracking_to_url = ?, easypost_tracking_return_url = ?, error = ?, message = ?, easypost_address_id_to = ?, express = ? " +
             "WHERE dsm_kit_id = ?";
+    private static final String INSERT_KIT_REQUEST = "INSERT INTO ddp_kit_request (ddp_instance_id, ddp_kit_request_id, kit_type_id, ddp_participant_id, bsp_collaborator_participant_id, bsp_collaborator_sample_id, " +
+            "ddp_label, created_by, created_date, external_order_number) values (?,?,?,?,?,?,?,?,?,?)";
 
     public static final String DEACTIVATION_REASON = "Generated Express";
 
@@ -629,7 +631,7 @@ public class KitRequestShipping extends KitRequest {
                                       @NonNull String createdBy, String addressIdTo, String errorMessage, String externalOrderNumber) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult(0);
-            try (PreparedStatement insertKitRequest = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.INSERT_KIT_REQUEST), Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement insertKitRequest = conn.prepareStatement(INSERT_KIT_REQUEST, Statement.RETURN_GENERATED_KEYS)) {
                 insertKitRequest.setString(1, instanceId);
                 insertKitRequest.setString(2, ddpKitRequestId);
                 insertKitRequest.setInt(3, kitTypeId);

@@ -25,7 +25,7 @@ public abstract class RequestHandler implements Route {
     private String realm = null;
     protected Auth0Util auth0Util;
 
-    public RequestHandler(@NonNull Auth0Util auth0Util, @NonNull String permission) {
+    public RequestHandler(@NonNull Auth0Util auth0Util, String permission) {
         this.auth0Util = auth0Util;
         this.permission = permission;
     }
@@ -46,18 +46,28 @@ public abstract class RequestHandler implements Route {
                     throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
                 }
             }
+            else {
+                throw new RuntimeException("Error user_id was missing from request");
+            }
 
             if (queryParams.value(RoutePath.REALM) != null) {
                 realm = queryParams.get(RoutePath.REALM).value();
             }
 
             //check actual permission
-            if (checkPermissions(permission, userId, userMail, realm)) {
-                return processRequest(request, response, userId, userMail);
+            if (StringUtils.isNotBlank(permission)) {
+                if (checkPermissions(permission, userId, userMail, realm)) {
+                    return processRequest(request, response, userId, userMail);
+                }
+                else {
+                    return new Result(500, UserErrorMessages.NO_RIGHTS);
+                }
             }
             else {
-                return new Result(500, UserErrorMessages.NO_RIGHTS);
+                //route needs to check it's own permissions
+                return processRequest(request, response, userId, userMail);
             }
+
         }
         throw new RuntimeException("Error user_id was missing from token");
     }

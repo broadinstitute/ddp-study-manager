@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.route;
 
+import lombok.NonNull;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.util.Auth0Util;
 import org.broadinstitute.dsm.util.UserUtil;
@@ -14,10 +15,8 @@ public class AllowedRealmsRoute extends RequestHandler {
 
     private static final String MENU = "menu";
 
-    private Auth0Util auth0Util;
-
-    public AllowedRealmsRoute(Auth0Util auth0Util) {
-        this.auth0Util = auth0Util;
+    public AllowedRealmsRoute(@NonNull Auth0Util auth0Util) {
+        super(auth0Util, null);
     }
 
     @Override

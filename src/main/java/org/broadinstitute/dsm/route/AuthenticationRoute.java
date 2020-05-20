@@ -91,7 +91,7 @@ public class AuthenticationRoute implements Route {
         return authResponse;
     }
 
-    public static DSMToken checkToken(@NonNull Request request, @NonNull String jwtSecret, @NonNull Auth0Util auth0Util, @NonNull String claim, @NonNull String authUserId, @NonNull String authUserEmail) {
+    public static DSMToken checkToken(@NonNull Request request, @NonNull String jwtSecret, @NonNull Auth0Util auth0Util) {
         String authHeader = request.headers(JWTRouteFilter.AUTHORIZATION);
         if (StringUtils.isNotBlank(authHeader)) {
             String[] parsedAuthHeader = authHeader.split(JWTRouteFilter.BEARER);
@@ -106,14 +106,16 @@ public class AuthenticationRoute implements Route {
 
                             Map<String, Claim> claims = jwt.getClaims();
                             if (claims != null) {
-                                if (claims.containsKey(claim)) {
-                                    Object accessObj = claims.get(claim);
-                                    if (accessObj != null && accessObj instanceof Access) {
-                                        Access access = (Access) accessObj;
+                                if (claims.containsKey(USER_ACCESS_ROLE)) {
+                                    Object accessObj = claims.get(USER_ACCESS_ROLE);
+                                    Object userIdObj = claims.get(AUTH_USER_ID);
+                                    Object userMailObj = claims.get(AUTH_USER_MAIL);
+                                    if (accessObj != null && userIdObj != null && userMailObj != null) {
+                                        Access access = new Gson().fromJson(((Claim) accessObj).asString(), Access.class);
                                         long exp = access.getExp();
                                         if ((System.currentTimeMillis() / 1000d) >= exp) {
                                             //create new token
-                                            return createNewDSMToken(auth0Util, jwtToken, new Auth0Util.Auth0UserInfo(authUserId, authUserEmail, jwt.getExpiresAt().getTime()));
+                                            return createNewDSMToken(auth0Util, jwtToken, new Auth0Util.Auth0UserInfo(((Claim) userIdObj).asString(), ((Claim) userMailObj).asString(), jwt.getExpiresAt().getTime()));
                                         }
                                     }
                                 }
