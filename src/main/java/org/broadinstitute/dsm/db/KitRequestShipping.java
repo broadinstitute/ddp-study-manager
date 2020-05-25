@@ -64,7 +64,7 @@ public class KitRequestShipping extends KitRequest {
     private static final String UPDATE_KIT_DEACTIVATION = "UPDATE ddp_kit kit INNER JOIN(SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit " +
             "ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id AND kit.dsm_kit_id = groupedKit.kit_id SET deactivated_date = ?, " +
             "deactivation_reason = ?, deactivated_by = ? WHERE kit.dsm_kit_request_id = ?";
-    private static final String INSERT_KIT = "INSERT INTO ddp_kit (dsm_kit_request_id, easypost_address_id_to,  error, message) VALUES (?,?,?,?)";
+    private static final String INSERT_KIT = "INSERT INTO ddp_kit (dsm_kit_request_id, easypost_address_id_to,  error, message, needs_approval) VALUES (?,?,?,?,?)";
     private static final String UPDATE_KIT = "UPDATE ddp_kit SET label_url_to = ?, label_url_return = ?, easypost_to_id = ?, easypost_return_id = ?, tracking_to_id = ?, " +
             "tracking_return_id = ?, easypost_tracking_to_url = ?, easypost_tracking_return_url = ?, error = ?, message = ?, easypost_address_id_to = ?, express = ? " +
             "WHERE dsm_kit_id = ?";
@@ -600,12 +600,12 @@ public class KitRequestShipping extends KitRequest {
     public static void addKitRequests(@NonNull String instanceId, @NonNull KitDetail kitDetail, @NonNull int kitTypeId,
                                       @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId) {
         addKitRequests(instanceId, kitDetail.getKitType(), kitDetail.getParticipantId(), kitDetail.getKitRequestId(), kitTypeId, kitRequestSettings,
-                collaboratorParticipantId);
+                collaboratorParticipantId, kitDetail.isNeedsApproval());
     }
 
     //adding kit request to db (called by hourly job to add kits into DSM)
     public static void addKitRequests(@NonNull String instanceId, @NonNull String kitType, @NonNull String participantId, @NonNull String kitRequestId,
-                                      @NonNull int kitTypeId, @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId) {
+                                      @NonNull int kitTypeId, @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, boolean needsApproval) {
         inTransaction((conn) -> {
             String errorMessage = "";
             String collaboratorSampleId = null;
@@ -622,8 +622,9 @@ public class KitRequestShipping extends KitRequest {
                     errorMessage += "bspCollaboratorSampleId was too long ";
                 }
             }
+            //TODO add externalOrderNumber??? to give kit request same id and separate sub kits ids
             writeRequest(instanceId, kitRequestId, kitTypeId, participantId, collaboratorParticipantId, collaboratorSampleId,
-                    "SYSTEM", null, errorMessage, null);
+                    "SYSTEM", null, errorMessage, null, needsApproval);
             return null;
         });
     }
@@ -633,7 +634,7 @@ public class KitRequestShipping extends KitRequest {
     // 2. kit upload
     public static String writeRequest(@NonNull String instanceId, @NonNull String ddpKitRequestId, @NonNull int kitTypeId,
                                       @NonNull String ddpParticipantId, String collaboratorPatientId, String collaboratorSampleId,
-                                      @NonNull String createdBy, String addressIdTo, String errorMessage, String externalOrderNumber) {
+                                      @NonNull String createdBy, String addressIdTo, String errorMessage, String externalOrderNumber, boolean needsApproval) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult(0);
             try (PreparedStatement insertKitRequest = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.INSERT_KIT_REQUEST), Statement.RETURN_GENERATED_KEYS)) {
@@ -661,7 +662,7 @@ public class KitRequestShipping extends KitRequest {
                 dbVals.resultException = ex;
             }
             if (dbVals.resultException == null && dbVals.resultValue != null) {
-                writeNewKit(conn, (String) dbVals.resultValue, addressIdTo, errorMessage);
+                writeNewKit(conn, (String) dbVals.resultValue, addressIdTo, errorMessage, needsApproval);
             }
             return dbVals;
         });
@@ -674,7 +675,7 @@ public class KitRequestShipping extends KitRequest {
         return (String) results.resultValue;
     }
 
-    private static SimpleResult writeNewKit(Connection conn, String kitRequestId, String addressIdTo, String errorMessage) {
+    private static SimpleResult writeNewKit(Connection conn, String kitRequestId, String addressIdTo, String errorMessage, boolean needsApproval) {
         SimpleResult dbVals = new SimpleResult();
         try (PreparedStatement insertKit = conn.prepareStatement(INSERT_KIT)) {
             insertKit.setString(1, kitRequestId);
@@ -691,6 +692,7 @@ public class KitRequestShipping extends KitRequest {
                 insertKit.setInt(3, 0);
             }
             insertKit.setObject(4, errorMessage);
+            insertKit.setBoolean(5, needsApproval);
             insertKit.executeUpdate();
         }
         catch (SQLException e) {
@@ -700,9 +702,9 @@ public class KitRequestShipping extends KitRequest {
     }
 
     // called by reactivation of a deactivated kit
-    public static void writeNewKit(String kitRequestId, String addressIdTo, String errorMessage) {
+    public static void writeNewKit(String kitRequestId, String addressIdTo, String errorMessage, boolean needsApproval) {
         SimpleResult results = inTransaction((conn) -> {
-            return writeNewKit(conn, kitRequestId, addressIdTo, errorMessage);
+            return writeNewKit(conn, kitRequestId, addressIdTo, errorMessage, needsApproval);
         });
 
         if (results.resultException != null) {
@@ -1150,7 +1152,7 @@ public class KitRequestShipping extends KitRequest {
         }
         if (results.resultValue != null) {
             KitRequestShipping kitRequestShipping = (KitRequestShipping) results.resultValue;
-            KitRequestShipping.writeNewKit(kitRequestId, kitRequestShipping.getEasypostAddressId(), message);
+            KitRequestShipping.writeNewKit(kitRequestId, kitRequestShipping.getEasypostAddressId(), message, false);
         }
     }
 

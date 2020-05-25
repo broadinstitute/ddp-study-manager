@@ -298,7 +298,7 @@ public class KitUploadRoute extends RequestHandler {
             KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), shippingId,
                     kitTypeId, kit.getParticipantId().trim(), collaboratorParticipantId,
                     collaboratorSampleId, userId, addressId,
-                    errorMessage, kit.getExternalOrderNumber());
+                    errorMessage, kit.getExternalOrderNumber(), false);
             kit.setShippingId(shippingId);
         }
         catch (EasyPostException e) {

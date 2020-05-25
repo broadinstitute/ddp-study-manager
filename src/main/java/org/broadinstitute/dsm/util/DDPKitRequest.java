@@ -191,7 +191,7 @@ public class DDPKitRequest {
                 //kitRequestId needs to stay unique -> add `_[SUB_COUNTER]` to it
                 KitRequestShipping.addKitRequests(instanceId, subKit.getKitName(), kitDetail.getParticipantId(),
                         subCounter == 0 ? kitDetail.getKitRequestId() : kitDetail.getKitRequestId() + "_" + subCounter, subKit.getKitTypeId(), kitRequestSettings,
-                        collaboratorParticipantId);
+                        collaboratorParticipantId, kitDetail.isNeedsApproval());
                 subCounter = subCounter + 1;
             }
         }
