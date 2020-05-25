@@ -595,15 +595,6 @@ public class ElasticSearchUtil {
                         }
                         else {
                             QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim());
-                            //                            if (tmpBuilder != null) {
-                            //                                ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered));
-                            //                                alreadyAdded = true;
-                            //                            }
-                            //                            else {
-                            //                                BoolQueryBuilder orAnswers = new BoolQueryBuilder();
-                            //                                orAnswers.should(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered));
-                            //                                queryBuilder.must(orAnswers);
-                            //                            }
                             alreadyAdded = mustOrSearchActivity(finalQuery, queryBuilder, tmpBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered, must);
                         }
                     }
@@ -631,15 +622,6 @@ public class ElasticSearchUtil {
                             }
                             else {
                                 QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
-                                //                                if (tmpBuilder != null) {
-                                //                                    ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
-                                //                                    alreadyAdded = true;
-                                //                                }
-                                //                                else {
-                                //                                    BoolQueryBuilder orAnswers = new BoolQueryBuilder();
-                                //                                    orAnswers.should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
-                                //                                    activityAnswer.must(orAnswers);
-                                //                                }
                                 alreadyAdded = mustOrSearchActivity(finalQuery, activityAnswer, tmpBuilder, ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered, must);
                             }
                         }
