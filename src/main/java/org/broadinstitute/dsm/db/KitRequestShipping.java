@@ -44,7 +44,8 @@ public class KitRequestShipping extends KitRequest {
             "WHERE req.ddp_instance_id = ddp_site.ddp_instance_id AND req.kit_type_id = kt.kit_type_id) AS request " +
             "LEFT JOIN (SELECT * FROM (SELECT kit.dsm_kit_request_id, kit.dsm_kit_id, kit.kit_complete, kit.label_url_to, kit.label_url_return, kit.tracking_to_id, " +
             "kit.tracking_return_id, kit.easypost_tracking_to_url, kit.easypost_tracking_return_url, kit.easypost_to_id, kit.easypost_shipment_status, kit.scan_date, kit.label_date, kit.error, kit.message, " +
-            "kit.receive_date, kit.deactivated_date, kit.easypost_address_id_to, kit.deactivation_reason, tracking.tracking_id, kit.kit_label, kit.express FROM ddp_kit kit " +
+            "kit.receive_date, kit.deactivated_date, kit.easypost_address_id_to, kit.deactivation_reason, tracking.tracking_id, kit.kit_label, kit.express, kit.needs_approval, kit.authorization, kit.denial_reason, " +
+            "kit.authorization_by FROM ddp_kit kit " +
             "INNER JOIN (SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id " +
             "AND kit.dsm_kit_id = groupedKit.kit_id LEFT JOIN ddp_kit_tracking tracking ON (kit.kit_label = tracking.kit_label))as wtf) AS kit ON kit.dsm_kit_request_id = request.dsm_kit_request_id " +
             "LEFT JOIN ddp_participant_exit ex ON (ex.ddp_instance_id = request.ddp_instance_id AND ex.ddp_participant_id = request.ddp_participant_id) " +
@@ -79,6 +80,7 @@ public class KitRequestShipping extends KitRequest {
     private static final String OVERVIEW = "overview";
     private static final String DEACTIVATED = "deactivated";
     private static final String TRIGGERED = "triggered";
+    private static final String WAITING = "waiting";
 
     private static final String PARTICIPANT_NOT_FOUND_MESSAGE = "Participant was not found at ";
     private static final String NO_PARTICIPANT_INFORMATION = "Please contact your DSM developer ";
@@ -400,7 +402,7 @@ public class KitRequestShipping extends KitRequest {
             //if queue get address if instance = rgp
             //or if kits no label > for shortId
             if (ERROR.equals(target) || QUEUE.equals(target) || UPLOADED.equals(target) || DEACTIVATED.equals(target)
-                    || TRIGGERED.equals(target) || OVERVIEW.equals(target)) {
+                    || TRIGGERED.equals(target) || OVERVIEW.equals(target) || WAITING.equals(target)) {
 
                 DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.NEEDS_NAME_LABELS);
                 Map<String, Map<String, Object>> participantsESData = null;
@@ -416,9 +418,10 @@ public class KitRequestShipping extends KitRequest {
                     for (KitRequestShipping kit : kitRequest) {
                         if (StringUtils.isNotBlank(kit.getRealm())) {
                             // ERROR need address; QUEUE need name label if realm = RGP
-                            // UPLOADED and DEACTIVATED and TRIGGERED need shortId if getCollaboratorParticipantId is blank
+                            // UPLOADED and DEACTIVATED and TRIGGERED and WAITING need shortId if getCollaboratorParticipantId is blank
                             if ((ERROR.equals(target) || ((QUEUE.equals(target) || UPLOADED.equals(target)) && ddpInstance.isHasRole()))
-                                    || ((UPLOADED.equals(target) || DEACTIVATED.equals(target) || TRIGGERED.equals(target) || OVERVIEW.equals(target)) && StringUtils.isBlank(kit.getCollaboratorParticipantId()))) {
+                                    || ((UPLOADED.equals(target) || DEACTIVATED.equals(target) || TRIGGERED.equals(target) || OVERVIEW.equals(target) || WAITING.equals(target))
+                                    && StringUtils.isBlank(kit.getCollaboratorParticipantId()))) {
                                 String apiKey = DSMServer.getDDPEasypostApiKey(ddpInstance.getName());
                                 if (StringUtils.isNotBlank(apiKey) && kit.getEasypostAddressId() != null
                                         && StringUtils.isNotBlank(kit.getEasypostAddressId())) {
@@ -509,6 +512,9 @@ public class KitRequestShipping extends KitRequest {
         }
         else if (TRIGGERED.equals(target)) {
             query = query.concat(QueryExtension.KIT_LABEL_TRIGGERED);
+        }
+        else if (WAITING.equals(target)) {
+            query = query.concat(QueryExtension.KIT_WAITING);
         }
         else if (!OVERVIEW.equals(target)) {
             throw new RuntimeException("Target is not known");

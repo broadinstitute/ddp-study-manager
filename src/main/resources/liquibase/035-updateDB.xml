@@ -22,4 +22,12 @@
             </column>
         </addColumn>
     </changeSet>
+    <changeSet author="simone" id="DDP-4631_approvalPage">
+        <insert tableName="access_role">
+            <column name="name" value="kit_authorization_view"></column>
+        </insert>
+        <insert tableName="access_role">
+            <column name="name" value="kit_authorization"></column>
+        </insert>
+    </changeSet>
 </databaseChangeLog>
