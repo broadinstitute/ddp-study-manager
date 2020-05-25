@@ -406,16 +406,6 @@ public class ElasticSearchUtil {
         return null;
     }
 
-    private static QueryBuilder findQueryBuilderForOrAnswer(BoolQueryBuilder finalQuery, String fieldName) {
-        QueryBuilder tmpBuilder = findQueryBuilder(finalQuery.must(), fieldName);
-        if (tmpBuilder != null) {
-            return tmpBuilder;
-        }
-        else {
-            return findQueryBuilder(finalQuery.should(), fieldName);
-        }
-    }
-
     private static QueryBuilder findQueryBuilderForFieldName(BoolQueryBuilder finalQuery, String fieldName) {
         QueryBuilder tmpBuilder = findQueryBuilder(finalQuery.must(), fieldName);
         if (tmpBuilder != null) {
@@ -435,7 +425,7 @@ public class ElasticSearchUtil {
                     tmpBuilder = builder;
                 }
                 else if (builder instanceof NestedQueryBuilder) {
-                    return findQueryBuilder(((BoolQueryBuilder) ((NestedQueryBuilder) builder).query()).must(), fieldName);
+                    tmpBuilder = findQueryBuilder(((BoolQueryBuilder) ((NestedQueryBuilder) builder).query()).must(), fieldName);
                 }
                 else {
                     String name = builder.getName();
@@ -564,24 +554,11 @@ public class ElasticSearchUtil {
                 }
                 catch (ParseException e) {
                     //was no date string so go for normal text
-                    valueQueryBuilder(finalQuery, dataParam[1].trim(), userEntered, wildCard, must);
+                    mustOrSearch(finalQuery, dataParam[1].trim(), userEntered, wildCard, must);
                 }
             }
             else if (nameValue[0].startsWith(ADDRESS)) {
-                if (must) {
-                    valueQueryBuilder(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
-                }
-                else {
-                    QueryBuilder tmpBuilder = findQueryBuilderForOrAnswer(finalQuery, nameValue[0].trim());
-                    if (tmpBuilder != null) {
-                        ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(nameValue[0].trim(), userEntered));
-                    }
-                    else {
-                        BoolQueryBuilder orAnswers = new BoolQueryBuilder();
-                        orAnswers.should(QueryBuilders.matchQuery(nameValue[0].trim(), userEntered));
-                        finalQuery.must(orAnswers);
-                    }
-                }
+                mustOrSearch(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
             }
             else {
                 String[] surveyParam = nameValue[0].split("\\.");
@@ -603,7 +580,7 @@ public class ElasticSearchUtil {
                         valueQueryBuilder(queryBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered, wildCard, must);
                     }
                 }
-                else if("status".equals(surveyParam[1])) {
+                else if ("status".equals(surveyParam[1])) {
                     if (wildCard) {
                         if (must) {
                             queryBuilder.must(QueryBuilders.wildcardQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered + "*"));
@@ -617,16 +594,17 @@ public class ElasticSearchUtil {
                             queryBuilder.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered));
                         }
                         else {
-                            QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery,ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim());
-                            if (tmpBuilder != null) {
-                                ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered));
-                                alreadyAdded = true;
-                            }
-                            else {
-                                BoolQueryBuilder orAnswers = new BoolQueryBuilder();
-                                orAnswers.should(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered));
-                                queryBuilder.must(orAnswers);
-                            }
+                            QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim());
+                            //                            if (tmpBuilder != null) {
+                            //                                ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered));
+                            //                                alreadyAdded = true;
+                            //                            }
+                            //                            else {
+                            //                                BoolQueryBuilder orAnswers = new BoolQueryBuilder();
+                            //                                orAnswers.should(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered));
+                            //                                queryBuilder.must(orAnswers);
+                            //                            }
+                            alreadyAdded = mustOrSearchActivity(finalQuery, queryBuilder, tmpBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered, must);
                         }
                     }
                 }
@@ -652,16 +630,17 @@ public class ElasticSearchUtil {
                                 activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
                             }
                             else {
-                                QueryBuilder tmpBuilder = findQueryBuilderForOrAnswer(finalQuery, ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
-                                if (tmpBuilder != null) {
-                                    ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
-                                    alreadyAdded = true;
-                                }
-                                else {
-                                    BoolQueryBuilder orAnswers = new BoolQueryBuilder();
-                                    orAnswers.should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
-                                    activityAnswer.must(orAnswers);
-                                }
+                                QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
+                                //                                if (tmpBuilder != null) {
+                                //                                    ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
+                                //                                    alreadyAdded = true;
+                                //                                }
+                                //                                else {
+                                //                                    BoolQueryBuilder orAnswers = new BoolQueryBuilder();
+                                //                                    orAnswers.should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
+                                //                                    activityAnswer.must(orAnswers);
+                                //                                }
+                                alreadyAdded = mustOrSearchActivity(finalQuery, activityAnswer, tmpBuilder, ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered, must);
                             }
                         }
                     }
@@ -679,6 +658,36 @@ public class ElasticSearchUtil {
         }
         else {
             logger.error("one of the following is null: fieldName: " + nameValue[0] + " userEntered: [hidingValueInCasePHI]");
+        }
+    }
+
+    private static boolean mustOrSearchActivity(@NonNull BoolQueryBuilder finalQuery, @NonNull BoolQueryBuilder queryBuilder, QueryBuilder tmpBuilder, @NonNull String name, @NonNull String value, boolean must) {
+        if (tmpBuilder != null) {
+            ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(name, value));
+            return true;
+        }
+        else {
+            BoolQueryBuilder orAnswers = new BoolQueryBuilder();
+            orAnswers.should(QueryBuilders.matchQuery(name, value));
+            queryBuilder.must(orAnswers);
+        }
+        return false;
+    }
+
+    private static void mustOrSearch(@NonNull BoolQueryBuilder finalQuery, @NonNull String name, @NonNull String value, boolean wildCard, boolean must) {
+        if (must) {
+            valueQueryBuilder(finalQuery, name, value, wildCard, must);
+        }
+        else {
+            QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, name);
+            if (tmpBuilder != null) {
+                ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(name, value));
+            }
+            else {
+                BoolQueryBuilder orAnswers = new BoolQueryBuilder();
+                orAnswers.should(QueryBuilders.matchQuery(name, value));
+                finalQuery.must(orAnswers);
+            }
         }
     }
 

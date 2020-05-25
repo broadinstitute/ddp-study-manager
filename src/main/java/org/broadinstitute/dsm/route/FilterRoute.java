@@ -103,6 +103,7 @@ public class FilterRoute extends RequestHandler {
                             }
                         }
                         if (StringUtils.isNotBlank(filterName)) {
+                            //quick filter name ptL
                             ViewFilter requestForFiltering = new ViewFilter(filterName, parent);
                             requestForFiltering.setFilterQuery(ViewFilter.getFilterQuery(filterName, parent));
                             if (requestForFiltering.getFilters() == null && StringUtils.isNotBlank(requestForFiltering.getFilterQuery())) {
@@ -111,13 +112,16 @@ public class FilterRoute extends RequestHandler {
                             filters = requestForFiltering.getFilters();
                         }
                         else {
+                            //saved filter ptL
                             if (StringUtils.isNotBlank(queryParams.get(RequestParameter.FILTERS).value())) {
                                 filters = new Gson().fromJson(queryParams.get(RequestParameter.FILTERS).value(), Filter[].class);
                             }
                         }
                         if (filters != null) {
+                            //quick and saved filter ptL
                             return filterParticipantList(filters, patchUtil.getColumnNameMap(), instance);
                         }
+                        //empty manual search
                         return ParticipantWrapper.getFilteredList(instance, null);
                     }
                     else {
@@ -209,6 +213,7 @@ public class FilterRoute extends RequestHandler {
 
         List<?> data;
         if (PARENT_PARTICIPANT_LIST.equals(parent)) {
+            //manual search and search bar ptL
             data = filterParticipantList(filters, patchUtil.getColumnNameMap(), instance);
         }
         else {
@@ -260,6 +265,7 @@ public class FilterRoute extends RequestHandler {
             }
 
             logger.info("Found query conditions for " + mergeConditions.size() + " tables");
+            //search bar ptL
             return ParticipantWrapper.getFilteredList(instance, mergeConditions);
         }
         else {
