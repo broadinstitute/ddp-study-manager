@@ -45,7 +45,7 @@ public class KitRequestShipping extends KitRequest {
             "LEFT JOIN (SELECT * FROM (SELECT kit.dsm_kit_request_id, kit.dsm_kit_id, kit.kit_complete, kit.label_url_to, kit.label_url_return, kit.tracking_to_id, " +
             "kit.tracking_return_id, kit.easypost_tracking_to_url, kit.easypost_tracking_return_url, kit.easypost_to_id, kit.easypost_shipment_status, kit.scan_date, kit.label_date, kit.error, kit.message, " +
             "kit.receive_date, kit.deactivated_date, kit.easypost_address_id_to, kit.deactivation_reason, tracking.tracking_id, kit.kit_label, kit.express, kit.needs_approval, kit.authorization, kit.denial_reason, " +
-            "kit.authorization_by FROM ddp_kit kit " +
+            "kit.authorized_by FROM ddp_kit kit " +
             "INNER JOIN (SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id " +
             "AND kit.dsm_kit_id = groupedKit.kit_id LEFT JOIN ddp_kit_tracking tracking ON (kit.kit_label = tracking.kit_label))as wtf) AS kit ON kit.dsm_kit_request_id = request.dsm_kit_request_id " +
             "LEFT JOIN ddp_participant_exit ex ON (ex.ddp_instance_id = request.ddp_instance_id AND ex.ddp_participant_id = request.ddp_participant_id) " +
@@ -69,6 +69,9 @@ public class KitRequestShipping extends KitRequest {
     private static final String UPDATE_KIT = "UPDATE ddp_kit SET label_url_to = ?, label_url_return = ?, easypost_to_id = ?, easypost_return_id = ?, tracking_to_id = ?, " +
             "tracking_return_id = ?, easypost_tracking_to_url = ?, easypost_tracking_return_url = ?, error = ?, message = ?, easypost_address_id_to = ?, express = ? " +
             "WHERE dsm_kit_id = ?";
+    private static final String UPDATE_KIT_AUTHORIZE = "UPDATE ddp_kit kit INNER JOIN(SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit " +
+            "ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id AND kit.dsm_kit_id = groupedKit.kit_id SET authorization = ?, authorization_date = ?, " +
+            "denial_reason = ?, authorized_by = ? WHERE kit.dsm_kit_request_id = ?";
 
     public static final String DEACTIVATION_REASON = "Generated Express";
 
@@ -1282,5 +1285,33 @@ public class KitRequestShipping extends KitRequest {
                     collaboratorParticipantLengthOverwrite, id);
         }
         return collaboratorParticipantId;
+    }
+
+    public static void changeAuthorizationStatus(@NonNull String kitRequestId, String reason, @NonNull String userId, boolean authorization) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(UPDATE_KIT_AUTHORIZE)) {
+                stmt.setBoolean(1, authorization);
+                stmt.setLong(2, System.currentTimeMillis());
+                stmt.setObject(3, reason);
+                stmt.setString(4, userId);
+                stmt.setString(5, kitRequestId);
+                int result = stmt.executeUpdate();
+                if (result == 1) {
+                    logger.info("Changed authorization status for kitRequest w/ dsm_kit_request_id " + kitRequestId);
+                }
+                else {
+                    throw new RuntimeException("Error changing authorization status for kitRequest " + kitRequestId + ". It was updating " + result + " rows");
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Error changing authorization status for kitRequest w/ dsm_kit_request_id " + kitRequestId, results.resultException);
+        }
     }
 }

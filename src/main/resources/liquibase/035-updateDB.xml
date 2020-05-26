@@ -14,11 +14,15 @@
             </column>
         </addColumn>
         <addColumn tableName="ddp_kit">
+            <column name="authorization_date" type="BIGINT">
+            </column>
+        </addColumn>
+        <addColumn tableName="ddp_kit">
             <column name="denial_reason" type="VARCHAR(1500)">
             </column>
         </addColumn>
         <addColumn tableName="ddp_kit">
-            <column name="authorization_by" type="VARCHAR(45)">
+            <column name="authorized_by" type="VARCHAR(45)">
             </column>
         </addColumn>
     </changeSet>
