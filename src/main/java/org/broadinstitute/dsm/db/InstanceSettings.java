@@ -65,7 +65,8 @@ public class InstanceSettings {
                         dbVals.resultValue = new InstanceSettings(mrCoverPdfSettings, kitBehaviorChange);
                     }
                 }
-            } catch (SQLException ex) {
+            }
+            catch (SQLException ex) {
                 dbVals.resultException = ex;
             }
             return dbVals;
@@ -103,7 +104,8 @@ public class InstanceSettings {
                                                 int i = Integer.parseInt(tmp);
                                                 dateStop = dateStart.plusDays(i);
                                             }
-                                        } else if (tmp.startsWith("-")) {
+                                        }
+                                        else if (tmp.startsWith("-")) {
                                             tmp = tmp.replace("-", "");
                                             if (StringUtils.isNumeric(tmp)) {
                                                 int i = Integer.parseInt(tmp);
@@ -122,16 +124,19 @@ public class InstanceSettings {
                                                 sdf.parse((String) nameObject1).before(sdf.parse(formattedStop))) {
                                             specialKit = true;
                                         }
-                                    } catch (ParseException e) {
+                                    }
+                                    catch (ParseException e) {
                                         logger.error(e.getMessage());
                                     }
                                     //just today
-                                } else if (!nameObject1.equals(condition.getValue())) {
+                                }
+                                else if (!nameObject1.equals(condition.getValue())) {
                                     specialKit = true;
                                 }
                             }
                         }
-                    } else {
+                    }
+                    else {
                         Object nameObject0 = participant.get(condition.getName());
                         if (nameObject0 instanceof String) {
                             if (StringUtils.isNotBlank((String) nameObject0)) {
