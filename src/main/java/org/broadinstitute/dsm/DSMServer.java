@@ -104,8 +104,7 @@ public class DSMServer extends BasicServer {
             //            server.setupCustomDB(cfg);
 
             logger.info("Server configuration complete.");
-        }
-        else {
+        } else {
             logger.error("TrustStore does not exist");
         }
     }
@@ -226,8 +225,7 @@ public class DSMServer extends BasicServer {
             container.getLoadPaths().add(container.getClassLoader().getResource(ENCRYPTION_PATH).getPath());
             container.runScriptlet("require 'encryptor'");
             receiver = container.runScriptlet(SCRIPT);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Couldn't setup ruby for MBC decryption");
         }
 
@@ -266,8 +264,7 @@ public class DSMServer extends BasicServer {
             Liquibase liquibase = new liquibase.Liquibase("master-changelog.xml", new ClassLoaderResourceAccessor(), database);
 
             liquibase.update(new Contexts());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("Failed to run DB update.", e);
         }
     }
@@ -387,12 +384,12 @@ public class DSMServer extends BasicServer {
         //        ParticipantEventRoute participantEventRoute = new ParticipantEventRoute();
         //        get(UI_ROOT + RoutePath.PARTICIPANT_EVENTS + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, participantEventRoute, new JsonTransformer());
         //        post(UI_ROOT + RoutePath.SKIP_PARTICIPANT_EVENTS, participantEventRoute, new JsonTransformer());
-        //
-        //        post(UI_ROOT + RoutePath.NDI_REQUEST, new NDIRoute(), new JsonTransformer());
-        //
-        //        DrugListRoute drugListRoute = new DrugListRoute();
-        //        get(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, drugListRoute, new JsonTransformer());
-        //        patch(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, drugListRoute, new JsonTransformer());
+
+        post(UI_ROOT + RoutePath.NDI_REQUEST, new NDIRoute(auth0Util), new JsonTransformer());
+
+        DrugListRoute drugListRoute = new DrugListRoute(auth0Util);
+        get(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, drugListRoute, new JsonTransformer());
+        patch(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, drugListRoute, new JsonTransformer());
     }
 
     private void setupSharedRoutes(@NonNull KitUtil kitUtil, @NonNull NotificationUtil notificationUtil,
@@ -407,7 +404,7 @@ public class DSMServer extends BasicServer {
         //
         //        get(UI_ROOT + RoutePath.KIT_TYPES_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, new KitTypeRoute(kitUtil), new JsonTransformer());
         //
-        //        patch(UI_ROOT + RoutePath.PATCH, new PatchRoute(notificationUtil, patchUtil), new JsonTransformer());
+        patch(UI_ROOT + RoutePath.PATCH, new PatchRoute(auth0Util, notificationUtil, patchUtil), new JsonTransformer());
     }
 
     private void setupJobs(@NonNull Config cfg, @NonNull KitUtil kitUtil,
@@ -452,12 +449,10 @@ public class DSMServer extends BasicServer {
                 try {
                     scheduler.start();
                     logger.info("Job Scheduler setup complete.");
-                }
-                catch (Exception ex) {
+                } catch (Exception ex) {
                     throw new RuntimeException("Unable to setup Job Scheduler.", ex);
                 }
-            }
-            catch (SchedulerException e) {
+            } catch (SchedulerException e) {
                 throw new RuntimeException("Could not create scheduler ", e);
             }
         }
