@@ -55,6 +55,29 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
+    public void activityDefinitionSearchRequest() throws Exception {
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
+            int scrollSize = 1000;
+            Map<String, Map<String, Object>> esData = new HashMap<>();
+            SearchRequest searchRequest = new SearchRequest("activity_definition.cmi.cmi-brain");
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            SearchResponse response = null;
+            int i = 0;
+            while (response == null || response.getHits().getHits().length != 0) {
+                searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+                searchSourceBuilder.size(scrollSize);
+                searchSourceBuilder.from(i * scrollSize);
+                searchRequest.source(searchSourceBuilder);
+
+                response = client.search(searchRequest, RequestOptions.DEFAULT);
+                ElasticSearchUtil.addingActivityDefinitionHits(response, esData);
+                i++;
+            }
+            Assert.assertNotEquals(0, esData.size());
+        }
+    }
+
+    @Test
     public void searchPTByProfileDataLike() throws Exception {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
@@ -72,29 +95,6 @@ public class ElasticSearchTest extends TestHelper {
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
                 ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
-                i++;
-            }
-            Assert.assertNotEquals(0, esData.size());
-        }
-    }
-
-    @Test
-    public void activityDefinitionSearchRequest() throws Exception {
-        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
-            int scrollSize = 1000;
-            Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("activity_definition.cmi.cmi-brain");
-            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            SearchResponse response = null;
-            int i = 0;
-            while (response == null || response.getHits().getHits().length != 0) {
-                searchSourceBuilder.query(QueryBuilders.matchAllQuery());
-                searchSourceBuilder.size(scrollSize);
-                searchSourceBuilder.from(i * scrollSize);
-                searchRequest.source(searchSourceBuilder);
-
-                response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingActivityDefinitionHits(response, esData);
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -531,7 +531,7 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void searchPTByProfileData() throws Exception {
-        searchProfileValue("participants_structured.cmi.cmi-osteo", "profile.hruid", "PPBNBN");
+        searchProfileValue("participants_structured.cmi.angio", "profile.hruid", "PMR4FU");
     }
 
     @Test
