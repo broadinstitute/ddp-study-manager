@@ -8,7 +8,6 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,8 +65,7 @@ public class InstanceSettings {
                         dbVals.resultValue = new InstanceSettings(mrCoverPdfSettings, kitBehaviorChange);
                     }
                 }
-            }
-            catch (SQLException ex) {
+            } catch (SQLException ex) {
                 dbVals.resultException = ex;
             }
             return dbVals;
@@ -80,11 +78,8 @@ public class InstanceSettings {
     }
 
 
-    public static boolean shouldKitBehaveDifferently(@NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId, @NonNull Value behavior) {
+    public static boolean shouldKitBehaveDifferently(@NonNull Map<String, Object> participant, @NonNull Value behavior) {
         boolean specialKit = false;
-        Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
-                ElasticSearchUtil.BY_GUID + ddpParticipantId);
-        Map<String, Object> participant = participants.get(ddpParticipantId);
         //condition type -> alert/notification is currently ignored for upload -> will alert per frontend
         if (!behavior.getValues().isEmpty()) {
             for (Value condition : behavior.getValues()) {
@@ -108,8 +103,7 @@ public class InstanceSettings {
                                                 int i = Integer.parseInt(tmp);
                                                 dateStop = dateStart.plusDays(i);
                                             }
-                                        }
-                                        else if (tmp.startsWith("-")) {
+                                        } else if (tmp.startsWith("-")) {
                                             tmp = tmp.replace("-", "");
                                             if (StringUtils.isNumeric(tmp)) {
                                                 int i = Integer.parseInt(tmp);
@@ -128,19 +122,16 @@ public class InstanceSettings {
                                                 sdf.parse((String) nameObject1).before(sdf.parse(formattedStop))) {
                                             specialKit = true;
                                         }
-                                    }
-                                    catch (ParseException e) {
+                                    } catch (ParseException e) {
                                         logger.error(e.getMessage());
                                     }
                                     //just today
-                                }
-                                else if (!nameObject1.equals(condition.getValue())) {
+                                } else if (!nameObject1.equals(condition.getValue())) {
                                     specialKit = true;
                                 }
                             }
                         }
-                    }
-                    else {
+                    } else {
                         Object nameObject0 = participant.get(condition.getName());
                         if (nameObject0 instanceof String) {
                             if (StringUtils.isNotBlank((String) nameObject0)) {
