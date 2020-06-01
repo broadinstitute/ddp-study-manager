@@ -12,6 +12,7 @@ import org.broadinstitute.dsm.model.bsp.BSPKitStatus;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.EventUtil;
 import org.broadinstitute.dsm.util.KitUtil;
 import org.broadinstitute.dsm.util.NotificationUtil;
@@ -76,21 +77,26 @@ public class BSPKitQueryRoute implements Route {
             }
 
             if (received != null && StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
-                boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(ddpInstance, bspKitInfo.getDdpParticipantId(), received);
-                if (specialBehavior) {
-                    //don't trigger ddp to sent out email, only email to study staff
-                    if (InstanceSettings.TYPE_NOTIFICATION.equals(received.getType())) {
-                        String message = "Kit of participant " + bspKitInfo.getBspParticipantId() + " was received by GP. <br> " +
-                                "CollaboratorSampleId:  " + bspKitInfo.getBspSampleId() + " <br> " +
-                                received.getValue();
-                        notificationUtil.sentNotification(bspKitInfo.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE);
+                Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
+                    ElasticSearchUtil.BY_GUID + bspKitInfo.getDdpParticipantId());
+                Map<String, Object> participant = participants.get(bspKitInfo.getDdpParticipantId());
+                if (participant != null) {
+                    boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(participant, received);
+                    if (specialBehavior) {
+                        //don't trigger ddp to sent out email, only email to study staff
+                        if (InstanceSettings.TYPE_NOTIFICATION.equals(received.getType())) {
+                            String message = "Kit of participant " + bspKitInfo.getBspParticipantId() + " was received by GP. <br> " +
+                                    "CollaboratorSampleId:  " + bspKitInfo.getBspSampleId() + " <br> " +
+                                    received.getValue();
+                            notificationUtil.sentNotification(bspKitInfo.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE);
+                        }
+                        else {
+                            logger.error("Instance settings behavior for kit was not known " + received.getType());
+                        }
                     }
                     else {
-                        logger.error("Instance settings behavior for kit was not known " + received.getType());
+                        triggerDDP(bspKitInfo, firstTimeReceived, kitLabel);
                     }
-                }
-                else {
-                    triggerDDP(bspKitInfo, firstTimeReceived, kitLabel);
                 }
             }
             else {
