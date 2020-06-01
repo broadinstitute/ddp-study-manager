@@ -13,6 +13,7 @@ import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.KitUtil;
 import org.broadinstitute.dsm.util.NotificationUtil;
 import org.broadinstitute.dsm.util.UserUtil;
@@ -23,6 +24,7 @@ import spark.Request;
 import spark.Response;
 
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 public class KitDeactivationRoute extends RequestHandler {
@@ -80,7 +82,10 @@ public class KitDeactivationRoute extends RequestHandler {
                         }
 
                         if (activation != null && StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
-                            boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(ddpInstance, kitRequest.getParticipantId(), activation);
+                            Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
+                                    ElasticSearchUtil.BY_GUID + kitRequest.getParticipantId());
+                            Map<String, Object> participant = participants.get(kitRequest.getParticipantId());
+                            boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(participant, activation);
                             if (specialBehavior) {
                                 if (InstanceSettings.TYPE_ALERT.equals(activation.getType())) {
                                     return new Result(200, activation.getValue());
