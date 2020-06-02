@@ -517,7 +517,7 @@ public class KitUtil {
                 // only look up kits if instance has special kit behavior for uploaded and has data in ES
                 if (uploaded != null && StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
                     List<org.broadinstitute.dsm.db.KitType> kitTypes = org.broadinstitute.dsm.db.KitType.getKitTypes(ddpInstance.getName(), null);
-                    Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance, null);
+                    Map<String, Map<String, Object>> participants = ElasticSearchUtil.getDDPParticipantsFromES(ddpInstance.getName(), ddpInstance.getParticipantIndexES());
                     if (participants != null) {
                         for (org.broadinstitute.dsm.db.KitType kitType : kitTypes) {
                             List<KitRequestShipping> kitRequestList = KitRequestShipping.getKitRequestsByRealm(ddpInstance.getName(),
@@ -526,17 +526,20 @@ public class KitUtil {
                                 //ignore if kit was reactivated with special behavior alert
                                 if (!IGNORE_AUTO_DEACTIVATION.equals(kit.getMessage())) {
                                     Map<String, Object> participant = participants.get(kit.getParticipantId());
-                                    boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(participant, uploaded);
-                                    if (specialBehavior) {
-                                        KitRequestShipping.deactivateKitRequest(kit.getDsmKitRequestId(), SYSTEM_AUTOMATICALLY_DEACTIVATED + ": " + uploaded.getValue(),
-                                                DSMServer.getDDPEasypostApiKey(ddpInstance.getName()), "System");
-                                        if (InstanceSettings.TYPE_NOTIFICATION.equals(uploaded.getType())) {
-                                            String message = kitType.getName() + " kit for participant " + kit.getParticipantId() + " (<b>" + kit.getCollaboratorParticipantId()
-                                                    + "</b>) was deactivated per background job <br>. " + uploaded.getValue();
-                                            notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE);
-                                        }
-                                        else {
-                                            logger.error("Instance settings behavior for kit was not known " + uploaded.getType());
+                                    if (participant != null) {
+                                        logger.info("Checking pt " + kit.getParticipantId() + " for special behavior");
+                                        boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(participant, uploaded);
+                                        if (specialBehavior) {
+                                            KitRequestShipping.deactivateKitRequest(kit.getDsmKitRequestId(), SYSTEM_AUTOMATICALLY_DEACTIVATED + ": " + uploaded.getValue(),
+                                                    DSMServer.getDDPEasypostApiKey(ddpInstance.getName()), "System");
+                                            if (InstanceSettings.TYPE_NOTIFICATION.equals(uploaded.getType())) {
+                                                String message = kitType.getName() + " kit for participant " + kit.getParticipantId() + " (<b>" + kit.getCollaboratorParticipantId()
+                                                        + "</b>) was deactivated per background job <br>. " + uploaded.getValue();
+                                                notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE);
+                                            }
+                                            else {
+                                                logger.error("Instance settings behavior for kit was not known " + uploaded.getType());
+                                            }
                                         }
                                     }
                                 }
