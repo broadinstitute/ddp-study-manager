@@ -122,7 +122,7 @@
         "key": "{{$errorAlert.key}}",
         "clientSettings": """{{$errorAlertEnvironment.clientSettings | toJSON}}""",
       {{if eq $vaultFile "config"}}
-        "recipientAddress": "{{$errorAlertEnvironment.recipientAddress}}"
+        "recipientAddress": "{{$errorAlert.recipientAddress}}"
       {{else}}
         "recipientAddress": ""
       {{end}}
