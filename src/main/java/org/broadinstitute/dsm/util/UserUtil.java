@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.UserSettings;
+import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
@@ -40,7 +41,7 @@ public class UserUtil {
             "LEFT JOIN access_user user on (roleGroup.user_id = user.user_id) " +
             "LEFT JOIN access_role role on (role.role_id = roleGroup.role_id) " +
             "WHERE roleGroup.user_id = ? ";
-    private static final String SQL_SELECT_USER_REALMS = "SELECT DISTINCT realm.instance_name, (SELECT count(role.name) " +
+    private static final String SQL_SELECT_USER_REALMS = "SELECT DISTINCT realm.instance_name, realm.display_name, (SELECT count(role.name) " +
             "FROM ddp_instance realm2, ddp_instance_role inRol, instance_role role " +
             "WHERE realm2.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id AND role.name = ? " +
             "AND realm2.ddp_instance_id = realm.ddp_instance_id) AS 'has_role' FROM access_user_role_group roleGroup, " +
@@ -167,6 +168,39 @@ public class UserUtil {
         }
         logger.info("Found " + listOfRealms.size() + " realm for user w/ id " + userId);
         return listOfRealms;
+    }
+
+    public static List<NameValue> getAllowedStudies(@NonNull String userId) {
+        List<NameValue> studies = new ArrayList<>();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_USER_REALMS)) {
+                stmt.setString(1, NO_USER_ROLE);
+                stmt.setString(2, userId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        String instanceName = rs.getString(DBConstants.INSTANCE_NAME);
+                        String displayName = rs.getString(DBConstants.DISPLAY_NAME);
+                        if (StringUtils.isNotBlank(displayName)) {
+                            studies.add(new NameValue(instanceName, displayName));
+                        }
+                        else {
+                            studies.add(new NameValue(instanceName, instanceName));
+                        }
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting list of studies ", results.resultException);
+        }
+        return studies;
+
     }
 
     public static Collection<String> getListOfAllowedRealms(@NonNull String userId, @NonNull String menu) {

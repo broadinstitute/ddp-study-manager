@@ -396,7 +396,9 @@ public class DSMServer extends BasicServer {
         get(UI_ROOT + RoutePath.SAMPLE_REPORT_REQUEST, dashboardRoute, new JsonTransformer());
         get(UI_ROOT + RoutePath.SAMPLE_REPORT_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.START + RoutePath.ROUTE_SEPARATOR + RequestParameter.END, dashboardRoute, new JsonTransformer());
 
-        get(UI_ROOT + RoutePath.ALLOWED_REALMS_REQUEST, new AllowedRealmsRoute(), new JsonTransformer());
+        AllowedRealmsRoute allowedRealmsRoute = new AllowedRealmsRoute();
+        get(UI_ROOT + RoutePath.ALLOWED_REALMS_REQUEST, allowedRealmsRoute, new JsonTransformer());
+        get(UI_ROOT + RoutePath.STUDIES, allowedRealmsRoute, new JsonTransformer());
 
         get(UI_ROOT + RoutePath.KIT_TYPES_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, new KitTypeRoute(kitUtil), new JsonTransformer());
 
