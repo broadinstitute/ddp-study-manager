@@ -631,7 +631,7 @@ public class KitRequestShipping extends KitRequest {
             SimpleResult dbVals = new SimpleResult(0);
             try (PreparedStatement insertKitRequest = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.INSERT_KIT_REQUEST), Statement.RETURN_GENERATED_KEYS)) {
                 insertKitRequest.setString(1, instanceId);
-                insertKitRequest.setString(2, ddpKitRequestId);//not null for AT we need to put something in here ,  we get this from Pepper or kitUpload
+                insertKitRequest.setString(2, ddpKitRequestId);
                 insertKitRequest.setInt(3, kitTypeId);
                 insertKitRequest.setString(4, ddpParticipantId);
                 insertKitRequest.setObject(5, collaboratorPatientId);
