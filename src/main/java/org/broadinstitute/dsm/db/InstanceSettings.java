@@ -8,7 +8,6 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,11 +79,8 @@ public class InstanceSettings {
     }
 
 
-    public static boolean shouldKitBehaveDifferently(@NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId, @NonNull Value behavior) {
+    public static boolean shouldKitBehaveDifferently(@NonNull Map<String, Object> participant, @NonNull Value behavior) {
         boolean specialKit = false;
-        Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
-                ElasticSearchUtil.BY_GUID + ddpParticipantId);
-        Map<String, Object> participant = participants.get(ddpParticipantId);
         //condition type -> alert/notification is currently ignored for upload -> will alert per frontend
         if (!behavior.getValues().isEmpty()) {
             for (Value condition : behavior.getValues()) {

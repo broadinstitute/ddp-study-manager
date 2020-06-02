@@ -231,7 +231,10 @@ public class KitUploadRoute extends RequestHandler {
                                  @NonNull String kitTypeName, String collaboratorParticipantId, String errorMessage, boolean uploadAnyway,
                                  List<KitRequest> duplicateKitList, ArrayList<KitRequest> orderKits, List<KitRequest> specialKitList, Value behavior) {
         if (behavior != null && StringUtils.isNotBlank(ddpInstance.getParticipantIndexES()) && !uploadAnyway) {
-            boolean specialKit = InstanceSettings.shouldKitBehaveDifferently(ddpInstance, kit.getParticipantId(), behavior);
+            Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
+                    ElasticSearchUtil.BY_GUID + kit.getParticipantId());
+            Map<String, Object> participant = participants.get(kit.getParticipantId());
+            boolean specialKit = InstanceSettings.shouldKitBehaveDifferently(participant, behavior);
             if (specialKit) {
                 if (InstanceSettings.TYPE_ALERT.equals(behavior.getType())) {
                     specialKitList.add(kit);
