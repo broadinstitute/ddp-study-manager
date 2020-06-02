@@ -88,9 +88,9 @@ public class Filter {
             query = AND + filter.getColumnName(dbElement);
             finalQuery = query + condition;
         }
-        else if (NUMBER.equals(filter.getType())) {
+        else if (NUMBER.equals(filter.getType()) && !filter.empty) {
             if (!filter.isRange()) {
-                if (filter.getFilter1() != null) {
+                if (filter.getFilter1() != null && filter.getFilter1().getValue() != null) {
                     query = AND + filter.getColumnName(dbElement);
                     condition = EQUALS + filter.getFilter1().getValue();
                     finalQuery = query + condition;
