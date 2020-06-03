@@ -1216,6 +1216,7 @@ public class RouteTest extends TestHelper {
     }
 
     @Test
+    @Ignore("No more mbc per db, it is now on pepper")
     public void newMBCParticipantsByBookmark() {
         //need to request first all of them, because jobs are deactivated... and list will not get populated then
         ddpMedicalRecordDataRequest.requestFromDB();
@@ -1254,6 +1255,7 @@ public class RouteTest extends TestHelper {
     }
 
     @Test
+    @Ignore("No more mbc per db, it is now on pepper")
     public void mbcParticipantsChanged() throws Exception {
         //need to request first all of them, because jobs are deactivated... and list will not get populated then
         ddpMedicalRecordDataRequest.requestFromDB();
