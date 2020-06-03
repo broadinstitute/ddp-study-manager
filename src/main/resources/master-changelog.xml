@@ -37,4 +37,5 @@
     <include file="liquibase/032-updateDB.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/033-updateDB.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/034-updateDB.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/035-updateDB.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
