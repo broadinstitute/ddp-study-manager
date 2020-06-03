@@ -62,6 +62,7 @@ public class RoutePath {
     public static final String PARTICIPANT_MEDICAL_RECORD_REQUEST = "rawData/";
     public static final String MAILING_LIST_REQUEST = "mailingList";
     public static final String ALLOWED_REALMS_REQUEST = "realmsAllowed";
+    public static final String STUDIES = "studies";
     public static final String KIT_TYPES_REQUEST = "kitTypes";
     public static final String KIT_UPLOAD_REQUEST = "kitUpload";
     public static final String KIT_LABEL_REQUEST = "kitLabel";

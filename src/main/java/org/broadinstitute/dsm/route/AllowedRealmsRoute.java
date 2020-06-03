@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.route;
 
 import org.broadinstitute.dsm.security.RequestHandler;
+import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.UserUtil;
 import spark.QueryParamsMap;
 import spark.Request;
@@ -16,6 +17,9 @@ public class AllowedRealmsRoute extends RequestHandler {
         String userIdRequest = UserUtil.getUserId(request);
         if (!userId.equals(userIdRequest)) {
             throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
+        }
+        if (request.url().contains(RoutePath.STUDIES)) {
+            return UserUtil.getAllowedStudies(userIdRequest);
         }
 
         if (queryParams.value(MENU) != null) {
