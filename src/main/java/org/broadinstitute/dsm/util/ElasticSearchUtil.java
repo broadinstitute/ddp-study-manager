@@ -50,6 +50,7 @@ public class ElasticSearchUtil {
     public static final String DSM = "dsm";
     private static final String ACTIVITY_CODE = "activityCode";
     public static final String ADDRESS = "address";
+    public static final String INVITATIONS = "invitations";
     public static final String PDFS = "pdfs";
     public static final String GUID = "guid";
     public static final String HRUID = "hruid";
@@ -190,6 +191,7 @@ public class ElasticSearchUtil {
         BoolQueryBuilder finalQuery = new BoolQueryBuilder();
 
         for (String f : filters) {
+            logger.info(f);
             if (StringUtils.isNotBlank(f) && f.contains(DBConstants.ALIAS_DELIMITER)) {
                 if (f.contains(Filter.EQUALS) || f.contains(Filter.LIKE)) {
                     f = f.replace("(", "").replace(")", "").trim();
@@ -559,6 +561,32 @@ public class ElasticSearchUtil {
             }
             else if (nameValue[0].startsWith(ADDRESS)) {
                 mustOrSearch(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
+            }
+            else if (nameValue[0].startsWith(INVITATIONS)) {
+                String[] invitationParam = nameValue[0].split("\\.");
+                BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
+
+                boolean alreadyAdded = false;
+                if (wildCard) {
+                    if (must) {
+                        queryBuilder.must(QueryBuilders.wildcardQuery(INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1].trim(), userEntered + "*"));
+                    }
+                    else {
+                        queryBuilder.should(QueryBuilders.wildcardQuery(INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1].trim(), userEntered + "*"));
+                    }
+                }
+                else {
+                    if (must) {
+                        queryBuilder.must(QueryBuilders.matchQuery(INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1].trim(), userEntered));
+                    }
+                    else {
+                        QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1].trim());
+                        alreadyAdded = mustOrSearchActivity(finalQuery, queryBuilder, tmpBuilder, INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1].trim(), userEntered, must);
+                    }
+                }
+                if (!alreadyAdded) {
+                    finalQuery.must(queryBuilder);
+                }
             }
             else {
                 String[] surveyParam = nameValue[0].split("\\.");
