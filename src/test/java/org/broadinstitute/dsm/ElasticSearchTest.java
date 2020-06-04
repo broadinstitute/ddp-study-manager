@@ -36,7 +36,7 @@ public class ElasticSearchTest extends TestHelper {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-brain");
+            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-osteo");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
@@ -59,7 +59,7 @@ public class ElasticSearchTest extends TestHelper {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("activity_definition.cmi.cmi-brain");
+            SearchRequest searchRequest = new SearchRequest("activity_definition.testboston.testboston");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
@@ -536,7 +536,7 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void mbcLegacyPTGUID() throws Exception {
-        searchProfileValue("participants_structured.cmi.angio", "profile.guid", "XGCG6DDBB3ELX4OKKWKO");
+        searchProfileValue("participants_structured.cmi.cmi-osteo", "profile.guid", "ZSNS8E4U838JPW7NU93Y");
     }
 
     @Test
