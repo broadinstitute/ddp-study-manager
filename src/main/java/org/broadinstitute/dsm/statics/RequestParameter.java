@@ -25,6 +25,8 @@ public class RequestParameter {
     public static final String CONFIG_NAME = "configName";
     public static final String FILTERS = "filters";
     public static final String FILTER_NAME = "filterName";
+    public static final String KIT_REQUEST_ID = "kitRequestId";
+    public static final String ACTIVATE = "activate";
 
     public static final String POLICY = "policy";
     public static final String FACILITY = "facility";

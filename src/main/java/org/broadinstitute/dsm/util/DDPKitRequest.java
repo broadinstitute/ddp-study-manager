@@ -2,7 +2,6 @@ package org.broadinstitute.dsm.util;
 
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.ddp.handlers.util.KitDetail;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.LatestKitRequest;
@@ -11,6 +10,7 @@ import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitSubKits;
 import org.broadinstitute.dsm.model.KitType;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
+import org.broadinstitute.dsm.model.ddp.KitDetail;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.externalShipper.ExternalShipper;
 import org.slf4j.Logger;
@@ -191,7 +191,7 @@ public class DDPKitRequest {
                 //kitRequestId needs to stay unique -> add `_[SUB_COUNTER]` to it
                 KitRequestShipping.addKitRequests(instanceId, subKit.getKitName(), kitDetail.getParticipantId(),
                         subCounter == 0 ? kitDetail.getKitRequestId() : kitDetail.getKitRequestId() + "_" + subCounter, subKit.getKitTypeId(), kitRequestSettings,
-                        collaboratorParticipantId);
+                        collaboratorParticipantId, kitDetail.isNeedsApproval());
                 subCounter = subCounter + 1;
             }
         }
