@@ -50,6 +50,7 @@ public class ElasticSearchUtil {
     public static final String DSM = "dsm";
     private static final String ACTIVITY_CODE = "activityCode";
     public static final String ADDRESS = "address";
+    public static final String INVITATIONS = "invitations";
     public static final String PDFS = "pdfs";
     public static final String GUID = "guid";
     public static final String HRUID = "hruid";
@@ -60,6 +61,7 @@ public class ElasticSearchUtil {
     public static final String CREATED_AT = "createdAt";
     public static final String COMPLETED_AT = "completedAt";
     public static final String LAST_UPDATED = "lastUpdatedAt";
+    public static final String STATUS = "status";
 
     public static RestHighLevelClient getClientForElasticsearchCloud(@NonNull String baseUrl, @NonNull String userName, @NonNull String password) throws MalformedURLException {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
@@ -185,6 +187,19 @@ public class ElasticSearchUtil {
         return null;
     }
 
+    public static String getPreferredLanguage(@NonNull Map<String, Map<String, Object>> participantsESData, @NonNull String ddpParticipantId) {
+        if (participantsESData != null && !participantsESData.isEmpty()) {
+            Map<String, Object> participantESData = participantsESData.get(ddpParticipantId);
+            if (participantESData != null && !participantESData.isEmpty()) {
+                Map<String, Object> profile = (Map<String, Object>) participantESData.get(PROFILE);
+                if (profile != null && !profile.isEmpty()) {
+                    return (String) profile.get("preferredLanguage");
+                }
+            }
+        }
+        return null;
+    }
+
     private static AbstractQueryBuilder<? extends AbstractQueryBuilder<?>> createESQuery(@NonNull String filter) {
         String[] filters = filter.split(Filter.AND);
         BoolQueryBuilder finalQuery = new BoolQueryBuilder();
@@ -242,6 +257,22 @@ public class ElasticSearchUtil {
                                 }
                                 else {
                                     finalQuery.must(QueryBuilders.rangeQuery(dataParam[1]).gte(date));
+                                }
+                            }
+                            catch (ParseException e) {
+                                logger.error("range was not date. user entered: " + userEntered);
+                            }
+                        }
+                        else if (nameValue[0].startsWith(INVITATIONS)) {
+                            String[] invitationParam = nameValue[0].split("\\.");
+                            QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, invitationParam[1]);
+                            try {
+                                long date = SystemUtil.getLongFromString(userEntered);
+                                if (tmpBuilder != null) {
+                                    ((RangeQueryBuilder) tmpBuilder).gte(date);
+                                }
+                                else {
+                                    finalQuery.must(QueryBuilders.rangeQuery(INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1]).gte(date));
                                 }
                             }
                             catch (ParseException e) {
@@ -318,6 +349,22 @@ public class ElasticSearchUtil {
                                 logger.error("range was not date. user entered: " + userEntered);
                             }
                         }
+                        else if (nameValue[0].startsWith(INVITATIONS)) {
+                            String[] invitationParam = nameValue[0].split("\\.");
+                            QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, invitationParam[1]);
+                            try {
+                                long date = SystemUtil.getLongFromString(userEntered);
+                                if (tmpBuilder != null) {
+                                    ((RangeQueryBuilder) tmpBuilder).lte(date);
+                                }
+                                else {
+                                    finalQuery.must(QueryBuilders.rangeQuery(INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1]).lte(date));
+                                }
+                            }
+                            catch (ParseException e) {
+                                logger.error("range was not date. user entered: " + userEntered);
+                            }
+                        }
                         else {
                             String[] surveyParam = nameValue[0].split("\\.");
                             if (CREATED_AT.equals(surveyParam[1]) || COMPLETED_AT.equals(surveyParam[1]) || LAST_UPDATED.equals(surveyParam[1])) {
@@ -359,9 +406,14 @@ public class ElasticSearchUtil {
                             ExistsQueryBuilder existsQuery = new ExistsQueryBuilder(dataParam[1].trim());
                             finalQuery.must(existsQuery);
                         }
+                        else if (nameValue[0].startsWith(INVITATIONS)) {
+                            String[] invitationParam = nameValue[0].split("\\.");
+                            ExistsQueryBuilder existsQuery = new ExistsQueryBuilder(INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1].trim());
+                            finalQuery.must(existsQuery);
+                        }
                         else {
                             String[] surveyParam = nameValue[0].split("\\.");
-                            if (CREATED_AT.equals(surveyParam[1]) || COMPLETED_AT.equals(surveyParam[1]) || LAST_UPDATED.equals(surveyParam[1]) || "status".equals(surveyParam[1])) {
+                            if (CREATED_AT.equals(surveyParam[1]) || COMPLETED_AT.equals(surveyParam[1]) || LAST_UPDATED.equals(surveyParam[1]) || STATUS.equals(surveyParam[1])) {
                                 BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
                                 ExistsQueryBuilder existsQuery = new ExistsQueryBuilder(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1]);
                                 activityAnswer.must(existsQuery);
@@ -529,11 +581,7 @@ public class ElasticSearchUtil {
                 }
                 else {
                     try {
-                        long start = SystemUtil.getLongFromString(userEntered);
-                        //set endDate to midnight of that date
-                        String endDate = userEntered + END_OF_DAY;
-                        long end = SystemUtil.getLongFromDetailDateString(endDate);
-                        rangeQueryBuilder(finalQuery, nameValue[0], start, end, must);
+                        queryDate(finalQuery, nameValue[0], userEntered, must);
                     }
                     catch (ParseException e) {
                         valueQueryBuilder(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
@@ -546,11 +594,7 @@ public class ElasticSearchUtil {
             else if (nameValue[0].startsWith(DATA)) {
                 String[] dataParam = nameValue[0].split("\\.");
                 try {
-                    long start = SystemUtil.getLongFromString(userEntered);
-                    //set endDate to midnight of that date
-                    String endDate = userEntered + END_OF_DAY;
-                    long end = SystemUtil.getLongFromDetailDateString(endDate);
-                    rangeQueryBuilder(finalQuery, dataParam[1], start, end, must);
+                    queryDate(finalQuery, dataParam[1], userEntered, must);
                 }
                 catch (ParseException e) {
                     //was no date string so go for normal text
@@ -560,6 +604,21 @@ public class ElasticSearchUtil {
             else if (nameValue[0].startsWith(ADDRESS)) {
                 mustOrSearch(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
             }
+            else if (nameValue[0].startsWith(INVITATIONS)) {
+                String[] invitationParam = nameValue[0].split("\\.");
+                BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
+
+                boolean alreadyAdded = false;
+                try {
+                    queryDate(queryBuilder, INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1], userEntered, must);
+                }
+                catch (ParseException e) {
+                    alreadyAdded = buildQueryBuilderForESObjects(finalQuery, queryBuilder, INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1].trim(), userEntered, must, wildCard);
+                    if (!alreadyAdded) {
+                        finalQuery.must(queryBuilder);
+                    }
+                }
+            }
             else {
                 String[] surveyParam = nameValue[0].split("\\.");
                 BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
@@ -568,36 +627,15 @@ public class ElasticSearchUtil {
                 boolean alreadyAdded = false;
                 if (CREATED_AT.equals(surveyParam[1]) || COMPLETED_AT.equals(surveyParam[1]) || LAST_UPDATED.equals(surveyParam[1])) {
                     try {
-                        //activity dates
-                        long start = SystemUtil.getLongFromString(userEntered);
-                        //set endDate to midnight of that date
-                        String endDate = userEntered + END_OF_DAY;
-                        long end = SystemUtil.getLongFromDetailDateString(endDate);
-                        rangeQueryBuilder(queryBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1], start, end, must);
+                        queryDate(queryBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1], userEntered, must);
                     }
                     catch (ParseException e) {
                         //activity status
                         valueQueryBuilder(queryBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered, wildCard, must);
                     }
                 }
-                else if ("status".equals(surveyParam[1])) {
-                    if (wildCard) {
-                        if (must) {
-                            queryBuilder.must(QueryBuilders.wildcardQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered + "*"));
-                        }
-                        else {
-                            queryBuilder.should(QueryBuilders.wildcardQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered + "*"));
-                        }
-                    }
-                    else {
-                        if (must) {
-                            queryBuilder.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered));
-                        }
-                        else {
-                            QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim());
-                            alreadyAdded = mustOrSearchActivity(finalQuery, queryBuilder, tmpBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered, must);
-                        }
-                    }
+                else if (STATUS.equals(surveyParam[1])) {
+                    alreadyAdded = buildQueryBuilderForESObjects(finalQuery, queryBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered, must, wildCard);
                 }
                 else {
                     //activity user entered
@@ -608,23 +646,7 @@ public class ElasticSearchUtil {
                     }
                     catch (ParseException e) {
                         //was no date string so go for normal text
-                        if (wildCard) {
-                            if (must) {
-                                activityAnswer.must(QueryBuilders.wildcardQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered + "*"));
-                            }
-                            else {
-                                activityAnswer.should(QueryBuilders.wildcardQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered + "*"));
-                            }
-                        }
-                        else {
-                            if (must) {
-                                activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
-                            }
-                            else {
-                                QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
-                                alreadyAdded = mustOrSearchActivity(finalQuery, activityAnswer, tmpBuilder, ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered, must);
-                            }
-                        }
+                        alreadyAdded = buildQueryBuilderForESObjects(finalQuery, activityAnswer, ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered, must, wildCard);
                     }
                     if (!alreadyAdded) {
                         NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery(ACTIVITIES_QUESTIONS_ANSWER, activityAnswer, ScoreMode.Avg);
@@ -673,22 +695,38 @@ public class ElasticSearchUtil {
         }
     }
 
-    private static void valueQueryBuilder(@NonNull BoolQueryBuilder finalQuery, @NonNull String name, @NonNull String query, boolean wildCard, boolean must) {
+    private static boolean buildQueryBuilderForESObjects(@NonNull BoolQueryBuilder finalQuery, @NonNull BoolQueryBuilder queryBuilder, @NonNull String name, @NonNull String value, boolean must, boolean wildCard){
+        boolean alreadyAdded = false;
         if (wildCard) {
-            if (must) {
-                finalQuery.must(QueryBuilders.wildcardQuery(name, query.toLowerCase() + "*"));
-            }
-            else {
-                finalQuery.should(QueryBuilders.wildcardQuery(name, query.toLowerCase() + "*"));
-            }
+            queryMustOrShould(queryBuilder, name, value + "*", must);
         }
         else {
             if (must) {
-                finalQuery.must(QueryBuilders.matchQuery(name, query));
+                queryBuilder.must(QueryBuilders.matchQuery(name, value));
             }
             else {
-                finalQuery.should(QueryBuilders.matchQuery(name, query));
+                QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, name);
+                alreadyAdded = mustOrSearchActivity(finalQuery, queryBuilder, tmpBuilder, name, value, must);
             }
+        }
+        return alreadyAdded;
+    }
+
+    private static void valueQueryBuilder(@NonNull BoolQueryBuilder finalQuery, @NonNull String name, @NonNull String value, boolean wildCard, boolean must) {
+        if (wildCard) {
+            queryMustOrShould(finalQuery, name, value.toLowerCase() + "*", must);
+        }
+        else {
+            queryMustOrShould(finalQuery, name, value, must);
+        }
+    }
+
+    private static void queryMustOrShould(@NonNull BoolQueryBuilder queryBuilder, @NonNull String name, @NonNull String value, boolean must) {
+        if (must) {
+            queryBuilder.must(QueryBuilders.wildcardQuery(name, value));
+        }
+        else {
+            queryBuilder.should(QueryBuilders.wildcardQuery(name, value));
         }
     }
 
@@ -699,5 +737,14 @@ public class ElasticSearchUtil {
         else {
             finalQuery.should(QueryBuilders.rangeQuery(name).gte(start).lte(end));
         }
+    }
+
+    private static void queryDate(@NonNull BoolQueryBuilder queryBuilder, @NonNull String name, @NonNull String value, boolean must) throws ParseException {
+        //activity dates
+        long start = SystemUtil.getLongFromString(value);
+        //set endDate to midnight of that date
+        String endDate = value + END_OF_DAY;
+        long end = SystemUtil.getLongFromDetailDateString(endDate);
+        rangeQueryBuilder(queryBuilder, name, start, end, must);
     }
 }
