@@ -187,6 +187,19 @@ public class ElasticSearchUtil {
         return null;
     }
 
+    public static String getPreferredLanguage(@NonNull Map<String, Map<String, Object>> participantsESData, @NonNull String ddpParticipantId) {
+        if (participantsESData != null && !participantsESData.isEmpty()) {
+            Map<String, Object> participantESData = participantsESData.get(ddpParticipantId);
+            if (participantESData != null && !participantESData.isEmpty()) {
+                Map<String, Object> profile = (Map<String, Object>) participantESData.get(PROFILE);
+                if (profile != null && !profile.isEmpty()) {
+                    return (String) profile.get("preferredLanguage");
+                }
+            }
+        }
+        return null;
+    }
+
     private static AbstractQueryBuilder<? extends AbstractQueryBuilder<?>> createESQuery(@NonNull String filter) {
         String[] filters = filter.split(Filter.AND);
         BoolQueryBuilder finalQuery = new BoolQueryBuilder();
