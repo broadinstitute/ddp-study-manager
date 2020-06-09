@@ -139,6 +139,7 @@ public class KitRequestShipping extends KitRequest {
     private String nameLabel;
 
     private String createdBy;
+    private String preferredLanguage;
 
     public KitRequestShipping(String collaboratorParticipantId, String kitType, String dsmKitRequestId, long scanDate, boolean error, long receiveDate, long deactivatedDate) {
         this(null, collaboratorParticipantId, null, null, null, kitType, dsmKitRequestId, null, null, null,
@@ -346,7 +347,6 @@ public class KitRequestShipping extends KitRequest {
                         wholeList.addAll(kitRequestList);
                     }
                 }
-
                 return wholeList;
             }
         }
@@ -355,7 +355,6 @@ public class KitRequestShipping extends KitRequest {
         for (List<KitRequestShipping> kitRequestList : kits) {
             wholeList.addAll(kitRequestList);
         }
-
         return wholeList;
     }
 
@@ -415,6 +414,9 @@ public class KitRequestShipping extends KitRequest {
 
                     for (KitRequestShipping kit : kitRequest) {
                         if (StringUtils.isNotBlank(kit.getRealm())) {
+                            if (participantsESData != null && !participantsESData.isEmpty()) {
+                                kit.setPreferredLanguage(ElasticSearchUtil.getPreferredLanguage(participantsESData, key));
+                            }
                             // ERROR need address; QUEUE need name label if realm = RGP
                             // UPLOADED and DEACTIVATED and TRIGGERED need shortId if getCollaboratorParticipantId is blank
                             if ((ERROR.equals(target) || ((QUEUE.equals(target) || UPLOADED.equals(target)) && ddpInstance.isHasRole()))
