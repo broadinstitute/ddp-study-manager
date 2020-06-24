@@ -121,4 +121,6 @@ public class ApplicationConfigConstants {
     public static final String GET_ALL_HOSPITALS_MBC = "mbc.selectAllHospitals";
     public static final String GET_PARTICIPANTS_MBC = "mbc.selectParticipants";
 
+    public static final String PREFERRED_SOURCE_IP_HEADER = "preferredSourceIPHeader";
+
 }

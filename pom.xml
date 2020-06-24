@@ -14,6 +14,20 @@
     <dependencies>
 
         <dependency>
+            <groupId>com.sparkjava</groupId>
+            <artifactId>spark-core</artifactId>
+            <version>2.8.0</version>
+            <exclusions>
+                <exclusion>
+                    <!-- this pom will declare the version of sparkjava -->
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>spark-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+
+        <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.18</version>
@@ -28,6 +42,13 @@
             <groupId>org.broadinstitute.ddp</groupId>
             <artifactId>lddp</artifactId>
             <version>dsm_2.4_20190322a</version>
+            <exclusions>
+                <exclusion>
+                    <!-- need this to to avoid http://www.slf4j.org/codes.html#multiple_bindings -->
+                    <groupId>com.sparkjava</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -136,6 +157,13 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlets</artifactId>
+            <version>9.4.28.v20200408</version>
+        </dependency>
+
     </dependencies>
 
     <build>
