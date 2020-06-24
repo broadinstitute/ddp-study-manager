@@ -21,6 +21,7 @@ import org.broadinstitute.ddp.security.CookieUtil;
 import org.broadinstitute.ddp.util.BasicTriggerListener;
 import org.broadinstitute.ddp.util.JsonTransformer;
 import org.broadinstitute.ddp.util.Utility;
+import org.broadinstitute.dsm.jetty.JettyConfig;
 import org.broadinstitute.dsm.jobs.*;
 import org.broadinstitute.dsm.model.mbc.MBCHospital;
 import org.broadinstitute.dsm.model.mbc.MBCInstitution;
@@ -38,11 +39,14 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.KeyMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import spark.Spark;
 
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static spark.Spark.*;
@@ -54,8 +58,17 @@ public class DSMServer extends BasicServer {
 
     private static final Logger logger = LoggerFactory.getLogger(DSMServer.class);
 
+    private static final List<String> ALLOWED_ORIGINS = Arrays.asList("http://localhost:4200","https://dsm.datadonationplatform.org",
+            "https://dsm.dev.datadonationplatform.org","https://dsm.test.datadonationplatform.org",
+            "https://dsm.staging.datadonationplatform.org","https://dsm-dev.datadonationplatform.org",
+            "https://dsm-test.datadonationplatform.org","https://dsm-staging.datadonationplatform.org");
+
     private static final String API_ROOT = "/api/";
     private static final String UI_ROOT = "/ui/";
+
+    private static final String[] CORS_HTTP_METHODS = new String[] {"GET", "PUT", "POST", "OPTIONS", "PATCH"};
+    private static final String[] CORS_HTTP_HEADERS = new String[] {"Content-Type", "Authorization", "X-Requested-With",
+            "Content-Length", "Accept", "Origin", ""};
 
     public static final String ENCRYPTION_PATH = "encryptorGem";
     public static final String SCRIPT = "def decrypt(encryptedValue, key)\n" +
@@ -103,10 +116,24 @@ public class DSMServer extends BasicServer {
         logger.info("Property source: " + config.getString("portal.environment"));
         logger.info("Configuring the server...");
         threadPool(-1, -1, 30000);
-        logger.info("On port " + config.getInt("portal.port"));
-        port(config.getInt("portal.port"));
+        int port = config.getInt("portal.port");
+        String appEnginePort = System.getenv("PORT");
+
+        // if port is passed via env var, assume it's GAE and prefer this port
+        if (appEnginePort != null) {
+            port = Integer.parseInt(appEnginePort);
+        }
+
+        logger.info("Using port {}", port);
+        port(port);
         setupDB(config);
         setupRouting(config);
+        String preferredSourceIPHeader = null;
+        if (config.hasPath(ApplicationConfigConstants.PREFERRED_SOURCE_IP_HEADER)) {
+            preferredSourceIPHeader = config.getString(ApplicationConfigConstants.PREFERRED_SOURCE_IP_HEADER);
+        }
+        JettyConfig.setupJetty(preferredSourceIPHeader);
+        enableCORS(String.join(",", CORS_HTTP_METHODS), String.join(",", CORS_HTTP_HEADERS));
     }
 
     protected void setupCustomRouting(@NonNull Config cfg) {
@@ -658,4 +685,31 @@ public class DSMServer extends BasicServer {
         }
         return true;
     }
+
+
+    // todo  arz fixme read from config file
+    private static void enableCORS(String methods, String headers) {
+        Spark.options("/*", (request, response) -> {
+            String accessControlRequestHeaders = request.headers("Access-Control-Request-Headers");
+            if (accessControlRequestHeaders != null) {
+                response.header("Access-Control-Allow-Headers", accessControlRequestHeaders);
+            }
+
+            String accessControlRequestMethod = request.headers("Access-Control-Request-Method");
+            if (accessControlRequestMethod != null) {
+                response.header("Access-Control-Allow-Methods", accessControlRequestMethod);
+            }
+
+            return "OK";
+        });
+        Spark.before((request, response) -> {
+            String origin = request.headers("Origin");
+            response.header("Access-Control-Allow-Origin", ALLOWED_ORIGINS.contains(origin) ? origin :  "");
+            response.header("Access-Control-Request-Method", methods);
+            response.header("Access-Control-Allow-Headers", headers);
+            response.header("Access-Control-Allow-Credentials", "true");
+            response.type("application/json");
+        });
+    }
+
 }
