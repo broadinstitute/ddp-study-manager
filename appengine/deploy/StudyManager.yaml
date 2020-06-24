@@ -1,0 +1,15 @@
+service: study-manager-backend
+runtime: java11
+instance_class: B4
+
+manual_scaling:
+  instances: 1
+
+network:
+  instance_tag: study-manager
+
+entrypoint: java -cp dsm-backend-SNAPSHOT.jar -javaagent:tcell/tcellagent.jar -Xmx820m -Xmx820m -Dconfig.file=vault.conf org.broadinstitute.dsm.DSMServer
+
+env_variables:
+  TCELL_AGENT_HOST_IDENTIFIER: study-manager
+  TCELL_AGENT_CACHE_DIR: /tmp

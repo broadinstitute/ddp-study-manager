@@ -76,6 +76,8 @@ public class DSMServer extends BasicServer {
     private static Map<String, MBCInstitution> mbcInstitutions = new HashMap<>();
     private static Map<String, MBCHospital> mbcHospitals = new HashMap<>();
     private static Map<String, JsonElement> ddpConfigurationLookup = new HashMap<>();
+    private static final String VAULT_DOT_CONF = "vault.conf";
+    private static final String GAE_DEPLOY_DIR = "appengine/deploy";
 
     private static Auth0Util auth0Util;
 
@@ -83,30 +85,18 @@ public class DSMServer extends BasicServer {
         //config without secrets
         Config cfg = ConfigFactory.load();
         //secrets from vault in a config file
-        cfg = cfg.withFallback(ConfigFactory.parseFile(new File("config/vault.conf")));
+        File vaultConfigInCwd = new File(VAULT_DOT_CONF);
+        File vaultConfigInDeployDir = new File(GAE_DEPLOY_DIR, VAULT_DOT_CONF);
+        File vaultConfig = vaultConfigInCwd.exists()  ? vaultConfigInCwd : vaultConfigInDeployDir;
+        logger.info("Reading config values from "+vaultConfig.getAbsolutePath());
+        cfg = cfg.withFallback(ConfigFactory.parseFile(vaultConfig));
 
         if (StringUtils.isNotBlank(cfg.getString("portal.googleProjectCredentials"))) {
             System.setProperty("GOOGLE_APPLICATION_CREDENTIALS", cfg.getString("portal.googleProjectCredentials"));
         }
-
-        TransactionWrapper.configureSslProperties(cfg.getString("portal.dbSslKeyStore"),
-                cfg.getString("portal.dbSslKeyStorePwd"),
-                cfg.getString("portal.dbSslTrustStore"),
-                cfg.getString("portal.dbSslTrustStorePwd"));
         DSMServer server = new DSMServer();
+        server.configureServer(cfg);
 
-        File test = new File(cfg.getString("portal.dbSslTrustStore"));
-        if (test.exists()) {
-            logger.info("TrustStore does exist");
-            server.configureServer(cfg);
-
-            //            server.setupCustomDB(cfg);
-
-            logger.info("Server configuration complete.");
-        }
-        else {
-            logger.error("TrustStore does not exist");
-        }
     }
 
     protected void configureServer(@NonNull Config config) {
@@ -252,7 +242,7 @@ public class DSMServer extends BasicServer {
     protected void updateDB(@NonNull String dbUrl) {
         logger.info("Running DB update...");
 
-        try (Connection conn = DriverManager.getConnection(dbUrl + "&verifyServerCertificate=true&useSSL=true&requireSSL=true"
+        try (Connection conn = DriverManager.getConnection(dbUrl
                 + "&sessionVariables=innodb_strict_mode=on,tx_isolation='READ-COMMITTED',sql_mode='TRADITIONAL'")) {
             Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(conn));
 
