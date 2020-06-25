@@ -17,20 +17,13 @@
             <groupId>com.sparkjava</groupId>
             <artifactId>spark-core</artifactId>
             <version>2.8.0</version>
-            <exclusions>
-                <exclusion>
-                    <!-- this pom will declare the version of sparkjava -->
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>spark-core</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
 
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.18</version>
+            <version>8.0.20</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud.sql</groupId>
@@ -44,9 +37,9 @@
             <version>dsm_2.4_20190322a</version>
             <exclusions>
                 <exclusion>
-                    <!-- need this to to avoid http://www.slf4j.org/codes.html#multiple_bindings -->
+                    <!-- this pom will declare the version of sparkjava -->
                     <groupId>com.sparkjava</groupId>
-                    <artifactId>slf4j-simple</artifactId>
+                    <artifactId>spark-core</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -194,6 +187,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
+                    <finalName>DSMServer</finalName>
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
