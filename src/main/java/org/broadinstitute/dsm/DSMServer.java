@@ -14,8 +14,8 @@ import liquibase.resource.ClassLoaderResourceAccessor;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
+import org.apache.http.HttpStatus;
 import org.broadinstitute.ddp.BasicServer;
-import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.security.Auth0Util;
 import org.broadinstitute.ddp.security.CookieUtil;
 import org.broadinstitute.ddp.util.BasicTriggerListener;
@@ -48,6 +48,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static spark.Spark.*;
 
@@ -91,25 +92,28 @@ public class DSMServer extends BasicServer {
     private static Map<String, JsonElement> ddpConfigurationLookup = new HashMap<>();
     private static final String VAULT_DOT_CONF = "vault.conf";
     private static final String GAE_DEPLOY_DIR = "appengine/deploy";
+    private static AtomicBoolean isReady = new AtomicBoolean(false);
 
     private static Auth0Util auth0Util;
 
     public static void main(String[] args) {
-        //config without secrets
-        Config cfg = ConfigFactory.load();
-        //secrets from vault in a config file
-        File vaultConfigInCwd = new File(VAULT_DOT_CONF);
-        File vaultConfigInDeployDir = new File(GAE_DEPLOY_DIR, VAULT_DOT_CONF);
-        File vaultConfig = vaultConfigInCwd.exists()  ? vaultConfigInCwd : vaultConfigInDeployDir;
-        logger.info("Reading config values from "+vaultConfig.getAbsolutePath());
-        cfg = cfg.withFallback(ConfigFactory.parseFile(vaultConfig));
+        synchronized (isReady) {
+            //config without secrets
+            Config cfg = ConfigFactory.load();
+            //secrets from vault in a config file
+            File vaultConfigInCwd = new File(VAULT_DOT_CONF);
+            File vaultConfigInDeployDir = new File(GAE_DEPLOY_DIR, VAULT_DOT_CONF);
+            File vaultConfig = vaultConfigInCwd.exists()  ? vaultConfigInCwd : vaultConfigInDeployDir;
+            logger.info("Reading config values from "+vaultConfig.getAbsolutePath());
+            cfg = cfg.withFallback(ConfigFactory.parseFile(vaultConfig));
 
-        if (StringUtils.isNotBlank(cfg.getString("portal.googleProjectCredentials"))) {
-            System.setProperty("GOOGLE_APPLICATION_CREDENTIALS", cfg.getString("portal.googleProjectCredentials"));
+            if (StringUtils.isNotBlank(cfg.getString("portal.googleProjectCredentials"))) {
+                System.setProperty("GOOGLE_APPLICATION_CREDENTIALS", cfg.getString("portal.googleProjectCredentials"));
+            }
+            DSMServer server = new DSMServer();
+            server.configureServer(cfg);
+            isReady.set(true);
         }
-        DSMServer server = new DSMServer();
-        server.configureServer(cfg);
-
     }
 
     protected void configureServer(@NonNull Config config) {
@@ -126,6 +130,7 @@ public class DSMServer extends BasicServer {
 
         logger.info("Using port {}", port);
         port(port);
+        registerAppEngineStartupCallback();
         setupDB(config);
         setupRouting(config);
         String preferredSourceIPHeader = null;
@@ -134,6 +139,7 @@ public class DSMServer extends BasicServer {
         }
         JettyConfig.setupJetty(preferredSourceIPHeader);
         enableCORS(String.join(",", CORS_HTTP_METHODS), String.join(",", CORS_HTTP_HEADERS));
+        isReady.set(true);
     }
 
     protected void setupCustomRouting(@NonNull Config cfg) {
@@ -684,6 +690,20 @@ public class DSMServer extends BasicServer {
             return jsonElement.getAsJsonObject().get(ApplicationConfigConstants.TEST).getAsBoolean();
         }
         return true;
+    }
+
+    private static void registerAppEngineStartupCallback() {
+        get("/_ah/start",(req, res)-> {
+            synchronized (isReady)  {
+                int status = HttpStatus.SC_SERVICE_UNAVAILABLE;
+                if (isReady.get()) {
+                    status = HttpStatus.SC_OK;
+                }
+                logger.info("Responding to GAE startup route with {}", status);
+                res.status(status);
+                return "";
+            }
+        });
     }
 
 
