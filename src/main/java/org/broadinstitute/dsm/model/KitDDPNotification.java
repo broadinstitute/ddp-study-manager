@@ -49,7 +49,7 @@ public class KitDDPNotification {
     public static KitDDPNotification getKitDDPNotification(@NonNull String query, @NonNull String kitLabel) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            try (PreparedStatement stmt = conn.prepareStatement(query,ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY)) {
                 stmt.setString(1, kitLabel);
                 try (ResultSet rs = stmt.executeQuery()) {
                     rs.last();

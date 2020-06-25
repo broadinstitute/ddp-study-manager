@@ -300,7 +300,8 @@ public class KitDiscard {
         Map<Integer, String> users = UserUtil.getUserMap();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_KIT_OF_EXITED_PARTICIPANTS) + QueryExtension.DISCARD_KIT_BY_DISCARD_ID)) {
+            try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_KIT_OF_EXITED_PARTICIPANTS) + QueryExtension.DISCARD_KIT_BY_DISCARD_ID,
+                    ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY)) {
                 stmt.setString(1, kitDiscardId);
                 try (ResultSet rs = stmt.executeQuery()) {
                     rs.last();

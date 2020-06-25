@@ -37,7 +37,7 @@ public class DBUtil {
 
     public static Long getBookmark(Connection conn, String bookmarkName) {
         if (conn != null) {
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_BOOKMARK)) {
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_BOOKMARK,ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY)) {
                 stmt.setString(1, bookmarkName);
                 try (ResultSet rs = stmt.executeQuery()) {
                     rs.last();

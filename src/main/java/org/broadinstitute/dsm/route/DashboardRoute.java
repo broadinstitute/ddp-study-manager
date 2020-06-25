@@ -137,7 +137,7 @@ public class DashboardRoute extends RequestHandler {
                                          @NonNull String returnColumn) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            try (PreparedStatement stmt = conn.prepareStatement(query,ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY)) {
                 stmt.setString(1, realm);
                 stmt.setInt(2, kitType.getKitId());
                 try (ResultSet rs = stmt.executeQuery()) {
@@ -615,7 +615,8 @@ public class DashboardRoute extends RequestHandler {
                                                    @NonNull KitType kitType) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_DASHBOARD_INFORMATION_OF_KIT_REQUESTS))) {
+            try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_DASHBOARD_INFORMATION_OF_KIT_REQUESTS),
+                    ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY)) {
                 stmt.setString(1, realm);
                 stmt.setInt(2, kitType.getKitId());
                 stmt.setString(3, realm);

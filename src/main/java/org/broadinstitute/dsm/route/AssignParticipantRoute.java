@@ -211,7 +211,8 @@ public class AssignParticipantRoute extends RequestHandler {
     public String getDDPParticipantId(@NonNull String participantId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(queryForDDPParticipantId)) {
+            try (PreparedStatement stmt = conn.prepareStatement(queryForDDPParticipantId,
+                    ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY)) {
                 stmt.setString(1, participantId);
                 try (ResultSet rs = stmt.executeQuery()) {
                     rs.last();
