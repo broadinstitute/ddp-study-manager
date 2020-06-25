@@ -39,16 +39,22 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.KeyMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import spark.Request;
+import spark.Response;
+import spark.Route;
 import spark.Spark;
 
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static spark.Spark.*;
 
@@ -93,10 +99,12 @@ public class DSMServer extends BasicServer {
     private static final String VAULT_DOT_CONF = "vault.conf";
     private static final String GAE_DEPLOY_DIR = "appengine/deploy";
     private static AtomicBoolean isReady = new AtomicBoolean(false);
+    private static final Duration DEFAULT_BOOT_WAIT = Duration.ofMinutes(10);
 
     private static Auth0Util auth0Util;
 
     public static void main(String[] args) {
+        // immediately lock isReady so that ah/start route will wait
         synchronized (isReady) {
             //config without secrets
             Config cfg = ConfigFactory.load();
@@ -127,10 +135,15 @@ public class DSMServer extends BasicServer {
         if (appEnginePort != null) {
             port = Integer.parseInt(appEnginePort);
         }
+        long bootTimeoutSeconds = DEFAULT_BOOT_WAIT.getSeconds();
+        if (config.hasPath(ApplicationConfigConstants.BOOT_TIMEOUT)) {
+            bootTimeoutSeconds = config.getInt(ApplicationConfigConstants.BOOT_TIMEOUT);
+        }
+
 
         logger.info("Using port {}", port);
         port(port);
-        registerAppEngineStartupCallback();
+        registerAppEngineStartupCallback(bootTimeoutSeconds);
         setupDB(config);
         setupRouting(config);
         String preferredSourceIPHeader = null;
@@ -139,7 +152,6 @@ public class DSMServer extends BasicServer {
         }
         JettyConfig.setupJetty(preferredSourceIPHeader);
         enableCORS(String.join(",", CORS_HTTP_METHODS), String.join(",", CORS_HTTP_HEADERS));
-        isReady.set(true);
     }
 
     protected void setupCustomRouting(@NonNull Config cfg) {
@@ -692,20 +704,41 @@ public class DSMServer extends BasicServer {
         return true;
     }
 
-    private static void registerAppEngineStartupCallback() {
-        get("/_ah/start",(req, res)-> {
-            synchronized (isReady)  {
-                int status = HttpStatus.SC_SERVICE_UNAVAILABLE;
-                if (isReady.get()) {
-                    status = HttpStatus.SC_OK;
-                }
-                logger.info("Responding to GAE startup route with {}", status);
-                res.status(status);
-                return "";
-            }
-        });
+    private static void registerAppEngineStartupCallback(long bootTimeoutSeconds) {
+        // Block until isReady is available, with an optional timeout to prevent
+        // instance for sitting around too long in a nonresponsive state.  There is a
+        // judgement call to be made here to allow for lengthy liquibase migrations during boot.
+        logger.info("Will wait for at most {} seconds for boot before GAE termination", bootTimeoutSeconds);
+        get("/_ah/start",new ReadinessRoute(bootTimeoutSeconds));
     }
 
+    private static class ReadinessRoute implements Route {
+
+        private final long bootTimeoutSeconds;
+
+        public ReadinessRoute(long bootTimeoutSeconds) {
+            this.bootTimeoutSeconds = bootTimeoutSeconds;
+        }
+
+        @Override
+        public Object handle(Request req, Response res) throws Exception {
+            AtomicInteger status = new AtomicInteger(HttpStatus.SC_SERVICE_UNAVAILABLE);
+            long bootTime = Instant.now().toEpochMilli();
+            Thread waitForBoot = new Thread(() -> {
+                synchronized (isReady) {
+                    if (isReady.get()) {
+                        status.set(HttpStatus.SC_OK);
+                    }
+                }
+            });
+
+            waitForBoot.start();
+            waitForBoot.join(bootTimeoutSeconds * 1000);
+            logger.info("Responding to startup route after {}ms delay with {}", Instant.now().toEpochMilli() - bootTime, status.get());
+            res.status(status.get());
+            return "";
+        }
+    }
 
     // todo  arz fixme read from config file
     private static void enableCORS(String methods, String headers) {
