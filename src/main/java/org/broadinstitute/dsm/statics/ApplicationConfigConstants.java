@@ -122,5 +122,6 @@ public class ApplicationConfigConstants {
     public static final String GET_PARTICIPANTS_MBC = "mbc.selectParticipants";
 
     public static final String PREFERRED_SOURCE_IP_HEADER = "preferredSourceIPHeader";
+    public static final String BOOT_TIMEOUT = "bootTimeout";
 
 }
