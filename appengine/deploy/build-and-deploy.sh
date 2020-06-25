@@ -14,7 +14,7 @@ mvn -DskipTests clean install package -f ../../pom.xml
 rm -fr lib
 mkdir -p lib
 mvn -f ../../pom.xml dependency:copy-dependencies -DoutputDirectory=./appengine/deploy/lib
-cp ../../target/dsm-backend-SNAPSHOT.jar .
+cp ../../target/DSMServer.jar .
 
 echo "Downloading and configuring tcell"
 gsutil cat gs://ddp-tcell/tcell-1.11.0.tar.gz | tar -xf -
