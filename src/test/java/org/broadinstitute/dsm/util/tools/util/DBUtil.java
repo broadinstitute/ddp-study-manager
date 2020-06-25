@@ -49,7 +49,7 @@ public class DBUtil {
     }
 
     public static String checkNotReceived(Connection conn, String selectQuery, Object kitInfo, String returnColumn) throws Exception {
-        try (PreparedStatement stmt = conn.prepareStatement(selectQuery)) {
+        try (PreparedStatement stmt = conn.prepareStatement(selectQuery,ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY)) {
             stmt.setObject(1, kitInfo);
             try (ResultSet rs = stmt.executeQuery()) {
                 rs.last();

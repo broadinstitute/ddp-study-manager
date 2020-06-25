@@ -898,7 +898,7 @@ public class KitRequestShipping extends KitRequest {
 
     public static int getKitCounter(@NonNull Connection conn, String collaboratorSampleId, int kitTypeId) {
         String query = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_COUNT_KITS_WITH_SAME_COLLABORATOR_SAMPLE_ID_AND_KIT_TYPE).replace("%1", collaboratorSampleId);
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        try (PreparedStatement stmt = conn.prepareStatement(query,ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY)) {
             stmt.setInt(1, kitTypeId);
             try (ResultSet rs = stmt.executeQuery()) {
                 rs.last();
@@ -1114,7 +1114,8 @@ public class KitRequestShipping extends KitRequest {
     public static void reactivateKitRequest(@NonNull String kitRequestId, String message) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KIT + QueryExtension.KIT_DEACTIVATED)) {
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KIT + QueryExtension.KIT_DEACTIVATED,
+                    ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY)) {
                 stmt.setString(1, kitRequestId);
                 try (ResultSet rs = stmt.executeQuery()) {
                     rs.last();
