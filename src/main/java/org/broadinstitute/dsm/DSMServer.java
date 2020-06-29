@@ -39,6 +39,7 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.KeyMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import spark.Request;
 import spark.Response;
 import spark.Route;
@@ -162,6 +163,10 @@ public class DSMServer extends BasicServer {
         if (StringUtils.isBlank(bspSecret)) {
             throw new RuntimeException("No secret supplied for BSP endpoint, system exiting.");
         }
+
+        //  capture basic route info for logging
+        before("*", new LoggingFilter());
+        afterAfter((req, res)-> MDC.clear());
 
         before(API_ROOT + RoutePath.BSP_KIT_QUERY_PATH, (req, res) -> {
             if (!new JWTRouteFilter(bspSecret, null).isAccessAllowed(req)) {
