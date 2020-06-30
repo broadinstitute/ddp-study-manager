@@ -435,7 +435,8 @@ public class RouteTest extends TestHelper {
         //3 pf the pt in db are known to the mock server
         map.put("all", 3);
         map.put("status.ENROLLED", 3);
-        Assert.assertEquals(map, ddps.getDashboardValues());
+        Assert.assertEquals(map.get("all"), ddps.getDashboardValues().get("all"));
+        Assert.assertEquals(map.get("status.ENROLLED"), ddps.getDashboardValues().get("status.ENROLLED"));
 
         mrId = editMedicalRecord(TEST_DDP, "NEW_TEST_PARTICIPANT", "TEST_INSTITUTION", "m.followUpRequired", "1", "followup_required");
         String followupRequired = DBTestUtil.getQueryDetail("SELECT * from ddp_medical_record where medical_record_id = ? ", mrId, "followup_required");
