@@ -1,53 +1,32 @@
-# Backend of the DDP Sample Management App (DSM)
-
-This is our first DDP backend app with a well structured dependency on https://github.com/broadinstitute/ddp-backend-core
+# Backend of the DDP Study Management App (DSM)
 
 # Prerequisites
 1. [Maven 3](https://maven.apache.org/download.cgi)
-2. [JDK 8](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
+2. OpenJDK 11
+```
+brew tap homebrew/cask-versions
+brew cask install java11
+```
 
 # Setting up maven
-In addition to the usual public repos, we have an internal repo: [broad-internal artifactory](http://artifactory.broadinstitute.org).  This is where our DDP artifacts will live.
+In addition to the usual public repos, we use github package manager for the older lddp core dependency.
 
-To enable this repo, edit your `settings.xml` file so that it includes the following:
+To download this dependency, generate a github token and add it to your `~/.m2/settings.xml`:
 
 ````
 <settings>
-    <localRepository>${user.home}/.m3/repository</localRepository>
-
-    <profiles>
-      <profile>
-	<id>PERSONAL</id>
-	<repositories>
-	  <repository>
-            <id>broad-artifactory-release-local</id>
-            <name>artifactory-releases</name>
-            <url>http://artifactory.broadinstitute.org/artifactory/libs-release-local</url>
-	  </repository>
-	</repositories>
-      </profile>
-    </profiles>
-
-     <activeProfiles>
-        <activeProfile>PERSONAL</activeProfile>
-     </activeProfiles>
-
-     <servers>
+   ...
+   <servers>
        <server>
-	 <id>broad-artifactory-release-local</id>
-	 <username>[YOUR ARTIFACTORY USERNAME]</username>
-	 <password>[YOUR *encrypted* ARTIFACTORY PASSWORD]</password>
-	 </server>
+         <id>github</id>
+         <username>...github username...</username>
+         <password>...github token...</password>
+       </server>
      </servers>
-
+     ...
 </settings>
 
 ````
-
-#Artifactory setup
-To get your username and password for artifactory, get in touch with Zim or email help@broad and tell them you need access to the "ddp" group in artifactory.
-
-Once you've got an account, login to [artifactory](https://artifactory.broadinstitute.org), click on your username in the upper right corner, and copy the "encrypted password" field from the form into the `password` field in `settings.xml`.  **Remember: this is the _encrypted_ version of your password.**
 
 # Vault
 From within the top level directory, run the `render-templates.sh` script to generate `vault.conf`:
