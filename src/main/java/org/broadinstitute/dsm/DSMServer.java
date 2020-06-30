@@ -146,7 +146,8 @@ public class DSMServer extends BasicServer {
         port(port);
         registerAppEngineStartupCallback(bootTimeoutSeconds);
         setupDB(config);
-        setupRouting(config);
+        // don't run superclass routing--it won't work with JettyConfig changes for capturing proper IP address in GAE
+        setupCustomRouting(config);
         String preferredSourceIPHeader = null;
         if (config.hasPath(ApplicationConfigConstants.PREFERRED_SOURCE_IP_HEADER)) {
             preferredSourceIPHeader = config.getString(ApplicationConfigConstants.PREFERRED_SOURCE_IP_HEADER);
