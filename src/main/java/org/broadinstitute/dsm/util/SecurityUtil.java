@@ -59,7 +59,7 @@ public class SecurityUtil {
             long invalidAfter = 300 + (System.currentTimeMillis() / 1000);
             Map<String, String> claims = new HashMap<>();
             claims.put(CLAIM_ISSUER, SIGNER);
-            token = new SecurityHelper().createToken(secret, invalidAfter, claims);
+            token = SecurityHelper.createToken(secret, invalidAfter, claims);
         }
         if (StringUtils.isBlank(token)) {
             throw new RuntimeException("No token available for " + instanceName);
