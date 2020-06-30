@@ -119,6 +119,12 @@ public class DSMServer extends BasicServer {
             if (StringUtils.isNotBlank(cfg.getString("portal.googleProjectCredentials"))) {
                 System.setProperty("GOOGLE_APPLICATION_CREDENTIALS", cfg.getString("portal.googleProjectCredentials"));
             }
+
+            String preferredSourceIPHeader = null;
+            if (cfg.hasPath(ApplicationConfigConstants.PREFERRED_SOURCE_IP_HEADER)) {
+                preferredSourceIPHeader = cfg.getString(ApplicationConfigConstants.PREFERRED_SOURCE_IP_HEADER);
+            }
+            JettyConfig.setupJetty(preferredSourceIPHeader);
             DSMServer server = new DSMServer();
             server.configureServer(cfg);
             isReady.set(true);
@@ -144,14 +150,11 @@ public class DSMServer extends BasicServer {
 
         logger.info("Using port {}", port);
         port(port);
+
         registerAppEngineStartupCallback(bootTimeoutSeconds);
         setupDB(config);
-        setupRouting(config);
-        String preferredSourceIPHeader = null;
-        if (config.hasPath(ApplicationConfigConstants.PREFERRED_SOURCE_IP_HEADER)) {
-            preferredSourceIPHeader = config.getString(ApplicationConfigConstants.PREFERRED_SOURCE_IP_HEADER);
-        }
-        JettyConfig.setupJetty(preferredSourceIPHeader);
+        setupCustomRouting(config);
+
         enableCORS(String.join(",", CORS_HTTP_METHODS), String.join(",", CORS_HTTP_HEADERS));
     }
 
