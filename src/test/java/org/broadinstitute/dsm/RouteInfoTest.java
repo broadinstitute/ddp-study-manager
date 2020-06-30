@@ -96,7 +96,7 @@ public class RouteInfoTest extends TestHelper {
 
     @Test
     public void participantStatusParticipantNotFound() throws Exception {
-        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/info/" + "participantstatus/TESTSTUDY1/123", getHeaderAppRoute()).returnResponse();
+            HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/info/" + "participantstatus/TESTSTUDY1/123", getHeaderAppRoute()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
         String message = DDPRequestUtil.getContentAsString(response);
         Gson gson = new GsonBuilder().create();

@@ -36,11 +36,11 @@
             <artifactId>lddp</artifactId>
             <version>dsm_2.4_20190322a</version>
             <exclusions>
-                <exclusion>
-                    <!-- this pom will declare the version of sparkjava -->
-                    <groupId>com.sparkjava</groupId>
-                    <artifactId>spark-core</artifactId>
-                </exclusion>
+<!--                <exclusion>-->
+<!--                    &lt;!&ndash; this pom will declare the version of sparkjava &ndash;&gt;-->
+<!--                    <groupId>com.sparkjava</groupId>-->
+<!--                    <artifactId>spark-core</artifactId>-->
+<!--                </exclusion>-->
             </exclusions>
         </dependency>
 
