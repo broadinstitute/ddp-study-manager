@@ -27,7 +27,7 @@
 
         <dependency>
             <groupId>org.broadinstitute.ddp</groupId>
-            <artifactId>lddp-backend</artifactId>
+            <artifactId>lddp</artifactId>
             <version>dsm_2.4_20190322a</version>
         </dependency>
 
