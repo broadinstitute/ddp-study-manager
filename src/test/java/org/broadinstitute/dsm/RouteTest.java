@@ -557,7 +557,7 @@ public class RouteTest extends TestHelper {
         String[] realms = gson.fromJson(DDPRequestUtil.getContentAsString(response), String[].class);
         boolean foundAngio = false;
         for (String realm : realms) {
-            if (TEST_DDP.equals(realm)) {
+            if ("testDDP".equals(realm)) {
                 foundAngio = true;
             }
         }
