@@ -44,8 +44,8 @@ public class LoggingFilter implements Filter {
                     }
                 }
 
-            } catch (Exception e) {
-                logger.error("Could not decode token", e);
+            } catch (JWTDecodeException e) {
+                logger.debug("Could not decode token", e);
             }
         }
 
