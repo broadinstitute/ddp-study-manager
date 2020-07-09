@@ -21,6 +21,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -206,7 +207,7 @@ public class ViewFilter {
                                      @NonNull String ddpGroupId, @NonNull String columnString) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_VIEW)) {
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_VIEW, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, columnString);
                 stmt.setString(2, viewFilter.getFilterName());
                 stmt.setString(3, userId);
