@@ -22,4 +22,4 @@ gsutil cat gs://ddp-tcell/tcell-1.11.0.tar.gz | tar -xf -
 gcloud --project=${PROJECT_ID} secrets versions access latest --secret="study-manager-tcell" >  tcell/tcell_agent.config
 
 # deploy to gae
-gcloud app deploy -q --stop-previous-version --project ${PROJECT_ID} StudyManager.yaml
+gcloud app deploy -q --stop-previous-version --promote --project ${PROJECT_ID} StudyManager.yaml
