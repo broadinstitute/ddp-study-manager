@@ -95,6 +95,26 @@ public class RouteInfoTest extends TestHelper {
     }
 
     @Test
+    public void allKitsTestEmptyParticipantList() throws Exception {
+        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/info/batchKitsStatus/TESTSTUDY1"), "", testUtil.buildAuthHeaders()).returnResponse();
+        Assert.assertEquals(500, response.getStatusLine().getStatusCode());
+    }
+
+    @Test
+    public void allKitsTest() throws Exception {
+        DBTestUtil.createTestData(TEST_DDP, "TEST_PARTICIPANT_1", "TEST_INSTITUTION");
+        DBTestUtil.createTestData(TEST_DDP, "TEST_PARTICIPANT_2", "TEST_INSTITUTION");
+        DBTestUtil.createTestData(TEST_DDP, "TEST_PARTICIPANT_3", "TEST_INSTITUTION");
+
+        String json = "{" +
+                "\"participantIds\": \"[\\\"TEST_PARTICIPANT_1\\\", \\\"TEST_PARTICIPANT_2\\\",\\\"TEST_PARTICIPANT_3\\\"]\"" +
+                "}";
+
+        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/info/batchKitsStatus/testDDP"), json, testUtil.buildAuthHeaders()).returnResponse();
+        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+    }
+
+    @Test
     public void participantStatusParticipantNotFound() throws Exception {
         HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/info/" + "participantstatus/TESTSTUDY1/123", getHeaderAppRoute()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());

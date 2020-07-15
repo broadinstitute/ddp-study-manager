@@ -229,6 +229,8 @@ public class DSMServer extends BasicServer {
 
         get("/info/" + RoutePath.PARTICIPANT_STATUS_REQUEST, new ParticipantStatusRoute(), new JsonNullTransformer());
 
+        post("/info/" + RoutePath.ALL_KITS_REQUEST, new BatchKitsRoute(), new JsonNullTransformer());
+
         // requests from frontend
         before(UI_ROOT + "*", (req, res) -> {
             if (!"OPTIONS".equals(req.requestMethod())) {
