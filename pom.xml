@@ -27,10 +27,9 @@
 
         <dependency>
             <groupId>org.broadinstitute.ddp</groupId>
-            <artifactId>lddp</artifactId>
-            <version>dsm_2.4_20190322a</version>
+            <artifactId>ldd-backend</artifactId>
+            <version>dsm_2.4_20200713b</version>
         </dependency>
-
 
         <dependency>
             <groupId>mysql</groupId>

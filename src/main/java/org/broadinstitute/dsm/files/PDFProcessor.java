@@ -101,7 +101,10 @@ public abstract class PDFProcessor implements BasicProcessor {
     }
 
     public static byte[] getTemplateFromGoogleBucket(@NonNull String fileName) {
-        String gcpCreds = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_CREDENTIALS);
+        String gcpCreds = null;
+        if (TransactionWrapper.hasConfigPath(ApplicationConfigConstants.GOOGLE_PROJECT_CREDENTIALS)) {
+            gcpCreds = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_CREDENTIALS);
+        }
         String gcpName = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_NAME);
         if (StringUtils.isNotBlank(gcpCreds) && StringUtils.isNotBlank(gcpName)) {
             String bucketName = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_CONFIG_BUCKET);

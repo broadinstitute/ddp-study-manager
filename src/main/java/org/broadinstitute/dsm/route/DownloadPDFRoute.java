@@ -581,7 +581,14 @@ public class DownloadPDFRoute extends RequestHandler {
     }
 
     private void savePDFinBucket(@NonNull String realm, @NonNull String ddpParticipantId, @NonNull InputStream stream, @NonNull String fileType, @NonNull Integer userId) {
-        String gcpCreds = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_CREDENTIALS);
+        String gcpCreds = null;
+        try {
+            gcpCreds = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_CREDENTIALS);
+        } catch(RuntimeException e) {
+            if (!e.getMessage().toLowerCase().contains("conf is missing query named portal.googleprojectcredentials")) {
+                throw e;
+            }
+        }
         String gcpName = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_NAME);
         if (StringUtils.isNotBlank(gcpCreds) && StringUtils.isNotBlank(gcpName)) {
             String bucketName = gcpName + "_dsm_" + realm.toLowerCase();
@@ -594,6 +601,9 @@ public class DownloadPDFRoute extends RequestHandler {
                 }
             }
             catch (Exception e) {
+                if (StringUtils.isBlank(gcpCreds)) {
+                    logger.warn("No explicit google project credentials given; using ambient credentials.");
+                }
                 logger.error("Failed to check for GCP bucket " + bucketName, e);
             }
         }

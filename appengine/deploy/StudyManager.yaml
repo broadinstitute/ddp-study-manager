@@ -8,7 +8,7 @@ manual_scaling:
 network:
   instance_tag: study-manager
 
-entrypoint: java -jar DSMServer.jar -javaagent:tcell/tcellagent.jar -Xms820m -Xmx820m -Dlog4j.configurationFile=log4j.xml -Dconfig.file=vault.conf
+entrypoint: java -javaagent:tcell/tcellagent.jar -Xms820m -Xmx820m -Dlog4j.configurationFile=log4j.xml -jar DSMServer.jar
 
 env_variables:
   TCELL_AGENT_HOST_IDENTIFIER: study-manager
