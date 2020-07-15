@@ -229,7 +229,7 @@ public class DSMServer extends BasicServer {
 
         get("/info/" + RoutePath.PARTICIPANT_STATUS_REQUEST, new ParticipantStatusRoute(), new JsonNullTransformer());
 
-        post("/info/" + RoutePath.BATCH_KITS_REQUEST, new BatchKitsRoute(), new JsonNullTransformer());
+        post(appRoute + RoutePath.BATCH_KITS_REQUEST, new BatchKitsRoute(), new JsonNullTransformer());
 
         // requests from frontend
         before(UI_ROOT + "*", (req, res) -> {

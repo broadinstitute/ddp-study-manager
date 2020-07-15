@@ -110,13 +110,13 @@ public class RouteInfoTest extends TestHelper {
                 "\"participantIds\": \"[\\\"TEST_PARTICIPANT_1\\\", \\\"TEST_PARTICIPANT_2\\\",\\\"TEST_PARTICIPANT_3\\\"]\"" +
                 "}";
 
-        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/info/batchKitsStatus/testDDP"), json, testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/app/batchKitsStatus/testDDP"), json, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
     }
 
     @Test
     public void participantStatusParticipantNotFound() throws Exception {
-        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/info/" + "participantstatus/TESTSTUDY1/123", getHeaderAppRoute()).returnResponse();
+        HttpResponse response = TestUtil.performGet(DSM_BASE_URL, "/app/" + "participantstatus/TESTSTUDY1/123", getHeaderAppRoute()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
         String message = DDPRequestUtil.getContentAsString(response);
         Gson gson = new GsonBuilder().create();
