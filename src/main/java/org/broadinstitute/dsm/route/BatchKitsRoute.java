@@ -4,6 +4,9 @@ import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.model.ParticipantKits;
+import org.broadinstitute.dsm.model.ParticipantWrapper;
+import org.broadinstitute.dsm.model.ddp.DDPListOfParticipants;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.slf4j.Logger;
@@ -28,29 +31,29 @@ public class BatchKitsRoute implements Route {
         if (StringUtils.isNotBlank(study)) {
             HttpServletRequest rawRequest = request.raw();
             String content = SystemUtil.getBody(rawRequest);
-            ids = (String) (new Gson().fromJson(content, new HashMap<String, String[]>().getClass())).get("participantIds");
-            String[] ddpParticipantIds = new Gson().fromJson(ids, String[].class);
+            String[] ddpParticipantIds = new Gson().fromJson(content, DDPListOfParticipants.class).participantIds;
             DDPInstance ddpInstance = DDPInstance.getDDPInstance(study);
+            List<ParticipantKits> results = new ArrayList<>();
             if (ddpInstance != null) {
                 if (ddpParticipantIds != null && ddpParticipantIds.length != 0) {
                     Map<String, List<KitRequestShipping>> kitRequests = KitRequestShipping.getKitRequests(ddpInstance.getName());
-                    Map<String, List<KitRequestShipping>> results = new HashMap<>();
+
                     for (String ddpParticipantId : ddpParticipantIds) {
-                        results.put(ddpParticipantId, kitRequests.getOrDefault(ddpParticipantId, new ArrayList<KitRequestShipping>()));
+                        if (kitRequests.containsKey(ddpParticipantId)) {
+                            List<KitRequestShipping> samples = kitRequests.get(ddpParticipantId);
+                            results.add(new ParticipantKits(ddpParticipantId, samples));
+                        }
                     }
-                    logger.info("Sending a list of "+results.size()+" KitRequestShippings for study "+study);
+                    logger.info("Sending a list of " + results.size() + " KitRequestShippings for study " + study);
                     return results;
-                }
-                else {
-                    return null;
                 }
             }
             logger.error("No study found for: " + study);
             response.status(404);
-            return null;
+            return results;
         }
         logger.error("No value was sent for realm");
         response.status(500);
-        return null;
+        return new ArrayList<>();
     }
 }

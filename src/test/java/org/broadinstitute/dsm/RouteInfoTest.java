@@ -96,7 +96,7 @@ public class RouteInfoTest extends TestHelper {
 
     @Test
     public void allKitsTestEmptyParticipantList() throws Exception {
-        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/info/batchKitsStatus/TESTSTUDY1"), "", testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/app/batchKitsStatus/TESTSTUDY1"), "", testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(500, response.getStatusLine().getStatusCode());
     }
 
@@ -107,7 +107,7 @@ public class RouteInfoTest extends TestHelper {
         DBTestUtil.createTestData(TEST_DDP, "TEST_PARTICIPANT_3", "TEST_INSTITUTION");
 
         String json = "{" +
-                "\"participantIds\": \"[\\\"TEST_PARTICIPANT_1\\\", \\\"TEST_PARTICIPANT_2\\\",\\\"TEST_PARTICIPANT_3\\\"]\"" +
+                "\"participantIds\":[\"TEST_PARTICIPANT_1\", \"TEST_PARTICIPANT_2\",\"TEST_PARTICIPANT_3\"]" +
                 "}";
 
         HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/app/batchKitsStatus/testDDP"), json, testUtil.buildAuthHeaders()).returnResponse();
