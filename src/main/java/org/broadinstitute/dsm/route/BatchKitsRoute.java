@@ -13,6 +13,7 @@ import spark.Response;
 import spark.Route;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,7 @@ public class BatchKitsRoute implements Route {
                     Map<String, List<KitRequestShipping>> kitRequests = KitRequestShipping.getKitRequests(ddpInstance.getName());
                     Map<String, List<KitRequestShipping>> results = new HashMap<>();
                     for (String ddpParticipantId : ddpParticipantIds) {
-                        results.put(ddpParticipantId, kitRequests.get(ddpParticipantId));
+                        results.put(ddpParticipantId, kitRequests.getOrDefault(ddpParticipantId, new ArrayList<KitRequestShipping>()));
                     }
                     logger.info("Sending a list of "+results.size()+" KitRequestShippings for study "+study);
                     return results;
