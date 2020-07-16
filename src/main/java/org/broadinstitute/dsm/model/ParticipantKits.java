@@ -1,15 +1,16 @@
 package org.broadinstitute.dsm.model;
 
 import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.KitStatus;
 
 import java.util.List;
 
 public class ParticipantKits {
-    String particpantId;
-    List<KitRequestShipping> samples;
+    String participantId;
+    List<KitStatus> samples;
 
-    public ParticipantKits(String particpantId, List<KitRequestShipping> samples) {
-        this.particpantId = particpantId;
+    public ParticipantKits(String participantId, List<KitStatus> samples) {
+        this.participantId = participantId;
         this.samples = samples;
     }
 }

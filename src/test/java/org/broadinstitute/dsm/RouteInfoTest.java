@@ -107,10 +107,10 @@ public class RouteInfoTest extends TestHelper {
         DBTestUtil.createTestData(TEST_DDP, "TEST_PARTICIPANT_3", "TEST_INSTITUTION");
 
         String json = "{" +
-                "\"participantIds\":[\"TEST_PARTICIPANT_1\", \"TEST_PARTICIPANT_2\",\"TEST_PARTICIPANT_3\"]" +
+                "\"participantIds\":[\"-2104929193.692d24f5-c0eb-4155-865f-2b2fb9ba99fd\", \"-2104929193.692d24f5-c0eb-4155-865f-2b2fb9ba99fd\",\"-2104929193.692d24f5-c0eb-4155-865f-2b2fb9ba99fd\"]" +
                 "}";
 
-        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/app/batchKitsStatus/testDDP"), json, testUtil.buildAuthHeaders()).returnResponse();
+        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/app/batchKitsStatus/GEC"), json, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
     }
 

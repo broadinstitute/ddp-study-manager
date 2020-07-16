@@ -3,9 +3,8 @@ package org.broadinstitute.dsm.route;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.KitStatus;
 import org.broadinstitute.dsm.model.ParticipantKits;
-import org.broadinstitute.dsm.model.ParticipantWrapper;
 import org.broadinstitute.dsm.model.ddp.DDPListOfParticipants;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.util.SystemUtil;
@@ -17,7 +16,6 @@ import spark.Route;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,11 +34,11 @@ public class BatchKitsRoute implements Route {
             List<ParticipantKits> results = new ArrayList<>();
             if (ddpInstance != null) {
                 if (ddpParticipantIds != null && ddpParticipantIds.length != 0) {
-                    Map<String, List<KitRequestShipping>> kitRequests = KitRequestShipping.getKitRequests(ddpInstance.getName());
+                    Map<String, List<KitStatus>> kitRequests = KitStatus.getBatchOfSampleStatus(ddpInstance.getDdpInstanceId());
 
                     for (String ddpParticipantId : ddpParticipantIds) {
                         if (kitRequests.containsKey(ddpParticipantId)) {
-                            List<KitRequestShipping> samples = kitRequests.get(ddpParticipantId);
+                            List<KitStatus> samples = kitRequests.get(ddpParticipantId);
                             results.add(new ParticipantKits(ddpParticipantId, samples));
                         }
                     }
