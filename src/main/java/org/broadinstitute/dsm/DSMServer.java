@@ -92,6 +92,7 @@ public class DSMServer extends BasicServer {
     public static final String CONTAINER = "Container";
     public static final String RECEIVER = "Receiver";
     public static final String ADDITIONAL_CRON_EXPRESSION = "AdditionalCronExpression";
+    public static final String GCP_PATH_TO_SERVICE_ACCOUNT = "portal.googleProjectCredentials";
 
     private static Map<String, MBCParticipant> mbcParticipants = new HashMap<>();
     private static Map<String, MBCInstitution> mbcInstitutions = new HashMap<>();
@@ -107,6 +108,7 @@ public class DSMServer extends BasicServer {
     public static void main(String[] args) {
         // immediately lock isReady so that ah/start route will wait
         synchronized (isReady) {
+            logger.info("Starting up DSM");
             //config without secrets
             Config cfg = ConfigFactory.load();
             //secrets from vault in a config file
@@ -116,8 +118,10 @@ public class DSMServer extends BasicServer {
             logger.info("Reading config values from "+vaultConfig.getAbsolutePath());
             cfg = cfg.withFallback(ConfigFactory.parseFile(vaultConfig));
 
-            if (StringUtils.isNotBlank(cfg.getString("portal.googleProjectCredentials"))) {
-                System.setProperty("GOOGLE_APPLICATION_CREDENTIALS", cfg.getString("portal.googleProjectCredentials"));
+            if (cfg.hasPath(GCP_PATH_TO_SERVICE_ACCOUNT)) {
+                if (StringUtils.isNotBlank(cfg.getString("portal.googleProjectCredentials"))) {
+                    System.setProperty("GOOGLE_APPLICATION_CREDENTIALS", cfg.getString("portal.googleProjectCredentials"));
+                }
             }
 
             String preferredSourceIPHeader = null;
@@ -128,6 +132,7 @@ public class DSMServer extends BasicServer {
             DSMServer server = new DSMServer();
             server.configureServer(cfg);
             isReady.set(true);
+            logger.info("DSM Startup Complete");
         }
     }
 
