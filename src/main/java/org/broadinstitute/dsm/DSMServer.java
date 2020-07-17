@@ -327,6 +327,8 @@ public class DSMServer extends BasicServer {
         patch(UI_ROOT + RoutePath.DEACTIVATE_KIT_REQUEST, kitDeactivationRoute, new JsonTransformer());
         patch(UI_ROOT + RoutePath.ACTIVATE_KIT_REQUEST, kitDeactivationRoute, new JsonTransformer());
 
+        patch(UI_ROOT + RoutePath.AUTHORIZE_KIT, new KitAuthorizationRoute(), new JsonTransformer());
+
         KitExpressRoute kitExpressRoute = new KitExpressRoute(notificationUtil);
         get(UI_ROOT + RoutePath.EXPRESS_KIT_REQUEST, kitExpressRoute, new JsonTransformer());
         patch(UI_ROOT + RoutePath.EXPRESS_KIT_REQUEST, kitExpressRoute, new JsonTransformer());

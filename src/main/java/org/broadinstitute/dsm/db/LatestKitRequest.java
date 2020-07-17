@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.db;
 
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.DDPKitRequest;
@@ -74,10 +75,24 @@ public class LatestKitRequest {
                 try (ResultSet rs = bspStatement.executeQuery()) {
                     while (rs.next()) {
                         if (rs.getBoolean(DBConstants.HAS_ROLE)) {
+                            String latestKitRequestId = rs.getString(DBConstants.DDP_KIT_REQUEST_ID);
+                            String instanceName = rs.getString(DBConstants.INSTANCE_NAME);
+                            if (StringUtils.isNotBlank(latestKitRequestId)) {
+                                logger.info("Found latestKitRequestID " + latestKitRequestId + " via " + instanceName);
+                                if (latestKitRequestId.startsWith(DDPKitRequest.MIGRATED_KIT_REQUEST)) {
+                                    //change the DDPKitRequest back to null (normal behaviour without migration (otherwise DDP will throw 500))
+                                    latestKitRequestId = null;
+                                }
+                                else if (!latestKitRequestId.startsWith(DDPKitRequest.UPLOADED_KIT_REQUEST) && latestKitRequestId.contains("_")) {
+                                    //subkit -> ignore `_[SUB_COUNTER]`
+                                    latestKitRequestId = latestKitRequestId.split("_")[0];
+                                }
+                            }
+
                             LatestKitRequest latestKitRequest = new LatestKitRequest(
-                                    rs.getString(DBConstants.DDP_KIT_REQUEST_ID),
+                                    latestKitRequestId,
                                     rs.getString(DBConstants.DDP_INSTANCE_ID),
-                                    rs.getString(DBConstants.INSTANCE_NAME),
+                                    instanceName,
                                     rs.getString(DBConstants.BASE_URL),
                                     rs.getString(DBConstants.COLLABORATOR_ID_PREFIX),
                                     rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN),
@@ -85,13 +100,6 @@ public class LatestKitRequest {
                                     rs.getBoolean(DBConstants.HAS_THIRD_ROLE),
                                     rs.getBoolean(DBConstants.MIGRATED_DDP),
                                     rs.getString(DBConstants.ES_PARTICIPANT_INDEX));
-                            if (latestKitRequest.getLatestDDPKitRequestID() != null) {
-                                logger.info("Found latestKitRequestID " + latestKitRequest.getLatestDDPKitRequestID() + " via " + latestKitRequest.getInstanceName());
-                                if (latestKitRequest.getLatestDDPKitRequestID().startsWith(DDPKitRequest.MIGRATED_KIT_REQUEST)) {
-                                    //change the DDPKitRequest back to null (normal behaviour without migration (otherwise DDP will throw 500))
-                                    latestKitRequest.setLatestDDPKitRequestID(null);
-                                }
-                            }
                             latestKitRequests.add(latestKitRequest);
                         }
                     }
