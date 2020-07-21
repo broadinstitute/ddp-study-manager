@@ -2,9 +2,10 @@
 set -eu -o pipefail
 
 PROJECT_ID=$1
+CONFIG_SECRETS=$2
 
 echo "Reading configs from cloud secret manager"
-gcloud --project=${PROJECT_ID} secrets versions access latest --secret="study-manager-config" > vault.conf
+gcloud --project=${PROJECT_ID} secrets versions access latest --secret="${CONFIG_SECRETS}" > vault.conf
 
 #  run the build
 echo "Running maven"
