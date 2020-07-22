@@ -215,7 +215,7 @@ public class DownloadPDFRoute extends RequestHandler {
 
             if (ddpInstance != null && StringUtils.isNotBlank(ddpParticipantId)) {
                 if (COVER_PDF.equals(pdfType)) {
-                    logger.info("Generating cover pdf");
+                    logger.info("Generating cover pdf for onc history {}", StringUtils.join(oncHistoryIDs,","));
                     JSONObject jsonObject = new JSONObject(requestBody);
                     Set keySet = jsonObject.keySet();
                     String startDate = null;
@@ -296,7 +296,7 @@ public class DownloadPDFRoute extends RequestHandler {
                     }
                 }
                 else if (REQUEST_PDF.equals(pdfType)) {
-                    logger.info("Generating request pdf");
+                    logger.info("Generating request pdf for onc history ids {}", StringUtils.join(oncHistoryIDs, ","));
                     RequestPDFProcessor processor = new RequestPDFProcessor(ddpInstance.getName());
                     Map<String, Object> valueMap = new HashMap<>();
                     String today = new SimpleDateFormat("MM/dd/yyyy").format(new Date());
@@ -314,18 +314,20 @@ public class DownloadPDFRoute extends RequestHandler {
                     InputStream stream = null;
                     try {
                         int counter = 0;
-                        for (int i = 0; i < oncHistoryIDs.size(); i++) {
-                            OncHistoryDetail oncHistoryDetail = OncHistoryDetail.getOncHistoryDetail(oncHistoryIDs.get(i), realm);
-                            // facility information is the same in all of the requests so only need to be set ones!
-                            if (i == 0) {
-                                valueMap.put(RequestPDFProcessor.FIELD_CONFIRMED_INSTITUTION_NAME, oncHistoryDetail.getFacility());
-                                valueMap.put(RequestPDFProcessor.FIELD_CONFIRMED_PHONE, oncHistoryDetail.getFPhone());
-                                valueMap.put(RequestPDFProcessor.FIELD_CONFIRMED_FAX, oncHistoryDetail.getFFax());
+                        if (oncHistoryIDs != null) {
+                            for (int i = 0; i < oncHistoryIDs.size(); i++) {
+                                OncHistoryDetail oncHistoryDetail = OncHistoryDetail.getOncHistoryDetail(oncHistoryIDs.get(i), realm);
+                                // facility information is the same in all of the requests so only need to be set ones!
+                                if (i == 0) {
+                                    valueMap.put(RequestPDFProcessor.FIELD_CONFIRMED_INSTITUTION_NAME, oncHistoryDetail.getFacility());
+                                    valueMap.put(RequestPDFProcessor.FIELD_CONFIRMED_PHONE, oncHistoryDetail.getFPhone());
+                                    valueMap.put(RequestPDFProcessor.FIELD_CONFIRMED_FAX, oncHistoryDetail.getFFax());
+                                }
+                                valueMap.put(RequestPDFProcessor.FIELD_DATE_PX + i, oncHistoryDetail.getDatePX());
+                                valueMap.put(RequestPDFProcessor.FIELD_TYPE_LOCATION + i, oncHistoryDetail.getTypePX());
+                                valueMap.put(RequestPDFProcessor.FIELD_ACCESSION_NUMBER + i, oncHistoryDetail.getAccessionNumber());
+                                counter = i;
                             }
-                            valueMap.put(RequestPDFProcessor.FIELD_DATE_PX + i, oncHistoryDetail.getDatePX());
-                            valueMap.put(RequestPDFProcessor.FIELD_TYPE_LOCATION + i, oncHistoryDetail.getTypePX());
-                            valueMap.put(RequestPDFProcessor.FIELD_ACCESSION_NUMBER + i, oncHistoryDetail.getAccessionNumber());
-                            counter = i;
                         }
                         valueMap.put(RequestPDFProcessor.BLOCK_COUNTER, counter + 1);
 
