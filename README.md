@@ -53,6 +53,10 @@ To download this dependency, generate a github token and add it to your `~/.m2/s
      	</repositories>
          </profile>
        </profiles>
+       
+       ...
+       
+       
 </settings>
 
 ````
