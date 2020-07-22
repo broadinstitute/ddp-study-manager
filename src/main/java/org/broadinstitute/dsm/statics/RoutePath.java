@@ -37,6 +37,8 @@ public class RoutePath {
 
     public static final String PARTICIPANT_STATUS_REQUEST = "/participantstatus/" + RequestParameter.REALM + "/" + RequestParameter.PARTICIPANTID;
 
+    public static final String BATCH_KITS_REQUEST = "/batchKitsStatus/" + RequestParameter.REALM ;
+
     public static final String ROUTE_SEPARATOR = "/";
 
     //DSM UI - routes
