@@ -123,16 +123,16 @@ public class QuartzExternalShipperTest extends TestHelper {
 
         //upload kits for one type
         String csvContent = TestUtil.readFile("KitUploadPromise.txt");
-        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "kitUpload?realm=" + DDP_PROMISE + "&kitType=SUB_KITS&userId=1"), csvContent, testUtil.buildAuthHeaders()).returnResponse();
-        Assert.assertEquals(200, response.getStatusLine().getStatusCode());
+        HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "kitUpload?realm=" + "testBoston" + "&kitType=TESTBOSTON&userId=26"), csvContent, testUtil.buildAuthHeaders()).returnResponse();
+        Assert. assertEquals(200, response.getStatusLine().getStatusCode());
 
         // check that kit is in db
         Assert.assertTrue(DBTestUtil.checkIfValueExists(CHECK_EXTERNAL_SHIPPER_REQUEST, "00004"));
         Assert.assertTrue(DBTestUtil.checkIfValueExists(CHECK_EXTERNAL_SHIPPER_REQUEST, "00003"));
 
         // check that it made 3 kits
-        Assert.assertEquals("3", DBTestUtil.getQueryDetail(CHECK_EXTERNAL_SHIPPER_REQUEST_COUNT, "00004", "count(*)"));
-        Assert.assertEquals("3", DBTestUtil.getQueryDetail(CHECK_EXTERNAL_SHIPPER_REQUEST_COUNT, "00003", "count(*)"));
+        Assert.assertEquals("2", DBTestUtil.getQueryDetail(CHECK_EXTERNAL_SHIPPER_REQUEST_COUNT, "00004", "count(*)"));
+        Assert.assertEquals("2", DBTestUtil.getQueryDetail(CHECK_EXTERNAL_SHIPPER_REQUEST_COUNT, "00003", "count(*)"));
     }
 
     public static void createJob(Scheduler scheduler) throws Exception {
