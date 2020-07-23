@@ -773,7 +773,7 @@ public class DSMServer extends BasicServer {
         });
         Spark.before((request, response) -> {
             String origin = request.headers("Origin");
-            response.header("Access-Control-Allow-Origin", allowedOrigins.contains(origin) ? origin :  "");
+            response.header("Access-Control-Allow-Origin", ( StringUtils.isNotBlank(origin) && allowedOrigins.contains(origin) )? origin :  "");
             response.header("Access-Control-Request-Method", methods);
             response.header("Access-Control-Allow-Headers", headers);
             response.header("Access-Control-Allow-Credentials", "true");
