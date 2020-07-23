@@ -16,7 +16,15 @@ To download this dependency, generate a github token and add it to your `~/.m2/s
 
 ````
 <settings>
+   
    ...
+   
+    <activeProfiles>
+       <activeProfile>github</activeProfile>
+     </activeProfiles>
+   
+   ...
+   
    <servers>
        <server>
          <id>github</id>
@@ -24,7 +32,31 @@ To download this dependency, generate a github token and add it to your `~/.m2/s
          <password>...github token...</password>
        </server>
      </servers>
+     
      ...
+     
+     <profiles>
+         <profile>
+           <id>github</id>
+           <repositories>
+             <repository>
+               <id>central</id>
+               <url>https://repo1.maven.org/maven2</url>
+               <releases><enabled>true</enabled></releases>
+               <snapshots><enabled>true</enabled></snapshots>
+             </repository>
+             <repository>
+               <id>github</id>
+               <name>GitHub OWNER Apache Maven Packages</name>
+               <url>https://maven.pkg.github.com/broadinstitute/ddp-study-manager</url>
+               </repository>
+     	</repositories>
+         </profile>
+       </profiles>
+       
+       ...
+       
+       
 </settings>
 
 ````
