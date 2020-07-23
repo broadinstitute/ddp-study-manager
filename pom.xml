@@ -25,11 +25,11 @@
             </exclusions>
         </dependency>
 
-        <dependency>
-            <groupId>org.broadinstitute.ddp</groupId>
-            <artifactId>ldd-backend</artifactId>
-            <version>dsm_2.4_20200713b</version>
-        </dependency>
+            <dependency>
+                <groupId>org.broadinstitute.ddp</groupId>
+                <artifactId>ldd-backend</artifactId>
+                <version>dsm_2.4_20200717</version>
+            </dependency>
 
         <dependency>
             <groupId>mysql</groupId>
@@ -153,6 +153,7 @@
             <artifactId>jetty-servlets</artifactId>
             <version>9.4.28.v20200408</version>
         </dependency>
+
         <dependency>
             <groupId>xml-apis</groupId>
             <artifactId>xml-apis</artifactId>
@@ -192,6 +193,13 @@
             <artifactId>jaxb-runtime</artifactId>
             <version>2.3.2</version>
         </dependency>
+
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>
