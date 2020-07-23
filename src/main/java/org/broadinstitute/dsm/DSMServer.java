@@ -203,6 +203,8 @@ public class DSMServer extends BasicServer {
         get(appRoute + RoutePath.DRUG_LIST_REQUEST, drugRoute, new JsonTransformer());
         get(UI_ROOT + RoutePath.DRUG_LIST_REQUEST, drugRoute, new JsonTransformer());
 
+        post(appRoute + RoutePath.BATCH_KITS_REQUEST, new BatchKitsRoute(), new JsonTransformer());
+
         CancerRoute cancerRoute = new CancerRoute();
         get(appRoute + RoutePath.CANCER_LIST_REQUEST, cancerRoute, new JsonTransformer());
         get(UI_ROOT + RoutePath.CANCER_LIST_REQUEST, cancerRoute, new JsonTransformer());
@@ -230,7 +232,7 @@ public class DSMServer extends BasicServer {
 
         get("/info/" + RoutePath.PARTICIPANT_STATUS_REQUEST, new ParticipantStatusRoute(), new JsonNullTransformer());
 
-        post(appRoute + RoutePath.BATCH_KITS_REQUEST, new BatchKitsRoute(), new JsonNullTransformer());
+
 
         // requests from frontend
         before(UI_ROOT + "*", (req, res) -> {
@@ -771,7 +773,7 @@ public class DSMServer extends BasicServer {
         });
         Spark.before((request, response) -> {
             String origin = request.headers("Origin");
-            response.header("Access-Control-Allow-Origin", allowedOrigins.contains(origin) ? origin :  "");
+            response.header("Access-Control-Allow-Origin", ( StringUtils.isNotBlank(origin) && allowedOrigins.contains(origin) )? origin :  "");
             response.header("Access-Control-Request-Method", methods);
             response.header("Access-Control-Allow-Headers", headers);
             response.header("Access-Control-Allow-Credentials", "true");

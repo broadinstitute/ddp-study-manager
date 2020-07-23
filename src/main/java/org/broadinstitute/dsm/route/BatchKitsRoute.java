@@ -42,9 +42,10 @@ public class BatchKitsRoute implements Route {
                             results.add(new ParticipantKits(ddpParticipantId, samples));
                         }
                     }
-                    logger.info("Sending a list of " + results.size() + " KitRequestShippings for study " + study);
-                    return results;
+
                 }
+                logger.info("Sending a list of " + results.size() + " kit status for batch of participants for study " + study);
+                return results;
             }
             logger.error("No study found for: " + study);
             response.status(404);
