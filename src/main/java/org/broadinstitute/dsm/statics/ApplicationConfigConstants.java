@@ -125,4 +125,12 @@ public class ApplicationConfigConstants {
     public static final String BOOT_TIMEOUT = "bootTimeout";
 
     public static final String CORS_ALLOWED_ORIGINS = "corsOrigins";
+
+    public static final String CARE_EVOLVE_ACCOUNT ="careEvolve.account";
+
+    public static final String CARE_EVOLVE_SUBSCRIBER_KEY = "careEvolve.subscriberKey";
+
+    public static final String CARE_EVOLVE_SERVICE_KEY = "careEvolve.serviceKey";
+
+    public static final String CARE_EVOLVE_ORDER_ENDPOINT = "careEvolve.orderEndpoint";
 }

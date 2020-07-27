@@ -69,7 +69,18 @@ To read secrets for a specific environment:
 gcloud --project=${PROJECT_ID} secrets versions access latest --secret="${CONFIG_SECRETS}" > config/vault.conf
 ```
 This will put `vault.conf` into the `config` dir.  `DSMServer` will look at `conf/vault.conf` at boot time.  **Do not
-commit any generated vault.conf files!**
+commit any generated .conf files!**
+
+To seed configuration values for local development, run `render-testing-configs.sh`.   This will put
+various `*.conf` files into the `/config` dir.  **Do not commit any generated .conf files!**
+
+# Running Tests
+Point your test configuration at the `test-log4j.xml` file and set the fallback config file:
+
+```
+export TEST_CONFIG_FILE=config/test-config.conf
+java -Dlog4j.configuration=test-log4j.xml ...
+```
 
 
 # Getting something up and running
