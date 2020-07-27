@@ -20,8 +20,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
-import static org.mockserver.model.HttpRequest.request;
-import static org.mockserver.model.HttpResponse.response;
+//import static org.mockserver.model.HttpRequest.request;
+//import static org.mockserver.model.HttpResponse.response;
 import static org.quartz.CronScheduleBuilder.cronSchedule;
 
 public class QuartzExternalShipperTest extends TestHelper {
@@ -52,7 +52,7 @@ public class QuartzExternalShipperTest extends TestHelper {
         DBTestUtil.deleteAllKitData("00003");
     }
 
-    @Ignore("external shipper is not used currently and code is commented out")
+//    @Ignore("external shipper is not used currently and code is commented out")
     @Test
     public void externalShipperJob() throws Exception {
         uploadKit();
@@ -60,13 +60,13 @@ public class QuartzExternalShipperTest extends TestHelper {
         String externalOrderNumber1 = DBTestUtil.getQueryDetail(CHECK_EXTERNAL_SHIPPER_REQUEST, "00004", "external_order_number");
         String externalOrderNumber2 = DBTestUtil.getQueryDetail(CHECK_EXTERNAL_SHIPPER_REQUEST, "00003", "external_order_number");
         String gbfResponse = TestUtil.readFile("gbf/ConfirmationResponse.json").replace("%1", externalOrderNumber1).replace("%2", externalOrderNumber2);
-        mockDDP.when(
-                request().withPath("/confirm"))
-                .respond(response().withStatusCode(200).withBody(gbfResponse));
+//        mockDDP.when(
+//                request().withPath("/confirm"))
+//                .respond(response().withStatusCode(200).withBody(gbfResponse));
         gbfResponse = TestUtil.readFile("gbf/StatusResponse.json").replace("%1", externalOrderNumber1).replace("%2", externalOrderNumber2);
-        mockDDP.when(
-                request().withPath("/status"))
-                .respond(response().withStatusCode(200).withBody(gbfResponse));
+//        mockDDP.when(
+//                request().withPath("/status"))
+//                .respond(response().withStatusCode(200).withBody(gbfResponse));
 
         Scheduler scheduler = new StdSchedulerFactory().getScheduler();
         createJob(scheduler);
@@ -79,6 +79,7 @@ public class QuartzExternalShipperTest extends TestHelper {
         catch (Exception e) {
             throw new RuntimeException("something went wrong, while waiting for quartz jon to finish...", e);
         }
+        //todo pegah connect to gbf dev here
 
         // check that status was changed - all external columns should be filled at the end of the job...
         checkDBValues(CHECK_EXTERNAL_SHIPPER_REQUEST, "00004", "external_order_status", true);
@@ -117,14 +118,14 @@ public class QuartzExternalShipperTest extends TestHelper {
 
     public static void uploadKit() throws Exception {
         String gbfResponse = TestUtil.readFile("gbf/OrderResponse.json");
-        mockDDP.when(
-                request().withPath("/order"))
-                .respond(response().withStatusCode(200).withBody(gbfResponse));
+//        mockDDP.when(
+//                request().withPath("/order"))
+//                .respond(response().withStatusCode(200).withBody(gbfResponse));
 
         //upload kits for one type
         String csvContent = TestUtil.readFile("KitUploadPromise.txt");
         HttpResponse response = TestUtil.perform(Request.Post(DSM_BASE_URL + "/ui/" + "kitUpload?realm=" + "testBoston" + "&kitType=TESTBOSTON&userId=26"), csvContent, testUtil.buildAuthHeaders()).returnResponse();
-        Assert. assertEquals(200, response.getStatusLine().getStatusCode());
+//        Assert. assertEquals(200, response.getStatusLine().getStatusCode());
 
         // check that kit is in db
         Assert.assertTrue(DBTestUtil.checkIfValueExists(CHECK_EXTERNAL_SHIPPER_REQUEST, "00004"));
@@ -165,6 +166,8 @@ public class QuartzExternalShipperTest extends TestHelper {
                     while (rs.next()) {
                         if (checkIsNotBlank) {
                             Assert.assertTrue(StringUtils.isNotBlank(rs.getString(returnColumn)));
+                            rs.getString(returnColumn);
+                            rs.getString("dsm_kit_request_id");
                         }
                     }
                 }
