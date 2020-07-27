@@ -87,7 +87,6 @@ public class TestHelper {
     }
 
     public static void setupDB(boolean setupDDPConfigLookup) {
-        cfg = ConfigFactory.load();
         //secrets from vault in a config file
         cfg = cfg.withFallback(ConfigFactory.parseFile(new File("config/test-config.conf")));
 
