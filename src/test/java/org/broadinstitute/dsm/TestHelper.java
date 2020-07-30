@@ -95,13 +95,6 @@ public class TestHelper {
         cfg = cfg.withValue("portal.port", ConfigValueFactory.fromAnyRef("9999"));
         cfg = cfg.withValue("errorAlert.recipientAddress", ConfigValueFactory.fromAnyRef(""));
 
-        if (!cfg.getString("portal.environment").startsWith("Local")) {
-            throw new RuntimeException("Not local environment");
-        }
-
-        if (!cfg.getString("portal.dbUrl").contains("local")) {
-            throw new RuntimeException("Not your test db");
-        }
 
         TransactionWrapper.configureSslProperties(cfg.getString("portal.dbSslKeyStore"),
                 cfg.getString("portal.dbSslKeyStorePwd"),

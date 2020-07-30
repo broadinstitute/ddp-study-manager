@@ -1,6 +1,9 @@
 package org.broadinstitute.dsm.careevolve;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -11,7 +14,11 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
 import org.apache.http.util.EntityUtils;
+import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.exception.CareEvolveException;
+import org.broadinstitute.dsm.model.ParticipantWrapper;
+import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +37,29 @@ public class Covid19OrderRegistrar {
      */
     public Covid19OrderRegistrar(String endpoint) {
         this.endpoint = endpoint;
+    }
+
+    public void orderTest(String participantId) {
+
+        DDPInstance instance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
+
+        Map<String, String> queryConditions = new HashMap<>();
+        queryConditions.put("p", " AND p.ddp_participant_id = '" + participantId + "'");
+        queryConditions.put("ES", ElasticSearchUtil.BY_GUID + participantId);
+        List<ParticipantWrapper> participants = ParticipantWrapper.getFilteredList(instance, queryConditions);
+//participants.iterator().next().getData().get("profile")
+        //participants.iterator().next().getKits().iterator().next().getDsmKitId()
+
+        String userGuid = ((Map)participants.iterator().next().getData().get("profile")).get("guid").toString();
+        // how  to sort kit?
+        if (participants.size() == 1) {
+            ParticipantWrapper participantWrapper = participants.iterator().next();
+            Map<String, Object> participantData = participantWrapper.getData();
+
+            for (Map.Entry<String, Object> participantKeyValue : participantData.entrySet()) {
+                logger.info(participantKeyValue.getKey()  + "="  + participantKeyValue.getValue());
+            }
+        }
     }
 
     /**
