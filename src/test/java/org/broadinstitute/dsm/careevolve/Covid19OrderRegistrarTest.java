@@ -89,7 +89,7 @@ public class Covid19OrderRegistrarTest {
     public void testOrdereForParticipant() throws Exception {
         Covid19OrderRegistrar orderRegistrar = new Covid19OrderRegistrar(careEvolveOrderEndpoint);
 
-        orderRegistrar.orderTest("X2LDCNFX16KUYX5Y74LW");
+        orderRegistrar.orderTest("PKDG8J");
 
     }
 }
