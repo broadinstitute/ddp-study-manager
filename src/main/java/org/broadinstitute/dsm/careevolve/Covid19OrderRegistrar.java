@@ -39,13 +39,12 @@ public class Covid19OrderRegistrar {
         this.endpoint = endpoint;
     }
 
-    public void orderTest(String participantId) {
+    public void orderTest(String hruid) {
 
         DDPInstance instance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
 
         Map<String, String> queryConditions = new HashMap<>();
-        queryConditions.put("p", " AND p.ddp_participant_id = '" + participantId + "'");
-        queryConditions.put("ES", ElasticSearchUtil.BY_GUID + participantId);
+        queryConditions.put("ES", " AND profile.hruid = '" + hruid +"'");
         List<ParticipantWrapper> participants = ParticipantWrapper.getFilteredList(instance, queryConditions);
 //participants.iterator().next().getData().get("profile")
         //participants.iterator().next().getKits().iterator().next().getDsmKitId()
