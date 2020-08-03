@@ -7,6 +7,7 @@ import com.typesafe.config.ConfigFactory;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.slf4j.Logger;
@@ -47,6 +48,7 @@ public class Covid19OrderRegistrarTest {
                 cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_NPI));
     }
 
+    @Ignore
     @Test
     public void testOrderForParticipant() throws Exception {
         Covid19OrderRegistrar orderRegistrar = new Covid19OrderRegistrar(careEvolveOrderEndpoint, careEvolveAccount, provider);
