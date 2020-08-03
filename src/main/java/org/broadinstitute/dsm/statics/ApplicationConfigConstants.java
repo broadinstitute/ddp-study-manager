@@ -133,4 +133,7 @@ public class ApplicationConfigConstants {
     public static final String CARE_EVOLVE_SERVICE_KEY = "careEvolve.serviceKey";
 
     public static final String CARE_EVOLVE_ORDER_ENDPOINT = "careEvolve.orderEndpoint";
+    public static final String CARE_EVOLVE_PROVIDER_FIRSTNAME = "careEvolve.provider.firstName";
+    public static final String CARE_EVOLVE_PROVIDER_LAST_NAME = "careEvolve.provider.lastName";
+    public static final String CARE_EVOLVE_PROVIDER_NPI = "careEvolve.provider.NPI";
 }
