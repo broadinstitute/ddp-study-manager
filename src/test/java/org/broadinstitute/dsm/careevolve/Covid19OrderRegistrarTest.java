@@ -1,16 +1,11 @@
 package org.broadinstitute.dsm.careevolve;
 
 import java.io.File;
-import java.util.List;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -30,6 +25,8 @@ public class Covid19OrderRegistrarTest {
 
     private static Config cfg;
 
+    private static Provider provider;
+
     @BeforeClass
     public static void beforeClass() throws Exception {
         cfg = ConfigFactory.load();
@@ -44,11 +41,15 @@ public class Covid19OrderRegistrarTest {
         String careEvolveServiceKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SERVICE_KEY);
         careEvolveOrderEndpoint = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_ORDER_ENDPOINT);
         auth = new Authentication(careEvolveSubscriberKey, careEvolveServiceKey);
+        // todo arz add  provider to SM
+        provider = new Provider(cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_FIRSTNAME),
+                cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_LAST_NAME),
+                cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_NPI));
     }
 
     @Test
     public void testOrderForParticipant() throws Exception {
-        Covid19OrderRegistrar orderRegistrar = new Covid19OrderRegistrar(careEvolveOrderEndpoint, careEvolveAccount);
+        Covid19OrderRegistrar orderRegistrar = new Covid19OrderRegistrar(careEvolveOrderEndpoint, careEvolveAccount, provider);
 
         orderRegistrar.orderTest(auth,"PKDG8J","GBF1213","kit124");
 

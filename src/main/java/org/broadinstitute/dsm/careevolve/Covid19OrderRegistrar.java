@@ -8,6 +8,7 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Request;
@@ -32,15 +33,28 @@ public class Covid19OrderRegistrar {
 
     private final String careEvolveAccount;
 
+    private final Provider provider;
+
     /**
      * Create a new one that uses the given endpoint
      * for placing orders
      */
-    public Covid19OrderRegistrar(String endpoint, String careEvolveAccount) {
+    public Covid19OrderRegistrar(String endpoint,
+                                 String careEvolveAccount,
+                                 Provider provider) {
         this.endpoint = endpoint;
         this.careEvolveAccount  = careEvolveAccount;
+        this.provider = provider;
     }
 
+    /**
+     * Places an order in CareEvolve
+     * @param auth the API credentials
+     * @param participantHruid hruid for the participant
+     * @param kitLabel The label on the swab.  Corresponds to ORC-2 and GP sample_id
+     * @param kitId an identifier that will show up in Birch to help
+     *              associate the result back to the proper kit
+     */
     public OrderResponse orderTest(Authentication auth,String participantHruid, String kitLabel,
                                    String kitId) throws CareEvolveException {
 
@@ -65,20 +79,26 @@ public class Covid19OrderRegistrar {
 
                     String firstName = profile.get("firstName");
                     String lastName = profile.get("lastName");
-                    // todo move provider to config file
-                    Provider provider = new Provider("Lisa", "Cosimi", "1154436111");
 
                     List<AOE> aoes = AOE.forTestBoston(null, kitId);
+
+                    // todo arz add dob/race/ethnicity when available
                     Patient testPatient = new Patient(patientId, firstName, lastName, "1901-01-01", "Other", "Other",
                             "other", careEvolveAddress);
 
                     Message message = new Message(new Order(careEvolveAccount, testPatient, kitLabel,provider, aoes), kitId);
 
+                    OrderResponse orderResponse = null;
                     try {
-                        return orderTest(auth, message);
+                        orderResponse = orderTest(auth, message);
                     } catch (IOException e) {
                         throw new CareEvolveException("Could not order test for " + patientId, e);
                     }
+
+                    if (StringUtils.isNotBlank(orderResponse.getError())) {
+                        throw new CareEvolveException("Order for participant " + participantHruid + " with handle  "+ orderResponse.getHandle() + " placed with error " + orderResponse.getError());
+                    }
+                    return orderResponse;
                 } else {
                     throw new CareEvolveException("No address for " + participantHruid + ".  Cannot register order.");
                 }
