@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.careevolve;
 
 import com.google.gson.annotations.SerializedName;
+import org.apache.commons.lang3.StringUtils;
 
 public class Address {
 
@@ -21,7 +22,9 @@ public class Address {
 
     public Address(String line1, String line2, String city, String state, String zipCode) {
         this.line1 = line1;
-        this.line2 = line2;
+        if (StringUtils.isNotBlank(line2)) {
+            this.line2 = line2;
+        }
         this.city = city;
         this.state = state;
         this.zipCode = zipCode;

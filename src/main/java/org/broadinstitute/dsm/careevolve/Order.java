@@ -24,19 +24,20 @@ public class Order {
      * be scanned into Mercury during accessioning
      */
     @SerializedName("OrderId")
-    private String orderId;
+    private String kitLabel;
 
     @SerializedName("CareEvolveAccount")
     private String account;
 
-    public Order(String account, Patient patient, Provider provider, List<AOE> aoes) {
+    public Order(String account, Patient patient, String kitLabel,Provider provider, List<AOE> aoes) {
         this.account = account;
         this.provider = provider;
         this.aoes = aoes;
         this.patient = patient;
+        this.kitLabel = kitLabel;
     }
 
     public String getOrderId() {
-        return orderId;
+        return kitLabel;
     }
 }
