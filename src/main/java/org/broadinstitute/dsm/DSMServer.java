@@ -66,11 +66,6 @@ public class DSMServer extends BasicServer {
 
     private static final Logger logger = LoggerFactory.getLogger(DSMServer.class);
 
-    private static final List<String> ALLOWED_ORIGINS = Arrays.asList("http://localhost:4200","https://dsm.datadonationplatform.org",
-            "https://dsm.dev.datadonationplatform.org","https://dsm.test.datadonationplatform.org",
-            "https://dsm.staging.datadonationplatform.org","https://dsm-dev.datadonationplatform.org",
-            "https://dsm-test.datadonationplatform.org","https://dsm-staging.datadonationplatform.org");
-
     private static final String API_ROOT = "/api/";
     private static final String UI_ROOT = "/ui/";
 
@@ -161,7 +156,8 @@ public class DSMServer extends BasicServer {
         // don't run superclass routing--it won't work with JettyConfig changes for capturing proper IP address in GAE
         setupCustomRouting(config);
 
-        enableCORS(String.join(",", CORS_HTTP_METHODS), String.join(",", CORS_HTTP_HEADERS));
+        List<String> allowedOrigins = config.getStringList(ApplicationConfigConstants.CORS_ALLOWED_ORIGINS);
+        enableCORS(StringUtils.join(allowedOrigins, ","), String.join(",", CORS_HTTP_METHODS), String.join(",", CORS_HTTP_HEADERS));
     }
 
     protected void setupCustomRouting(@NonNull Config cfg) {
@@ -207,6 +203,8 @@ public class DSMServer extends BasicServer {
         get(appRoute + RoutePath.DRUG_LIST_REQUEST, drugRoute, new JsonTransformer());
         get(UI_ROOT + RoutePath.DRUG_LIST_REQUEST, drugRoute, new JsonTransformer());
 
+        post(appRoute + RoutePath.BATCH_KITS_REQUEST, new BatchKitsRoute(), new JsonTransformer());
+
         CancerRoute cancerRoute = new CancerRoute();
         get(appRoute + RoutePath.CANCER_LIST_REQUEST, cancerRoute, new JsonTransformer());
         get(UI_ROOT + RoutePath.CANCER_LIST_REQUEST, cancerRoute, new JsonTransformer());
@@ -233,6 +231,8 @@ public class DSMServer extends BasicServer {
         });
 
         get("/info/" + RoutePath.PARTICIPANT_STATUS_REQUEST, new ParticipantStatusRoute(), new JsonNullTransformer());
+
+
 
         // requests from frontend
         before(UI_ROOT + "*", (req, res) -> {
@@ -756,8 +756,7 @@ public class DSMServer extends BasicServer {
         }
     }
 
-    // todo  arz fixme read from config file
-    private static void enableCORS(String methods, String headers) {
+    protected static void enableCORS(String allowedOrigins, String methods, String headers) {
         Spark.options("/*", (request, response) -> {
             String accessControlRequestHeaders = request.headers("Access-Control-Request-Headers");
             if (accessControlRequestHeaders != null) {
@@ -776,7 +775,7 @@ public class DSMServer extends BasicServer {
         });
         Spark.before((request, response) -> {
             String origin = request.headers("Origin");
-            response.header("Access-Control-Allow-Origin", ALLOWED_ORIGINS.contains(origin) ? origin :  "");
+            response.header("Access-Control-Allow-Origin", ( StringUtils.isNotBlank(origin) && allowedOrigins.contains(origin) )? origin :  "");
             response.header("Access-Control-Request-Method", methods);
             response.header("Access-Control-Allow-Headers", headers);
             response.header("Access-Control-Allow-Credentials", "true");

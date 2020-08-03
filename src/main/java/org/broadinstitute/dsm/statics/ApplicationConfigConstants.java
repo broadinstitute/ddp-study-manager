@@ -124,4 +124,5 @@ public class ApplicationConfigConstants {
     public static final String PREFERRED_SOURCE_IP_HEADER = "preferredSourceIPHeader";
     public static final String BOOT_TIMEOUT = "bootTimeout";
 
+    public static final String CORS_ALLOWED_ORIGINS = "corsOrigins";
 }
