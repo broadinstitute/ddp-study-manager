@@ -42,7 +42,6 @@ public class Covid19OrderRegistrarTest {
         String careEvolveServiceKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SERVICE_KEY);
         careEvolveOrderEndpoint = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_ORDER_ENDPOINT);
         auth = new Authentication(careEvolveSubscriberKey, careEvolveServiceKey);
-        // todo arz add  provider to SM
         provider = new Provider(cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_FIRSTNAME),
                 cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_LAST_NAME),
                 cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_NPI));
