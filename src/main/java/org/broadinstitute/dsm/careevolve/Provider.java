@@ -9,10 +9,9 @@ public class Provider {
 
     @SerializedName("LastName")
     private String lastName;
-    private final String npi;
 
     @SerializedName("NPI")
-    private String NPI;
+    private String npi;
 
     public Provider(String firstName,
                     String lastName,

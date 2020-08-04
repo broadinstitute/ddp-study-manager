@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.careevolve;
 
 import java.io.File;
+import java.time.Instant;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -52,7 +53,7 @@ public class Covid19OrderRegistrarTest {
     public void testOrderForParticipant() throws Exception {
         Covid19OrderRegistrar orderRegistrar = new Covid19OrderRegistrar(careEvolveOrderEndpoint, careEvolveAccount, provider);
 
-        orderRegistrar.orderTest(auth,"PKDG8J","GBF1213","kit124");
+        orderRegistrar.orderTest(auth,"PKDG8J","GBF1219","kit129", Instant.now());
 
     }
 }
