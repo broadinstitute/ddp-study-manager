@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.careevolve;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,9 +55,10 @@ public class Covid19OrderRegistrar {
      * @param kitLabel The label on the swab.  Corresponds to ORC-2 and GP sample_id
      * @param kitId an identifier that will show up in Birch to help
      *              associate the result back to the proper kit
+     * @param collectionTime the time at which the sample was taken
      */
-    public OrderResponse orderTest(Authentication auth,String participantHruid, String kitLabel,
-                                   String kitId) throws CareEvolveException {
+    public OrderResponse orderTest(Authentication auth, String participantHruid, String kitLabel,
+                                   String kitId, Instant collectionTime) throws CareEvolveException {
 
         DDPInstance instance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
 
@@ -86,7 +88,7 @@ public class Covid19OrderRegistrar {
                     Patient testPatient = new Patient(patientId, firstName, lastName, "1901-01-01", "Other", "Other",
                             "other", careEvolveAddress);
 
-                    Message message = new Message(new Order(careEvolveAccount, testPatient, kitLabel,provider, aoes), kitId);
+                    Message message = new Message(new Order(careEvolveAccount, testPatient, kitLabel, collectionTime, provider, aoes), kitId);
 
                     OrderResponse orderResponse = null;
                     try {

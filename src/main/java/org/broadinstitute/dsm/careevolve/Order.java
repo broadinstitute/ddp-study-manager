@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.careevolve;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,13 +11,13 @@ public class Order {
     @SerializedName("AOEs")
     private List<AOE> aoes = new ArrayList<>();
 
-    @SerializedName("collection")
+    @SerializedName("Collection")
     private String collectionTime;
 
-    @SerializedName("patient")
+    @SerializedName("Patient")
     private Patient patient;
 
-    @SerializedName("provider")
+    @SerializedName("Provider")
     private Provider provider;
 
     /**
@@ -29,12 +30,20 @@ public class Order {
     @SerializedName("CareEvolveAccount")
     private String account;
 
-    public Order(String account, Patient patient, String kitLabel,Provider provider, List<AOE> aoes) {
+    @SerializedName("TestCode")
+    private static final String TEST_CODE = "Covid19_Diagnostic";
+
+    @SerializedName("TestDescription")
+    private static final String TEST_DESCRIPTION = TEST_CODE;
+
+    public Order(String account, Patient patient, String kitLabel, Instant collectionTime, Provider provider, List<AOE> aoes) {
         this.account = account;
         this.provider = provider;
         this.aoes = aoes;
         this.patient = patient;
         this.kitLabel = kitLabel;
+        // we rely on ISO8601
+        this.collectionTime = collectionTime.toString();
     }
 
     public String getOrderId() {
