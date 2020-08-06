@@ -121,6 +121,7 @@ public class GBFRequestUtil implements ExternalShipper {
                             kit.getParticipant().getStreet1(), kit.getParticipant().getStreet2(), kit.getParticipant().getCity(),
                             kit.getParticipant().getState(), kit.getParticipant().getPostalCode(), kit.getParticipant().getCountry(),
                             kitRequestSettings.getPhone());
+                    //todo PEGAH TESTBOSTON verify address
                 }
                 if (address != null) {
                     ShippingInfo shippingInfo = new ShippingInfo(kitRequestSettings.getCarrierToAccountNumber(), kitRequestSettings.getServiceTo(), address);
@@ -138,7 +139,7 @@ public class GBFRequestUtil implements ExternalShipper {
                 boolean test = DSMServer.isTest(getExternalShipperName());//true for dev in `not-secret.conf`
                 JSONObject payload = new JSONObject().put("orderXml", orderXml).put("test", test);
                 String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + ORDER_ENDPOINT;
-                String apiKey = DSMServer.getApiKey(getExternalShipperName());
+                String apiKey = DSMServer.getApiKey(getExternalShipperName());// todo pegah put that in the vault for dev deployment
                 Response gbfResponse = null;
                 int totalAttempts = 2 + additionalAttempts;
                 Exception ex = null;
@@ -196,6 +197,7 @@ public class GBFRequestUtil implements ExternalShipper {
                         if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
                             for (String dsmKitRequestId : dsmKitRequestIds) {
                                 KitRequestExternal.updateKitRequest(status.getOrderStatus(), System.currentTimeMillis(), dsmKitRequestId);
+                                //todo pegah tell Pepper about SHIPPED and DELIVERED kits here
                             }
                         }
                     }
@@ -214,6 +216,7 @@ public class GBFRequestUtil implements ExternalShipper {
         String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + CONFIRM_ENDPOINT;
         logger.info("payload: " + payload.toString());
         Response gbfResponse = executePost(Response.class, sendRequest, payload.toString(), DSMServer.getApiKey(getExternalShipperName()));
+        System.out.println(gbfResponse.getXML());
         if (gbfResponse != null && StringUtils.isNotBlank(gbfResponse.getXML())) {
             ShippingConfirmations shippingConfirmations = objectFromXMLString(ShippingConfirmations.class, gbfResponse.getXML());
             List<ShippingConfirmation> confirmationList = shippingConfirmations.getShippingConfirmations();
@@ -236,7 +239,7 @@ public class GBFRequestUtil implements ExternalShipper {
 
                                 for (int i = 0; i < tubes.size(); i++) {
                                     KitRequest kitRequest = getKitRequest(kitRequests, confirmation.getOrderNumber(), subItem.getItemNumber(), i);
-                                    if (kitRequest != null) {
+                                    if (kitRequest != null) {//todo pegah check here
                                         KitRequestExternal.updateKitRequestResponse(confirmation.getTracking(), subItem.getReturnTracking(),
                                                 tubes.get(i).getSerial(), SystemUtil.getLongFromDateString(confirmation.getShipDate()), EXTERNAL_SHIPPER_NAME,
                                                 kitRequest.getDsmKitRequestId());
@@ -279,7 +282,7 @@ public class GBFRequestUtil implements ExternalShipper {
         if (results.resultException != null) {
             throw new RuntimeException("Error looking up kit requests  ", results.resultException);
         }
-        logger.info("Found " + kitRequests.size() + " kit requests which do not have a end status yet");
+        logger.info("Found " + kitRequests.size() + " kit requests which do not have an end status yet");
         return kitRequests;
     }
 

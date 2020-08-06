@@ -8,12 +8,16 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
+import java.util.HashMap;
+
 public class GBFMockServerRoute extends RequestHandler {
     private static final Logger logger = LoggerFactory.getLogger(GBFMockServerRoute.class);
 
     public static ClientAndServer mockDDP;
 
     private static final String orderNumber = "ORD3343";
+    HashMap<String, String> pathsAndResponses = new HashMap<>();
+
     @Override
     protected Object processRequest(Request request, Response response, String userId) throws Exception {
         String message = TestUtil.readFile("gbf/OrderResponse.json");
@@ -26,6 +30,16 @@ public class GBFMockServerRoute extends RequestHandler {
                 "{\"orderNumber\": \"K6289XU7Z69J46FPASZ8\", \"orderStatus\": \"NOT FOUND\"}]}";
 
 
+
+
+
+
         return null;
     }
+
+
+    public void setResponseForPath(String path, String response){
+        pathsAndResponses.put(path, response);
+    }
+
 }

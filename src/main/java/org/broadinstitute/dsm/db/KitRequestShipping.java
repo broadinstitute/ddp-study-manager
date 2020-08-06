@@ -19,9 +19,11 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.*;
+import org.broadinstitute.dsm.util.externalShipper.ExternalShipper;
 import org.eclipse.jetty.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 
 import java.sql.*;
 import java.util.*;
@@ -609,14 +611,14 @@ public class KitRequestShipping extends KitRequest {
 
     //adding kit request to db (called by hourly job to add kits into DSM)
     public static void addKitRequests(@NonNull String instanceId, @NonNull KitDetail kitDetail, @NonNull int kitTypeId,
-                                      @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId) {
+                                      @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, String externalOrderNumber) {
         addKitRequests(instanceId, kitDetail.getKitType(), kitDetail.getParticipantId(), kitDetail.getKitRequestId(), kitTypeId, kitRequestSettings,
-                collaboratorParticipantId, kitDetail.isNeedsApproval());
+                collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber);
     }
 
     //adding kit request to db (called by hourly job to add kits into DSM)
     public static void addKitRequests(@NonNull String instanceId, @NonNull String kitType, @NonNull String participantId, @NonNull String kitRequestId,
-                                      @NonNull int kitTypeId, @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, boolean needsApproval) {
+                                      @NonNull int kitTypeId, @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, boolean needsApproval, String externalOrderNumber) {
         inTransaction((conn) -> {
             String errorMessage = "";
             String collaboratorSampleId = null;
@@ -633,12 +635,14 @@ public class KitRequestShipping extends KitRequest {
                     errorMessage += "bspCollaboratorSampleId was too long ";
                 }
             }
-            //TODO add externalOrderNumber??? to give kit request same id and separate sub kits ids
+            //TODO Pegah Simone add externalOrderNumber??? to give kit request same id and separate sub kits ids
             writeRequest(instanceId, kitRequestId, kitTypeId, participantId, collaboratorParticipantId, collaboratorSampleId,
-                    "SYSTEM", null, errorMessage, null, needsApproval);
+                    "SYSTEM", null, errorMessage, externalOrderNumber, needsApproval);
             return null;
         });
     }
+
+
 
     // called by
     // 1. hourly job to add kit requests into db
@@ -916,7 +920,7 @@ public class KitRequestShipping extends KitRequest {
 
     public static int getKitCounter(@NonNull Connection conn, String collaboratorSampleId, int kitTypeId) {
         String query = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_COUNT_KITS_WITH_SAME_COLLABORATOR_SAMPLE_ID_AND_KIT_TYPE).replace("%1", collaboratorSampleId);
-        try (PreparedStatement stmt = conn.prepareStatement(query,ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY)) {
+        try (PreparedStatement stmt = conn.prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
             stmt.setInt(1, kitTypeId);
             try (ResultSet rs = stmt.executeQuery()) {
                 rs.last();
@@ -1133,7 +1137,7 @@ public class KitRequestShipping extends KitRequest {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KIT + QueryExtension.KIT_DEACTIVATED,
-                    ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY)) {
+                    ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
                 stmt.setString(1, kitRequestId);
                 try (ResultSet rs = stmt.executeQuery()) {
                     rs.last();

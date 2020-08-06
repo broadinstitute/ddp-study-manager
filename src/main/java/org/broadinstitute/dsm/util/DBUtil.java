@@ -95,4 +95,36 @@ public class DBUtil {
         }
         return query;
     }
+
+    public static boolean exists(String tableName, String columnName, String externalOrderNumber){
+        String query = "Select * from ? where ?=?";
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement insertKitRequest = conn.prepareStatement(query)) {
+                insertKitRequest.setString(1, tableName);
+                insertKitRequest.setString(2, columnName);
+                insertKitRequest.setString(3, externalOrderNumber);
+                try (ResultSet rs = insertKitRequest.executeQuery();) {
+                    if (rs.next()) {
+                        dbVals.resultValue = true;
+                    }else{
+                        dbVals.resultValue = false;
+                    }
+
+                }
+                catch (Exception e) {
+                    throw new RuntimeException("Error getting values from db", e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Error checking if values exist in db", results.resultException);
+        }
+        return (boolean) results.resultValue;
+    }
 }
