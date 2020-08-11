@@ -30,11 +30,14 @@ public class Order {
     @SerializedName("CareEvolveAccount")
     private String account;
 
-    @SerializedName("TestCode")
+
     private static final String TEST_CODE = "Covid19_Diagnostic";
 
+    @SerializedName("TestCode")
+    private String testCode = TEST_CODE;
+
     @SerializedName("TestDescription")
-    private static final String TEST_DESCRIPTION = TEST_CODE;
+    private final String testDescription = TEST_CODE;
 
     public Order(String account, Patient patient, String kitLabel, Instant collectionTime, Provider provider, List<AOE> aoes) {
         this.account = account;
