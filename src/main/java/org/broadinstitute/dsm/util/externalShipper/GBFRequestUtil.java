@@ -60,7 +60,7 @@ public class GBFRequestUtil implements ExternalShipper {
 
     public static final String SQL_SELECT_EXTERNAL_KIT_NOT_DONE = "SELECT * FROM (SELECT kt.kit_type_name, ddp_site.instance_name, ddp_site.ddp_instance_id, ddp_site.base_url, ddp_site.auth0_token, ddp_site.migrated_ddp, " +
             "ddp_site.collaborator_id_prefix, req.bsp_collaborator_sample_id, req.ddp_participant_id, req.ddp_label, req.dsm_kit_request_id, req.bsp_collaborator_participant_id, " +
-            "req.kit_type_id, req.external_order_status, req.external_order_number, req.external_response, kt.no_return, req.created_by, kit.kit_label FROM kit_type kt, ddp_kit_request req, ddp_kit kit, ddp_instance ddp_site " +
+            "req.kit_type_id, req.external_order_status, req.external_order_number, req.external_order_date, req.external_response, kt.no_return, req.created_by, kit.kit_label FROM kit_type kt, ddp_kit_request req, ddp_kit kit, ddp_instance ddp_site " +
             "WHERE req.ddp_instance_id = ddp_site.ddp_instance_id AND req.kit_type_id = kt.kit_type_id AND kit.dsm_kit_request_id = req.dsm_kit_request_id) AS request " +
             "LEFT JOIN ddp_participant_exit ex ON (ex.ddp_instance_id = request.ddp_instance_id AND ex.ddp_participant_id = request.ddp_participant_id) " +
             "LEFT JOIN (SELECT subK.kit_type_id, subK.external_name from ddp_kit_request_settings dkc " +
@@ -230,9 +230,15 @@ public class GBFRequestUtil implements ExternalShipper {
 
                         KitRequest kit = externalOrdersStatus.get(status.getOrderNumber());
                         KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_SENT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER, kit.getExternalOrderNumber(), 2);//todo change this to the number of subkits but for now 2 for test boston works
-                        if (status.getOrderStatus().equals("NOT FOUND") && kit.getExternalOrderStatus().equals("NOT FOUND")
+                        if (status.getOrderStatus().equals("NOT FOUND") && StringUtils.isNotBlank(kit.getExternalOrderStatus()) && kit.getExternalOrderStatus().equals("NOT FOUND")
                                 && System.currentTimeMillis() - kit.getExternalOrderDate() >= TimeUnit.HOURS.toMillis(24)) {
-                            throw new RuntimeException("Kit Request with external order number " + kit.getExternalOrderNumber() + "has not been shipped in the last 24 hours! ");
+                            List<String> dsmKitRequestIds = getDSMKitRequestId(status.getOrderNumber());
+                            if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
+                                for (String dsmKitRequestId : dsmKitRequestIds) {
+                                    KitRequestExternal.updateKitRequest(status.getOrderStatus(), System.currentTimeMillis(), dsmKitRequestId);//todo pegah only update if alerted or changed status
+                                }
+                            }
+                            logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has not been shipped in the last 24 hours! ");
                         }
                         else if (status.getOrderStatus().contains("SHIPPED") && kit.getExternalOrderStatus().equals("NOT FOUND")) {
                             if (kitDDPNotification != null) {
@@ -241,12 +247,15 @@ public class GBFRequestUtil implements ExternalShipper {
                             }
                         }
                         else if (status.getOrderStatus().contains("CANCELLED") && !kit.getExternalOrderStatus().contains("CANCELLED")) {
-                            throw new RuntimeException("Kit Request with external order number " + kit.getExternalOrderNumber() + "has got cancelled by GBF!");
+                            logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has got cancelled by GBF!");
                         }
-                        List<String> dsmKitRequestIds = getDSMKitRequestId(status.getOrderNumber());
-                        if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
-                            for (String dsmKitRequestId : dsmKitRequestIds) {
-                                KitRequestExternal.updateKitRequest(status.getOrderStatus(), System.currentTimeMillis(), dsmKitRequestId);
+                        if (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
+                                !kit.getExternalOrderStatus().equals(status.getOrderStatus())) {
+                            List<String> dsmKitRequestIds = getDSMKitRequestId(status.getOrderNumber());
+                            if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
+                                for (String dsmKitRequestId : dsmKitRequestIds) {
+                                    KitRequestExternal.updateKitRequest(status.getOrderStatus(), System.currentTimeMillis(), dsmKitRequestId);//todo pegah only update if alerted or changed status
+                                }
                             }
                         }
                     }
