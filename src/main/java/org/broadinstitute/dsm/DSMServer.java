@@ -488,8 +488,10 @@ public class DSMServer extends BasicServer {
 
                 // currently not needed anymore but might come back
                 // remove external shipper job till a ddp is actually using it
-                // createScheduleJob(scheduler, null, ExternalShipperJob.class, "CHECK_EXTERNAL_SHIPPER",
-                // cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_EXPRESSION_FOR_EXTERNAL_SHIPPER), new ExternalShipperTriggerListener(), cfg);
+                 createScheduleJob(scheduler, eventUtil, notificationUtil,
+                         ExternalShipperJob.class, "CHECK_EXTERNAL_SHIPPER",
+                         cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_EXPRESSION_FOR_EXTERNAL_SHIPPER),
+                         new ExternalShipperTriggerListener(), cfg);
 
                 createScheduleJob(scheduler, null, null, EasypostShipmentStatusJob.class, "CHECK_STATUS_SHIPMENT",
                         cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_STATUS_SHIPMENT), new EasypostShipmentStatusTriggerListener(), cfg);

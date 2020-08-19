@@ -3,7 +3,6 @@ package org.broadinstitute.dsm.util;
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.LatestKitRequest;
@@ -13,18 +12,12 @@ import org.broadinstitute.dsm.model.KitSubKits;
 import org.broadinstitute.dsm.model.KitType;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.ddp.KitDetail;
-import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.externalShipper.ExternalShipper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
-
-import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 public class DDPKitRequest {
 
@@ -163,6 +156,7 @@ public class DDPKitRequest {
                                     throw new RuntimeException("Important information for kitRequest is missing");
                                 }
                             }
+                            //TODO PEGAH GET UNORDERED OR NOT FOUND ORDERS AND ADD THEM  TO THE LIST
 
                             //only order if kit were added to kits to order hash (which should only be if a kit has an external shipper)
                             if (!kitsToOrder.isEmpty()) {
@@ -171,6 +165,7 @@ public class DDPKitRequest {
                                     KitRequestSettings setting = iter.next();
                                     ArrayList<KitRequest> kits = kitsToOrder.get(setting);
                                     try {
+                                        logger.info("placing order with external shipper");
                                         ExternalShipper shipper = (ExternalShipper) Class.forName(DSMServer.getClassName(setting.getExternalShipper())).newInstance();
                                         shipper.orderKitRequests(kits, new EasyPostUtil(latestKit.getInstanceName()), setting);
                                     }
@@ -216,12 +211,11 @@ public class DDPKitRequest {
     public static String generateExternalOrderNumber() {
         String externalOrderNumber = NanoIdUtils.randomNanoId(
                 NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 20);
-        while(DBUtil.exists(DBConstants.DDP_KIT_REQUEST,DBConstants.EXTERNAL_ORDER_NUMBER, externalOrderNumber)){
+        while(DBUtil.existsExternalOrderNumber(externalOrderNumber)){
             externalOrderNumber = NanoIdUtils.randomNanoId(
                     NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 20);
         }
         return externalOrderNumber;
     }
-
 
 }

@@ -14,12 +14,13 @@ public class KitRequest {
     private DDPParticipant participant;
     private String externalOrderStatus;
     private String externalKitName;
+    private Long externalOrderDate;
 
     public KitRequest(String participantId, String shortId, DDPParticipant participant) {
-        this(null, participantId, shortId, null, null, participant, null, null);
+        this(null, participantId, shortId, null, null, participant, null, null, null);
     }
 
-    public KitRequest(String dsmKitRequestId, String participantId, String shortId, String shippingId, String externalOrderNumber, DDPParticipant participant, String externalOrderStatus, String externalKitName) {
+    public KitRequest(String dsmKitRequestId, String participantId, String shortId, String shippingId, String externalOrderNumber, DDPParticipant participant, String externalOrderStatus, String externalKitName, Long externalOrderDate) {
         this.dsmKitRequestId = dsmKitRequestId;
         this.participantId = participantId;
         this.shortId = shortId;
@@ -28,5 +29,6 @@ public class KitRequest {
         this.participant = participant;
         this.externalOrderStatus = externalOrderStatus;
         this.externalKitName = externalKitName;
+        this.externalOrderDate = externalOrderDate;
     }
 }

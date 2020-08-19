@@ -105,6 +105,7 @@ public class DBConstants {
     public static final String EXTERNAL_ORDER_NUMBER = "external_order_number";
     public static final String NO_RETURN = "no_return";
     public static final String EXTERNAL_ORDER_STATUS = "external_order_status";
+    public static final String EXTERNAL_ORDER_DATE = "external_order_date";
     public static final String EASYPOST_SHIPMENT_STATUS = "easypost_shipment_status";
     public static final String EASYPOST_SHIPMENT_DATE = "easypost_shipment_date";
 

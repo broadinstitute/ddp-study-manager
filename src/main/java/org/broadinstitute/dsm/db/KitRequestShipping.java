@@ -168,7 +168,7 @@ public class KitRequestShipping extends KitRequest {
                               long receiveDate, String easypostAddressId, long deactivatedDate, String deactivationReason,
                               String kitLabel, boolean express, String easypostToId, long labelTriggeredDate, String easypostShipmentStatus,
                               String externalOrderNumber, boolean noReturn, String externalOrderStatus, String createdBy) {
-        super(dsmKitRequestId, participantId, null, shippingId, externalOrderNumber, null, externalOrderStatus, null);
+        super(dsmKitRequestId, participantId, null, shippingId, externalOrderNumber, null, externalOrderStatus, null, null);
         this.collaboratorParticipantId = collaboratorParticipantId;
         this.bspCollaboratorSampleId = bspCollaboratorSampleId;
         this.realm = realm;

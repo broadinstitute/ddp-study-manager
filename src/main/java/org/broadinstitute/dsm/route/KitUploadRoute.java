@@ -149,6 +149,7 @@ public class KitUploadRoute extends RequestHandler {
                 //only order if external shipper name is set for that kit request
                 if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
                     try {
+                        logger.info("placing order with external shipper");
                         ExternalShipper shipper = (ExternalShipper) Class.forName(DSMServer.getClassName(kitRequestSettings.getExternalShipper())).newInstance();
                         shipper.orderKitRequests(orderKits, easyPostUtil, kitRequestSettings);
                     }

@@ -23,7 +23,7 @@ public class KitRequestExternal extends KitRequest {
 
     public KitRequestExternal(String dsmKitRequestId, String participantId, String shortId, String shippingId, String externalOrderNumber, DDPParticipant participant,
                               String externalOrderStatus, String externalKitName) {
-        super(dsmKitRequestId, participantId, shortId, shippingId, externalOrderNumber, participant, externalOrderStatus, externalKitName);
+        super(dsmKitRequestId, participantId, shortId, shippingId, externalOrderNumber, participant, externalOrderStatus, externalKitName, null);
     }
 
     // update kit request with status and date of external shipper

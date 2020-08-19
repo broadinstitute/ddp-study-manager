@@ -107,9 +107,9 @@ public class TestHelper {
             throw new RuntimeException("Not local environment");
         }
 
-        if (!cfg.getString("portal.dbUrl").contains("local")) {
-            throw new RuntimeException("Not your test db");
-        }
+//        if (!cfg.getString("portal.dbUrl").contains("local")) {
+//            throw new RuntimeException("Not your test db");
+//        }
 
         if (cfg == null) {
             throw new NullPointerException("config");
@@ -146,6 +146,7 @@ public class TestHelper {
 //
 //        DBTestUtil.executeQuery("UPDATE ddp_instance set is_active = 1 where instance_name = \"" + TEST_DDP_MIGRATED + "\"");
 
+        /*
         INSTANCE_ID = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TEST_DDP, DDP_INSTANCE_ID);
         INSTANCE_ID_2 = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TEST_DDP_2, DDP_INSTANCE_ID);
         INSTANCE_ID_MIGRATED = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TEST_DDP_MIGRATED, DDP_INSTANCE_ID);
@@ -219,6 +220,8 @@ public class TestHelper {
         if (setupDDPConfigLookup) {
             DSMServer.setupDDPConfigurationLookup(cfg.getString("ddp"));
         }
+
+         */
     }
 
     private static void checkRole(String role, List<String> roles, String user, String group) {

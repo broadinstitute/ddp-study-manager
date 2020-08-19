@@ -96,14 +96,12 @@ public class DBUtil {
         return query;
     }
 
-    public static boolean exists(String tableName, String columnName, String externalOrderNumber){
-        String query = "Select * from ? where ?=?";
+    public static boolean existsExternalOrderNumber(String externalOrderNumber){
+        String query = "Select * from ddp_kit_request where external_order_number = ?";
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement insertKitRequest = conn.prepareStatement(query)) {
-                insertKitRequest.setString(1, tableName);
-                insertKitRequest.setString(2, columnName);
-                insertKitRequest.setString(3, externalOrderNumber);
+                insertKitRequest.setString(1, externalOrderNumber);
                 try (ResultSet rs = insertKitRequest.executeQuery();) {
                     if (rs.next()) {
                         dbVals.resultValue = true;

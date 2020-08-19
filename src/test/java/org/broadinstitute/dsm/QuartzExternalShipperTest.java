@@ -7,9 +7,14 @@ import org.apache.http.client.fluent.Request;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.util.BasicTriggerListener;
 import org.broadinstitute.dsm.jobs.ExternalShipperJob;
+import org.broadinstitute.dsm.model.KitRequest;
+import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.util.DBTestUtil;
+import org.broadinstitute.dsm.util.EasyPostUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.broadinstitute.dsm.util.TestUtil;
+import org.broadinstitute.dsm.util.externalShipper.ExternalShipper;
+import org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil;
 import org.broadinstitute.dsm.util.triggerListener.ExternalShipperTriggerListener;
 import org.junit.*;
 import org.quartz.*;
@@ -18,6 +23,8 @@ import org.quartz.impl.matchers.KeyMatcher;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Map;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 //import static org.mockserver.model.HttpRequest.request;
@@ -55,7 +62,13 @@ public class QuartzExternalShipperTest extends TestHelper {
 //    @Ignore("external shipper is not used currently and code is commented out")
     @Test
     public void externalShipperJob() throws Exception {
-        uploadKit();
+//        uploadKit();
+
+        ExternalShipper shipper = (ExternalShipper) Class.forName(DSMServer.getClassName("gbf")).newInstance();//GBFRequestUtil
+        ArrayList<KitRequest> kitRequests = shipper.getKitRequestsNotDone(15);
+        Map<Integer, KitRequestSettings> kitRequestSettingsMap = KitRequestSettings.getKitRequestSettings("15");
+        shipper.orderKitRequests(kitRequests, new EasyPostUtil("testboston"), kitRequestSettingsMap.get(11));
+
 
         String externalOrderNumber1 = DBTestUtil.getQueryDetail(CHECK_EXTERNAL_SHIPPER_REQUEST, "00004", "external_order_number");
         String externalOrderNumber2 = DBTestUtil.getQueryDetail(CHECK_EXTERNAL_SHIPPER_REQUEST, "00003", "external_order_number");
