@@ -25,7 +25,7 @@ public class ExternalShipperJob implements Job {
         List<KitType> kitTypes = KitType.getKitTypesWithExternalShipper();
         for (KitType kitType : kitTypes) {
             try {
-                    logger.info("Starting the external shipper job");
+                logger.info("Starting the external shipper job");
                 ExternalShipper shipper = (ExternalShipper) Class.forName(DSMServer.getClassName(kitType.getExternalShipper())).newInstance();//GBFRequestUtil
                 ArrayList<KitRequest> kitRequests = shipper.getKitRequestsNotDone(kitType.getInstanceId());
                 shipper.orderStatus(kitRequests);

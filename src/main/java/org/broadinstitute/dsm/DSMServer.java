@@ -32,6 +32,7 @@ import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.*;
+import org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil;
 import org.broadinstitute.dsm.util.triggerListener.*;
 import org.jruby.embed.ScriptingContainer;
 import org.quartz.*;
@@ -86,7 +87,7 @@ public class DSMServer extends BasicServer {
     public static final String EVENT_UTIL = "EventUtil";
     public static final String CONTAINER = "Container";
     public static final String RECEIVER = "Receiver";
-    public static final String ADDITIONAL_CRON_EXPRESSION = "AdditionalCronExpression";
+    public static final String ADDITIONAL_CRON_EXPRESSION = "externalShipper_cron_expression_additional";
     public static final String GCP_PATH_TO_SERVICE_ACCOUNT = "portal.googleProjectCredentials";
 
     private static Map<String, MBCParticipant> mbcParticipants = new HashMap<>();
@@ -277,8 +278,8 @@ public class DSMServer extends BasicServer {
         PatchUtil patchUtil = new PatchUtil();
 
         // currently not needed anymore but might come back
-        // setupExternalShipperLookup(cfg.getString(ApplicationConfigConstants.EXTERNAL_SHIPPER));
-        // GBFRequestUtil gbfRequestUtil = new GBFRequestUtil();
+         setupExternalShipperLookup(cfg.getString(ApplicationConfigConstants.EXTERNAL_SHIPPER));
+         GBFRequestUtil gbfRequestUtil = new GBFRequestUtil();
 
         setupShippingRoutes(notificationUtil, auth0Util, userUtil);
 
@@ -487,7 +488,6 @@ public class DSMServer extends BasicServer {
                         cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_EXPRESSION_FOR_DDP_EVENT_TRIGGER), new DDPEventTriggerListener(), null);
 
                 // currently not needed anymore but might come back
-                // remove external shipper job till a ddp is actually using it
                  createScheduleJob(scheduler, eventUtil, notificationUtil,
                          ExternalShipperJob.class, "CHECK_EXTERNAL_SHIPPER",
                          cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_EXPRESSION_FOR_EXTERNAL_SHIPPER),
@@ -609,10 +609,10 @@ public class DSMServer extends BasicServer {
             //pass parameters to JobDataMap for JobDetail
             job.getJobDataMap().put(NOTIFICATION_UTIL, notificationUtil);
         }
-        // currently not needed anymore but might come back
-        // if (jobClass == ExternalShipperJob.class) {
-        // job.getJobDataMap().put(ADDITIONAL_CRON_EXPRESSION, config.getString(ApplicationConfigConstants.QUARTZ_CRON_EXPRESSION_FOR_EXTERNAL_SHIPPER_ADDITIONAL));
-        // }
+//         currently not needed anymore but might come back
+         if (jobClass == ExternalShipperJob.class) {
+         job.getJobDataMap().put(ADDITIONAL_CRON_EXPRESSION, config.getString(ApplicationConfigConstants.QUARTZ_CRON_EXPRESSION_FOR_EXTERNAL_SHIPPER_ADDITIONAL));
+         }
 
         logger.info(cronExpression);
 
@@ -681,14 +681,14 @@ public class DSMServer extends BasicServer {
     }
 
     // currently not needed anymore but might come back
-    //    public static void setupExternalShipperLookup(@NonNull String externalSipperConf) {
-    //        JsonArray array = (JsonArray) (new JsonParser().parse(externalSipperConf));
-    //        for (JsonElement ddpInfo : array) {
-    //            if (ddpInfo.isJsonObject()) {
-    //                ddpConfigurationLookup.put(ddpInfo.getAsJsonObject().get(ApplicationConfigConstants.SHIPPER_NAME).getAsString().toLowerCase(), ddpInfo);
-    //            }
-    //        }
-    //    }
+        public static void setupExternalShipperLookup(@NonNull String externalSipperConf) {
+            JsonArray array = (JsonArray) (new JsonParser().parse(externalSipperConf));
+            for (JsonElement ddpInfo : array) {
+                if (ddpInfo.isJsonObject()) {
+                    ddpConfigurationLookup.put(ddpInfo.getAsJsonObject().get(ApplicationConfigConstants.SHIPPER_NAME).getAsString().toLowerCase(), ddpInfo);
+                }
+            }
+        }
 
     public static String getApiKey(@NonNull String shipperName) {
         JsonElement jsonElement = ddpConfigurationLookup.get(shipperName.toLowerCase());
