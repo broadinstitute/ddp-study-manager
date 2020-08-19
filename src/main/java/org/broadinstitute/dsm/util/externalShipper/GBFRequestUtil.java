@@ -247,7 +247,6 @@ public class GBFRequestUtil implements ExternalShipper {
                         if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
                             for (String dsmKitRequestId : dsmKitRequestIds) {
                                 KitRequestExternal.updateKitRequest(status.getOrderStatus(), System.currentTimeMillis(), dsmKitRequestId);
-                                //todo pegah tell Pepper about SHIPPED and DELIVERED kits here
                             }
                         }
                     }
