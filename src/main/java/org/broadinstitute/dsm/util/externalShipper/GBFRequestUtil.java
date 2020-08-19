@@ -250,7 +250,7 @@ public class GBFRequestUtil implements ExternalShipper {
                             logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has got cancelled by GBF!");
                         }
                         if (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
-                                !kit.getExternalOrderStatus().equals(status.getOrderStatus())) {
+                                !kit.getExternalOrderStatus().equals(status.getOrderStatus()    )) {
                             List<String> dsmKitRequestIds = getDSMKitRequestId(status.getOrderNumber());
                             if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
                                 for (String dsmKitRequestId : dsmKitRequestIds) {
