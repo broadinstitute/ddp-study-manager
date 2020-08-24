@@ -18,6 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
@@ -113,7 +114,7 @@ public class UserUtil {
     public void insertUser(@NonNull String name, @NonNull String email) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement insertStmt = conn.prepareStatement(SQL_INSERT_USER)) {
+            try (PreparedStatement insertStmt = conn.prepareStatement(SQL_INSERT_USER, Statement.RETURN_GENERATED_KEYS)) {
                 insertStmt.setString(1, name);
                 insertStmt.setString(2, email);
                 insertStmt.executeUpdate();
