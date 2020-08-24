@@ -245,6 +245,9 @@ public class GBFRequestUtil implements ExternalShipper {
                                 logger.info("Triggering DDP for shipped kit with external order number: " + kit.getExternalOrderNumber());
                                 EventUtil.triggerDDP(kitDDPNotification);
                             }
+                            else{
+                                logger.error("kitDDPNotification was null for "+kit.getExternalOrderNumber());
+                            }
                         }
                         else if (status.getOrderStatus().contains("CANCELLED") && !kit.getExternalOrderStatus().contains("CANCELLED")) {
                             logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has got cancelled by GBF!");
