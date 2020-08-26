@@ -6,6 +6,9 @@ appengine/deploy/lib
 appengine/deploy/*.conf
 appengine/deploy/tcell/*
 
+# This file is rendered.
+appengine/deploy/StudyManager.yaml
+
 # IDEs and editors
 .idea
 target
