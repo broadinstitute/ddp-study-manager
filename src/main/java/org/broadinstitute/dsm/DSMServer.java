@@ -50,7 +50,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,6 +87,10 @@ public class DSMServer extends BasicServer {
     public static final String RECEIVER = "Receiver";
     public static final String ADDITIONAL_CRON_EXPRESSION = "AdditionalCronExpression";
     public static final String GCP_PATH_TO_SERVICE_ACCOUNT = "portal.googleProjectCredentials";
+
+    public static final String PUBSUB_BIRCH_TOPIC = "";
+    public static final String PUBSUB_PROJECT_ID = "hl7-dev-274911";
+    public static final String PUBSUB_BIRCH_SUBSCRIPTION = "pegah-results-sub";
 
     private static Map<String, MBCParticipant> mbcParticipants = new HashMap<>();
     private static Map<String, MBCInstitution> mbcInstitutions = new HashMap<>();
@@ -294,8 +297,13 @@ public class DSMServer extends BasicServer {
         patch(UI_ROOT + RoutePath.USER_SETTINGS_REQUEST, new UserSettingRoute(), new JsonTransformer());
 
         setupJobs(cfg, kitUtil, notificationUtil, eventUtil, container, receiver);
+        
+        setupPubSub();
 
         logger.info("Finished setting up DSM custom routes and jobs...");
+    }
+
+    private void setupPubSub() {
     }
 
     protected void updateDB(@NonNull String dbUrl) {
@@ -491,6 +499,9 @@ public class DSMServer extends BasicServer {
 
                 createScheduleJob(scheduler, null, null, EasypostShipmentStatusJob.class, "CHECK_STATUS_SHIPMENT",
                         cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_STATUS_SHIPMENT), new EasypostShipmentStatusTriggerListener(), cfg);
+
+                createScheduleJob(scheduler, null, null, PubSubLookUpJob.class, "PUBSUB_LOOKUP_JOB",
+                        cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_PUBSUB_LOOKUP), new PubSubLookupTriggerListener(), cfg);
 
                 logger.info("Setup Job Scheduler...");
                 try {
