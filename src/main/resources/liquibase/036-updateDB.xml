@@ -5,11 +5,11 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
     <changeSet author="pegah" id="covid-testResults">
-        <addColumn tableName="ddp_kit_request">
-            <column name="test_result" type="VARCHAR(100)" afterColumn="external_response">
+        <addColumn tableName="ddp_kit">
+            <column name="test_result" type="VARCHAR(100)" afterColumn="needs_approval">
             </column>
         </addColumn>
-        <addColumn tableName="ddp_kit_request">
+        <addColumn tableName="ddp_kit">
             <column name="result_date" type="VARCHAR(100)" afterColumn="test_result">
             </column>
         </addColumn>
