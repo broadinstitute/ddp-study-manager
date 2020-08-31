@@ -32,6 +32,7 @@ public class ApplicationConfigConstants {
     public static final String ES_URL = "elasticSearch.url";
     public static final String ES_USERNAME = "elasticSearch.username";
     public static final String ES_PASSWORD = "elasticSearch.password";
+    public static final String ES_PROXY = "elasticSearch.proxy";
 
     //security information
     public static final String BSP_SECRET = "bsp.secret";
