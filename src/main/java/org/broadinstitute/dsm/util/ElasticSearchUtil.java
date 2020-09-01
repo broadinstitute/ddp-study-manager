@@ -68,10 +68,21 @@ public class ElasticSearchUtil {
         credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(userName, password));
 
         URL url = new URL(baseUrl);
+        String proxy = TransactionWrapper.hasConfigPath(ApplicationConfigConstants.ES_PROXY)
+                ? TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PROXY) : null;
+        URL proxyUrl = (proxy != null && !proxy.isBlank()) ? new URL(proxy) : null;
+        if (proxyUrl != null) {
+            logger.info("Using Elasticsearch client proxy: {}", proxyUrl);
+        }
 
         RestClientBuilder builder = RestClient.builder(new HttpHost(url.getHost(), url.getPort(), url.getProtocol()))
-                .setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder
-                        .setDefaultCredentialsProvider(credentialsProvider))
+                .setHttpClientConfigCallback(httpClientBuilder -> {
+                    httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+                    if (proxyUrl != null) {
+                        httpClientBuilder.setProxy(new HttpHost(proxyUrl.getHost(), proxyUrl.getPort(), proxyUrl.getProtocol()));
+                    }
+                    return httpClientBuilder;
+                })
                 .setMaxRetryTimeoutMillis(100000);
 
         return new RestHighLevelClient(builder);
