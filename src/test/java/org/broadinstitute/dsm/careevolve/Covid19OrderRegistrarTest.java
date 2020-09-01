@@ -53,7 +53,7 @@ public class Covid19OrderRegistrarTest {
     public void testOrderForParticipant() throws Exception {
         Covid19OrderRegistrar orderRegistrar = new Covid19OrderRegistrar(careEvolveOrderEndpoint, careEvolveAccount, provider);
 
-        orderRegistrar.orderTest(auth,"PKDG8J","GBF1220","kit130", Instant.now());
+        orderRegistrar.orderTest(auth,"PUTPKX","TBOS-112211221","kit130");
 
     }
 }
