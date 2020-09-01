@@ -1,6 +1,8 @@
 package org.broadinstitute.dsm.careevolve;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -8,6 +10,8 @@ import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
@@ -36,6 +40,8 @@ public class Covid19OrderRegistrar {
 
     private final Provider provider;
 
+    private static final List<String> KIT_ACTIVITY_CODES = List.of("BASELINE_SYMPTOM","LONGITUDINAL_COVID");
+
     /**
      * Create a new one that uses the given endpoint
      * for placing orders
@@ -55,10 +61,9 @@ public class Covid19OrderRegistrar {
      * @param kitLabel The label on the swab.  Corresponds to ORC-2 and GP sample_id
      * @param kitId an identifier that will show up in Birch to help
      *              associate the result back to the proper kit
-     * @param collectionTime the time at which the sample was taken
      */
     public OrderResponse orderTest(Authentication auth, String participantHruid, String kitLabel,
-                                   String kitId, Instant collectionTime) throws CareEvolveException {
+                                   String kitId) throws CareEvolveException {
 
         DDPInstance instance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
 
@@ -66,29 +71,61 @@ public class Covid19OrderRegistrar {
         queryConditions.put("ES", " AND profile.hruid = '" + participantHruid +"'");
         List<ParticipantWrapper> participants = ParticipantWrapper.getFilteredList(instance, queryConditions);
 
+        // "activityCode" -> "BASELINE_COVID"
+        // data.get("activities") DOB SEX RACE
 
         if (participants.size() == 1) {
             ParticipantWrapper participant = participants.iterator().next();
-            Map data = participant.getData();
+            JsonObject data = participant.getDataAsJson();
             if (data != null) {
-                Map<String, String> address = (Map) data.get("address");
+                JsonObject address = data.get("address").getAsJsonObject();
                 if (address != null) {
                     Address careEvolveAddress = toCareEvolveAddress(address);
-                    logger.info("foo");
 
-                    Map<String, String> profile = (Map) participant.getData().get("profile");
-                    String patientId = profile.get("guid");
+                    JsonObject profile = data.get("profile").getAsJsonObject();
+                    String patientId = profile.get("guid").getAsString();
 
-                    String firstName = profile.get("firstName");
-                    String lastName = profile.get("lastName");
+                    String firstName = profile.get("firstName").getAsString();
+                    String lastName = profile.get("lastName").getAsString();
 
                     List<AOE> aoes = AOE.forTestBoston(null, kitId);
+
+                    JsonArray activities = data.get("activities").getAsJsonArray();
+
+                    JsonObject latestKitActivity = getLatestKitActivity(activities);
+                    JsonArray latestKitAnswers = latestKitActivity.get("questionsAnswers").getAsJsonArray();
+
+                    StringBuilder collectionDateTimeStr = new StringBuilder();
+                    Instant collectionDateTime = null;
+                    for (int i = 0; i < latestKitAnswers.size(); i++) {
+                        JsonObject latestKitAnswer = latestKitAnswers.get(i).getAsJsonObject();
+                        String questionStableId = latestKitAnswer.get("stableId").getAsString();
+
+                        if ("SAMPLE_COLLECT_DATE".equals(questionStableId)) {
+                            JsonObject dateFields = latestKitAnswer.get("dateFields").getAsJsonObject();
+                            collectionDateTimeStr.append(dateFields.get("month")).append("/")
+                                    .append(dateFields.get("day")).append("/")
+                                    .append(dateFields.get("year"));
+                        } else if ("SAMPLE_COLLECT_TIME".equals(questionStableId)) {
+                            JsonArray timeFields = latestKitAnswer.getAsJsonArray("answer").get(0).getAsJsonArray();
+                            for (int timeFieldIdx = 0; timeFieldIdx < timeFields.size(); timeFieldIdx++) {
+                                collectionDateTimeStr.append(" ").append(timeFields.get(timeFieldIdx).getAsString());
+                            }
+                        }
+                    }
+
+                    try {
+                        collectionDateTime = new SimpleDateFormat("MM/dd/yyyy h m a").parse(collectionDateTimeStr.toString()).toInstant();
+                    } catch (ParseException e) {
+                        throw new CareEvolveException("Could not parse collection date time " + collectionDateTimeStr.toString()
+                                + " for participant " + patientId + " in activity instance " + latestKitActivity.get("guid"));
+                    }
 
                     // todo arz add dob/race/ethnicity when available
                     Patient testPatient = new Patient(patientId, firstName, lastName, "1901-01-01", "Other", "Other",
                             "other", careEvolveAddress);
 
-                    Message message = new Message(new Order(careEvolveAccount, testPatient, kitLabel, collectionTime, provider, aoes), kitId);
+                    Message message = new Message(new Order(careEvolveAccount, testPatient, kitLabel, collectionDateTime, provider, aoes), kitId);
 
                     OrderResponse orderResponse = null;
                     try {
@@ -112,12 +149,31 @@ public class Covid19OrderRegistrar {
         }
     }
 
-    private Address toCareEvolveAddress(Map<String, String> esAddress) {
-        return new Address(esAddress.get("street1"),
-                esAddress.get("street2"),
-                esAddress.get("city"),
-                esAddress.get("state"),
-                esAddress.get("zip"));
+    /**
+     * Returns the latest kit-related activity
+     */
+    private JsonObject getLatestKitActivity(JsonArray activities) {
+        JsonObject latestKitActivity = null;
+        for (int i = 0; i < activities.size(); i++) {
+            JsonObject activity = activities.get(i).getAsJsonObject();
+            if (KIT_ACTIVITY_CODES.contains(activity.get("activityCode").getAsString())) {
+                if (latestKitActivity == null) {
+                    latestKitActivity = activity;
+                }
+                if (latestKitActivity.get("createdAt").getAsNumber().longValue() < activity.get("createdAt").getAsNumber().longValue()) {
+                    latestKitActivity = activity;
+                }
+            }
+        }
+        return latestKitActivity;
+    }
+
+    private Address toCareEvolveAddress(JsonObject esAddress) {
+        return new Address(esAddress.get("street1").getAsString(),
+                esAddress.get("street2").getAsString(),
+                esAddress.get("city").getAsString(),
+                esAddress.get("state").getAsString(),
+                esAddress.get("zip").getAsString());
     }
 
     /**
