@@ -1,5 +1,7 @@
 package org.broadinstitute.dsm.jobs;
 
+import com.google.api.gax.core.ExecutorProvider;
+import com.google.api.gax.core.InstantiatingExecutorProvider;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Subscriber;
@@ -14,6 +16,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.threeten.bp.Duration;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -45,16 +48,18 @@ public class PubSubLookUpJob implements Job {
                     };
 
             Subscriber subscriber = null;
+            ProjectSubscriptionName resultSubName = ProjectSubscriptionName.of(projectId, subscriptionId);
+            ExecutorProvider resultsSubExecProvider = InstantiatingExecutorProvider.newBuilder().setExecutorThreadCount(10).build();
+             subscriber = Subscriber.newBuilder(resultSubName, receiver)
+                    .setParallelPullCount(10)
+                    .setExecutorProvider(resultsSubExecProvider)
+                    .setMaxAckExtensionPeriod(Duration.ofSeconds(30))
+                    .build();
             try {
-                subscriber = Subscriber.newBuilder(subscriptionName, receiver).build();
-                // Start the subscriber.
-                subscriber.startAsync().awaitRunning();
-                logger.info("Listening for messages on %s:\n", subscriptionName.toString());
-                // Allow the subscriber to run for 30s unless an unrecoverable error occurs.
-                subscriber.awaitTerminated(1L, TimeUnit.MINUTES);
-            } catch (TimeoutException timeoutException) {
-                // Shut down the subscriber after 30s. Stop receiving messages.
-                subscriber.stopAsync();
+                subscriber.startAsync().awaitRunning(1L, TimeUnit.MINUTES);
+                logger.info("Started subscription receiver for {}", subscriptionId);
+            } catch (TimeoutException e) {
+                throw new RuntimeException("Timed out while starting pubsub subscription " + subscriptionId, e);
             }
         }
         catch (Exception e){
