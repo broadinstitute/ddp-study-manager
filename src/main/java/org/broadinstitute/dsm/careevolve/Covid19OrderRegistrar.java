@@ -76,9 +76,6 @@ public class Covid19OrderRegistrar {
         queryConditions.put("ES", " AND profile.hruid = '" + participantHruid +"'");
         List<ParticipantWrapper> participants = ParticipantWrapper.getFilteredList(instance, queryConditions);
 
-        // "activityCode" -> "BASELINE_COVID"
-        // data.get("activities") DOB SEX RACE
-
         if (participants.size() == 1) {
             ParticipantWrapper participant = participants.iterator().next();
             JsonObject data = participant.getDataAsJson();
