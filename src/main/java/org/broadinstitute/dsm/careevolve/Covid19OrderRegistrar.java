@@ -129,7 +129,7 @@ public class Covid19OrderRegistrar {
 
                     // mappings  for  race, ethnicity, and  sex are custom  for the  Ellkay API
                     // and are controlled  by the Ellkay integration
-                    String race = "2131-1";
+                    String race = "2131-1"; // code for "other"
                     String ethnicity = "U";
                     String sex = "U";
                     for (int i = 0; i < baselineCovidAnswers.size(); i++) {
@@ -169,11 +169,10 @@ public class Covid19OrderRegistrar {
                         }  else if ("RACE".equals(questionStableId)) {
                             JsonArray races = answer.getAsJsonArray("answer");
 
-                            if (races.size() > 0) {
-                                // CareEvolve only supports a  single race per order, so we'll pick
-                                // one of  the selected values at random
+                            if (races.size() == 1) {
+                                // CareEvolve only supports a  single race per order
                                 int randomIndex = ThreadLocalRandom.current().nextInt(races.size());
-                                race = races.get(randomIndex).getAsString();
+                                race = races.get(0).getAsString();
 
                                 if ("ASIAN".equals(race)) {
                                     race = "2028-9";
@@ -190,6 +189,10 @@ public class Covid19OrderRegistrar {
                                 } else {
                                     logger.error("Could not map race " + race + " to Ellkay code; will default to other for " + baselineCovidActivity.get("guid"));
                                 }
+                            } else {
+                                // if there's no value or if multiple values are selected,
+                                // use the code for "other"
+                                race = "2131-1";
                             }
                         }
                         else if ("ETHNICITY".equals(questionStableId)) {
