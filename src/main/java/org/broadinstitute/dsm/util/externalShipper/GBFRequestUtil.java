@@ -227,9 +227,10 @@ public class GBFRequestUtil implements ExternalShipper {
                 List<Status> statuses = gbfResponse.getStatuses();
                 if (statuses != null && !statuses.isEmpty()) {
                     for (Status status : statuses) {
-
                         KitRequest kit = externalOrdersStatus.get(status.getOrderNumber());
-                        logger.info("Kit status from GBF is changed to: "+status.getOrderStatus() +", from "+kit.getExternalOrderStatus()+" for kit: "+kit.getExternalOrderNumber());
+                        if (!status.getOrderStatus().equals(kit.getExternalOrderStatus())) {
+                            logger.info("Kit status from GBF is changed from " + kit.getExternalOrderStatus()   + " to " +  status.getOrderStatus() + " for kit: " + kit.getExternalOrderNumber());
+                        }
                         KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_SENT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER, kit.getExternalOrderNumber(), 2);//todo change this to the number of subkits but for now 2 for test boston works
                         if (status.getOrderStatus().equals("NOT FOUND") && StringUtils.isNotBlank(kit.getExternalOrderStatus()) && kit.getExternalOrderStatus().equals("NOT FOUND")
                                 && System.currentTimeMillis() - kit.getExternalOrderDate() >= TimeUnit.HOURS.toMillis(24)) {
@@ -246,15 +247,15 @@ public class GBFRequestUtil implements ExternalShipper {
                                 logger.info("Triggering DDP for shipped kit with external order number: " + kit.getExternalOrderNumber());
                                 EventUtil.triggerDDP(kitDDPNotification);
                             }
-                            else{
-                                logger.error("kitDDPNotification was null for "+kit.getExternalOrderNumber());
+                            else {
+                                logger.error("kitDDPNotification was null for " + kit.getExternalOrderNumber());
                             }
                         }
                         else if (status.getOrderStatus().contains("CANCELLED") && !kit.getExternalOrderStatus().contains("CANCELLED")) {
                             logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has got cancelled by GBF!");
                         }
                         if (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
-                                !kit.getExternalOrderStatus().equals(status.getOrderStatus()    )) {
+                                !kit.getExternalOrderStatus().equals(status.getOrderStatus())) {
                             List<String> dsmKitRequestIds = getDSMKitRequestId(status.getOrderNumber());
                             if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
                                 for (String dsmKitRequestId : dsmKitRequestIds) {
@@ -275,47 +276,47 @@ public class GBFRequestUtil implements ExternalShipper {
     // Confirmation may include order number, client(participant) ID, outbound tracking number, return tracking number(s), line item(s), kit serial number(s), etc.
     public void orderConfirmation(ArrayList<KitRequest> kitRequests, long startDate, long endDate) throws Exception {
         return;
-//        JSONObject payload = new JSONObject().put("startDate", SystemUtil.getDateFormatted(startDate)).put("endDate", SystemUtil.getDateFormatted(endDate));
-//        String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + CONFIRM_ENDPOINT;
-//        logger.info("payload: " + payload.toString());
-//        Response gbfResponse = executePost(Response.class, sendRequest, payload.toString(), DSMServer.getApiKey(getExternalShipperName()));
-//        if (gbfResponse != null && StringUtils.isNotBlank(gbfResponse.getXML())) {
-//            ShippingConfirmations shippingConfirmations = objectFromXMLString(ShippingConfirmations.class, gbfResponse.getXML());
-//            List<ShippingConfirmation> confirmationList = shippingConfirmations.getShippingConfirmations();
-//            if (confirmationList != null && !confirmationList.isEmpty()) {
-//                for (ShippingConfirmation confirmation : confirmationList) {
-//                    //update external shipper response at request
-//                    Node node = GBFRequestUtil.getXMLNode(gbfResponse.getXML(), XML_NODE_EXPRESSION.replace("%1", confirmation.getOrderNumber()));
-//                    List<String> dsmKitRequestIds = getDSMKitRequestId(confirmation.getOrderNumber());
-//                    if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
-//                        for (String dsmKitRequestId : dsmKitRequestIds) {
-//                            KitRequestExternal.updateKitRequestResponse(getStringFromNode(node), dsmKitRequestId);
-//                        }
-//                    }
-//                    //update kit shipping information
-//                    if (confirmation.getItem() != null) {
-//                        List<SubItem> subItems = confirmation.getItem().getSubItem();
-//                        if (subItems != null && !subItems.isEmpty()) {
-//                            for (SubItem subItem : subItems) {
-//                                List<Tube> tubes = subItem.getTube();
-//
-//                                for (int i = 0; i < tubes.size(); i++) {
-//                                    KitRequest kitRequest = getKitRequest(kitRequests, confirmation.getOrderNumber(), subItem.getItemNumber(), i);
-//                                    if (kitRequest != null) {//todo pegah check here
-//                                        KitRequestExternal.updateKitRequestResponse(confirmation.getTracking(), subItem.getReturnTracking(),
-//                                                tubes.get(i).getSerial(), SystemUtil.getLongFromDateString(confirmation.getShipDate()), EXTERNAL_SHIPPER_NAME,
-//                                                kitRequest.getDsmKitRequestId());
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//            else {
-//                logger.info("No shipping confirmation returned");
-//            }
-//        }
+        //        JSONObject payload = new JSONObject().put("startDate", SystemUtil.getDateFormatted(startDate)).put("endDate", SystemUtil.getDateFormatted(endDate));
+        //        String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + CONFIRM_ENDPOINT;
+        //        logger.info("payload: " + payload.toString());
+        //        Response gbfResponse = executePost(Response.class, sendRequest, payload.toString(), DSMServer.getApiKey(getExternalShipperName()));
+        //        if (gbfResponse != null && StringUtils.isNotBlank(gbfResponse.getXML())) {
+        //            ShippingConfirmations shippingConfirmations = objectFromXMLString(ShippingConfirmations.class, gbfResponse.getXML());
+        //            List<ShippingConfirmation> confirmationList = shippingConfirmations.getShippingConfirmations();
+        //            if (confirmationList != null && !confirmationList.isEmpty()) {
+        //                for (ShippingConfirmation confirmation : confirmationList) {
+        //                    //update external shipper response at request
+        //                    Node node = GBFRequestUtil.getXMLNode(gbfResponse.getXML(), XML_NODE_EXPRESSION.replace("%1", confirmation.getOrderNumber()));
+        //                    List<String> dsmKitRequestIds = getDSMKitRequestId(confirmation.getOrderNumber());
+        //                    if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
+        //                        for (String dsmKitRequestId : dsmKitRequestIds) {
+        //                            KitRequestExternal.updateKitRequestResponse(getStringFromNode(node), dsmKitRequestId);
+        //                        }
+        //                    }
+        //                    //update kit shipping information
+        //                    if (confirmation.getItem() != null) {
+        //                        List<SubItem> subItems = confirmation.getItem().getSubItem();
+        //                        if (subItems != null && !subItems.isEmpty()) {
+        //                            for (SubItem subItem : subItems) {
+        //                                List<Tube> tubes = subItem.getTube();
+        //
+        //                                for (int i = 0; i < tubes.size(); i++) {
+        //                                    KitRequest kitRequest = getKitRequest(kitRequests, confirmation.getOrderNumber(), subItem.getItemNumber(), i);
+        //                                    if (kitRequest != null) {//todo pegah check here
+        //                                        KitRequestExternal.updateKitRequestResponse(confirmation.getTracking(), subItem.getReturnTracking(),
+        //                                                tubes.get(i).getSerial(), SystemUtil.getLongFromDateString(confirmation.getShipDate()), EXTERNAL_SHIPPER_NAME,
+        //                                                kitRequest.getDsmKitRequestId());
+        //                                    }
+        //                                }
+        //                            }
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //            else {
+        //                logger.info("No shipping confirmation returned");
+        //            }
+        //        }
     }
 
     public void orderCancellation(ArrayList<KitRequest> kitRequests) throws Exception {
