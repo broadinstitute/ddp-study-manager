@@ -18,7 +18,7 @@ public class Patient {
     private String dateOfBirth;
 
     // cdc 1000-9 values
-    @SerializedName("race")
+    @SerializedName("Race")
     private String race;
 
     @SerializedName("Ethnicity")

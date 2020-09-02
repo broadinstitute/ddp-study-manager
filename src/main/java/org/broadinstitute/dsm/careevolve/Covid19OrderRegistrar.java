@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -40,7 +41,11 @@ public class Covid19OrderRegistrar {
 
     private final Provider provider;
 
-    private static final List<String> KIT_ACTIVITY_CODES = List.of("BASELINE_SYMPTOM","LONGITUDINAL_COVID");
+    public static final String BASELINE_SYMPTOM_ACTIVITY = "BASELINE_SYMPTOM";
+
+    public static final String BASELINE_COVID_ACTIVITY = "BASELINE_COVID";
+
+    private static final List<String> KIT_ACTIVITY_CODES = List.of(BASELINE_SYMPTOM_ACTIVITY,"LONGITUDINAL_COVID");
 
     /**
      * Create a new one that uses the given endpoint
@@ -121,9 +126,93 @@ public class Covid19OrderRegistrar {
                                 + " for participant " + patientId + " in activity instance " + latestKitActivity.get("guid"));
                     }
 
-                    // todo arz add dob/race/ethnicity when available
-                    Patient testPatient = new Patient(patientId, firstName, lastName, "1901-01-01", "Other", "Other",
-                            "other", careEvolveAddress);
+                    JsonObject baselineCovidActivity = getBaselineCovidActivity(activities);
+                    JsonArray baselineCovidAnswers = baselineCovidActivity.get("questionsAnswers").getAsJsonArray();
+                    String dob = null;
+
+                    // mappings  for  race, ethnicity, and  sex are custom  for the  Ellkay API
+                    // and are controlled  by the Ellkay integration
+                    String race = "2131-1";
+                    String ethnicity = "U";
+                    String sex = "U";
+                    for (int i = 0; i < baselineCovidAnswers.size(); i++) {
+                        JsonObject answer = baselineCovidAnswers.get(i).getAsJsonObject();
+                        String questionStableId = answer.get("stableId").getAsString();
+
+                        if ("DOB".equals(questionStableId)) {
+                            JsonObject dateFields = answer.get("dateFields").getAsJsonObject();
+                            StringBuilder dobStr  = new StringBuilder();
+                            dobStr.append(dateFields.get("year")).append("-")
+                                    .append(dateFields.get("month")).append("-")
+                                    .append(dateFields.get("day"));
+                            SimpleDateFormat dobFormat = new SimpleDateFormat("yyyy-MM-dd");
+                            try {
+                                dob = dobFormat.format(dobFormat.parse(dobStr.toString()));
+                            } catch (ParseException e) {
+                                throw new CareEvolveException("Could not parse dob " + dobStr.toString()
+                                        + " for participant " + patientId + " in activity instance " + baselineCovidActivity.get("guid"));
+                            }
+
+                        } else if ("SEX".equals(questionStableId)) {
+                            JsonArray sexAnswers = answer.getAsJsonArray("answer");
+                            if (sexAnswers.size() > 0) {
+                                sex = sexAnswers.get(0).getAsString();
+                            }
+
+                            if ("SEX_FEMALE".equals(sex)) {
+                                sex = "F";
+                            } else if ("SEX_MALE".equals(sex)) {
+                                sex = "M";
+                            } else if ("OTHER".equals(sex)) {
+                                sex = "U";
+                            }  else {
+                                logger.error("Could not map sex " + sex + " to Ellkay code; will default to unknown for " + baselineCovidActivity.get("guid"));
+                            }
+
+                        }  else if ("RACE".equals(questionStableId)) {
+                            JsonArray races = answer.getAsJsonArray("answer");
+
+                            if (races.size() > 0) {
+                                // CareEvolve only supports a  single race per order, so we'll pick
+                                // one of  the selected values at random
+                                int randomIndex = ThreadLocalRandom.current().nextInt(races.size());
+                                race = races.get(randomIndex).getAsString();
+
+                                if ("ASIAN".equals(race)) {
+                                    race = "2028-9";
+                                } else if ("BLACK".equals(race)) {
+                                    race = "2054-5";
+                                } else if ("AMERICAN_INDIAN".equals(race)) {
+                                    race = "2054-5";
+                                } else if ("NATIVE_HAWAIIAN".equals(race)) {
+                                    race = "2076-8";
+                                } else if ("WHITE".equals(race)) {
+                                    race = "2106-3";
+                                } else if ("OTHER".equals(race)) {
+                                    race = "2131-1";
+                                } else {
+                                    logger.error("Could not map race " + race + " to Ellkay code; will default to other for " + baselineCovidActivity.get("guid"));
+                                }
+                            }
+                        }
+                        else if ("ETHNICITY".equals(questionStableId)) {
+                            JsonArray answers = answer.getAsJsonArray("answer");
+                            if  (answers.size() > 0) {
+                                ethnicity = answer.getAsJsonArray("answer").get(0).getAsString();
+                                if ("HISPANIC_LATINO".equals(ethnicity)) {
+                                    ethnicity = "H";
+                                } else if ("NOT_HISPANIC_LATINO".equals(ethnicity)) {
+                                    ethnicity = "N";
+                                } else {
+                                    logger.error("Could not map ethnicity " + ethnicity + " to Ellkay code; will default to unknown for " + baselineCovidActivity.get("guid"));
+                                }
+                            }
+                        }
+
+                    }
+
+                    Patient testPatient = new Patient(patientId, firstName, lastName, dob, race, ethnicity,
+                            sex, careEvolveAddress);
 
                     Message message = new Message(new Order(careEvolveAccount, testPatient, kitLabel, collectionDateTime, provider, aoes), kitId);
 
@@ -166,6 +255,17 @@ public class Covid19OrderRegistrar {
             }
         }
         return latestKitActivity;
+    }
+
+    private JsonObject getBaselineCovidActivity(JsonArray activities) {
+        JsonObject baselineCovidActivity = null;
+        for (int i = 0; i < activities.size(); i++) {
+            JsonObject activity = activities.get(i).getAsJsonObject();
+            if (BASELINE_COVID_ACTIVITY.equals(activity.get("activityCode").getAsString())) {
+                baselineCovidActivity = activity;
+            }
+        }
+        return baselineCovidActivity;
     }
 
     private Address toCareEvolveAddress(JsonObject esAddress) {
