@@ -107,7 +107,7 @@ public class PubSubLookUpJob implements Job {
 
         KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(query, testBostonResult.getSampleId());
         if (kitDDPNotification != null) {
-            EventUtil.triggerDDP(kitDDPNotification);
+            EventUtil.triggerDDPWithTestResult(kitDDPNotification, testBostonResult);
         }
     }
 
