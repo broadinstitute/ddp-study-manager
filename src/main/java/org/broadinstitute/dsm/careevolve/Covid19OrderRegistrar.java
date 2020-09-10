@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -90,37 +89,38 @@ public class Covid19OrderRegistrar {
                     String firstName = profile.get("firstName").getAsString();
                     String lastName = profile.get("lastName").getAsString();
 
-                    List<AOE> aoes = AOE.forTestBoston(null, kitId);
+                    List<AOE> aoes = AOE.forTestBoston(patientId, kitId);
 
                     JsonArray activities = data.get("activities").getAsJsonArray();
 
                     JsonObject latestKitActivity = getLatestKitActivity(activities);
                     JsonArray latestKitAnswers = latestKitActivity.get("questionsAnswers").getAsJsonArray();
 
-                    StringBuilder collectionDateTimeStr = new StringBuilder();
+                    String collectionDateTimeStr = null;
                     Instant collectionDateTime = null;
+                    StringBuilder collectionDate = new StringBuilder();
+                    StringBuilder collectionTime = new StringBuilder();
                     for (int i = 0; i < latestKitAnswers.size(); i++) {
                         JsonObject latestKitAnswer = latestKitAnswers.get(i).getAsJsonObject();
                         String questionStableId = latestKitAnswer.get("stableId").getAsString();
 
                         if ("SAMPLE_COLLECT_DATE".equals(questionStableId)) {
-                            JsonObject dateFields = latestKitAnswer.get("dateFields").getAsJsonObject();
-                            collectionDateTimeStr.append(dateFields.get("month")).append("/")
-                                    .append(dateFields.get("day")).append("/")
-                                    .append(dateFields.get("year"));
+                            collectionDate.append(latestKitAnswer.get("date").getAsString());
                         } else if ("SAMPLE_COLLECT_TIME".equals(questionStableId)) {
                             JsonArray timeFields = latestKitAnswer.getAsJsonArray("answer").get(0).getAsJsonArray();
                             for (int timeFieldIdx = 0; timeFieldIdx < timeFields.size(); timeFieldIdx++) {
-                                collectionDateTimeStr.append(" ").append(timeFields.get(timeFieldIdx).getAsString());
+                                collectionTime.append(" ").append(timeFields.get(timeFieldIdx).getAsString());
                             }
                         }
                     }
-
+                    collectionDateTimeStr = collectionDate + " "  + collectionTime;
                     try {
-                        collectionDateTime = new SimpleDateFormat("MM/dd/yyyy h m a").parse(collectionDateTimeStr.toString()).toInstant();
+                        collectionDateTime = new SimpleDateFormat("yyyy-MM-dd h m a").parse(
+                                collectionDateTimeStr
+                        ).toInstant();
                     } catch (ParseException e) {
                         throw new CareEvolveException("Could not parse collection date time " + collectionDateTimeStr.toString()
-                                + " for participant " + patientId + " in activity instance " + latestKitActivity.get("guid"));
+                                + " for participant " + patientId + " in activity instance " + latestKitActivity.get("guid"), e);
                     }
 
                     JsonObject baselineCovidActivity = getBaselineCovidActivity(activities);
@@ -171,7 +171,6 @@ public class Covid19OrderRegistrar {
 
                             if (races.size() == 1) {
                                 // CareEvolve only supports a  single race per order
-                                int randomIndex = ThreadLocalRandom.current().nextInt(races.size());
                                 race = races.get(0).getAsString();
 
                                 if ("ASIAN".equals(race)) {
