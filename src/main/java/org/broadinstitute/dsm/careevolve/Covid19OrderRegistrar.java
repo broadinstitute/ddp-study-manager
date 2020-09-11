@@ -65,9 +65,11 @@ public class Covid19OrderRegistrar {
      * @param kitLabel The label on the swab.  Corresponds to ORC-2 and GP sample_id
      * @param kitId an identifier that will show up in Birch to help
      *              associate the result back to the proper kit
+     * @param kitPickupTime the time at which the kit was picked
+     *                      up from the participant
      */
     public OrderResponse orderTest(Authentication auth, String participantHruid, String kitLabel,
-                                   String kitId) throws CareEvolveException {
+                                   String kitId, Instant kitPickupTime) throws CareEvolveException {
 
         DDPInstance instance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
 
@@ -113,14 +115,23 @@ public class Covid19OrderRegistrar {
                             }
                         }
                     }
-                    collectionDateTimeStr = collectionDate + " "  + collectionTime;
-                    try {
-                        collectionDateTime = new SimpleDateFormat("yyyy-MM-dd h m a").parse(
-                                collectionDateTimeStr
-                        ).toInstant();
-                    } catch (ParseException e) {
-                        throw new CareEvolveException("Could not parse collection date time " + collectionDateTimeStr.toString()
-                                + " for participant " + patientId + " in activity instance " + latestKitActivity.get("guid"), e);
+
+                    if (collectionDate.length() > 0 && collectionTime.length() > 0) {
+                        collectionDateTimeStr = collectionDate + " " + collectionTime;
+                        try {
+                            collectionDateTime = new SimpleDateFormat("yyyy-MM-dd h m a").parse(
+                                    collectionDateTimeStr
+                            ).toInstant();
+                        } catch (ParseException e) {
+                            throw new CareEvolveException("Could not parse collection date time " + collectionDateTimeStr.toString()
+                                    + " for participant " + patientId + " in activity instance " + latestKitActivity.get("guid"), e);
+                        }
+                    } else {
+                        collectionDateTime = kitPickupTime;
+                    }
+
+                    if (collectionDateTime == null) {
+                        logger.error("No kit collection time for "+ patientId);
                     }
 
                     JsonObject baselineCovidActivity = getBaselineCovidActivity(activities);
