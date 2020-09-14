@@ -226,7 +226,8 @@ public class KitUtil {
                                         rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_COUNTRY), rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_PHONE),
                                         rs.getString(DBConstants.KIT_TYPE_DISPLAY_NAME), rs.getString(DBConstants.EXTERNAL_SHIPPER),
                                         rs.getString(DBConstants.EXTERNAL_CLIENT_ID), rs.getString(DBConstants.EXTERNAL_KIT_NAME),
-                                        0, null), //label creation doesn't care if kit was part of sub kit...
+                                        0, null,
+                                        rs.getInt(DBConstants.DDP_INSTANCE_ID)), //label creation doesn't care if kit was part of sub kit...
                                 new KitType(rs.getInt(DBConstants.KIT_TYPE_ID),
                                         rs.getInt(DBConstants.DDP_INSTANCE_ID),
                                         rs.getString(DBConstants.KIT_TYPE_NAME),

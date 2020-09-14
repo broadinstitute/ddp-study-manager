@@ -3,7 +3,9 @@ package org.broadinstitute.dsm.util;
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.DSMServer;
+import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.LatestKitRequest;
 import org.broadinstitute.dsm.model.KitRequest;
@@ -12,12 +14,18 @@ import org.broadinstitute.dsm.model.KitSubKits;
 import org.broadinstitute.dsm.model.KitType;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.ddp.KitDetail;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.externalShipper.ExternalShipper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
+
+import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 public class DDPKitRequest {
 
@@ -44,8 +52,8 @@ public class DDPKitRequest {
                     KitDetail[] kitDetails = DDPRequestUtil.getResponseObject(KitDetail[].class, dsmRequest, latestKit.getInstanceName(), latestKit.isHasAuth0Token());
                     if (kitDetails != null) {
                         logger.info("Got " + kitDetails.length + " 'new' KitRequests from " + latestKit.getInstanceName());
-                        if(latestKit.getInstanceName().equals("testBoston")){
-                           logger.info("Test Boston kit :"+latestKit.getLatestDDPKitRequestID());
+                        if (latestKit.getInstanceName().equals("testBoston")) {
+                            logger.info("Test Boston kit :" + latestKit.getLatestDDPKitRequestID());
                         }
                         Map<String, Map<String, Object>> participantsESData = null;
                         if (kitDetails.length > 0) {
@@ -96,7 +104,7 @@ public class DDPKitRequest {
                                                                 if (ddpParticipant != null) {
                                                                     if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
                                                                         orderKit.add(new KitRequest(kitDetail.getParticipantId(), (String) profile.get("hruid"), ddpParticipant));
-                                                                        System.out.println(orderKit);
+                                                                        logger.info("Added kit with external order number " + orderKit.get(orderKit.size() - 1).getExternalOrderNumber() + " to the order listftodo pea");
                                                                     }
                                                                 }
                                                             }
@@ -104,7 +112,7 @@ public class DDPKitRequest {
                                                                 KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, kitType.getKitTypeId(),
                                                                         kitRequestSettings, collaboratorParticipantId, null);
                                                             }
-                                                            if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {//testboston
+                                                            if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper()) && !kitDetail.isNeedsApproval()) {//testboston
                                                                 kitsToOrder.put(kitRequestSettings, orderKit);
                                                             }
                                                         }
@@ -118,7 +126,7 @@ public class DDPKitRequest {
                                                     // if the kit type has sub kits > like for promise
                                                     String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(latestKit.getBaseURL(), latestKit.getInstanceID(), latestKit.isMigrated(),
                                                             latestKit.getCollaboratorIdPrefix(), participant.getParticipantId(), participant.getShortId(), kitRequestSettings.getCollaboratorParticipantLengthOverwrite());
-                                                    //only promise for now
+                                                    //only testboston for now
                                                     if (kitHasSubKits) {
                                                         List<KitSubKits> subKits = kitRequestSettings.getSubKits();
                                                         addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID());
@@ -134,7 +142,7 @@ public class DDPKitRequest {
                                                             orderKit.add(new KitRequest(kitDetail.getParticipantId(), participant.getShortId(), participant));
                                                         }
                                                     }
-                                                    if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
+                                                    if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper()) && !kitDetail.isNeedsApproval()) {
                                                         kitsToOrder.put(kitRequestSettings, orderKit);
                                                     }
                                                 }
@@ -157,6 +165,7 @@ public class DDPKitRequest {
                                 }
                             }
                             //TODO PEGAH GET UNORDERED OR NOT FOUND ORDERS AND ADD THEM  TO THE LIST
+//                            addOtherUnorderedKitsToList(kitsToOrder);
 
                             //only order if kit were added to kits to order hash (which should only be if a kit has an external shipper)
                             if (!kitsToOrder.isEmpty()) {
@@ -190,32 +199,100 @@ public class DDPKitRequest {
         }
     }
 
-    private void addSubKits(@NonNull List<KitSubKits> subKits, @NonNull KitDetail kitDetail, @NonNull String collaboratorParticipantId,
-                            @NonNull KitRequestSettings kitRequestSettings, @NonNull String instanceId) {
-        int subCounter = 0;
-        String externalOrderNumber = null;
-        if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
-            externalOrderNumber = generateExternalOrderNumber();
-            logger.info("Generated an externalOrderNumber " + externalOrderNumber);//todo Pegah will be removed after test
-        }
-        for (KitSubKits subKit : subKits) {
-            for (int i = 0; i < subKit.getKitCount(); i++) {
-                //kitRequestId needs to stay unique -> add `_[SUB_COUNTER]` to it
-                KitRequestShipping.addKitRequests(instanceId, subKit.getKitName(), kitDetail.getParticipantId(),
-                        subCounter == 0 ? kitDetail.getKitRequestId() : kitDetail.getKitRequestId() + "_" + subCounter, subKit.getKitTypeId(), kitRequestSettings,
-                        collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber);
-                subCounter = subCounter + 1;
+    public static void addOtherUnorderedKitsToList(Map<KitRequestSettings, ArrayList<KitRequest>> kitsToOrder) {
+        for (KitRequestSettings kitRequestSettings : kitsToOrder.keySet()) {
+            String query = "SELECT * FROM dev_dsm_db.ddp_kit_request request LEFT JOIN dev_dsm_db.ddp_kit kit on kit.dsm_kit_request_id = request.dsm_kit_request_id " +
+                    "LEFT JOIN ddp_kit_request_settings settings on settings.ddp_instance_id = request.ddp_instance_id " +
+                    "LEFT JOIN ddp_instance realm on (realm.ddp_instance_id = settings.ddp_instance_id) " +
+                    "where request.ddp_instance_id = ? and kit.needs_approval = true and kit.authorization = true and request.external_order_status is null";
+            ArrayList<KitRequest> orderKit = kitsToOrder.get(kitRequestSettings);
+            DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(kitRequestSettings.getDdpInstanceId());
+            SimpleResult results = inTransaction((conn) -> {
+                SimpleResult dbVals = new SimpleResult();
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setInt(1, kitRequestSettings.getDdpInstanceId());
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) {
+                            String participantsIndexES = ddpInstance.getParticipantIndexES();
+                            Map<String, Map<String, Object>> participantsESData = null;
+                            if (StringUtils.isNotBlank(participantsIndexES)) {
+                                //could be filtered as well to have a smaller list
+                                participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(ddpInstance.getName(), participantsIndexES);
+                            }
+                            if (participantsESData != null && !participantsESData.isEmpty()) {
+                                Map<String, Object> participantESData = participantsESData.get(rs.getString("" + DBConstants.DDP_PARTICIPANT_ID));
+                                if (participantESData != null && !participantESData.isEmpty()) {
+                                    DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData,
+                                            rs.getString(DBConstants.DDP_PARTICIPANT_ID));
+
+                                    Map<String, Object> profile = (Map<String, Object>) participantESData.get("profile");
+                                    if (profile != null && !profile.isEmpty()) {
+
+                                        KitDetail kitDetail = new KitDetail(rs.getString(DBConstants.DDP_PARTICIPANT_ID),
+                                                rs.getString(DBConstants.DDP_KIT_REQUEST_ID),
+                                                rs.getString(DBConstants.KIT_TYPE_ID),
+                                                rs.getBoolean("needs_approval"));
+                                        if (ddpParticipant != null) {
+                                            orderKit.add(new KitRequest(rs.getString(DBConstants.DSM_KIT_REQUEST_ID), rs.getString(DBConstants.DDP_PARTICIPANT_ID),
+                                                    null, null, rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER), ddpParticipant,
+                                                    rs.getString(DBConstants.EXTERNAL_ORDER_STATUS),
+                                                    rs.getString("subkits." + DBConstants.EXTERNAL_KIT_NAME),
+                                                    rs.getLong(DBConstants.EXTERNAL_ORDER_DATE)));
+                                            logger.info("Added unordered kit with external order number " + orderKit.get(orderKit.size() - 1).getExternalOrderNumber() + " to the order list");
+                                        }
+
+                                    }
+
+                                }
+                            }
+
+                        }
+                        kitsToOrder.put(kitRequestSettings,orderKit);
+                    }
+                    catch (SQLException ex) {
+                        throw new RuntimeException("Can not query for unordered kits for external shipper "+ ex);
+                    }
+
+                }
+                catch (SQLException ex) {
+                    dbVals.resultException = ex;
+                }
+                return dbVals;
+            });
+            if(results.resultException != null){
+                throw new RuntimeException("Error getting approved kits for external shipper "+ results.resultException);
             }
+
         }
-    }
-    public static String generateExternalOrderNumber() {
-        String externalOrderNumber = NanoIdUtils.randomNanoId(
-                NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 20);
-        while(DBUtil.existsExternalOrderNumber(externalOrderNumber)){
-            externalOrderNumber = NanoIdUtils.randomNanoId(
-                    NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 20);
-        }
-        return externalOrderNumber;
     }
 
-}
+        private void addSubKits (@NonNull List < KitSubKits > subKits, @NonNull KitDetail kitDetail, @NonNull String collaboratorParticipantId,
+                @NonNull KitRequestSettings kitRequestSettings, @NonNull String instanceId){
+            int subCounter = 0;
+            String externalOrderNumber = null;
+            if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
+                externalOrderNumber = generateExternalOrderNumber();
+                logger.info("Generated an externalOrderNumber " + externalOrderNumber);//todo Pegah will be removed after test
+            }
+            for (KitSubKits subKit : subKits) {
+                for (int i = 0; i < subKit.getKitCount(); i++) {
+                    //kitRequestId needs to stay unique -> add `_[SUB_COUNTER]` to it
+                    KitRequestShipping.addKitRequests(instanceId, subKit.getKitName(), kitDetail.getParticipantId(),
+                            subCounter == 0 ? kitDetail.getKitRequestId() : kitDetail.getKitRequestId() + "_" + subCounter, subKit.getKitTypeId(), kitRequestSettings,
+                            collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber);
+                    subCounter = subCounter + 1;
+                }
+            }
+        }
+
+        public static String generateExternalOrderNumber () {
+            String externalOrderNumber = NanoIdUtils.randomNanoId(
+                    NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 20);
+            while (DBUtil.existsExternalOrderNumber(externalOrderNumber)) {
+                externalOrderNumber = NanoIdUtils.randomNanoId(
+                        NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 20);
+            }
+            return externalOrderNumber;
+        }
+
+    }
