@@ -55,6 +55,13 @@ public class PubSubLookUp {
                 && StringUtils.isNotBlank(dsmTestResult.date) && dsmTestResult.date.equals(testBostonResult.getTimeCompleted())) {
             return false;
         }
+        // weird result
+        if (!testBostonResult.isCorrected()
+                && StringUtils.isNotBlank(dsmTestResult.result) && !dsmTestResult.result.equals(testBostonResult.getResult()) ) {
+
+            logger.error("A new result for sample id "+testBostonResult.getSampleId() +" that doesn't match the previous one. Date of the new result: "+testBostonResult.getTimeCompleted());
+            return false;
+        }
         return true;
     }
 
