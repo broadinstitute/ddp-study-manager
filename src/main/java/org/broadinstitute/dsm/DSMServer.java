@@ -74,7 +74,7 @@ public class DSMServer extends BasicServer {
 
     private static final Logger logger = LoggerFactory.getLogger(DSMServer.class);
 
-    private static final String API_ROOT = "/api/";
+    private static final String API_ROOT = "/ddp/";
     private static final String UI_ROOT = "/ui/";
 
     private static final String[] CORS_HTTP_METHODS = new String[] {"GET", "PUT", "POST", "OPTIONS", "PATCH"};
