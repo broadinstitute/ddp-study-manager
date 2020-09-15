@@ -322,9 +322,13 @@ public class DSMServer extends BasicServer {
                         System  .out.println("Data: " + message.getData().toStringUtf8());
                         try {
                             PubSubLookUp.processCovidTestResults(message);
+                            logger.info("Processing the message finished");
                             consumer.ack();
+
                         }catch(Exception ex){
+                            logger.info("about to nack the message");
                             consumer.nack();
+                            ex.printStackTrace();
                         }
                     };
 

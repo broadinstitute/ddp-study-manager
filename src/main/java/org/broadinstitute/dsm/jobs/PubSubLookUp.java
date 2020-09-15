@@ -29,7 +29,7 @@ public class PubSubLookUp {
     public static void processCovidTestResults(PubsubMessage message) {
         String data = message.getData().toStringUtf8();
         TestBostonResult testBostonResult = new Gson().fromJson(data, TestBostonResult.class);
-
+        logger.info("Processing test results for "+testBostonResult.getSampleId());
         if (shouldWriteResultIntoDB(testBostonResult)) {
             writeResultsIntoDB(testBostonResult);
             tellPepperAboutTheNewResults(testBostonResult);// notify pepper if we update DB
@@ -65,13 +65,17 @@ public class PubSubLookUp {
     }
 
     private static void tellPepperAboutTheNewResults(TestBostonResult testBostonResult) {
+        logger.info("Going to Notify Pepper");
         String query = "select   eve.event_name,   eve.event_type,   request.ddp_participant_id,   request.dsm_kit_request_id,   realm.ddp_instance_id,   realm.instance_name,   realm.base_url,   realm.auth0_token,   realm.notification_recipients,   realm.migrated_ddp,   kit.receive_date,   kit.scan_date   from   ddp_kit_request request,   ddp_kit kit,   event_type eve,   ddp_instance realm   where request.dsm_kit_request_id = kit.dsm_kit_request_id   and request.ddp_instance_id = realm.ddp_instance_id   " +
                 " and (eve.ddp_instance_id = request.ddp_instance_id   and eve.kit_type_id = request.kit_type_id)   and eve.event_type = \"RESULT\" " + // that's the change from the original query
                 " and request.external_order_number = ?"; // that's the change from the original query
 
         KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(query, testBostonResult.getSampleId());
         if (kitDDPNotification != null) {
+            logger.info("Notifying Pepper with notification");
             EventUtil.triggerDDPWithTestResult(kitDDPNotification, testBostonResult);
+        }else{
+            logger.info("kitDDPNotification was null");
         }
     }
 
@@ -137,6 +141,8 @@ public class PubSubLookUp {
 
         if (results.resultException != null) {
             throw new RuntimeException("Couldn't update the test results for kit label" + testBostonResult.getSampleId(), results.resultException);
+        }else{
+            logger.info("Updated test result for kit with external id " + testBostonResult.getSampleId() );
         }
 
     }
