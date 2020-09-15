@@ -77,9 +77,9 @@ public class DSMServer extends BasicServer {
     private static final String API_ROOT = "/ddp/";
     private static final String UI_ROOT = "/ui/";
 
-    private static final String[] CORS_HTTP_METHODS = new String[] {"GET", "PUT", "POST", "OPTIONS", "PATCH"};
-    private static final String[] CORS_HTTP_HEADERS = new String[] {"Content-Type", "Authorization", "X-Requested-With",
-            "Content-Length", "Accept", "Origin", ""};
+    private static final String[] CORS_HTTP_METHODS = new String[] { "GET", "PUT", "POST", "OPTIONS", "PATCH" };
+    private static final String[] CORS_HTTP_HEADERS = new String[] { "Content-Type", "Authorization", "X-Requested-With",
+            "Content-Length", "Accept", "Origin", "" };
 
     public static final String ENCRYPTION_PATH = "encryptorGem";
     public static final String SCRIPT = "def decrypt(encryptedValue, key)\n" +
@@ -96,10 +96,6 @@ public class DSMServer extends BasicServer {
     public static final String RECEIVER = "Receiver";
     public static final String ADDITIONAL_CRON_EXPRESSION = "AdditionalCronExpression";
     public static final String GCP_PATH_TO_SERVICE_ACCOUNT = "portal.googleProjectCredentials";
-
-    public static final String PUBSUB_BIRCH_TOPIC = "";
-    public static final String PUBSUB_PROJECT_ID = "hl7-dev-274911";
-    public static final String PUBSUB_BIRCH_SUBSCRIPTION = "pegah-results-sub";
 
     private static Map<String, MBCParticipant> mbcParticipants = new HashMap<>();
     private static Map<String, MBCInstitution> mbcInstitutions = new HashMap<>();
@@ -121,8 +117,8 @@ public class DSMServer extends BasicServer {
             //secrets from vault in a config file
             File vaultConfigInCwd = new File(VAULT_DOT_CONF);
             File vaultConfigInDeployDir = new File(GAE_DEPLOY_DIR, VAULT_DOT_CONF);
-            File vaultConfig = vaultConfigInCwd.exists()  ? vaultConfigInCwd : vaultConfigInDeployDir;
-            logger.info("Reading config values from "+vaultConfig.getAbsolutePath());
+            File vaultConfig = vaultConfigInCwd.exists() ? vaultConfigInCwd : vaultConfigInDeployDir;
+            logger.info("Reading config values from " + vaultConfig.getAbsolutePath());
             cfg = cfg.withFallback(ConfigFactory.parseFile(vaultConfig));
 
             if (cfg.hasPath(GCP_PATH_TO_SERVICE_ACCOUNT)) {
@@ -183,7 +179,7 @@ public class DSMServer extends BasicServer {
 
         //  capture basic route info for logging
         before("*", new LoggingFilter());
-        afterAfter((req, res)-> MDC.clear());
+        afterAfter((req, res) -> MDC.clear());
 
         before(API_ROOT + RoutePath.BSP_KIT_QUERY_PATH, (req, res) -> {
             if (!new JWTRouteFilter(bspSecret, null).isAccessAllowed(req)) {
@@ -243,7 +239,6 @@ public class DSMServer extends BasicServer {
         });
 
         get("/info/" + RoutePath.PARTICIPANT_STATUS_REQUEST, new ParticipantStatusRoute(), new JsonNullTransformer());
-
 
 
         // requests from frontend
@@ -306,15 +301,15 @@ public class DSMServer extends BasicServer {
         patch(UI_ROOT + RoutePath.USER_SETTINGS_REQUEST, new UserSettingRoute(), new JsonTransformer());
 
         setupJobs(cfg, kitUtil, notificationUtil, eventUtil, container, receiver);
-        
+
         setupPubSub();
 
         logger.info("Finished setting up DSM custom routes and jobs...");
     }
 
     private void setupPubSub() {
-        String projectId = "hl7-dev-274911";
-        String subscriptionId = "pegah-results-sub";
+        String projectId = "broad-ddp-dev";
+        String subscriptionId = "dev-dsm-test-results-sub";
 
         try {
             ProjectSubscriptionName subscriptionName =
@@ -324,10 +319,13 @@ public class DSMServer extends BasicServer {
             MessageReceiver receiver =
                     (PubsubMessage message, AckReplyConsumer consumer) -> {
                         // Handle incoming message, then ack the received message.
-                        System.out.println("Id: " + message.getMessageId());
-                        System.out.println("Data: " + message.getData().toStringUtf8());
-                        PubSubLookUp.processCovidTestResults(message);
-                        consumer.ack();
+                        System  .out.println("Data: " + message.getData().toStringUtf8());
+                        try {
+                            PubSubLookUp.processCovidTestResults(message);
+                            consumer.ack();
+                        }catch(Exception ex){
+                            consumer.nack();
+                        }
                     };
 
             Subscriber subscriber = null;
@@ -776,7 +774,7 @@ public class DSMServer extends BasicServer {
         // instance for sitting around too long in a nonresponsive state.  There is a
         // judgement call to be made here to allow for lengthy liquibase migrations during boot.
         logger.info("Will wait for at most {} seconds for boot before GAE termination", bootTimeoutSeconds);
-        get("/_ah/start",new ReadinessRoute(bootTimeoutSeconds));
+        get("/_ah/start", new ReadinessRoute(bootTimeoutSeconds));
     }
 
     private static class ReadinessRoute implements Route {
@@ -826,7 +824,7 @@ public class DSMServer extends BasicServer {
         });
         Spark.before((request, response) -> {
             String origin = request.headers("Origin");
-            response.header("Access-Control-Allow-Origin", ( StringUtils.isNotBlank(origin) && allowedOrigins.contains(origin) )? origin :  "");
+            response.header("Access-Control-Allow-Origin", (StringUtils.isNotBlank(origin) && allowedOrigins.contains(origin)) ? origin : "");
             response.header("Access-Control-Request-Method", methods);
             response.header("Access-Control-Allow-Headers", headers);
             response.header("Access-Control-Allow-Credentials", "true");

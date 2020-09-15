@@ -37,17 +37,15 @@ public class PubSubLookUp {
 
     private static boolean shouldWriteResultIntoDB(TestBostonResult testBostonResult) {
         DSMTestResult[] dsmTestResultArray = getLatestKitTestResults(testBostonResult);
-        if (dsmTestResultArray == null) {
+        if (dsmTestResultArray == null || dsmTestResultArray.length == 0) {
             return true;
         }
         DSMTestResult dsmTestResult = null;
-        if (dsmTestResultArray != null && dsmTestResultArray.length > 0) {
-            dsmTestResult = dsmTestResultArray[dsmTestResultArray.length - 1];
-        }
+        dsmTestResult = dsmTestResultArray[dsmTestResultArray.length - 1];
 
         //corrected result -> assuming corrected results are always changed
         if (dsmTestResult != null && !testBostonResult.isCorrected() && dsmTestResult.isCorrected) {
-            return true;
+            return false;//should we error?
         }
         //duplicate result
         if (testBostonResult.isCorrected() == dsmTestResult.isCorrected
@@ -57,10 +55,9 @@ public class PubSubLookUp {
         }
         // weird result
         if (!testBostonResult.isCorrected()
-                && StringUtils.isNotBlank(dsmTestResult.result) && !dsmTestResult.result.equals(testBostonResult.getResult()) ) {
+                && StringUtils.isNotBlank(dsmTestResult.result) && !dsmTestResult.result.equals(testBostonResult.getResult())) {
 
-            logger.error("A new result for sample id "+testBostonResult.getSampleId() +" that doesn't match the previous one. Date of the new result: "+testBostonResult.getTimeCompleted());
-            return false;
+            throw new RuntimeException("A new result for sample id " + testBostonResult.getSampleId() + " that doesn't match the previous one. Date of the new result: " + testBostonResult.getTimeCompleted());
         }
         return true;
     }
