@@ -308,8 +308,8 @@ public class DSMServer extends BasicServer {
     }
 
     private void setupPubSub() {
-        String projectId = "broad-ddp-dev";
-        String subscriptionId = "dev-dsm-test-results-sub";
+        String projectId = "hl7-dev-274911";
+        String subscriptionId = "pegah-results-sub";
 
         try {
             ProjectSubscriptionName subscriptionName =
