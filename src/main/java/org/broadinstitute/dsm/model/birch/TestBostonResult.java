@@ -10,5 +10,7 @@ public class TestBostonResult {
     private String result;
     private String reason;
     private String timeCompleted;
+    private boolean isCorrected;
+    private String kitRequestId;
     
 }

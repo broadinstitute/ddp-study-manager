@@ -1,8 +1,15 @@
 package org.broadinstitute.dsm;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.api.gax.core.ExecutorProvider;
+import com.google.api.gax.core.InstantiatingExecutorProvider;
+import com.google.cloud.pubsub.v1.AckReplyConsumer;
+import com.google.cloud.pubsub.v1.MessageReceiver;
+import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.common.net.MediaType;
 import com.google.gson.*;
+import com.google.pubsub.v1.ProjectSubscriptionName;
+import com.google.pubsub.v1.PubsubMessage;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import liquibase.Contexts;
@@ -53,6 +60,8 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -304,6 +313,42 @@ public class DSMServer extends BasicServer {
     }
 
     private void setupPubSub() {
+        String projectId = "hl7-dev-274911";
+        String subscriptionId = "pegah-results-sub";
+
+        try {
+            ProjectSubscriptionName subscriptionName =
+                    ProjectSubscriptionName.of(projectId, subscriptionId);
+
+            // Instantiate an asynchronous message receiver.
+            MessageReceiver receiver =
+                    (PubsubMessage message, AckReplyConsumer consumer) -> {
+                        // Handle incoming message, then ack the received message.
+                        System.out.println("Id: " + message.getMessageId());
+                        System.out.println("Data: " + message.getData().toStringUtf8());
+                        PubSubLookUp.processCovidTestResults(message);
+                        consumer.ack();
+                    };
+
+            Subscriber subscriber = null;
+            ProjectSubscriptionName resultSubName = ProjectSubscriptionName.of(projectId, subscriptionId);
+            ExecutorProvider resultsSubExecProvider = InstantiatingExecutorProvider.newBuilder().setExecutorThreadCount(10).build();
+            subscriber = Subscriber.newBuilder(resultSubName, receiver)
+                    .setParallelPullCount(1)
+                    .setExecutorProvider(resultsSubExecProvider)
+                    .setMaxAckExtensionPeriod(org.threeten.bp.Duration.ofSeconds(120))
+                    .build();
+            try {
+                subscriber.startAsync().awaitRunning(1L, TimeUnit.MINUTES);
+                logger.info("Started subscription receiver for {}", subscriptionId);
+            }
+            catch (TimeoutException e) {
+                throw new RuntimeException("Timed out while starting pubsub subscription " + subscriptionId, e);
+            }
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Failed to get results from pubsub ", e);
+        }
     }
 
     protected void updateDB(@NonNull String dbUrl) {
@@ -499,9 +544,6 @@ public class DSMServer extends BasicServer {
 
                 createScheduleJob(scheduler, null, null, EasypostShipmentStatusJob.class, "CHECK_STATUS_SHIPMENT",
                         cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_STATUS_SHIPMENT), new EasypostShipmentStatusTriggerListener(), cfg);
-
-                createScheduleJob(scheduler, null, null, PubSubLookUpJob.class, "PUBSUB_LOOKUP_JOB",
-                        cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_PUBSUB_LOOKUP), new PubSubLookupTriggerListener(), cfg);
 
                 logger.info("Setup Job Scheduler...");
                 try {
