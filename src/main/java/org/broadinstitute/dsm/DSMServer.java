@@ -70,9 +70,9 @@ public class DSMServer extends BasicServer {
     private static final String API_ROOT = "/ddp/";
     private static final String UI_ROOT = "/ui/";
 
-    private static final String[] CORS_HTTP_METHODS = new String[] {"GET", "PUT", "POST", "OPTIONS", "PATCH"};
-    private static final String[] CORS_HTTP_HEADERS = new String[] {"Content-Type", "Authorization", "X-Requested-With",
-            "Content-Length", "Accept", "Origin", ""};
+    private static final String[] CORS_HTTP_METHODS = new String[] { "GET", "PUT", "POST", "OPTIONS", "PATCH" };
+    private static final String[] CORS_HTTP_HEADERS = new String[] { "Content-Type", "Authorization", "X-Requested-With",
+            "Content-Length", "Accept", "Origin", "" };
 
     public static final String ENCRYPTION_PATH = "encryptorGem";
     public static final String SCRIPT = "def decrypt(encryptedValue, key)\n" +
@@ -89,6 +89,11 @@ public class DSMServer extends BasicServer {
     public static final String RECEIVER = "Receiver";
     public static final String ADDITIONAL_CRON_EXPRESSION = "externalShipper_cron_expression_additional";
     public static final String GCP_PATH_TO_SERVICE_ACCOUNT = "portal.googleProjectCredentials";
+    public static final String UPS_PATH_TO_USERNAME = "ups.username";
+    public static final String UPS_PATH_TO_ACCESSKEY = "ups.accesskey";
+
+    public static String UPS_USERNAME;
+    public static String UPS_ACCESSKEY;
 
     private static Map<String, MBCParticipant> mbcParticipants = new HashMap<>();
     private static Map<String, MBCInstitution> mbcInstitutions = new HashMap<>();
@@ -110,8 +115,8 @@ public class DSMServer extends BasicServer {
             //secrets from vault in a config file
             File vaultConfigInCwd = new File(VAULT_DOT_CONF);
             File vaultConfigInDeployDir = new File(GAE_DEPLOY_DIR, VAULT_DOT_CONF);
-            File vaultConfig = vaultConfigInCwd.exists()  ? vaultConfigInCwd : vaultConfigInDeployDir;
-            logger.info("Reading config values from "+vaultConfig.getAbsolutePath());
+            File vaultConfig = vaultConfigInCwd.exists() ? vaultConfigInCwd : vaultConfigInDeployDir;
+            logger.info("Reading config values from " + vaultConfig.getAbsolutePath());
             cfg = cfg.withFallback(ConfigFactory.parseFile(vaultConfig));
 
             if (cfg.hasPath(GCP_PATH_TO_SERVICE_ACCOUNT)) {
@@ -172,7 +177,7 @@ public class DSMServer extends BasicServer {
 
         //  capture basic route info for logging
         before("*", new LoggingFilter());
-        afterAfter((req, res)-> MDC.clear());
+        afterAfter((req, res) -> MDC.clear());
 
         before(API_ROOT + RoutePath.BSP_KIT_QUERY_PATH, (req, res) -> {
             if (!new JWTRouteFilter(bspSecret, null).isAccessAllowed(req)) {
@@ -234,7 +239,6 @@ public class DSMServer extends BasicServer {
         get("/info/" + RoutePath.PARTICIPANT_STATUS_REQUEST, new ParticipantStatusRoute(), new JsonNullTransformer());
 
 
-
         // requests from frontend
         before(UI_ROOT + "*", (req, res) -> {
             if (!"OPTIONS".equals(req.requestMethod())) {
@@ -256,7 +260,8 @@ public class DSMServer extends BasicServer {
         setupDDPConfigurationLookup(cfg.getString(ApplicationConfigConstants.DDP));
 
         AuthenticationRoute authenticationRoute = new AuthenticationRoute(auth0Util,
-                jwtSecret, cookieSalt, cookieName, userUtil, cfg.getString("portal.environment"));
+                jwtSecret, cookieSalt, cookieName, userUtil,
+                cfg.getString("portal.environment"));
         post(UI_ROOT + RoutePath.AUTHENTICATION_REQUEST, authenticationRoute, new JsonTransformer());
 
         KitUtil kitUtil = new KitUtil();
@@ -278,8 +283,8 @@ public class DSMServer extends BasicServer {
         PatchUtil patchUtil = new PatchUtil();
 
         // currently not needed anymore but might come back
-         setupExternalShipperLookup(cfg.getString(ApplicationConfigConstants.EXTERNAL_SHIPPER));
-         GBFRequestUtil gbfRequestUtil = new GBFRequestUtil();
+        setupExternalShipperLookup(cfg.getString(ApplicationConfigConstants.EXTERNAL_SHIPPER));
+        GBFRequestUtil gbfRequestUtil = new GBFRequestUtil();
 
         setupShippingRoutes(notificationUtil, auth0Util, userUtil);
 
@@ -488,14 +493,21 @@ public class DSMServer extends BasicServer {
                         cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_EXPRESSION_FOR_DDP_EVENT_TRIGGER), new DDPEventTriggerListener(), null);
 
                 // currently not needed anymore but might come back
-                 createScheduleJob(scheduler, eventUtil, notificationUtil,
-                         ExternalShipperJob.class, "CHECK_EXTERNAL_SHIPPER",
-                         cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_EXPRESSION_FOR_EXTERNAL_SHIPPER),
-                         new ExternalShipperTriggerListener(), cfg);
+                createScheduleJob(scheduler, eventUtil, notificationUtil,
+                        ExternalShipperJob.class, "CHECK_EXTERNAL_SHIPPER",
+                        cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_EXPRESSION_FOR_EXTERNAL_SHIPPER),
+                        new ExternalShipperTriggerListener(), cfg);
 
                 createScheduleJob(scheduler, null, null, EasypostShipmentStatusJob.class, "CHECK_STATUS_SHIPMENT",
                         cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_STATUS_SHIPMENT), new EasypostShipmentStatusTriggerListener(), cfg);
 
+                //pegah todo
+//                createScheduleJob(scheduler, null, null, UPSTrackingJob.class, "UPS_TRACKING_JOB",
+//                        cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_STATUS_SHIPMENT), new EasypostShipmentStatusTriggerListener(), cfg);
+
+                UPS_ACCESSKEY = cfg.getString(UPS_PATH_TO_ACCESSKEY);
+                UPS_USERNAME = cfg.getString(UPS_PATH_TO_USERNAME);
+                UPSTrackingJob.testMethod();
                 logger.info("Setup Job Scheduler...");
                 try {
                     scheduler.start();
@@ -609,10 +621,10 @@ public class DSMServer extends BasicServer {
             //pass parameters to JobDataMap for JobDetail
             job.getJobDataMap().put(NOTIFICATION_UTIL, notificationUtil);
         }
-//         currently not needed anymore but might come back
-         if (jobClass == ExternalShipperJob.class) {
-         job.getJobDataMap().put(ADDITIONAL_CRON_EXPRESSION, config.getString(ApplicationConfigConstants.QUARTZ_CRON_EXPRESSION_FOR_EXTERNAL_SHIPPER_ADDITIONAL));
-         }
+        //         currently not needed anymore but might come back
+        if (jobClass == ExternalShipperJob.class) {
+            job.getJobDataMap().put(ADDITIONAL_CRON_EXPRESSION, config.getString(ApplicationConfigConstants.QUARTZ_CRON_EXPRESSION_FOR_EXTERNAL_SHIPPER_ADDITIONAL));
+        }
 
         logger.info(cronExpression);
 
@@ -681,14 +693,14 @@ public class DSMServer extends BasicServer {
     }
 
     // currently not needed anymore but might come back
-        public static void setupExternalShipperLookup(@NonNull String externalSipperConf) {
-            JsonArray array = (JsonArray) (new JsonParser().parse(externalSipperConf));
-            for (JsonElement ddpInfo : array) {
-                if (ddpInfo.isJsonObject()) {
-                    ddpConfigurationLookup.put(ddpInfo.getAsJsonObject().get(ApplicationConfigConstants.SHIPPER_NAME).getAsString().toLowerCase(), ddpInfo);
-                }
+    public static void setupExternalShipperLookup(@NonNull String externalSipperConf) {
+        JsonArray array = (JsonArray) (new JsonParser().parse(externalSipperConf));
+        for (JsonElement ddpInfo : array) {
+            if (ddpInfo.isJsonObject()) {
+                ddpConfigurationLookup.put(ddpInfo.getAsJsonObject().get(ApplicationConfigConstants.SHIPPER_NAME).getAsString().toLowerCase(), ddpInfo);
             }
         }
+    }
 
     public static String getApiKey(@NonNull String shipperName) {
         JsonElement jsonElement = ddpConfigurationLookup.get(shipperName.toLowerCase());
@@ -727,7 +739,7 @@ public class DSMServer extends BasicServer {
         // instance for sitting around too long in a nonresponsive state.  There is a
         // judgement call to be made here to allow for lengthy liquibase migrations during boot.
         logger.info("Will wait for at most {} seconds for boot before GAE termination", bootTimeoutSeconds);
-        get("/_ah/start",new ReadinessRoute(bootTimeoutSeconds));
+        get("/_ah/start", new ReadinessRoute(bootTimeoutSeconds));
     }
 
     private static class ReadinessRoute implements Route {
@@ -777,7 +789,7 @@ public class DSMServer extends BasicServer {
         });
         Spark.before((request, response) -> {
             String origin = request.headers("Origin");
-            response.header("Access-Control-Allow-Origin", ( StringUtils.isNotBlank(origin) && allowedOrigins.contains(origin) )? origin :  "");
+            response.header("Access-Control-Allow-Origin", (StringUtils.isNotBlank(origin) && allowedOrigins.contains(origin)) ? origin : "");
             response.header("Access-Control-Request-Method", methods);
             response.header("Access-Control-Allow-Headers", headers);
             response.header("Access-Control-Allow-Credentials", "true");

@@ -3,54 +3,103 @@ package org.broadinstitute.dsm.jobs;
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.gson.Gson;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.util.Utility;
+import org.broadinstitute.dsm.DSMServer;
+import org.broadinstitute.dsm.model.ups.UPSTrackingResponse;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.DDPRequestUtil;
 import org.broadinstitute.dsm.util.SecurityUtil;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Response;
 
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 public class UPSTrackingJob implements Job {
 
     private static final Logger logger = LoggerFactory.getLogger(UPSTrackingJob.class);
-    private static final String SQL_SELECT_KITS = "SELECT * FROM ddp_kit kit LEFT JOIN ddp_kit_request req ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) AND kit.ddp_instance_id = ?";
-    String upsTrackingEndpoint="https://wwwcie.ups.com/track/v1/details/";//todo pegah should be changed for prod and moved to vault
-    String upsAccessCode = "";
-    String upsUserName = "";
+    private static final String SQL_SELECT_KITS = "SELECT * FROM ddp_kit kit LEFT JOIN ddp_kit_request req ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) WHERE req.ddp_instance_id = ?";
+    static String upsTrackingEndpoint = "https://wwwcie.ups.com/track/v1/details/";//todo pegah should be changed for prod and moved to vault
+    static String upsAccessCode = "";
+    static String upsUserName = "";
     String upsPassword = "";
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        ResultSet rs = getResultSet("15");
-        ArrayList<String> trackingIds = (ArrayList<String>) getTrackingIdsFromResultSet(rs);
-        ArrayList<String> returnTrackingIds = (ArrayList<String>) getReturnIdsFromResultSet(rs);
-        for(String trackingId: trackingIds){
+        //        String realm = getRealmsWithRole();
+        Map<String, Set<String>> ids = getResultSet("15");
+        ArrayList<String> trackingIds = (ArrayList<String>) ids.get("shipping");
+        ArrayList<String> returnTrackingIds = (ArrayList<String>) ids.get("return");
+        for (String trackingId : trackingIds) {
             String transId = NanoIdUtils.randomNanoId(
                     NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 32);
             String inquiryNumber = trackingId;
             String transSrc = "TestTracking";
+            String sendRequest = upsTrackingEndpoint + inquiryNumber;
+            Map<String, String> headers = new HashMap<>();
+            headers.put("transId", transId);
+            headers.put("transSrc", transSrc);
+            headers.put("Username", DSMServer.UPS_USERNAME);
+            headers.put("AccessLicenseNumber", DSMServer.UPS_ACCESSKEY);
+            headers.put("Content-Type", "application/json");
+            headers.put("Accept", "application/json");
+            try {
+                UPSTrackingResponse response = DDPRequestUtil.getResponseObjectWithCustomHeader(UPSTrackingResponse.class, sendRequest, "UPS Tracking Test " + inquiryNumber, headers);
+                logger.info("got response back: " + response);
+
+            }
+            catch (IOException e) {
+                throw new RuntimeException("couldn't get response from ups tracking ", e);
+            }
         }
     }
 
-    public static ResultSet getResultSet(String realm) {
+    public static void testMethod() {
+        Map<String, Set<String>> ids = getResultSet("15");
+        Set<String> trackingIds = (HashSet<String>) ids.get("shipping");
+        Set<String> returnTrackingIds = (HashSet<String>) ids.get("return");
+        for (String trackingId : returnTrackingIds) {
+            String transId = NanoIdUtils.randomNanoId(
+                    NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 32);
+            String inquiryNumber = trackingId;
+            String transSrc = "TestTracking";
+            String sendRequest = upsTrackingEndpoint + inquiryNumber;
+            Map<String, String> headers = new HashMap<>();
+            headers.put("transId", transId);
+            headers.put("transSrc", transSrc);
+            headers.put("Username", upsUserName);
+            headers.put("AccessLicenseNumber", upsAccessCode);
+            headers.put("Content-Type", "application/json");
+            headers.put("Accept", "application/json");
+            try {
+                UPSTrackingResponse response = DDPRequestUtil.getResponseObjectWithCustomHeader(UPSTrackingResponse.class, sendRequest, "UPS Tracking Test " + inquiryNumber, headers);
+                logger.info("got response back: " + response);
+
+            }
+            catch (IOException e) {
+                throw new RuntimeException("couldn't get response from ups tracking ", e);
+            }
+        }
+    }
+
+    public static Map<String, Set<String>> getResultSet(String realm) {
         SimpleResult result = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KITS)) {
                 stmt.setString(1, realm);
                 try (ResultSet rs = stmt.executeQuery()) {
-                    dbVals.resultValue = rs;
+                    Map<String, Set<String>> results = getIdsFromResultSet(rs);
+                    dbVals.resultValue = results;
                     return dbVals;
                 }
                 catch (Exception e) {
@@ -65,33 +114,29 @@ public class UPSTrackingJob implements Job {
         if (result.resultException != null) {
             throw new RuntimeException(result.resultException);
         }
-        return ((ResultSet) result.resultValue);
+        return (Map<String, Set<String>>) result.resultValue;
     }
 
-    public static List<String> getReturnIdsFromResultSet(ResultSet rs) {
-        ArrayList<String> trackingIds = new ArrayList<>();
+    public static Map<String, Set<String>> getIdsFromResultSet(ResultSet rs) {
+        Set<String> returnTrackingIds = new HashSet<>();
+        Set<String> trackingIds = new HashSet<>();
         try {
             while (rs.next()) {
-                trackingIds.add(rs.getString(DBConstants.TRACKING_RETURN_ID));
+                if (StringUtils.isNotBlank(rs.getString("kit.tracking_to_id"))) {
+                    trackingIds.add(rs.getString("kit.tracking_to_id"));
+                }
+                if (StringUtils.isNotBlank(rs.getString("kit.tracking_return_id"))) {
+                    returnTrackingIds.add(rs.getString("kit.tracking_return_id"));
+                }
             }
         }
         catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
-        return trackingIds;
-    }
-
-    public static List<String> getTrackingIdsFromResultSet(ResultSet rs) {
-        ArrayList<String> returnTrackingIds = new ArrayList<>();
-        try {
-            while (rs.next()) {
-                returnTrackingIds.add(rs.getString(DBConstants.TRACKING_RETURN_ID));
-            }
-        }
-        catch (SQLException ex) {
-            throw new RuntimeException(ex);
-        }
-        return returnTrackingIds;
+        Map<String, Set<String>> results = new HashMap<>();
+        results.put("shipping", trackingIds);
+        results.put("return", returnTrackingIds);
+        return results;
     }
 
 
