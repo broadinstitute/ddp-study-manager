@@ -24,12 +24,12 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 public class PubSubLookUp {
     private static final Logger logger = LoggerFactory.getLogger(PubSubLookUp.class);
     private static String SELECT_LATEST_RESULT_QUERY = "SELECT kit.test_result FROM dev_dsm_db.ddp_kit_request req LEFT JOIN  ddp_kit kit ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) " +
-            "WHERE req.external_order_number = ? and req.kit_type_id=12"; //todo pegah change this later to insert kit_type_id
+            "WHERE req.external_order_number = ? and req.kit_type_id=12"; //todo pegah change this for prod to kit_label
 
     public static void processCovidTestResults(PubsubMessage message) {
         String data = message.getData().toStringUtf8();
         TestBostonResult testBostonResult = new Gson().fromJson(data, TestBostonResult.class);
-        logger.info("Processing test results for "+testBostonResult.getSampleId());
+        logger.info("Processing test results for " + testBostonResult.getSampleId());
         if (shouldWriteResultIntoDB(testBostonResult)) {
             writeResultsIntoDB(testBostonResult);
             tellPepperAboutTheNewResults(testBostonResult);// notify pepper if we update DB
@@ -52,7 +52,7 @@ public class PubSubLookUp {
         //duplicate result
         if (testBostonResult.isCorrected() == dsmTestResult.isCorrected
                 && StringUtils.isNotBlank(dsmTestResult.result) && dsmTestResult.result.equals(testBostonResult.getResult())
-                && StringUtils.isNotBlank(dsmTestResult.date) && dsmTestResult.date.equals(testBostonResult.getTimeCompleted())) {
+                && StringUtils.isNotBlank(dsmTestResult.getTimeCompleted()) && dsmTestResult.getTimeCompleted().equals(testBostonResult.getTimeCompleted())) {
             return false;
         }
         // weird result
@@ -66,15 +66,16 @@ public class PubSubLookUp {
 
     private static void tellPepperAboutTheNewResults(TestBostonResult testBostonResult) {
         logger.info("Going to Notify Pepper");
-        String query = "select   eve.event_name,   eve.event_type,   request.ddp_participant_id,   request.dsm_kit_request_id,   realm.ddp_instance_id,   realm.instance_name,   realm.base_url,   realm.auth0_token,   realm.notification_recipients,   realm.migrated_ddp,   kit.receive_date,   kit.scan_date   from   ddp_kit_request request,   ddp_kit kit,   event_type eve,   ddp_instance realm   where request.dsm_kit_request_id = kit.dsm_kit_request_id   and request.ddp_instance_id = realm.ddp_instance_id   " +
+        String query = "select eve.event_name, eve.event_type, request.ddp_participant_id, request.dsm_kit_request_id, realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token,   realm.notification_recipients,   realm.migrated_ddp,   kit.receive_date,   kit.scan_date   from   ddp_kit_request request,   ddp_kit kit,   event_type eve,   ddp_instance realm   where request.dsm_kit_request_id = kit.dsm_kit_request_id   and request.ddp_instance_id = realm.ddp_instance_id   " +
                 " and (eve.ddp_instance_id = request.ddp_instance_id   and eve.kit_type_id = request.kit_type_id)   and eve.event_type = \"RESULT\" " + // that's the change from the original query
                 " and request.external_order_number = ?"; // that's the change from the original query
 
         KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(query, testBostonResult.getSampleId());
         if (kitDDPNotification != null) {
-            logger.info("Notifying Pepper with notification");
             EventUtil.triggerDDPWithTestResult(kitDDPNotification, testBostonResult);
-        }else{
+            logger.info("Notified Pepper with notification");
+        }
+        else {
             logger.info("kitDDPNotification was null");
         }
     }
@@ -111,7 +112,7 @@ public class PubSubLookUp {
 
     public static void writeResultsIntoDB(TestBostonResult testBostonResult) {
         DSMTestResult[] dsmTestResultArray = getLatestKitTestResults(testBostonResult);
-        String query = "UPDATE ddp_kit SET  test_result = ? WHERE dsm_kit_id <> 0 and  dsm_kit_id  in (select  dsm_kit_request_id from (select * from ddp_kit_request as something where something.external_order_number= ? and something.kit_type_id = 12 ) as t  )";
+        String query = "UPDATE ddp_kit SET  test_result = ? WHERE dsm_kit_id <> 0 and  dsm_kit_request_id  in (select  dsm_kit_request_id from (select * from ddp_kit_request as something where something.external_order_number= ? and something.kit_type_id = 12 ) as t  )";
         DSMTestResult[] array = null;
         DSMTestResult newDsmTestResult = new DSMTestResult(testBostonResult.getResult(), testBostonResult.getTimeCompleted(), testBostonResult.isCorrected());
         if (dsmTestResultArray == null) {
@@ -129,8 +130,14 @@ public class PubSubLookUp {
                         && StringUtils.isNotBlank(testBostonResult.getTimeCompleted())
                         && StringUtils.isNotBlank(testBostonResult.getSampleId())) {
                     stmt.setString(1, finalArray);
-                    stmt.executeUpdate();
-                    logger.info("Updated test result for kit with external id " + testBostonResult.getSampleId() + " to " + testBostonResult.getResult());
+                    stmt.setString(2, testBostonResult.getSampleId());
+                    int result = stmt.executeUpdate();
+                    if (result != 1) {
+                        throw new RuntimeException("Error updating test  result for"+ testBostonResult.getSampleId()+", returned " + result + " rows");
+                    }
+                    else {
+                        logger.info("Updated test result for kit with external id " + testBostonResult.getSampleId() + " to " + testBostonResult.getResult());
+                    }
                 }
             }
             catch (SQLException ex) {
@@ -141,8 +148,9 @@ public class PubSubLookUp {
 
         if (results.resultException != null) {
             throw new RuntimeException("Couldn't update the test results for kit label" + testBostonResult.getSampleId(), results.resultException);
-        }else{
-            logger.info("Updated test result for kit with external id " + testBostonResult.getSampleId() );
+        }
+        else {
+            logger.info("Updated test result for kit with external id " + testBostonResult.getSampleId());
         }
 
     }

@@ -6,6 +6,7 @@ import org.broadinstitute.ddp.handlers.util.Event;
 import org.broadinstitute.dsm.db.ParticipantEvent;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.TestResultEvent;
+import org.broadinstitute.dsm.model.birch.DSMTestResult;
 import org.broadinstitute.dsm.model.birch.TestBostonResult;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
@@ -121,7 +122,8 @@ public class EventUtil {
 
     private static void triggerDDPWithTestResult(@NonNull String eventType, @NonNull KitDDPNotification kitInfo, @Nonnull TestBostonResult result) {
         try {
-            TestResultEvent event = new TestResultEvent(kitInfo.getParticipantId(), eventType, kitInfo.getDate() / 1000, result);
+            DSMTestResult dsmTestResult = new DSMTestResult(result.getResult(), result.getTimeCompleted(), result.isCorrected());
+            TestResultEvent event = new TestResultEvent(kitInfo.getParticipantId(), eventType, kitInfo.getDate() / 1000, dsmTestResult);
             String sendRequest = kitInfo.getBaseUrl() + RoutePath.DDP_PARTICIPANT_EVENT_PATH + "/" + kitInfo.getParticipantId();
             DDPRequestUtil.postRequest(sendRequest, event, kitInfo.getInstanceName(), kitInfo.isHasAuth0Token());
             addEvent(eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId());
