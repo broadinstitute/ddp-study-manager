@@ -38,9 +38,9 @@ public class UPSTrackingJob implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
         //        String realm = getRealmsWithRole();
         Map<String, Set<String>> ids = getResultSet("15");
-        ArrayList<String> trackingIds = (ArrayList<String>) ids.get("shipping");
-        ArrayList<String> returnTrackingIds = (ArrayList<String>) ids.get("return");
-        for (String trackingId : trackingIds) {
+        Set<String> trackingIds = (HashSet<String>) ids.get("shipping");
+        Set<String> returnTrackingIds = (HashSet<String>) ids.get("return");
+        for (String trackingId : returnTrackingIds) {
             String transId = NanoIdUtils.randomNanoId(
                     NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 32);
             String inquiryNumber = trackingId;
@@ -50,6 +50,7 @@ public class UPSTrackingJob implements Job {
             headers.put("transId", transId);
             headers.put("transSrc", transSrc);
             headers.put("Username", DSMServer.UPS_USERNAME);
+            headers.put("Password", DSMServer.UPS_PASSWORD);
             headers.put("AccessLicenseNumber", DSMServer.UPS_ACCESSKEY);
             headers.put("Content-Type", "application/json");
             headers.put("Accept", "application/json");
@@ -64,33 +65,6 @@ public class UPSTrackingJob implements Job {
         }
     }
 
-    public static void testMethod() {
-        Map<String, Set<String>> ids = getResultSet("15");
-        Set<String> trackingIds = (HashSet<String>) ids.get("shipping");
-        Set<String> returnTrackingIds = (HashSet<String>) ids.get("return");
-        for (String trackingId : returnTrackingIds) {
-            String transId = NanoIdUtils.randomNanoId(
-                    NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 32);
-            String inquiryNumber = trackingId;
-            String transSrc = "TestTracking";
-            String sendRequest = upsTrackingEndpoint + inquiryNumber;
-            Map<String, String> headers = new HashMap<>();
-            headers.put("transId", transId);
-            headers.put("transSrc", transSrc);
-            headers.put("Username", upsUserName);
-            headers.put("AccessLicenseNumber", upsAccessCode);
-            headers.put("Content-Type", "application/json");
-            headers.put("Accept", "application/json");
-            try {
-                UPSTrackingResponse response = DDPRequestUtil.getResponseObjectWithCustomHeader(UPSTrackingResponse.class, sendRequest, "UPS Tracking Test " + inquiryNumber, headers);
-                logger.info("got response back: " + response);
-
-            }
-            catch (IOException e) {
-                throw new RuntimeException("couldn't get response from ups tracking ", e);
-            }
-        }
-    }
 
     public static Map<String, Set<String>> getResultSet(String realm) {
         SimpleResult result = inTransaction((conn) -> {

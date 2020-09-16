@@ -62,31 +62,17 @@ public class GBFRequestUtil implements ExternalShipper {
             "LEFT JOIN sub_kits_settings subK ON (subK.ddp_kit_request_settings_id = dkc.ddp_kit_request_settings_id)) as subkits ON (subkits.kit_type_id = request.kit_type_id) " +
             "WHERE ex.ddp_participant_exit_id is null AND request.ddp_instance_id = ? AND NOT external_order_status <=> 'CANCELLED' AND (external_response IS NULL OR kit_label IS NULL) AND external_order_number IS NOT NULL";
     private static final String SQL_SELECT_KIT_REQUEST_BY_EXTERNAL_ORDER_NUMBER = "SELECT dsm_kit_request_id FROM ddp_kit_request req WHERE external_order_number = ?";
-    private static final String SQL_SELECT_SENT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select" +
-            "        eve.*," +
-            "        request.ddp_participant_id," +
-            "        request.ddp_label," +
-            "        request.dsm_kit_request_id," +
-            "        realm.ddp_instance_id," +
-            "        realm.instance_name," +
-            "        realm.base_url," +
-            "        realm.auth0_token," +
-            "        realm.notification_recipients," +
-            "        realm.migrated_ddp," +
-            "        kit.receive_date," +
-            "        kit.scan_date" +
-            "        from" +
-            "        ddp_kit_request request," +
-            "        ddp_kit kit," +
-            "        event_type eve," +
-            "        ddp_instance realm" +
-            "        where request.dsm_kit_request_id = kit.dsm_kit_request_id" +
-            "        and request.ddp_instance_id = realm.ddp_instance_id" +
-            "        and (eve.ddp_instance_id = request.ddp_instance_id" +
-            "        and eve.kit_type_id = request.kit_type_id)" +
-            "        and eve.event_type = \"SENT\"" +
-            "        and request.external_order_number is not null" +
-            "        and request.external_order_number= ?";
+    private static final String SQL_SELECT_SENT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
+            "        from ddp_kit_request request, ddp_kit kit, event_type eve, ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
+            "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = \"SENT\" and request.external_order_number is not null and request.external_order_number= ?";
+
+    private static final String SQL_SELECT_DELIVERED_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
+            "        from ddp_kit_request request, ddp_kit kit, event_type eve, ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
+            "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = \"DELIVERED\" and request.external_order_number is not null and request.external_order_number= ?";
+
+    private static final String SQL_SELECT_RECEIVED_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
+            "        from ddp_kit_request request, ddp_kit kit, event_type eve, ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
+            "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = \"RECEIVED\" and request.external_order_number is not null and request.external_order_number= ?";
 
     public static final String ORDER_ENDPOINT = "order";
     public static final String CONFIRM_ENDPOINT = "confirm";
@@ -207,12 +193,6 @@ public class GBFRequestUtil implements ExternalShipper {
     // 'RECEIVED', 'PROCESSING', 'SHIPPED', 'DISTRIBUTION', 'FORMS PRINTED', 'CANCELLED', 'NOT FOUND', 'SHIPPED (SIMULATED)'
     // return the actual tube barcode for all tubes but only after the kit is shipped (around 7:00pm)
     public void orderStatus(ArrayList<KitRequest> kitRequests) throws Exception {
-        //        if(true) {
-        //            HashMap<Integer, KitRequestSettings> kitRequestSettings = KitRequestSettings.getKitRequestSettings("15");
-        //            HashMap<KitRequestSettings, ArrayList<KitRequest>> map = new HashMap<>();
-        //            map.put(kitRequestSettings.get(15), new ArrayList<>());
-        //            DDPKitRequest.addOtherUnorderedKitsToList(map);
-        //        }
         if (kitRequests != null && !kitRequests.isEmpty()) {
             List<String> orderNumbers = new ArrayList<>();
             Map<String, KitRequest> externalOrdersStatus = new HashMap<>();
@@ -245,16 +225,38 @@ public class GBFRequestUtil implements ExternalShipper {
                             }
                             //                            logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has not been shipped in the last 24 hours! ");//todo pegah uncomment for production
                         }
-                        else if (status.getOrderStatus().contains("SHIPPED") && !kit.getExternalOrderStatus().contains("SHIPPED")) {
+                        else if (status.getOrderStatus().contains("NOT FOUND") && StringUtils.isBlank(kit.getExternalOrderStatus())) {//todo change later pegah after test
                             if (kitDDPNotification != null) {
                                 logger.info("Triggering DDP for shipped kit with external order number: " + kit.getExternalOrderNumber());
                                 EventUtil.triggerDDP(kitDDPNotification);
+                                logger.info("Waiting fir 3 minutes");
+                                Thread.sleep(3 * 60 * 1000);
+
+                                kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_DELIVERED_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER, kit.getExternalOrderNumber(), 2);//todo change this to the number of subkits but for now 2 for test boston works
+                                if(kitDDPNotification != null){
+                                    logger.info("Triggering DDP for Delivered kit with external order number: " + kit.getExternalOrderNumber());
+                                EventUtil.triggerDDP(kitDDPNotification);
+                                }
+                                else {
+                                    logger.error("kitDDPNotification was null for " + kit.getExternalOrderNumber());
+                                }
+                                logger.info("Waiting fir 3 minutes");
+                                Thread.sleep(3 * 60 * 1000);
+                                kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_RECEIVED_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER, kit.getExternalOrderNumber(), 2);//todo change this to the number of subkits but for now 2 for test boston works
+                                if(kitDDPNotification != null){
+                                    logger.info("Triggering DDP for Received kit with external order number: " + kit.getExternalOrderNumber());
+                                    EventUtil.triggerDDP(kitDDPNotification);
+                                }
+                                else {
+                                    logger.error("kitDDPNotification was null for " + kit.getExternalOrderNumber());
+                                }
+
                             }
                             else {
                                 logger.error("kitDDPNotification was null for " + kit.getExternalOrderNumber());
                             }
                         }
-                        else if (status.getOrderStatus().contains("CANCELLED") && !kit.getExternalOrderStatus().contains("CANCELLED")) {
+                        else if (status.getOrderStatus().contains("CANCELLED") && !kit.getExternalOrderStatus().contains("CANCELLED")) {//todo uncomment for prod
                             //                            logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has got cancelled by GBF!");//todo pegah uncomment for production
                         }
                         if (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
@@ -279,27 +281,27 @@ public class GBFRequestUtil implements ExternalShipper {
     // Confirmation may include order number, client(participant) ID, outbound tracking number, return tracking number(s), line item(s), kit serial number(s), etc.
     public void orderConfirmation(ArrayList<KitRequest> kitRequests, long startDate, long endDate) throws Exception {
         //        return;
-                        JSONObject payload = new JSONObject().put("startDate", SystemUtil.getDateFormatted(startDate)).put("endDate", SystemUtil.getDateFormatted(endDate));
-                        String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + CONFIRM_ENDPOINT;
-                        logger.info("payload: " + payload.toString());
-                        Response gbfResponse = executePost(Response.class, sendRequest, payload.toString(), DSMServer.getApiKey(getExternalShipperName()));
-//        Response gbfResponse = new Response();
-//        String xmlFromFile = "";
-//        try {
-//            File myObj = new File("src/main/resources/gbf/confirmation.xml");
-//            Scanner myReader = new Scanner(myObj);
-//            while (myReader.hasNextLine()) {
-//                xmlFromFile += myReader.nextLine();
-//
-//            }
-//            System.out.println(xmlFromFile);
-//            myReader.close();
-//        }
-//        catch (FileNotFoundException e) {
-//            System.out.println("An error occurred.");
-//            e.printStackTrace();
-//        }
-//        gbfResponse.setXML(xmlFromFile);
+        JSONObject payload = new JSONObject().put("startDate", SystemUtil.getDateFormatted(startDate)).put("endDate", SystemUtil.getDateFormatted(endDate));
+        String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + CONFIRM_ENDPOINT;
+        logger.info("payload: " + payload.toString());
+        Response gbfResponse = executePost(Response.class, sendRequest, payload.toString(), DSMServer.getApiKey(getExternalShipperName()));
+        //        Response gbfResponse = new Response();
+        //        String xmlFromFile = "";
+        //        try {
+        //            File myObj = new File("src/main/resources/gbf/confirmation.xml");
+        //            Scanner myReader = new Scanner(myObj);
+        //            while (myReader.hasNextLine()) {
+        //                xmlFromFile += myReader.nextLine();
+        //
+        //            }
+        //            System.out.println(xmlFromFile);
+        //            myReader.close();
+        //        }
+        //        catch (FileNotFoundException e) {
+        //            System.out.println("An error occurred.");
+        //            e.printStackTrace();
+        //        }
+        //        gbfResponse.setXML(xmlFromFile);
         if (gbfResponse != null && StringUtils.isNotBlank(gbfResponse.getXML())) {
             ShippingConfirmations shippingConfirmations = objectFromXMLString(ShippingConfirmations.class, gbfResponse.getXML());
             List<ShippingConfirmation> confirmationList = shippingConfirmations.getShippingConfirmations();
@@ -315,13 +317,13 @@ public class GBFRequestUtil implements ExternalShipper {
                     }
                     //update kit shipping information
                     if (confirmation.getItem() != null) {
-                            Item item = confirmation.getItem();
-                            KitRequest kitRequest = getKitRequest(kitRequests, confirmation.getOrderNumber(), item.getItemNumber(), 1);
-                            if (kitRequest != null) {//todo pegah check here
-                                KitRequestExternal.updateKitRequestResponse(confirmation.getTracking(), item.getReturnTracking(),
-                                        item.getSerialNumber(), SystemUtil.getLongFromDateString(confirmation.getShipDate()), EXTERNAL_SHIPPER_NAME,
-                                        kitRequest.getDsmKitRequestId());
-                            }
+                        Item item = confirmation.getItem();
+                        KitRequest kitRequest = getKitRequest(kitRequests, confirmation.getOrderNumber(), item.getItemNumber(), 1);
+                        if (kitRequest != null) {//todo pegah check here
+                            KitRequestExternal.updateKitRequestResponse(confirmation.getTracking(), item.getReturnTracking(),
+                                    item.getSerialNumber(), SystemUtil.getLongFromDateString(confirmation.getShipDate()), EXTERNAL_SHIPPER_NAME,
+                                    kitRequest.getDsmKitRequestId());
+                        }
                     }
                 }
             }

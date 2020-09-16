@@ -90,9 +90,11 @@ public class DSMServer extends BasicServer {
     public static final String ADDITIONAL_CRON_EXPRESSION = "externalShipper_cron_expression_additional";
     public static final String GCP_PATH_TO_SERVICE_ACCOUNT = "portal.googleProjectCredentials";
     public static final String UPS_PATH_TO_USERNAME = "ups.username";
+    public static final String UPS_PATH_TO_PASSWORD = "ups.password";
     public static final String UPS_PATH_TO_ACCESSKEY = "ups.accesskey";
 
     public static String UPS_USERNAME;
+    public static String UPS_PASSWORD;
     public static String UPS_ACCESSKEY;
 
     private static Map<String, MBCParticipant> mbcParticipants = new HashMap<>();
@@ -502,12 +504,15 @@ public class DSMServer extends BasicServer {
                         cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_STATUS_SHIPMENT), new EasypostShipmentStatusTriggerListener(), cfg);
 
                 //pegah todo
-//                createScheduleJob(scheduler, null, null, UPSTrackingJob.class, "UPS_TRACKING_JOB",
-//                        cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_STATUS_SHIPMENT), new EasypostShipmentStatusTriggerListener(), cfg);
 
                 UPS_ACCESSKEY = cfg.getString(UPS_PATH_TO_ACCESSKEY);
                 UPS_USERNAME = cfg.getString(UPS_PATH_TO_USERNAME);
-                UPSTrackingJob.testMethod();
+                UPS_PASSWORD = cfg.getString(UPS_PATH_TO_PASSWORD);
+
+//                createScheduleJob(scheduler, null, null, UPSTrackingJob.class, "UPS_TRACKING_JOB",
+//                        cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_STATUS_SHIPMENT), new EasypostShipmentStatusTriggerListener(), cfg);
+
+
                 logger.info("Setup Job Scheduler...");
                 try {
                     scheduler.start();
