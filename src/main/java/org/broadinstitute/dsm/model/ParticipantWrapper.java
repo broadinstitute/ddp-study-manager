@@ -1,5 +1,8 @@
 package org.broadinstitute.dsm.model;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import lombok.Getter;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +42,10 @@ public class ParticipantWrapper {
         this.kits = kits;
         this.abstractionActivities = abstractionActivities;
         this.abstractionSummary = abstractionSummary;
+    }
+
+    public JsonObject getDataAsJson() {
+        return new JsonParser().parse(new Gson().toJson(data)).getAsJsonObject();
     }
 
     public static List<ParticipantWrapper> getFilteredList(@NonNull DDPInstance instance, Map<String, String> filters) {
