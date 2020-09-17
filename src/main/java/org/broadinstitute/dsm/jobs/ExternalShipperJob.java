@@ -29,7 +29,7 @@ public class ExternalShipperJob implements Job {
                 ExternalShipper shipper = (ExternalShipper) Class.forName(DSMServer.getClassName(kitType.getExternalShipper())).newInstance();//GBFRequestUtil
                 ArrayList<KitRequest> kitRequests = shipper.getKitRequestsNotDone(kitType.getInstanceId());
                 shipper.orderStatus(kitRequests);
-                if (kitRequests != null && !kitRequests.isEmpty()) { // only if there are kits which are not yet shipped out
+                if (kitRequests != null && !kitRequests.isEmpty()) { // only if there are kits which are not yet having kit_label set
                     JobDataMap dataMap = context.getJobDetail().getJobDataMap();
                     String additionalCronExpression = (String) dataMap.get(DSMServer.ADDITIONAL_CRON_EXPRESSION);
                     if (CronExpression.isValidExpression(additionalCronExpression)) {

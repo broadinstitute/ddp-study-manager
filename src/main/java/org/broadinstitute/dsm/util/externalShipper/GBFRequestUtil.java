@@ -223,12 +223,11 @@ public class GBFRequestUtil implements ExternalShipper {
                                     KitRequestExternal.updateKitRequest(status.getOrderStatus(), System.currentTimeMillis(), dsmKitRequestId);// in order to update time for the  next 24 hour check we need this
                                 }
                             }
-                            //                            logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has not been shipped in the last 24 hours! ");//todo pegah uncomment for production
+                            logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has not been shipped in the last 24 hours! ");//todo pegah uncomment for production
                         }
                         else if (status.getOrderStatus().contains("SHIPPED") && !kit.getExternalOrderStatus().contains("SHIPPED")) {
                             if (kitDDPNotification != null) {
                                 logger.info("Triggering DDP for shipped kit with external order number: " + kit.getExternalOrderNumber());
-                                updateScanDateForKit(kit);
                                 EventUtil.triggerDDP(kitDDPNotification);
 
                             }
@@ -237,7 +236,7 @@ public class GBFRequestUtil implements ExternalShipper {
                             }
                         }
                         else if (status.getOrderStatus().contains("CANCELLED") && !kit.getExternalOrderStatus().contains("CANCELLED")) {//todo uncomment for prod
-                            //                            logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has got cancelled by GBF!");//todo pegah uncomment for production
+                            logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has got cancelled by GBF!");//todo pegah uncomment for production
                         }
                         if (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
                                 !kit.getExternalOrderStatus().equals(status.getOrderStatus())) {// if changed
@@ -257,29 +256,8 @@ public class GBFRequestUtil implements ExternalShipper {
         }
     }
 
-    public static void updateScanDateForKit(KitRequest kit) {
-        String query = "UPDATE ddp_kit SET scan_date= ? where dsm_kit_id <> 0 and dsm_kit_id in (SELECT kit.dsm_kit_id from (Select * from ddp_kit) kit  where kit.dsm_kit_request_id  = ? )";
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            dbVals.resultValue = null;
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setLong(1, System.currentTimeMillis() / 1000);
-                stmt.setString(2, kit.getDsmKitRequestId());
-                int result = stmt.executeUpdate();
-            }
-            catch (Exception e) {
-                dbVals.resultException = e;
-            }
-            return dbVals;
-        });
 
-        if (results.resultException != null) {
-            throw new RuntimeException("Error getQueryDetail ", results.resultException);
-        }
-    }
-
-
-    public static void updateDeliveredDateForKit(KitRequest kit) {
+    public static void updateDeliveredDateForKit(KitRequest kit) {// for when UPS is integrated
         String query = "UPDATE ddp_kit SET delivered_date= ? where dsm_kit_id <> 0 and dsm_kit_id in (SELECT kit.dsm_kit_id from (Select * from ddp_kit) kit  where kit.dsm_kit_request_id  = ? )";
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -300,7 +278,7 @@ public class GBFRequestUtil implements ExternalShipper {
         }
     }
 
-    public static void updateReceivedDateForKit(KitRequest kit) {
+    public static void updateReceivedDateForKit(KitRequest kit) {// for when UPS is integrated
         String query = "UPDATE ddp_kit SET received_date= ? where dsm_kit_id <> 0 and dsm_kit_id in (SELECT kit.dsm_kit_id from (Select * from ddp_kit) kit  where kit.dsm_kit_request_id  = ? )";
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -324,7 +302,6 @@ public class GBFRequestUtil implements ExternalShipper {
     // The confirmation, dependent upon level of detail required, is a shipping receipt to prove completion.
     // Confirmation may include order number, client(participant) ID, outbound tracking number, return tracking number(s), line item(s), kit serial number(s), etc.
     public void orderConfirmation(ArrayList<KitRequest> kitRequests, long startDate, long endDate) throws Exception {
-        //                return;
         JSONObject payload = new JSONObject().put("startDate", SystemUtil.getDateFormatted(startDate)).put("endDate", SystemUtil.getDateFormatted(endDate));
         String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + CONFIRM_ENDPOINT;
         logger.info("payload: " + payload.toString());
@@ -346,11 +323,19 @@ public class GBFRequestUtil implements ExternalShipper {
                     //update kit shipping information
                     if (confirmation.getItem() != null) {
                         Item item = confirmation.getItem();
-                        KitRequest kitRequest = getKitRequest(kitRequests, confirmation.getOrderNumber(), item.getItemNumber(), 1);
-                        if (kitRequest != null) {
-                            KitRequestExternal.updateKitRequestResponse(confirmation.getTracking(), item.getReturnTracking(),
-                                    item.getSerialNumber(), SystemUtil.getLongFromDateString(confirmation.getShipDate()), EXTERNAL_SHIPPER_NAME,
-                                    kitRequest.getDsmKitRequestId());
+                        List<KitRequest> kitRequestsResult = getKitRequest(kitRequests, confirmation.getOrderNumber(), item.getItemNumber(), 1);
+                        int counter = 0;
+                        if (kitRequestsResult != null) {
+                            for (KitRequest kitRequest : kitRequestsResult) {
+                                String kitLabel = item.getSerialNumber();
+                                if (counter > 0) {
+                                    kitLabel += "_" + counter;
+                                }
+                                KitRequestExternal.updateKitRequestResponse(confirmation.getTracking(), item.getReturnTracking(),
+                                        kitLabel, SystemUtil.getLongFromDateString(confirmation.getShipDate()), EXTERNAL_SHIPPER_NAME,
+                                        kitRequest.getDsmKitRequestId());
+                                counter++;
+                            }
                         }
                     }
                 }
@@ -430,20 +415,22 @@ public class GBFRequestUtil implements ExternalShipper {
         return dsmKitRequestIds;
     }
 
-    private KitRequest getKitRequest(@NonNull ArrayList<KitRequest> kitRequests, @NonNull String externalOrderNumber, String subKitName, int tubeNumber) {
+    private List<KitRequest> getKitRequest(@NonNull ArrayList<KitRequest> kitRequests, @NonNull String externalOrderNumber, String subKitName, int tubeNumber) {
         int counter = -1;
+        ArrayList<KitRequest> kitRequestsResult = new ArrayList<>();
         for (KitRequest kitRequest : kitRequests) {
             if (externalOrderNumber.equals(kitRequest.getExternalOrderNumber())) {
                 if (StringUtils.isNotBlank(subKitName)) {
                     if (subKitName.equals(kitRequest.getExternalKitName())) {
+                        kitRequestsResult.add(kitRequest);
                         counter++;
                         if (counter == tubeNumber) {
-                            return kitRequest;
+                            return kitRequestsResult;
                         }
                     }
                 }
                 else {
-                    return kitRequest;
+                    return kitRequestsResult;
                 }
             }
         }

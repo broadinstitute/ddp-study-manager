@@ -90,7 +90,7 @@ public class KitRequestExternal extends KitRequest {
                 stmt.setString(6, dsmKitRequestId);
 
                 int result = stmt.executeUpdate();
-                if (result > 1) {
+                if (result != 1) {
                     throw new RuntimeException("Error updating kit w/ dsm_kit_request_id " + dsmKitRequestId + " it was updating " + result + " rows");
                 }
             }
