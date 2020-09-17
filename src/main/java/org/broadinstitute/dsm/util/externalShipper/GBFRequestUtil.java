@@ -215,7 +215,7 @@ public class GBFRequestUtil implements ExternalShipper {
                             logger.info("Kit status from GBF is changed from " + kit.getExternalOrderStatus() + " to " + status.getOrderStatus() + " for kit: " + kit.getExternalOrderNumber());
                         }
                         KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_SENT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER, kit.getExternalOrderNumber(), 2);//todo change this to the number of subkits but for now 2 for test boston works
-                        if (status.getOrderStatus().equals("NOT FOUND") && StringUtils.isNotBlank(kit.getExternalOrderStatus()) && kit.getExternalOrderStatus().equals("NOT FOUND")
+                        if (status.getOrderStatus().equals(NOT_FOUND) && StringUtils.isNotBlank(kit.getExternalOrderStatus()) && kit.getExternalOrderStatus().equals("NOT FOUND")
                                 && System.currentTimeMillis() - kit.getExternalOrderDate() >= TimeUnit.HOURS.toMillis(24)) {
                             List<String> dsmKitRequestIds = getDSMKitRequestId(status.getOrderNumber());
                             if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
@@ -225,7 +225,7 @@ public class GBFRequestUtil implements ExternalShipper {
                             }
                             logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has not been shipped in the last 24 hours! ");//todo pegah uncomment for production
                         }
-                        else if (status.getOrderStatus().contains("SHIPPED") && !kit.getExternalOrderStatus().contains("SHIPPED")) {
+                        else if (status.getOrderStatus().contains(SHIPPED) && !kit.getExternalOrderStatus().contains(SHIPPED)) {
                             if (kitDDPNotification != null) {
                                 logger.info("Triggering DDP for shipped kit with external order number: " + kit.getExternalOrderNumber());
                                 EventUtil.triggerDDP(kitDDPNotification);
@@ -488,7 +488,6 @@ public class GBFRequestUtil implements ExternalShipper {
         XMLStreamReader xmlStreamReader = xmlInputFactory.createXMLStreamReader(reader);
 
         T object = (T) unmarshaller.unmarshal(xmlStreamReader);
-        ;
 
         return object;
     }
@@ -529,7 +528,7 @@ public class GBFRequestUtil implements ExternalShipper {
                     stmt.setString(2, kitRequest.getDsmKitRequestId());
                     int result = stmt.executeUpdate();
                     if (result != 1) {
-                        throw new RuntimeException("Error updating final value of medical record abstraction for participant w/ id ");
+                        throw new RuntimeException("Error updating status as ordered");
                     }
                 }
                 catch (SQLException ex) {

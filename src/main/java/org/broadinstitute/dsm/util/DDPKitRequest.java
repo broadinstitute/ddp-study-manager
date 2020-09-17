@@ -105,7 +105,7 @@ public class DDPKitRequest {
                                                                 DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData, kitDetail.getParticipantId());
                                                                 if (ddpParticipant != null) {
                                                                     if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
-                                                                        orderKit.add(new KitRequest(kitDetail.getParticipantId(), (String) profile.get("hruid"), ddpParticipant,  externalOrderNumber ));
+                                                                        orderKit.add(new KitRequest(kitDetail.getParticipantId(), (String) profile.get("hruid"), ddpParticipant, externalOrderNumber));
                                                                         logger.info("Added kit with external order number " + orderKit.get(orderKit.size() - 1).getExternalOrderNumber() + " to the order list");
                                                                     }
                                                                 }
@@ -167,7 +167,7 @@ public class DDPKitRequest {
                                 }
                             }
                             //TODO PEGAH GET UNORDERED OR NOT FOUND ORDERS AND ADD THEM  TO THE LIST
-//                            addOtherUnorderedKitsToList(kitsToOrder);
+                            //                            addOtherUnorderedKitsToList(kitsToOrder);
 
                             //only order if kit were added to kits to order hash (which should only be if a kit has an external shipper)
                             if (!kitsToOrder.isEmpty()) {
@@ -211,14 +211,14 @@ public class DDPKitRequest {
                 )) {
                     stmt.setInt(1, kitRequestSettings.getDdpInstanceId());
                     try (ResultSet rs = stmt.executeQuery()) {
-                        while (rs.next()) {
-                            String participantsIndexES = ddpInstance.getParticipantIndexES();
-                            Map<String, Map<String, Object>> participantsESData = null;
-                            if (StringUtils.isNotBlank(participantsIndexES)) {
-                                //could be filtered as well to have a smaller list
-                                participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(ddpInstance.getName(), participantsIndexES);
-                            }
-                            if (participantsESData != null && !participantsESData.isEmpty()) {
+                        String participantsIndexES = ddpInstance.getParticipantIndexES();
+                        Map<String, Map<String, Object>> participantsESData = null;
+                        if (StringUtils.isNotBlank(participantsIndexES)) {
+                            //could be filtered as well to have a smaller list
+                            participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(ddpInstance.getName(), participantsIndexES);
+                        }
+                        if (participantsESData != null && !participantsESData.isEmpty()) {
+                            while (rs.next()) {
                                 Map<String, Object> participantESData = participantsESData.get(rs.getString("" + DBConstants.DDP_PARTICIPANT_ID));
                                 if (participantESData != null && !participantESData.isEmpty()) {
                                     DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData,
@@ -246,10 +246,10 @@ public class DDPKitRequest {
                             }
 
                         }
-                        kitsToOrder.put(kitRequestSettings,orderKit);
+                        kitsToOrder.put(kitRequestSettings, orderKit);
                     }
                     catch (SQLException ex) {
-                        throw new RuntimeException("Can not query for unordered kits for external shipper "+ ex);
+                        throw new RuntimeException("Can not query for unordered kits for external shipper " + ex);
                     }
 
                 }
@@ -258,41 +258,41 @@ public class DDPKitRequest {
                 }
                 return dbVals;
             });
-            if(results.resultException != null){
-                throw new RuntimeException("Error getting approved kits for external shipper "+ results.resultException);
+            if (results.resultException != null) {
+                throw new RuntimeException("Error getting approved kits for external shipper " + results.resultException);
             }
 
         }
     }
 
-        private String addSubKits (@NonNull List < KitSubKits > subKits, @NonNull KitDetail kitDetail, @NonNull String collaboratorParticipantId,
-                @NonNull KitRequestSettings kitRequestSettings, @NonNull String instanceId){
-            int subCounter = 0;
-            String externalOrderNumber = null;
-            if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
-                externalOrderNumber = generateExternalOrderNumber();
+    private String addSubKits(@NonNull List<KitSubKits> subKits, @NonNull KitDetail kitDetail, @NonNull String collaboratorParticipantId,
+                              @NonNull KitRequestSettings kitRequestSettings, @NonNull String instanceId) {
+        int subCounter = 0;
+        String externalOrderNumber = null;
+        if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
+            externalOrderNumber = generateExternalOrderNumber();
+        }
+        for (KitSubKits subKit : subKits) {
+            for (int i = 0; i < subKit.getKitCount(); i++) {
+                //kitRequestId needs to stay unique -> add `_[SUB_COUNTER]` to it
+                KitRequestShipping.addKitRequests(instanceId, subKit.getKitName(), kitDetail.getParticipantId(),
+                        subCounter == 0 ? kitDetail.getKitRequestId() : kitDetail.getKitRequestId() + "_" + subCounter, subKit.getKitTypeId(), kitRequestSettings,
+                        collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber);
+                subCounter = subCounter + 1;
             }
-            for (KitSubKits subKit : subKits) {
-                for (int i = 0; i < subKit.getKitCount(); i++) {
-                    //kitRequestId needs to stay unique -> add `_[SUB_COUNTER]` to it
-                    KitRequestShipping.addKitRequests(instanceId, subKit.getKitName(), kitDetail.getParticipantId(),
-                            subCounter == 0 ? kitDetail.getKitRequestId() : kitDetail.getKitRequestId() + "_" + subCounter, subKit.getKitTypeId(), kitRequestSettings,
-                            collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber);
-                    subCounter = subCounter + 1;
-                }
-            }
-
-            return externalOrderNumber;
         }
 
-        public static String generateExternalOrderNumber () {
-            String externalOrderNumber = NanoIdUtils.randomNanoId(
+        return externalOrderNumber;
+    }
+
+    public static String generateExternalOrderNumber() {
+        String externalOrderNumber = NanoIdUtils.randomNanoId(
+                NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 20);
+        while (DBUtil.existsExternalOrderNumber(externalOrderNumber)) {
+            externalOrderNumber = NanoIdUtils.randomNanoId(
                     NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 20);
-            while (DBUtil.existsExternalOrderNumber(externalOrderNumber)) {
-                externalOrderNumber = NanoIdUtils.randomNanoId(
-                        NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 20);
-            }
-            return externalOrderNumber;
         }
-
+        return externalOrderNumber;
     }
+
+}
