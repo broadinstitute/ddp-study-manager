@@ -326,7 +326,7 @@ public class DSMServer extends BasicServer {
                             consumer.ack();
 
                         }catch(Exception ex){
-                            logger.info("about to nack the message");
+                            logger.info("about to nack the message", ex);
                             consumer.nack();
                             ex.printStackTrace();
                         }
