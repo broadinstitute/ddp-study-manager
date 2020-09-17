@@ -10,17 +10,17 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-<!--    <dependencyManagement>-->
-<!--        <dependencies>-->
-<!--            <dependency>-->
-<!--                <groupId>com.google.cloud</groupId>-->
-<!--                <artifactId>libraries-bom</artifactId>-->
-<!--                <version>10.0.0</version>-->
-<!--                <type>pom</type>-->
-<!--                <scope>import</scope>-->
-<!--            </dependency>-->
-<!--        </dependencies>-->
-<!--    </dependencyManagement>-->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.google.cloud</groupId>
+                <artifactId>libraries-bom</artifactId>
+                <version>10.0.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
 
@@ -40,7 +40,7 @@
         <dependency>
             <groupId>org.broadinstitute.ddp</groupId>
             <artifactId>ldd-backend</artifactId>
-            <version>dsm_2.4_20200810</version>
+            <version>dsm_2.4_20200917b</version>
         </dependency>
 
         <dependency>
@@ -64,13 +64,6 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-pubsub</artifactId>
-            <version>1.108.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.cloud</groupId>
-            <artifactId>google-cloud-storage</artifactId>
-            <version>1.113.0</version>
         </dependency>
 
         <dependency>

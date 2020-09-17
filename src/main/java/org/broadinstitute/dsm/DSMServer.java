@@ -163,6 +163,8 @@ public class DSMServer extends BasicServer {
 
         registerAppEngineStartupCallback(bootTimeoutSeconds);
         setupDB(config);
+
+        setupPubSub(config);
         // don't run superclass routing--it won't work with JettyConfig changes for capturing proper IP address in GAE
         setupCustomRouting(config);
 
@@ -304,8 +306,6 @@ public class DSMServer extends BasicServer {
 
         setupJobs(cfg, kitUtil, notificationUtil, eventUtil, container, receiver);
 
-        setupPubSub(cfg);
-
         logger.info("Finished setting up DSM custom routes and jobs...");
     }
 
@@ -313,10 +313,9 @@ public class DSMServer extends BasicServer {
         String projectId = cfg.getString(GCP_PATH_TO_PUBSUB_PROJECT_ID);
         String subscriptionId = cfg.getString(GCP_PATH_TO_PUBSUB_SUB);
 
-        try {
-            ProjectSubscriptionName subscriptionName =
-                    ProjectSubscriptionName.of(projectId, subscriptionId);
+        logger.info("Setting up pubsub for {}/{}", projectId, subscriptionId);
 
+        try {
             // Instantiate an asynchronous message receiver.
             MessageReceiver receiver =
                     (PubsubMessage message, AckReplyConsumer consumer) -> {
@@ -352,6 +351,8 @@ public class DSMServer extends BasicServer {
         catch (Exception e) {
             throw new RuntimeException("Failed to get results from pubsub ", e);
         }
+
+        logger.info("Pubsub setup complete");
     }
 
     protected void updateDB(@NonNull String dbUrl) {
