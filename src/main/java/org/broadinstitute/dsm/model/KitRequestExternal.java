@@ -23,7 +23,7 @@ public class KitRequestExternal extends KitRequest {
 
     public KitRequestExternal(String dsmKitRequestId, String participantId, String shortId, String shippingId, String externalOrderNumber, DDPParticipant participant,
                               String externalOrderStatus, String externalKitName) {
-        super(dsmKitRequestId, participantId, shortId, shippingId, externalOrderNumber, participant, externalOrderStatus, externalKitName);
+        super(dsmKitRequestId, participantId, shortId, shippingId, externalOrderNumber, participant, externalOrderStatus, externalKitName, null);
     }
 
     // update kit request with status and date of external shipper
@@ -90,7 +90,7 @@ public class KitRequestExternal extends KitRequest {
                 stmt.setString(6, dsmKitRequestId);
 
                 int result = stmt.executeUpdate();
-                if (result > 1) {
+                if (result != 1) {
                     throw new RuntimeException("Error updating kit w/ dsm_kit_request_id " + dsmKitRequestId + " it was updating " + result + " rows");
                 }
             }

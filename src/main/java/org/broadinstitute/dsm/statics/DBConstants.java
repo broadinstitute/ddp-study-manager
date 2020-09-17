@@ -87,6 +87,7 @@ public class DBConstants {
     public static final String BSP_COLLABORATOR_PARTICIPANT_ID = "bsp_collaborator_sample_id";
     public static final String DEACTIVATION_REASON = "deactivation_reason";
     public static final String TRACKING_ID = "tracking_id";
+    public static final String TRACKING_RETURN_ID = "tracking_return_id";
     public static final String KIT_LABEL = "kit_label";
     public static final String MANUAL_SENT_TRACK = "manual_sent_track";
     public static final String EXPRESS = "express";
@@ -105,6 +106,7 @@ public class DBConstants {
     public static final String EXTERNAL_ORDER_NUMBER = "external_order_number";
     public static final String NO_RETURN = "no_return";
     public static final String EXTERNAL_ORDER_STATUS = "external_order_status";
+    public static final String EXTERNAL_ORDER_DATE = "external_order_date";
     public static final String EASYPOST_SHIPMENT_STATUS = "easypost_shipment_status";
     public static final String EASYPOST_SHIPMENT_DATE = "easypost_shipment_date";
 
