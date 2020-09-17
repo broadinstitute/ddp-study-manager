@@ -116,7 +116,7 @@ public class KitRequestShipping extends KitRequest {
 
     @ColumnName (DBConstants.KIT_LABEL)
     private final String kitLabel;
-    @ColumnName(DBConstants.TEST_RESULT)
+    @ColumnName(DBConstants.KIT_TEST_RESULT)
     private String testResult;
     @ColumnName(DBConstants.RESULT_DATE)
     private String resultDate;

@@ -7,9 +7,8 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.birch.DSMTestResult;
 import org.broadinstitute.dsm.model.birch.TestBostonResult;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.EventUtil;
-import org.json.JSONString;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +23,8 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 public class PubSubLookUp {
     private static final Logger logger = LoggerFactory.getLogger(PubSubLookUp.class);
     private static String SELECT_LATEST_RESULT_QUERY = "SELECT kit.test_result FROM dev_dsm_db.ddp_kit_request req LEFT JOIN  ddp_kit kit ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) " +
-            "WHERE req.external_order_number = ? and req.kit_type_id=12"; //todo pegah change this for prod to kit_label
+            "WHERE kit.kit_label = ?"; //todo pegah change this for prod to kit_labe
+    private static String UPDATE_TEST_RESULT = "UPDATE ddp_kit SET  test_result = ? WHERE dsm_kit_id <> 0 and  dsm_kit_request_id  in (select  dsm_kit_request_id from (select * from ddp_kit as something where something.kit_label = ? ) as t  )";
 
     public static void processCovidTestResults(PubsubMessage message) {
         String data = message.getData().toStringUtf8();
@@ -46,18 +46,18 @@ public class PubSubLookUp {
         dsmTestResult = dsmTestResultArray[dsmTestResultArray.length - 1];
 
         //corrected result -> assuming corrected results are always changed
-        if (dsmTestResult != null && !testBostonResult.isCorrected() && dsmTestResult.isCorrected) {
+        if (dsmTestResult != null && !testBostonResult.isCorrected() && dsmTestResult.isCorrected()) {
             return false;//should we error?
         }
         //duplicate result
-        if (testBostonResult.isCorrected() == dsmTestResult.isCorrected
-                && StringUtils.isNotBlank(dsmTestResult.result) && dsmTestResult.result.equals(testBostonResult.getResult())
+        if (testBostonResult.isCorrected() == dsmTestResult.isCorrected()
+                && StringUtils.isNotBlank(dsmTestResult.getResult()) && dsmTestResult.getResult().equals(testBostonResult.getResult())
                 && StringUtils.isNotBlank(dsmTestResult.getTimeCompleted()) && dsmTestResult.getTimeCompleted().equals(testBostonResult.getTimeCompleted())) {
             return false;
         }
         // weird result
         if (!testBostonResult.isCorrected()
-                && StringUtils.isNotBlank(dsmTestResult.result) && !dsmTestResult.result.equals(testBostonResult.getResult())) {
+                && StringUtils.isNotBlank(dsmTestResult.getResult()) && !dsmTestResult.getResult().equals(testBostonResult.getResult())) {
 
             throw new RuntimeException("A new result for sample id " + testBostonResult.getSampleId() + " that doesn't match the previous one. Date of the new result: " + testBostonResult.getTimeCompleted());
         }
@@ -81,14 +81,14 @@ public class PubSubLookUp {
     }
 
     private static DSMTestResult[] getLatestKitTestResults(TestBostonResult testBostonResult) {
-        String externalOrderNumber = testBostonResult.getSampleId();
+        String kitLabel = testBostonResult.getSampleId();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SELECT_LATEST_RESULT_QUERY)) {
-                stmt.setString(1, externalOrderNumber);
+                stmt.setString(1, kitLabel);
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        String resultArray = rs.getString("test_result");
+                        String resultArray = rs.getString(DBConstants.KIT_TEST_RESULT);
                         DSMTestResult[] dsmTestResultsArray = new Gson().fromJson(resultArray, DSMTestResult[].class);
                         dbVals.resultValue = dsmTestResultsArray;
                     }
@@ -112,7 +112,6 @@ public class PubSubLookUp {
 
     public static void writeResultsIntoDB(TestBostonResult testBostonResult) {
         DSMTestResult[] dsmTestResultArray = getLatestKitTestResults(testBostonResult);
-        String query = "UPDATE ddp_kit SET  test_result = ? WHERE dsm_kit_id <> 0 and  dsm_kit_request_id  in (select  dsm_kit_request_id from (select * from ddp_kit_request as something where something.external_order_number= ? and something.kit_type_id = 12 ) as t  )";
         DSMTestResult[] array = null;
         DSMTestResult newDsmTestResult = new DSMTestResult(testBostonResult.getResult(), testBostonResult.getTimeCompleted(), testBostonResult.isCorrected());
         if (dsmTestResultArray == null) {
@@ -125,7 +124,7 @@ public class PubSubLookUp {
         String finalArray = new Gson().toJson(array);
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            try (PreparedStatement stmt = conn.prepareStatement(UPDATE_TEST_RESULT)) {
                 if (StringUtils.isNotBlank(testBostonResult.getResult())
                         && StringUtils.isNotBlank(testBostonResult.getTimeCompleted())
                         && StringUtils.isNotBlank(testBostonResult.getSampleId())) {
@@ -133,10 +132,10 @@ public class PubSubLookUp {
                     stmt.setString(2, testBostonResult.getSampleId());
                     int result = stmt.executeUpdate();
                     if (result != 1) {
-                        throw new RuntimeException("Error updating test  result for"+ testBostonResult.getSampleId()+", returned " + result + " rows");
+                        throw new RuntimeException("Error updating test result for kit label" + testBostonResult.getSampleId() + ", returned " + result + " rows");
                     }
                     else {
-                        logger.info("Updated test result for kit with external id " + testBostonResult.getSampleId() + " to " + testBostonResult.getResult());
+                        logger.info("Updated test result for kit with kit label " + testBostonResult.getSampleId() + " to " + testBostonResult.getResult());
                     }
                 }
             }

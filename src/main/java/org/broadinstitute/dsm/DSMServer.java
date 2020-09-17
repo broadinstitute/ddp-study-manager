@@ -96,6 +96,8 @@ public class DSMServer extends BasicServer {
     public static final String RECEIVER = "Receiver";
     public static final String ADDITIONAL_CRON_EXPRESSION = "AdditionalCronExpression";
     public static final String GCP_PATH_TO_SERVICE_ACCOUNT = "portal.googleProjectCredentials";
+    public static final String GCP_PATH_TO_PUBSUB_PROJECT_ID = "pubsub.projectId";
+    public static final String GCP_PATH_TO_PUBSUB_SUB = "pubsub.subscription";
 
     private static Map<String, MBCParticipant> mbcParticipants = new HashMap<>();
     private static Map<String, MBCInstitution> mbcInstitutions = new HashMap<>();
@@ -302,14 +304,14 @@ public class DSMServer extends BasicServer {
 
         setupJobs(cfg, kitUtil, notificationUtil, eventUtil, container, receiver);
 
-        setupPubSub();
+        setupPubSub(cfg);
 
         logger.info("Finished setting up DSM custom routes and jobs...");
     }
 
-    private void setupPubSub() {
-        String projectId = "broad-ddp-dev";
-        String subscriptionId = "dev-dsm-test-results-sub";
+    private void setupPubSub(@NonNull Config cfg) {
+        String projectId = cfg.getString(GCP_PATH_TO_PUBSUB_PROJECT_ID);
+        String subscriptionId = cfg.getString(GCP_PATH_TO_PUBSUB_SUB);
 
         try {
             ProjectSubscriptionName subscriptionName =
@@ -319,7 +321,6 @@ public class DSMServer extends BasicServer {
             MessageReceiver receiver =
                     (PubsubMessage message, AckReplyConsumer consumer) -> {
                         // Handle incoming message, then ack the received message.
-                        System  .out.println("Data: " + message.getData().toStringUtf8());
                         try {
                             PubSubLookUp.processCovidTestResults(message);
                             logger.info("Processing the message finished");
@@ -342,7 +343,7 @@ public class DSMServer extends BasicServer {
                     .build();
             try {
                 subscriber.startAsync().awaitRunning(1L, TimeUnit.MINUTES);
-                logger.info("Started subscription receiver for {}", subscriptionId);
+                logger.info("Started pubsub subscription receiver for {}", subscriptionId);
             }
             catch (TimeoutException e) {
                 throw new RuntimeException("Timed out while starting pubsub subscription " + subscriptionId, e);

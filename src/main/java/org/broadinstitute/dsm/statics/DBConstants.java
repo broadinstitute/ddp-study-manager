@@ -88,7 +88,6 @@ public class DBConstants {
     public static final String DEACTIVATION_REASON = "deactivation_reason";
     public static final String TRACKING_ID = "tracking_id";
     public static final String KIT_LABEL = "kit_label";
-    public static final String TEST_RESULT = "test_result";
     public static final String RESULT_DATE = "result_date";
     public static final String MANUAL_SENT_TRACK = "manual_sent_track";
     public static final String EXPRESS = "express";
@@ -433,4 +432,6 @@ public class DBConstants {
 
     public static final String MR_COVER_PDF = "mr_cover_pdf";
     public static final String KIT_BEHAVIOR_CHANGE = "kit_behavior_change";
+
+    public static final String KIT_TEST_RESULT = "test_result";
 }
