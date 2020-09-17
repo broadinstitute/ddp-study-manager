@@ -15,6 +15,7 @@
             <dependency>
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
+                <!--  when changing this, also change  in lddp-backend -->
                 <version>10.0.0</version>
                 <type>pom</type>
                 <scope>import</scope>
@@ -40,7 +41,7 @@
         <dependency>
             <groupId>org.broadinstitute.ddp</groupId>
             <artifactId>ldd-backend</artifactId>
-            <version>dsm_2.4_20200917b</version>
+            <version>dsm_2.4_20200917c</version>
         </dependency>
 
         <dependency>
