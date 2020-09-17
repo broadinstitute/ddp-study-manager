@@ -46,7 +46,6 @@ public class GBFTest extends TestHelper {
     }
 
     @Test
-    @Ignore
     public void orderGBFTestKit() throws Exception {
         String apiKey = getApiKey();
         if (apiKey != null) {
@@ -66,6 +65,40 @@ public class GBFTest extends TestHelper {
             Response gbfResponse = GBFRequestUtil.executePost(Response.class, sendRequest, payload.toString(), apiKey);
             Assert.assertNotNull(gbfResponse);
             Assert.assertTrue(gbfResponse.isSuccess());
+        }
+        else {
+            Assert.fail("No apiKey found");
+        }
+        apiKey = getApiKey();
+        if (apiKey != null) {
+            long testDate = 1595920000L; //change that to the date of testing!
+            long start = testDate - SystemUtil.MILLIS_PER_DAY;
+            long end = testDate;
+
+            JSONObject payload = new JSONObject().put("startDate", SystemUtil.getDateFormatted(start)).put("endDate", SystemUtil.getDateFormatted(end));
+            String sendRequest = GBF_URL + GBFRequestUtil.CONFIRM_ENDPOINT;
+            Response gbfResponse = GBFRequestUtil.executePost(Response.class, sendRequest, payload.toString(), apiKey);
+            Assert.assertNotNull(gbfResponse);
+            Assert.assertTrue(StringUtils.isNotBlank(gbfResponse.getXML()));
+        }
+        else {
+            Assert.fail("No apiKey found");
+        }
+        apiKey = getApiKey();
+        if (apiKey != null) {
+            List<String> orderNumbers = new ArrayList<>();
+            orderNumbers.add(ORDER_NUMBER);
+            JSONObject payload = new JSONObject().put("orderNumbers", orderNumbers);
+
+            String sendRequest = GBF_URL + GBFRequestUtil.STATUS_ENDPOINT;
+            Response gbfResponse = GBFRequestUtil.executePost(Response.class, sendRequest, payload.toString(), apiKey);
+
+            Assert.assertNotNull(gbfResponse);
+            Assert.assertTrue(gbfResponse.isSuccess());
+            Assert.assertTrue(StringUtils.isBlank(gbfResponse.getErrorMessage()));
+            List<Status> statuses = gbfResponse.getStatuses();
+            Assert.assertTrue(statuses.size() == 1);
+            Assert.assertTrue(!statuses.get(0).getOrderStatus().equals("NOT FOUND"));
         }
         else {
             Assert.fail("No apiKey found");

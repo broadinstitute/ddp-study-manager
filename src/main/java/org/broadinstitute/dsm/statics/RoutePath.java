@@ -71,6 +71,7 @@ public class RoutePath {
     public static final String PARTICIPANT_EXIT_REQUEST = "exitParticipant";
     public static final String DEACTIVATE_KIT_REQUEST = "deactivateKit/" + RequestParameter.KITREQUESTID;
     public static final String ACTIVATE_KIT_REQUEST = "activateKit/" + RequestParameter.KITREQUESTID;
+    public static final String AUTHORIZE_KIT = "authorizeKit";
     public static final String USER_SETTINGS_REQUEST = "userSettings";
     public static final String EXPRESS_KIT_REQUEST = "expressKit/" + RequestParameter.KITREQUESTID;
     public static final String TRIGGER_SURVEY = "triggerSurvey";

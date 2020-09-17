@@ -95,4 +95,34 @@ public class DBUtil {
         }
         return query;
     }
+
+    public static boolean existsExternalOrderNumber(String externalOrderNumber){
+        String query = "Select * from ddp_kit_request where external_order_number = ?";
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement selectKitRequest = conn.prepareStatement(query)) {
+                selectKitRequest.setString(1, externalOrderNumber);
+                try (ResultSet rs = selectKitRequest.executeQuery();) {
+                    if (rs.next()) {
+                        dbVals.resultValue = true;
+                    }else{
+                        dbVals.resultValue = false;
+                    }
+
+                }
+                catch (Exception e) {
+                    throw new RuntimeException("Error getting values from db", e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Error checking if values exist in db", results.resultException);
+        }
+        return (boolean) results.resultValue;
+    }
 }

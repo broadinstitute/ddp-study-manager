@@ -109,6 +109,34 @@ public class DDPInstance {
         return (DDPInstance) results.resultValue;
     }
 
+    public static DDPInstance getDDPInstanceById(@NonNull Integer ddpInstanceId) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_ALL_ACTIVE_REALMS + QueryExtension.BY_INSTANCE_ID)) {
+                stmt.setInt(1, ddpInstanceId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = getDDPInstanceFormResultSet(rs);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting information for realm with instance id" + ddpInstanceId, e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get realm information for realm with instance id " + ddpInstanceId, results.resultException);
+        }
+        return (DDPInstance) results.resultValue;
+    }
+
+
+
     public static DDPInstance getDDPInstanceWithRole(@NonNull String realm, @NonNull String role) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();

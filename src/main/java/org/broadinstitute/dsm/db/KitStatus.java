@@ -27,7 +27,7 @@ public class KitStatus {
             "LEFT JOIN carrier_service cs on (ks.carrier_service_to_id = cs.carrier_service_id) WHERE req.ddp_instance_id = ? AND kit.scan_date IS NOT NULL AND kit.deactivation_reason IS NULL";
 
 
-    private String ddpKitRequestId;
+    private String kitRequestId;
     private String kitType;
     private String trackingId;
     private String carrier;
@@ -44,8 +44,8 @@ public class KitStatus {
         this.received = received;
     }
 
-    public KitStatus(String ddpKitRequestId, String kitType, String trackingId, String carrier, Long sent, Long delivered, Long received) {
-        this.ddpKitRequestId = ddpKitRequestId;
+    public KitStatus(String kitRequestId, String kitType, String trackingId, String carrier, Long sent, Long delivered, Long received) {
+        this.kitRequestId = kitRequestId;
         this.kitType = kitType;
         this.trackingId = trackingId;
         this.carrier = carrier;
