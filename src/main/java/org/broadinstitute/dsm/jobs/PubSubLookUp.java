@@ -73,7 +73,7 @@ public class PubSubLookUp {
         KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(query, testBostonResult.getOrderMessageId());
         if (kitDDPNotification != null) {
             EventUtil.triggerDDPWithTestResult(kitDDPNotification, testBostonResult);
-            logger.info("Notified Pepper with notification");
+            logger.info("Notified Pepper with test result notification");
         }
         else {
             logger.info("kitDDPNotification was null for externalOrderId "+testBostonResult.getOrderMessageId());
