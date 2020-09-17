@@ -272,7 +272,6 @@ public class DDPKitRequest {
             String externalOrderNumber = null;
             if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
                 externalOrderNumber = generateExternalOrderNumber();
-                logger.info("Generated an externalOrderNumber " + externalOrderNumber);//todo Pegah will be removed after test
             }
             for (KitSubKits subKit : subKits) {
                 for (int i = 0; i < subKit.getKitCount(); i++) {

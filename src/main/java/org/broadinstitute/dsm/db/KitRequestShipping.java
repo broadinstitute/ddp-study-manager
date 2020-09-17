@@ -635,7 +635,6 @@ public class KitRequestShipping extends KitRequest {
                     errorMessage += "bspCollaboratorSampleId was too long ";
                 }
             }
-            //TODO Pegah Simone add externalOrderNumber??? to give kit request same id and separate sub kits ids
             writeRequest(instanceId, kitRequestId, kitTypeId, participantId, collaboratorParticipantId, collaboratorSampleId,
                     "SYSTEM", null, errorMessage, externalOrderNumber, needsApproval);
             return null;

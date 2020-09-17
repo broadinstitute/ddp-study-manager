@@ -30,9 +30,6 @@ public class UPSTrackingJob implements Job {
     private static final Logger logger = LoggerFactory.getLogger(UPSTrackingJob.class);
     private static final String SQL_SELECT_KITS = "SELECT * FROM ddp_kit kit LEFT JOIN ddp_kit_request req ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) WHERE req.ddp_instance_id = ?";
     static String upsTrackingEndpoint = "https://wwwcie.ups.com/track/v1/details/";//todo pegah should be changed for prod and moved to vault
-    static String upsAccessCode = "";
-    static String upsUserName = "";
-    String upsPassword = "";
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
