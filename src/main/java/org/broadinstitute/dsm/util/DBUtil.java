@@ -100,9 +100,9 @@ public class DBUtil {
         String query = "Select * from ddp_kit_request where external_order_number = ?";
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement insertKitRequest = conn.prepareStatement(query)) {
-                insertKitRequest.setString(1, externalOrderNumber);
-                try (ResultSet rs = insertKitRequest.executeQuery();) {
+            try (PreparedStatement selectKitRequest = conn.prepareStatement(query)) {
+                selectKitRequest.setString(1, externalOrderNumber);
+                try (ResultSet rs = selectKitRequest.executeQuery();) {
                     if (rs.next()) {
                         dbVals.resultValue = true;
                     }else{
