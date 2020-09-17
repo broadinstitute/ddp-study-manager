@@ -180,7 +180,7 @@ public class GBFRequestUtil implements ExternalShipper {
                 }
                 if (gbfResponse != null && gbfResponse.isSuccess()) {
                     logger.info("Ordered kits");
-                    //todo pegah change status to "ORDERED" and change null checks to ORDERED
+                    //todo pegah change status to "ORDERED" and change null checks to ORDERED -> for when UPS checks needed
                 }
                 else {
                     throw new ExternalShipperException("Unable to order kits after retry.", ex);

@@ -34,6 +34,11 @@ public class DDPKitRequest {
     public static final String UPLOADED_KIT_REQUEST = "UPLOADED_";
     public static final String MIGRATED_KIT_REQUEST = "MIGRATED_";
 
+    private static final String SELECT_APPROVED_ORDERS = "SELECT * FROM ddp_kit_request request LEFT JOIN dev_dsm_db.ddp_kit kit on kit.dsm_kit_request_id = request.dsm_kit_request_id " +
+            "LEFT JOIN ddp_kit_request_settings settings on settings.ddp_instance_id = request.ddp_instance_id " +
+            "LEFT JOIN ddp_instance realm on (realm.ddp_instance_id = settings.ddp_instance_id) " +
+            "where request.ddp_instance_id = ? and kit.needs_approval = true and kit.authorization = true and request.external_order_status is null";
+
     /**
      * Requesting 'new' DDPKitRequests and write them into ddp_kit_request
      *
@@ -52,9 +57,6 @@ public class DDPKitRequest {
                     KitDetail[] kitDetails = DDPRequestUtil.getResponseObject(KitDetail[].class, dsmRequest, latestKit.getInstanceName(), latestKit.isHasAuth0Token());
                     if (kitDetails != null) {
                         logger.info("Got " + kitDetails.length + " 'new' KitRequests from " + latestKit.getInstanceName());
-                        if (latestKit.getInstanceName().equals("testBoston")) {
-                            logger.info("Test Boston kit :" + latestKit.getLatestDDPKitRequestID());
-                        }
                         Map<String, Map<String, Object>> participantsESData = null;
                         if (kitDetails.length > 0) {
 
@@ -99,12 +101,12 @@ public class DDPKitRequest {
 
                                                             if (kitHasSubKits) {
                                                                 List<KitSubKits> subKits = kitRequestSettings.getSubKits();
-                                                                addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID());
+                                                                String externalOrderNumber = addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID());
                                                                 DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData, kitDetail.getParticipantId());
                                                                 if (ddpParticipant != null) {
                                                                     if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
-                                                                        orderKit.add(new KitRequest(kitDetail.getParticipantId(), (String) profile.get("hruid"), ddpParticipant));
-                                                                        logger.info("Added kit with external order number " + orderKit.get(orderKit.size() - 1).getExternalOrderNumber() + " to the order listftodo pea");
+                                                                        orderKit.add(new KitRequest(kitDetail.getParticipantId(), (String) profile.get("hruid"), ddpParticipant,  externalOrderNumber ));
+                                                                        logger.info("Added kit with external order number " + orderKit.get(orderKit.size() - 1).getExternalOrderNumber() + " to the order list");
                                                                     }
                                                                 }
                                                             }
@@ -126,12 +128,12 @@ public class DDPKitRequest {
                                                     // if the kit type has sub kits > like for promise
                                                     String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(latestKit.getBaseURL(), latestKit.getInstanceID(), latestKit.isMigrated(),
                                                             latestKit.getCollaboratorIdPrefix(), participant.getParticipantId(), participant.getShortId(), kitRequestSettings.getCollaboratorParticipantLengthOverwrite());
-                                                    //only testboston for now
+                                                    //only testboston for now which is not gen2 so it won't matter
                                                     if (kitHasSubKits) {
                                                         List<KitSubKits> subKits = kitRequestSettings.getSubKits();
-                                                        addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID());
+                                                        String externalOrderNumber = addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID());
                                                         if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
-                                                            orderKit.add(new KitRequest(kitDetail.getParticipantId(), participant.getShortId(), participant));
+                                                            orderKit.add(new KitRequest(kitDetail.getParticipantId(), participant.getShortId(), participant, externalOrderNumber));
                                                         }
                                                     }
                                                     else {
@@ -139,7 +141,7 @@ public class DDPKitRequest {
                                                         KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, kitType.getKitTypeId(),
                                                                 kitRequestSettings, collaboratorParticipantId, null);
                                                         if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
-                                                            orderKit.add(new KitRequest(kitDetail.getParticipantId(), participant.getShortId(), participant));
+                                                            orderKit.add(new KitRequest(kitDetail.getParticipantId(), participant.getShortId(), participant, null));
                                                         }
                                                     }
                                                     if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper()) && !kitDetail.isNeedsApproval()) {
@@ -201,15 +203,12 @@ public class DDPKitRequest {
 
     public static void addOtherUnorderedKitsToList(Map<KitRequestSettings, ArrayList<KitRequest>> kitsToOrder) {
         for (KitRequestSettings kitRequestSettings : kitsToOrder.keySet()) {
-            String query = "SELECT * FROM dev_dsm_db.ddp_kit_request request LEFT JOIN dev_dsm_db.ddp_kit kit on kit.dsm_kit_request_id = request.dsm_kit_request_id " +
-                    "LEFT JOIN ddp_kit_request_settings settings on settings.ddp_instance_id = request.ddp_instance_id " +
-                    "LEFT JOIN ddp_instance realm on (realm.ddp_instance_id = settings.ddp_instance_id) " +
-                    "where request.ddp_instance_id = ? and kit.needs_approval = true and kit.authorization = true and request.external_order_status is null";
             ArrayList<KitRequest> orderKit = kitsToOrder.get(kitRequestSettings);
             DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(kitRequestSettings.getDdpInstanceId());
             SimpleResult results = inTransaction((conn) -> {
                 SimpleResult dbVals = new SimpleResult();
-                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                try (PreparedStatement stmt = conn.prepareStatement(SELECT_APPROVED_ORDERS
+                )) {
                     stmt.setInt(1, kitRequestSettings.getDdpInstanceId());
                     try (ResultSet rs = stmt.executeQuery()) {
                         while (rs.next()) {
@@ -266,7 +265,7 @@ public class DDPKitRequest {
         }
     }
 
-        private void addSubKits (@NonNull List < KitSubKits > subKits, @NonNull KitDetail kitDetail, @NonNull String collaboratorParticipantId,
+        private String addSubKits (@NonNull List < KitSubKits > subKits, @NonNull KitDetail kitDetail, @NonNull String collaboratorParticipantId,
                 @NonNull KitRequestSettings kitRequestSettings, @NonNull String instanceId){
             int subCounter = 0;
             String externalOrderNumber = null;
@@ -282,6 +281,8 @@ public class DDPKitRequest {
                     subCounter = subCounter + 1;
                 }
             }
+
+            return externalOrderNumber;
         }
 
         public static String generateExternalOrderNumber () {

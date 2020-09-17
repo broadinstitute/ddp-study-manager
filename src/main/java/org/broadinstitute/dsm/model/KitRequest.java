@@ -16,8 +16,8 @@ public class KitRequest {
     private String externalKitName;
     private Long externalOrderDate;
 
-    public KitRequest(String participantId, String shortId, DDPParticipant participant) {
-        this(null, participantId, shortId, null, null, participant, null, null, null);
+    public KitRequest(String participantId, String shortId, DDPParticipant participant, String externalOrderNumber) {
+        this(null, participantId, shortId, null, externalOrderNumber, participant, null, null, null);
     }
 
     public KitRequest(String dsmKitRequestId, String participantId, String shortId, String shippingId, String externalOrderNumber, DDPParticipant participant, String externalOrderStatus, String externalKitName, Long externalOrderDate) {
