@@ -46,7 +46,7 @@ public class KitDDPNotification {
         this.hasAuth0Token = hasAuth0Token;
     }
 
-    public static KitDDPNotification getKitDDPNotification(@NonNull String query, @NonNull String kitLabel) {
+    public static KitDDPNotification getKitDDPNotification(@NonNull String query, @NonNull String kitLabel, int expectedCount) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(query,ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY)) {
@@ -55,7 +55,7 @@ public class KitDDPNotification {
                     rs.last();
                     int count = rs.getRow();
                     rs.beforeFirst();
-                    if (count == 1 && rs.next()) { //if row is 0 the ddp/kit type combination does not trigger a participant event
+                    if (count == expectedCount && rs.next()) { //if row is 0 the ddp/kit type combination does not trigger a participant event
                         dbVals.resultValue = new KitDDPNotification(rs.getString(DBConstants.DDP_PARTICIPANT_ID),
                                 rs.getString(DBConstants.DSM_KIT_REQUEST_ID), rs.getString(DBConstants.DDP_INSTANCE_ID),
                                 rs.getString(DBConstants.INSTANCE_NAME),

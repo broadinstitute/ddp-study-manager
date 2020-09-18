@@ -11,18 +11,20 @@ public class Item {
     private String serialNumber;
     private String expireDate;
     private String shippedQty;
+    private String returnTracking;
     private List<SubItem> subItem;
 
     public Item() {
     }
 
-    public Item(String itemNumber, String lotNumber, String serialNumber, String expireDate, String shippedQty, List<SubItem> subItem) {
+    public Item(String itemNumber, String lotNumber, String serialNumber, String expireDate, String shippedQty, String returnTracking, List<SubItem> subItem) {
         this.itemNumber = itemNumber;
         this.lotNumber = lotNumber;
         this.serialNumber = serialNumber;
         this.expireDate = expireDate;
         this.shippedQty = shippedQty;
-        this.subItem = subItem;
+        this.returnTracking= returnTracking;
+//        this.subItem = subItem;
     }
 
     @XmlAttribute(name="ItemNumber")
@@ -69,6 +71,10 @@ public class Item {
     public void setShippedQty(String shippedQty) {
         this.shippedQty = shippedQty;
     }
+
+    @XmlElement(name="ReturnTracking")
+    public String getReturnTracking() { return returnTracking; }
+    public void setReturnTracking(String returnTracking) { this.returnTracking = returnTracking; }
 
     @XmlElement(name="SubItem")
     public List<SubItem> getSubItem() {
