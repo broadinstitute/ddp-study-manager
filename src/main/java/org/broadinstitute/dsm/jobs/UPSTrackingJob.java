@@ -12,6 +12,7 @@ import org.broadinstitute.dsm.model.ups.*;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.DDPRequestUtil;
 import org.broadinstitute.dsm.util.EventUtil;
+import org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -35,7 +36,7 @@ public class UPSTrackingJob implements Job {
 
     private static final String SQL_UPDATE_UPS_TRACKING_STATUS = "UPDATE ddp_kit SET ups_tracking_status = ?, ups_tracking_date = ? " +
             "WHERE dsm_kit_id <> 0 and dsm_kit_id in ( SELECT dsm_kit_id FROM ( SELECT * from ddp_kit) as something WHERE something.tracking_to_id = ? );";
-    private static final String SQL_UPDATE_UPS_RETURN_STATUS = "UPDATE ddp_kit SET ups_return_status = ?, ups_return date = ? " +
+    private static final String SQL_UPDATE_UPS_RETURN_STATUS = "UPDATE ddp_kit SET ups_return_status = ?, ups_return_date = ? " +
             "WHERE dsm_kit_id <> 0 and dsm_kit_id in ( SELECT dsm_kit_id FROM ( SELECT * from ddp_kit) as something WHERE something.tracking_return_id= ? );";
 
     private static final String SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
@@ -80,9 +81,10 @@ public class UPSTrackingJob implements Job {
 
     public static void lookUpKit(DdpKit kit, boolean isReturn) {
         String trackingId;
-        if(!isReturn){
+        if (!isReturn) {
             trackingId = kit.getTrackingToId();
-        }else{
+        }
+        else {
             trackingId = kit.getTrackingReturnId();
         }
         String transId = NanoIdUtils.randomNanoId(
@@ -156,7 +158,7 @@ public class UPSTrackingJob implements Job {
                 stmt.setString(2, date);
                 stmt.setString(3, trackingId);
                 int r = stmt.executeUpdate();
-                if (r != 1) {
+                if (r != 2) {//number of subkits
                     throw new RuntimeException("Update query for UPS tracking updated " + r + " rows!");
                 }
                 else {
@@ -172,6 +174,8 @@ public class UPSTrackingJob implements Job {
                             else {
                                 logger.error("delivered kitDDPNotification was null for " + kit.getExternalOrderNumber());
                             }
+                        }else if(statusType.equals(DELIVERY) && !(DELIVERY.equals(oldType))){
+                            GBFRequestUtil.updateDeliveredDateForKit(kit.getDsmKitRequestId());
                         }
 
                     }
@@ -181,9 +185,9 @@ public class UPSTrackingJob implements Job {
                             Instant now = Instant.now();
                             orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), now);
                         }
-                        //if delivered notif pepper for received
+                        //if delivered notify pepper for received
                         else if (statusType.equals(DELIVERY) && !(DELIVERY.equals(oldType))) {
-                            //                            GBFRequestUtil.updateReceivedDateForKit();
+                            GBFRequestUtil.updateReceivedDateForKit(kit.getDsmKitRequestId());
                             KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { RECEIVED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
                             if (kitDDPNotification != null) {
                                 logger.info("Triggering DDP for received kit with external order number: " + kit.getExternalOrderNumber());
