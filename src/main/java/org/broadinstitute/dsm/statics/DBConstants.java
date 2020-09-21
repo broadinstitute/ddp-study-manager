@@ -47,6 +47,12 @@ public class DBConstants {
     public static final String KIT_TYPE_ID = "kit_type_id";
     public static final String DDP_KIT_REQUEST_ID = "last_kit";
     public static final String DSM_KIT_REQUEST_ID = "dsm_kit_request_id";
+    public static final String UPS_TRACKING_STATUS = "ups_tracking_status";
+    public static final String UPS_RETURN_STATUS = "ups_return_status";
+    public static final String UPS_TRACKING_DATE = "ups_tracking_date";
+    public static final String UPS_RETURN_DATE = "ups_return_date";
+
+
     public static final String DSM_LABEL_TO = "label_url_to";
     public static final String DSM_LABEL_RETURN = "label_url_return";
     public static final String DSM_CARRIER_TO = "carrierTo";
@@ -433,4 +439,6 @@ public class DBConstants {
 
     public static final String MR_COVER_PDF = "mr_cover_pdf";
     public static final String KIT_BEHAVIOR_CHANGE = "kit_behavior_change";
+
+    //DDPKit
 }

@@ -66,13 +66,7 @@ public class GBFRequestUtil implements ExternalShipper {
             "        from ddp_kit_request request, ddp_kit kit, event_type eve, ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
             "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = \"SENT\" and request.external_order_number is not null and request.external_order_number= ?";
 
-    private static final String SQL_SELECT_DELIVERED_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
-            "        from ddp_kit_request request, ddp_kit kit, event_type eve, ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
-            "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = \"DELIVERED\" and request.external_order_number is not null and request.external_order_number= ?";
 
-    private static final String SQL_SELECT_RECEIVED_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
-            "        from ddp_kit_request request, ddp_kit kit, event_type eve, ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
-            "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = \"RECEIVED\" and request.external_order_number is not null and request.external_order_number= ?";
 
     public static final String ORDER_ENDPOINT = "order";
     public static final String CONFIRM_ENDPOINT = "confirm";
@@ -308,6 +302,7 @@ public class GBFRequestUtil implements ExternalShipper {
         Response gbfResponse = executePost(Response.class, sendRequest, payload.toString(), DSMServer.getApiKey(getExternalShipperName()));
 
         if (gbfResponse != null && StringUtils.isNotBlank(gbfResponse.getXML())) {
+            logger.info("Confirmation xmls received: " + gbfResponse.getXML());
             ShippingConfirmations shippingConfirmations = objectFromXMLString(ShippingConfirmations.class, gbfResponse.getXML());
             List<ShippingConfirmation> confirmationList = shippingConfirmations.getShippingConfirmations();
             if (confirmationList != null && !confirmationList.isEmpty()) {
@@ -335,10 +330,12 @@ public class GBFRequestUtil implements ExternalShipper {
                                         kitLabel, SystemUtil.getLongFromDateString(confirmation.getShipDate()), EXTERNAL_SHIPPER_NAME,
                                         kitRequest.getDsmKitRequestId());
                                 counter++;
+                                logger.info("Updated confirmation information for : " + kitRequest.getDsmKitRequestId());
                             }
                         }
                     }
                 }
+                DBUtil.updateBookmark(endDate, DBConstants.GBF_CONFIRMATION);
             }
             else {
                 logger.info("No shipping confirmation returned");

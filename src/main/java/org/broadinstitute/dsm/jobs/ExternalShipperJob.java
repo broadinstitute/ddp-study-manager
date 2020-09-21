@@ -38,7 +38,6 @@ public class ExternalShipperJob implements Job {
                             long lastRun = DBUtil.getBookmark(DBConstants.GBF_CONFIRMATION);
                             long now = System.currentTimeMillis();
                             shipper.orderConfirmation(kitRequests, lastRun, now);
-                            DBUtil.updateBookmark(now, DBConstants.GBF_CONFIRMATION);
                         }
                     }
                     else {
