@@ -55,6 +55,7 @@ public class UPSTrackingJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
+        logger.info("Starting the UPS lookup job");
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole("test_boston", "ups_tracking");
         if (ddpInstance != null) {
             Map<String, Set<DdpKit>> ids = getResultSet(ddpInstance.getDdpInstanceId());
