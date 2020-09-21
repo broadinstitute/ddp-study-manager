@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar;
+import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.DdpKit;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.ups.*;
@@ -54,25 +55,26 @@ public class UPSTrackingJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        //        String realm = getRealmsWithRole();
-        Map<String, Set<DdpKit>> ids = getResultSet("15");
+        DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole("test_boston", "ups_tracking");
+        Map<String, Set<DdpKit>> ids = getResultSet(ddpInstance.getDdpInstanceId());
         orderRegistrar = new Covid19OrderRegistrar(DSMServer.careEvolveOrderEndpoint, DSMServer.careEvolveAccount, DSMServer.provider);
         Set<DdpKit> kits = ids.get("shipping");
         for (DdpKit kit : kits) {
-            lookUpKit(kit);
+            lookUpKit(kit, false);
+        }
+        kits = ids.get("return");
+        for (DdpKit kit : kits) {
+            lookUpKit(kit, true);
         }
 
     }
 
-    public static void lookUpKit(DdpKit kit) {
+    public static void lookUpKit(DdpKit kit, boolean isReturn) {
         String trackingId = kit.getTrackingToId();
-        String type = kit.getUpsTrackingStatus();
-        if (StringUtils.isNotBlank(type)) {// get only type from it
-            type = type.substring(0, type.indexOf(' '));
-        }
         String transId = NanoIdUtils.randomNanoId(
                 NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 32);
-        String inquiryNumber = trackingId;
+//        String inquiryNumber = "7798339175";
+        String inquiryNumber = trackingId.trim();
         String transSrc = "TestTracking";
         String sendRequest = DSMServer.UPS_ENDPOINT + inquiryNumber;
         Map<String, String> headers = new HashMap<>();
@@ -86,8 +88,12 @@ public class UPSTrackingJob implements Job {
         try {
             UPSTrackingResponse response = DDPRequestUtil.getResponseObjectWithCustomHeader(UPSTrackingResponse.class, sendRequest, "UPS Tracking Test " + inquiryNumber, headers);
             logger.info("got response back from UPS: " + response);
+            String type = kit.getUpsTrackingStatus();
+            if (StringUtils.isNotBlank(type)) {// get only type from it
+                type = type.substring(0, type.indexOf(' '));
+            }
             if (response.getErrors() == null) {
-                updateStatus(trackingId, type, response, false, kit);
+                updateStatus(trackingId, type, response, isReturn, kit);
             }
             else {
                 logError(trackingId, response.getErrors());
