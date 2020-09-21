@@ -174,8 +174,6 @@ public class UPSTrackingJob implements Job {
                             else {
                                 logger.error("delivered kitDDPNotification was null for " + kit.getExternalOrderNumber());
                             }
-                        }else if(statusType.equals(DELIVERY) && !(DELIVERY.equals(oldType))){
-                            GBFRequestUtil.updateDeliveredDateForKit(kit.getDsmKitRequestId());
                         }
 
                     }

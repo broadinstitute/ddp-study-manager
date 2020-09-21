@@ -250,30 +250,8 @@ public class GBFRequestUtil implements ExternalShipper {
         }
     }
 
-
-    public static void updateDeliveredDateForKit(String dsmKitRequestId) {// for when UPS is integrated
-        String query = "UPDATE ddp_kit SET delivered_date= ? where dsm_kit_id <> 0 and dsm_kit_id in (SELECT kit.dsm_kit_id from (Select * from ddp_kit) kit  where kit.dsm_kit_request_id  = ? )";
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            dbVals.resultValue = null;
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setLong(1, System.currentTimeMillis() / 1000);
-                stmt.setString(2, dsmKitRequestId);
-                int result = stmt.executeUpdate();
-            }
-            catch (Exception e) {
-                dbVals.resultException = e;
-            }
-            return dbVals;
-        });
-
-        if (results.resultException != null) {
-            throw new RuntimeException("Error getQueryDetail ", results.resultException);
-        }
-    }
-
     public static void updateReceivedDateForKit(String dsmKitRequestId) {// for when UPS is integrated
-        String query = "UPDATE ddp_kit SET received_date= ? where dsm_kit_id <> 0 and dsm_kit_id in (SELECT kit.dsm_kit_id from (Select * from ddp_kit) kit  where kit.dsm_kit_request_id  = ? )";
+        String query = "UPDATE ddp_kit SET receive_date= ? where dsm_kit_id <> 0 and dsm_kit_id in (SELECT kit.dsm_kit_id from (Select * from ddp_kit) kit  where kit.dsm_kit_request_id  = ? )";
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             dbVals.resultValue = null;
