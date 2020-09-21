@@ -67,7 +67,6 @@ public class GBFRequestUtil implements ExternalShipper {
             "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = \"SENT\" and request.external_order_number is not null and request.external_order_number= ?";
 
 
-
     public static final String ORDER_ENDPOINT = "order";
     public static final String CONFIRM_ENDPOINT = "confirm";
     public static final String STATUS_ENDPOINT = "status";
@@ -251,7 +250,7 @@ public class GBFRequestUtil implements ExternalShipper {
     }
 
     public static void updateReceivedDateForKit(String dsmKitRequestId) {// for when UPS is integrated
-        String query = "UPDATE ddp_kit SET receive_date= ? where dsm_kit_id <> 0 and dsm_kit_id in (SELECT kit.dsm_kit_id from (Select * from ddp_kit) kit  where kit.dsm_kit_request_id  = ? )";
+        String query = "UPDATE ddp_kit SET receive_date= ? where dsm_kit_id <> 0 and dsm_kit_id in (SELECT kit.dsm_kit_id from (Select dsm_kit_id, dsm_kit_request_id from ddp_kit) kit  where kit.dsm_kit_request_id  = ? )";
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             dbVals.resultValue = null;
@@ -259,6 +258,9 @@ public class GBFRequestUtil implements ExternalShipper {
                 stmt.setLong(1, System.currentTimeMillis() / 1000);
                 stmt.setString(2, dsmKitRequestId);
                 int result = stmt.executeUpdate();
+                if (result != 2) {
+                    throw new RuntimeException("Updated " + result + " rows!");
+                }
             }
             catch (Exception e) {
                 dbVals.resultException = e;

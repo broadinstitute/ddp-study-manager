@@ -102,7 +102,7 @@ public class UPSTrackingJob implements Job {
         headers.put("Content-Type", "application/json");
         headers.put("Accept", "application/json");
         try {
-            UPSTrackingResponse response = DDPRequestUtil.getResponseObjectWithCustomHeader(UPSTrackingResponse.class, sendRequest, "UPS Tracking Test " + inquiryNumber, headers);
+                UPSTrackingResponse response = DDPRequestUtil.getResponseObjectWithCustomHeader(UPSTrackingResponse.class, sendRequest, "UPS Tracking Test " + inquiryNumber, headers);
             logger.info("got response back from UPS: " + response);
             String type = kit.getUpsTrackingStatus();
             if (StringUtils.isNotBlank(type)) {// get only type from it
@@ -185,7 +185,7 @@ public class UPSTrackingJob implements Job {
                         }
                         //if delivered notify pepper for received
                         else if (statusType.equals(DELIVERY) && !(DELIVERY.equals(oldType))) {
-                            GBFRequestUtil.updateReceivedDateForKit(kit.getDsmKitRequestId());
+//                            GBFRequestUtil.updateReceivedDateForKit(kit.getDsmKitRequestId());
                             KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { RECEIVED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
                             if (kitDDPNotification != null) {
                                 logger.info("Triggering DDP for received kit with external order number: " + kit.getExternalOrderNumber());
