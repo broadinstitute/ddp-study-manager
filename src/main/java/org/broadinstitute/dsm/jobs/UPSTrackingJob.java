@@ -79,7 +79,12 @@ public class UPSTrackingJob implements Job {
     }
 
     public static void lookUpKit(DdpKit kit, boolean isReturn) {
-        String trackingId = kit.getTrackingToId();
+        String trackingId;
+        if(!isReturn){
+            trackingId = kit.getTrackingToId();
+        }else{
+            trackingId = kit.getTrackingReturnId();
+        }
         String transId = NanoIdUtils.randomNanoId(
                 NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 32);
         //        String inquiryNumber = "7798339175";
