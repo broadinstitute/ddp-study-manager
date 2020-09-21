@@ -56,15 +56,17 @@ public class UPSTrackingJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole("test_boston", "ups_tracking");
-        Map<String, Set<DdpKit>> ids = getResultSet(ddpInstance.getDdpInstanceId());
-        orderRegistrar = new Covid19OrderRegistrar(DSMServer.careEvolveOrderEndpoint, DSMServer.careEvolveAccount, DSMServer.provider);
-        Set<DdpKit> kits = ids.get("shipping");
-        for (DdpKit kit : kits) {
-            lookUpKit(kit, false);
-        }
-        kits = ids.get("return");
-        for (DdpKit kit : kits) {
-            lookUpKit(kit, true);
+        if (ddpInstance != null) {
+            Map<String, Set<DdpKit>> ids = getResultSet(ddpInstance.getDdpInstanceId());
+            orderRegistrar = new Covid19OrderRegistrar(DSMServer.careEvolveOrderEndpoint, DSMServer.careEvolveAccount, DSMServer.provider);
+            Set<DdpKit> kits = ids.get("shipping");
+            for (DdpKit kit : kits) {
+                lookUpKit(kit, false);
+            }
+            kits = ids.get("return");
+            for (DdpKit kit : kits) {
+                lookUpKit(kit, true);
+            }
         }
 
     }
@@ -73,7 +75,7 @@ public class UPSTrackingJob implements Job {
         String trackingId = kit.getTrackingToId();
         String transId = NanoIdUtils.randomNanoId(
                 NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 32);
-//        String inquiryNumber = "7798339175";
+        //        String inquiryNumber = "7798339175";
         String inquiryNumber = trackingId.trim();
         String transSrc = "TestTracking";
         String sendRequest = DSMServer.UPS_ENDPOINT + inquiryNumber;
@@ -232,18 +234,18 @@ public class UPSTrackingJob implements Job {
             while (rs.next()) {
                 DdpKit kit = new DdpKit(
                         rs.getString(DBConstants.DSM_KIT_REQUEST_ID),
-                        rs.getString("kit."+DBConstants.KIT_LABEL),
-                        rs.getString("kit."+DBConstants.DSM_TRACKING_TO),
-                        rs.getString("kit."+DBConstants.TRACKING_RETURN_ID),
-                        rs.getString("kit."+DBConstants.ERROR),
-                        rs.getString("kit."+DBConstants.MESSAGE),
-                        rs.getString("kit."+DBConstants.DSM_RECEIVE_DATE),
-                        rs.getString( "kit."+DBConstants.UPS_TRACKING_STATUS),
-                        rs.getString("kit."+DBConstants.UPS_TRACKING_DATE),
-                        rs.getString("kit."+DBConstants.UPS_RETURN_STATUS),
-                        rs.getString("kit."+DBConstants.UPS_RETURN_DATE),
-                        rs.getString("req."+DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID),
-                        rs.getString("req."+DBConstants.EXTERNAL_ORDER_NUMBER)
+                        rs.getString("kit." + DBConstants.KIT_LABEL),
+                        rs.getString("kit." + DBConstants.DSM_TRACKING_TO),
+                        rs.getString("kit." + DBConstants.TRACKING_RETURN_ID),
+                        rs.getString("kit." + DBConstants.ERROR),
+                        rs.getString("kit." + DBConstants.MESSAGE),
+                        rs.getString("kit." + DBConstants.DSM_RECEIVE_DATE),
+                        rs.getString("kit." + DBConstants.UPS_TRACKING_STATUS),
+                        rs.getString("kit." + DBConstants.UPS_TRACKING_DATE),
+                        rs.getString("kit." + DBConstants.UPS_RETURN_STATUS),
+                        rs.getString("kit." + DBConstants.UPS_RETURN_DATE),
+                        rs.getString("req." + DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID),
+                        rs.getString("req." + DBConstants.EXTERNAL_ORDER_NUMBER)
                 );
                 String type;
                 if (StringUtils.isNotBlank(kit.getTrackingToId())) {
