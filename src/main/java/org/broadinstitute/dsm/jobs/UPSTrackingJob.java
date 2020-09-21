@@ -56,20 +56,26 @@ public class UPSTrackingJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         logger.info("Starting the UPS lookup job");
-        DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole("test_boston", "ups_tracking");
-        if (ddpInstance != null) {
-            Map<String, Set<DdpKit>> ids = getResultSet(ddpInstance.getDdpInstanceId());
-            orderRegistrar = new Covid19OrderRegistrar(DSMServer.careEvolveOrderEndpoint, DSMServer.careEvolveAccount, DSMServer.provider);
-            Set<DdpKit> kits = ids.get("shipping");
-            for (DdpKit kit : kits) {
-                lookUpKit(kit, false);
-            }
-            kits = ids.get("return");
-            for (DdpKit kit : kits) {
-                lookUpKit(kit, true);
+        List<DDPInstance> ddpInstanceList = DDPInstance.getDDPInstanceListWithRole("ups_tracking");
+        for (DDPInstance ddpInstance : ddpInstanceList) {
+            if (ddpInstance.isHasRole()) {
+                logger.info("tracking ups ids for " + ddpInstance.getName());
+                if (ddpInstance != null) {
+                    Map<String, Set<DdpKit>> ids = getResultSet(ddpInstance.getDdpInstanceId());
+                    orderRegistrar = new Covid19OrderRegistrar(DSMServer.careEvolveOrderEndpoint, DSMServer.careEvolveAccount, DSMServer.provider);
+                    Set<DdpKit> kits = ids.get("shipping");
+                    logger.info("checking tracking status for " + kits.size() + " tracking numbers");
+                    for (DdpKit kit : kits) {
+                        lookUpKit(kit, false);
+                    }
+                    kits = ids.get("return");
+                    logger.info("checking return status for " + kits.size() + " tracking numbers");
+                    for (DdpKit kit : kits) {
+                        lookUpKit(kit, true);
+                    }
+                }
             }
         }
-
     }
 
     public static void lookUpKit(DdpKit kit, boolean isReturn) {
