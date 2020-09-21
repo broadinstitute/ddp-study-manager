@@ -32,7 +32,7 @@ public class DdpKit {
         this.upsTrackingDate = upsTrackingDate;
         this.upsReturnStatus = upsReturnStatus;
         this.upsReturnDate = upsReturnDate;
-        this.HRUID = bspCollaboratodId.substring(bspCollaboratodId.indexOf('_') + 1, bspCollaboratodId.lastIndexOf('_'));
+        this.HRUID = bspCollaboratodId;
         this.externalOrderNumber = externalOrderNumber;
 
     }

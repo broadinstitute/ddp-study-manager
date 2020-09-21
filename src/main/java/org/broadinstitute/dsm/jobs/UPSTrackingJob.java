@@ -91,7 +91,7 @@ public class UPSTrackingJob implements Job {
                 NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 32);
         //        String inquiryNumber = "7798339175";
         String inquiryNumber = trackingId.trim();
-        String transSrc = "TestTracking";
+        String transSrc = "Tracking";
         String sendRequest = DSMServer.UPS_ENDPOINT + inquiryNumber;
         Map<String, String> headers = new HashMap<>();
         headers.put("transId", transId);
@@ -102,7 +102,7 @@ public class UPSTrackingJob implements Job {
         headers.put("Content-Type", "application/json");
         headers.put("Accept", "application/json");
         try {
-                UPSTrackingResponse response = DDPRequestUtil.getResponseObjectWithCustomHeader(UPSTrackingResponse.class, sendRequest, "UPS Tracking Test " + inquiryNumber, headers);
+            UPSTrackingResponse response = DDPRequestUtil.getResponseObjectWithCustomHeader(UPSTrackingResponse.class, sendRequest, "UPS Tracking Test " + inquiryNumber, headers);
             logger.info("got response back from UPS: " + response);
             String type = kit.getUpsTrackingStatus();
             if (StringUtils.isNotBlank(type)) {// get only type from it
@@ -164,7 +164,7 @@ public class UPSTrackingJob implements Job {
                 else {
                     if (!isReturn) {
                         //if delivered notif pepper
-                        if (statusType.equals(OUT_FOR_DELIVERY) && !(OUT_FOR_DELIVERY.equals(oldType))) {
+                        if (statusType.equals(DELIVERY) && !(DELIVERY.equals(oldType))) {
                             KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_TRACKING_NUMBER, new String[] { DELIVERED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
                             if (kitDDPNotification != null) {
                                 logger.info("Triggering DDP for delivered kit with external order number: " + kit.getExternalOrderNumber());
@@ -182,10 +182,11 @@ public class UPSTrackingJob implements Job {
                         if (statusType.equals(PICKUP) && !(PICKUP.equals(oldType))) {
                             Instant now = Instant.now();
                             orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), now);
+                            logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
                         }
                         //if delivered notify pepper for received
                         else if (statusType.equals(DELIVERY) && !(DELIVERY.equals(oldType))) {
-//                            GBFRequestUtil.updateReceivedDateForKit(kit.getDsmKitRequestId());
+                            //                            GBFRequestUtil.updateReceivedDateForKit(kit.getDsmKitRequestId());
                             KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { RECEIVED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
                             if (kitDDPNotification != null) {
                                 logger.info("Triggering DDP for received kit with external order number: " + kit.getExternalOrderNumber());
@@ -227,7 +228,7 @@ public class UPSTrackingJob implements Job {
                     return dbVals;
                 }
                 catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw new RuntimeException("Error getting ups tracking numbers", e);
                 }
             }
             catch (Exception e) {
@@ -258,7 +259,7 @@ public class UPSTrackingJob implements Job {
                         rs.getString("kit." + DBConstants.UPS_TRACKING_DATE),
                         rs.getString("kit." + DBConstants.UPS_RETURN_STATUS),
                         rs.getString("kit." + DBConstants.UPS_RETURN_DATE),
-                        rs.getString("req." + DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID),
+                        rs.getString("req." + DBConstants.COLLABORATOR_PARTICIPANT_ID),
                         rs.getString("req." + DBConstants.EXTERNAL_ORDER_NUMBER)
                 );
                 String type;
