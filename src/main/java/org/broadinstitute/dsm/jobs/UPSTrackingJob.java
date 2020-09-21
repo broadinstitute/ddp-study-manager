@@ -149,7 +149,7 @@ public class UPSTrackingJob implements Job {
                     if (!isReturn) {
                         //if delivered notif pepper
                         if (statusType.equals(OUT_FOR_DELIVERY) && !(OUT_FOR_DELIVERY.equals(oldType))) {
-                            KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { DELIVERED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
+                            KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_TRACKING_NUMBER, new String[] { DELIVERED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
                             if (kitDDPNotification != null) {
                                 logger.info("Triggering DDP for delivered kit with external order number: " + kit.getExternalOrderNumber());
                                 EventUtil.triggerDDP(kitDDPNotification);
