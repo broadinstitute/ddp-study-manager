@@ -171,7 +171,7 @@ public class UPSTrackingJob implements Job {
                             orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), now);
                         }
                         //if delivered notif pepper for received
-                        else if (statusType.equals(DELIVERED) && !(DELIVERED.equals(oldType))) {
+                        else if (statusType.equals(DELIVERY) && !(DELIVERY.equals(oldType))) {
                             //                            GBFRequestUtil.updateReceivedDateForKit();
                             KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { RECEIVED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
                             if (kitDDPNotification != null) {
