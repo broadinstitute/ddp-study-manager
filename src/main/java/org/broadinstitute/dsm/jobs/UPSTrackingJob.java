@@ -31,7 +31,7 @@ public class UPSTrackingJob implements Job {
 
     private static final Logger logger = LoggerFactory.getLogger(UPSTrackingJob.class);
     private static final String SQL_SELECT_KITS = "SELECT * FROM ddp_kit kit LEFT JOIN ddp_kit_request req " +
-            "ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) WHERE req.ddp_instance_id = ?";
+            "ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) WHERE req.ddp_instance_id = ? order by kit.dsm_kit_request_id ASC";
 
     private static final String SQL_UPDATE_UPS_TRACKING_STATUS = "UPDATE ddp_kit SET ups_tracking_status = ?, ups_tracking_date = ? " +
             "WHERE dsm_kit_id <> 0 and dsm_kit_id in ( SELECT dsm_kit_id FROM ( SELECT * from ddp_kit) as something WHERE something.tracking_to_id = ? );";
@@ -108,9 +108,10 @@ public class UPSTrackingJob implements Job {
             UPSTrackingResponse response = DDPRequestUtil.getResponseObjectWithCustomHeader(UPSTrackingResponse.class, sendRequest, "UPS Tracking Test " + inquiryNumber, headers);
             logger.info("got response back from UPS: " + response);
             String type;
-            if(isReturn){
+            if (isReturn) {
                 type = kit.getUpsReturnStatus();
-            }else{
+            }
+            else {
                 type = kit.getUpsTrackingStatus();
             }
             if (StringUtils.isNotBlank(type)) {// get only type from it
