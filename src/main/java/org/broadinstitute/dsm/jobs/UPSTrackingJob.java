@@ -12,7 +12,7 @@ import org.broadinstitute.dsm.model.ups.*;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.DDPRequestUtil;
 import org.broadinstitute.dsm.util.EventUtil;
-import org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil;
+import org.broadinstitute.dsm.util.NanoIdUtil;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -59,20 +59,24 @@ public class UPSTrackingJob implements Job {
         logger.info("Starting the UPS lookup job");
         List<DDPInstance> ddpInstanceList = DDPInstance.getDDPInstanceListWithRole("ups_tracking");
         for (DDPInstance ddpInstance : ddpInstanceList) {
-            if (ddpInstance.isHasRole()) {
-                if (ddpInstance != null) {
+            if (ddpInstance != null) {
+                if (ddpInstance.isHasRole()) {
                     logger.info("tracking ups ids for " + ddpInstance.getName());
                     Map<String, Map<String, DdpKit>> ids = getResultSet(ddpInstance.getDdpInstanceId());
                     orderRegistrar = new Covid19OrderRegistrar(DSMServer.careEvolveOrderEndpoint, DSMServer.careEvolveAccount, DSMServer.provider);
-                    Map<String, DdpKit> kits = ids.get("shipping");
-                    logger.info("checking tracking status for " + kits.size() + " tracking numbers");
-                    for (DdpKit kit : kits.values()) {
-                        lookUpKit(kit, false);
-                    }
-                    kits = ids.get("return");
-                    logger.info("checking return status for " + kits.size() + " tracking numbers");
-                    for (DdpKit kit : kits.values()) {
-                        lookUpKit(kit, true);
+                    if (ids != null) {
+                        Map<String, DdpKit> kits = ids.get("shipping");
+                        if (kits != null) {
+                            logger.info("checking tracking status for " + kits.size() + " tracking numbers");
+                            for (DdpKit kit : kits.values()) {
+                                lookUpKit(kit, false);
+                            }
+                            kits = ids.get("return");
+                            logger.info("checking return status for " + kits.size() + " tracking numbers");
+                            for (DdpKit kit : kits.values()) {
+                                lookUpKit(kit, true);
+                            }
+                        }
                     }
                 }
             }
@@ -87,8 +91,7 @@ public class UPSTrackingJob implements Job {
         else {
             trackingId = kit.getTrackingReturnId();
         }
-        String transId = NanoIdUtils.randomNanoId(
-                NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 32);
+        String transId = NanoIdUtil.getNanoId("1234567890QWERTYUIOPASDFGHJKLZXCVBNM", 32);
         //        String inquiryNumber = "7798339175";
         String inquiryNumber = trackingId.trim();
         String transSrc = "Tracking";
@@ -129,25 +132,33 @@ public class UPSTrackingJob implements Job {
     }
 
     private static void updateStatus(String trackingId, String oldType, UPSTrackingResponse response, boolean isReturn, DdpKit kit) {
-        UPSShipment[] shipment = response.getTrackResponse().getShipment();
-        if (shipment != null && shipment.length > 0) {
-            UPSPackage[] upsPackages = shipment[0].getUpsPackageArray();
-            if (upsPackages != null && upsPackages.length > 0) {
-                UPSPackage upsPackage = upsPackages[0];
-                UPSActivity activity = upsPackage.getActivity()[0];
-                UPSStatus status = activity.getStatus();
-                String statusType = status.getType();
-                String statusDescription = status.getDescription();
-                String date = activity.getDate() + " " + activity.getTime();
-                if (!isReturn) {
-                    updateTrackingInfo(statusType, oldType, statusDescription, trackingId, date, SQL_UPDATE_UPS_TRACKING_STATUS, isReturn, kit);
-                }
-                else {
-                    updateTrackingInfo(statusType, oldType, statusDescription, trackingId, date, SQL_UPDATE_UPS_RETURN_STATUS, isReturn, kit);
+        if (response.getTrackResponse() != null) {
+            UPSShipment[] shipment = response.getTrackResponse().getShipment();
+
+            if (shipment != null && shipment.length > 0) {
+                UPSPackage[] upsPackages = shipment[0].getUpsPackageArray();
+                if (upsPackages != null && upsPackages.length > 0) {
+                    UPSPackage upsPackage = upsPackages[0];
+                    UPSActivity activity = upsPackage.getActivity()[0];
+                    if (activity != null) {
+                        UPSStatus status = activity.getStatus();
+                        if (status != null) {
+                            String statusType = status.getType();
+                            String statusDescription = status.getDescription();
+                            String date = activity.getDate() + " " + activity.getTime();
+                            if (!isReturn) {
+                                updateTrackingInfo(statusType, oldType, statusDescription, trackingId, date, SQL_UPDATE_UPS_TRACKING_STATUS, isReturn, kit);
+                            }
+                            else {
+                                updateTrackingInfo(statusType, oldType, statusDescription, trackingId, date, SQL_UPDATE_UPS_RETURN_STATUS, isReturn, kit);
+                            }
+                        }
+                    }
                 }
             }
         }
     }
+
 
     private static void updateTrackingInfo(String statusType, String oldType, String statusDescription, String trackingId, String date, String query, boolean isReturn, DdpKit kit) {
         SimpleResult result = inTransaction((conn) -> {
@@ -164,7 +175,7 @@ public class UPSTrackingJob implements Job {
                 else {
                     if (!isReturn) {
                         //if delivered notif pepper
-                        if (statusType.equals(DELIVERY) && !(DELIVERY.equals(oldType))) {
+                        if (DELIVERY.equals(statusType) && !(DELIVERY.equals(oldType))) {
                             KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_TRACKING_NUMBER, new String[] { DELIVERED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
                             if (kitDDPNotification != null) {
                                 logger.info("Triggering DDP for delivered kit with external order number: " + kit.getExternalOrderNumber());
