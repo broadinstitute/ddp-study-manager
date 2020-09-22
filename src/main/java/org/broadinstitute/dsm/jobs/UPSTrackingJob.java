@@ -51,6 +51,7 @@ public class UPSTrackingJob implements Job {
 
     private static final String OUT_FOR_DELIVERY = "O";
     private static final String PICKUP = "P";
+    private static final String IN_TRANSIT = "I";
     private static final String DELIVERY = "D";
 
     @Override
@@ -197,7 +198,7 @@ public class UPSTrackingJob implements Job {
             }
             else {
                 //if picked up place order
-                if (statusType.equals(PICKUP) && !(PICKUP.equals(oldType))) {
+                if (!(PICKUP.equals(oldType)) && (PICKUP.equals(statusType) || IN_TRANSIT.equals(statusType))) {
                     Instant now = Instant.now();
                     orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), now);
                     logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
