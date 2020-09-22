@@ -1,6 +1,5 @@
 package org.broadinstitute.dsm.jobs;
 
-import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.DSMServer;
@@ -172,9 +171,6 @@ public class UPSTrackingJob implements Job {
                 if (r != 2) {//number of subkits
                     throw new RuntimeException("Update query for UPS tracking updated " + r + " rows!");
                 }
-                else {
-                    }
-
             }
             catch (Exception e) {
                 dbVals.resultException = e;
