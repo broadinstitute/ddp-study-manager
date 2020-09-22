@@ -60,8 +60,8 @@ public class UPSTrackingJob implements Job {
         List<DDPInstance> ddpInstanceList = DDPInstance.getDDPInstanceListWithRole("ups_tracking");
         for (DDPInstance ddpInstance : ddpInstanceList) {
             if (ddpInstance.isHasRole()) {
-                logger.info("tracking ups ids for " + ddpInstance.getName());
                 if (ddpInstance != null) {
+                    logger.info("tracking ups ids for " + ddpInstance.getName());
                     Map<String, Map<String, DdpKit>> ids = getResultSet(ddpInstance.getDdpInstanceId());
                     orderRegistrar = new Covid19OrderRegistrar(DSMServer.careEvolveOrderEndpoint, DSMServer.careEvolveAccount, DSMServer.provider);
                     Map<String, DdpKit> kits = ids.get("shipping");
@@ -187,6 +187,7 @@ public class UPSTrackingJob implements Job {
                         //if delivered notify pepper for received
                         else if (statusType.equals(DELIVERY) && !(DELIVERY.equals(oldType))) {
                             //                            GBFRequestUtil.updateReceivedDateForKit(kit.getDsmKitRequestId());
+                            logger.info("RECEIVED: " + trackingId);
                             KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { RECEIVED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
                             if (kitDDPNotification != null) {
                                 logger.info("Triggering DDP for received kit with external order number: " + kit.getExternalOrderNumber());
@@ -198,7 +199,7 @@ public class UPSTrackingJob implements Job {
                             }
                         }
                     }
-                    logger.info("Updated status of tracking number " + trackingId + " to " + upsUpdate);
+                    logger.info("Updated status of tracking number " + trackingId + " to " + upsUpdate + " from " + oldType);
                 }
 
             }

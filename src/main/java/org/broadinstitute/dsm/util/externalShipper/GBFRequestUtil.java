@@ -216,7 +216,8 @@ public class GBFRequestUtil implements ExternalShipper {
                             }
                             logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has not been shipped in the last 24 hours! ");//todo pegah uncomment for production
                         }
-                        else if (status.getOrderStatus().contains(SHIPPED) && !kit.getExternalOrderStatus().contains(SHIPPED)) {
+                        else if (status.getOrderStatus().contains(SHIPPED) && (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
+                                !kit.getExternalOrderStatus().contains(SHIPPED))) {
                             if (kitDDPNotification != null) {
                                 logger.info("Triggering DDP for shipped kit with external order number: " + kit.getExternalOrderNumber());
                                 EventUtil.triggerDDP(kitDDPNotification);
@@ -300,7 +301,7 @@ public class GBFRequestUtil implements ExternalShipper {
                         int counter = 0;
                         if (kitRequestsResult != null) {
                             for (KitRequest kitRequest : kitRequestsResult) {
-                                String kitLabel = item.getSerialNumber();
+                                String kitLabel = item.getTubeSerial();
                                 if (counter > 0) {
                                     kitLabel += "_" + counter;
                                 }
