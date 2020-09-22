@@ -161,9 +161,9 @@ public class UPSTrackingJob implements Job {
 
 
     private static void updateTrackingInfo(String statusType, String oldType, String statusDescription, String trackingId, String date, String query, boolean isReturn, DdpKit kit) {
+        String upsUpdate = statusType + " " + statusDescription;
         SimpleResult result = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            String upsUpdate = statusType + " " + statusDescription;
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, upsUpdate);
                 stmt.setString(2, date);
@@ -173,45 +173,7 @@ public class UPSTrackingJob implements Job {
                     throw new RuntimeException("Update query for UPS tracking updated " + r + " rows!");
                 }
                 else {
-                    if (!isReturn) {
-                        //if delivered notif pepper
-                        if (DELIVERY.equals(statusType) && !(DELIVERY.equals(oldType))) {
-                            KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_TRACKING_NUMBER, new String[] { DELIVERED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
-                            if (kitDDPNotification != null) {
-                                logger.info("Triggering DDP for delivered kit with external order number: " + kit.getExternalOrderNumber());
-                                EventUtil.triggerDDP(kitDDPNotification);
-
-                            }
-                            else {
-                                logger.error("delivered kitDDPNotification was null for " + kit.getExternalOrderNumber());
-                            }
-                        }
-
                     }
-                    else {
-                        //if picked up place order
-                        if (statusType.equals(PICKUP) && !(PICKUP.equals(oldType))) {
-                            Instant now = Instant.now();
-                            orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), now);
-                            logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
-                        }
-                        //if delivered notify pepper for received
-                        else if (statusType.equals(DELIVERY) && !(DELIVERY.equals(oldType))) {
-                            //                            GBFRequestUtil.updateReceivedDateForKit(kit.getDsmKitRequestId());
-                            logger.info("RECEIVED: " + trackingId);
-                            KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { RECEIVED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
-                            if (kitDDPNotification != null) {
-                                logger.info("Triggering DDP for received kit with external order number: " + kit.getExternalOrderNumber());
-                                EventUtil.triggerDDP(kitDDPNotification);
-
-                            }
-                            else {
-                                logger.error("received kitDDPNotification was null for " + kit.getExternalOrderNumber());
-                            }
-                        }
-                    }
-                    logger.info("Updated status of tracking number " + trackingId + " to " + upsUpdate + " from " + oldType);
-                }
 
             }
             catch (Exception e) {
@@ -221,6 +183,46 @@ public class UPSTrackingJob implements Job {
         });
         if (result.resultException != null) {
             throw new RuntimeException(result.resultException);
+        }else{
+            if (!isReturn) {
+                //if delivered notif pepper
+                if (DELIVERY.equals(statusType) && !(DELIVERY.equals(oldType))) {
+                    KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_TRACKING_NUMBER, new String[] { DELIVERED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
+                    if (kitDDPNotification != null) {
+                        logger.info("Triggering DDP for delivered kit with external order number: " + kit.getExternalOrderNumber());
+                        EventUtil.triggerDDP(kitDDPNotification);
+
+                    }
+                    else {
+                        logger.error("delivered kitDDPNotification was null for " + kit.getExternalOrderNumber());
+                    }
+                }
+
+            }
+            else {
+                //if picked up place order
+                if (statusType.equals(PICKUP) && !(PICKUP.equals(oldType))) {
+                    Instant now = Instant.now();
+                    orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), now);
+                    logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
+                }
+                //if delivered notify pepper for received
+                else if (statusType.equals(DELIVERY) && !(DELIVERY.equals(oldType))) {
+                    //                            GBFRequestUtil.updateReceivedDateForKit(kit.getDsmKitRequestId());
+                    logger.info("RECEIVED: " + trackingId);
+                    KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { RECEIVED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
+                    if (kitDDPNotification != null) {
+                        logger.info("Triggering DDP for received kit with external order number: " + kit.getExternalOrderNumber());
+                        EventUtil.triggerDDP(kitDDPNotification);
+
+                    }
+                    else {
+                        logger.error("received kitDDPNotification was null for " + kit.getExternalOrderNumber());
+                    }
+                }
+            }
+            logger.info("Updated status of tracking number " + trackingId + " to " + upsUpdate + " from " + oldType);
+
         }
     }
 
