@@ -77,8 +77,8 @@ public class Covid19OrderRegistrar {
      * @param kitPickupTime the time at which the kit was picked
      *                      up from the participant
      */
-    public OrderResponse orderTest(Authentication auth, String participantHruid, String kitLabel,
-                                   String kitId, Instant kitPickupTime) throws CareEvolveException {
+    public  OrderResponse orderTest(Authentication auth, String participantHruid, String kitLabel,
+                                          String kitId, Instant kitPickupTime) throws CareEvolveException {
 
         DDPInstance instance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
 

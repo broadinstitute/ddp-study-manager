@@ -21,6 +21,8 @@ import org.broadinstitute.ddp.security.CookieUtil;
 import org.broadinstitute.ddp.util.BasicTriggerListener;
 import org.broadinstitute.ddp.util.JsonTransformer;
 import org.broadinstitute.ddp.util.Utility;
+import org.broadinstitute.dsm.careevolve.Authentication;
+import org.broadinstitute.dsm.careevolve.Provider;
 import org.broadinstitute.dsm.jetty.JettyConfig;
 import org.broadinstitute.dsm.jobs.*;
 import org.broadinstitute.dsm.model.mbc.MBCHospital;
@@ -92,10 +94,18 @@ public class DSMServer extends BasicServer {
     public static final String UPS_PATH_TO_USERNAME = "ups.username";
     public static final String UPS_PATH_TO_PASSWORD = "ups.password";
     public static final String UPS_PATH_TO_ACCESSKEY = "ups.accesskey";
+    public static final String UPS_PATH_TO_ENDPOINT = "ups.url";
 
     public static String UPS_USERNAME;
     public static String UPS_PASSWORD;
+    public static String UPS_ENDPOINT;
     public static String UPS_ACCESSKEY;
+    public static String careEvolveSubscriberKey;
+    public static String careEvolveServiceKey;
+    public static String careEvolveOrderEndpoint;
+    public static String careEvolveAccount;
+    public static Authentication careEvolveAuth;
+    public static Provider provider;
 
     private static Map<String, MBCParticipant> mbcParticipants = new HashMap<>();
     private static Map<String, MBCInstitution> mbcInstitutions = new HashMap<>();
@@ -284,7 +294,6 @@ public class DSMServer extends BasicServer {
         DDPRequestUtil ddpRequestUtil = new DDPRequestUtil();
         PatchUtil patchUtil = new PatchUtil();
 
-        // currently not needed anymore but might come back
         setupExternalShipperLookup(cfg.getString(ApplicationConfigConstants.EXTERNAL_SHIPPER));
         GBFRequestUtil gbfRequestUtil = new GBFRequestUtil();
 
@@ -508,9 +517,21 @@ public class DSMServer extends BasicServer {
                 UPS_ACCESSKEY = cfg.getString(UPS_PATH_TO_ACCESSKEY);
                 UPS_USERNAME = cfg.getString(UPS_PATH_TO_USERNAME);
                 UPS_PASSWORD = cfg.getString(UPS_PATH_TO_PASSWORD);
+                UPS_ENDPOINT = cfg.getString(UPS_PATH_TO_ENDPOINT);
 
-//                createScheduleJob(scheduler, null, null, UPSTrackingJob.class, "UPS_TRACKING_JOB",
-//                        cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_STATUS_SHIPMENT), new EasypostShipmentStatusTriggerListener(), cfg);
+                careEvolveSubscriberKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SUBSCRIBER_KEY);
+                careEvolveServiceKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SERVICE_KEY);
+                careEvolveAuth = new Authentication(careEvolveSubscriberKey, careEvolveServiceKey);
+                careEvolveAccount = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_ACCOUNT);
+                careEvolveSubscriberKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SUBSCRIBER_KEY);
+                careEvolveServiceKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SERVICE_KEY);
+                careEvolveOrderEndpoint = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_ORDER_ENDPOINT);
+                provider = new Provider(cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_FIRSTNAME),
+                        cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_LAST_NAME),
+                        cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_NPI));
+
+                createScheduleJob(scheduler, null, null, UPSTrackingJob.class, "UPS_TRACKING_JOB",
+                        cfg.getString(ApplicationConfigConstants.QUARTZ_UPS_LOOKUP_JOB), new UPSTriggerListener(), cfg);
 
 
                 logger.info("Setup Job Scheduler...");
