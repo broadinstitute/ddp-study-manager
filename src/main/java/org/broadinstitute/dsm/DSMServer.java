@@ -39,6 +39,7 @@ import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.*;
+import org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil;
 import org.broadinstitute.dsm.util.triggerListener.*;
 import org.jruby.embed.ScriptingContainer;
 import org.quartz.*;
@@ -94,8 +95,15 @@ public class DSMServer extends BasicServer {
     public static final String EVENT_UTIL = "EventUtil";
     public static final String CONTAINER = "Container";
     public static final String RECEIVER = "Receiver";
-    public static final String ADDITIONAL_CRON_EXPRESSION = "AdditionalCronExpression";
+    public static final String ADDITIONAL_CRON_EXPRESSION = "externalShipper_cron_expression_additional";
     public static final String GCP_PATH_TO_SERVICE_ACCOUNT = "portal.googleProjectCredentials";
+    public static final String UPS_PATH_TO_USERNAME = "ups.username";
+    public static final String UPS_PATH_TO_PASSWORD = "ups.password";
+    public static final String UPS_PATH_TO_ACCESSKEY = "ups.accesskey";
+
+    public static String UPS_USERNAME;
+    public static String UPS_PASSWORD;
+    public static String UPS_ACCESSKEY;
     public static final String GCP_PATH_TO_PUBSUB_PROJECT_ID = "pubsub.projectId";
     public static final String GCP_PATH_TO_PUBSUB_SUB = "pubsub.subscription";
 
@@ -266,7 +274,8 @@ public class DSMServer extends BasicServer {
         setupDDPConfigurationLookup(cfg.getString(ApplicationConfigConstants.DDP));
 
         AuthenticationRoute authenticationRoute = new AuthenticationRoute(auth0Util,
-                jwtSecret, cookieSalt, cookieName, userUtil, cfg.getString("portal.environment"));
+                jwtSecret, cookieSalt, cookieName, userUtil,
+                cfg.getString("portal.environment"));
         post(UI_ROOT + RoutePath.AUTHENTICATION_REQUEST, authenticationRoute, new JsonTransformer());
 
         KitUtil kitUtil = new KitUtil();
@@ -288,8 +297,8 @@ public class DSMServer extends BasicServer {
         PatchUtil patchUtil = new PatchUtil();
 
         // currently not needed anymore but might come back
-        // setupExternalShipperLookup(cfg.getString(ApplicationConfigConstants.EXTERNAL_SHIPPER));
-        // GBFRequestUtil gbfRequestUtil = new GBFRequestUtil();
+        setupExternalShipperLookup(cfg.getString(ApplicationConfigConstants.EXTERNAL_SHIPPER));
+        GBFRequestUtil gbfRequestUtil = new GBFRequestUtil();
 
         setupShippingRoutes(notificationUtil, auth0Util, userUtil);
 
@@ -383,6 +392,8 @@ public class DSMServer extends BasicServer {
         KitDeactivationRoute kitDeactivationRoute = new KitDeactivationRoute(notificationUtil);
         patch(UI_ROOT + RoutePath.DEACTIVATE_KIT_REQUEST, kitDeactivationRoute, new JsonTransformer());
         patch(UI_ROOT + RoutePath.ACTIVATE_KIT_REQUEST, kitDeactivationRoute, new JsonTransformer());
+
+        patch(UI_ROOT + RoutePath.AUTHORIZE_KIT, new KitAuthorizationRoute(), new JsonTransformer());
 
         KitExpressRoute kitExpressRoute = new KitExpressRoute(notificationUtil);
         get(UI_ROOT + RoutePath.EXPRESS_KIT_REQUEST, kitExpressRoute, new JsonTransformer());
@@ -542,12 +553,23 @@ public class DSMServer extends BasicServer {
                         cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_EXPRESSION_FOR_DDP_EVENT_TRIGGER), new DDPEventTriggerListener(), null);
 
                 // currently not needed anymore but might come back
-                // remove external shipper job till a ddp is actually using it
-                // createScheduleJob(scheduler, null, ExternalShipperJob.class, "CHECK_EXTERNAL_SHIPPER",
-                // cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_EXPRESSION_FOR_EXTERNAL_SHIPPER), new ExternalShipperTriggerListener(), cfg);
+                createScheduleJob(scheduler, eventUtil, notificationUtil,
+                        ExternalShipperJob.class, "CHECK_EXTERNAL_SHIPPER",
+                        cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_EXPRESSION_FOR_EXTERNAL_SHIPPER),
+                        new ExternalShipperTriggerListener(), cfg);
 
                 createScheduleJob(scheduler, null, null, EasypostShipmentStatusJob.class, "CHECK_STATUS_SHIPMENT",
                         cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_STATUS_SHIPMENT), new EasypostShipmentStatusTriggerListener(), cfg);
+
+                //pegah todo
+
+                UPS_ACCESSKEY = cfg.getString(UPS_PATH_TO_ACCESSKEY);
+                UPS_USERNAME = cfg.getString(UPS_PATH_TO_USERNAME);
+                UPS_PASSWORD = cfg.getString(UPS_PATH_TO_PASSWORD);
+
+//                createScheduleJob(scheduler, null, null, UPSTrackingJob.class, "UPS_TRACKING_JOB",
+//                        cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_STATUS_SHIPMENT), new EasypostShipmentStatusTriggerListener(), cfg);
+
 
                 logger.info("Setup Job Scheduler...");
                 try {
@@ -662,10 +684,10 @@ public class DSMServer extends BasicServer {
             //pass parameters to JobDataMap for JobDetail
             job.getJobDataMap().put(NOTIFICATION_UTIL, notificationUtil);
         }
-        // currently not needed anymore but might come back
-        // if (jobClass == ExternalShipperJob.class) {
-        // job.getJobDataMap().put(ADDITIONAL_CRON_EXPRESSION, config.getString(ApplicationConfigConstants.QUARTZ_CRON_EXPRESSION_FOR_EXTERNAL_SHIPPER_ADDITIONAL));
-        // }
+        //         currently not needed anymore but might come back
+        if (jobClass == ExternalShipperJob.class) {
+            job.getJobDataMap().put(ADDITIONAL_CRON_EXPRESSION, config.getString(ApplicationConfigConstants.QUARTZ_CRON_EXPRESSION_FOR_EXTERNAL_SHIPPER_ADDITIONAL));
+        }
 
         logger.info(cronExpression);
 
@@ -734,14 +756,14 @@ public class DSMServer extends BasicServer {
     }
 
     // currently not needed anymore but might come back
-    //    public static void setupExternalShipperLookup(@NonNull String externalSipperConf) {
-    //        JsonArray array = (JsonArray) (new JsonParser().parse(externalSipperConf));
-    //        for (JsonElement ddpInfo : array) {
-    //            if (ddpInfo.isJsonObject()) {
-    //                ddpConfigurationLookup.put(ddpInfo.getAsJsonObject().get(ApplicationConfigConstants.SHIPPER_NAME).getAsString().toLowerCase(), ddpInfo);
-    //            }
-    //        }
-    //    }
+    public static void setupExternalShipperLookup(@NonNull String externalSipperConf) {
+        JsonArray array = (JsonArray) (new JsonParser().parse(externalSipperConf));
+        for (JsonElement ddpInfo : array) {
+            if (ddpInfo.isJsonObject()) {
+                ddpConfigurationLookup.put(ddpInfo.getAsJsonObject().get(ApplicationConfigConstants.SHIPPER_NAME).getAsString().toLowerCase(), ddpInfo);
+            }
+        }
+    }
 
     public static String getApiKey(@NonNull String shipperName) {
         JsonElement jsonElement = ddpConfigurationLookup.get(shipperName.toLowerCase());

@@ -25,6 +25,8 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.*;
 
+import static org.apache.http.client.fluent.Request.Get;
+
 public class DDPRequestUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(DDPRequestUtil.class);
@@ -68,6 +70,29 @@ public class DDPRequestUtil {
         return objects;
     }
 
+
+    // make a get request with custom header
+    public static <T> T getResponseObjectWithCustomHeader(Class<T> responseClass, String sendRequest, String name, Map<String, String> header) throws IOException {
+        logger.info("Requesting data from " + name + " w/ " + sendRequest);
+        org.apache.http.client.fluent.Request request = Get(sendRequest);
+
+        if (header != null) {
+            for (Map.Entry<String, String> headerEntry : header.entrySet()) {
+                request = request.addHeader(headerEntry.getKey(), headerEntry.getValue());
+            }
+        }
+        T objects;
+        if (blindTrustEverythingExecutor != null) {
+            objects = blindTrustEverythingExecutor.execute(request).handleResponse(res -> getResponse(res, responseClass, sendRequest));
+        }
+        else {
+            objects = request.execute().handleResponse(res -> getResponse(res, responseClass, sendRequest));
+        }
+        if (objects != null) {
+            logger.info("Got response back");
+        }
+        return objects;
+    }
     // make a post request
     public static Integer postRequest(String sendRequest, Object objectToPost, String name, boolean auth0Token) throws IOException {
         logger.info("Requesting data from " + name + " w/ " + sendRequest);
