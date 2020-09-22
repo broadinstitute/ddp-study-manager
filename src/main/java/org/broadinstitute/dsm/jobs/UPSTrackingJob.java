@@ -62,16 +62,16 @@ public class UPSTrackingJob implements Job {
             if (ddpInstance.isHasRole()) {
                 logger.info("tracking ups ids for " + ddpInstance.getName());
                 if (ddpInstance != null) {
-                    Map<String, Set<DdpKit>> ids = getResultSet(ddpInstance.getDdpInstanceId());
+                    Map<String, Map<String, DdpKit>> ids = getResultSet(ddpInstance.getDdpInstanceId());
                     orderRegistrar = new Covid19OrderRegistrar(DSMServer.careEvolveOrderEndpoint, DSMServer.careEvolveAccount, DSMServer.provider);
-                    Set<DdpKit> kits = ids.get("shipping");
+                    Map<String, DdpKit> kits = ids.get("shipping");
                     logger.info("checking tracking status for " + kits.size() + " tracking numbers");
-                    for (DdpKit kit : kits) {
+                    for (DdpKit kit : kits.values()) {
                         lookUpKit(kit, false);
                     }
                     kits = ids.get("return");
                     logger.info("checking return status for " + kits.size() + " tracking numbers");
-                    for (DdpKit kit : kits) {
+                    for (DdpKit kit : kits.values()) {
                         lookUpKit(kit, true);
                     }
                 }
@@ -217,13 +217,13 @@ public class UPSTrackingJob implements Job {
     }
 
 
-    public static Map<String, Set<DdpKit>> getResultSet(String realm) {
+    public static Map<String, Map<String, DdpKit>> getResultSet(String realm) {
         SimpleResult result = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KITS)) {
                 stmt.setString(1, realm);
                 try (ResultSet rs = stmt.executeQuery()) {
-                    Map<String, Set<DdpKit>> results = getIdsFromResultSet(rs);
+                    Map<String, Map<String, DdpKit>> results = getIdsFromResultSet(rs);
                     dbVals.resultValue = results;
                     return dbVals;
                 }
@@ -239,12 +239,12 @@ public class UPSTrackingJob implements Job {
         if (result.resultException != null) {
             throw new RuntimeException(result.resultException);
         }
-        return (Map<String, Set<DdpKit>>) result.resultValue;
+        return (Map<String, Map<String, DdpKit>>) result.resultValue;
     }
 
-    public static Map<String, Set<DdpKit>> getIdsFromResultSet(ResultSet rs) {
-        Set<DdpKit> returnTrackingIds = new HashSet<>();
-        Set<DdpKit> trackingIds = new HashSet<>();
+    public static Map<String, Map<String, DdpKit>> getIdsFromResultSet(ResultSet rs) {
+        Map<String, DdpKit> returnTrackingIds = new HashMap<>();
+        Map<String, DdpKit> trackingIds = new HashMap<>();
         try {
             while (rs.next()) {
                 DdpKit kit = new DdpKit(
@@ -269,7 +269,7 @@ public class UPSTrackingJob implements Job {
                         type = type.substring(0, type.indexOf(' '));
                     }
                     if (!"D".equals(type)) {//don't include delivered ones
-                        trackingIds.add(kit);
+                        trackingIds.put(kit.getExternalOrderNumber(), kit);
                     }
                 }
                 if (StringUtils.isNotBlank(kit.getTrackingReturnId())) {
@@ -278,7 +278,7 @@ public class UPSTrackingJob implements Job {
                         type = type.substring(0, type.indexOf(' '));
                     }
                     if (!"D".equals(type)) {
-                        returnTrackingIds.add(kit);
+                        returnTrackingIds.put(kit.getExternalOrderNumber(), kit);
                     }
                 }
             }
@@ -286,7 +286,7 @@ public class UPSTrackingJob implements Job {
         catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
-        Map<String, Set<DdpKit>> results = new HashMap<>();
+        Map<String, Map<String, DdpKit>> results = new HashMap<>();
         results.put("shipping", trackingIds);
         results.put("return", returnTrackingIds);
         return results;
