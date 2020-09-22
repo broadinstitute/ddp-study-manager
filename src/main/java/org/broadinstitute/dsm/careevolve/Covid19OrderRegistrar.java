@@ -33,6 +33,15 @@ import org.slf4j.LoggerFactory;
 public class Covid19OrderRegistrar {
 
     private static final Logger logger = LoggerFactory.getLogger(Covid19OrderRegistrar.class);
+    public static final String ADDRESS_FIELD = "address";
+    public static final String PROFILE_FIELD = "profile";
+    public static final String GUID_FIELD = "guid";
+    public static final String FIRST_NAME_FIELD = "firstName";
+    public static final String LAST_NAME_FIELD = "lastName";
+    public static final String ACTIVITIES_FIELD = "activities";
+    public static final String QUESTIONS_ANSWERS_FIELD = "questionsAnswers";
+    public static final String STABLE_ID_FIELD = "stableId";
+    public static final String ANSWER_FIELD = "answer";
 
     private final String endpoint;
 
@@ -81,165 +90,171 @@ public class Covid19OrderRegistrar {
             ParticipantWrapper participant = participants.iterator().next();
             JsonObject data = participant.getDataAsJson();
             if (data != null) {
-                JsonObject address = data.get("address").getAsJsonObject();
-                if (address != null) {
-                    Address careEvolveAddress = toCareEvolveAddress(address);
+                if (!data.has(ADDRESS_FIELD)) {
+                    throw new CareEvolveException("No address for " + participantHruid + ".  Cannot register order.");
+                }
+                JsonObject address = data.get(ADDRESS_FIELD).getAsJsonObject();
+                Address careEvolveAddress = toCareEvolveAddress(address);
 
-                    JsonObject profile = data.get("profile").getAsJsonObject();
-                    String patientId = profile.get("guid").getAsString();
+                JsonObject profile = data.get(PROFILE_FIELD).getAsJsonObject();
+                String patientId = profile.get(GUID_FIELD).getAsString();
 
-                    String firstName = profile.get("firstName").getAsString();
-                    String lastName = profile.get("lastName").getAsString();
+                String firstName = profile.get(FIRST_NAME_FIELD).getAsString();
+                String lastName = profile.get(LAST_NAME_FIELD).getAsString();
 
-                    List<AOE> aoes = AOE.forTestBoston(patientId, kitId);
+                List<AOE> aoes = AOE.forTestBoston(patientId, kitId);
 
-                    JsonArray activities = data.get("activities").getAsJsonArray();
+                JsonArray activities = data.get(ACTIVITIES_FIELD).getAsJsonArray();
 
-                    JsonObject latestKitActivity = getLatestKitActivity(activities);
-                    JsonArray latestKitAnswers = latestKitActivity.get("questionsAnswers").getAsJsonArray();
+                JsonObject latestKitActivity = getLatestKitActivity(activities);
 
-                    String collectionDateTimeStr = null;
-                    Instant collectionDateTime = null;
-                    StringBuilder collectionDate = new StringBuilder();
-                    StringBuilder collectionTime = new StringBuilder();
-                    for (int i = 0; i < latestKitAnswers.size(); i++) {
-                        JsonObject latestKitAnswer = latestKitAnswers.get(i).getAsJsonObject();
-                        String questionStableId = latestKitAnswer.get("stableId").getAsString();
+                Instant collectionDateTime = kitPickupTime;
 
-                        if ("SAMPLE_COLLECT_DATE".equals(questionStableId)) {
-                            collectionDate.append(latestKitAnswer.get("date").getAsString());
-                        } else if ("SAMPLE_COLLECT_TIME".equals(questionStableId)) {
-                            JsonArray timeFields = latestKitAnswer.getAsJsonArray("answer").get(0).getAsJsonArray();
-                            for (int timeFieldIdx = 0; timeFieldIdx < timeFields.size(); timeFieldIdx++) {
-                                collectionTime.append(" ").append(timeFields.get(timeFieldIdx).getAsString());
+                if (latestKitActivity != null) {
+                    JsonArray latestKitAnswers = latestKitActivity.get(QUESTIONS_ANSWERS_FIELD).getAsJsonArray();
+
+                    if (latestKitAnswers != null) {
+                        String collectionDateTimeStr = null;
+
+                        StringBuilder collectionDate = new StringBuilder();
+                        StringBuilder collectionTime = new StringBuilder();
+                        for (int i = 0; i < latestKitAnswers.size(); i++) {
+                            JsonObject latestKitAnswer = latestKitAnswers.get(i).getAsJsonObject();
+                            String questionStableId = latestKitAnswer.get(STABLE_ID_FIELD).getAsString();
+
+                            if ("SAMPLE_COLLECT_DATE".equals(questionStableId)) {
+                                collectionDate.append(latestKitAnswer.get("date").getAsString());
+                            } else if ("SAMPLE_COLLECT_TIME".equals(questionStableId)) {
+                                JsonArray timeFields = latestKitAnswer.getAsJsonArray(ANSWER_FIELD).get(0).getAsJsonArray();
+                                for (int timeFieldIdx = 0; timeFieldIdx < timeFields.size(); timeFieldIdx++) {
+                                    collectionTime.append(" ").append(timeFields.get(timeFieldIdx).getAsString());
+                                }
                             }
                         }
-                    }
 
-                    if (collectionDate.length() > 0 && collectionTime.length() > 0) {
-                        collectionDateTimeStr = collectionDate + " " + collectionTime;
-                        try {
-                            collectionDateTime = new SimpleDateFormat("yyyy-MM-dd h m a").parse(
-                                    collectionDateTimeStr
-                            ).toInstant();
-                        } catch (ParseException e) {
-                            throw new CareEvolveException("Could not parse collection date time " + collectionDateTimeStr.toString()
-                                    + " for participant " + patientId + " in activity instance " + latestKitActivity.get("guid"), e);
+                        if (collectionDate.length() > 0 && collectionTime.length() > 0) {
+                            collectionDateTimeStr = collectionDate + " " + collectionTime;
+                            try {
+                                collectionDateTime = new SimpleDateFormat("yyyy-MM-dd h m a").parse(
+                                        collectionDateTimeStr
+                                ).toInstant();
+                            } catch (ParseException e) {
+                                throw new CareEvolveException("Could not parse collection date time " + collectionDateTimeStr.toString()
+                                        + " for participant " + patientId + " in activity instance " + latestKitActivity.get("guid"), e);
+                            }
+                        } else {
+                            collectionDateTime = kitPickupTime;
                         }
-                    } else {
-                        collectionDateTime = kitPickupTime;
                     }
 
                     if (collectionDateTime == null) {
-                        logger.error("No kit collection time for "+ patientId);
+                        logger.error("No kit collection time for " + patientId);
                     }
-
-                    JsonObject baselineCovidActivity = getBaselineCovidActivity(activities);
-                    JsonArray baselineCovidAnswers = baselineCovidActivity.get("questionsAnswers").getAsJsonArray();
-                    String dob = null;
-
-                    // mappings  for  race, ethnicity, and  sex are custom  for the  Ellkay API
-                    // and are controlled  by the Ellkay integration
-                    String race = "2131-1"; // code for "other"
-                    String ethnicity = "U";
-                    String sex = "U";
-                    for (int i = 0; i < baselineCovidAnswers.size(); i++) {
-                        JsonObject answer = baselineCovidAnswers.get(i).getAsJsonObject();
-                        String questionStableId = answer.get("stableId").getAsString();
-
-                        if ("DOB".equals(questionStableId)) {
-                            JsonObject dateFields = answer.get("dateFields").getAsJsonObject();
-                            StringBuilder dobStr  = new StringBuilder();
-                            dobStr.append(dateFields.get("year")).append("-")
-                                    .append(dateFields.get("month")).append("-")
-                                    .append(dateFields.get("day"));
-                            SimpleDateFormat dobFormat = new SimpleDateFormat("yyyy-MM-dd");
-                            try {
-                                dob = dobFormat.format(dobFormat.parse(dobStr.toString()));
-                            } catch (ParseException e) {
-                                throw new CareEvolveException("Could not parse dob " + dobStr.toString()
-                                        + " for participant " + patientId + " in activity instance " + baselineCovidActivity.get("guid"));
-                            }
-
-                        } else if ("SEX".equals(questionStableId)) {
-                            JsonArray sexAnswers = answer.getAsJsonArray("answer");
-                            if (sexAnswers.size() > 0) {
-                                sex = sexAnswers.get(0).getAsString();
-                            }
-
-                            if ("SEX_FEMALE".equals(sex)) {
-                                sex = "F";
-                            } else if ("SEX_MALE".equals(sex)) {
-                                sex = "M";
-                            } else if ("OTHER".equals(sex)) {
-                                sex = "U";
-                            }  else {
-                                logger.error("Could not map sex " + sex + " to Ellkay code; will default to unknown for " + baselineCovidActivity.get("guid"));
-                            }
-
-                        }  else if ("RACE".equals(questionStableId)) {
-                            JsonArray races = answer.getAsJsonArray("answer");
-
-                            if (races.size() == 1) {
-                                // CareEvolve only supports a  single race per order
-                                race = races.get(0).getAsString();
-
-                                if ("ASIAN".equals(race)) {
-                                    race = "2028-9";
-                                } else if ("BLACK".equals(race)) {
-                                    race = "2054-5";
-                                } else if ("AMERICAN_INDIAN".equals(race)) {
-                                    race = "2054-5";
-                                } else if ("NATIVE_HAWAIIAN".equals(race)) {
-                                    race = "2076-8";
-                                } else if ("WHITE".equals(race)) {
-                                    race = "2106-3";
-                                } else if ("OTHER".equals(race)) {
-                                    race = "2131-1";
-                                } else {
-                                    logger.error("Could not map race " + race + " to Ellkay code; will default to other for " + baselineCovidActivity.get("guid"));
-                                }
-                            } else {
-                                // if there's no value or if multiple values are selected,
-                                // use the code for "other"
-                                race = "2131-1";
-                            }
-                        }
-                        else if ("ETHNICITY".equals(questionStableId)) {
-                            JsonArray answers = answer.getAsJsonArray("answer");
-                            if  (answers.size() > 0) {
-                                ethnicity = answer.getAsJsonArray("answer").get(0).getAsString();
-                                if ("HISPANIC_LATINO".equals(ethnicity)) {
-                                    ethnicity = "H";
-                                } else if ("NOT_HISPANIC_LATINO".equals(ethnicity)) {
-                                    ethnicity = "N";
-                                } else {
-                                    logger.error("Could not map ethnicity " + ethnicity + " to Ellkay code; will default to unknown for " + baselineCovidActivity.get("guid"));
-                                }
-                            }
-                        }
-
-                    }
-
-                    Patient testPatient = new Patient(patientId, firstName, lastName, dob, race, ethnicity,
-                            sex, careEvolveAddress);
-
-                    Message message = new Message(new Order(careEvolveAccount, testPatient, kitLabel, collectionDateTime, provider, aoes), kitId);
-
-                    OrderResponse orderResponse = null;
-                    try {
-                        orderResponse = orderTest(auth, message);
-                    } catch (IOException e) {
-                        throw new CareEvolveException("Could not order test for " + patientId, e);
-                    }
-
-                    if (StringUtils.isNotBlank(orderResponse.getError())) {
-                        throw new CareEvolveException("Order for participant " + participantHruid + " with handle  "+ orderResponse.getHandle() + " placed with error " + orderResponse.getError());
-                    }
-                    return orderResponse;
-                } else {
-                    throw new CareEvolveException("No address for " + participantHruid + ".  Cannot register order.");
                 }
+
+                JsonObject baselineCovidActivity = getBaselineCovidActivity(activities);
+                JsonArray baselineCovidAnswers = baselineCovidActivity.get("questionsAnswers").getAsJsonArray();
+                String dob = null;
+
+                // mappings  for  race, ethnicity, and  sex are custom  for the  Ellkay API
+                // and are controlled  by the Ellkay integration
+                String race = "2131-1"; // code for "other"
+                String ethnicity = "U";
+                String sex = "U";
+                for (int i = 0; i < baselineCovidAnswers.size(); i++) {
+                    JsonObject answer = baselineCovidAnswers.get(i).getAsJsonObject();
+                    String questionStableId = answer.get("stableId").getAsString();
+
+                    if ("DOB".equals(questionStableId)) {
+                        JsonObject dateFields = answer.get("dateFields").getAsJsonObject();
+                        StringBuilder dobStr = new StringBuilder();
+                        dobStr.append(dateFields.get("year")).append("-")
+                                .append(dateFields.get("month")).append("-")
+                                .append(dateFields.get("day"));
+                        SimpleDateFormat dobFormat = new SimpleDateFormat("yyyy-MM-dd");
+                        try {
+                            dob = dobFormat.format(dobFormat.parse(dobStr.toString()));
+                        } catch (ParseException e) {
+                            throw new CareEvolveException("Could not parse dob " + dobStr.toString()
+                                    + " for participant " + patientId + " in activity instance " + baselineCovidActivity.get("guid"));
+                        }
+
+                    } else if ("SEX".equals(questionStableId)) {
+                        JsonArray sexAnswers = answer.getAsJsonArray(ANSWER_FIELD);
+                        if (sexAnswers.size() > 0) {
+                            sex = sexAnswers.get(0).getAsString();
+                        }
+
+                        if ("SEX_FEMALE".equals(sex)) {
+                            sex = "F";
+                        } else if ("SEX_MALE".equals(sex)) {
+                            sex = "M";
+                        } else if ("OTHER".equals(sex)) {
+                            sex = "U";
+                        } else {
+                            logger.error("Could not map sex " + sex + " to Ellkay code; will default to unknown for " + baselineCovidActivity.get("guid"));
+                        }
+
+                    } else if ("RACE".equals(questionStableId)) {
+                        JsonArray races = answer.getAsJsonArray(ANSWER_FIELD);
+
+                        if (races.size() == 1) {
+                            // CareEvolve only supports a  single race per order
+                            race = races.get(0).getAsString();
+
+                            if ("ASIAN".equals(race)) {
+                                race = "2028-9";
+                            } else if ("BLACK".equals(race)) {
+                                race = "2054-5";
+                            } else if ("AMERICAN_INDIAN".equals(race)) {
+                                race = "2054-5";
+                            } else if ("NATIVE_HAWAIIAN".equals(race)) {
+                                race = "2076-8";
+                            } else if ("WHITE".equals(race)) {
+                                race = "2106-3";
+                            } else if ("OTHER".equals(race)) {
+                                race = "2131-1";
+                            } else {
+                                logger.error("Could not map race " + race + " to Ellkay code; will default to other for " + baselineCovidActivity.get("guid"));
+                            }
+                        } else {
+                            // if there's no value or if multiple values are selected,
+                            // use the code for "other"
+                            race = "2131-1";
+                        }
+                    } else if ("ETHNICITY".equals(questionStableId)) {
+                        JsonArray answers = answer.getAsJsonArray(ANSWER_FIELD);
+                        if (answers.size() > 0) {
+                            ethnicity = answer.getAsJsonArray(ANSWER_FIELD).get(0).getAsString();
+                            if ("HISPANIC_LATINO".equals(ethnicity)) {
+                                ethnicity = "H";
+                            } else if ("NOT_HISPANIC_LATINO".equals(ethnicity)) {
+                                ethnicity = "N";
+                            } else {
+                                logger.error("Could not map ethnicity " + ethnicity + " to Ellkay code; will default to unknown for " + baselineCovidActivity.get("guid"));
+                            }
+                        }
+                    }
+
+                }
+
+                Patient testPatient = new Patient(patientId, firstName, lastName, dob, race, ethnicity,
+                        sex, careEvolveAddress);
+
+                Message message = new Message(new Order(careEvolveAccount, testPatient, kitLabel, collectionDateTime, provider, aoes), kitId);
+
+                OrderResponse orderResponse = null;
+                try {
+                    orderResponse = orderTest(auth, message);
+                    logger.info("Placed CE order {} {} for {}", orderResponse.getHandle(), orderResponse.getHl7Ack(), patientId);
+                } catch (IOException e) {
+                    throw new CareEvolveException("Could not order test for " + patientId, e);
+                }
+
+                if (StringUtils.isNotBlank(orderResponse.getError())) {
+                    throw new CareEvolveException("Order for participant " + participantHruid + " with handle  " + orderResponse.getHandle() + " placed with error " + orderResponse.getError());
+                }
+                return orderResponse;
             } else {
                 throw new CareEvolveException("No participant data for " + participantHruid + ".  Cannot register order.");
             }
