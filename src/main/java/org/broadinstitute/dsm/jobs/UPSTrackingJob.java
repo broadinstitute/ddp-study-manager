@@ -107,7 +107,12 @@ public class UPSTrackingJob implements Job {
         try {
             UPSTrackingResponse response = DDPRequestUtil.getResponseObjectWithCustomHeader(UPSTrackingResponse.class, sendRequest, "UPS Tracking Test " + inquiryNumber, headers);
             logger.info("got response back from UPS: " + response);
-            String type = kit.getUpsTrackingStatus();
+            String type;
+            if(isReturn){
+                type = kit.getUpsReturnStatus();
+            }else{
+                type = kit.getUpsTrackingStatus();
+            }
             if (StringUtils.isNotBlank(type)) {// get only type from it
                 type = type.substring(0, type.indexOf(' '));
             }
@@ -180,7 +185,8 @@ public class UPSTrackingJob implements Job {
         });
         if (result.resultException != null) {
             throw new RuntimeException(result.resultException);
-        }else{
+        }
+        else {
             if (!isReturn) {
                 //if delivered notif pepper
                 if (DELIVERY.equals(statusType) && !(DELIVERY.equals(oldType))) {
@@ -198,7 +204,7 @@ public class UPSTrackingJob implements Job {
             }
             else {
                 //if picked up place order
-                if (!(PICKUP.equals(oldType)) && (PICKUP.equals(statusType) || IN_TRANSIT.equals(statusType))) {
+                if (!(PICKUP.equals(oldType)) && !(IN_TRANSIT.equals(oldType)) && (PICKUP.equals(statusType) || IN_TRANSIT.equals(statusType))) {
                     Instant now = Instant.now();
                     orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), now);
                     logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
