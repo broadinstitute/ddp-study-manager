@@ -176,7 +176,7 @@ public class UPSTrackingJob implements Job {
                 stmt.setString(3, trackingId);
                 int r = stmt.executeUpdate();
                 if (r != 2) {//number of subkits
-                    throw new RuntimeException("Update query for UPS tracking updated " + r + " rows!");
+                    throw new RuntimeException("Update query for UPS tracking updated " + r + " rows! with tracking/return id: "+trackingId);
                 }
             }
             catch (Exception e) {
@@ -205,10 +205,11 @@ public class UPSTrackingJob implements Job {
             }
             else {
                 //if picked up place order
-                if (!(PICKUP.equals(oldType)) && !(IN_TRANSIT.equals(oldType)) && (PICKUP.equals(statusType) || IN_TRANSIT.equals(statusType))) {
+                if (shouldMakeCEOrder(oldType, statusType) && !kit.isCEOrdered()) {
                     Instant now = Instant.now();
                     orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), now);
                     logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
+                    kit.changeCEOrdered(true);
                 }
                 //if delivered notify pepper for received
                 else if (statusType.equals(DELIVERY) && !(DELIVERY.equals(oldType))) {
@@ -230,8 +231,8 @@ public class UPSTrackingJob implements Job {
         }
     }
 
-    public static void testMethod() {
-
+    private static boolean shouldMakeCEOrder(String oldType, String statusType) {
+        return !(PICKUP.equals(oldType)) && !(IN_TRANSIT.equals(oldType)) && (PICKUP.equals(statusType) || IN_TRANSIT.equals(statusType));
     }
 
 
@@ -278,7 +279,8 @@ public class UPSTrackingJob implements Job {
                         rs.getString("kit." + DBConstants.UPS_RETURN_STATUS),
                         rs.getString("kit." + DBConstants.UPS_RETURN_DATE),
                         rs.getString("req." + DBConstants.COLLABORATOR_PARTICIPANT_ID),
-                        rs.getString("req." + DBConstants.EXTERNAL_ORDER_NUMBER)
+                        rs.getString("req." + DBConstants.EXTERNAL_ORDER_NUMBER),
+                        rs.getBoolean("kit."+DBConstants.CE_ORDER)
                 );
                 String type;
                 if (StringUtils.isNotBlank(kit.getTrackingToId())) {

@@ -26,4 +26,10 @@
             </column>
         </addColumn>
     </changeSet>
+    <changeSet id="CE-order-flag" author="pegah">
+        <addColumn tableName="ddp_kit">
+            <column name="CE_order" type="TINYINT(1)">
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

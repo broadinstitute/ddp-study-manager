@@ -110,6 +110,7 @@ public class DBConstants {
     public static final String SUB_KIT_NAME = "subKitName";
     public static final String GBF_CONFIRMATION = "gbf_confirmation";
     public static final String EXTERNAL_ORDER_NUMBER = "external_order_number";
+    public static final String CE_ORDER = "CE_order";
     public static final String NO_RETURN = "no_return";
     public static final String EXTERNAL_ORDER_STATUS = "external_order_status";
     public static final String EXTERNAL_ORDER_DATE = "external_order_date";
