@@ -70,7 +70,7 @@ public class PubSubLookUp {
                 " and (eve.ddp_instance_id = request.ddp_instance_id   and eve.kit_type_id = request.kit_type_id)   and eve.event_type = \"RESULT\" " + // that's the change from the original query
                 " and request.external_order_number = ?"; // that's the change from the original query
 
-        KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(query, testBostonResult.getOrderMessageId());
+        KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(query, testBostonResult.getOrderMessageId(), 2);
         if (kitDDPNotification != null) {
             EventUtil.triggerDDPWithTestResult(kitDDPNotification, testBostonResult);
             logger.info("Notified Pepper with test result notification");
