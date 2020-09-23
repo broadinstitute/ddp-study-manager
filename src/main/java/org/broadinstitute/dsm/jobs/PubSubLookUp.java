@@ -32,7 +32,7 @@ public class PubSubLookUp {
         logger.info("Processing test results for " + testBostonResult.getSampleId());
         if (shouldWriteResultIntoDB(testBostonResult)) {
             writeResultsIntoDB(testBostonResult);
-            tellPepperAboutTheNewResults(testBostonResult);// notify pepper if we update DB
+//            tellPepperAboutTheNewResults(testBostonResult);// notify pepper if we update DB
         }
     }
 
@@ -137,6 +137,7 @@ public class PubSubLookUp {
                     }
                     else {
                         logger.info("Updated test result for kit with kit label " + testBostonResult.getSampleId() + " to " + testBostonResult.getResult());
+                        tellPepperAboutTheNewResults(testBostonResult);
                     }
                 }
             }
