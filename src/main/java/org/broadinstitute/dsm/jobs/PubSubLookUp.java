@@ -32,8 +32,12 @@ public class PubSubLookUp {
         logger.info("Processing test results for " + testBostonResult.getSampleId());
         if (shouldWriteResultIntoDB(testBostonResult)) {
             writeResultsIntoDB(testBostonResult);
-//            tellPepperAboutTheNewResults(testBostonResult);// notify pepper if we update DB
+            notifyStudyStaff(testBostonResult);
+            tellPepperAboutTheNewResults(testBostonResult);// notify pepper if we update DB
         }
+    }
+
+    private static void notifyStudyStaff(TestBostonResult testBostonResult) {
     }
 
     private static boolean shouldWriteResultIntoDB(TestBostonResult testBostonResult) {
@@ -77,7 +81,7 @@ public class PubSubLookUp {
             logger.info("Notified Pepper with test result notification");
         }
         else {
-            throw new RuntimeException("kitDDPNotification was null for kitLabel "+testBostonResult.getOrderMessageId());
+            throw new RuntimeException("kitDDPNotification was null for kitLabel "+testBostonResult.getSampleId());
         }
     }
 
@@ -137,7 +141,7 @@ public class PubSubLookUp {
                     }
                     else {
                         logger.info("Updated test result for kit with kit label " + testBostonResult.getSampleId() + " to " + testBostonResult.getResult());
-                        tellPepperAboutTheNewResults(testBostonResult);
+//                        tellPepperAboutTheNewResults(testBostonResult);
                     }
                 }
             }
