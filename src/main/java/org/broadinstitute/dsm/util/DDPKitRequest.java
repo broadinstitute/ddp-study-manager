@@ -286,11 +286,9 @@ public class DDPKitRequest {
     }
 
     public static String generateExternalOrderNumber() {
-        String externalOrderNumber = NanoIdUtils.randomNanoId(
-                NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 20);
+        String externalOrderNumber =NanoIdUtil.getNanoId("1234567890QWERTYUIOPASDFGHJKLZXCVBNM", 20);
         while (DBUtil.existsExternalOrderNumber(externalOrderNumber)) {
-            externalOrderNumber = NanoIdUtils.randomNanoId(
-                    NanoIdUtils.DEFAULT_NUMBER_GENERATOR, "1234567890QWERTYUIOPASDFGHJKLZXCVBNM".toCharArray(), 20);
+            externalOrderNumber = NanoIdUtil.getNanoId("1234567890QWERTYUIOPASDFGHJKLZXCVBNM", 20);
         }
         return externalOrderNumber;
     }
