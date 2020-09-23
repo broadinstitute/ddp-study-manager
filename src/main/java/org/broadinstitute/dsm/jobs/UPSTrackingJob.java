@@ -298,7 +298,7 @@ public class UPSTrackingJob implements Job {
                         type = type.substring(0, type.indexOf(' '));
                     }
                     if (!"D".equals(type)) {
-                        if (!returnTrackingIds.containsKey(kit.getExternalOrderNumber()) || (returnTrackingIds.containsKey(kit.getExternalOrderNumber()) && !kit.getKitLabel().contains("_"))) {
+                        if (!kit.getKitLabel().contains("_1")) {
                             returnTrackingIds.put(kit.getExternalOrderNumber(), kit);
                         }
                     }

@@ -332,14 +332,14 @@ public class DSMServer extends BasicServer {
         String subscriptionId = cfg.getString(GCP_PATH_TO_PUBSUB_SUB);
 
         logger.info("Setting up pubsub for {}/{}", projectId, subscriptionId);
-
+        NotificationUtil notificationUtil = new NotificationUtil(cfg);
         try {
             // Instantiate an asynchronous message receiver.
             MessageReceiver receiver =
                     (PubsubMessage message, AckReplyConsumer consumer) -> {
                         // Handle incoming message, then ack the received message.
                         try {
-                            PubSubLookUp.processCovidTestResults(message);
+                            PubSubLookUp.processCovidTestResults(message, notificationUtil);
                             logger.info("Processing the message finished");
                             consumer.ack();
 
