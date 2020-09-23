@@ -22,7 +22,7 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 public class PubSubLookUp {
     private static final Logger logger = LoggerFactory.getLogger(PubSubLookUp.class);
-    private static String SELECT_LATEST_RESULT_QUERY = "SELECT kit.test_result FROM dev_dsm_db.ddp_kit_request req LEFT JOIN  ddp_kit kit ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) " +
+    private static String SELECT_LATEST_RESULT_QUERY = "SELECT kit.test_result FROM ddp_kit_request req LEFT JOIN  ddp_kit kit ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) " +
             "WHERE kit.kit_label = ?"; //todo pegah change this for prod to kit_labe
     private static String UPDATE_TEST_RESULT = "UPDATE ddp_kit SET  test_result = ? WHERE dsm_kit_id <> 0 and  dsm_kit_request_id  in (select  dsm_kit_request_id from (select * from ddp_kit as something where something.kit_label = ? ) as t  )";
 
@@ -64,19 +64,20 @@ public class PubSubLookUp {
         return true;
     }
 
-    private static void tellPepperAboutTheNewResults(TestBostonResult testBostonResult) {
+    public static void tellPepperAboutTheNewResults(TestBostonResult testBostonResult) {
         logger.info("Going to Notify Pepper");
-        String query = "select eve.event_name, eve.event_type, request.ddp_participant_id, request.dsm_kit_request_id, realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token,   realm.notification_recipients,   realm.migrated_ddp,   kit.receive_date,   kit.scan_date   from   ddp_kit_request request,   ddp_kit kit,   event_type eve,   ddp_instance realm   where request.dsm_kit_request_id = kit.dsm_kit_request_id   and request.ddp_instance_id = realm.ddp_instance_id   " +
+        String query = "select eve.event_name, eve.event_type, request.ddp_participant_id, request.dsm_kit_request_id, realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token,   realm.notification_recipients,   realm.migrated_ddp,   kit.receive_date,   kit.scan_date   from   ddp_kit_request request,   " +
+                "ddp_kit kit,   event_type eve,   ddp_instance realm   where request.dsm_kit_request_id = kit.dsm_kit_request_id   and request.ddp_instance_id = realm.ddp_instance_id   " +
                 " and (eve.ddp_instance_id = request.ddp_instance_id   and eve.kit_type_id = request.kit_type_id)   and eve.event_type = \"RESULT\" " + // that's the change from the original query
-                " and request.external_order_number = ?"; // that's the change from the original query
+                " and kit.kit_label = ?"; // that's the change from the original query
 
-        KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(query, testBostonResult.getOrderMessageId(), 2);
+        KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(query, testBostonResult.getSampleId(), 1);
         if (kitDDPNotification != null) {
             EventUtil.triggerDDPWithTestResult(kitDDPNotification, testBostonResult);
             logger.info("Notified Pepper with test result notification");
         }
         else {
-            logger.info("kitDDPNotification was null for externalOrderId "+testBostonResult.getOrderMessageId());
+            throw new RuntimeException("kitDDPNotification was null for kitLabel "+testBostonResult.getOrderMessageId());
         }
     }
 
