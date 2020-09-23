@@ -13,9 +13,7 @@ import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.exception.ExternalShipperException;
 import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
-import org.broadinstitute.dsm.model.eel.Event;
 import org.broadinstitute.dsm.model.gbf.*;
-import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.*;
 import org.json.JSONObject;
@@ -66,13 +64,6 @@ public class GBFRequestUtil implements ExternalShipper {
             "        from ddp_kit_request request, ddp_kit kit, event_type eve, ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
             "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = \"SENT\" and request.external_order_number is not null and request.external_order_number= ?";
 
-    private static final String SQL_SELECT_DELIVERED_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
-            "        from ddp_kit_request request, ddp_kit kit, event_type eve, ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
-            "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = \"DELIVERED\" and request.external_order_number is not null and request.external_order_number= ?";
-
-    private static final String SQL_SELECT_RECEIVED_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
-            "        from ddp_kit_request request, ddp_kit kit, event_type eve, ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
-            "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = \"RECEIVED\" and request.external_order_number is not null and request.external_order_number= ?";
 
     public static final String ORDER_ENDPOINT = "order";
     public static final String CONFIRM_ENDPOINT = "confirm";
@@ -225,7 +216,8 @@ public class GBFRequestUtil implements ExternalShipper {
                             }
                             logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has not been shipped in the last 24 hours! ");//todo pegah uncomment for production
                         }
-                        else if (status.getOrderStatus().contains(SHIPPED) && !kit.getExternalOrderStatus().contains(SHIPPED)) {
+                        else if (status.getOrderStatus().contains(SHIPPED) && (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
+                                !kit.getExternalOrderStatus().contains(SHIPPED))) {
                             if (kitDDPNotification != null) {
                                 logger.info("Triggering DDP for shipped kit with external order number: " + kit.getExternalOrderNumber());
                                 EventUtil.triggerDDP(kitDDPNotification);
@@ -256,37 +248,18 @@ public class GBFRequestUtil implements ExternalShipper {
         }
     }
 
-
-    public static void updateDeliveredDateForKit(KitRequest kit) {// for when UPS is integrated
-        String query = "UPDATE ddp_kit SET delivered_date= ? where dsm_kit_id <> 0 and dsm_kit_id in (SELECT kit.dsm_kit_id from (Select * from ddp_kit) kit  where kit.dsm_kit_request_id  = ? )";
+    public static void updateReceivedDateForKit(String dsmKitRequestId) {// for when UPS is integrated
+        String query = "UPDATE ddp_kit SET receive_date= ? where dsm_kit_id <> 0 and dsm_kit_id in (SELECT kit.dsm_kit_id from (Select dsm_kit_id, dsm_kit_request_id from ddp_kit) kit  where kit.dsm_kit_request_id  = ? )";
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             dbVals.resultValue = null;
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setLong(1, System.currentTimeMillis() / 1000);
-                stmt.setString(2, kit.getDsmKitRequestId());
+                stmt.setString(2, dsmKitRequestId);
                 int result = stmt.executeUpdate();
-            }
-            catch (Exception e) {
-                dbVals.resultException = e;
-            }
-            return dbVals;
-        });
-
-        if (results.resultException != null) {
-            throw new RuntimeException("Error getQueryDetail ", results.resultException);
-        }
-    }
-
-    public static void updateReceivedDateForKit(KitRequest kit) {// for when UPS is integrated
-        String query = "UPDATE ddp_kit SET received_date= ? where dsm_kit_id <> 0 and dsm_kit_id in (SELECT kit.dsm_kit_id from (Select * from ddp_kit) kit  where kit.dsm_kit_request_id  = ? )";
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            dbVals.resultValue = null;
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setLong(1, System.currentTimeMillis() / 1000);
-                stmt.setString(2, kit.getDsmKitRequestId());
-                int result = stmt.executeUpdate();
+                if (result != 2) {
+                    throw new RuntimeException("Updated " + result + " rows!");
+                }
             }
             catch (Exception e) {
                 dbVals.resultException = e;
@@ -308,40 +281,45 @@ public class GBFRequestUtil implements ExternalShipper {
         Response gbfResponse = executePost(Response.class, sendRequest, payload.toString(), DSMServer.getApiKey(getExternalShipperName()));
 
         if (gbfResponse != null && StringUtils.isNotBlank(gbfResponse.getXML())) {
+            logger.info("Confirmation xmls received: " + gbfResponse.getXML());
             ShippingConfirmations shippingConfirmations = objectFromXMLString(ShippingConfirmations.class, gbfResponse.getXML());
-            List<ShippingConfirmation> confirmationList = shippingConfirmations.getShippingConfirmations();
-            if (confirmationList != null && !confirmationList.isEmpty()) {
-                for (ShippingConfirmation confirmation : confirmationList) {
-                    //update external shipper response at request
-                    Node node = GBFRequestUtil.getXMLNode(gbfResponse.getXML(), XML_NODE_EXPRESSION.replace("%1", confirmation.getOrderNumber()));
-                    List<String> dsmKitRequestIds = getDSMKitRequestId(confirmation.getOrderNumber());
-                    if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
-                        for (String dsmKitRequestId : dsmKitRequestIds) {
-                            KitRequestExternal.updateKitRequestResponse(getStringFromNode(node), dsmKitRequestId);
+            if (shippingConfirmations != null) {
+                List<ShippingConfirmation> confirmationList = shippingConfirmations.getShippingConfirmations();
+                if (confirmationList != null && !confirmationList.isEmpty()) {
+                    for (ShippingConfirmation confirmation : confirmationList) {
+                        //update external shipper response at request
+                        Node node = GBFRequestUtil.getXMLNode(gbfResponse.getXML(), XML_NODE_EXPRESSION.replace("%1", confirmation.getOrderNumber()));
+                        List<String> dsmKitRequestIds = getDSMKitRequestId(confirmation.getOrderNumber());
+                        if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
+                            for (String dsmKitRequestId : dsmKitRequestIds) {
+                                KitRequestExternal.updateKitRequestResponse(getStringFromNode(node), dsmKitRequestId);
+                            }
                         }
-                    }
-                    //update kit shipping information
-                    if (confirmation.getItem() != null) {
-                        Item item = confirmation.getItem();
-                        List<KitRequest> kitRequestsResult = getKitRequest(kitRequests, confirmation.getOrderNumber(), item.getItemNumber(), 1);
-                        int counter = 0;
-                        if (kitRequestsResult != null) {
-                            for (KitRequest kitRequest : kitRequestsResult) {
-                                String kitLabel = item.getSerialNumber();
-                                if (counter > 0) {
-                                    kitLabel += "_" + counter;
+                        //update kit shipping information
+                        if (confirmation.getItem() != null) {
+                            Item item = confirmation.getItem();
+                            List<KitRequest> kitRequestsResult = getKitRequest(kitRequests, confirmation.getOrderNumber(), item.getItemNumber(), 1);
+                            int counter = 0;
+                            if (kitRequestsResult != null) {
+                                for (KitRequest kitRequest : kitRequestsResult) {
+                                    String kitLabel = item.getTubeSerial();
+                                    if (counter > 0) {
+                                        kitLabel += "_" + counter;
+                                    }
+                                    KitRequestExternal.updateKitRequestResponse(confirmation.getTracking(), item.getReturnTracking(),
+                                            kitLabel, SystemUtil.getLongFromDateString(confirmation.getShipDate()), EXTERNAL_SHIPPER_NAME,
+                                            kitRequest.getDsmKitRequestId());
+                                    counter++;
+                                    logger.info("Updated confirmation information for : " + kitRequest.getDsmKitRequestId());
                                 }
-                                KitRequestExternal.updateKitRequestResponse(confirmation.getTracking(), item.getReturnTracking(),
-                                        kitLabel, SystemUtil.getLongFromDateString(confirmation.getShipDate()), EXTERNAL_SHIPPER_NAME,
-                                        kitRequest.getDsmKitRequestId());
-                                counter++;
                             }
                         }
                     }
+                    DBUtil.updateBookmark(endDate, DBConstants.GBF_CONFIRMATION);
                 }
-            }
-            else {
-                logger.info("No shipping confirmation returned");
+                else {
+                    logger.info("No shipping confirmation returned");
+                }
             }
         }
     }
