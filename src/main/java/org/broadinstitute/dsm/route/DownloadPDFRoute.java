@@ -63,6 +63,7 @@ public class DownloadPDFRoute extends RequestHandler {
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
+        logger.info(request.url());
         if (request.url().contains(RoutePath.DOWNLOAD_PDF)) {
             String realm = null;
             QueryParamsMap queryParams = request.queryMap();
@@ -215,7 +216,7 @@ public class DownloadPDFRoute extends RequestHandler {
 
             if (ddpInstance != null && StringUtils.isNotBlank(ddpParticipantId)) {
                 if (COVER_PDF.equals(pdfType)) {
-                    logger.info("Generating cover pdf for onc history {}", StringUtils.join(oncHistoryIDs,","));
+                    logger.info("Generating cover pdf for onc history {}", StringUtils.join(oncHistoryIDs, ","));
                     JSONObject jsonObject = new JSONObject(requestBody);
                     Set keySet = jsonObject.keySet();
                     String startDate = null;
@@ -586,7 +587,8 @@ public class DownloadPDFRoute extends RequestHandler {
         String gcpCreds = null;
         try {
             gcpCreds = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_CREDENTIALS);
-        } catch(RuntimeException e) {
+        }
+        catch (RuntimeException e) {
             if (!e.getMessage().toLowerCase().contains("conf is missing query named portal.googleprojectcredentials")) {
                 throw e;
             }

@@ -1,8 +1,15 @@
 package org.broadinstitute.dsm;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.api.gax.core.ExecutorProvider;
+import com.google.api.gax.core.InstantiatingExecutorProvider;
+import com.google.cloud.pubsub.v1.AckReplyConsumer;
+import com.google.cloud.pubsub.v1.MessageReceiver;
+import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.common.net.MediaType;
 import com.google.gson.*;
+import com.google.pubsub.v1.ProjectSubscriptionName;
+import com.google.pubsub.v1.PubsubMessage;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import liquibase.Contexts;
@@ -53,10 +60,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -106,6 +114,8 @@ public class DSMServer extends BasicServer {
     public static String careEvolveAccount;
     public static Authentication careEvolveAuth;
     public static Provider provider;
+    public static final String GCP_PATH_TO_PUBSUB_PROJECT_ID = "pubsub.projectId";
+    public static final String GCP_PATH_TO_PUBSUB_SUB = "pubsub.subscription";
 
     private static Map<String, MBCParticipant> mbcParticipants = new HashMap<>();
     private static Map<String, MBCInstitution> mbcInstitutions = new HashMap<>();
@@ -171,6 +181,8 @@ public class DSMServer extends BasicServer {
 
         registerAppEngineStartupCallback(bootTimeoutSeconds);
         setupDB(config);
+
+        setupPubSub(config);
         // don't run superclass routing--it won't work with JettyConfig changes for capturing proper IP address in GAE
         setupCustomRouting(config);
 
@@ -313,6 +325,52 @@ public class DSMServer extends BasicServer {
         setupJobs(cfg, kitUtil, notificationUtil, eventUtil, container, receiver);
 
         logger.info("Finished setting up DSM custom routes and jobs...");
+    }
+
+    private void setupPubSub(@NonNull Config cfg) {
+        String projectId = cfg.getString(GCP_PATH_TO_PUBSUB_PROJECT_ID);
+        String subscriptionId = cfg.getString(GCP_PATH_TO_PUBSUB_SUB);
+
+        logger.info("Setting up pubsub for {}/{}", projectId, subscriptionId);
+
+        try {
+            // Instantiate an asynchronous message receiver.
+            MessageReceiver receiver =
+                    (PubsubMessage message, AckReplyConsumer consumer) -> {
+                        // Handle incoming message, then ack the received message.
+                        try {
+                            PubSubLookUp.processCovidTestResults(message);
+                            logger.info("Processing the message finished");
+                            consumer.ack();
+
+                        }catch(Exception ex){
+                            logger.info("about to nack the message", ex);
+                            consumer.nack();
+                            ex.printStackTrace();
+                        }
+                    };
+
+            Subscriber subscriber = null;
+            ProjectSubscriptionName resultSubName = ProjectSubscriptionName.of(projectId, subscriptionId);
+            ExecutorProvider resultsSubExecProvider = InstantiatingExecutorProvider.newBuilder().setExecutorThreadCount(10).build();
+            subscriber = Subscriber.newBuilder(resultSubName, receiver)
+                    .setParallelPullCount(1)
+                    .setExecutorProvider(resultsSubExecProvider)
+                    .setMaxAckExtensionPeriod(org.threeten.bp.Duration.ofSeconds(120))
+                    .build();
+            try {
+                subscriber.startAsync().awaitRunning(1L, TimeUnit.MINUTES);
+                logger.info("Started pubsub subscription receiver for {}", subscriptionId);
+            }
+            catch (TimeoutException e) {
+                throw new RuntimeException("Timed out while starting pubsub subscription " + subscriptionId, e);
+            }
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Failed to get results from pubsub ", e);
+        }
+
+        logger.info("Pubsub setup complete");
     }
 
     protected void updateDB(@NonNull String dbUrl) {

@@ -5,11 +5,15 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.handlers.util.Event;
 import org.broadinstitute.dsm.db.ParticipantEvent;
 import org.broadinstitute.dsm.model.KitDDPNotification;
+import org.broadinstitute.dsm.model.TestResultEvent;
+import org.broadinstitute.dsm.model.birch.DSMTestResult;
+import org.broadinstitute.dsm.model.birch.TestBostonResult;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -90,9 +94,36 @@ public class EventUtil {
         }
     }
 
+    public static void triggerDDPWithTestResult(@NonNull KitDDPNotification kitDDPNotification, @Nonnull TestBostonResult result) {
+        Collection<String> events = ParticipantEvent.getParticipantEvent(kitDDPNotification.getParticipantId(), kitDDPNotification.getDdpInstanceId());
+        if (!events.contains(kitDDPNotification.getEventName())) {
+            EventUtil.triggerDDPWithTestResult(kitDDPNotification.getEventName(), kitDDPNotification, result);
+        }
+        else {
+            logger.info("Participant direct event was added in the participant_event table. DDP will not get triggered");
+            //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
+            addEvent(kitDDPNotification.getEventName(), kitDDPNotification.getDdpInstanceId(), kitDDPNotification.getDsmKitRequestId(), false);
+        }
+    }
+
     private static void triggerDDP(@NonNull String eventType, @NonNull KitDDPNotification kitInfo) {
         try {
             Event event = new Event(kitInfo.getParticipantId(), eventType, kitInfo.getDate() / 1000);
+            String sendRequest = kitInfo.getBaseUrl() + RoutePath.DDP_PARTICIPANT_EVENT_PATH + "/" + kitInfo.getParticipantId();
+            DDPRequestUtil.postRequest(sendRequest, event, kitInfo.getInstanceName(), kitInfo.isHasAuth0Token());
+            addEvent(eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId());
+        }
+        catch (IOException e) {
+            logger.error("Failed to trigger DDP to notify participant about " + eventType);
+            //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
+            addEvent(eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId(), false);
+        }
+    }
+
+    private static void triggerDDPWithTestResult(@NonNull String eventType, @NonNull KitDDPNotification kitInfo, @Nonnull TestBostonResult result) {
+        try {
+            DSMTestResult dsmTestResult = new DSMTestResult(result.getResult(), result.getTimeCompleted(), result.isCorrected());
+            TestResultEvent event = new TestResultEvent(kitInfo.getParticipantId(), eventType, kitInfo.getDate() / 1000, dsmTestResult);
             String sendRequest = kitInfo.getBaseUrl() + RoutePath.DDP_PARTICIPANT_EVENT_PATH + "/" + kitInfo.getParticipantId();
             DDPRequestUtil.postRequest(sendRequest, event, kitInfo.getInstanceName(), kitInfo.isHasAuth0Token());
             addEvent(eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId());
