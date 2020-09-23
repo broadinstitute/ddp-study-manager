@@ -176,7 +176,7 @@ public class UPSTrackingJob implements Job {
                 stmt.setString(3, trackingId);
                 int r = stmt.executeUpdate();
                 if (r != 2) {//number of subkits
-                    throw new RuntimeException("Update query for UPS tracking updated " + r + " rows! with tracking/return id: "+trackingId);
+                    throw new RuntimeException("Update query for UPS tracking updated " + r + " rows! with tracking/return id: " + trackingId);
                 }
             }
             catch (Exception e) {
@@ -280,7 +280,7 @@ public class UPSTrackingJob implements Job {
                         rs.getString("kit." + DBConstants.UPS_RETURN_DATE),
                         rs.getString("req." + DBConstants.COLLABORATOR_PARTICIPANT_ID),
                         rs.getString("req." + DBConstants.EXTERNAL_ORDER_NUMBER),
-                        rs.getBoolean("kit."+DBConstants.CE_ORDER)
+                        rs.getBoolean("kit." + DBConstants.CE_ORDER)
                 );
                 String type;
                 if (StringUtils.isNotBlank(kit.getTrackingToId())) {
@@ -298,7 +298,9 @@ public class UPSTrackingJob implements Job {
                         type = type.substring(0, type.indexOf(' '));
                     }
                     if (!"D".equals(type)) {
-                        returnTrackingIds.put(kit.getExternalOrderNumber(), kit);
+                        if (!returnTrackingIds.containsKey(kit.getExternalOrderNumber()) || (returnTrackingIds.containsKey(kit.getExternalOrderNumber()) && !kit.getKitLabel().contains("_"))) {
+                            returnTrackingIds.put(kit.getExternalOrderNumber(), kit);
+                        }
                     }
                 }
             }
