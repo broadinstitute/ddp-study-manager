@@ -34,7 +34,7 @@ public class DDPKitRequest {
     public static final String UPLOADED_KIT_REQUEST = "UPLOADED_";
     public static final String MIGRATED_KIT_REQUEST = "MIGRATED_";
 
-    private static final String SELECT_APPROVED_ORDERS = "SELECT * FROM ddp_kit_request request LEFT JOIN dev_dsm_db.ddp_kit kit on kit.dsm_kit_request_id = request.dsm_kit_request_id " +
+    private static final String SELECT_APPROVED_ORDERS = "SELECT * FROM ddp_kit_request request LEFT JOIN ddp_kit kit on kit.dsm_kit_request_id = request.dsm_kit_request_id " +
             "LEFT JOIN ddp_kit_request_settings settings on settings.ddp_instance_id = request.ddp_instance_id " +
             "LEFT JOIN ddp_instance realm on (realm.ddp_instance_id = settings.ddp_instance_id) " +
             "where request.ddp_instance_id = ? and kit.needs_approval = true and kit.authorization = true and request.external_order_status is null";
