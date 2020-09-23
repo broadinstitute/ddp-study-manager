@@ -49,7 +49,7 @@ public class KitDDPNotification {
     public static KitDDPNotification getKitDDPNotification(@NonNull String query, @NonNull String kitLabel, int expectedCount) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(query,ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY)) {
+            try (PreparedStatement stmt = conn.prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
                 stmt.setString(1, kitLabel);
                 try (ResultSet rs = stmt.executeQuery()) {
                     rs.last();
@@ -74,6 +74,42 @@ public class KitDDPNotification {
 
         if (results.resultException != null) {
             logger.error("Failed to get KitDDPNotification w/ label " + kitLabel, results.resultException);
+        }
+        return (KitDDPNotification) results.resultValue;
+    }
+
+    public static KitDDPNotification getKitDDPNotification(@NonNull String query, @NonNull String[] inputs, int expectedCount) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
+                int counter = 1;
+                for (String string : inputs) {
+                    stmt.setString(counter, string);
+                    counter++;
+                }
+                try (ResultSet rs = stmt.executeQuery()) {
+                    rs.last();
+                    int count = rs.getRow();
+                    rs.beforeFirst();
+                    if (count == expectedCount && rs.next()) { //if row is 0 the ddp/kit type combination does not trigger a participant event
+                        dbVals.resultValue = new KitDDPNotification(rs.getString(DBConstants.DDP_PARTICIPANT_ID),
+                                rs.getString(DBConstants.DSM_KIT_REQUEST_ID), rs.getString(DBConstants.DDP_INSTANCE_ID),
+                                rs.getString(DBConstants.INSTANCE_NAME),
+                                rs.getString(DBConstants.BASE_URL),
+                                rs.getString(DBConstants.EVENT_NAME),
+                                rs.getString(DBConstants.EVENT_TYPE), rs.getLong(DBConstants.DSM_RECEIVE_DATE),
+                                rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN));
+                    }
+                }
+            }
+            catch (Exception ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            logger.error("Failed to get KitDDPNotification w/ input " + inputs[inputs.length-1], results.resultException);
         }
         return (KitDDPNotification) results.resultValue;
     }
