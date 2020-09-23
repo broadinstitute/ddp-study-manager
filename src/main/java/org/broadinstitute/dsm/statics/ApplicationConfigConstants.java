@@ -63,7 +63,6 @@ public class ApplicationConfigConstants {
     public static final String QUARTZ_CRON_EXPRESSION_FOR_EXTERNAL_SHIPPER_ADDITIONAL = "quartz.externalShipper_cron_expression_additional";
     public static final String QUARTZ_CRON_STATUS_SHIPMENT = "quartz.shipmentStatusJob_cron_expression";
     public static final String QUARTZ_UPS_LOOKUP_JOB = "quartz.ups_lookup_cron_expression";
-    public static final String QUARTZ_CRON_PUBSUB_LOOKUP= "quartz.pubsubLookUpJob_cron_expression";
 
     //email
     public static final String EMAIL_CRON_EXPRESSION_FOR_GP_NOTIFICATION = "email.cron_expression_GP_notification";
