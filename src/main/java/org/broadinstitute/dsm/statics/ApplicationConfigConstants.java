@@ -23,7 +23,6 @@ public class ApplicationConfigConstants {
     public static final String EEL_DB_URL = "eel.url";
 
     //google buckets
-    public static final String GOOGLE_PROJECT_CREDENTIALS = "portal.googleProjectCredentials";
     public static final String GOOGLE_PROJECT_NAME = "portal.googleProjectName";
     public static final String GOOGLE_DISCARD_BUCKET = "portal.discardSampleBucket";
     public static final String GOOGLE_CONFIG_BUCKET = "portal.configBucket";
