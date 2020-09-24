@@ -19,11 +19,9 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.*;
-import org.broadinstitute.dsm.util.externalShipper.ExternalShipper;
 import org.eclipse.jetty.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 
 import java.sql.*;
 import java.util.*;
@@ -104,10 +102,12 @@ public class KitRequestShipping extends KitRequest {
 
     @ColumnName (DBConstants.DSM_TRACKING_TO)
     private final String trackingNumberTo;
+
+    @ColumnName (DBConstants.DSM_TRACKING_RETURN)
     private final String trackingNumberReturn;
 
     @ColumnName (DBConstants.TRACKING_ID)
-    private final String scannedTrackingNumber;
+    private String scannedTrackingNumber;
     private final String trackingUrlTo;
     private final String trackingUrlReturn;
     private final String collaboratorParticipantId;
@@ -154,13 +154,13 @@ public class KitRequestShipping extends KitRequest {
 
     public KitRequestShipping(String collaboratorParticipantId, String kitType, String dsmKitRequestId, long scanDate, boolean error, long receiveDate, long deactivatedDate) {
         this(null, collaboratorParticipantId, null, null, null, kitType, dsmKitRequestId, null, null, null,
-                null, null, null, null, null, scanDate, error, null, receiveDate,
+                null, null, null, null, scanDate, error, null, receiveDate,
                 null, deactivatedDate, null, null, false, null, 0, null, null, false, null, null);
     }
 
     public KitRequestShipping(String dsmKitRequestId, String dsmKitId, String easypostToId, String easypostAddressId, boolean error, String message) {
         this(null, null, null, null, null, null, dsmKitRequestId, dsmKitId, null, null,
-                null, null, null, null, null, 0, error, message, 0,
+                null, null, null, null, 0, error, message, 0,
                 easypostAddressId, 0, null, null, false, easypostToId, 0, null, null, false, null, null);
     }
 
@@ -168,7 +168,7 @@ public class KitRequestShipping extends KitRequest {
     //todo pegah add testResult and resultDate
     public KitRequestShipping(String participantId, String collaboratorParticipantId, String bspCollaboratorSampleId, String shippingId, String realm,
                               String kitType, String dsmKitRequestId, String dsmKitId, String labelUrlTo, String labelUrlReturn,
-                              String trackingNumberTo, String trackingNumberReturn, String scannedTrackingNumber,
+                              String trackingNumberTo, String trackingNumberReturn,
                               String trackingUrlTo, String trackingUrlReturn, long scanDate, boolean error, String message,
                               long receiveDate, String easypostAddressId, long deactivatedDate, String deactivationReason,
                               String kitLabel, boolean express, String easypostToId, long labelTriggeredDate, String easypostShipmentStatus,
@@ -183,7 +183,6 @@ public class KitRequestShipping extends KitRequest {
         this.labelUrlReturn = labelUrlReturn;
         this.trackingNumberTo = trackingNumberTo;
         this.trackingNumberReturn = trackingNumberReturn;
-        this.scannedTrackingNumber = scannedTrackingNumber;
         this.trackingUrlTo = trackingUrlTo;
         this.trackingUrlReturn = trackingUrlReturn;
         this.scanDate = scanDate;
@@ -203,6 +202,10 @@ public class KitRequestShipping extends KitRequest {
     }
 
     public static KitRequestShipping getKitRequestShipping(@NonNull ResultSet rs) throws SQLException {
+        String returnTrackingId = rs.getString(DBConstants.TRACKING_ID);
+        if (StringUtils.isBlank(returnTrackingId)) {
+            returnTrackingId = rs.getString(DBConstants.DSM_TRACKING_RETURN);
+        }
         KitRequestShipping kitRequestShipping = new KitRequestShipping(
                 rs.getString(DBConstants.DDP_PARTICIPANT_ID),
                 rs.getString(DBConstants.COLLABORATOR_PARTICIPANT_ID),
@@ -215,8 +218,7 @@ public class KitRequestShipping extends KitRequest {
                 rs.getString(DBConstants.DSM_LABEL_TO),
                 rs.getString(DBConstants.DSM_LABEL_RETURN),
                 rs.getString(DBConstants.DSM_TRACKING_TO),
-                rs.getString(DBConstants.DSM_TRACKING_RETURN),
-                rs.getString(DBConstants.TRACKING_ID), //additionalTrackingNumber
+                returnTrackingId,
                 rs.getString(DBConstants.DSM_TRACKING_URL_TO),
                 rs.getString(DBConstants.DSM_TRACKING_URL_RETURN),
                 rs.getLong(DBConstants.DSM_SCAN_DATE),
