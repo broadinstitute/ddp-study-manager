@@ -87,8 +87,6 @@ public class ApplicationConfigConstants {
     public static final String UPDATE_KIT_ERROR = "portal.updateKitRequestError";
     public static final String GET_DDP_PARTICIPANT_ID = "portal.getDDPParticipantId";
     public static final String GET_DASHBOARD_INFORMATION_OF_KIT_REQUESTS = "portal.dashboardKitRequests";
-    public static final String GET_DASHBOARD_INFORMATION_OF_KIT_REQUESTS_SENT = "portal.dashboardKitSent";
-    public static final String GET_DASHBOARD_INFORMATION_OF_KIT_REQUESTS_RECEIVED = "portal.dashboardKitReceived";
     public static final String GET_DASHBOARD_INFORMATION_OF_KIT_REQUESTS_DEACTIVATED = "portal.dashboardKitDeactivated";
     public static final String GET_DASHBOARD_INFORMATION_OF_KIT_REQUESTS_SENT_REPORT = "portal.dashboardReportKitSent";
     public static final String GET_DASHBOARD_INFORMATION_OF_KIT_REQUESTS_RECEIVED_REPORT = "portal.dashboardReportKitReceived";
