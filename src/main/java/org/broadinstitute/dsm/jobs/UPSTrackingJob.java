@@ -214,7 +214,7 @@ public class UPSTrackingJob implements Job {
                 }
                 //if delivered notify pepper for received
                 else if (statusType.equals(DELIVERY) && !(DELIVERY.equals(oldType))) {
-//                                                GBFRequestUtil.updateReceivedDateForKit(kit.getDsmKitRequestId());
+                    GBFRequestUtil.updateReceivedDateForKit(kit.getDsmKitRequestId());
                     logger.info("RECEIVED: " + trackingId);
                     KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { RECEIVED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
                     if (kitDDPNotification != null) {
@@ -299,7 +299,7 @@ public class UPSTrackingJob implements Job {
                         type = type.substring(0, type.indexOf(' '));
                     }
                     if (!"D".equals(type)) {
-                        if (kit.getKitLabel().contains("_1") && kit.getKitLabel().indexOf("_1") == kit.getKitLabel().length()-2) {
+                        if (kit.getKitLabel().contains("_1") && kit.getKitLabel().indexOf("_1") == kit.getKitLabel().length() - 2) {
                             kit.setKitLabel(kit.getKitLabel().substring(0, kit.getKitLabel().length() - 2));
                         }
                         returnTrackingIds.put(kit.getExternalOrderNumber(), kit);
