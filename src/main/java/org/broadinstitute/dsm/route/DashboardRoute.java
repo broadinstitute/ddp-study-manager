@@ -32,6 +32,15 @@ public class DashboardRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(DashboardRoute.class);
 
+    private static final String SQL_SELECT_KIT_REQUESTS_SENT = "SELECT kit.scan_date, realm.instance_name, request.ddp_instance_id FROM ddp_kit_request request " +
+            "LEFT JOIN ddp_kit kit on (kit.dsm_kit_request_id = request.dsm_kit_request_id) LEFT JOIN ddp_instance realm on (request.ddp_instance_id = realm.ddp_instance_id) " +
+            "LEFT JOIN ddp_participant_exit ex on (ex.ddp_participant_id = request.ddp_participant_id and ex.ddp_instance_id = request.ddp_instance_id) " +
+            "WHERE scan_date IS NOT NULL AND ex.ddp_participant_exit_id IS NULL AND realm.instance_name = ? AND request.kit_type_id = ?";
+    private static final String SQL_SELECT_KIT_REQUESTS_DEACTIVATED = "SELECT kit.receive_date, realm.instance_name, request.ddp_instance_id FROM ddp_kit_request request " +
+            "LEFT JOIN ddp_kit kit on (kit.dsm_kit_request_id = request.dsm_kit_request_id) LEFT JOIN ddp_instance realm on (request.ddp_instance_id = realm.ddp_instance_id) " +
+            "LEFT JOIN ddp_participant_exit ex on (ex.ddp_participant_id = request.ddp_participant_id and ex.ddp_instance_id = request.ddp_instance_id) " +
+            "WHERE receive_date IS NOT NULL AND ex.ddp_participant_exit_id IS NULL AND realm.instance_name = ? AND request.kit_type_id = ?";
+
     private final KitUtil kitUtil;
 
     private ScriptingContainer container;
@@ -106,9 +115,7 @@ public class DashboardRoute extends RequestHandler {
             logger.error("Couldn't get dashboard information ", e);
             return new Result(500, UserErrorMessages.CONTACT_DEVELOPER);
         }
-        //        return new Result(500, UserErrorMessages.CONTACT_DEVELOPER);
     }
-
 
     public DashboardInformation getShippingDashboard(@NonNull String realm, @NonNull String userId) {
         List<DashboardInformation.KitCounter> sentMap = new ArrayList<>();
@@ -116,30 +123,30 @@ public class DashboardRoute extends RequestHandler {
         List<NameValue> deactivatedMap = new ArrayList<>();
         List<KitType> kitTypes = KitType.getKitTypes(realm, userId);
         for (KitType kitType : kitTypes) {
-            KitRequestsPerDate kits = getAllKitsForQuery(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_DASHBOARD_INFORMATION_OF_KIT_REQUESTS_SENT),
-                    realm, kitType, DBConstants.DSM_SCAN_DATE);
+            int kitTypeId = getKitTypeId(realm, kitType);
+            //normal kit type
+            KitRequestsPerDate kits = getAllKitsForQuery(SQL_SELECT_KIT_REQUESTS_SENT, realm, kitTypeId, DBConstants.DSM_SCAN_DATE);
             DashboardInformation.KitCounter kitCounter = new DashboardInformation.KitCounter(kitType.getName(), getNameValueList(kits));
             sentMap.add(kitCounter);
 
-            kits = getAllKitsForQuery(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_DASHBOARD_INFORMATION_OF_KIT_REQUESTS_RECEIVED),
-                    realm, kitType, DBConstants.DSM_RECEIVE_DATE);
+            kits = getAllKitsForQuery(SQL_SELECT_KIT_REQUESTS_DEACTIVATED, realm, kitTypeId, DBConstants.DSM_RECEIVE_DATE);
             kitCounter = new DashboardInformation.KitCounter(kitType.getName(), getNameValueList(kits));
             receivedMap.add(kitCounter);
 
             Integer count = getCountOfDeactivatedKits(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_DASHBOARD_INFORMATION_OF_KIT_REQUESTS_DEACTIVATED),
-                    realm, kitType, DBConstants.KITREQUEST_COUNT);
+                    realm, kitTypeId, DBConstants.KITREQUEST_COUNT);
             deactivatedMap.add(new NameValue(kitType.getName(), count));
         }
         return new DashboardInformation(realm, sentMap, receivedMap, deactivatedMap);
     }
 
-    public int getCountOfDeactivatedKits(@NonNull String query, @NonNull String realm, @NonNull KitType kitType,
+    public int getCountOfDeactivatedKits(@NonNull String query, @NonNull String realm, @NonNull int kitTypeId,
                                          @NonNull String returnColumn) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(query,ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY)) {
                 stmt.setString(1, realm);
-                stmt.setInt(2, kitType.getKitId());
+                stmt.setInt(2, kitTypeId);
                 try (ResultSet rs = stmt.executeQuery()) {
                     rs.last();
                     int count = rs.getRow();
@@ -166,14 +173,14 @@ public class DashboardRoute extends RequestHandler {
         return (Integer) results.resultValue;
     }
 
-    public KitRequestsPerDate getAllKitsForQuery(@NonNull String query, @NonNull String realm, @NonNull KitType kitType,
+    public KitRequestsPerDate getAllKitsForQuery(@NonNull String query, @NonNull String realm, @NonNull int kitTypeId,
                                                  @NonNull String returnColumn) {
         KitRequestsPerDate kitRequestsPerDate = new KitRequestsPerDate();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, realm);
-                stmt.setInt(2, kitType.getKitId());
+                stmt.setInt(2, kitTypeId);
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         String dateString = SystemUtil.getDateFormatted(rs.getLong(returnColumn));
@@ -612,27 +619,27 @@ public class DashboardRoute extends RequestHandler {
     }
 
     public SummaryKitType getKitRequestInformation(@NonNull long start, @NonNull long end, @NonNull String realm,
-                                                   @NonNull KitType kitType) {
+                                                   @NonNull int  kitTypeId, @NonNull String kitTypeName) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_DASHBOARD_INFORMATION_OF_KIT_REQUESTS),
                     ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY)) {
                 stmt.setString(1, realm);
-                stmt.setInt(2, kitType.getKitId());
+                stmt.setInt(2, kitTypeId);
                 stmt.setString(3, realm);
-                stmt.setInt(4, kitType.getKitId());
+                stmt.setInt(4, kitTypeId);
                 stmt.setLong(5, start);
                 stmt.setLong(6, end);
                 stmt.setString(7, realm);
-                stmt.setInt(8, kitType.getKitId());
+                stmt.setInt(8, kitTypeId);
                 stmt.setString(9, realm);
-                stmt.setInt(10, kitType.getKitId());
+                stmt.setInt(10, kitTypeId);
                 stmt.setLong(11, start);
                 stmt.setLong(12, end);
                 stmt.setString(13, realm);
-                stmt.setInt(14, kitType.getKitId());
+                stmt.setInt(14, kitTypeId);
                 stmt.setString(15, realm);
-                stmt.setInt(16, kitType.getKitId());
+                stmt.setInt(16, kitTypeId);
                 stmt.setLong(17, start);
                 stmt.setLong(18, end);
                 try (ResultSet rs = stmt.executeQuery()) {
@@ -641,7 +648,7 @@ public class DashboardRoute extends RequestHandler {
                     rs.beforeFirst();
                     if (count < 2) { // 0 rows are ok, more than 1 row is not good!
                         if (rs.next()) {
-                            SummaryKitType summaryKitType = new SummaryKitType(kitType.getName(), rs.getInt(DBConstants.KIT_NEW),
+                            SummaryKitType summaryKitType = new SummaryKitType(kitTypeName, rs.getInt(DBConstants.KIT_NEW),
                                     rs.getInt(DBConstants.KIT_SENT), rs.getInt(DBConstants.KIT_RECEIVED),
                                     rs.getInt(DBConstants.KIT_NEW_PERIOD), rs.getInt(DBConstants.KIT_SENT_PERIOD),
                                     rs.getInt(DBConstants.KIT_RECEIVED_PERIOD));
@@ -664,30 +671,6 @@ public class DashboardRoute extends RequestHandler {
         }
         return (SummaryKitType) results.resultValue;
     }
-
-    //    public void getExitParticipantCount(SummaryMedicalRecordTissue summary, String realm) {
-    //        SimpleResult results = inTransaction((conn) -> {
-    //            SimpleResult dbVals = new SimpleResult(0);
-    //            try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_EXITED_PARTICIPANTS))) {
-    //                stmt.setString(1, realm);
-    //                try (ResultSet rs = stmt.executeQuery()) {
-    //                    rs.last();
-    //                    int count = rs.getRow();
-    //                    rs.beforeFirst();
-    //                    dbVals.resultValue = count;
-    //                }
-    //            }
-    //            catch (SQLException ex) {
-    //                dbVals.resultException = ex;
-    //            }
-    //            return dbVals;
-    //        });
-    //
-    //        if (results.resultException != null) {
-    //            throw new RuntimeException("Error getting medical record participant information ", results.resultException);
-    //        }
-    //        summary.setExitedParticipants((int) results.resultValue);
-    //    }
 
     public ArrayList<NameValue> getNameValueList(KitRequestsPerDate map) {
         ArrayList<NameValue> nameValueList = new ArrayList<>();
@@ -725,13 +708,6 @@ public class DashboardRoute extends RequestHandler {
         return nameValueList;
     }
 
-    //
-    //    public SummaryMedicalRecordTissue getMedicalRecordTissueSummary(@NonNull String userId, @NonNull String realm, long start, long end) {
-    //        SummaryMedicalRecordTissue summary = new SummaryMedicalRecordTissue();
-    //        Participant.getParticipants(userId, realm, summary, start, end);
-    //        return summary;
-    //    }
-    //
     public Collection<KitReport> getShippingReport(@NonNull String userId, @NonNull long start, @NonNull long end) {
         logger.info("Shipping report");
         Collection<String> allowedRealms = UserUtil.getListOfAllowedRealms(userId);
@@ -741,7 +717,8 @@ public class DashboardRoute extends RequestHandler {
             List<SummaryKitType> kitReports = new ArrayList<>();
             List<KitType> kitTypes = KitType.getKitTypes(ddp, userId);
             for (KitType kitType : kitTypes) {
-                kitReports.add(getKitRequestInformation(start, end, ddp, kitType));
+                int kitTypeId = getKitTypeId(ddp, kitType);
+                kitReports.add(getKitRequestInformation(start, end, ddp, kitTypeId, kitType.getName()));
             }
             KitReport kitreport = new KitReport(ddp, kitReports);
             kitTypesPerDDP.add(kitreport);
@@ -814,5 +791,18 @@ public class DashboardRoute extends RequestHandler {
         if (results.resultException != null) {
             throw new RuntimeException("Error getting kit request information for download ", results.resultException);
         }
+    }
+
+    private int getKitTypeId (@NonNull String realm, @NonNull KitType kitType) {
+        int kitTypeId = kitType.getKitId();
+        List<KitSubKits> subKits = KitSubKits.getSubKits(realm, kitType.getName());
+        if (subKits != null && !subKits.isEmpty()) {
+            //kit has sub kits (assumption: all subkits stay together and will therefore be counted as just "one" kit)
+            KitSubKits firstSubKit = subKits.get(0);
+            if (firstSubKit != null) {
+                kitTypeId = firstSubKit.getKitTypeId();
+            }
+        }
+        return kitTypeId;
     }
 }
