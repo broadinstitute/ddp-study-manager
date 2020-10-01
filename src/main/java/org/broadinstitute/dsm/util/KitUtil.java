@@ -536,7 +536,7 @@ public class KitUtil {
                                             if (InstanceSettings.TYPE_NOTIFICATION.equals(uploaded.getType())) {
                                                 String message = kitType.getName() + " kit for participant " + kit.getParticipantId() + " (<b>" + kit.getCollaboratorParticipantId()
                                                         + "</b>) was deactivated per background job <br>. " + uploaded.getValue();
-                                                notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE);
+                                                notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE, NotificationUtil.DSM_SUBJECT);
                                             }
                                             else {
                                                 logger.error("Instance settings behavior for kit was not known " + uploaded.getType());
