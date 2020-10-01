@@ -67,7 +67,7 @@ public class KitDiscardRoute extends RequestHandler {
             if (request.url().contains(RoutePath.DISCARD_SHOW_UPLOAD)) {
                 if (UserUtil.checkUserAccess(realm, userId, "discard_sample") || UserUtil.checkUserAccess(realm, userId, "participant_exit")) {
                     if (kitAction.getPath() != null) {
-                        byte[] bytes = GoogleBucket.downloadFile(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_CREDENTIALS),
+                        byte[] bytes = GoogleBucket.downloadFile(null,
                                 TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_NAME),
                                 TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_DISCARD_BUCKET), kitAction.getPath());
                         if (bytes != null) {
@@ -193,7 +193,7 @@ public class KitDiscardRoute extends RequestHandler {
                     if (path != null) {
                         if (deleteFile) {
                             //delete file
-                            if (GoogleBucket.deleteFile(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_CREDENTIALS),
+                            if (GoogleBucket.deleteFile(null,
                                     TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_NAME),
                                     TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_DISCARD_BUCKET), path)) {
                                 KitDiscard.updateInfo(kitAction.getKitDiscardId(), userIdRequest, null, pathName, null);
@@ -203,7 +203,7 @@ public class KitDiscardRoute extends RequestHandler {
                         else {
                             //save file
                             HttpServletRequest rawRequest = request.raw();
-                            String fileName = GoogleBucket.uploadFile(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_CREDENTIALS),
+                            String fileName = GoogleBucket.uploadFile(null,
                                     TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_NAME),
                                     TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_DISCARD_BUCKET), kitDiscardId + "_" + path, rawRequest.getInputStream());
                             KitDiscard.updateInfo(kitAction.getKitDiscardId(), userIdRequest, null, pathName, fileName);
