@@ -56,7 +56,7 @@ public class BSPKitQueryRoute implements Route {
         boolean firstTimeReceived = KitUtil.setKitReceived(kitLabel);
         if (StringUtils.isNotBlank(bspKitInfo.getParticipantExitId())) {
             String message = "Kit of exited participant " + bspKitInfo.getBspParticipantId() + " was received by GP.<br>";
-            notificationUtil.sentNotification(bspKitInfo.getNotificationRecipient(), message);
+            notificationUtil.sentNotification(bspKitInfo.getNotificationRecipient(), message, NotificationUtil.DSM_SUBJECT);
             return new BSPKitStatus(BSPKitStatus.EXITED);
         }
         if (StringUtils.isNotBlank(bspKitInfo.getDeactivationDate())) {
@@ -88,7 +88,7 @@ public class BSPKitQueryRoute implements Route {
                             String message = "Kit of participant " + bspKitInfo.getBspParticipantId() + " was received by GP. <br> " +
                                     "CollaboratorSampleId:  " + bspKitInfo.getBspSampleId() + " <br> " +
                                     received.getValue();
-                            notificationUtil.sentNotification(bspKitInfo.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE);
+                            notificationUtil.sentNotification(bspKitInfo.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE, NotificationUtil.DSM_SUBJECT);
                         }
                         else {
                             logger.error("Instance settings behavior for kit was not known " + received.getType());
