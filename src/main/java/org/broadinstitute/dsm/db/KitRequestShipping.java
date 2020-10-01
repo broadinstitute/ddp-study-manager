@@ -45,7 +45,7 @@ public class KitRequestShipping extends KitRequest {
             "LEFT JOIN (SELECT * FROM (SELECT kit.dsm_kit_request_id, kit.dsm_kit_id, kit.kit_complete, kit.label_url_to, kit.label_url_return, kit.tracking_to_id, " +
             "kit.tracking_return_id, kit.easypost_tracking_to_url, kit.easypost_tracking_return_url, kit.easypost_to_id, kit.easypost_shipment_status, kit.scan_date, kit.label_date, kit.error, kit.message, " +
             "kit.receive_date, kit.deactivated_date, kit.easypost_address_id_to, kit.deactivation_reason, tracking.tracking_id, kit.kit_label, kit.express, kit.test_result, kit.needs_approval, kit.authorization, kit.denial_reason, " +
-            "kit.authorized_by FROM ddp_kit kit " +
+            "kit.authorized_by, kit.ups_tracking_status, kit.ups_return_status FROM ddp_kit kit " +
             "INNER JOIN (SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id " +
             "AND kit.dsm_kit_id = groupedKit.kit_id LEFT JOIN ddp_kit_tracking tracking ON (kit.kit_label = tracking.kit_label))as wtf) AS kit ON kit.dsm_kit_request_id = request.dsm_kit_request_id " +
             "LEFT JOIN ddp_participant_exit ex ON (ex.ddp_instance_id = request.ddp_instance_id AND ex.ddp_participant_id = request.ddp_participant_id) " +
@@ -151,16 +151,24 @@ public class KitRequestShipping extends KitRequest {
     private String createdBy;
     private String preferredLanguage;
 
-    public KitRequestShipping(String collaboratorParticipantId, String kitType, String dsmKitRequestId, long scanDate, boolean error, long receiveDate, long deactivatedDate, String testResult) {
+    @ColumnName (DBConstants.UPS_TRACKING_STATUS)
+    private final String upsTrackingStatus;
+
+    @ColumnName (DBConstants.UPS_RETURN_STATUS)
+    private final String upsReturnStatus;
+
+    public KitRequestShipping(String collaboratorParticipantId, String kitType, String dsmKitRequestId, long scanDate, boolean error, long receiveDate, long deactivatedDate, String testResult,
+                              String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus) {
         this(null, collaboratorParticipantId, null, null, null, kitType, dsmKitRequestId, null, null, null,
                 null, null, null, null, scanDate, error, null, receiveDate,
-                null, deactivatedDate, null, null, false, null, 0, null, null, false, null, null, testResult);
+                null, deactivatedDate, null, null, false, null, 0, null, null, false, externalOrderStatus, null, testResult,
+                upsTrackingStatus, upsReturnStatus);
     }
 
     public KitRequestShipping(String dsmKitRequestId, String dsmKitId, String easypostToId, String easypostAddressId, boolean error, String message) {
         this(null, null, null, null, null, null, dsmKitRequestId, dsmKitId, null, null,
                 null, null, null, null, 0, error, message, 0,
-                easypostAddressId, 0, null, null, false, easypostToId, 0, null, null, false, null, null, null);
+                easypostAddressId, 0, null, null, false, easypostToId, 0, null, null, false, null, null, null, null, null);
     }
 
     // shippingId = ddp_label !!!
@@ -171,7 +179,8 @@ public class KitRequestShipping extends KitRequest {
                               String trackingUrlTo, String trackingUrlReturn, long scanDate, boolean error, String message,
                               long receiveDate, String easypostAddressId, long deactivatedDate, String deactivationReason,
                               String kitLabel, boolean express, String easypostToId, long labelTriggeredDate, String easypostShipmentStatus,
-                              String externalOrderNumber, boolean noReturn, String externalOrderStatus, String createdBy, String testResult) {
+                              String externalOrderNumber, boolean noReturn, String externalOrderStatus, String createdBy, String testResult,
+                              String upsTrackingStatus, String upsReturnStatus) {
         super(dsmKitRequestId, participantId, null, shippingId, externalOrderNumber, null, externalOrderStatus, null, null);
         this.collaboratorParticipantId = collaboratorParticipantId;
         this.bspCollaboratorSampleId = bspCollaboratorSampleId;
@@ -199,6 +208,8 @@ public class KitRequestShipping extends KitRequest {
         this.noReturn = noReturn;
         this.createdBy = createdBy;
         this.testResult = testResult;
+        this.upsTrackingStatus = upsTrackingStatus;
+        this.upsReturnStatus = upsReturnStatus;
     }
 
     public static KitRequestShipping getKitRequestShipping(@NonNull ResultSet rs) throws SQLException {
@@ -237,7 +248,9 @@ public class KitRequestShipping extends KitRequest {
                 rs.getBoolean(DBConstants.NO_RETURN),
                 rs.getString(DBConstants.EXTERNAL_ORDER_STATUS),
                 rs.getString(DBConstants.CREATED_BY),
-                rs.getString(DBConstants.KIT_TEST_RESULT)
+                rs.getString(DBConstants.KIT_TEST_RESULT),
+                rs.getString(DBConstants.UPS_TRACKING_STATUS),
+                rs.getString(DBConstants.UPS_RETURN_STATUS)
         );
         return kitRequestShipping;
     }
@@ -318,7 +331,10 @@ public class KitRequestShipping extends KitRequest {
                                 false,
                                 rs.getLong(DBConstants.DSM_RECEIVE_DATE),
                                 rs.getLong(DBConstants.DSM_DEACTIVATED_DATE),
-                                rs.getString(DBConstants.KIT_TEST_RESULT)
+                                rs.getString(DBConstants.KIT_TEST_RESULT),
+                                rs.getString(DBConstants.UPS_TRACKING_STATUS),
+                                rs.getString(DBConstants.UPS_RETURN_STATUS),
+                                rs.getString(DBConstants.EXTERNAL_ORDER_STATUS)
                         );
                         if (showNotReceived) {
                             if (kitRequest.getReceiveDate() == 0 && kitRequest.getDeactivatedDate() == 0) {
