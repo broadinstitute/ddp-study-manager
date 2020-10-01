@@ -60,9 +60,6 @@ public class PubSubLookUp {
         notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE, subject);
     }
 
-    private static void notifyStudyStaff(TestBostonResult testBostonResult) {
-    }
-
     private static boolean shouldWriteResultIntoDB(TestBostonResult testBostonResult) {
         logger.info("checking to see if we  should write the new test result");
         DSMTestResult[] dsmTestResultArray = getLatestKitTestResults(testBostonResult);
