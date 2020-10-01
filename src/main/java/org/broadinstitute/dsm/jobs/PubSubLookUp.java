@@ -60,6 +60,9 @@ public class PubSubLookUp {
         notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE, subject);
     }
 
+    private static void notifyStudyStaff(TestBostonResult testBostonResult) {
+    }
+
     private static boolean shouldWriteResultIntoDB(TestBostonResult testBostonResult) {
         logger.info("checking to see if we  should write the new test result");
         DSMTestResult[] dsmTestResultArray = getLatestKitTestResults(testBostonResult);
@@ -101,7 +104,7 @@ public class PubSubLookUp {
             logger.info("Notified Pepper with test result notification");
         }
         else {
-            throw new RuntimeException("kitDDPNotification was null for kitLabel " + testBostonResult.getOrderMessageId());
+            throw new RuntimeException("kitDDPNotification was null for kitLabel "+testBostonResult.getSampleId());
         }
     }
 
@@ -161,6 +164,7 @@ public class PubSubLookUp {
                     }
                     else {
                         logger.info("Updated test result for kit with kit label " + testBostonResult.getSampleId() + " to " + testBostonResult.getResult());
+//                        tellPepperAboutTheNewResults(testBostonResult);
                     }
                 }
             }
