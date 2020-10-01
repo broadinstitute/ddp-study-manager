@@ -2,13 +2,16 @@ package org.broadinstitute.dsm.jobs;
 
 import com.google.gson.Gson;
 import com.google.pubsub.v1.PubsubMessage;
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.birch.DSMTestResult;
 import org.broadinstitute.dsm.model.birch.TestBostonResult;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.EventUtil;
+import org.broadinstitute.dsm.util.NotificationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +20,7 @@ import java.sql.ResultSet;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -26,18 +30,34 @@ public class PubSubLookUp {
             "WHERE kit.kit_label = ?"; //todo pegah change this for prod to kit_labe
     private static String UPDATE_TEST_RESULT = "UPDATE ddp_kit SET  test_result = ? WHERE dsm_kit_id <> 0 and  dsm_kit_request_id  in (select  dsm_kit_request_id from (select * from ddp_kit as something where something.kit_label = ? ) as t  )";
 
-    public static void processCovidTestResults(PubsubMessage message) {
+    public static void processCovidTestResults(PubsubMessage message, @NonNull NotificationUtil notificationUtil) {
         String data = message.getData().toStringUtf8();
         TestBostonResult testBostonResult = new Gson().fromJson(data, TestBostonResult.class);
-        logger.info("Processing test results for " + testBostonResult.getSampleId());
-        if (shouldWriteResultIntoDB(testBostonResult)) {
-            writeResultsIntoDB(testBostonResult);
-            notifyStudyStaff(testBostonResult);
-            tellPepperAboutTheNewResults(testBostonResult);// notify pepper if we update DB
-        }
+        List<DDPInstance> instanceList = DDPInstance.getDDPInstanceListWithRole("pubsub_lookup");
+        for (DDPInstance ddpInstance: instanceList)
+            if(ddpInstance.isHasRole()) {
+                logger.info("Processing test results for " + testBostonResult.getSampleId());
+                if (shouldWriteResultIntoDB(testBostonResult)) {
+                    writeResultsIntoDB(testBostonResult);
+                    tellPepperAboutTheNewResults(testBostonResult);// notify pepper if we update DB
+                    notifyPIs(ddpInstance, testBostonResult, notificationUtil);
+                }
+            }
     }
 
-    private static void notifyStudyStaff(TestBostonResult testBostonResult) {
+    private static void notifyPIs(DDPInstance ddpInstance, TestBostonResult testBostonResult, NotificationUtil notificationUtil) {
+        String message = "";
+        String subject = "";
+        if (testBostonResult.isCorrected()) {
+            subject = "CORRECTED RESULT: "+testBostonResult.getSampleId();
+            message = "A test result has been recorded as corrected for sample Id " + testBostonResult.getSampleId() + " on time "+testBostonResult.getTimeCompleted()+". Please login to the study manager to review the result.";
+        }
+        else if ("POSITIVE".equals(testBostonResult.getResult())) {
+            subject = "POSITIVE RESULT: "+testBostonResult.getSampleId();
+            message = "A positive viral test has been recorded for sample Id " + testBostonResult.getSampleId() + " on time "+testBostonResult.getTimeCompleted()+". Please login to the study manager to review the result.";
+
+        }
+        notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE, subject);
     }
 
     private static boolean shouldWriteResultIntoDB(TestBostonResult testBostonResult) {

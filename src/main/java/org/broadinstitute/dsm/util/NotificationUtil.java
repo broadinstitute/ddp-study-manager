@@ -34,6 +34,7 @@ public class NotificationUtil {
 
     public static final String EMAIL_TYPE = "EXITED_KIT_RECEIVED_NOTIFICATION";
     public static final String UNIVERSAL_NOTIFICATION_TEMPLATE = "UNIVERSAL_NOTIFICATION_TEMPLATE";
+    public static final String DSM_SUBJECT = "study-manager notification";
 
     public static final String KITREQUEST_LINK = "/permalink/whereto?";
 
@@ -69,16 +70,16 @@ public class NotificationUtil {
         return reminderNotificationLookup.get(id);
     }
 
-    public void sentNotification(String notificationRecipient, String message) {
-        sentNotification(notificationRecipient, message, EMAIL_TYPE);
+    public void sentNotification(String notificationRecipient, String message, String subject) {
+        sentNotification(notificationRecipient, message, EMAIL_TYPE, subject);
     }
 
-    public void sentNotification(String notificationRecipient, String message, String recordId) {
+    public void sentNotification(String notificationRecipient, String message, String recordId, String subject) {
         try {
             if (StringUtils.isNotBlank(notificationRecipient)) {
                 notificationRecipient = notificationRecipient.replaceAll("\\s", "");
                 List<String> recipients = Arrays.asList(notificationRecipient.split(","));
-                sentNotification(recipients, message, recordId);
+                sentNotification(recipients, message, recordId, subject);
             }
         }
         catch (Exception e) {
@@ -86,15 +87,16 @@ public class NotificationUtil {
         }
     }
 
-    public void sentNotification(List<String> recipients, String message, String recordId) {
+    public void sentNotification(List<String> recipients, String message, String recordId, String subject) {
         for (String recipient : recipients) {
-            doNotification(recipient, message, recordId);
+            doNotification(recipient, message, recordId, subject);
         }
     }
 
-    private void doNotification(@NonNull String recipient, String message, String recordId) {
+    private void doNotification(@NonNull String recipient, String message, String recordId, String subject) {
         Map<String, String> mapy = new HashMap<>();
         mapy.put(":customText", message);
+        mapy.put(":subject", subject);
         Recipient emailRecipient = new Recipient(recipient);
         if (EMAIL_TYPE.equals(recordId)) {
             emailRecipient.setUrl(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.EMAIL_FRONTEND_URL_FOR_LINKS) + KITREQUEST_LINK);
