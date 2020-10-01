@@ -34,7 +34,7 @@ public class NotificationUtil {
 
     public static final String EMAIL_TYPE = "EXITED_KIT_RECEIVED_NOTIFICATION";
     public static final String UNIVERSAL_NOTIFICATION_TEMPLATE = "UNIVERSAL_NOTIFICATION_TEMPLATE";
-    public static final String DSM_SUBJECT = "STUDY_MANAGER_NOTIFICATION";
+    public static final String DSM_SUBJECT = "study-manager notification";
 
     public static final String KITREQUEST_LINK = "/permalink/whereto?";
 

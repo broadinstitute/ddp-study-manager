@@ -182,7 +182,7 @@ public class DSMServer extends BasicServer {
         registerAppEngineStartupCallback(bootTimeoutSeconds);
         setupDB(config);
 
-        setupPubSub(config);
+
         // don't run superclass routing--it won't work with JettyConfig changes for capturing proper IP address in GAE
         setupCustomRouting(config);
 
@@ -213,6 +213,8 @@ public class DSMServer extends BasicServer {
         //DSM internal routes
         EventUtil eventUtil = new EventUtil();
         NotificationUtil notificationUtil = new NotificationUtil(cfg);
+
+        setupPubSub(cfg, notificationUtil);
 
         get(API_ROOT + RoutePath.BSP_KIT_QUERY_PATH, new BSPKitQueryRoute(notificationUtil), new JsonTransformer());
         get(API_ROOT + RoutePath.BSP_KIT_REGISTERED, new BSPKitRegisteredRoute(), new JsonTransformer());
@@ -327,12 +329,12 @@ public class DSMServer extends BasicServer {
         logger.info("Finished setting up DSM custom routes and jobs...");
     }
 
-    private void setupPubSub(@NonNull Config cfg) {
+    private void setupPubSub(@NonNull Config cfg, NotificationUtil notificationUtil) {
         String projectId = cfg.getString(GCP_PATH_TO_PUBSUB_PROJECT_ID);
         String subscriptionId = cfg.getString(GCP_PATH_TO_PUBSUB_SUB);
 
         logger.info("Setting up pubsub for {}/{}", projectId, subscriptionId);
-        NotificationUtil notificationUtil = new NotificationUtil(cfg);
+
         try {
             // Instantiate an asynchronous message receiver.
             MessageReceiver receiver =
