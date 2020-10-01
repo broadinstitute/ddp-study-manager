@@ -101,17 +101,13 @@ public abstract class PDFProcessor implements BasicProcessor {
     }
 
     public static byte[] getTemplateFromGoogleBucket(@NonNull String fileName) {
-        String gcpCreds = null;
-        if (TransactionWrapper.hasConfigPath(ApplicationConfigConstants.GOOGLE_PROJECT_CREDENTIALS)) {
-            gcpCreds = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_CREDENTIALS);
-        }
         String gcpName = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_NAME);
         if (StringUtils.isNotBlank(gcpName)) {
             String bucketName = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_CONFIG_BUCKET);
             try {
-                if (GoogleBucket.bucketExists(gcpCreds, gcpName, bucketName)) {
+                if (GoogleBucket.bucketExists(null, gcpName, bucketName)) {
                     logger.info("Downloading template " + fileName + " from bucket " + bucketName);
-                    return GoogleBucket.downloadFile(gcpCreds, gcpName, bucketName, fileName);
+                    return GoogleBucket.downloadFile(null, gcpName, bucketName, fileName);
                 }
                 else {
                     logger.error("Google bucket " + bucketName + " does not exist");
@@ -122,7 +118,7 @@ public abstract class PDFProcessor implements BasicProcessor {
             }
         }
         else {
-            logger.error("Credentials missing to download pdf template");
+            logger.error("Google project name missing to download pdf template");
         }
         return null;
     }

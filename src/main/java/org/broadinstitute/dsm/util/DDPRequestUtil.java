@@ -246,16 +246,15 @@ public class DDPRequestUtil {
     public static void savePDFsInBucket(@NonNull String baseURL, @NonNull String instanceName, @NonNull String ddpParticipantId, @NonNull boolean hasAuth0Token, @NonNull String pdfEndpoint,
                                         @NonNull long time, @NonNull String userId, @NonNull String reason) {
         String fileName = pdfEndpoint.replace("/", "").replace("pdf", "");
-        String gcpCreds = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_CREDENTIALS);
         String gcpName = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_NAME);
-        if (StringUtils.isNotBlank(gcpCreds) && StringUtils.isNotBlank(gcpName)) {
+        if (StringUtils.isNotBlank(gcpName)) {
             String bucketName = gcpName + "_dsm_" + instanceName.toLowerCase();
             try {
-                if (GoogleBucket.bucketExists(gcpCreds, gcpName, bucketName)) {
+                if (GoogleBucket.bucketExists(null, gcpName, bucketName)) {
                     String pdfRequest = baseURL + RoutePath.DDP_PARTICIPANTS_PATH + "/" + ddpParticipantId + pdfEndpoint;
                     byte[] bytes = DDPRequestUtil.getPDFByteArray(pdfRequest, instanceName, hasAuth0Token);
 
-                    GoogleBucket.uploadFile(gcpCreds, gcpName, bucketName, ddpParticipantId + "/readonly/" + ddpParticipantId + "_" + fileName + "_" + userId + "_" + reason + "_" + time + ".pdf",
+                    GoogleBucket.uploadFile(null, gcpName, bucketName, ddpParticipantId + "/readonly/" + ddpParticipantId + "_" + fileName + "_" + userId + "_" + reason + "_" + time + ".pdf",
                             new ByteArrayInputStream(bytes));
                 }
             }
