@@ -123,6 +123,7 @@ public class KitRequestShipping extends KitRequest {
 
     @ColumnName (DBConstants.KIT_LABEL)
     private final String kitLabel;
+
     @ColumnName(DBConstants.KIT_TEST_RESULT)
     private String testResult;
 
@@ -150,18 +151,16 @@ public class KitRequestShipping extends KitRequest {
     private String createdBy;
     private String preferredLanguage;
 
-
-
-    public KitRequestShipping(String collaboratorParticipantId, String kitType, String dsmKitRequestId, long scanDate, boolean error, long receiveDate, long deactivatedDate) {
+    public KitRequestShipping(String collaboratorParticipantId, String kitType, String dsmKitRequestId, long scanDate, boolean error, long receiveDate, long deactivatedDate, String testResult) {
         this(null, collaboratorParticipantId, null, null, null, kitType, dsmKitRequestId, null, null, null,
                 null, null, null, null, scanDate, error, null, receiveDate,
-                null, deactivatedDate, null, null, false, null, 0, null, null, false, null, null);
+                null, deactivatedDate, null, null, false, null, 0, null, null, false, null, null, testResult);
     }
 
     public KitRequestShipping(String dsmKitRequestId, String dsmKitId, String easypostToId, String easypostAddressId, boolean error, String message) {
         this(null, null, null, null, null, null, dsmKitRequestId, dsmKitId, null, null,
                 null, null, null, null, 0, error, message, 0,
-                easypostAddressId, 0, null, null, false, easypostToId, 0, null, null, false, null, null);
+                easypostAddressId, 0, null, null, false, easypostToId, 0, null, null, false, null, null, null);
     }
 
     // shippingId = ddp_label !!!
@@ -172,7 +171,7 @@ public class KitRequestShipping extends KitRequest {
                               String trackingUrlTo, String trackingUrlReturn, long scanDate, boolean error, String message,
                               long receiveDate, String easypostAddressId, long deactivatedDate, String deactivationReason,
                               String kitLabel, boolean express, String easypostToId, long labelTriggeredDate, String easypostShipmentStatus,
-                              String externalOrderNumber, boolean noReturn, String externalOrderStatus, String createdBy) {
+                              String externalOrderNumber, boolean noReturn, String externalOrderStatus, String createdBy, String testResult) {
         super(dsmKitRequestId, participantId, null, shippingId, externalOrderNumber, null, externalOrderStatus, null, null);
         this.collaboratorParticipantId = collaboratorParticipantId;
         this.bspCollaboratorSampleId = bspCollaboratorSampleId;
@@ -199,6 +198,7 @@ public class KitRequestShipping extends KitRequest {
         this.easypostShipmentStatus = easypostShipmentStatus;
         this.noReturn = noReturn;
         this.createdBy = createdBy;
+        this.testResult = testResult;
     }
 
     public static KitRequestShipping getKitRequestShipping(@NonNull ResultSet rs) throws SQLException {
@@ -236,7 +236,8 @@ public class KitRequestShipping extends KitRequest {
                 rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER),
                 rs.getBoolean(DBConstants.NO_RETURN),
                 rs.getString(DBConstants.EXTERNAL_ORDER_STATUS),
-                rs.getString(DBConstants.CREATED_BY)
+                rs.getString(DBConstants.CREATED_BY),
+                rs.getString(DBConstants.KIT_TEST_RESULT)
         );
         return kitRequestShipping;
     }
@@ -246,7 +247,7 @@ public class KitRequestShipping extends KitRequest {
     }
 
     public static Map<String, List<KitRequestShipping>> getKitRequests(@NonNull String realm, String queryAddition) {
-        logger.info("Collection mr information");
+        logger.info("Collection sample information");
         Map<String, List<KitRequestShipping>> kitRequests = new HashMap<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -316,7 +317,8 @@ public class KitRequestShipping extends KitRequest {
                                 rs.getLong(DBConstants.DSM_SCAN_DATE),
                                 false,
                                 rs.getLong(DBConstants.DSM_RECEIVE_DATE),
-                                rs.getLong(DBConstants.DSM_DEACTIVATED_DATE)
+                                rs.getLong(DBConstants.DSM_DEACTIVATED_DATE),
+                                rs.getString(DBConstants.KIT_TEST_RESULT)
                         );
                         if (showNotReceived) {
                             if (kitRequest.getReceiveDate() == 0 && kitRequest.getDeactivatedDate() == 0) {
