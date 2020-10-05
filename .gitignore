@@ -4,10 +4,13 @@ tcell
 appengine/*.conf
 appengine/deploy/lib
 appengine/deploy/*.conf
+appengine/deploy/*.xml
+appengine/deploy/*.jar
 appengine/deploy/tcell/*
 
 # This file is rendered.
 appengine/deploy/StudyManager.yaml
+StudyManager.yaml
 
 # IDEs and editors
 .idea
