@@ -257,7 +257,7 @@ public class GBFRequestUtil implements ExternalShipper {
                 stmt.setLong(1, System.currentTimeMillis() / 1000);
                 stmt.setString(2, dsmKitRequestId);
                 int result = stmt.executeUpdate();
-                if (result != 2) {
+                if (result != 1) {
                     throw new RuntimeException("Updated " + result + " rows!");
                 }
             }
@@ -268,7 +268,10 @@ public class GBFRequestUtil implements ExternalShipper {
         });
 
         if (results.resultException != null) {
-            throw new RuntimeException("Error getQueryDetail ", results.resultException);
+            throw new RuntimeException("Error updating received date ", results.resultException);
+        }
+        else {
+            logger.info("updated received date for DSM kit request ID " + dsmKitRequestId);
         }
     }
 
