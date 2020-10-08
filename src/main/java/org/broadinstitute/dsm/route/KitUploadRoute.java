@@ -61,6 +61,7 @@ public class KitUploadRoute extends RequestHandler {
     private static final String STATE = "state";
     private static final String POSTAL_CODE = "postalCode";
     private static final String COUNTRY = "country";
+    private static final String PHONE_NUMBER = "phoneNumber";
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
@@ -96,7 +97,8 @@ public class KitUploadRoute extends RequestHandler {
                 List<KitRequest> kitUploadContent = null;
                 if (uploadAnyway) { //already participants and no file
                     String requestBody = request.body();
-                    kitUploadContent = Arrays.asList(new Gson().fromJson(requestBody, KitUploadObject[].class));
+                    System.out.println(content);
+                    kitUploadContent = Arrays.asList(new Gson().fromJson(content, KitUploadObject[].class));
                 }
                 else {
                     kitUploadContent = isFileValid(content);
@@ -193,7 +195,7 @@ public class KitUploadRoute extends RequestHandler {
                     String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(ddpInstance.getBaseUrl(), ddpInstance.getDdpInstanceId(), ddpInstance.isMigratedDDP(),
                             ddpInstance.getCollaboratorIdPrefix(), kit.getParticipantId(), kit.getShortId(),
                             kitRequestSettings.getCollaboratorParticipantLengthOverwrite());
-                    //subkits is currently not used by any DDP!
+                    //subkits is currently only used by test boston
                     if (kitHasSubKits) {
                         List<KitSubKits> subKits = kitRequestSettings.getSubKits();
                         boolean alreadyExists = false;
@@ -217,7 +219,7 @@ public class KitUploadRoute extends RequestHandler {
                         }
                     }
                     else {
-                        //all ddps are currently using this!
+                        //all cmi ddps are currently using this!
                         handleNormalKit(conn, ddpInstance, kitType, kit, kitRequestSettings, easyPostUtil, userIdRequest, kitTypeName,
                                 collaboratorParticipantId, errorMessage, uploadAnyway, duplicateKitList, orderKits, specialKitList, behavior);
                     }
@@ -280,33 +282,56 @@ public class KitUploadRoute extends RequestHandler {
                                KitRequest kit) {
         String collaboratorSampleId = null;
         String bspCollaboratorSampleType = kitTypeName;
-        if (kitRequestSettings.getCollaboratorSampleTypeOverwrite() != null) {
-            bspCollaboratorSampleType = kitRequestSettings.getCollaboratorSampleTypeOverwrite();
-        }
-        if (StringUtils.isNotBlank(collaboratorParticipantId)) {
-            collaboratorSampleId = KitRequestShipping.generateBspSampleID(conn, collaboratorParticipantId, bspCollaboratorSampleType, kitTypeId);
-            if (collaboratorParticipantId == null) {
-                errorMessage += "collaboratorParticipantId was too long ";
+        if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
+            // write it todo pegah
+            try {
+                String shippingId = DDPKitRequest.UPLOADED_KIT_REQUEST + KitRequestShipping.createRandom(20);
+                Address address = easyPostUtil.getAddress(((KitUploadObject) kit).getEasyPostAddressId());
+                String addressId = null;
+                if (address != null) {
+                    addressId = address.getId();
+                }
+                collaboratorSampleId = KitRequestShipping.generateBspSampleID(conn, collaboratorParticipantId, bspCollaboratorSampleType, kitTypeId);
+                KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), shippingId,
+                        kitTypeId, kit.getParticipantId().trim(), collaboratorParticipantId,
+                        collaboratorSampleId, userId, addressId,
+                        errorMessage, kit.getExternalOrderNumber(), false);
+                kit.setShippingId(shippingId);
             }
-            if (collaboratorSampleId == null) {
-                errorMessage += "collaboratorSampleId was too long ";
+            catch (EasyPostException e) {
+                throw new RuntimeException("EasyPost addressId could not be received ", e);
             }
         }
-        try {
-            String shippingId = DDPKitRequest.UPLOADED_KIT_REQUEST + KitRequestShipping.createRandom(20);
-            Address address = easyPostUtil.getAddress(((KitUploadObject) kit).getEasyPostAddressId());
-            String addressId = null;
-            if (address != null) {
-                addressId = address.getId();
+        else {
+
+            if (kitRequestSettings.getCollaboratorSampleTypeOverwrite() != null) {
+                bspCollaboratorSampleType = kitRequestSettings.getCollaboratorSampleTypeOverwrite();
             }
-            KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), shippingId,
-                    kitTypeId, kit.getParticipantId().trim(), collaboratorParticipantId,
-                    collaboratorSampleId, userId, addressId,
-                    errorMessage, kit.getExternalOrderNumber(), false);
-            kit.setShippingId(shippingId);
-        }
-        catch (EasyPostException e) {
-            throw new RuntimeException("EasyPost addressId could not be received ", e);
+            if (StringUtils.isNotBlank(collaboratorParticipantId)) {
+                collaboratorSampleId = KitRequestShipping.generateBspSampleID(conn, collaboratorParticipantId, bspCollaboratorSampleType, kitTypeId);
+                if (collaboratorParticipantId == null) {
+                    errorMessage += "collaboratorParticipantId was too long ";
+                }
+                if (collaboratorSampleId == null) {
+                    errorMessage += "collaboratorSampleId was too long ";
+                }
+            }
+            try {
+                String shippingId = DDPKitRequest.UPLOADED_KIT_REQUEST + KitRequestShipping.createRandom(20);
+                Address address = easyPostUtil.getAddress(((KitUploadObject) kit).getEasyPostAddressId());
+                String addressId = null;
+                if (address != null) {
+                    addressId = address.getId();
+                }
+                KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), shippingId,
+                        kitTypeId, kit.getParticipantId().trim(), collaboratorParticipantId,
+                        collaboratorSampleId, userId, addressId,
+                        errorMessage, kit.getExternalOrderNumber(), false);
+                kit.setShippingId(shippingId);
+            }
+            catch (EasyPostException e) {
+                throw new RuntimeException("EasyPost addressId could not be received ", e);
+            }
         }
     }
 
@@ -341,19 +366,19 @@ public class KitUploadRoute extends RequestHandler {
                                         object = new KitUploadObject(null, obj.get(PARTICIPANT_ID), shortId,
                                                 null, obj.get(SIGNATURE),
                                                 obj.get(STREET1), obj.get(STREET2), obj.get(CITY),
-                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY));
+                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY), obj.get(PHONE_NUMBER));
                                     }
                                     else if (containsOrderNumber) {
                                         object = new KitUploadObject(obj.get(ORDER_NUMBER), obj.get(PARTICIPANT_ID), null,
                                                 null, obj.get(NAME),
                                                 obj.get(STREET1), obj.get(STREET2), obj.get(CITY),
-                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY));
+                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY), obj.get(PHONE_NUMBER));
                                     }
                                     else {
                                         object = new KitUploadObject(null, obj.get(PARTICIPANT_ID), shortId,
                                                 obj.get(FIRST_NAME), obj.get(LAST_NAME),
                                                 obj.get(STREET1), obj.get(STREET2), obj.get(CITY),
-                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY));
+                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY), obj.get(PHONE_NUMBER));
                                     }
                                     uploadObjects.add(object);
                                 }

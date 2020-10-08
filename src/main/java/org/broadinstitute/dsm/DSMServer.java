@@ -344,7 +344,6 @@ public class DSMServer extends BasicServer {
                             PubSubLookUp.processCovidTestResults(message, notificationUtil);
                             logger.info("Processing the message finished");
                             consumer.ack();
-
                         }catch(Exception ex){
                             logger.info("about to nack the message", ex);
                             consumer.nack();
