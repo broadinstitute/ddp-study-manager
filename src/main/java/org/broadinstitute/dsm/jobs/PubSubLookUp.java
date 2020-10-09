@@ -27,7 +27,7 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 public class PubSubLookUp {
     private static final Logger logger = LoggerFactory.getLogger(PubSubLookUp.class);
     private static String SELECT_LATEST_RESULT_QUERY = "SELECT kit.test_result FROM ddp_kit_request req LEFT JOIN  ddp_kit kit ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) " +
-            "WHERE kit.kit_label = ?"; //todo pegah change this for prod to kit_labe
+            "WHERE kit.kit_label = ?";
     private static String UPDATE_TEST_RESULT = "UPDATE ddp_kit SET  test_result = ? WHERE dsm_kit_id <> 0 and  dsm_kit_request_id  in (select  dsm_kit_request_id from (select * from ddp_kit as something where something.kit_label = ? ) as t  )";
 
     public static void processCovidTestResults(PubsubMessage message, @NonNull NotificationUtil notificationUtil) {

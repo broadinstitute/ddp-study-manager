@@ -354,7 +354,7 @@ public class DSMServer extends BasicServer {
 
             Subscriber subscriber = null;
             ProjectSubscriptionName resultSubName = ProjectSubscriptionName.of(projectId, subscriptionId);
-            ExecutorProvider resultsSubExecProvider = InstantiatingExecutorProvider.newBuilder().setExecutorThreadCount(10).build();
+            ExecutorProvider resultsSubExecProvider = InstantiatingExecutorProvider.newBuilder().setExecutorThreadCount(1).build();
             subscriber = Subscriber.newBuilder(resultSubName, receiver)
                     .setParallelPullCount(1)
                     .setExecutorProvider(resultsSubExecProvider)
