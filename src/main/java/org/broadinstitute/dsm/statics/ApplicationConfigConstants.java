@@ -135,4 +135,6 @@ public class ApplicationConfigConstants {
     public static final String CARE_EVOLVE_PROVIDER_FIRSTNAME = "careEvolve.provider.firstName";
     public static final String CARE_EVOLVE_PROVIDER_LAST_NAME = "careEvolve.provider.lastName";
     public static final String CARE_EVOLVE_PROVIDER_NPI = "careEvolve.provider.NPI";
+    public static final String CARE_EVOLVE_MAX_RETRIES = "careEvolve.maxRetries";
+    public static final String CARE_EVOLVE_RETRY_WAIT_SECONDS = "careEvolve.retryWaitSeconds";
 }

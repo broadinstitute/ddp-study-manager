@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -49,6 +47,10 @@ public class Covid19OrderRegistrar {
 
     private final Provider provider;
 
+    private final int maxRetries;
+
+    private final long retryWaitMillis;
+
     public static final String BASELINE_SYMPTOM_ACTIVITY = "BASELINE_SYMPTOM";
 
     public static final String BASELINE_COVID_ACTIVITY = "BASELINE_COVID";
@@ -61,10 +63,14 @@ public class Covid19OrderRegistrar {
      */
     public Covid19OrderRegistrar(String endpoint,
                                  String careEvolveAccount,
-                                 Provider provider) {
+                                 Provider provider,
+                                 int maxRetries,
+                                 int retryWaitSeconds) {
         this.endpoint = endpoint;
         this.careEvolveAccount  = careEvolveAccount;
         this.provider = provider;
+        this.maxRetries = maxRetries;
+        this.retryWaitMillis = retryWaitSeconds * 1000;
     }
 
     /**
@@ -244,11 +250,30 @@ public class Covid19OrderRegistrar {
                 Message message = new Message(new Order(careEvolveAccount, testPatient, kitLabel, collectionDateTime, provider, aoes), kitId);
 
                 OrderResponse orderResponse = null;
-                try {
-                    orderResponse = orderTest(auth, message);
-                    logger.info("Placed CE order {} {} for {}", orderResponse.getHandle(), orderResponse.getHl7Ack(), patientId);
-                } catch (IOException e) {
-                    throw new CareEvolveException("Could not order test for " + patientId, e);
+
+                boolean orderSucceeded = false;
+                Collection<Exception> orderExceptions = new ArrayList<>();
+                int numAttempts = 0;
+                do {
+                    try {
+                        orderResponse = orderTest(auth, message);
+                        orderSucceeded = true;
+                        logger.info("Placed CE order {} {} for {}", orderResponse.getHandle(), orderResponse.getHl7Ack(), patientId);
+                    } catch (IOException e) {
+                        orderExceptions.add(e);
+                        logger.warn("Could not order test for " + patientId + ".  Pausing for " + retryWaitMillis + "ms before retry " + numAttempts + "/" + maxRetries, e);
+                        try {
+                            Thread.sleep(retryWaitMillis);
+                        } catch (InterruptedException interruptedException) {
+                            logger.error("Interrupted while waiting for CE order retry for patient " + patientId, e);
+                        }
+                    }
+                    numAttempts++;
+                } while (numAttempts < maxRetries && !orderSucceeded);
+
+                if (!orderSucceeded) {
+                    String exceptionsText = StringUtils.join(orderExceptions, "\n");
+                    throw new CareEvolveException("Could not order test for " + patientId + " after " + maxRetries + ":\n" + exceptionsText);
                 }
 
                 if (StringUtils.isNotBlank(orderResponse.getError())) {
