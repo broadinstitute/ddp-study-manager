@@ -274,7 +274,7 @@ public class KitUploadRoute extends RequestHandler {
         }
         else {
             addKitRequest(conn, kitTypeName, kitRequestSettings, ddpInstance, kitType.getKitTypeId(),
-                    collaboratorParticipantId, errorMessage, userIdRequest, easyPostUtil, kit, );
+                    collaboratorParticipantId, errorMessage, userIdRequest, easyPostUtil, kit, externalOrderNumber);
             orderKits.add(kit);
         }
     }
