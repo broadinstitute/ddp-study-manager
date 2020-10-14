@@ -358,19 +358,19 @@ public class KitUploadRoute extends RequestHandler {
                                         object = new KitUploadObject(null, obj.get(PARTICIPANT_ID), shortId,
                                                 null, obj.get(SIGNATURE),
                                                 obj.get(STREET1), obj.get(STREET2), obj.get(CITY),
-                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY), obj.get(PHONE_NUMBER));
+                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY), obj.getOrDefault(PHONE_NUMBER, null));
                                     }
                                     else if (containsOrderNumber) {
                                         object = new KitUploadObject(obj.get(ORDER_NUMBER), obj.get(PARTICIPANT_ID), null,
                                                 null, obj.get(NAME),
                                                 obj.get(STREET1), obj.get(STREET2), obj.get(CITY),
-                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY), obj.get(PHONE_NUMBER));
+                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY), obj.getOrDefault(PHONE_NUMBER, null));
                                     }
                                     else {
                                         object = new KitUploadObject(null, obj.get(PARTICIPANT_ID), shortId,
                                                 obj.get(FIRST_NAME), obj.get(LAST_NAME),
                                                 obj.get(STREET1), obj.get(STREET2), obj.get(CITY),
-                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY), obj.get(PHONE_NUMBER));
+                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY), obj.getOrDefault(PHONE_NUMBER, null));
                                     }
                                     uploadObjects.add(object);
                                 }
