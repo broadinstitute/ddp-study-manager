@@ -4,6 +4,8 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.*;
+import org.broadinstitute.dsm.model.KitRequestSettings;
+import org.broadinstitute.dsm.model.KitSubKits;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
@@ -17,7 +19,9 @@ import spark.QueryParamsMap;
 import spark.Request;
 import spark.Response;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class DisplaySettingsRoute extends RequestHandler {
@@ -71,6 +75,38 @@ public class DisplaySettingsRoute extends RequestHandler {
                 InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(realm);
                 if (instanceSettings != null && instanceSettings.getMrCoverPdf() != null && !instanceSettings.getMrCoverPdf().isEmpty()) {
                     displaySettings.put("mrCoverPDF", instanceSettings.getMrCoverPdf());
+                }
+                if (instanceSettings != null && instanceSettings.getSpecialFormat() != null && !instanceSettings.getSpecialFormat().isEmpty()) {
+                    displaySettings.put("specialFormat", instanceSettings.getSpecialFormat());
+                }
+                if (instanceSettings != null && instanceSettings.getHideESFields() != null && !instanceSettings.getHideESFields().isEmpty()) {
+                    displaySettings.put("hideESField", instanceSettings.getHideESFields());
+                }
+                Map<Integer, KitRequestSettings> kitRequestSettingsMap = KitRequestSettings.getKitRequestSettings(instance.getDdpInstanceId());
+                if (kitRequestSettingsMap != null) {
+                    List<KitType> kits = new ArrayList<>();
+                    List<KitType> kitTypes = KitType.getKitTypes(realm, null);
+                    if (kitTypes != null && !kitTypes.isEmpty()) {
+                        kitTypes.forEach( kitType -> {
+                            KitRequestSettings kitRequestSettings = kitRequestSettingsMap.get(kitType.getKitId());
+                            //kit has sub kits add them to displaySettings
+                            if (kitRequestSettings != null && kitRequestSettings.getHasSubKits() != 0) {
+                                List<KitSubKits> subKits = kitRequestSettings.getSubKits();
+                                if (subKits != null && !subKits.isEmpty()) {
+                                    subKits.forEach(subKit -> {
+                                        kits.add(new KitType(subKit.getKitTypeId(), subKit.getKitName(), subKit.getKitName(), kitType.isManualSentTrack(), kitType.isExternalShipper()));
+                                    });
+                                }
+                            }
+                            else {
+                                //kit doesn't have subkits add kitType
+                                kits.add(kitType);
+                            }
+                        });
+                    }
+                    if (kits != null && !kits.isEmpty()) {
+                        displaySettings.put("kitTypes", kits);
+                    }
                 }
                 return displaySettings;
             }
