@@ -215,7 +215,7 @@ public class GBFRequestUtil implements ExternalShipper {
                                     KitRequestExternal.updateKitRequest(status.getOrderStatus(), System.currentTimeMillis(), dsmKitRequestId);// in order to update time for the  next 24 hour check we need this
                                 }
                             }
-                            //                            logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has not been shipped in the last 24 hours! ");//todo pegah uncomment for production
+                            logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has not been shipped in the last 24 hours! ");//todo pegah uncomment for production
                         }
                         else if (status.getOrderStatus().contains(SHIPPED) && (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
                                 !kit.getExternalOrderStatus().contains(SHIPPED))) {
@@ -230,6 +230,9 @@ public class GBFRequestUtil implements ExternalShipper {
                         }
                         else if (status.getOrderStatus().contains("CANCELLED") && (StringUtils.isBlank(kit.getExternalOrderStatus()) || !kit.getExternalOrderStatus().contains("CANCELLED"))) {//todo uncomment for prod
                             //                            logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has got cancelled by GBF!");//todo pegah uncomment for production
+                        else if (status.getOrderStatus().contains("CANCELLED") && (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
+                                (StringUtils.isNotBlank(kit.getExternalOrderStatus()) && !kit.getExternalOrderStatus().contains("CANCELLED")))) {//todo uncomment for prod
+                            logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has got cancelled by GBF!");//todo pegah uncomment for production
                         }
                         if (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
                                 !kit.getExternalOrderStatus().equals(status.getOrderStatus())) {// if changed
@@ -352,7 +355,7 @@ public class GBFRequestUtil implements ExternalShipper {
                                         rs.getLong(DBConstants.EXTERNAL_ORDER_DATE)));
                             }
                             else {
-                                //                                logger.error("Participant not found in ES! " + rs.getString(DBConstants.DDP_PARTICIPANT_ID));
+                                logger.error("Participant not found in ES! " + rs.getString(DBConstants.DDP_PARTICIPANT_ID));
                             }
                         }
 

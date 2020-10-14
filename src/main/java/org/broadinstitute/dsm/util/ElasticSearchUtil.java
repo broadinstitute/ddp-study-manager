@@ -24,6 +24,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +63,7 @@ public class ElasticSearchUtil {
     public static final String COMPLETED_AT = "completedAt";
     public static final String LAST_UPDATED = "lastUpdatedAt";
     public static final String STATUS = "status";
+    public static final String PROFILE_CREATED_AT = "profile." + CREATED_AT;
 
     public static RestHighLevelClient getClientForElasticsearchCloud(@NonNull String baseUrl, @NonNull String userName, @NonNull String password) throws MalformedURLException {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
@@ -100,7 +102,7 @@ public class ElasticSearchUtil {
                     SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
                     SearchResponse response = null;
                     int i = 0;
-                    searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+                    searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(PROFILE_CREATED_AT, SortOrder.ASC);
                     while (response == null || response.getHits().getHits().length != 0) {
                         searchSourceBuilder.size(scrollSize);
                         searchSourceBuilder.from(i * scrollSize);

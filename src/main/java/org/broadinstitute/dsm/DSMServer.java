@@ -111,6 +111,8 @@ public class DSMServer extends BasicServer {
     public static String careEvolveSubscriberKey;
     public static String careEvolveServiceKey;
     public static String careEvolveOrderEndpoint;
+    public static int careEvolveMaxRetries;
+    public static int careEvolveRetyWaitSeconds;
     public static String careEvolveAccount;
     public static Authentication careEvolveAuth;
     public static Provider provider;
@@ -585,6 +587,17 @@ public class DSMServer extends BasicServer {
                 careEvolveSubscriberKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SUBSCRIBER_KEY);
                 careEvolveServiceKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SERVICE_KEY);
                 careEvolveOrderEndpoint = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_ORDER_ENDPOINT);
+                if (cfg.hasPath(ApplicationConfigConstants.CARE_EVOLVE_MAX_RETRIES)) {
+                    careEvolveMaxRetries = cfg.getInt(ApplicationConfigConstants.CARE_EVOLVE_MAX_RETRIES);
+                } else {
+                    careEvolveMaxRetries = 5;
+                }
+                if (cfg.hasPath(ApplicationConfigConstants.CARE_EVOLVE_RETRY_WAIT_SECONDS)) {
+                    careEvolveRetyWaitSeconds = cfg.getInt(ApplicationConfigConstants.CARE_EVOLVE_RETRY_WAIT_SECONDS);
+                } else {
+                    careEvolveRetyWaitSeconds = 10;
+                }
+                logger.info("Will retry CareEvolve at most {} times after {} seconds", careEvolveMaxRetries, careEvolveRetyWaitSeconds);
                 provider = new Provider(cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_FIRSTNAME),
                         cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_LAST_NAME),
                         cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_NPI));

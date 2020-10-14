@@ -65,7 +65,8 @@ public class UPSTrackingJob implements Job {
                 if (ddpInstance.isHasRole()) {
                     logger.info("tracking ups ids for " + ddpInstance.getName());
                     Map<String, Map<String, DdpKit>> ids = getResultSet(ddpInstance.getDdpInstanceId());
-                    orderRegistrar = new Covid19OrderRegistrar(DSMServer.careEvolveOrderEndpoint, DSMServer.careEvolveAccount, DSMServer.provider);
+                    orderRegistrar = new Covid19OrderRegistrar(DSMServer.careEvolveOrderEndpoint, DSMServer.careEvolveAccount, DSMServer.provider,
+                            DSMServer.careEvolveMaxRetries, DSMServer.careEvolveRetyWaitSeconds);
                     if (ids != null) {
                         Map<String, DdpKit> kits = ids.get("shipping");
                         if (kits != null) {
