@@ -284,25 +284,26 @@ public class KitUploadRoute extends RequestHandler {
                                KitRequest kit, String externalOrderNumber) {
         String collaboratorSampleId = null;
         String bspCollaboratorSampleType = kitTypeName;
+        String addressId = null;
+        String shippingId = DDPKitRequest.UPLOADED_KIT_REQUEST + KitRequestShipping.createRandom(20);
+        try {
+            Address address = easyPostUtil.getAddress(((KitUploadObject) kit).getEasyPostAddressId());
+            if (address != null) {
+                addressId = address.getId();
+            }
+        }
+        catch (EasyPostException e) {
+            throw new RuntimeException("EasyPost addressId could not be received ", e);
+        }
+
         if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
-            try {
-                String shippingId = DDPKitRequest.UPLOADED_KIT_REQUEST + KitRequestShipping.createRandom(20);
-                Address address = easyPostUtil.getAddress(((KitUploadObject) kit).getEasyPostAddressId());
-                String addressId = null;
-                if (address != null) {
-                    addressId = address.getId();
-                }
-                collaboratorSampleId = KitRequestShipping.generateBspSampleID(conn, collaboratorParticipantId, bspCollaboratorSampleType, kitTypeId);
-                KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), shippingId,
-                        kitTypeId, kit.getParticipantId().trim(), collaboratorParticipantId,
-                        collaboratorSampleId, userId, addressId,
-                        errorMessage, externalOrderNumber, false);
-                kit.setShippingId(shippingId);
-                kit.setExternalOrderNumber(externalOrderNumber);
-            }
-            catch (EasyPostException e) {
-                throw new RuntimeException("EasyPost addressId could not be received ", e);
-            }
+            collaboratorSampleId = KitRequestShipping.generateBspSampleID(conn, collaboratorParticipantId, bspCollaboratorSampleType, kitTypeId);
+            KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), shippingId,
+                    kitTypeId, kit.getParticipantId().trim(), collaboratorParticipantId,
+                    collaboratorSampleId, userId, addressId,
+                    errorMessage, externalOrderNumber, false);
+            kit.setShippingId(shippingId);
+            kit.setExternalOrderNumber(externalOrderNumber);
         }
         else {
 
@@ -318,22 +319,11 @@ public class KitUploadRoute extends RequestHandler {
                     errorMessage += "collaboratorSampleId was too long ";
                 }
             }
-            try {
-                String shippingId = DDPKitRequest.UPLOADED_KIT_REQUEST + KitRequestShipping.createRandom(20);
-                Address address = easyPostUtil.getAddress(((KitUploadObject) kit).getEasyPostAddressId());
-                String addressId = null;
-                if (address != null) {
-                    addressId = address.getId();
-                }
-                KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), shippingId,
-                        kitTypeId, kit.getParticipantId().trim(), collaboratorParticipantId,
-                        collaboratorSampleId, userId, addressId,
-                        errorMessage, kit.getExternalOrderNumber(), false);
-                kit.setShippingId(shippingId);
-            }
-            catch (EasyPostException e) {
-                throw new RuntimeException("EasyPost addressId could not be received ", e);
-            }
+            KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), shippingId,
+                    kitTypeId, kit.getParticipantId().trim(), collaboratorParticipantId,
+                    collaboratorSampleId, userId, addressId,
+                    errorMessage, kit.getExternalOrderNumber(), false);
+            kit.setShippingId(shippingId);
         }
     }
 
