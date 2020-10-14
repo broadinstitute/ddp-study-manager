@@ -117,7 +117,8 @@ public class GBFRequestUtil implements ExternalShipper {
                     address = new Address(participantAddress.getName(),
                             participantAddress.getStreet1(), participantAddress.getStreet2(), participantAddress.getCity(),
                             participantAddress.getState(), participantAddress.getZip(), participantAddress.getCountry(),
-                            participantAddress.getPhone());
+                            StringUtils.isNotBlank(((KitUploadObject) kit).getPhoneNumber()) ?
+                            ((KitUploadObject) kit).getPhoneNumber() : participantAddress.getPhone());
                 }
                 // kit per ddp request
                 else if (kit.getParticipant() != null) {
@@ -249,32 +250,7 @@ public class GBFRequestUtil implements ExternalShipper {
         }
     }
 
-    public static void updateReceivedDateForKit(String dsmKitRequestId) {// for when UPS is integrated
-        String query = "UPDATE ddp_kit SET receive_date= ? where dsm_kit_id <> 0 and dsm_kit_id in (SELECT kit.dsm_kit_id from (Select dsm_kit_id, dsm_kit_request_id from ddp_kit) kit  where kit.dsm_kit_request_id  = ? )";
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            dbVals.resultValue = null;
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setLong(1, System.currentTimeMillis() / 1000);
-                stmt.setString(2, dsmKitRequestId);
-                int result = stmt.executeUpdate();
-                if (result != 1) {
-                    throw new RuntimeException("Updated " + result + " rows!");
-                }
-            }
-            catch (Exception e) {
-                dbVals.resultException = e;
-            }
-            return dbVals;
-        });
 
-        if (results.resultException != null) {
-            throw new RuntimeException("Error updating received date ", results.resultException);
-        }
-        else {
-            logger.info("updated received date for DSM kit request ID " + dsmKitRequestId);
-        }
-    }
 
     // The confirmation, dependent upon level of detail required, is a shipping receipt to prove completion.
     // Confirmation may include order number, client(participant) ID, outbound tracking number, return tracking number(s), line item(s), kit serial number(s), etc.
