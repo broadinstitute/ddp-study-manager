@@ -228,8 +228,6 @@ public class GBFRequestUtil implements ExternalShipper {
                                 logger.error("kitDDPNotification was null for " + kit.getExternalOrderNumber());
                             }
                         }
-                        else if (status.getOrderStatus().contains("CANCELLED") && (StringUtils.isBlank(kit.getExternalOrderStatus()) || !kit.getExternalOrderStatus().contains("CANCELLED"))) {//todo uncomment for prod
-                            //                            logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has got cancelled by GBF!");//todo pegah uncomment for production
                         else if (status.getOrderStatus().contains("CANCELLED") && (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
                                 (StringUtils.isNotBlank(kit.getExternalOrderStatus()) && !kit.getExternalOrderStatus().contains("CANCELLED")))) {//todo uncomment for prod
                             logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has got cancelled by GBF!");//todo pegah uncomment for production
