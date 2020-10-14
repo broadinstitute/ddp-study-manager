@@ -116,6 +116,7 @@ public class DBConstants {
     public static final String EXTERNAL_ORDER_DATE = "external_order_date";
     public static final String EASYPOST_SHIPMENT_STATUS = "easypost_shipment_status";
     public static final String EASYPOST_SHIPMENT_DATE = "easypost_shipment_date";
+    public static final String CARE_EVOLVE = "CE_order";
 
     //medical record
     public static final String PARTICIPANT_ID = "participant_id";
