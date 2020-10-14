@@ -1,19 +1,31 @@
 package org.broadinstitute.dsm.model;
 
 import lombok.Data;
+import org.broadinstitute.dsm.db.structure.ColumnName;
+import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
+import org.broadinstitute.dsm.statics.DBConstants;
 
 @Data
+@TableName(
+        name = DBConstants.DDP_KIT_REQUEST,
+        alias = DBConstants.DDP_KIT_REQUEST_ALIAS,
+        primaryKey = "",
+        columnPrefix = "")
 public class KitRequest {
 
     private String dsmKitRequestId;
     private String participantId;
     private String shortId;
     private String shippingId;
-    private String externalOrderNumber;
     private DDPParticipant participant;
     private String externalOrderStatus;
     private String externalKitName;
+
+    @ColumnName(DBConstants.EXTERNAL_ORDER_NUMBER)
+    private String externalOrderNumber;
+
+    @ColumnName (DBConstants.EXTERNAL_ORDER_DATE)
     private Long externalOrderDate;
 
     public KitRequest(String participantId, String shortId, DDPParticipant participant, String externalOrderNumber) {

@@ -40,12 +40,12 @@ public class KitRequestShipping extends KitRequest {
 
     public static final String SQL_SELECT_KIT_REQUEST = "SELECT * FROM (SELECT kt.kit_type_name, ddp_site.instance_name, ddp_site.ddp_instance_id, ddp_site.base_url, ddp_site.auth0_token, ddp_site.billing_reference, " +
             "ddp_site.migrated_ddp, ddp_site.collaborator_id_prefix, ddp_site.es_participant_index, req.bsp_collaborator_participant_id, req.bsp_collaborator_sample_id, req.ddp_participant_id, req.ddp_label, req.dsm_kit_request_id, " +
-            "req.kit_type_id, req.external_order_status, req.external_order_number, req.external_response, kt.no_return, req.created_by FROM kit_type kt, ddp_kit_request req, ddp_instance ddp_site " +
+            "req.kit_type_id, req.external_order_status, req.external_order_number, req.external_order_date, req.external_response, kt.no_return, req.created_by FROM kit_type kt, ddp_kit_request req, ddp_instance ddp_site " +
             "WHERE req.ddp_instance_id = ddp_site.ddp_instance_id AND req.kit_type_id = kt.kit_type_id) AS request " +
             "LEFT JOIN (SELECT * FROM (SELECT kit.dsm_kit_request_id, kit.dsm_kit_id, kit.kit_complete, kit.label_url_to, kit.label_url_return, kit.tracking_to_id, " +
             "kit.tracking_return_id, kit.easypost_tracking_to_url, kit.easypost_tracking_return_url, kit.easypost_to_id, kit.easypost_shipment_status, kit.scan_date, kit.label_date, kit.error, kit.message, " +
             "kit.receive_date, kit.deactivated_date, kit.easypost_address_id_to, kit.deactivation_reason, tracking.tracking_id, kit.kit_label, kit.express, kit.test_result, kit.needs_approval, kit.authorization, kit.denial_reason, " +
-            "kit.authorized_by, kit.ups_tracking_status, kit.ups_return_status FROM ddp_kit kit " +
+            "kit.authorized_by, kit.ups_tracking_status, kit.ups_return_status, kit.CE_order FROM ddp_kit kit " +
             "INNER JOIN (SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id " +
             "AND kit.dsm_kit_id = groupedKit.kit_id LEFT JOIN ddp_kit_tracking tracking ON (kit.kit_label = tracking.kit_label))as wtf) AS kit ON kit.dsm_kit_request_id = request.dsm_kit_request_id " +
             "LEFT JOIN ddp_participant_exit ex ON (ex.ddp_instance_id = request.ddp_instance_id AND ex.ddp_participant_id = request.ddp_participant_id) " +
@@ -157,22 +157,24 @@ public class KitRequestShipping extends KitRequest {
     @ColumnName (DBConstants.UPS_RETURN_STATUS)
     private final String upsReturnStatus;
 
+    @ColumnName (DBConstants.CARE_EVOLVE)
+    private boolean careEvolve;
+
     public KitRequestShipping(String collaboratorParticipantId, String kitType, String dsmKitRequestId, long scanDate, boolean error, long receiveDate, long deactivatedDate, String testResult,
-                              String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus) {
+                              String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus, String externalOrderNumber, long externalOrderDate, boolean careEvolve) {
         this(null, collaboratorParticipantId, null, null, null, kitType, dsmKitRequestId, null, null, null,
                 null, null, null, null, scanDate, error, null, receiveDate,
-                null, deactivatedDate, null, null, false, null, 0, null, null, false, externalOrderStatus, null, testResult,
-                upsTrackingStatus, upsReturnStatus);
+                null, deactivatedDate, null, null, false, null, 0, null, externalOrderNumber, false, externalOrderStatus, null, testResult,
+                upsTrackingStatus, upsReturnStatus, externalOrderDate, false);
     }
 
     public KitRequestShipping(String dsmKitRequestId, String dsmKitId, String easypostToId, String easypostAddressId, boolean error, String message) {
         this(null, null, null, null, null, null, dsmKitRequestId, dsmKitId, null, null,
                 null, null, null, null, 0, error, message, 0,
-                easypostAddressId, 0, null, null, false, easypostToId, 0, null, null, false, null, null, null, null, null);
+                easypostAddressId, 0, null, null, false, easypostToId, 0, null, null, false, null, null, null, null, null, 0, false);
     }
 
     // shippingId = ddp_label !!!
-    //todo pegah add testResult and resultDate
     public KitRequestShipping(String participantId, String collaboratorParticipantId, String bspCollaboratorSampleId, String shippingId, String realm,
                               String kitType, String dsmKitRequestId, String dsmKitId, String labelUrlTo, String labelUrlReturn,
                               String trackingNumberTo, String trackingNumberReturn,
@@ -180,8 +182,8 @@ public class KitRequestShipping extends KitRequest {
                               long receiveDate, String easypostAddressId, long deactivatedDate, String deactivationReason,
                               String kitLabel, boolean express, String easypostToId, long labelTriggeredDate, String easypostShipmentStatus,
                               String externalOrderNumber, boolean noReturn, String externalOrderStatus, String createdBy, String testResult,
-                              String upsTrackingStatus, String upsReturnStatus) {
-        super(dsmKitRequestId, participantId, null, shippingId, externalOrderNumber, null, externalOrderStatus, null, null);
+                              String upsTrackingStatus, String upsReturnStatus, long externalOrderDate, boolean careEvolve) {
+        super(dsmKitRequestId, participantId, null, shippingId, externalOrderNumber, null, externalOrderStatus, null, externalOrderDate);
         this.collaboratorParticipantId = collaboratorParticipantId;
         this.bspCollaboratorSampleId = bspCollaboratorSampleId;
         this.realm = realm;
@@ -210,6 +212,7 @@ public class KitRequestShipping extends KitRequest {
         this.testResult = testResult;
         this.upsTrackingStatus = upsTrackingStatus;
         this.upsReturnStatus = upsReturnStatus;
+        this.careEvolve = careEvolve;
     }
 
     public static KitRequestShipping getKitRequestShipping(@NonNull ResultSet rs) throws SQLException {
@@ -250,7 +253,9 @@ public class KitRequestShipping extends KitRequest {
                 rs.getString(DBConstants.CREATED_BY),
                 rs.getString(DBConstants.KIT_TEST_RESULT),
                 rs.getString(DBConstants.UPS_TRACKING_STATUS),
-                rs.getString(DBConstants.UPS_RETURN_STATUS)
+                rs.getString(DBConstants.UPS_RETURN_STATUS),
+                rs.getLong(DBConstants.EXTERNAL_ORDER_DATE),
+                rs.getBoolean(DBConstants.CARE_EVOLVE)
         );
         return kitRequestShipping;
     }
@@ -334,7 +339,10 @@ public class KitRequestShipping extends KitRequest {
                                 rs.getString(DBConstants.KIT_TEST_RESULT),
                                 rs.getString(DBConstants.UPS_TRACKING_STATUS),
                                 rs.getString(DBConstants.UPS_RETURN_STATUS),
-                                rs.getString(DBConstants.EXTERNAL_ORDER_STATUS)
+                                rs.getString(DBConstants.EXTERNAL_ORDER_STATUS),
+                                rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER),
+                                rs.getLong(DBConstants.EXTERNAL_ORDER_DATE),
+                                rs.getBoolean(DBConstants.CARE_EVOLVE)
                         );
                         if (showNotReceived) {
                             if (kitRequest.getReceiveDate() == 0 && kitRequest.getDeactivatedDate() == 0) {
