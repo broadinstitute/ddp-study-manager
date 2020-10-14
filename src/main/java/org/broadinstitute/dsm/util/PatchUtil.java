@@ -6,6 +6,7 @@ import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.db.ViewFilter;
+import org.broadinstitute.dsm.model.KitRequest;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +36,7 @@ public class PatchUtil {
         getColumnNames(AbstractionActivity.class);
         getColumnNames(ViewFilter.class);
         getColumnNames(KitRequestShipping.class);
+        getColumnNames(KitRequest.class);
         getColumnNames(Drug.class);
         logger.info("Loaded patch utils");
     }
