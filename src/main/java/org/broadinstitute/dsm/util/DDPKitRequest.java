@@ -1,6 +1,5 @@
 package org.broadinstitute.dsm.util;
 
-import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
