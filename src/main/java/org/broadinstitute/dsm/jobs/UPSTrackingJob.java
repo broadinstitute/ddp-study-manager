@@ -216,7 +216,6 @@ public class UPSTrackingJob implements Job {
                 }
                 //if delivered notify pepper for received
                 else if (statusType.equals(DELIVERY) && !(DELIVERY.equals(oldType))) {
-                    GBFRequestUtil.updateReceivedDateForKit(kit.getDsmKitRequestId());
                     KitUtil.setKitReceived(kit.getKitLabel());
                     logger.info("RECEIVED: " + trackingId);
                     KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { RECEIVED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
