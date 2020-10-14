@@ -11,9 +11,10 @@ public class KitUploadObject extends KitRequest {
     private String postalCode;
     private String country;
     private String easyPostAddressId;
+    private String phoneNumber;
 
     public KitUploadObject(String externalOrderNumber, String ddpParticipantId, String shortId, String firstName, String lastName,
-                           String street1, String street2, String city, String state, String postalCode, String country) {
+                           String street1, String street2, String city, String state, String postalCode, String country, String phoneNumber) {
         super(null, ddpParticipantId, shortId, null, externalOrderNumber, null, null, null, null);
         this.firstName = firstName;
         this.lastName = lastName;
@@ -23,6 +24,7 @@ public class KitUploadObject extends KitRequest {
         this.state = state;
         this.postalCode = postalCode;
         this.country = country;
+        this.phoneNumber = phoneNumber;
     }
 
     public String getFirstName() {
@@ -61,6 +63,10 @@ public class KitUploadObject extends KitRequest {
         return easyPostAddressId;
     }
 
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
     public void setEasyPostAddressId(String easyPostAddressId) {
         this.easyPostAddressId = easyPostAddressId;
     }
@@ -79,6 +85,7 @@ public class KitUploadObject extends KitRequest {
                 ", state='" + state + '\'' +
                 ", postalCode='" + postalCode + '\'' +
                 ", country='" + country + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
                 '}';
     }
 }
