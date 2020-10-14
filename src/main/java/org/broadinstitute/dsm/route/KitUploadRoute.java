@@ -285,7 +285,6 @@ public class KitUploadRoute extends RequestHandler {
         String collaboratorSampleId = null;
         String bspCollaboratorSampleType = kitTypeName;
         if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
-            // write it todo pegah
             try {
                 String shippingId = DDPKitRequest.UPLOADED_KIT_REQUEST + KitRequestShipping.createRandom(20);
                 Address address = easyPostUtil.getAddress(((KitUploadObject) kit).getEasyPostAddressId());
