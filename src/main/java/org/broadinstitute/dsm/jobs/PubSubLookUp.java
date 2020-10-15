@@ -55,9 +55,10 @@ public class PubSubLookUp {
         else if ("POSITIVE".equals(testBostonResult.getResult())) {
             subject = "POSITIVE RESULT: "+testBostonResult.getSampleId();
             message = "A positive viral test has been recorded for sample Id " + testBostonResult.getSampleId() + " on time "+testBostonResult.getTimeCompleted()+". Please login to the study manager to review the result.";
-
         }
-        notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE, subject);
+        if (StringUtils.isNotBlank(subject) && StringUtils.isNotBlank(message)) {
+            notificationUtil.sentNotification(ddpInstance.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE, subject);
+        }
     }
 
     private static boolean shouldWriteResultIntoDB(TestBostonResult testBostonResult) {
