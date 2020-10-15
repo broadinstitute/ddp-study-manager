@@ -10,10 +10,7 @@ import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
-import org.broadinstitute.dsm.util.AbstractionUtil;
-import org.broadinstitute.dsm.util.ElasticSearchUtil;
-import org.broadinstitute.dsm.util.PatchUtil;
-import org.broadinstitute.dsm.util.UserUtil;
+import org.broadinstitute.dsm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.QueryParamsMap;
@@ -83,6 +80,8 @@ public class DisplaySettingsRoute extends RequestHandler {
                 if (!instance.isHasRole()) {
                     displaySettings.put("hideMRTissueWorkflow", true);
                 }
+                displaySettings.put("preferredLanguages", DDPRequestUtil.getPreferredLanguages(instance));
+
                 Map<Integer, KitRequestSettings> kitRequestSettingsMap = KitRequestSettings.getKitRequestSettings(instance.getDdpInstanceId());
                 if (kitRequestSettingsMap != null) {
                     List<KitType> kits = new ArrayList<>();

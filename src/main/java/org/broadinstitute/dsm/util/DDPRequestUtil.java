@@ -13,7 +13,9 @@ import org.broadinstitute.ddp.handlers.util.*;
 import org.broadinstitute.ddp.util.GoogleBucket;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.exception.SurveyNotCreated;
+import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
+import org.broadinstitute.dsm.model.ddp.PreferredLanguage;
 import org.broadinstitute.dsm.route.DownloadPDFRoute;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -70,6 +72,16 @@ public class DDPRequestUtil {
         return objects;
     }
 
+    // make a get request
+    public static <T> T getResponseObjectWithoutHeader(Class<T> responseClass, String sendRequest, String name) throws IOException {
+        logger.info("Requesting data from " + name + " w/ " + sendRequest);
+        org.apache.http.client.fluent.Request request = SecurityUtil.createGetRequestNoToken(sendRequest);
+        T objects = request.execute().handleResponse(res -> getResponse(res, responseClass, sendRequest));
+        if (objects != null) {
+            logger.info("Got response back");
+        }
+        return objects;
+    }
 
     // make a get request with custom header
     public static <T> T getResponseObjectWithCustomHeader(Class<T> responseClass, String sendRequest, String name, Map<String, String> header) throws IOException {
@@ -314,5 +326,18 @@ public class DDPRequestUtil {
         for (Map<String, String> pdf : pdfList) {
             DDPRequestUtil.savePDFsInBucket(ddpInstance.getBaseUrl(), ddpInstance.getName(), ddpParticipantId, ddpInstance.isHasAuth0Token(), "/pdfs/" + pdf.get("configName"), time, userId, reason);
         }
+    }
+
+    public static List<PreferredLanguage> getPreferredLanguages(@NonNull DDPInstance ddpInstance) {
+        PreferredLanguage[] list = null;
+        String sendRequest = ddpInstance.getBaseUrl().replace("/dsm","") + "/languages" ;
+        try {
+            list = DDPRequestUtil.getResponseObjectWithoutHeader(PreferredLanguage[].class, sendRequest, ddpInstance.getName());
+        }
+        catch (Exception ioe) {
+            throw new RuntimeException("Couldn't get preferred languages from " + sendRequest, ioe);
+        }
+        return Arrays.asList(list.clone());
+
     }
 }
