@@ -218,9 +218,9 @@ public class UserUtil {
                     getList(conn, query, instanceRole, userId, listOfRealms);
                 }
                 else if (MEDICALRECORD_MENU.equals(menu)) {
-                    query = query + QueryExtension.BY_ROLE_NAME;
-                    query = query.replace("%1", DBConstants.MR_VIEW);
-                    instanceRole = DBConstants.MEDICAL_RECORD_ACTIVATED;
+//                    query = query + QueryExtension.BY_ROLE_NAME;
+//                    query = query.replace("%1", DBConstants.MR_VIEW);
+//                    getList(conn, query, instanceRole, userId, listOfRealms);
                     getList(conn, query, instanceRole, userId, listOfRealms);
                 }
                 else if (SHIPPING_MENU.equals(menu)) {

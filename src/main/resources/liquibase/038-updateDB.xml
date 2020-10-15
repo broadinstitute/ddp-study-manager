@@ -17,4 +17,9 @@
             </column>
         </addColumn>
     </changeSet>
+    <changeSet author="simone" id="addNewUserAccess">
+        <insert tableName="access_role">
+            <column name="name" value="pt_list_view"/>
+        </insert>
+    </changeSet>
 </databaseChangeLog>
