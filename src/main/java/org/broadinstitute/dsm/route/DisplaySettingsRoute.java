@@ -80,8 +80,9 @@ public class DisplaySettingsRoute extends RequestHandler {
                 if (!instance.isHasRole()) {
                     displaySettings.put("hideMRTissueWorkflow", true);
                 }
-                displaySettings.put("preferredLanguages", DDPRequestUtil.getPreferredLanguages(instance));
-
+                if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
+                    displaySettings.put("preferredLanguages", DDPRequestUtil.getPreferredLanguages(instance));
+                }
                 Map<Integer, KitRequestSettings> kitRequestSettingsMap = KitRequestSettings.getKitRequestSettings(instance.getDdpInstanceId());
                 if (kitRequestSettingsMap != null) {
                     List<KitType> kits = new ArrayList<>();
