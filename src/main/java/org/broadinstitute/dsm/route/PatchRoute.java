@@ -47,8 +47,8 @@ public class PatchRoute extends RequestHandler {
         if (patchUtil.getColumnNameMap() == null) {
             return new RuntimeException("ColumnNameMap is null!");
         }
-        if (UserUtil.checkUserAccess(null, userId, "mr_request") || UserUtil.checkUserAccess(null, userId, "mr_abstracter")
-                || UserUtil.checkUserAccess(null, userId, "mr_qc")) {
+        if (UserUtil.checkUserAccess(null, userId, "mr_view") || UserUtil.checkUserAccess(null, userId, "mr_abstracter")
+                || UserUtil.checkUserAccess(null, userId, "mr_qc") || UserUtil.checkUserAccess(null, userId, "pt_list_view")) {
             try {
                 String requestBody = request.body();
                 Patch patch = new Gson().fromJson(requestBody, Patch.class);
