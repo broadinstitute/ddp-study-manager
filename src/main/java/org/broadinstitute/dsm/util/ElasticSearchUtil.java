@@ -655,9 +655,9 @@ public class ElasticSearchUtil {
                             alreadyAdded = mustOrSearchActivity(finalQuery, queryBuilder, tmpBuilder, INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1].trim(), userEntered, must);
                         }
                     }
-                    if (!alreadyAdded) {
-                        finalQuery.must(queryBuilder);
-                    }
+                }
+                if (!alreadyAdded) {
+                    finalQuery.must(queryBuilder);
                 }
             }
             else {
