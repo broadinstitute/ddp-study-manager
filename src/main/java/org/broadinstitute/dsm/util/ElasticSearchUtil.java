@@ -139,8 +139,8 @@ public class ElasticSearchUtil {
                     if (query == null) {
                         throw new RuntimeException("Couldn't create query from filter " + filter);
                     }
+                    searchSourceBuilder.query(query).sort(PROFILE_CREATED_AT, SortOrder.ASC);
                     while (response == null || response.getHits().getHits().length != 0) {
-                        searchSourceBuilder.query(query);
                         searchSourceBuilder.size(scrollSize);
                         searchSourceBuilder.from(i * scrollSize);
                         searchRequest.source(searchSourceBuilder);
