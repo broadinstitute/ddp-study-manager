@@ -117,6 +117,12 @@ public class DDPKitRequest {
                                                                 kitsToOrder.put(kitRequestSettings, orderKit);
                                                             }
                                                         }
+                                                        else {
+                                                            logger.error("ES profile data was empty for participant with ddp_kit_request_id " + kitDetail.getKitRequestId());
+                                                        }
+                                                    }
+                                                    else {
+                                                        logger.error("Participant of ddp_kit_request_id " + kitDetail.getKitRequestId() + " not found in ES ");
                                                     }
                                                 }
                                             }
