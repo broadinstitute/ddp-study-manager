@@ -53,7 +53,6 @@ public class SecurityUtil {
         }
         else {
             secret = DSMServer.getDDPTokenSecret(instanceName);
-
         }
         if (StringUtils.isBlank(token) && StringUtils.isNotBlank(secret)) {
             long invalidAfter = 300 + (System.currentTimeMillis() / 1000);
@@ -91,6 +90,11 @@ public class SecurityUtil {
                 request = request.addHeader(headerEntry.getKey(), headerEntry.getValue());
             }
         }
+        return request;
+    }
+
+    public static org.apache.http.client.fluent.Request createGetRequestNoToken(@NonNull String requestString) {
+        org.apache.http.client.fluent.Request request = Get(requestString);
         return request;
     }
 

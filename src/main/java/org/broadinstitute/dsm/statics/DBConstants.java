@@ -441,6 +441,8 @@ public class DBConstants {
 
     public static final String MR_COVER_PDF = "mr_cover_pdf";
     public static final String KIT_BEHAVIOR_CHANGE = "kit_behavior_change";
+    public static final String SPECIAL_FORMAT = "special_format";
+    public static final String HIDE_ES_FIELDS = "hide_ES_fields";
 
     public static final String KIT_TEST_RESULT = "test_result";
 

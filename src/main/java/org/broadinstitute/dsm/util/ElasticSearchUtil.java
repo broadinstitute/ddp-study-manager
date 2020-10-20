@@ -139,8 +139,8 @@ public class ElasticSearchUtil {
                     if (query == null) {
                         throw new RuntimeException("Couldn't create query from filter " + filter);
                     }
+                    searchSourceBuilder.query(query).sort(PROFILE_CREATED_AT, SortOrder.ASC);
                     while (response == null || response.getHits().getHits().length != 0) {
-                        searchSourceBuilder.query(query);
                         searchSourceBuilder.size(scrollSize);
                         searchSourceBuilder.from(i * scrollSize);
                         searchRequest.source(searchSourceBuilder);
@@ -655,9 +655,9 @@ public class ElasticSearchUtil {
                             alreadyAdded = mustOrSearchActivity(finalQuery, queryBuilder, tmpBuilder, INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1].trim(), userEntered, must);
                         }
                     }
-                    if (!alreadyAdded) {
-                        finalQuery.must(queryBuilder);
-                    }
+                }
+                if (!alreadyAdded) {
+                    finalQuery.must(queryBuilder);
                 }
             }
             else {

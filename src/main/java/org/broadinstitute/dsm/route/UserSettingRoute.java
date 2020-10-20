@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import spark.QueryParamsMap;
 import spark.Request;
 import spark.Response;
-import spark.Route;
 
 public class UserSettingRoute extends RequestHandler {
 
@@ -23,7 +22,8 @@ public class UserSettingRoute extends RequestHandler {
         QueryParamsMap queryParams = request.queryMap();
         if (queryParams.value(UserUtil.USER_ID) != null) {
             String userIdRequest = queryParams.get(UserUtil.USER_ID).value();
-            if (UserUtil.checkUserAccess(null, userId, "kit_shipping") || UserUtil.checkUserAccess(null, userId, "mr_view")) {
+            if (UserUtil.checkUserAccess(null, userId, "kit_shipping") || UserUtil.checkUserAccess(null, userId, "mr_view")
+                    || UserUtil.checkUserAccess(null, userId, "pt_list_view")) {
                 if (StringUtils.isNotBlank(userIdRequest)) {
                     String requestBody = request.body();
                     if (!userId.equals(userIdRequest)) {

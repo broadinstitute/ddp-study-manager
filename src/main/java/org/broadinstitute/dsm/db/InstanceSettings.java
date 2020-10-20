@@ -27,7 +27,7 @@ public class InstanceSettings {
 
     private static final Logger logger = LoggerFactory.getLogger(InstanceSettings.class);
 
-    private static final String SQL_SELECT_INSTANCE_SETTINGS = "SELECT mr_cover_pdf, kit_behavior_change FROM instance_settings settings, ddp_instance realm " +
+    private static final String SQL_SELECT_INSTANCE_SETTINGS = "SELECT mr_cover_pdf, kit_behavior_change, special_format, hide_ES_fields FROM instance_settings settings, ddp_instance realm " +
             "WHERE realm.ddp_instance_id = settings.ddp_instance_id AND realm.instance_name = ?";
 
     public static final String INSTANCE_SETTING_UPLOAD = "upload";
@@ -39,10 +39,14 @@ public class InstanceSettings {
 
     private List<Value> mrCoverPdf;
     private List<Value> kitBehaviorChange;
+    private List<Value> specialFormat;
+    private List<Value> hideESFields;
 
-    public InstanceSettings(List<Value> mrCoverPdf, List<Value> kitBehaviorChange) {
+    public InstanceSettings(List<Value> mrCoverPdf, List<Value> kitBehaviorChange, List<Value> specialFormat, List<Value> hideESFields) {
         this.mrCoverPdf = mrCoverPdf;
         this.kitBehaviorChange = kitBehaviorChange;
+        this.specialFormat = specialFormat;
+        this.hideESFields = hideESFields;
     }
 
     public static InstanceSettings getInstanceSettings(@NonNull String realm) {
@@ -52,17 +56,11 @@ public class InstanceSettings {
                 stmt.setString(1, realm);
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        String mrCoverPDf = rs.getString(DBConstants.MR_COVER_PDF);
-                        List<Value> mrCoverPdfSettings = null;
-                        if (StringUtils.isNotBlank(mrCoverPDf)) {
-                            mrCoverPdfSettings = Arrays.asList(new Gson().fromJson(mrCoverPDf, Value[].class));
-                        }
-                        String kitBehavior = rs.getString(DBConstants.KIT_BEHAVIOR_CHANGE);
-                        List<Value> kitBehaviorChange = null;
-                        if (StringUtils.isNotBlank(kitBehavior)) {
-                            kitBehaviorChange = Arrays.asList(new Gson().fromJson(kitBehavior, Value[].class));
-                        }
-                        dbVals.resultValue = new InstanceSettings(mrCoverPdfSettings, kitBehaviorChange);
+                        List<Value> mrCoverPdfSettings = getListValue(rs.getString(DBConstants.MR_COVER_PDF));
+                        List<Value> kitBehaviorChange = getListValue(rs.getString(DBConstants.KIT_BEHAVIOR_CHANGE));
+                        List<Value> specialFormat = getListValue(rs.getString(DBConstants.SPECIAL_FORMAT));
+                        List<Value> hideESFields = getListValue(rs.getString(DBConstants.HIDE_ES_FIELDS));
+                        dbVals.resultValue = new InstanceSettings(mrCoverPdfSettings, kitBehaviorChange, specialFormat, hideESFields);
                     }
                 }
             }
@@ -152,5 +150,13 @@ public class InstanceSettings {
             }
         }
         return specialKit;
+    }
+
+    private static List<Value> getListValue (String dbValue) {
+        List<Value> list = null;
+        if (StringUtils.isNotBlank(dbValue)) {
+            list = Arrays.asList(new Gson().fromJson(dbValue, Value[].class));
+        }
+        return list;
     }
 }

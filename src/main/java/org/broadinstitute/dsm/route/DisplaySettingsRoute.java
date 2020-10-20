@@ -7,12 +7,10 @@ import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitSubKits;
 import org.broadinstitute.dsm.security.RequestHandler;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
-import org.broadinstitute.dsm.util.AbstractionUtil;
-import org.broadinstitute.dsm.util.ElasticSearchUtil;
-import org.broadinstitute.dsm.util.PatchUtil;
-import org.broadinstitute.dsm.util.UserUtil;
+import org.broadinstitute.dsm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.QueryParamsMap;
@@ -53,12 +51,12 @@ public class DisplaySettingsRoute extends RequestHandler {
         if (!userId.equals(userIdRequest)) {
             throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
         }
-        if (UserUtil.checkUserAccess(realm, userId, "mr_view")) {
+        if (UserUtil.checkUserAccess(realm, userId, "mr_view") || UserUtil.checkUserAccess(realm, userId, "pt_list_view")) {
             String parent = queryParams.get("parent").value();
             if (StringUtils.isBlank(parent)) {
                 logger.error("Parent is empty");
             }
-            DDPInstance instance = DDPInstance.getDDPInstance(realm);
+            DDPInstance instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.MEDICAL_RECORD_ACTIVATED);
             if (instance == null) {
                 logger.error("Instance was not found");
             }
@@ -75,6 +73,15 @@ public class DisplaySettingsRoute extends RequestHandler {
                 InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(realm);
                 if (instanceSettings != null && instanceSettings.getMrCoverPdf() != null && !instanceSettings.getMrCoverPdf().isEmpty()) {
                     displaySettings.put("mrCoverPDF", instanceSettings.getMrCoverPdf());
+                }
+                if (instanceSettings != null && instanceSettings.getHideESFields() != null && !instanceSettings.getHideESFields().isEmpty()) {
+                    displaySettings.put("hideESFields", instanceSettings.getHideESFields());
+                }
+                if (!instance.isHasRole()) {
+                    displaySettings.put("hideMRTissueWorkflow", true);
+                }
+                if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
+                    displaySettings.put("preferredLanguages", DDPRequestUtil.getPreferredLanguages(instance));
                 }
                 Map<Integer, KitRequestSettings> kitRequestSettingsMap = KitRequestSettings.getKitRequestSettings(instance.getDdpInstanceId());
                 if (kitRequestSettingsMap != null) {
