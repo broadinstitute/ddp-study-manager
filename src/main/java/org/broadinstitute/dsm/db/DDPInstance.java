@@ -370,7 +370,7 @@ public class DDPInstance {
                     while (rs.next()) {
                         DDPInstance ddpInstance = getDDPInstanceFormResultSet(rs);
                         List<Value> kitBehavior = Arrays.asList(new Gson().fromJson(rs.getString(DBConstants.KIT_BEHAVIOR_CHANGE), Value[].class));
-                        InstanceSettings instanceSettings = new InstanceSettings(null, kitBehavior);
+                        InstanceSettings instanceSettings = new InstanceSettings(null, kitBehavior, null, null);
                         ddpInstance.setInstanceSettings(instanceSettings);
                         ddpInstances.add(ddpInstance);
                     }
