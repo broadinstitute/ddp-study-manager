@@ -11,6 +11,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class SystemUtil {
 
@@ -82,6 +83,7 @@ public class SystemUtil {
     public static long getLongFromString(@NonNull String dateString) throws ParseException {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat(SystemUtil.DATE_FORMAT);
+            sdf.setTimeZone(TimeZone.getTimeZone("EST"));
             Date date = sdf.parse(dateString);
             return date.getTime();
         }

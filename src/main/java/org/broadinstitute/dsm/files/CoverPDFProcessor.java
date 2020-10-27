@@ -60,7 +60,7 @@ public class CoverPDFProcessor extends PDFProcessor {
             inputStream = generateStreamFromPdfForm(fields, bytes);
         }
         catch (Exception ex) {
-            throw new FileProcessingException("COVER PDF - Unable to generate consent stream.", ex);
+            throw new FileProcessingException("COVER PDF - Unable to generate pdf", ex);
         }
 
         return inputStream;
