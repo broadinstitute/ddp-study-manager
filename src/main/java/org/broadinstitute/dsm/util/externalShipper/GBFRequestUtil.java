@@ -111,6 +111,7 @@ public class GBFRequestUtil implements ExternalShipper {
             orders.setOrders(new ArrayList<>());
             for (KitRequest kit : kitRequests) {
                 Address address = null;
+                logger.info("placing order for external order number: " + kit.getExternalOrderNumber());
                 // kit was uploaded
                 if (kit instanceof KitUploadObject) {
                     com.easypost.model.Address participantAddress = easyPostUtil.getAddress(((KitUploadObject) kit).getEasyPostAddressId());
@@ -141,7 +142,8 @@ public class GBFRequestUtil implements ExternalShipper {
             }
             if (!orders.getOrders().isEmpty()) {
                 String orderXml = GBFRequestUtil.orderXmlToString(Orders.class, orders);
-                logger.info("orderXML: " + orderXml);
+
+                //                logger.info("orderXML: " + orderXml);
                 boolean test = DSMServer.isTest(getExternalShipperName());//true for dev in `not-secret.conf`
                 JSONObject payload = new JSONObject().put("orderXml", orderXml).put("test", test);
                 String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + ORDER_ENDPOINT;
@@ -195,13 +197,17 @@ public class GBFRequestUtil implements ExternalShipper {
                 }
             }
             JSONObject payload = new JSONObject().put("orderNumbers", orderNumbers);
+            logger.info("payload size for order status: " + orderNumbers.size());
             String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + STATUS_ENDPOINT;
             logger.info("payload: " + payload.toString());
             Response gbfResponse = executePost(Response.class, sendRequest, payload.toString(), DSMServer.getApiKey(getExternalShipperName()));
+            logger.info(gbfResponse.getXML());
             if (gbfResponse != null && gbfResponse.isSuccess()) {
                 List<Status> statuses = gbfResponse.getStatuses();
+                logger.info("Got a list of " + statuses.size() + " responses from GBF status");
                 if (statuses != null && !statuses.isEmpty()) {
                     for (Status status : statuses) {
+                        logger.info("Got Kit status in GBF Response is " + status.getOrderStatus() + " for " + status.getOrderNumber());
                         KitRequest kit = externalOrdersStatus.get(status.getOrderNumber());
                         if (!status.getOrderStatus().equals(kit.getExternalOrderStatus())) {
                             logger.info("Kit status from GBF is changed from " + kit.getExternalOrderStatus() + " to " + status.getOrderStatus() + " for kit: " + kit.getExternalOrderNumber());
@@ -215,7 +221,7 @@ public class GBFRequestUtil implements ExternalShipper {
                                     KitRequestExternal.updateKitRequest(status.getOrderStatus(), System.currentTimeMillis(), dsmKitRequestId);// in order to update time for the  next 24 hour check we need this
                                 }
                             }
-                            logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has not been shipped in the last 24 hours! ");//todo pegah uncomment for production
+                            logger.warn("Kit Request with external order number " + kit.getExternalOrderNumber() + "has not been shipped in the last 24 hours! ");//todo pegah uncomment for production
                         }
                         else if (status.getOrderStatus().contains(SHIPPED) && (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
                                 !kit.getExternalOrderStatus().contains(SHIPPED))) {
@@ -251,7 +257,6 @@ public class GBFRequestUtil implements ExternalShipper {
     }
 
 
-
     // The confirmation, dependent upon level of detail required, is a shipping receipt to prove completion.
     // Confirmation may include order number, client(participant) ID, outbound tracking number, return tracking number(s), line item(s), kit serial number(s), etc.
     public void orderConfirmation(ArrayList<KitRequest> kitRequests, long startDate, long endDate) throws Exception {
@@ -261,13 +266,14 @@ public class GBFRequestUtil implements ExternalShipper {
         Response gbfResponse = executePost(Response.class, sendRequest, payload.toString(), DSMServer.getApiKey(getExternalShipperName()));
 
         if (gbfResponse != null && StringUtils.isNotBlank(gbfResponse.getXML())) {
-            logger.info("Confirmation xmls received: " + gbfResponse.getXML());
+            logger.info("Confirmation xmls received! ");
             ShippingConfirmations shippingConfirmations = objectFromXMLString(ShippingConfirmations.class, gbfResponse.getXML());
             if (shippingConfirmations != null) {
                 List<ShippingConfirmation> confirmationList = shippingConfirmations.getShippingConfirmations();
                 if (confirmationList != null && !confirmationList.isEmpty()) {
                     for (ShippingConfirmation confirmation : confirmationList) {
                         //update external shipper response at request
+                        logger.info("Got confirmation for " + confirmation.getOrderNumber());
                         Node node = GBFRequestUtil.getXMLNode(gbfResponse.getXML(), XML_NODE_EXPRESSION.replace("%1", confirmation.getOrderNumber()));
                         List<String> dsmKitRequestIds = getDSMKitRequestId(confirmation.getOrderNumber());
                         if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
@@ -292,6 +298,9 @@ public class GBFRequestUtil implements ExternalShipper {
                                     counter++;
                                     logger.info("Updated confirmation information for : " + kitRequest.getDsmKitRequestId());
                                 }
+                            }
+                            else {
+                                logger.info("No kit requests found for kit with order number: " + confirmation.getOrderNumber());
                             }
                         }
                     }
