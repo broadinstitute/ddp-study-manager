@@ -1,7 +1,10 @@
 package org.broadinstitute.dsm.model.gbf;
+import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.bind.annotation.XmlElement;
 
+@Data
 public class Address {
 
     @XmlElement(name="Company")
@@ -33,6 +36,7 @@ public class Address {
 
     public Address(String company, String addressLine1, String addressLine2, String city, String state, String zipCode,
                    String country, String phoneNumber) {
+
         this.company = company;
         this.addressLine1 = addressLine1;
         this.addressLine2 = addressLine2;
@@ -41,5 +45,12 @@ public class Address {
         this.zipCode = zipCode;
         this.country = country;
         this.phoneNumber = phoneNumber;
+
+    }
+    public boolean isComplete(){
+        return  StringUtils.isNotBlank(this.company) && StringUtils.isNotBlank(this.addressLine1) &&
+                StringUtils.isNotBlank(city) && StringUtils.isNotBlank(this.state) &&
+                StringUtils.isNotBlank(zipCode) && StringUtils.isNotBlank(country) &&
+                StringUtils.isNotBlank(phoneNumber);
     }
 }

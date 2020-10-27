@@ -129,7 +129,11 @@ public class GBFRequestUtil implements ExternalShipper {
                             kitRequestSettings.getPhone());
 
                 }
-                if (address != null) {
+                if (!address.isComplete()) {
+                    logger.error("Address is not complete for kit with external order number " + kit.getExternalOrderNumber());
+                    continue;
+                }
+                else if (address != null) {
                     ShippingInfo shippingInfo = new ShippingInfo(kitRequestSettings.getCarrierToAccountNumber(), kitRequestSettings.getServiceTo(), address);
                     List<LineItem> lineItems = new ArrayList<>();
                     lineItems.add(new LineItem(kitRequestSettings.getExternalShipperKitName(), "1"));
