@@ -55,6 +55,7 @@ public class UPSTrackingJob implements Job {
     private static final String PICKUP = "P";
     private static final String IN_TRANSIT = "I";
     private static final String DELIVERY = "D";
+    private static final String LABEL_CREATED = "M";
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -234,8 +235,9 @@ public class UPSTrackingJob implements Job {
         }
     }
 
-    private static boolean shouldMakeCEOrder(String oldType, String statusType) {
-        return !(PICKUP.equals(oldType)) && !(IN_TRANSIT.equals(oldType)) && (PICKUP.equals(statusType) || IN_TRANSIT.equals(statusType));
+    private static boolean shouldMakeCEOrder(String oldType, String newType) {
+        return (!(PICKUP.equals(oldType)) && !(IN_TRANSIT.equals(oldType)) && (PICKUP.equals(newType) || IN_TRANSIT.equals(newType)))
+                || (LABEL_CREATED.equals(oldType) && (OUT_FOR_DELIVERY.equals(newType) || DELIVERY.equals(newType)));
     }
 
 
