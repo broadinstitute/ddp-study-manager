@@ -4,7 +4,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.bind.annotation.XmlElement;
 
-@Data
 public class Address {
 
     @XmlElement(name="Company")
@@ -49,8 +48,8 @@ public class Address {
     }
     public boolean isComplete(){
         return  StringUtils.isNotBlank(this.company) && StringUtils.isNotBlank(this.addressLine1) &&
-                StringUtils.isNotBlank(city) && StringUtils.isNotBlank(this.state) &&
-                StringUtils.isNotBlank(zipCode) && StringUtils.isNotBlank(country) &&
-                StringUtils.isNotBlank(phoneNumber);
+                StringUtils.isNotBlank(this.city) && StringUtils.isNotBlank(this.state) &&
+                StringUtils.isNotBlank(this.zipCode) && StringUtils.isNotBlank(this.country) &&
+                StringUtils.isNotBlank(this.phoneNumber);
     }
 }

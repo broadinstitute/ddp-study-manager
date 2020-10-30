@@ -6,7 +6,6 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.fluent.Executor;
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.util.Utility;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
