@@ -209,7 +209,7 @@ public class UPSTrackingJob implements Job {
             }
             else {
                 //if picked up place order
-                if (shouldMakeCEOrder(oldType, statusType) && !kit.isCEOrdered()) {
+                if (shouldMakeCEOrder(statusType) && !kit.isCEOrdered()) {
                     Instant now = Instant.now();
                     orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), now);
                     logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
@@ -235,9 +235,8 @@ public class UPSTrackingJob implements Job {
         }
     }
 
-    private static boolean shouldMakeCEOrder(String oldType, String newType) {
-        return (!(PICKUP.equals(oldType)) && !(IN_TRANSIT.equals(oldType)) && (PICKUP.equals(newType) || IN_TRANSIT.equals(newType)))
-                || (LABEL_CREATED.equals(oldType) && (OUT_FOR_DELIVERY.equals(newType) || DELIVERY.equals(newType)));
+    private static boolean shouldMakeCEOrder( String newType) {
+        return (!LABEL_CREATED.equals(newType));
     }
 
 
