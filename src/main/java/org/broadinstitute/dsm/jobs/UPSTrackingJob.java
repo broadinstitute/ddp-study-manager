@@ -55,6 +55,7 @@ public class UPSTrackingJob implements Job {
     private static final String PICKUP = "P";
     private static final String IN_TRANSIT = "I";
     private static final String DELIVERY = "D";
+    private static final String LABEL_CREATED = "M";
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -208,7 +209,7 @@ public class UPSTrackingJob implements Job {
             }
             else {
                 //if picked up place order
-                if (shouldMakeCEOrder(oldType, statusType) && !kit.isCEOrdered()) {
+                if (shouldMakeCEOrder(statusType) && !kit.isCEOrdered()) {
                     Instant now = Instant.now();
                     orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), now);
                     logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
@@ -234,8 +235,8 @@ public class UPSTrackingJob implements Job {
         }
     }
 
-    private static boolean shouldMakeCEOrder(String oldType, String statusType) {
-        return !(PICKUP.equals(oldType)) && !(IN_TRANSIT.equals(oldType)) && (PICKUP.equals(statusType) || IN_TRANSIT.equals(statusType));
+    private static boolean shouldMakeCEOrder( String newType) {
+        return (!LABEL_CREATED.equals(newType));
     }
 
 
