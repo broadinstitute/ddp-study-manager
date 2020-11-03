@@ -6,7 +6,6 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.fluent.Executor;
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.util.Utility;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
@@ -129,7 +128,11 @@ public class GBFRequestUtil implements ExternalShipper {
                             kitRequestSettings.getPhone());
 
                 }
-                if (address != null) {
+                if (!address.isComplete()) {
+                    logger.error("Address is not complete for kit with external order number " + kit.getExternalOrderNumber());
+                    continue;
+                }
+                else if (address != null) {
                     ShippingInfo shippingInfo = new ShippingInfo(kitRequestSettings.getCarrierToAccountNumber(), kitRequestSettings.getServiceTo(), address);
                     List<LineItem> lineItems = new ArrayList<>();
                     lineItems.add(new LineItem(kitRequestSettings.getExternalShipperKitName(), "1"));
