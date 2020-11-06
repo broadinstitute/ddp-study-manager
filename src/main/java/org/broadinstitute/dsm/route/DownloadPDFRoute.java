@@ -19,7 +19,6 @@ import org.broadinstitute.dsm.files.PDFProcessor;
 import org.broadinstitute.dsm.files.RequestPDFProcessor;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
-import org.broadinstitute.dsm.model.mbc.MBCParticipant;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.*;
 import org.broadinstitute.dsm.util.*;
@@ -259,15 +258,9 @@ public class DownloadPDFRoute extends RequestHandler {
                             }
                         }
                     }
+                    //get information from ddp
+                    addDDPParticipantDataToValueMap(ddpInstance, ddpParticipantId, valueMap, true);
 
-                    if (ddpInstance.isHasRole()) {
-                        //get information from ddp db
-                        addMBCParticipantDataToValueMap(ddpParticipantId, valueMap, true);
-                    }
-                    else {
-                        //get information from ddp
-                        addDDPParticipantDataToValueMap(ddpInstance, ddpParticipantId, valueMap, true);
-                    }
                     valueMap.put(CoverPDFProcessor.START_DATE_2, StringUtils.isNotBlank(startDate) ? startDate : valueMap.get(CoverPDFProcessor.FIELD_DATE_OF_DIAGNOSIS)); //start date
                     InputStream stream = null;
                     try {
@@ -304,14 +297,7 @@ public class DownloadPDFRoute extends RequestHandler {
                     valueMap.put(RequestPDFProcessor.FIELD_DATE, today);
                     valueMap.put(RequestPDFProcessor.FIELD_DATE_2, "(" + today + ")");
 
-                    if (ddpInstance.isHasRole()) {
-                        //get information from ddp db
-                        addMBCParticipantDataToValueMap(ddpParticipantId, valueMap, false);
-                    }
-                    else {
-                        //get information from ddp
-                        addDDPParticipantDataToValueMap(ddpInstance, ddpParticipantId, valueMap, false);
-                    }
+                    addDDPParticipantDataToValueMap(ddpInstance, ddpParticipantId, valueMap, false);
                     InputStream stream = null;
                     try {
                         int counter = 0;
@@ -493,46 +479,6 @@ public class DownloadPDFRoute extends RequestHandler {
                 valueMap.put(CoverPDFProcessor.FIELD_DATE_OF_DIAGNOSIS, medicalInfo.getDateOfDiagnosis());
             }
         }
-    }
-
-    private void addMBCParticipantDataToValueMap(@NonNull String ddpParticipantId,
-                                                 @NonNull Map<String, Object> valueMap, boolean addDateOfDiagnosis) {
-
-        MBCParticipant mbcParticipant = DSMServer.getMbcParticipants().get(ddpParticipantId);
-        if (mbcParticipant != null) {
-            String fullName = mbcParticipant.getFirstName() + " " +
-                    mbcParticipant.getLastName();
-
-            //fill fields of pdf (needs to match the fields in template!)
-            valueMap.put(CoverPDFProcessor.FIELD_FULL_NAME, fullName);
-            String dob = "";
-            String consentDOB = mbcParticipant.getDOBConsent();
-            String bloodDOB = mbcParticipant.getDOBBlood();
-            if (StringUtils.isNotBlank(consentDOB)) {
-                dob = consentDOB;
-            }
-            else if (StringUtils.isNotBlank(bloodDOB)) {
-                dob = bloodDOB;
-            }
-            dob = SystemUtil.changeDateFormat(SystemUtil.DATE_FORMAT, SystemUtil.US_DATE_FORMAT, dob);
-            valueMap.put(CoverPDFProcessor.FIELD_DATE_OF_BIRTH, dob);
-
-            if (addDateOfDiagnosis) {
-                String diagnosed = "0/0";
-                String diagnosedYear = mbcParticipant.getDiagnosedYear();
-                String diagnosedMonth = mbcParticipant.getDiagnosedMonth();
-                if (StringUtils.isNotBlank(diagnosedYear)) {
-                    if (StringUtils.isNotBlank(diagnosedMonth)) {
-                        diagnosed = diagnosedMonth + "/" + diagnosedYear;
-                    }
-                    else {
-                        diagnosed = diagnosedYear;
-                    }
-                }
-                valueMap.put(CoverPDFProcessor.FIELD_DATE_OF_DIAGNOSIS, diagnosed);
-            }
-        }
-
     }
 
     public class InstanceWithDDPParticipantId {

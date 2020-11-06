@@ -14,7 +14,6 @@ import org.broadinstitute.dsm.util.AbstractionUtil;
 import org.broadinstitute.dsm.util.KitUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.broadinstitute.dsm.util.UserUtil;
-import org.jruby.embed.ScriptingContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.QueryParamsMap;
@@ -43,14 +42,8 @@ public class DashboardRoute extends RequestHandler {
 
     private final KitUtil kitUtil;
 
-    private ScriptingContainer container;
-    private Object receiver;
-
-    public DashboardRoute(@NonNull KitUtil kitUtil, @NonNull ScriptingContainer container,
-                          @NonNull Object receiver) {
+    public DashboardRoute(@NonNull KitUtil kitUtil) {
         this.kitUtil = kitUtil;
-        this.container = container;
-        this.receiver = receiver;
     }
 
     @Override

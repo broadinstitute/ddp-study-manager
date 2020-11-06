@@ -866,6 +866,7 @@ public class DBTestUtil {
         String columnName = getQueryDetail(columnQuery, settingId, "column_name");
         String columnDisplay = getQueryDetail(columnQuery, settingId, "column_display");
         String displayType = getQueryDetail(columnQuery, settingId, "display_type");
+        String orderNumber = getQueryDetail(columnQuery, settingId, "order_number");
 
         List<Value> possibleValues;
         String possibleValuesString = getQueryDetail(columnQuery, settingId, "possible_values");
@@ -884,7 +885,7 @@ public class DBTestUtil {
             deleted = true;
         }
 
-        FieldSettings setting = new FieldSettings(settingId, columnName, columnDisplay, fieldType, displayType, possibleValues);
+        FieldSettings setting = new FieldSettings(settingId, columnName, columnDisplay, fieldType, displayType, possibleValues, new Integer(orderNumber).intValue());
         setting.setDeleted(deleted);
         checkSettingMatch(setting, expectedFieldType, expectedColumnDisplay, expectedColumnName, expectedDisplayType,
                 expectedPossibleValues, expectedDeleted, "setting with id " + settingId);

@@ -11,9 +11,6 @@ import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.model.FollowUp;
-import org.broadinstitute.dsm.model.mbc.MBCHospital;
-import org.broadinstitute.dsm.model.mbc.MBCInstitution;
-import org.broadinstitute.dsm.model.mbc.MBCParticipant;
 import org.broadinstitute.dsm.statics.*;
 import org.broadinstitute.dsm.util.DBUtil;
 import org.broadinstitute.dsm.util.DDPRequestUtil;
@@ -461,77 +458,6 @@ public class MedicalRecord {
         catch (IOException e) {
             throw new RuntimeException("Couldn't get participants and institutions for ddpInstance " + ddpInstance.getName(), e);
         }
-    }
-
-    public static MedicalInfo getInstitutionInfoFromDB(@NonNull String realm, @NonNull String ddpParticipantId) {
-        MedicalInfo medicalInfo = new MedicalInfo();
-        Map<String, MBCInstitution> mbcInstitutions = DSMServer.getMbcInstitutions();
-        Map<String, MBCHospital> mbcHospitals = DSMServer.getMbcHospitals();
-        Map<String, MBCParticipant> mbcParticipants = DSMServer.getMbcParticipants();
-        MBCParticipant mbcParticipant = mbcParticipants.get(ddpParticipantId);
-        if (mbcParticipant != null && mbcInstitutions != null && !mbcInstitutions.isEmpty()) {
-            logger.info(mbcInstitutions.size() + " institutions in MBC cached list");
-            logger.info(mbcHospitals.size() + " hospitals in MBC cached list");
-            ArrayList<InstitutionDetail> institutionDetails = new ArrayList<>();
-            List<MedicalRecord> medicalRecords = getInstitutions(realm, ddpParticipantId);
-            Integer tissueConsent = null;
-            for (MedicalRecord medicalRecord : medicalRecords) {
-                if (StringUtils.isNotBlank(medicalRecord.getType())) {
-                    if (MBCInstitution.PHYSICIAN.equals(medicalRecord.getType())) {
-                        MBCInstitution mbcInstitution = mbcInstitutions.get(medicalRecord.getDdpInstitutionId());
-                        if (mbcInstitution != null) {
-                            InstitutionDetail institutionDetail = new InstitutionDetail(mbcInstitution.getPhysicianId(),
-                                    mbcInstitution.getName(), mbcInstitution.getInstitution(), mbcInstitution.getCity(),
-                                    mbcInstitution.getState(), medicalRecord.getType());
-                            institutionDetails.add(institutionDetail);
-                            if (tissueConsent == null || tissueConsent == 1) {
-                                //TODO how to handle if it changed?
-                                tissueConsent = (!mbcInstitution.isFromBloodRelease()) ? 1 : 0;
-                            }
-                        }
-                    }
-                    else {
-                        MBCHospital mbcHospital = mbcHospitals.get(medicalRecord.getDdpInstitutionId());
-                        if (mbcHospital != null) {
-                            InstitutionDetail institutionDetail = new InstitutionDetail(mbcHospital.getHospitalId(),
-                                    null, mbcHospital.getName(), mbcHospital.getCity(),
-                                    mbcHospital.getState(), medicalRecord.getType());
-                            institutionDetails.add(institutionDetail);
-                        }
-                    }
-                }
-            }
-
-            String dob = "";
-            String consentDOB = mbcParticipant.getDOBConsent();
-            String bloodDOB = mbcParticipant.getDOBBlood();
-            if (StringUtils.isNotBlank(consentDOB)) {
-                dob = consentDOB;
-            }
-            else if (StringUtils.isNotBlank(bloodDOB)) {
-                dob = bloodDOB;
-            }
-            medicalInfo.setDob(dob);
-            String diagnosed = "0/0";
-            String diagnosedYear = mbcParticipant.getDiagnosedYear();
-            String diagnosedMonth = mbcParticipant.getDiagnosedMonth();
-            if (StringUtils.isNotBlank(diagnosedYear)) {
-                if (StringUtils.isNotBlank(diagnosedMonth)) {
-                    diagnosed = diagnosedMonth + "/" + diagnosedYear;
-                }
-                else {
-                    diagnosed = diagnosedYear;
-                }
-            }
-            medicalInfo.setDateOfDiagnosis(diagnosed);
-            medicalInfo.setInstitutions(institutionDetails);
-            medicalInfo.setDrawBloodConsent(1);
-            medicalInfo.setTissueSampleConsent(tissueConsent);
-        }
-        else {
-            logger.info("No information of participant in cache " + ddpParticipantId);
-        }
-        return medicalInfo;
     }
 
     public static List<MedicalRecord> getInstitutions(@NonNull String realm, @NonNull String ddpParticipantId) {

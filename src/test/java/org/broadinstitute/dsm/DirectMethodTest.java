@@ -107,9 +107,10 @@ public class DirectMethodTest extends TestHelper {
                                                                              @NonNull String fieldType,
                                                                              @NonNull String displayType,
                                                                              List<Value> possibleValues,
+                                                                             int orderNumber,
                                                                              boolean deleted) {
         FieldSettings setting = new FieldSettings(settingId, columnName, columnDisplay, fieldType, displayType,
-                possibleValues);
+                possibleValues, orderNumber);
         if (settingId != null && deleted) {
             setting.setDeleted(true);
         }
@@ -133,13 +134,13 @@ public class DirectMethodTest extends TestHelper {
         //Create some example settings
         Map<String, Collection<FieldSettings>> oncSettingsLists = constructFieldSettingsMap(null,
                 "customOncName", "customOncDisplay", "oD",
-                "textarea", null, false);
+                "textarea", null, 1, false);
         List<Value> options = new ArrayList<>();
         options.add(new Value("tissueo1"));
         options.add(new Value("tissueo2"));
         Map<String, Collection<FieldSettings>> tissueSettingsLists = constructFieldSettingsMap(null,
                 "customTissueName", "customTissueDisplay", "t",
-                "multiselect", options, false);
+                "multiselect", options, 1, false);
 
         //Use setFieldSettings to add the onc history setting
         FieldSettings.saveFieldSettings(TEST_DDP, oncSettingsLists, "TEST_USER");
@@ -180,7 +181,7 @@ public class DirectMethodTest extends TestHelper {
 
         //Update the onc history setting by changing the display name
         oncSettingsLists = constructFieldSettingsMap(oncId, "customOncName", "new onc display",
-                "oD", "textarea", null, false);
+                "oD", "textarea", null, 2, false);
         FieldSettings.saveFieldSettings(TEST_DDP, oncSettingsLists, "TEST_USER");
 
         //Check the table to make sure it got updated correctly
@@ -190,7 +191,7 @@ public class DirectMethodTest extends TestHelper {
 
         //"Update" the tissue setting by setting deleted to true
         tissueSettingsLists = constructFieldSettingsMap(tissueId, "customTissueName", "customTissueDisplay",
-                "t", "multiselect", options, true);
+                "t", "multiselect", options, 2, true);
         FieldSettings.saveFieldSettings(TEST_DDP, tissueSettingsLists, "TEST_USER");
 
         //Make sure it was effectively deleted

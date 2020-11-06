@@ -44,12 +44,7 @@ public class InstitutionRoute extends RequestHandler {
                     if (StringUtils.isNotBlank(ddpParticipantId) && StringUtils.isNotBlank(realm)) {
                         DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRoleByDDPParticipantAndRealm(realm, ddpParticipantId, DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
                         if (ddpInstance != null) {
-                            if (!ddpInstance.isHasRole()) { // if ddp does not have info in db (all others except mbc)
-                                return MedicalRecord.getDDPInstitutionInfo(ddpInstance, ddpParticipantId);
-                            }
-                            else { //mbc (get institution information from db)
-                                return MedicalRecord.getInstitutionInfoFromDB(realm, ddpParticipantId);
-                            }
+                            return MedicalRecord.getDDPInstitutionInfo(ddpInstance, ddpParticipantId);
                         }
                     }
                     logger.warn("Error missing ddpParticipantId " + ddpParticipantId + " or realm " + realm + " w/ userId " + user);
