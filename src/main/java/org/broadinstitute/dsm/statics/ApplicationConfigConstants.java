@@ -114,12 +114,6 @@ public class ApplicationConfigConstants {
     public static final String UPDATE_KIT_DISCARD = "portal.updateKitDiscard";
     public static final String SET_USER_CONFIRMED = "portal.userConfirmed";
 
-    public static final String GET_NEW_PHYSICIANS_MBC = "mbc.selectNewPhysicians";
-    public static final String GET_NEW_HOSPITALS_MBC = "mbc.selectNewHospital";
-    public static final String GET_ALL_PHYSICIAN_MBC = "mbc.selectAllPhysicians";
-    public static final String GET_ALL_HOSPITALS_MBC = "mbc.selectAllHospitals";
-    public static final String GET_PARTICIPANTS_MBC = "mbc.selectParticipants";
-
     public static final String PREFERRED_SOURCE_IP_HEADER = "preferredSourceIPHeader";
     public static final String BOOT_TIMEOUT = "bootTimeout";
 
