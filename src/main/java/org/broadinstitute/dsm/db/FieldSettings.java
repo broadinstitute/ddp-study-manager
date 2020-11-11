@@ -24,12 +24,12 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 @Data
 public class FieldSettings {
     public static final String GET_FIELD_SETTINGS = "SELECT setting.field_settings_id, setting.column_name, " +
-            "setting.column_display, setting.field_type, setting.display_type, setting.possible_values FROM field_settings setting, ddp_instance realm WHERE " +
-            "realm.ddp_instance_id = setting.ddp_instance_id AND NOT (setting.deleted <=>1) AND realm.instance_name=?";
+            "setting.column_display, setting.field_type, setting.display_type, setting.possible_values, setting.order_number FROM field_settings setting, ddp_instance realm WHERE " +
+            "realm.ddp_instance_id = setting.ddp_instance_id AND NOT (setting.deleted <=>1) AND realm.instance_name=? ORDER BY order_number asc";
     public static final String UPDATE_FIELD_SETTINGS_TABLE = "UPDATE field_settings SET column_name = ?, " +
-            "column_display = ?, deleted = ?, field_type = ?, display_type = ?, possible_values = ?, changed_by = ?, last_changed = ? WHERE field_settings_id = ?";
+            "column_display = ?, deleted = ?, field_type = ?, display_type = ?, possible_values = ?, order_number = ?, changed_by = ?, last_changed = ? WHERE field_settings_id = ?";
     public static final String INSERT_FIELD_SETTINGS = "INSERT INTO field_settings SET column_name = ?, " +
-            "column_display = ?, field_type = ?, display_type = ?, possible_values = ?, ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance " +
+            "column_display = ?, field_type = ?, display_type = ?, possible_values = ?, order_number = ?, ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance " +
             "WHERE instance_name = ?), changed_by = ?, last_changed = ?";
 
     private static final Logger logger = LoggerFactory.getLogger(FieldSettings.class);
@@ -40,14 +40,16 @@ public class FieldSettings {
     private final List<Value> possibleValues; //Value of possible_values for the setting
     private boolean deleted; //Value of deleted for the setting
     private final String fieldType; //Value of field_type for the setting
+    private final int orderNumber; //Value of field_type for the setting
 
-    public FieldSettings(String fieldSettingId, String columnName, String columnDisplay, String fieldType, String displayType, List<Value> possibleValues) {
+    public FieldSettings(String fieldSettingId, String columnName, String columnDisplay, String fieldType, String displayType, List<Value> possibleValues, int orderNumber) {
         this.fieldSettingId = fieldSettingId;
         this.columnName = columnName;
         this.columnDisplay = columnDisplay;
         this.fieldType = fieldType;
         this.displayType = displayType;
         this.possibleValues = possibleValues;
+        this.orderNumber = orderNumber;
     }
 
     /**
@@ -71,7 +73,8 @@ public class FieldSettings {
                         String type = rs.getString(DBConstants.FIELD_TYPE);
                         FieldSettings setting = new FieldSettings(rs.getString(DBConstants.FIELD_SETTING_ID),
                                 rs.getString(DBConstants.COLUMN_NAME), rs.getString(DBConstants.COLUMN_DISPLAY),
-                                type, rs.getString(DBConstants.DISPLAY_TYPE), possibleValues);
+                                type, rs.getString(DBConstants.DISPLAY_TYPE), possibleValues,
+                                rs.getInt(DBConstants.ORDER_NUMBER));
                         if (fieldSettingsList.containsKey(type)){
                             // If we have already found settings with this field_type, add this
                             // setting to the list of settings with this field_type
@@ -169,9 +172,10 @@ public class FieldSettings {
                 else {
                     stmt.setString(6, null);
                 }
-                stmt.setString(7, userId);
-                stmt.setLong(8, System.currentTimeMillis());
-                stmt.setString(9, fieldSetting.getFieldSettingId());
+                stmt.setInt(7, fieldSetting.getOrderNumber());
+                stmt.setString(8, userId);
+                stmt.setLong(9, System.currentTimeMillis());
+                stmt.setString(10, fieldSetting.getFieldSettingId());
                 int result = stmt.executeUpdate();
                 if (result == 1){
                     logger.info("Updated field setting with id " + fieldSettingId);
@@ -201,10 +205,16 @@ public class FieldSettings {
                 stmt.setString(2, fieldSetting.getColumnDisplay());
                 stmt.setString(3, fieldSetting.getFieldType());
                 stmt.setString(4, fieldSetting.getDisplayType());
-                stmt.setString(5, possibleValues != null && !"null".equals(possibleValues) ? possibleValues : null);
-                stmt.setString(6, realm);
-                stmt.setString(7, userId);
-                stmt.setLong(8, System.currentTimeMillis());
+                if (fieldSetting.getPossibleValues() != null && fieldSetting.getPossibleValues().size() > 0) {
+                    stmt.setString(5, possibleValues != null && !"null".equals(possibleValues) ? possibleValues : null);
+                }
+                else {
+                    stmt.setString(5, null);
+                }
+                stmt.setInt(6, fieldSetting.getOrderNumber());
+                stmt.setString(7, realm);
+                stmt.setString(8, userId);
+                stmt.setLong(9, System.currentTimeMillis());
                 int result = stmt.executeUpdate();
                 if (result == 1){
                     logger.info("Added new setting for " + realm);

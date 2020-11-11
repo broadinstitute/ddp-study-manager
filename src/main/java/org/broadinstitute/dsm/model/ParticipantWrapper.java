@@ -29,10 +29,11 @@ public class ParticipantWrapper {
     private List<KitRequestShipping> kits;
     private List<AbstractionActivity> abstractionActivities;
     private List<AbstractionGroup> abstractionSummary;
+    private List<ParticipantData> participantData;
 
     public ParticipantWrapper(Map<String, Object> data, Participant participant, List<MedicalRecord> medicalRecords,
                               List<OncHistoryDetail> oncHistoryDetails, List<KitRequestShipping> kits, List<AbstractionActivity> abstractionActivities,
-                              List<AbstractionGroup> abstractionSummary) {
+                              List<AbstractionGroup> abstractionSummary, List<ParticipantData> participantData) {
         this.data = data;
         this.participant = participant;
         this.medicalRecords = medicalRecords;
@@ -40,6 +41,7 @@ public class ParticipantWrapper {
         this.kits = kits;
         this.abstractionActivities = abstractionActivities;
         this.abstractionSummary = abstractionSummary;
+        this.participantData = participantData;
     }
 
     public JsonObject getDataAsJson() {
@@ -56,6 +58,7 @@ public class ParticipantWrapper {
             Map<String, List<KitRequestShipping>> kitRequests = KitRequestShipping.getKitRequests(instance.getName());
             Map<String, List<AbstractionActivity>> abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName());
             Map<String, List<AbstractionGroup>> abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName());
+            Map<String, List<ParticipantData>> participantData = ParticipantData.getParticipantData(instance.getName());
 
             //baselist should be not gen2/mbc db
             List<String> baseList = null;
@@ -66,7 +69,7 @@ public class ParticipantWrapper {
                 baseList = new ArrayList<>(participants.keySet());
             }
 
-            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary);
+            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, participantData);
             return r;
         }
         else {
@@ -78,6 +81,7 @@ public class ParticipantWrapper {
             Map<String, List<KitRequestShipping>> kitRequests = null;
             Map<String, List<AbstractionActivity>> abstractionActivities = null;
             Map<String, List<AbstractionGroup>> abstractionSummary = null;
+            Map<String, List<ParticipantData>> participantData = null;
             List<String> baseList = null;
             //filter the lists depending on filter
             for (String source : filters.keySet()) {
@@ -101,6 +105,10 @@ public class ParticipantWrapper {
                     else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
                         abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName(), filters.get(source));
                         baseList = getCommonEntries(baseList, new ArrayList<>(abstractionActivities.keySet()));
+                    }
+                    else if (DBConstants.DDP_PARTICIPANT_DATA_ALIAS.equals(source)) {
+                        participantData = ParticipantData.getParticipantData(instance.getName(), filters.get(source));
+                        baseList = getCommonEntries(baseList, new ArrayList<>(participantData.keySet()));
                     }
                     //                else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
                     //                    abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName(), filters.get(source));
@@ -134,6 +142,9 @@ public class ParticipantWrapper {
             if (abstractionSummary == null) {
                 abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName());
             }
+            if (participantData == null) {
+                participantData = ParticipantData.getParticipantData(instance.getName());
+            }
             //baselist should be not gen2/mbc db
             if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
                 baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
@@ -142,8 +153,8 @@ public class ParticipantWrapper {
                 baseList = getCommonEntries(baseList, new ArrayList<>(participants.keySet()));
             }
             //bring together all the information
-
-            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistories, kitRequests, abstractionActivities, abstractionSummary);
+            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistories, kitRequests,
+                    abstractionActivities, abstractionSummary, participantData);
             return r;
         }
     }
@@ -171,18 +182,20 @@ public class ParticipantWrapper {
     public static List<ParticipantWrapper> addAllData(List<String> baseList, Map<String, Map<String, Object>> esDataMap,
                                                       Map<String, Participant> participantMap, Map<String, List<MedicalRecord>> medicalRecordMap,
                                                       Map<String, List<OncHistoryDetail>> oncHistoryMap, Map<String, List<KitRequestShipping>> kitRequestMap,
-                                                      Map<String, List<AbstractionActivity>> abstractionActivityMap, Map<String, List<AbstractionGroup>> abstractionSummary) {
+                                                      Map<String, List<AbstractionActivity>> abstractionActivityMap, Map<String, List<AbstractionGroup>> abstractionSummary,
+                                                      Map<String, List<ParticipantData>> participantData) {
         List<ParticipantWrapper> participantList = new ArrayList<>();
         for (String ddpParticipantId : baseList) {
             Participant participant = participantMap != null ? participantMap.get(ddpParticipantId) : null;
-            Map<String, Object> participantData = esDataMap.get(ddpParticipantId);
-            if (participantData != null) {
-                participantList.add(new ParticipantWrapper(participantData, participant,
+            Map<String, Object> participantESData = esDataMap.get(ddpParticipantId);
+            if (participantESData != null) {
+                participantList.add(new ParticipantWrapper(participantESData, participant,
                         medicalRecordMap != null ? medicalRecordMap.get(ddpParticipantId) : null,
                         oncHistoryMap != null ? oncHistoryMap.get(ddpParticipantId) : null,
                         kitRequestMap != null ? kitRequestMap.get(ddpParticipantId) : null,
                         abstractionActivityMap != null ? abstractionActivityMap.get(ddpParticipantId) : null,
-                        abstractionSummary != null ? abstractionSummary.get(ddpParticipantId) : null));
+                        abstractionSummary != null ? abstractionSummary.get(ddpParticipantId) : null,
+                        participantData != null ? participantData.get(ddpParticipantId) : null));
             }
         }
         logger.info("Returning list w/ " + participantList.size() + " pts now");
