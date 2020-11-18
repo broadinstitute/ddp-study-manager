@@ -273,6 +273,7 @@ public class GBFRequestUtil implements ExternalShipper {
             ShippingConfirmations shippingConfirmations = objectFromXMLString(ShippingConfirmations.class, gbfResponse.getXML());
             if (shippingConfirmations != null) {
                 List<ShippingConfirmation> confirmationList = shippingConfirmations.getShippingConfirmations();
+                logger.info("Number of confirmations received: "+confirmationList.size());
                 if (confirmationList != null && !confirmationList.isEmpty()) {
                     for (ShippingConfirmation confirmation : confirmationList) {
                         //update external shipper response at request
