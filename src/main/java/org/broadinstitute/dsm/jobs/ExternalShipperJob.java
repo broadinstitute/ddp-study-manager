@@ -35,7 +35,7 @@ public class ExternalShipperJob implements Job {
                     if (CronExpression.isValidExpression(additionalCronExpression)) {
                         CronExpression cron = new CronExpression(additionalCronExpression);
                         if (cron.isSatisfiedBy(context.getFireTime())) {
-                            long lastRun = DBUtil.getBookmark(DBConstants.GBF_CONFIRMATION);
+                            long lastRun = 0L;//let's get all of them
                             long now = System.currentTimeMillis();
                             shipper.orderConfirmation(kitRequests, lastRun, now);
                         }
