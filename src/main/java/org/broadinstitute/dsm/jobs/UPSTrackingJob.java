@@ -13,7 +13,6 @@ import org.broadinstitute.dsm.util.DDPRequestUtil;
 import org.broadinstitute.dsm.util.EventUtil;
 import org.broadinstitute.dsm.util.KitUtil;
 import org.broadinstitute.dsm.util.NanoIdUtil;
-import org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -193,8 +192,7 @@ public class UPSTrackingJob implements Job {
         }
         else {
             if (!isReturn) {
-                //if delivered notif pepper
-                if (DELIVERY.equals(statusType) && !(DELIVERY.equals(oldType))) {
+                if (shouldTriggerKitDeliveryEvent(statusType, oldType)) {
                     KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_TRACKING_NUMBER, new String[] { DELIVERED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
                     if (kitDDPNotification != null) {
                         logger.info("Triggering DDP for delivered kit with external order number: " + kit.getExternalOrderNumber());
@@ -215,8 +213,7 @@ public class UPSTrackingJob implements Job {
                     logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
                     kit.changeCEOrdered(true);
                 }
-                //if delivered notify pepper for received
-                else if (statusType.equals(DELIVERY) && !(DELIVERY.equals(oldType))) {
+                else if (shouldTriggerKitDeliveryEvent(statusType, oldType)) {
                     KitUtil.setKitReceived(kit.getKitLabel());
                     logger.info("RECEIVED: " + trackingId);
                     KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { RECEIVED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
@@ -233,6 +230,15 @@ public class UPSTrackingJob implements Job {
             logger.info("Updated status of tracking number " + trackingId + " to " + upsUpdate + " from " + oldType);
 
         }
+    }
+
+    /**
+     * Determines whether or not a trigger should be sent to
+     * study-server to respond to kit being sent to participant
+     */
+    private static boolean shouldTriggerKitDeliveryEvent(String currentStatus, String previousStatus) {
+        List<String> triggerStates = Arrays.asList(DELIVERY, IN_TRANSIT);
+        return triggerStates.contains(currentStatus) && !triggerStates.contains(previousStatus);
     }
 
     private static boolean shouldMakeCEOrder( String newType) {
