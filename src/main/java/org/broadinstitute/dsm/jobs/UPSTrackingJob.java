@@ -52,8 +52,6 @@ public class UPSTrackingJob implements Job {
 
     private static final String OUT_FOR_DELIVERY = "O";
     private static final String PICKUP = "P";
-    private static final String IN_TRANSIT = "I";
-    private static final String DELIVERY = "D";
     private static final String LABEL_CREATED = "M";
 
     @Override
@@ -149,18 +147,19 @@ public class UPSTrackingJob implements Job {
                 if (upsPackages != null && upsPackages.length > 0) {
                     UPSPackage upsPackage = upsPackages[0];
                     UPSActivity activity = upsPackage.getActivity()[0];
+
                     if (activity != null) {
                         UPSStatus status = activity.getStatus();
                         if (status != null) {
                             String statusType = status.getType();
                             String statusDescription = status.getDescription();
-                            String date = activity.getDate() + " " + activity.getTime();
-                            if (!isReturn) {
-                                updateTrackingInfo(statusType, oldType, statusDescription, trackingId, date, SQL_UPDATE_UPS_TRACKING_STATUS, isReturn, kit);
+                            String date = activity.getDateTimeString();
+                            String sqlUpdate = SQL_UPDATE_UPS_TRACKING_STATUS;
+                            Instant earliestInTransitDate = upsPackage.getEarliestIndicationOfInTransit().getInstant();
+                            if (isReturn) {
+                                sqlUpdate = SQL_UPDATE_UPS_RETURN_STATUS;
                             }
-                            else {
-                                updateTrackingInfo(statusType, oldType, statusDescription, trackingId, date, SQL_UPDATE_UPS_RETURN_STATUS, isReturn, kit);
-                            }
+                            updateTrackingInfo(statusType, oldType, statusDescription, trackingId, date, sqlUpdate, isReturn, kit, earliestInTransitDate);
                         }
                     }
                 }
@@ -169,7 +168,15 @@ public class UPSTrackingJob implements Job {
     }
 
 
-    private static void updateTrackingInfo(String statusType, String oldType, String statusDescription, String trackingId, String date, String query, boolean isReturn, DdpKit kit) {
+    private static void updateTrackingInfo(String statusType,
+                                           String previousStatusType,
+                                           String statusDescription,
+                                           String trackingId,
+                                           String date,
+                                           String query,
+                                           boolean isReturn,
+                                           DdpKit kit,
+                                           Instant earliestInTransitTime) {
         String upsUpdate = statusType + " " + statusDescription;
         SimpleResult result = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -192,7 +199,7 @@ public class UPSTrackingJob implements Job {
         }
         else {
             if (!isReturn) {
-                if (shouldTriggerKitDeliveryEvent(statusType, oldType)) {
+                if (shouldTriggerKitDeliveryEvent(statusType, previousStatusType)) {
                     KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_TRACKING_NUMBER, new String[] { DELIVERED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
                     if (kitDDPNotification != null) {
                         logger.info("Triggering DDP for delivered kit with external order number: " + kit.getExternalOrderNumber());
@@ -208,12 +215,15 @@ public class UPSTrackingJob implements Job {
             else {
                 //if picked up place order
                 if (shouldMakeCEOrder(statusType) && !kit.isCEOrdered()) {
-                    Instant now = Instant.now();
-                    orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), now);
+                    Instant collectionDate = Instant.now();
+                    if (earliestInTransitTime != null) {
+                        collectionDate = earliestInTransitTime;
+                    }
+                    orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), collectionDate);
                     logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
                     kit.changeCEOrdered(true);
                 }
-                else if (shouldTriggerKitDeliveryEvent(statusType, oldType)) {
+                else if (shouldTriggerKitDeliveryEvent(statusType, previousStatusType)) {
                     KitUtil.setKitReceived(kit.getKitLabel());
                     logger.info("RECEIVED: " + trackingId);
                     KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { RECEIVED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
@@ -227,7 +237,7 @@ public class UPSTrackingJob implements Job {
                     }
                 }
             }
-            logger.info("Updated status of tracking number " + trackingId + " to " + upsUpdate + " from " + oldType);
+            logger.info("Updated status of tracking number " + trackingId + " to " + upsUpdate + " from " + previousStatusType);
 
         }
     }
@@ -237,7 +247,7 @@ public class UPSTrackingJob implements Job {
      * study-server to respond to kit being sent to participant
      */
     private static boolean shouldTriggerKitDeliveryEvent(String currentStatus, String previousStatus) {
-        List<String> triggerStates = Arrays.asList(DELIVERY, IN_TRANSIT);
+        List<String> triggerStates = Arrays.asList(UPSStatus.DELIVERED_CODE, UPSStatus.IN_TRANSIT_CODE);
         return triggerStates.contains(currentStatus) && !triggerStates.contains(previousStatus);
     }
 
