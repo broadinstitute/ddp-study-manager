@@ -185,7 +185,7 @@ public class UPSTrackingJob implements Job {
         }
         else {
             if (!isReturn) {
-                if (shouldTriggerKitOnItsWayToParticipant(statusType, previousStatusType)) {
+                if (shouldTriggerEventForKitOnItsWayToParticipant(statusType, oldType)) {
                     KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_TRACKING_NUMBER, new String[] { DELIVERED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
                     if (kitDDPNotification != null) {
                         logger.info("Triggering DDP for kit going to participant with external order number: " + kit.getExternalOrderNumber());
@@ -205,7 +205,7 @@ public class UPSTrackingJob implements Job {
                     logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
                     kit.changeCEOrdered(true);
                 }
-                if (shouldTriggerKitReturned(statusType, previousStatusType)) {
+                else if (shouldTriggerEventForReturnKitDelivery(statusType, oldType)) {
                     KitUtil.setKitReceived(kit.getKitLabel());
                     logger.info("RECEIVED: " + trackingId);
                     KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { RECEIVED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
@@ -228,17 +228,22 @@ public class UPSTrackingJob implements Job {
      * Determines whether or not a trigger should be sent to
      * study-server to respond to kit being sent to participant
      */
-    private static boolean shouldTriggerKitOnItsWayToParticipant(String currentStatus, String previousStatus) {
-        List<String> triggerStates = Arrays.asList(UPSStatus.DELIVERED_TYPE, UPSStatus.IN_TRANSIT_TYPE);
+    private static boolean shouldTriggerEventForKitOnItsWayToParticipant(String currentStatus, String previousStatus) {
+        List<String> triggerStates = Arrays.asList(DELIVERY, IN_TRANSIT);
         return triggerStates.contains(currentStatus) && !triggerStates.contains(previousStatus);
     }
 
     /**
      * Determines whether or not a trigger should be sent to
-     * study-server to respond to kit arriving back at Broad
+     * study-server to respond to kit being delivered back at broad
      */
-    private static boolean shouldTriggerKitReturned(String currentStatus, String previousStatus) {
-        return UPSStatus.isDelivery(currentStatus) && !UPSStatus.DELIVERED_TYPE.equals(previousStatus);
+    private static boolean shouldTriggerEventForReturnKitDelivery(String currentStatus, String previousStatus) {
+        List<String> triggerStates = Arrays.asList(DELIVERY);
+        return triggerStates.contains(currentStatus) && !triggerStates.contains(previousStatus);
+    }
+
+    private static boolean shouldMakeCEOrder( String newType) {
+        return (!LABEL_CREATED.equals(newType));
     }
 
     public static Map<String, Map<String, DdpKit>> getResultSet(String realm) {
