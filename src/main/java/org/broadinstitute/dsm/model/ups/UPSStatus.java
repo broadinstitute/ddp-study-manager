@@ -8,9 +8,13 @@ public class UPSStatus {
     String description;
     String code;
 
-    public static final String IN_TRANSIT_CODE = "I";
+    public static final String IN_TRANSIT_TYPE = "I";
 
-    public static final String DELIVERED_CODE = "D";
+    public static final String DELIVERED_TYPE = "D";
+
+    public static final String PICKUP_TYPE = "P";
+
+    public static final String OUT_FOR_DELIVERY_TYPE = "O";
 
     public UPSStatus() {}
 
@@ -20,11 +24,26 @@ public class UPSStatus {
         this.code = code;
     }
 
-    public boolean isInTransit() {
-        return IN_TRANSIT_CODE.equals(code);
+    public static boolean isDelivery(String status) {
+        return DELIVERED_TYPE.equals(status);
     }
 
-    public boolean isDelivered() {
-        return DELIVERED_CODE.equals(code);
+    /**
+     * Returns whether this status indicates physical
+     * movement of the package according to heuristics
+     * based on shipping history.
+     */
+    public boolean isOnItsWay() {
+        return IN_TRANSIT_TYPE.equals(type) ||
+                OUT_FOR_DELIVERY_TYPE.equals(type) ||
+                isDelivery(type);
+    }
+
+    public boolean isDelivery() {
+        return DELIVERED_TYPE.equals(type);
+    }
+
+    public boolean isPickup() {
+        return PICKUP_TYPE.equals(type);
     }
 }

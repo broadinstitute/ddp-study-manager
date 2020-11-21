@@ -32,13 +32,13 @@ public class UPSActivityTest {
 
     @Test
     public void testInTransit() {
-        Assert.assertTrue(inTransitActivity.isInTransit());
-        Assert.assertFalse(inTransitActivity.isDelivered());
+        Assert.assertTrue(inTransitActivity.isOnItsWay());
     }
 
     @Test
     public void testDelivered() {
-        Assert.assertFalse(deliveredActivity.isInTransit());
-        Assert.assertTrue(deliveredActivity.isDelivered());
+        Assert.assertTrue(deliveredActivity.isOnItsWay());
     }
+
+    // todo arz negative testing
 }

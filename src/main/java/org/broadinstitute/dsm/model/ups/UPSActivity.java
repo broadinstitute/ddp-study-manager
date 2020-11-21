@@ -3,7 +3,6 @@ package org.broadinstitute.dsm.model.ups;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.Date;
 
 import lombok.Data;
 
@@ -27,22 +26,36 @@ public class UPSActivity {
     }
 
     public Instant getInstant() {
-        Date theDate = null;
-        if (date != null) {
+        Instant eventTime = null;
+        String dateTime = getDateTimeString();
+        if (dateTime != null) {
             try {
-                theDate = new SimpleDateFormat("yyyyMMdd kkmmss").parse(getDateTimeString());
+                eventTime = new SimpleDateFormat("yyyyMMdd kkmmss").parse(dateTime).toInstant();
             } catch (ParseException e) {
                 throw new RuntimeException("Could parse date " + date + " to a proper date object", e);
             }
         }
-        return theDate.toInstant();
+        return eventTime;
     }
 
-    public boolean isInTransit() {
-        return status.isInTransit();
+    /**
+     * Convenience method for {@link UPSStatus#isOnItsWay()}
+     */
+    public boolean isOnItsWay() {
+        return status.isOnItsWay();
     }
 
-    public boolean isDelivered() {
-        return status.isDelivered();
+    /**
+     * Convenience method for {@link UPSStatus#isPickup()}
+     */
+    public boolean isPickup() {
+        return status.isPickup();
+    }
+
+    /**
+     * Convenience method for {@link UPSStatus#isDelivery(String)}
+     */
+    public boolean isDelivery() {
+        return status.isDelivery();
     }
 }
