@@ -192,7 +192,7 @@ public class UPSTrackingJob implements Job {
         }
         else {
             if (!isReturn) {
-                if (shouldTriggerKitDeliveryEvent(statusType, oldType)) {
+                if (shouldTriggerEventForKitOnItsWayToParticipant(statusType, oldType)) {
                     KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_TRACKING_NUMBER, new String[] { DELIVERED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
                     if (kitDDPNotification != null) {
                         logger.info("Triggering DDP for delivered kit with external order number: " + kit.getExternalOrderNumber());
@@ -213,7 +213,7 @@ public class UPSTrackingJob implements Job {
                     logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
                     kit.changeCEOrdered(true);
                 }
-                else if (shouldTriggerKitDeliveryEvent(statusType, oldType)) {
+                else if (shouldTriggerEventForReturnKitDelivery(statusType, oldType)) {
                     KitUtil.setKitReceived(kit.getKitLabel());
                     logger.info("RECEIVED: " + trackingId);
                     KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { RECEIVED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
@@ -236,8 +236,17 @@ public class UPSTrackingJob implements Job {
      * Determines whether or not a trigger should be sent to
      * study-server to respond to kit being sent to participant
      */
-    private static boolean shouldTriggerKitDeliveryEvent(String currentStatus, String previousStatus) {
+    private static boolean shouldTriggerEventForKitOnItsWayToParticipant(String currentStatus, String previousStatus) {
         List<String> triggerStates = Arrays.asList(DELIVERY, IN_TRANSIT);
+        return triggerStates.contains(currentStatus) && !triggerStates.contains(previousStatus);
+    }
+
+    /**
+     * Determines whether or not a trigger should be sent to
+     * study-server to respond to kit being delivered back at broad
+     */
+    private static boolean shouldTriggerEventForReturnKitDelivery(String currentStatus, String previousStatus) {
+        List<String> triggerStates = Arrays.asList(DELIVERY);
         return triggerStates.contains(currentStatus) && !triggerStates.contains(previousStatus);
     }
 
