@@ -13,6 +13,8 @@ public class UPSActivityTest {
 
     private UPSActivity deliveredActivity;
 
+    private UPSActivity labelGenerated = new UPSActivity(new UPSStatus("M","Printed some stuff","MO"), "20201117", "015327");
+
     @Before
     public void setUp() {
         inTransitActivity = new UPSActivity(new UPSStatus("I","On the way!","IX"), "20201113", "195327");
@@ -40,5 +42,8 @@ public class UPSActivityTest {
         Assert.assertTrue(deliveredActivity.isOnItsWay());
     }
 
-    // todo arz negative testing
+    @Test
+    public void testLabelGeneratedIsNotOnItsWay() {
+        Assert.assertFalse(labelGenerated.isOnItsWay());
+    }
 }
