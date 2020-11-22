@@ -51,11 +51,4 @@ public class UPSActivity {
     public boolean isPickup() {
         return status.isPickup();
     }
-
-    /**
-     * Convenience method for {@link UPSStatus#isDelivery(String)}
-     */
-    public boolean isDelivery() {
-        return status.isDelivery();
-    }
 }

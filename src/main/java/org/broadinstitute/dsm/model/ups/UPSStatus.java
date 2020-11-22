@@ -23,11 +23,6 @@ public class UPSStatus {
         this.description = description;
         this.code = code;
     }
-
-    public static boolean isDelivery(String status) {
-        return DELIVERED_TYPE.equals(status);
-    }
-
     /**
      * Returns whether this status indicates physical
      * movement of the package according to heuristics
@@ -36,7 +31,8 @@ public class UPSStatus {
     public boolean isOnItsWay() {
         return IN_TRANSIT_TYPE.equals(type) ||
                 OUT_FOR_DELIVERY_TYPE.equals(type) ||
-                isDelivery(type);
+                isDelivery() ||
+                isPickup();
     }
 
     public boolean isDelivery() {

@@ -7,23 +7,22 @@ public class UPSPackage {
     String trackingNumber;
     UPSActivity[] activity;
 
+    public UPSPackage() { }
+
+    public UPSPackage(String trackingNumber, UPSActivity[] activity) {
+        this.trackingNumber = trackingNumber;
+        this.activity = activity;
+    }
+
     /**
      * Gets the earliest {@link UPSActivity} that indicates
-     * actual package motion, such as in transit or delivery.
+     * actual package motion, such as pickup, transit or delivery.
      * Excludes prep steps like "We see there's a package
      * to be created" and exceptions.
      */
     public UPSActivity getEarliestPackageMovementEvent() {
-        UPSActivity earliestMovement = getEarliestFilterredEvent(UPSActivity::isOnItsWay);
-        if (earliestMovement == null) {
-            earliestMovement = getEarliestPickUp();
-        }
-        if (earliestMovement == null) {
-            earliestMovement = getEarliestDelivery();
-        }
-        return earliestMovement;
+        return getEarliestFilterredEvent(UPSActivity::isOnItsWay);
     }
-
 
     public UPSActivity getEarliestFilterredEvent(EventFilter filter) {
         UPSActivity earliestFilteredEvent = null;
@@ -37,14 +36,6 @@ public class UPSPackage {
             }
         }
         return earliestFilteredEvent;
-    }
-
-    public UPSActivity getEarliestPickUp() {
-        return getEarliestFilterredEvent(UPSActivity::isPickup);
-    }
-
-    public UPSActivity getEarliestDelivery() {
-        return getEarliestFilterredEvent(UPSActivity::isDelivery);
     }
 
     public String printActivity() {
@@ -61,5 +52,4 @@ public class UPSPackage {
     private interface EventFilter {
         boolean includeEvent(UPSActivity event);
     }
-
 }

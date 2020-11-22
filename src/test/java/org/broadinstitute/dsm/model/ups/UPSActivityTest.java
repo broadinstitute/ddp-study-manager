@@ -15,8 +15,8 @@ public class UPSActivityTest {
 
     @Before
     public void setUp() {
-        inTransitActivity = new UPSActivity(new UPSStatus("Coming Back","On the way!","I"), "20201113", "195327");
-        deliveredActivity = new UPSActivity(new UPSStatus("Done","You got it!","D"), "20201117", "015327");
+        inTransitActivity = new UPSActivity(new UPSStatus("I","On the way!","IX"), "20201113", "195327");
+        deliveredActivity = new UPSActivity(new UPSStatus("D","You got it!","DX"), "20201117", "015327");
     }
 
 
