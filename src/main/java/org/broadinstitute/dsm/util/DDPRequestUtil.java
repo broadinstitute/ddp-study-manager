@@ -335,9 +335,11 @@ public class DDPRequestUtil {
             list = DDPRequestUtil.getResponseObjectWithoutHeader(PreferredLanguage[].class, sendRequest, ddpInstance.getName());
         }
         catch (Exception ioe) {
-            throw new RuntimeException("Couldn't get preferred languages from " + sendRequest, ioe);
+            logger.error("Couldn't get preferred languages from " + sendRequest, ioe);
         }
-        return Arrays.asList(list.clone());
-
+        if (list != null) {
+            return Arrays.asList(list.clone());
+        }
+        return null;
     }
 }
