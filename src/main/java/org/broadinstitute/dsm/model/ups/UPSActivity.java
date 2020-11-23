@@ -1,8 +1,8 @@
 package org.broadinstitute.dsm.model.ups;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import lombok.Data;
 
@@ -25,15 +25,15 @@ public class UPSActivity {
         return date + " " + time;
     }
 
+    /**
+     * Returns the instant of this event.  Assumes New York
+     * time zone!
+     */
     public Instant getInstant() {
         Instant eventTime = null;
         String dateTime = getDateTimeString();
         if (dateTime != null) {
-            try {
-                eventTime = new SimpleDateFormat("yyyyMMdd kkmmss").parse(dateTime).toInstant();
-            } catch (ParseException e) {
-                throw new RuntimeException("Could parse date " + date + " to a proper date object", e);
-            }
+            eventTime = DateTimeFormatter.ofPattern("yyyyMMdd HHmmss").withZone(ZoneId.of("America/New_York")).parse(dateTime, Instant::from);
         }
         return eventTime;
     }
