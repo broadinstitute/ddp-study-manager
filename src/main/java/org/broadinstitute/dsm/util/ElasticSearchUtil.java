@@ -167,7 +167,7 @@ public class ElasticSearchUtil {
                 Map<String, Object> address = (Map<String, Object>) participantESData.get(ADDRESS);
                 Map<String, Object> profile = (Map<String, Object>) participantESData.get(PROFILE);
                 if (address != null && !address.isEmpty() && profile != null && !profile.isEmpty()) {
-                    return new DDPParticipant(ddpParticipantId, "", (String) address.get("mailToName"),
+                    return new DDPParticipant(ddpParticipantId, (String) profile.get("firstName"), (String) profile.get("lastName"),
                             (String) address.get("country"), (String) address.get("city"), (String) address.get("zip"),
                             (String) address.get("street1"), (String) address.get("street2"), (String) address.get("state"),
                             (String) profile.get(HRUID), null);
