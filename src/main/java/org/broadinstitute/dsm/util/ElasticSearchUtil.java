@@ -43,6 +43,8 @@ public class ElasticSearchUtil {
     private static final String ACTIVITIES = "activities";
     private static final String ACTIVITIES_QUESTIONS_ANSWER = "activities.questionsAnswers";
     private static final String ACTIVITIES_QUESTIONS_ANSWER_ANSWER = "activities.questionsAnswers.answer";
+    private static final String ACTIVITIES_QUESTIONS_ANSWER_GROUPED_OPTIONS = "activities.questionsAnswers.groupedOptions";
+    private static final String ACTIVITIES_QUESTIONS_ANSWER_NESTED_OPTIONS = "activities.questionsAnswers.nestedOptions";
     private static final String ACTIVITIES_QUESTIONS_ANSWER_DATE_FIELDS = "activities.questionsAnswers.dateFields";
     private static final String ACTIVITIES_QUESTIONS_ANSWER_DATE = "activities.questionsAnswers.date";
     private static final String ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID = "activities.questionsAnswers.stableId";
@@ -652,7 +654,7 @@ public class ElasticSearchUtil {
                         }
                         else {
                             QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1].trim());
-                            alreadyAdded = mustOrSearchActivity(finalQuery, queryBuilder, tmpBuilder, INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1].trim(), userEntered, must);
+                            alreadyAdded = mustOrSearchActivity(queryBuilder, tmpBuilder, INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1].trim(), userEntered);
                         }
                     }
                 }
@@ -695,7 +697,7 @@ public class ElasticSearchUtil {
                         }
                         else {
                             QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim());
-                            alreadyAdded = mustOrSearchActivity(finalQuery, queryBuilder, tmpBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered, must);
+                            alreadyAdded = mustOrSearchActivity(queryBuilder, tmpBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered);
                         }
                     }
                 }
@@ -718,11 +720,20 @@ public class ElasticSearchUtil {
                         }
                         else {
                             if (must) {
-                                activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
+                                BoolQueryBuilder orAnswers = new BoolQueryBuilder();
+                                orAnswers.should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered));
+                                if  (StringUtils.isNotBlank(userEntered) && userEntered.contains(".")) {
+                                    String[] tmp = userEntered.split("\\.");
+                                    if (tmp != null && tmp.length > 1 && StringUtils.isNotBlank(tmp[0]) && StringUtils.isNotBlank(tmp[1])) {
+                                        orAnswers.should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_GROUPED_OPTIONS + "." + tmp[0], tmp[1]));
+                                        orAnswers.should(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_NESTED_OPTIONS + "." + tmp[0], tmp[1]));
+                                    }
+                                }
+                                activityAnswer.must(orAnswers);
                             }
                             else {
                                 QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
-                                alreadyAdded = mustOrSearchActivity(finalQuery, activityAnswer, tmpBuilder, ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered, must);
+                                alreadyAdded = mustOrSearchActivity(activityAnswer, tmpBuilder, ACTIVITIES_QUESTIONS_ANSWER_ANSWER, userEntered);
                             }
                         }
                     }
@@ -743,7 +754,7 @@ public class ElasticSearchUtil {
         }
     }
 
-    private static boolean mustOrSearchActivity(@NonNull BoolQueryBuilder finalQuery, @NonNull BoolQueryBuilder queryBuilder, QueryBuilder tmpBuilder, @NonNull String name, @NonNull String value, boolean must) {
+    private static boolean mustOrSearchActivity(@NonNull BoolQueryBuilder queryBuilder, QueryBuilder tmpBuilder, @NonNull String name, @NonNull String value) {
         if (tmpBuilder != null) {
             ((BoolQueryBuilder) tmpBuilder).should(QueryBuilders.matchQuery(name, value));
             return true;
