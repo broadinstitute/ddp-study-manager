@@ -103,7 +103,7 @@ public class UPSTrackingJob implements Job {
         if (StringUtils.isNotBlank(type)) {// get only type from it
             type = type.substring(0, type.indexOf(' '));
         }
-        if (response.getErrors() == null) {
+        if (response != null && response.getErrors() == null) {
             updateStatus(trackingId, type, response, isReturn, kit);
         }
         else {
