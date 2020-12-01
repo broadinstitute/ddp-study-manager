@@ -34,16 +34,9 @@ public class ExternalShipperJob implements Job {
                     JobDataMap dataMap = context.getJobDetail().getJobDataMap();
                     String additionalCronExpression = (String) dataMap.get(DSMServer.ADDITIONAL_CRON_EXPRESSION);
                     if (CronExpression.isValidExpression(additionalCronExpression)) {
-                        CronExpression cron = new CronExpression(additionalCronExpression);
-                        if (cron.isSatisfiedBy(context.getFireTime())) {
-                            long lastRun = DBUtil.getBookmark(DBConstants.GBF_CONFIRMATION);
-                            long now = System.currentTimeMillis();
-                            long fixedStartTime = new SimpleDateFormat("yyyy-MM-dd").parse("2020-08-01").getTime();
-                            shipper.orderConfirmation(kitRequests, fixedStartTime, now);
-                        }
-                    }
-                    else {
-                        throw new RuntimeException("Additional cron expression is not a valid cron expression");
+                        long now = System.currentTimeMillis();
+                        long fixedStartTime = new SimpleDateFormat("yyyy-MM-dd").parse("2020-08-01").getTime();
+                        shipper.orderConfirmation(kitRequests, fixedStartTime, now);
                     }
                 }
             }
