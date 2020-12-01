@@ -644,14 +644,15 @@ public class KitRequestShipping extends KitRequest {
 
     //adding kit request to db (called by hourly job to add kits into DSM)
     public static void addKitRequests(@NonNull String instanceId, @NonNull KitDetail kitDetail, @NonNull int kitTypeId,
-                                      @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, String externalOrderNumber) {
+                                      @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, String externalOrderNumber, String uploadReason) {
         addKitRequests(instanceId, kitDetail.getKitType(), kitDetail.getParticipantId(), kitDetail.getKitRequestId(), kitTypeId, kitRequestSettings,
-                collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber);
+                collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber,  uploadReason);
     }
 
     //adding kit request to db (called by hourly job to add kits into DSM)
     public static void addKitRequests(@NonNull String instanceId, @NonNull String kitType, @NonNull String participantId, @NonNull String kitRequestId,
-                                      @NonNull int kitTypeId, @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, boolean needsApproval, String externalOrderNumber) {
+                                      @NonNull int kitTypeId, @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, boolean needsApproval, String externalOrderNumber,
+                                      String uploadReason) {
         inTransaction((conn) -> {
             String errorMessage = "";
             String collaboratorSampleId = null;
@@ -669,7 +670,7 @@ public class KitRequestShipping extends KitRequest {
                 }
             }
             writeRequest(instanceId, kitRequestId, kitTypeId, participantId, collaboratorParticipantId, collaboratorSampleId,
-                    "SYSTEM", null, errorMessage, externalOrderNumber, needsApproval);
+                    "SYSTEM", null, errorMessage, externalOrderNumber, needsApproval, uploadReason);
             return null;
         });
     }
@@ -681,7 +682,7 @@ public class KitRequestShipping extends KitRequest {
     // 2. kit upload
     public static String writeRequest(@NonNull String instanceId, @NonNull String ddpKitRequestId, @NonNull int kitTypeId,
                                       @NonNull String ddpParticipantId, String collaboratorPatientId, String collaboratorSampleId,
-                                      @NonNull String createdBy, String addressIdTo, String errorMessage, String externalOrderNumber, boolean needsApproval) {
+                                      @NonNull String createdBy, String addressIdTo, String errorMessage, String externalOrderNumber, boolean needsApproval, String uploadReason) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult(0);
             try (PreparedStatement insertKitRequest = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.INSERT_KIT_REQUEST), Statement.RETURN_GENERATED_KEYS)) {
@@ -695,6 +696,7 @@ public class KitRequestShipping extends KitRequest {
                 insertKitRequest.setString(8, createdBy);
                 insertKitRequest.setLong(9, System.currentTimeMillis());
                 insertKitRequest.setObject(10, StringUtils.isNotBlank(externalOrderNumber) ? externalOrderNumber : null); //external_order_number
+                insertKitRequest.setString(11, uploadReason); //upload reason
                 insertKitRequest.executeUpdate();
                 try (ResultSet rs = insertKitRequest.getGeneratedKeys()) {
                     if (rs.next()) {

@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.db;
 
+import com.google.gson.Gson;
 import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -9,10 +10,12 @@ import org.broadinstitute.dsm.statics.QueryExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Array;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
@@ -27,6 +30,10 @@ public class KitType {
             " AND rel.ddp_instance_id = realm.ddp_instance_id AND user_role.user_id = user.user_id AND user_role.role_id = role.role_id AND realm.ddp_instance_id = realmGroup.ddp_instance_id" +
             " AND realmGroup.ddp_group_id = user_role.group_id AND ((type.required_role IS NOT NULL AND user_role.role_id = type.required_role) OR (type.required_role IS NULL AND role.name regexp '^kit_shipping'))" +
             " AND realm.instance_name = ?";
+
+    private static final String SQL_SELECT_UPLOAD_REASONS = "SELECT upload_reasons FROM ddp_kit_request_settings kits" +
+            " LEFT JOIN ddp_instance realm ON (realm.ddp_instance_id = kits.ddp_instance_id) " +
+            " WHERE realm.instance_name = ? ";
 
     private final int kitId;
     private final String name;
@@ -87,5 +94,44 @@ public class KitType {
         }
         logger.info("Found " + kitTypes.size() + " kitTypes ");
         return kitTypes;
+    }
+
+    public static List<String> getUploadReasons(@NonNull String realm){
+        SimpleResult results = inTransaction((conn) -> {
+            List<String> uploadReasons = new ArrayList<>();
+            SimpleResult dbVals = new SimpleResult();
+            String query = SQL_SELECT_UPLOAD_REASONS;
+
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setString(1, realm);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+
+                        String reasons = rs.getString(DBConstants.UPLOAD_REASONS);
+                        if (StringUtils.isBlank(reasons)) {
+                            dbVals.resultValue = null;
+                            return dbVals;
+                        }
+                        uploadReasons = Arrays.asList(new Gson().fromJson(reasons, String[].class));
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            dbVals.resultValue = uploadReasons;
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting list of kitTypes ", results.resultException);
+        }
+        List<String> uploadReasons = new ArrayList<>();
+        if(results.resultValue != null){
+            uploadReasons = (List<String>) results.resultValue;
+            logger.info("Found " + uploadReasons.size() + " kitTypes ");
+
+        }
+        return uploadReasons;
     }
 }

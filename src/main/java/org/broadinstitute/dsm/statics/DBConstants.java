@@ -53,6 +53,7 @@ public class DBConstants {
     public static final String UPS_RETURN_DATE = "ups_return_date";
 
 
+
     public static final String DSM_LABEL_TO = "label_url_to";
     public static final String DSM_LABEL_RETURN = "label_url_return";
     public static final String DSM_CARRIER_TO = "carrierTo";
@@ -317,6 +318,10 @@ public class DBConstants {
     public static final String TOP_MARGIN = "top_margin";
     public static final String BOTTOM_MARGIN = "bottom_margin";
     public static final String LEFT_MARGIN = "left_margin";
+
+    //ddp_kit_request_settings
+    public static final String UPLOAD_REASONS = "upload_reasons";
+    public static final String UPLOAD_REASON = "upload_reason";
 
     //eventType
     public static final String EVENT_NAME = "event_name";

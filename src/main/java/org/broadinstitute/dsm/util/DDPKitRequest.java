@@ -111,7 +111,7 @@ public class DDPKitRequest {
                                                             }
                                                             else {
                                                                 KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, kitType.getKitTypeId(),
-                                                                        kitRequestSettings, collaboratorParticipantId, null);
+                                                                        kitRequestSettings, collaboratorParticipantId, null, null);
                                                             }
                                                             if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper()) && !kitDetail.isNeedsApproval()) {//testboston
                                                                 kitsToOrder.put(kitRequestSettings, orderKit);
@@ -136,7 +136,7 @@ public class DDPKitRequest {
                                                     //only testboston for now which is not gen2 so it won't matter
                                                     if (kitHasSubKits) {
                                                         List<KitSubKits> subKits = kitRequestSettings.getSubKits();
-                                                        String externalOrderNumber = addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID());
+                                                        String externalOrderNumber = addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID(), null);
                                                         if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
                                                             orderKit.add(new KitRequest(kitDetail.getParticipantId(), participant.getShortId(), participant, externalOrderNumber));
                                                         }
@@ -144,7 +144,7 @@ public class DDPKitRequest {
                                                     else {
                                                         // all other ddps
                                                         KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, kitType.getKitTypeId(),
-                                                                kitRequestSettings, collaboratorParticipantId, null);
+                                                                kitRequestSettings, collaboratorParticipantId, null, null);
                                                         if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
                                                             orderKit.add(new KitRequest(kitDetail.getParticipantId(), participant.getShortId(), participant, null));
                                                         }
@@ -271,7 +271,7 @@ public class DDPKitRequest {
     }
 
     private String addSubKits(@NonNull List<KitSubKits> subKits, @NonNull KitDetail kitDetail, @NonNull String collaboratorParticipantId,
-                              @NonNull KitRequestSettings kitRequestSettings, @NonNull String instanceId) {
+                              @NonNull KitRequestSettings kitRequestSettings, @NonNull String instanceId, String uploadReason) {
         int subCounter = 0;
         String externalOrderNumber = null;
         if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
@@ -282,7 +282,7 @@ public class DDPKitRequest {
                 //kitRequestId needs to stay unique -> add `_[SUB_COUNTER]` to it
                 KitRequestShipping.addKitRequests(instanceId, subKit.getKitName(), kitDetail.getParticipantId(),
                         subCounter == 0 ? kitDetail.getKitRequestId() : kitDetail.getKitRequestId() + "_" + subCounter, subKit.getKitTypeId(), kitRequestSettings,
-                        collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber);
+                        collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber,  uploadReason);
                 subCounter = subCounter + 1;
             }
         }

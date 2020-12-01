@@ -12,6 +12,7 @@ public class RoutePath {
 
     public static final String REALM = "realm";
     public static final String KIT_TYPE = "kitType";
+    public static final String UPLOAD_REASONS = "uploadReasons";
     public static final String ddpParticipantId = "ddpParticipantId";
 
     //DDP - routes
