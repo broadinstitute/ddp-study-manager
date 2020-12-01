@@ -103,7 +103,8 @@ public class KitDDPNotification {
                                 rs.getString(DBConstants.BASE_URL),
                                 rs.getString(DBConstants.EVENT_NAME),
                                 rs.getString(DBConstants.EVENT_TYPE), rs.getLong(DBConstants.DSM_RECEIVE_DATE),
-                                rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN));
+                                rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN),
+                                rs.getString(DBConstants.UPLOAD_REASON));
                     }
                 }
             }
