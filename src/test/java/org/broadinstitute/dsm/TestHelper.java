@@ -9,14 +9,11 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
-import org.broadinstitute.ddp.BasicServer;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.util.Utility;
 import org.broadinstitute.dsm.db.MedicalRecord;
-import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.*;
 import org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil;
-import org.broadinstitute.dsm.util.tools.util.DBUtil;
 import org.junit.Assert;
 import org.mockserver.integration.ClientAndServer;
 import org.slf4j.Logger;
@@ -26,7 +23,6 @@ import spark.Spark;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import org.broadinstitute.ddp.BasicServer;
 
 public class TestHelper {
 
@@ -97,12 +93,12 @@ public class TestHelper {
         cfg = ConfigFactory.load();
 //        //secrets from vault in a config file
         cfg = cfg.withFallback(ConfigFactory.parseFile(new File("config/test-config.conf")));
-//
+
 //        //overwrite quartz.jobs
         cfg = cfg.withValue("quartz.enableJobs", ConfigValueFactory.fromAnyRef("false"));
         cfg = cfg.withValue("portal.port", ConfigValueFactory.fromAnyRef("9999"));
         cfg = cfg.withValue("errorAlert.recipientAddress", ConfigValueFactory.fromAnyRef(""));
-//
+
         if (!cfg.getString("portal.environment").startsWith("Local")) {
             throw new RuntimeException("Not local environment");
         }
@@ -128,6 +124,12 @@ public class TestHelper {
             } else {
                 logger.info("Skipping DB update...");
             }
+        TransactionWrapper.configureSslProperties(cfg.getString("portal.dbSslKeyStore"),
+                cfg.getString("portal.dbSslKeyStorePwd"),
+                cfg.getString("portal.dbSslTrustStore"),
+                cfg.getString("portal.dbSslTrustStorePwd"));
+
+        TransactionWrapper.reset(TestUtil.UNIT_TEST);
             TransactionWrapper.init(maxConnections, dbUrl, cfg, skipSsl);
             if (!Utility.dbCheck()) {
                 throw new RuntimeException("DB connection error.");

@@ -31,10 +31,11 @@ public class ParticipantWrapper {
     private List<KitRequestShipping> kits;
     private List<AbstractionActivity> abstractionActivities;
     private List<AbstractionGroup> abstractionSummary;
+    private List<Map<String, Object>> proxyData;
 
     public ParticipantWrapper(Map<String, Object> data, Participant participant, List<MedicalRecord> medicalRecords,
                               List<OncHistoryDetail> oncHistoryDetails, List<KitRequestShipping> kits, List<AbstractionActivity> abstractionActivities,
-                              List<AbstractionGroup> abstractionSummary) {
+                              List<AbstractionGroup> abstractionSummary, List<Map<String, Object>> proxyData) {
         this.data = data;
         this.participant = participant;
         this.medicalRecords = medicalRecords;
@@ -42,6 +43,7 @@ public class ParticipantWrapper {
         this.kits = kits;
         this.abstractionActivities = abstractionActivities;
         this.abstractionSummary = abstractionSummary;
+        this.proxyData = proxyData;
     }
 
     public JsonObject getDataAsJson() {
@@ -58,6 +60,7 @@ public class ParticipantWrapper {
             Map<String, List<KitRequestShipping>> kitRequests = KitRequestShipping.getKitRequests(instance.getName());
             Map<String, List<AbstractionActivity>> abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName());
             Map<String, List<AbstractionGroup>> abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName());
+            Map<String, Map<String, Object>> proxyData = getProxyData(instance);
 
             //baselist should be not gen2/mbc db
             List<String> baseList = null;
@@ -68,7 +71,7 @@ public class ParticipantWrapper {
                 baseList = new ArrayList<>(participants.keySet());
             }
 
-            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary);
+            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, proxyData);
             return r;
         }
         else {
@@ -80,6 +83,7 @@ public class ParticipantWrapper {
             Map<String, List<KitRequestShipping>> kitRequests = null;
             Map<String, List<AbstractionActivity>> abstractionActivities = null;
             Map<String, List<AbstractionGroup>> abstractionSummary = null;
+            Map<String, Map<String, Object>> proxyData = null;
             List<String> baseList = null;
             //filter the lists depending on filter
             for (String source : filters.keySet()) {
@@ -112,6 +116,7 @@ public class ParticipantWrapper {
                         participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filters.get(source));
                         baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
                     }
+                    //TODO add proxy filtering
                 }
             }
             //get all the list which were not filtered
@@ -136,6 +141,9 @@ public class ParticipantWrapper {
             if (abstractionSummary == null) {
                 abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName());
             }
+            if (proxyData == null) {
+                proxyData = getProxyData(instance);
+            }
             //baselist should be not gen2/mbc db
             if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
                 baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
@@ -145,7 +153,7 @@ public class ParticipantWrapper {
             }
             //bring together all the information
 
-            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistories, kitRequests, abstractionActivities, abstractionSummary);
+            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistories, kitRequests, abstractionActivities, abstractionSummary, proxyData);
             return r;
         }
     }
@@ -165,6 +173,13 @@ public class ParticipantWrapper {
         }
     }
 
+    public static Map<String, Map<String, Object>> getProxyData(@NonNull DDPInstance instance) {
+        if (StringUtils.isNotBlank(instance.getUsersIndexES())) {
+            return ElasticSearchUtil.getDDPParticipantsFromES(instance.getName(), instance.getUsersIndexES());
+        }
+        return null;
+    }
+
     private static List<String> getCommonEntries(List<String> list1, List<String> list2) {
         if (list1 == null) {
             return list2;
@@ -178,7 +193,8 @@ public class ParticipantWrapper {
     public static List<ParticipantWrapper> addAllData(List<String> baseList, Map<String, Map<String, Object>> esDataMap,
                                                       Map<String, Participant> participantMap, Map<String, List<MedicalRecord>> medicalRecordMap,
                                                       Map<String, List<OncHistoryDetail>> oncHistoryMap, Map<String, List<KitRequestShipping>> kitRequestMap,
-                                                      Map<String, List<AbstractionActivity>> abstractionActivityMap, Map<String, List<AbstractionGroup>> abstractionSummary) {
+                                                      Map<String, List<AbstractionActivity>> abstractionActivityMap, Map<String, List<AbstractionGroup>> abstractionSummary,
+                                                      Map<String, Map<String, Object>> proxyData) {
         List<ParticipantWrapper> participantList = new ArrayList<>();
         for (String ddpParticipantId : baseList) {
             Participant participant = participantMap != null ? participantMap.get(ddpParticipantId) : null;
@@ -189,11 +205,29 @@ public class ParticipantWrapper {
                         oncHistoryMap != null ? oncHistoryMap.get(ddpParticipantId) : null,
                         kitRequestMap != null ? kitRequestMap.get(ddpParticipantId) : null,
                         abstractionActivityMap != null ? abstractionActivityMap.get(ddpParticipantId) : null,
-                        abstractionSummary != null ? abstractionSummary.get(ddpParticipantId) : null));
+                        abstractionSummary != null ? abstractionSummary.get(ddpParticipantId) : null,
+                        getProxyProfiles(participantData, proxyData)));
             }
         }
         logger.info("Returning list w/ " + participantList.size() + " pts now");
         return participantList;
+    }
+
+    private static List<Map<String, Object>> getProxyProfiles(Map<String, Object> participantData, Map<String, Map<String, Object>> proxyDataES) {
+        if (participantData != null && !participantData.isEmpty()) {
+            List<String> proxies = (List<String>) participantData.get("proxies");
+            List<Map<String, Object>> proxyData = new ArrayList<>();
+            if (proxies != null && !proxies.isEmpty()) {
+                proxies.forEach(proxy -> {
+                    Map<String, Object> proxyD = proxyDataES.get(proxy);
+                    if (proxyD != null) {
+                        proxyData.add(proxyD);
+                    }
+                });
+                return proxyData;
+            }
+        }
+        return null;
     }
 
     private static Map<String, Map<String, Object>> parseGen1toESParticipant(Map<String, MBCParticipant> mbcParticipants, Map<String, ParticipantExit> exitedParticipants) {
