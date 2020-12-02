@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,9 +36,9 @@ public class ExternalShipperJob implements Job {
                     JobDataMap dataMap = context.getJobDetail().getJobDataMap();
                     String additionalCronExpression = (String) dataMap.get(DSMServer.ADDITIONAL_CRON_EXPRESSION);
                     if (CronExpression.isValidExpression(additionalCronExpression)) {
-                        long now = System.currentTimeMillis();
+                        Instant now = Instant.now();
                         long fixedStartTime = new SimpleDateFormat("yyyy-MM-dd").parse("2020-08-01").getTime();
-                        shipper.orderConfirmation(kitRequests, fixedStartTime, now);
+                        shipper.orderConfirmation(kitRequests, now.minus(30, ChronoUnit.DAYS).toEpochMilli(), now.toEpochMilli());
                     }
                 }
             }
