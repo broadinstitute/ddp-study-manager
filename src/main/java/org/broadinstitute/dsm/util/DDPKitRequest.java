@@ -100,7 +100,7 @@ public class DDPKitRequest {
 
                                                             if (kitHasSubKits) {
                                                                 List<KitSubKits> subKits = kitRequestSettings.getSubKits();
-                                                                String externalOrderNumber = addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID());
+                                                                String externalOrderNumber = addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID(), null);
                                                                 DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData, kitDetail.getParticipantId());
                                                                 if (ddpParticipant != null) {
                                                                     if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
