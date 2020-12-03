@@ -3,8 +3,6 @@ package org.broadinstitute.dsm.model;
 import lombok.Data;
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.ddp.db.TransactionWrapper;
-import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +31,11 @@ public class KitDDPNotification {
     private final long date;
     private final boolean hasAuth0Token;
     private final String uploadReason;
+    private final String ddpKitRequestId;
 
     public KitDDPNotification(String participantId, String dsmKitRequestId, String ddpInstanceId, String instanceName,
-                              String baseUrl, String eventName, String eventType, long date, boolean hasAuth0Token, String uploadReason) {
+                              String baseUrl, String eventName, String eventType, long date, boolean hasAuth0Token, String uploadReason,
+                              String ddpKitRequestId ) {
         this.participantId = participantId;
         this.dsmKitRequestId = dsmKitRequestId;
         this.ddpInstanceId = ddpInstanceId;
@@ -46,6 +46,7 @@ public class KitDDPNotification {
         this.date = date;
         this.hasAuth0Token = hasAuth0Token;
         this.uploadReason = uploadReason;
+        this.ddpKitRequestId = ddpKitRequestId;
     }
 
     public static KitDDPNotification getKitDDPNotification(@NonNull String query, @NonNull String kitLabel, int expectedCount) {
@@ -67,7 +68,9 @@ public class KitDDPNotification {
                                 rs.getString(DBConstants.EVENT_TYPE),
                                 rs.getLong(DBConstants.DSM_RECEIVE_DATE),
                                 rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN),
-                                rs.getString(DBConstants.UPLOAD_REASON));
+                                rs.getString(DBConstants.UPLOAD_REASON),
+                                rs.getString(DBConstants.DDP_KIT_REQUEST_ID));
+
                     }
                 }
             }
@@ -104,7 +107,8 @@ public class KitDDPNotification {
                                 rs.getString(DBConstants.EVENT_NAME),
                                 rs.getString(DBConstants.EVENT_TYPE), rs.getLong(DBConstants.DSM_RECEIVE_DATE),
                                 rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN),
-                                rs.getString(DBConstants.UPLOAD_REASON));
+                                rs.getString(DBConstants.UPLOAD_REASON),
+                                rs.getString(DBConstants.DDP_KIT_REQUEST_ID));
                     }
                 }
             }

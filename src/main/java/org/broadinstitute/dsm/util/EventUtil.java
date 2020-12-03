@@ -2,7 +2,6 @@ package org.broadinstitute.dsm.util;
 
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.ddp.handlers.util.Event;
 import org.broadinstitute.dsm.db.ParticipantEvent;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.TestResultEvent;
@@ -65,7 +64,8 @@ public class EventUtil {
                                     rs.getString(DBConstants.BASE_URL),
                                     rs.getString(DBConstants.EVENT_NAME),
                                     rs.getString(DBConstants.EVENT_TYPE), System.currentTimeMillis(),
-                                    rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN),  rs.getString(DBConstants.UPLOAD_REASON)));
+                                    rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN), rs.getString(DBConstants.UPLOAD_REASON),
+                                    rs.getString(DBConstants.DDP_KIT_REQUEST_ID)));
                         }
                     }
                 }
@@ -109,7 +109,7 @@ public class EventUtil {
 
     private static void triggerDDP(@NonNull String eventType, @NonNull KitDDPNotification kitInfo) {
         try {
-            Event event = new Event(kitInfo.getParticipantId(), eventType, kitInfo.getDate() / 1000);
+            KitEvent event = new KitEvent(kitInfo.getParticipantId(), eventType, kitInfo.getDate() / 1000, kitInfo.getUploadReason(), kitInfo.getDdpKitRequestId());
             String sendRequest = kitInfo.getBaseUrl() + RoutePath.DDP_PARTICIPANT_EVENT_PATH + "/" + kitInfo.getParticipantId();
             DDPRequestUtil.postRequest(sendRequest, event, kitInfo.getInstanceName(), kitInfo.isHasAuth0Token());
             addEvent(eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId());
@@ -124,7 +124,7 @@ public class EventUtil {
     private static void triggerDDPWithTestResult(@NonNull String eventType, @NonNull KitDDPNotification kitInfo, @Nonnull TestBostonResult result) {
         try {
             DSMTestResult dsmTestResult = new DSMTestResult(result.getResult(), result.getTimeCompleted(), result.isCorrected());
-            TestResultEvent event = new TestResultEvent(kitInfo.getParticipantId(), eventType, kitInfo.getDate() / 1000, dsmTestResult);
+            TestResultEvent event = new TestResultEvent(kitInfo.getParticipantId(), eventType, kitInfo.getDate() / 1000,kitInfo.getUploadReason(), kitInfo.getDdpKitRequestId(),  dsmTestResult);
             String sendRequest = kitInfo.getBaseUrl() + RoutePath.DDP_PARTICIPANT_EVENT_PATH + "/" + kitInfo.getParticipantId();
             DDPRequestUtil.postRequest(sendRequest, event, kitInfo.getInstanceName(), kitInfo.isHasAuth0Token());
             addEvent(eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId());
@@ -151,7 +151,7 @@ public class EventUtil {
                 stmt.setBoolean(5, trigger);
                 int result = stmt.executeUpdate();
                 if (result != 1) {
-                    throw new RuntimeException("Error could not add event for kit request " + requestId );
+                    throw new RuntimeException("Error could not add event for kit request " + requestId);
                 }
             }
             catch (SQLException e) {

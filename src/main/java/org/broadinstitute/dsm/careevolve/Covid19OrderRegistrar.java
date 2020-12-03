@@ -37,8 +37,6 @@ public class Covid19OrderRegistrar {
     public static final String FIRST_NAME_FIELD = "firstName";
     public static final String LAST_NAME_FIELD = "lastName";
     public static final String ACTIVITIES_FIELD = "activities";
-    public static final String QUESTIONS_ANSWERS_FIELD = "questionsAnswers";
-    public static final String STABLE_ID_FIELD = "stableId";
     public static final String ANSWER_FIELD = "answer";
 
     private final String endpoint;
@@ -51,12 +49,7 @@ public class Covid19OrderRegistrar {
 
     private final long retryWaitMillis;
 
-    public static final String BASELINE_SYMPTOM_ACTIVITY = "BASELINE_SYMPTOM";
-
     public static final String BASELINE_COVID_ACTIVITY = "BASELINE_COVID";
-
-    private static final List<String> KIT_ACTIVITY_CODES = List.of(BASELINE_SYMPTOM_ACTIVITY,"LONGITUDINAL_COVID");
-
     /**
      * Create a new one that uses the given endpoint
      * for placing orders
@@ -85,6 +78,9 @@ public class Covid19OrderRegistrar {
      */
     public  OrderResponse orderTest(Authentication auth, String participantHruid, String kitLabel,
                                           String kitId, Instant kitPickupTime) throws CareEvolveException {
+        if (kitPickupTime == null) {
+            throw new CareEvolveException("Cannot place order for " + kitLabel + " without a pickup time");
+        }
 
         DDPInstance instance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
 
@@ -112,53 +108,8 @@ public class Covid19OrderRegistrar {
 
                 JsonArray activities = data.get(ACTIVITIES_FIELD).getAsJsonArray();
 
-                JsonObject latestKitActivity = getLatestKitActivity(activities);
-
-                Instant collectionDateTime = kitPickupTime;
-
-                if (latestKitActivity != null) {
-                    JsonArray latestKitAnswers = latestKitActivity.get(QUESTIONS_ANSWERS_FIELD).getAsJsonArray();
-
-                    if (latestKitAnswers != null) {
-                        String collectionDateTimeStr = null;
-
-                        StringBuilder collectionDate = new StringBuilder();
-                        StringBuilder collectionTime = new StringBuilder();
-                        for (int i = 0; i < latestKitAnswers.size(); i++) {
-                            JsonObject latestKitAnswer = latestKitAnswers.get(i).getAsJsonObject();
-                            String questionStableId = latestKitAnswer.get(STABLE_ID_FIELD).getAsString();
-
-                            if ("SAMPLE_COLLECT_DATE".equals(questionStableId)) {
-                                collectionDate.append(latestKitAnswer.get("date").getAsString());
-                            } else if ("SAMPLE_COLLECT_TIME".equals(questionStableId)) {
-                                JsonArray timeFields = latestKitAnswer.getAsJsonArray(ANSWER_FIELD).get(0).getAsJsonArray();
-                                for (int timeFieldIdx = 0; timeFieldIdx < timeFields.size(); timeFieldIdx++) {
-                                    collectionTime.append(" ").append(timeFields.get(timeFieldIdx).getAsString());
-                                }
-                            }
-                        }
-
-                        if (collectionDate.length() > 0 && collectionTime.length() > 0) {
-                            collectionDateTimeStr = collectionDate + " " + collectionTime;
-                            try {
-                                collectionDateTime = new SimpleDateFormat("yyyy-MM-dd h m a").parse(
-                                        collectionDateTimeStr
-                                ).toInstant();
-                            } catch (ParseException e) {
-                                throw new CareEvolveException("Could not parse collection date time " + collectionDateTimeStr.toString()
-                                        + " for participant " + patientId + " in activity instance " + latestKitActivity.get("guid"), e);
-                            }
-                        } else {
-                            collectionDateTime = kitPickupTime;
-                        }
-                    }
-
-                    if (collectionDateTime == null) {
-                        logger.error("No kit collection time for " + patientId);
-                    }
-                }
-
                 JsonObject baselineCovidActivity = getBaselineCovidActivity(activities);
+
                 JsonArray baselineCovidAnswers = baselineCovidActivity.get("questionsAnswers").getAsJsonArray();
                 String dob = null;
 
@@ -241,13 +192,20 @@ public class Covid19OrderRegistrar {
                             }
                         }
                     }
+                }
 
+                if (StringUtils.isBlank(firstName)) {
+                    throw new CareEvolveException("Cannot place order for " + kitLabel + " without first name");
+                }
+
+                if (StringUtils.isBlank(lastName)) {
+                    throw new CareEvolveException("Cannot place order for " + kitLabel + " without last name");
                 }
 
                 Patient testPatient = new Patient(patientId, firstName, lastName, dob, race, ethnicity,
                         sex, careEvolveAddress);
 
-                Message message = new Message(new Order(careEvolveAccount, testPatient, kitLabel, collectionDateTime, provider, aoes), kitId);
+                Message message = new Message(new Order(careEvolveAccount, testPatient, kitLabel, kitPickupTime, provider, aoes), kitId);
 
                 OrderResponse orderResponse = null;
 
@@ -284,27 +242,8 @@ public class Covid19OrderRegistrar {
                 throw new CareEvolveException("No participant data for " + participantHruid + ".  Cannot register order.");
             }
         } else {
-            throw new CareEvolveException("No particiant data found for " + participantHruid + ".  Cannot register order.");
+            throw new CareEvolveException("No participant data found for " + participantHruid + ".  Cannot register order.");
         }
-    }
-
-    /**
-     * Returns the latest kit-related activity
-     */
-    private JsonObject getLatestKitActivity(JsonArray activities) {
-        JsonObject latestKitActivity = null;
-        for (int i = 0; i < activities.size(); i++) {
-            JsonObject activity = activities.get(i).getAsJsonObject();
-            if (KIT_ACTIVITY_CODES.contains(activity.get("activityCode").getAsString())) {
-                if (latestKitActivity == null) {
-                    latestKitActivity = activity;
-                }
-                if (latestKitActivity.get("createdAt").getAsNumber().longValue() < activity.get("createdAt").getAsNumber().longValue()) {
-                    latestKitActivity = activity;
-                }
-            }
-        }
-        return latestKitActivity;
     }
 
     private JsonObject getBaselineCovidActivity(JsonArray activities) {

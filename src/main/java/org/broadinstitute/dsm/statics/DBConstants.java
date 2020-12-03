@@ -45,8 +45,9 @@ public class DBConstants {
     public static final String KIT_TYPE_NAME = "kit_type_name";
     public static final String DSM_LABEL = "ddp_label";
     public static final String KIT_TYPE_ID = "kit_type_id";
-    public static final String DDP_KIT_REQUEST_ID = "last_kit";
+    public static final String LAST_KIT = "last_kit";
     public static final String DSM_KIT_REQUEST_ID = "dsm_kit_request_id";
+    public static final String DDP_KIT_REQUEST_ID = "ddp_kit_request_id";
     public static final String UPS_TRACKING_STATUS = "ups_tracking_status";
     public static final String UPS_RETURN_STATUS = "ups_return_status";
     public static final String UPS_TRACKING_DATE = "ups_tracking_date";
