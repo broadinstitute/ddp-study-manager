@@ -91,7 +91,9 @@ public class PubSubLookUp {
 
     public static void tellPepperAboutTheNewResults(TestBostonResult testBostonResult) {
         logger.info("Going to Notify Pepper");
-        String query = "select eve.event_name, eve.event_type, request.ddp_participant_id, request.dsm_kit_request_id, realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token,   realm.notification_recipients,   realm.migrated_ddp,   kit.receive_date,   kit.scan_date   from   ddp_kit_request request,   " +
+        String query = "select eve.event_name, eve.event_type, request.ddp_participant_id, request.dsm_kit_request_id, request.ddp_kit_request_id, request.upload_reason, " +
+                "realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token,   realm.notification_recipients,   realm.migrated_ddp,   kit.receive_date,   kit.scan_date  " +
+                " from   ddp_kit_request request,   " +
                 "ddp_kit kit,   event_type eve,   ddp_instance realm   where request.dsm_kit_request_id = kit.dsm_kit_request_id   and request.ddp_instance_id = realm.ddp_instance_id   " +
                 " and (eve.ddp_instance_id = request.ddp_instance_id   and eve.kit_type_id = request.kit_type_id)   and eve.event_type = \"RESULT\" " + // that's the change from the original query
                 " and kit.kit_label = ?"; // that's the change from the original query
@@ -105,7 +107,7 @@ public class PubSubLookUp {
             throw new RuntimeException("kitDDPNotification was null for kitLabel "+testBostonResult.getSampleId());
         }
     }
-
+    
     private static DSMTestResult[] getLatestKitTestResults(TestBostonResult testBostonResult) {
         String kitLabel = testBostonResult.getSampleId();
         SimpleResult results = inTransaction((conn) -> {
