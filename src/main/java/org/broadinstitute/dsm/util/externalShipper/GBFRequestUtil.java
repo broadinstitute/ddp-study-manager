@@ -303,7 +303,7 @@ public class GBFRequestUtil implements ExternalShipper {
                                 }
                             }
                             else {
-                                logger.info("No kit requests found for kit with order number: " + confirmation.getOrderNumber());
+                                logger.error("No kit requests found for kit with order number: " + confirmation.getOrderNumber());
                             }
                         } else {
                             logger.error("No items for order " + confirmation.getOrderNumber());
