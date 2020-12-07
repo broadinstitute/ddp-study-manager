@@ -299,12 +299,14 @@ public class GBFRequestUtil implements ExternalShipper {
                                             kitLabel, SystemUtil.getLongFromDateString(confirmation.getShipDate()), EXTERNAL_SHIPPER_NAME,
                                             kitRequest.getDsmKitRequestId());
                                     counter++;
-                                    logger.info("Updated confirmation information for : " + kitRequest.getDsmKitRequestId());
+                                    logger.info("Updated confirmation information for : " + kitRequest.getDsmKitRequestId() + " " + kitLabel);
                                 }
                             }
                             else {
-                                logger.info("No kit requests found for kit with order number: " + confirmation.getOrderNumber());
+                                logger.error("No kit requests found for kit with order number: " + confirmation.getOrderNumber());
                             }
+                        } else {
+                            logger.error("No items for order " + confirmation.getOrderNumber());
                         }
                     }
                     DBUtil.updateBookmark(endDate, DBConstants.GBF_CONFIRMATION);
