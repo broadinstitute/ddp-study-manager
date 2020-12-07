@@ -124,12 +124,12 @@ public class KitType {
         });
 
         if (results.resultException != null) {
-            throw new RuntimeException("Error getting list of kitTypes ", results.resultException);
+            throw new RuntimeException("Error getting list of upload reasons ", results.resultException);
         }
         List<String> uploadReasons = new ArrayList<>();
         if(results.resultValue != null){
             uploadReasons = (List<String>) results.resultValue;
-            logger.info("Found " + uploadReasons.size() + " kitTypes ");
+            logger.info("Found " + uploadReasons.size() + " upload reasons ");
 
         }
         return uploadReasons;

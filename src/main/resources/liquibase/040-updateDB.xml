@@ -17,4 +17,10 @@
             </column>
         </addColumn>
     </changeSet>
+    <changeSet id="carrierPerGroup" author="pegah">
+        <addColumn tableName="carrier_service">
+            <column name="instance_group" type="VARCHAR(100)">
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>
