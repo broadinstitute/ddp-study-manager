@@ -10,7 +10,7 @@ public interface ExternalShipper {
 
     public String getExternalShipperName();
 
-    public void orderKitRequests(ArrayList<KitRequest> kitRequests, EasyPostUtil easyPostUtil, KitRequestSettings kitRequestSettings) throws Exception;
+    public void orderKitRequests(ArrayList<KitRequest> kitRequests, EasyPostUtil easyPostUtil, KitRequestSettings kitRequestSettings, String shippingCarrier) throws Exception;
 
     public void orderStatus(ArrayList<KitRequest> kitRequests) throws Exception;
 

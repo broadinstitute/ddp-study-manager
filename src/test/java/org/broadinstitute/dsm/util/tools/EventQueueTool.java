@@ -118,7 +118,9 @@ public class EventQueueTool {
                                     rs.getString(DBConstants.DSM_KIT_REQUEST_ID), rs.getString(DBConstants.DDP_INSTANCE_ID), realmName,
                                     rs.getString(DBConstants.BASE_URL), eventName,
                                     rs.getString(DBConstants.EVENT_TYPE), System.currentTimeMillis(),
-                                    rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN)));
+                                    rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN),
+                                    rs.getString(DBConstants.UPLOAD_REASON),
+                                    rs.getString(DBConstants.DDP_KIT_REQUEST_ID)));
                         }
                     }
                 }

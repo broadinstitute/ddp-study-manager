@@ -531,6 +531,7 @@ public class DSMServer extends BasicServer {
 
         get(UI_ROOT + RoutePath.KIT_TYPES_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, new KitTypeRoute(kitUtil), new JsonTransformer());
         get(UI_ROOT + RoutePath.UPLOAD_REASONS + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM, new KitTypeRoute(kitUtil), new JsonTransformer());
+        get(UI_ROOT + RoutePath.CARRIERS + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM,  new CarrierServiceRoute(), new JsonTransformer());
 
         patch(UI_ROOT + RoutePath.PATCH, new PatchRoute(notificationUtil, patchUtil), new JsonTransformer());
     }

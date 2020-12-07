@@ -103,7 +103,7 @@ public class GBFRequestUtil implements ExternalShipper {
         return EXTERNAL_SHIPPER_NAME;
     }
 
-    public void orderKitRequests(ArrayList<KitRequest> kitRequests, EasyPostUtil easyPostUtil, KitRequestSettings kitRequestSettings) throws Exception {
+    public void orderKitRequests(ArrayList<KitRequest> kitRequests, EasyPostUtil easyPostUtil, KitRequestSettings kitRequestSettings, String shippingCarrier) throws Exception {
         if (kitRequests != null && !kitRequests.isEmpty()) {
             logger.info("Attempting to place orders with GBF");
             Orders orders = new Orders();
@@ -133,7 +133,10 @@ public class GBFRequestUtil implements ExternalShipper {
                     continue;
                 }
                 else if (address != null) {
-                    ShippingInfo shippingInfo = new ShippingInfo(kitRequestSettings.getCarrierToAccountNumber(), kitRequestSettings.getServiceTo(), address);
+                    if (!(kit instanceof KitUploadObject)) {
+                        shippingCarrier = kitRequestSettings.getServiceTo();
+                    }
+                    ShippingInfo shippingInfo = new ShippingInfo(kitRequestSettings.getCarrierToAccountNumber(), shippingCarrier, address);
                     List<LineItem> lineItems = new ArrayList<>();
                     lineItems.add(new LineItem(kitRequestSettings.getExternalShipperKitName(), "1"));
                     Order order = new Order(kit.getExternalOrderNumber(), kitRequestSettings.getExternalClientId(), kit.getParticipantId(), shippingInfo, lineItems);
@@ -273,7 +276,7 @@ public class GBFRequestUtil implements ExternalShipper {
             ShippingConfirmations shippingConfirmations = objectFromXMLString(ShippingConfirmations.class, gbfResponse.getXML());
             if (shippingConfirmations != null) {
                 List<ShippingConfirmation> confirmationList = shippingConfirmations.getShippingConfirmations();
-                logger.info("Number of confirmations received: "+confirmationList.size());
+                logger.info("Number of confirmations received: " + confirmationList.size());
                 if (confirmationList != null && !confirmationList.isEmpty()) {
                     for (ShippingConfirmation confirmation : confirmationList) {
                         //update external shipper response at request
