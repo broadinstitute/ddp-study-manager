@@ -10,10 +10,7 @@ import org.broadinstitute.dsm.statics.QueryExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Array;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,7 +38,7 @@ public class KitType {
     private final boolean manualSentTrack;
     private final boolean externalShipper;
 
-    public KitType(int kitId, String name, String displayName, boolean manualSentTrack, boolean externalShipper){
+    public KitType(int kitId, String name, String displayName, boolean manualSentTrack, boolean externalShipper) {
         this.kitId = kitId;
         this.name = name;
         this.displayName = displayName;
@@ -96,7 +93,7 @@ public class KitType {
         return kitTypes;
     }
 
-    public static List<String> getUploadReasons(@NonNull String realm){
+    public static List<String> getUploadReasons(@NonNull String realm) {
         SimpleResult results = inTransaction((conn) -> {
             List<String> uploadReasons = new ArrayList<>();
             SimpleResult dbVals = new SimpleResult();
@@ -105,7 +102,7 @@ public class KitType {
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, realm);
                 try (ResultSet rs = stmt.executeQuery()) {
-                    while (rs.next()) {
+                    if (rs.next()) {
 
                         String reasons = rs.getString(DBConstants.UPLOAD_REASONS);
                         if (StringUtils.isBlank(reasons)) {
@@ -127,7 +124,7 @@ public class KitType {
             throw new RuntimeException("Error getting list of upload reasons ", results.resultException);
         }
         List<String> uploadReasons = new ArrayList<>();
-        if(results.resultValue != null){
+        if (results.resultValue != null) {
             uploadReasons = (List<String>) results.resultValue;
             logger.info("Found " + uploadReasons.size() + " upload reasons ");
 

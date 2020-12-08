@@ -6,14 +6,14 @@ public class KitEvent extends Event {
     private String eventInfo;
     private String eventType;
     private long eventDate;
-    private String kitUploadType;
-    private String ddpKitRequestId;
+    private String kitReasonType;
+    private String kitRequestId;
 
-    public KitEvent(String eventInfo, String eventType, long eventDate, String kitUploadType, String ddpKitRequestId) {
+    public KitEvent(String eventInfo, String eventType, long eventDate, String kitReasonType, String kitRequestId) {
         this.eventInfo = eventInfo;
         this.eventType = eventType;
         this.eventDate = eventDate;
-        this.kitUploadType = kitUploadType;
-        this.ddpKitRequestId = ddpKitRequestId;
+        this.kitReasonType = kitReasonType;
+        this.kitRequestId = kitRequestId;
     }
 }
