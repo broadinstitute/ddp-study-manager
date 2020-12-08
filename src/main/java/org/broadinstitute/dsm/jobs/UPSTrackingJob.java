@@ -12,7 +12,6 @@ import org.broadinstitute.dsm.shipping.UPSTracker;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.EventUtil;
 import org.broadinstitute.dsm.util.KitUtil;
-import org.broadinstitute.dsm.util.NanoIdUtil;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -30,9 +29,11 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 public class UPSTrackingJob implements Job {
 
     private static final Logger logger = LoggerFactory.getLogger(UPSTrackingJob.class);
-            private static final String SQL_SELECT_KITS = "SELECT * FROM ddp_kit kit LEFT JOIN ddp_kit_request req " +
-                    " ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) WHERE req.ddp_instance_id = 9 and kit_label not like \"%\\\\_1\"  and (ups_tracking_status not like \"D %\" or ups_return_status not like \"D %\")" +
+            private static final String SQL_SELECT_KITS = "SELECT kit.dsm_kit_request_id, kit.kit_label, kit.tracking_to_id, kit.tracking_return_id, kit.error, kit.message, kit.receive_date, kit.ups_tracking_status, kit.ups_tracking_date, kit.ups_return_date, kit.ups_return_status, req.bsp_collaborator_participant_id" +
+                    " req.external_order_number, kit.CE_order FROM ddp_kit kit LEFT JOIN ddp_kit_request req " +
+                    " ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) WHERE req.ddp_instance_id = 9 and kit_label not like \"%\\\\_1\"  and (ups_tracking_status not like \"? %\" or ups_return_status not like \"? %\")" +
                     " order by kit.dsm_kit_request_id ASC";
+
 
     private static final String SQL_UPDATE_UPS_TRACKING_STATUS = "UPDATE ddp_kit SET ups_tracking_status = ?, ups_tracking_date = ? " +
             "WHERE dsm_kit_id <> 0 and  tracking_to_id = ? ";
@@ -251,6 +252,8 @@ public class UPSTrackingJob implements Job {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KITS)) {
                 stmt.setString(1, realm);
+                stmt.setString(2, UPSStatus.DELIVERED_TYPE);
+                stmt.setString(3,  UPSStatus.DELIVERED_TYPE);
                 try (ResultSet rs = stmt.executeQuery()) {
                     Map<String, Map<String, DdpKit>> results = getIdsFromResultSet(rs);
                     dbVals.resultValue = results;
