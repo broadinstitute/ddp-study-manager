@@ -44,6 +44,10 @@ public class UPSTrackingJob implements Job {
     static String DELIVERED = "DELIVERED";
     static String RECEIVED = "RECEIVED";
 
+    private static final int MAX_RETRIES = 5;
+
+    private static final long RETRY_SLEEP_MS = 7_000;
+
     private static String SELECT_BY_TRACKING_NUMBER = "and kit.tracking_to_id = ?";
     private static String SELECT_BY_RETURN_NUMBER = "and kit.tracking_return_id = ?";
     private static Covid19OrderRegistrar orderRegistrar;
@@ -78,9 +82,31 @@ public class UPSTrackingJob implements Job {
         }
     }
 
-    public static UPSTrackingResponse lookupTrackingInfo(String trackingId) {
+    public static UPSTrackingResponse lookupTrackingInfoSingleTry(String trackingId) {
         return new UPSTracker(DSMServer.UPS_ENDPOINT,DSMServer.UPS_USERNAME, DSMServer.UPS_PASSWORD, DSMServer.UPS_ACCESSKEY).lookupTrackingInfo(trackingId);
     }
+
+    public static UPSTrackingResponse lookupWithRetry(String trackingId) {
+        for (int i = 0; i < MAX_RETRIES; i++) {
+            if (i > 0) {
+                try {
+                    logger.info("Pausing before UPS retry");
+                    Thread.sleep(RETRY_SLEEP_MS);
+                } catch (InterruptedException e) {
+                    logger.error("Interrupted while sleeping between UPS retry attempts", e);
+                }
+                logger.info("Querying UPS for {}",trackingId);
+                try {
+                    return lookupTrackingInfoSingleTry(trackingId);
+                } catch (Exception e) {
+                    logger.error("Could not lookup UPS tracking info for " + trackingId + " on attempt " + i + " of " + MAX_RETRIES,e);
+                }
+            }
+        }
+        // if we're here, all attempts have failed
+        throw new RuntimeException("Failed to lookup UPS data after " + MAX_RETRIES + " retries for " + trackingId);
+    }
+
 
     public static void updateKitStatus(DdpKit kit, boolean isReturn) {
         String trackingId;
@@ -91,7 +117,7 @@ public class UPSTrackingJob implements Job {
             trackingId = kit.getTrackingReturnId();
         }
 
-        UPSTrackingResponse response = lookupTrackingInfo(trackingId);
+        UPSTrackingResponse response = lookupWithRetry(trackingId);
         logger.info("got response back from UPS: " + response);
         String type;
         if (isReturn) {
