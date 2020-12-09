@@ -26,9 +26,9 @@ import java.util.*;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
-public class UPSTrackingJob implements Job {
+public class TestBostonUPSTrackingJob implements Job {
 
-    private static final Logger logger = LoggerFactory.getLogger(UPSTrackingJob.class);
+    private static final Logger logger = LoggerFactory.getLogger(TestBostonUPSTrackingJob.class);
             private static final String SQL_SELECT_KITS = "SELECT kit.dsm_kit_request_id, kit.kit_label, kit.tracking_to_id, kit.tracking_return_id, kit.error, kit.message, kit.receive_date, kit.ups_tracking_status, kit.ups_tracking_date, kit.ups_return_date, kit.ups_return_status, req.bsp_collaborator_participant_id" +
                     " req.external_order_number, kit.CE_order FROM ddp_kit kit LEFT JOIN ddp_kit_request req " +
                     " ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) WHERE req.ddp_instance_id = 9 and kit_label not like \"%\\\\_1\"  and (ups_tracking_status not like \"? %\" or ups_return_status not like \"? %\")" +
