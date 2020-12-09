@@ -605,7 +605,7 @@ public class DSMServer extends BasicServer {
                         cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_LAST_NAME),
                         cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_NPI));
 
-                createScheduleJob(scheduler, null, null, UPSTrackingJob.class, "UPS_TRACKING_JOB",
+                createScheduleJob(scheduler, null, null, TestBostonUPSTrackingJob.class, "UPS_TRACKING_JOB",
                         cfg.getString(ApplicationConfigConstants.QUARTZ_UPS_LOOKUP_JOB), new UPSTriggerListener(), cfg);
 
 
