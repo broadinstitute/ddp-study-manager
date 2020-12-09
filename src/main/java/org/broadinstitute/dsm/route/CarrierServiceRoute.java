@@ -3,7 +3,6 @@ package org.broadinstitute.dsm.route;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.handlers.util.Result;
-import org.broadinstitute.dsm.db.KitType;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.RoutePath;
@@ -31,7 +30,7 @@ public class CarrierServiceRoute extends RequestHandler {
     protected Object processRequest(Request request, Response response, String userId) throws Exception {
         String realm = request.params(RequestParameter.REALM);
         if (request.url().contains(RoutePath.CARRIERS)) {
-            if (UserUtil.checkUserAccess(realm, userId, "kit_shipping")) {
+                if (UserUtil.checkUserAccess(realm, userId, "kit_shipping")) {
                 if (StringUtils.isNotBlank(realm)) {
                     String userIdRequest = UserUtil.getUserId(request);
                     if (!userId.equals(userIdRequest)) {
