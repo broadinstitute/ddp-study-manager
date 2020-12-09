@@ -145,29 +145,25 @@ public class GBFRequestUtil implements ExternalShipper {
             }
             if (!orders.getOrders().isEmpty()) {
                 String orderXml = GBFRequestUtil.orderXmlToString(Orders.class, orders);
-
-                //                logger.info("orderXML: " + orderXml);
                 boolean test = DSMServer.isTest(getExternalShipperName());//true for dev in `not-secret.conf`
                 JSONObject payload = new JSONObject().put("orderXml", orderXml).put("test", test);
                 String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + ORDER_ENDPOINT;
                 String apiKey = DSMServer.getApiKey(getExternalShipperName());
                 Response gbfResponse = null;
-                int totalAttempts = 2 + additionalAttempts;
                 Exception ex = null;
                 try {
-                    for (int i = 1; i <= totalAttempts; i++) {
+                    for (int i = 1; i <= MAX_ORDER_RETRIES; i++) {
                         //if this isn't the first attempt let's wait a little before retrying...
                         if (i > 1) {
-                            logger.info("Sleeping before request retry for " + sleepInMs + " ms.");
-                            Thread.sleep(sleepInMs);
-                            logger.info("Sleeping done.");
+                            logger.info("Sleeping before request retry for " + GBF_SLEEP_BETWEEN_RETRIES + " ms.");
+                            Thread.sleep(GBF_SLEEP_BETWEEN_RETRIES);
                         }
                         try {
                             gbfResponse = executePost(Response.class, sendRequest, payload.toString(), apiKey);
                             break;
                         }
                         catch (Exception newEx) {
-                            logger.warn("Send request failed (attempt #" + i + " of " + totalAttempts + "): ", newEx);
+                            logger.error("Send request failed (attempt #" + i + " of " + MAX_ORDER_RETRIES + ")", newEx);
                             ex = newEx;
                         }
                     }
