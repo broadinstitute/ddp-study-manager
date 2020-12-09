@@ -161,11 +161,11 @@ public class GBFRequestUtil implements ExternalShipper {
                         try {
                             logger.info("Attempting to order {} kits via {}", orders.getOrders().size(), sendRequest);
                             gbfResponse = executePost(Response.class, sendRequest, payload.toString(), apiKey);
-                            logger.info("Completed order for {} kits via {}", orders.getOrders().size(), sendRequest);
+                            logger.info("Completed order for {} kits via {} on attempt number {}.", orders.getOrders().size(), sendRequest, i);
                             break;
                         }
                         catch (Exception newEx) {
-                            logger.error("Send request failed (attempt #" + i + " of " + MAX_ORDER_RETRIES + ")", newEx);
+                            logger.error("Send request failed (attempt #" + i + " of " + MAX_ORDER_RETRIES + ").  This may be a transient issue.", newEx);
                             ex = newEx;
                         }
                     }
