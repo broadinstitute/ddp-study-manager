@@ -64,14 +64,22 @@ public class UPSTrackingJob implements Job {
                         if (kits != null) {
                             logger.info("checking tracking status for " + kits.size() + " tracking numbers");
                             for (DdpKit kit : kits.values()) {
-                                updateKitStatus(kit, false);
+                                try {
+                                    updateKitStatus(kit, false);
+                                } catch (Exception e) {
+                                    logger.error("Could not update outbound status for " + kit.getExternalOrderNumber(), e);
+                                }
                             }
                         }
                         kits = ids.get("return");
                         if (kits != null) {
                             logger.info("checking return status for " + kits.size() + " tracking numbers");
                             for (DdpKit kit : kits.values()) {
-                                updateKitStatus(kit, true);
+                                try {
+                                    updateKitStatus(kit, true);
+                                } catch (Exception e) {
+                                    logger.error("Could not update return status for " + kit.getExternalOrderNumber(), e);
+                                }
                             }
                         }
                     }
