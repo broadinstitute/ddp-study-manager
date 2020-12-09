@@ -66,7 +66,9 @@ public class UPSTrackingJob implements Job {
                             for (DdpKit kit : kits.values()) {
                                 updateKitStatus(kit, false);
                             }
-                            kits = ids.get("return");
+                        }
+                        kits = ids.get("return");
+                        if (kits != null) {
                             logger.info("checking return status for " + kits.size() + " tracking numbers");
                             for (DdpKit kit : kits.values()) {
                                 updateKitStatus(kit, true);
@@ -79,7 +81,7 @@ public class UPSTrackingJob implements Job {
     }
 
     public static UPSTrackingResponse lookupTrackingInfo(String trackingId) {
-        return new UPSTracker(DSMServer.UPS_ENDPOINT,DSMServer.UPS_USERNAME, DSMServer.UPS_PASSWORD, DSMServer.UPS_ACCESSKEY).lookupTrackingInfo(trackingId);
+        return new UPSTracker(DSMServer.UPS_ENDPOINT, DSMServer.UPS_USERNAME, DSMServer.UPS_PASSWORD, DSMServer.UPS_ACCESSKEY).lookupTrackingInfo(trackingId);
     }
 
     public static void updateKitStatus(DdpKit kit, boolean isReturn) {
@@ -205,7 +207,8 @@ public class UPSTrackingJob implements Job {
                     orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime);
                     logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
                     kit.changeCEOrdered(true);
-                } else {
+                }
+                else {
                     logger.info("No return events for " + kit.getKitLabel() + ".  Will not place order yet.");
                 }
                 if (shouldTriggerEventForReturnKitDelivery(statusType, oldType)) {
