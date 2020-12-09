@@ -91,8 +91,9 @@ public class UPSTrackingJob implements Job {
             trackingId = kit.getTrackingReturnId();
         }
 
+        logger.info("Checking UPS status for " + trackingId);
         UPSTrackingResponse response = lookupTrackingInfo(trackingId);
-        logger.info("got response back from UPS: " + response);
+        logger.info("UPS response for " + trackingId + " is " + response);
         String type;
         if (isReturn) {
             type = kit.getUpsReturnStatus();

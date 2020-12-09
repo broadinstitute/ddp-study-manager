@@ -31,13 +31,9 @@ public class ExternalShipperJob implements Job {
                 ArrayList<KitRequest> kitRequests = shipper.getKitRequestsNotDone(kitType.getInstanceId());
                 shipper.orderStatus(kitRequests);
                 if (kitRequests != null && !kitRequests.isEmpty()) { // only if there are kits which are not yet having kit_label set
-                    JobDataMap dataMap = context.getJobDetail().getJobDataMap();
-                    String additionalCronExpression = (String) dataMap.get(DSMServer.ADDITIONAL_CRON_EXPRESSION);
-                    if (CronExpression.isValidExpression(additionalCronExpression)) {
-                        long now = System.currentTimeMillis();
-                        long fixedStartTime = new SimpleDateFormat("yyyy-MM-dd").parse("2020-08-01").getTime();
-                        shipper.orderConfirmation(kitRequests, fixedStartTime, now);
-                    }
+                    long now = System.currentTimeMillis();
+                    long fixedStartTime = new SimpleDateFormat("yyyy-MM-dd").parse("2020-08-01").getTime();
+                    shipper.orderConfirmation(kitRequests, fixedStartTime, now);
                 }
             }
             catch (Exception e) {
