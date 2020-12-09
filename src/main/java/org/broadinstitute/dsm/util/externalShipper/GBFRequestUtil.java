@@ -82,8 +82,8 @@ public class GBFRequestUtil implements ExternalShipper {
 
     public final String EXTERNAL_SHIPPER_NAME = "gbf";
 
-    private static int additionalAttempts = 1;
-    private static int sleepInMs = 500;
+    private static final int MAX_ORDER_RETRIES = 5;
+    private static final int GBF_SLEEP_BETWEEN_RETRIES = 7_000;
 
     private static Executor blindTrustEverythingExecutor;
 
@@ -159,7 +159,9 @@ public class GBFRequestUtil implements ExternalShipper {
                             Thread.sleep(GBF_SLEEP_BETWEEN_RETRIES);
                         }
                         try {
+                            logger.info("Attempting to order {} kits via {}", orders.getOrders().size(), sendRequest);
                             gbfResponse = executePost(Response.class, sendRequest, payload.toString(), apiKey);
+                            logger.info("Completed order for {} kits via {}", orders.getOrders().size(), sendRequest);
                             break;
                         }
                         catch (Exception newEx) {
@@ -172,11 +174,13 @@ public class GBFRequestUtil implements ExternalShipper {
                     throw new RuntimeException("Unable to send requests.", ex);
                 }
                 if (gbfResponse != null && gbfResponse.isSuccess()) {
-                    logger.info("Ordered kits");
+                    for (Status kitStatus : gbfResponse.getStatuses()) {
+                        logger.info("Order status from order endpoint for " + kitStatus.getOrderNumber() + " is " + kitStatus.getOrderStatus());
+                    }
                     //todo pegah change status to "ORDERED" and change null checks to ORDERED -> for when UPS checks needed
                 }
                 else {
-                    throw new ExternalShipperException("Unable to order kits after retry.", ex);
+                    throw new ExternalShipperException("Unable to order " + orders.getOrders().size() + " kits via " + sendRequest + " after " + MAX_ORDER_RETRIES + " retries.", ex);
                 }
             }
         }
