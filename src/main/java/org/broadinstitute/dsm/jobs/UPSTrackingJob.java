@@ -30,7 +30,7 @@ public class UPSTrackingJob implements Job {
 
     private static final Logger logger = LoggerFactory.getLogger(UPSTrackingJob.class);
     private static final String SQL_SELECT_KITS = "SELECT * FROM ddp_kit kit LEFT JOIN ddp_kit_request req " +
-            "ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) WHERE req.ddp_instance_id = ? and kit_label not like \"%\\_1\" order by kit.dsm_kit_request_id ASC";
+            "ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) WHERE req.ddp_instance_id = ? and kit_label not like \"%\\_1\" order by kit.dsm_kit_request_id DESC";
 
     private static final String SQL_UPDATE_UPS_TRACKING_STATUS = "UPDATE ddp_kit SET ups_tracking_status = ?, ups_tracking_date = ? " +
             "WHERE dsm_kit_id <> 0 and dsm_kit_id in ( SELECT dsm_kit_id FROM ( SELECT * from ddp_kit) as something WHERE something.tracking_to_id = ? );";
@@ -175,7 +175,7 @@ public class UPSTrackingJob implements Job {
                 stmt.setString(3, trackingId);
                 int r = stmt.executeUpdate();
                 if (r != 2) {//number of subkits
-                    throw new RuntimeException("Update query for UPS tracking updated " + r + " rows! with tracking/return id: " + trackingId);
+                    logger.error("Update query for UPS tracking updated " + r + " rows! with tracking/return id: " + trackingId);
                 }
             }
             catch (Exception e) {
