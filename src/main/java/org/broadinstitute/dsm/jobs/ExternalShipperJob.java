@@ -29,6 +29,8 @@ public class ExternalShipperJob implements Job {
                 logger.info("Starting the external shipper job");
                 ExternalShipper shipper = (ExternalShipper) Class.forName(DSMServer.getClassName(kitType.getExternalShipper())).newInstance();//GBFRequestUtil
                 ArrayList<KitRequest> kitRequests = shipper.getKitRequestsNotDone(kitType.getInstanceId());
+                logger.info("External shipping is currently disabled; ignoring " + kitRequests.size() + " pending orders");
+                /*
                 shipper.orderStatus(kitRequests);
                 if (kitRequests != null && !kitRequests.isEmpty()) { // only if there are kits which are not yet having kit_label set
                     logger.info("Working on " + kitRequests.size() + " incomplete external kits");
@@ -36,6 +38,7 @@ public class ExternalShipperJob implements Job {
                     long fixedStartTime = new SimpleDateFormat("yyyy-MM-dd").parse("2020-08-01").getTime();
                     shipper.orderConfirmation(kitRequests, fixedStartTime, now);
                 }
+                */
             }
             catch (Exception e) {
                 throw new RuntimeException("Failed to get status and/or confirmation ", e);
