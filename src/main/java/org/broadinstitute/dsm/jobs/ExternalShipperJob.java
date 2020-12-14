@@ -13,6 +13,7 @@ import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,19 +31,10 @@ public class ExternalShipperJob implements Job {
                 ArrayList<KitRequest> kitRequests = shipper.getKitRequestsNotDone(kitType.getInstanceId());
                 shipper.orderStatus(kitRequests);
                 if (kitRequests != null && !kitRequests.isEmpty()) { // only if there are kits which are not yet having kit_label set
-                    JobDataMap dataMap = context.getJobDetail().getJobDataMap();
-                    String additionalCronExpression = (String) dataMap.get(DSMServer.ADDITIONAL_CRON_EXPRESSION);
-                    if (CronExpression.isValidExpression(additionalCronExpression)) {
-                        CronExpression cron = new CronExpression(additionalCronExpression);
-                        if (cron.isSatisfiedBy(context.getFireTime())) {
-                            long lastRun = 0L;//let's get all of them
-                            long now = System.currentTimeMillis();
-                            shipper.orderConfirmation(kitRequests, lastRun, now);
-                        }
-                    }
-                    else {
-                        throw new RuntimeException("Additional cron expression is not a valid cron expression");
-                    }
+                    logger.info("Working on " + kitRequests.size() + " incomplete external kits");
+                    long now = System.currentTimeMillis();
+                    long fixedStartTime = new SimpleDateFormat("yyyy-MM-dd").parse("2020-08-01").getTime();
+                    shipper.orderConfirmation(kitRequests, fixedStartTime, now);
                 }
             }
             catch (Exception e) {
