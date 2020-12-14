@@ -68,12 +68,22 @@ public class TestBostonUPSTrackingJob implements Job {
                         if (kits != null) {
                             logger.info("checking tracking status for " + kits.size() + " tracking numbers");
                             for (DdpKit kit : kits.values()) {
-                                updateKitStatus(kit, false);
+                                try {
+                                    updateKitStatus(kit, false);
+                                } catch (Exception e) {
+                                    logger.error("Could not update outbound status for " + kit.getExternalOrderNumber(), e);
+                                }
                             }
-                            kits = ids.get("return");
+                        }
+                        kits = ids.get("return");
+                        if (kits != null) {
                             logger.info("checking return status for " + kits.size() + " tracking numbers");
                             for (DdpKit kit : kits.values()) {
-                                updateKitStatus(kit, true);
+                                try {
+                                    updateKitStatus(kit, true);
+                                } catch (Exception e) {
+                                    logger.error("Could not update return status for " + kit.getExternalOrderNumber(), e);
+                                }
                             }
                         }
                     }
@@ -83,7 +93,7 @@ public class TestBostonUPSTrackingJob implements Job {
     }
 
     public static UPSTrackingResponse lookupTrackingInfo(String trackingId) {
-        return new UPSTracker(DSMServer.UPS_ENDPOINT,DSMServer.UPS_USERNAME, DSMServer.UPS_PASSWORD, DSMServer.UPS_ACCESSKEY).lookupTrackingInfo(trackingId);
+        return new UPSTracker(DSMServer.UPS_ENDPOINT, DSMServer.UPS_USERNAME, DSMServer.UPS_PASSWORD, DSMServer.UPS_ACCESSKEY).lookupTrackingInfo(trackingId);
     }
 
     public static void updateKitStatus(DdpKit kit, boolean isReturn) {
@@ -95,8 +105,9 @@ public class TestBostonUPSTrackingJob implements Job {
             trackingId = kit.getTrackingReturnId();
         }
 
+        logger.info("Checking UPS status for " + trackingId);
         UPSTrackingResponse response = lookupTrackingInfo(trackingId);
-        logger.info("got response back from UPS: " + response);
+        logger.info("UPS response for " + trackingId + " is " + response);
         String type;
         if (isReturn) {
             type = kit.getUpsReturnStatus();
@@ -107,7 +118,7 @@ public class TestBostonUPSTrackingJob implements Job {
         if (StringUtils.isNotBlank(type)) {// get only type from it
             type = type.substring(0, type.indexOf(' '));
         }
-        if (response.getErrors() == null) {
+        if (response != null && response.getErrors() == null) {
             updateStatus(trackingId, type, response, isReturn, kit);
         }
         else {
@@ -176,7 +187,7 @@ public class TestBostonUPSTrackingJob implements Job {
                 stmt.setString(3, trackingId);
                 int r = stmt.executeUpdate();
                 if (r != 2) {//number of subkits
-                    throw new RuntimeException("Update query for UPS tracking updated " + r + " rows! with tracking/return id: " + trackingId);
+                    logger.error("Update query for UPS tracking updated " + r + " rows! with tracking/return id: " + trackingId);
                 }
             }
             catch (Exception e) {
@@ -208,7 +219,8 @@ public class TestBostonUPSTrackingJob implements Job {
                     orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime);
                     logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
                     kit.changeCEOrdered(true);
-                } else {
+                }
+                else {
                     logger.info("No return events for " + kit.getKitLabel() + ".  Will not place order yet.");
                 }
                 if (shouldTriggerEventForReturnKitDelivery(statusType, oldType)) {
