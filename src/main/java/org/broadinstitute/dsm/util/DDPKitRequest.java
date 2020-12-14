@@ -233,7 +233,7 @@ public class DDPKitRequest {
                                     if (profile != null && !profile.isEmpty()) {
 
                                         KitDetail kitDetail = new KitDetail(rs.getString(DBConstants.DDP_PARTICIPANT_ID),
-                                                rs.getString(DBConstants.LAST_KIT),
+                                                rs.getString(DBConstants.DDP_KIT_REQUEST_ID),
                                                 rs.getString(DBConstants.KIT_TYPE_ID),
                                                 rs.getBoolean("needs_approval"));
                                         if (ddpParticipant != null) {
