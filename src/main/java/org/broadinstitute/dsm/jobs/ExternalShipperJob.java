@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +26,6 @@ public class ExternalShipperJob implements Job {
     public void execute(JobExecutionContext context) {
         //get all kits requests settings with external shippers
         List<KitType> kitTypes = KitType.getKitTypesWithExternalShipper();
-        long milliSecsInOneDay = 24 * 60 * 60 * 1000;
         for (KitType kitType : kitTypes) {
             try {
                 logger.info("Starting the external shipper job");
@@ -33,9 +34,9 @@ public class ExternalShipperJob implements Job {
                 shipper.orderStatus(kitRequests);
                 if (kitRequests != null && !kitRequests.isEmpty()) { // only if there are kits which are not yet having kit_label set
                     logger.info("Working on " + kitRequests.size() + " incomplete external kits");
-                    long now = System.currentTimeMillis();
-                    long dynamicStartTime = now - 5 * milliSecsInOneDay;
-                    shipper.orderConfirmation(kitRequests, dynamicStartTime, now);
+                    Instant now = Instant.now();
+                    Instant dynamicStartTime = now.minus(5, ChronoUnit.DAYS);
+                    shipper.orderConfirmation(kitRequests, dynamicStartTime.toEpochMilli(), now.toEpochMilli());
                 }
             }
             catch (Exception e) {
