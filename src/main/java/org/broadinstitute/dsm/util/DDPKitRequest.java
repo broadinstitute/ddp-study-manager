@@ -181,9 +181,9 @@ public class DDPKitRequest {
                                     KitRequestSettings setting = iter.next();
                                     ArrayList<KitRequest> kits = kitsToOrder.get(setting);
                                     try {
-                                        logger.info("skipping ordering with external shipper");
+                                        logger.info("placing order with external shipper");
                                         ExternalShipper shipper = (ExternalShipper) Class.forName(DSMServer.getClassName(setting.getExternalShipper())).newInstance();
-                                        //shipper.orderKitRequests(kits, new EasyPostUtil(latestKit.getInstanceName()), setting);
+                                        shipper.orderKitRequests(kits, new EasyPostUtil(latestKit.getInstanceName()), setting);
                                     }
                                     catch (Exception e) {
                                         logger.error("Failed to sent external shipper kit request order to " + setting.getExternalShipper(), e);
