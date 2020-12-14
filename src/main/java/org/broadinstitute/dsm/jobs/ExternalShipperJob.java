@@ -24,6 +24,7 @@ public class ExternalShipperJob implements Job {
     public void execute(JobExecutionContext context) {
         //get all kits requests settings with external shippers
         List<KitType> kitTypes = KitType.getKitTypesWithExternalShipper();
+        long milliSecsInOneDay = 24 * 60 * 60 * 1000;
         for (KitType kitType : kitTypes) {
             try {
                 logger.info("Starting the external shipper job");
@@ -33,8 +34,8 @@ public class ExternalShipperJob implements Job {
                 if (kitRequests != null && !kitRequests.isEmpty()) { // only if there are kits which are not yet having kit_label set
                     logger.info("Working on " + kitRequests.size() + " incomplete external kits");
                     long now = System.currentTimeMillis();
-                    long fixedStartTime = new SimpleDateFormat("yyyy-MM-dd").parse("2020-08-01").getTime();
-                    shipper.orderConfirmation(kitRequests, fixedStartTime, now);
+                    long dynamicStartTime = now - 5 * milliSecsInOneDay;
+                    shipper.orderConfirmation(kitRequests, dynamicStartTime, now);
                 }
             }
             catch (Exception e) {
