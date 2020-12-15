@@ -104,10 +104,17 @@ public abstract class PDFProcessor implements BasicProcessor {
         String gcpName = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_NAME);
         if (StringUtils.isNotBlank(gcpName)) {
             String bucketName = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_CONFIG_BUCKET);
+            String credentials = null;
+            if (TransactionWrapper.hasConfigPath(ApplicationConfigConstants.GOOGLE_CREDENTIALS)) {
+                String tmp = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_CREDENTIALS);
+                if (StringUtils.isNotBlank(tmp) && new File(tmp).exists()) {
+                    credentials = tmp;
+                }
+            }
             try {
-                if (GoogleBucket.bucketExists(null, gcpName, bucketName)) {
+                if (GoogleBucket.bucketExists(credentials, gcpName, bucketName)) {
                     logger.info("Downloading template " + fileName + " from bucket " + bucketName);
-                    return GoogleBucket.downloadFile(null, gcpName, bucketName, fileName);
+                    return GoogleBucket.downloadFile(credentials, gcpName, bucketName, fileName);
                 }
                 else {
                     logger.error("Google bucket " + bucketName + " does not exist");

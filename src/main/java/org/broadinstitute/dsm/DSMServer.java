@@ -441,11 +441,8 @@ public class DSMServer extends BasicServer {
         patch(UI_ROOT + RoutePath.INSTITUTION_REQUEST, institutionRoute, new JsonTransformer());
 
         DownloadPDFRoute pdfRoute = new DownloadPDFRoute();
-        post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.CONSENT_PDF, pdfRoute, new JsonTransformer());
-        post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.RELEASE_PDF, pdfRoute, new JsonTransformer());
-        post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.COVER_PDF + RoutePath.ROUTE_SEPARATOR + RequestParameter.MEDICALRECORDID, pdfRoute, new JsonTransformer());
-        post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.REQUEST_PDF, pdfRoute, new JsonTransformer());
         post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.PDF, pdfRoute, new JsonTransformer());
+        post(UI_ROOT + RoutePath.DOWNLOAD_PDF + DownloadPDFRoute.BUNDLE, pdfRoute, new JsonTransformer());
         get(UI_ROOT + DownloadPDFRoute.PDF, pdfRoute, new JsonTransformer());
 
         patch(UI_ROOT + RoutePath.ASSIGN_PARTICIPANT_REQUEST, new AssignParticipantRoute(
