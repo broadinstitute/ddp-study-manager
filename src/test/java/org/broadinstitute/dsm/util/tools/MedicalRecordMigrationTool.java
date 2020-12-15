@@ -5,7 +5,6 @@ import com.typesafe.config.ConfigFactory;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.TransactionWrapper;
-import org.broadinstitute.dsm.model.mbc.MBCInstitution;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.util.DBTestUtil;
 import org.broadinstitute.dsm.util.DDPMedicalRecordDataRequest;
@@ -118,10 +117,6 @@ public class MedicalRecordMigrationTool {
                                     ddpParticipantId, instanceId);
                             MedicalRecordUtil.writeNewRecordIntoDb(conn, DDPMedicalRecordDataRequest.SQL_INSERT_PARTICIPANT_RECORD,
                                     ddpParticipantId, instanceId);
-                        }
-                        if (MedicalRecordUtil.isInstitutionInDB(conn, ddpParticipantId, ddpInstitutionId, instanceId, MBCInstitution.PHYSICIAN) == null) {
-                            MedicalRecordUtil.writeInstitutionIntoDb(conn, ddpParticipantId, instanceId,
-                                    ddpInstitutionId, MBCInstitution.PHYSICIAN);
                         }
 
                         String medicalRecordId = null;

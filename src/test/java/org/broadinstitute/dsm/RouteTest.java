@@ -8,21 +8,14 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
-import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.email.SendGridEvent;
 import org.broadinstitute.ddp.email.SendGridEventData;
 import org.broadinstitute.ddp.handlers.util.*;
 import org.broadinstitute.ddp.security.SecurityHelper;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.model.*;
-import org.broadinstitute.dsm.model.mbc.MBC;
-import org.broadinstitute.dsm.model.mbc.MBCInstitution;
-import org.broadinstitute.dsm.model.mbc.MBCParticipant;
-import org.broadinstitute.dsm.model.mbc.MBCParticipantInstitution;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.*;
-import org.broadinstitute.dsm.util.tools.util.DBUtil;
-import org.jruby.embed.ScriptingContainer;
 import org.junit.*;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.model.JsonBody;
@@ -34,7 +27,6 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
@@ -52,9 +44,6 @@ public class RouteTest extends TestHelper {
     private static final Logger logger = LoggerFactory.getLogger(RouteTest.class);
 
     public static final String OUTPUT_FOLDER = "src/test/resources/output/";
-
-    private static Object receiver = null;
-    private static ScriptingContainer container = null;
 
     private static DDPMedicalRecordDataRequest ddpMedicalRecordDataRequest;
 
@@ -100,21 +89,7 @@ public class RouteTest extends TestHelper {
     }
 
     private static void setupScriptingContainer() {
-        receiver = null;
-        container = null;
-        try {
-            container = new ScriptingContainer();
-            //put path to encryptorGem gem here
-            container.getLoadPaths().add(container.getClassLoader().getResource(DSMServer.ENCRYPTION_PATH).getPath());
-            container.runScriptlet("require 'encryptor'");
-            // add script
-            receiver = container.runScriptlet(DSMServer.SCRIPT);
-        }
-        catch (Exception e) {
-            Assert.fail("Couldn't setup ruby for MBC decryption");
-        }
-
-        ddpMedicalRecordDataRequest = new DDPMedicalRecordDataRequest(container, receiver);
+        ddpMedicalRecordDataRequest = new DDPMedicalRecordDataRequest();
     }
 
     //kits will get deleted even if test failed!
@@ -1213,82 +1188,6 @@ public class RouteTest extends TestHelper {
             }
             return null;
         });
-    }
-
-    @Test
-    @Ignore("No more mbc per db, it is now on pepper")
-    public void newMBCParticipantsByBookmark() {
-        //need to request first all of them, because jobs are deactivated... and list will not get populated then
-        ddpMedicalRecordDataRequest.requestFromDB();
-
-        //get ddp_institution_id of last physician
-        String maxPhysicianMBC = DBTestUtil.getQueryDetail(DBTestUtil.SELECT_MAXPARTICIPANT,
-                DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, "mbc", "ddp_instance_id"), "value");
-        Map<String, MBCInstitution> mbcInstitutions = DSMServer.getMbcInstitutions();
-        MBCInstitution institution = mbcInstitutions.get(maxPhysicianMBC);
-        String updateAtBeforeChange = institution.getUpdatedAt();
-
-        //change value of the last physician (in mbc db) in the physician list
-        institution.setUpdatedAt("just now");
-        DSMServer.putMBCInstitution(maxPhysicianMBC, institution);
-        //double checking that value is now changed in DSM list
-        mbcInstitutions = DSMServer.getMbcInstitutions();
-        institution = mbcInstitutions.get(maxPhysicianMBC);
-        String updateAtAfterChange = institution.getUpdatedAt();
-        Assert.assertNotEquals(updateAtBeforeChange, updateAtAfterChange);
-
-        //changing bookmarked ddp_institution_id to second last one
-        List strings = new ArrayList<>();
-        String newMaxPhysicianMBC = String.valueOf((Integer.parseInt(maxPhysicianMBC)) - 1);
-        Assert.assertNotEquals(newMaxPhysicianMBC, maxPhysicianMBC);
-        strings.add(newMaxPhysicianMBC);
-        strings.add(DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, "mbc", "ddp_instance_id"));
-        DBTestUtil.executeQueryWStrings("update bookmark set value = ? where instance = ? ", strings);
-
-        ddpMedicalRecordDataRequest.requestFromDB();
-        //check value now after request
-        mbcInstitutions = DSMServer.getMbcInstitutions();
-        institution = mbcInstitutions.get(maxPhysicianMBC);
-        String updateAtAfterRequest = institution.getUpdatedAt();
-        Assert.assertNotEquals(updateAtAfterChange, updateAtAfterRequest);
-        Assert.assertEquals(updateAtBeforeChange, updateAtAfterRequest);
-    }
-
-    @Test
-    @Ignore("No more mbc per db, it is now on pepper")
-    public void mbcParticipantsChanged() throws Exception {
-        //need to request first all of them, because jobs are deactivated... and list will not get populated then
-        ddpMedicalRecordDataRequest.requestFromDB();
-        Map<String, MBCParticipant> mbcParticipants = DSMServer.getMbcParticipants();
-        MBCParticipant participant = mbcParticipants.get("129");
-        String originalUpdatedValue = participant.getUpdatedAt();
-        String updatedChanged = "yesterday";
-        MBCParticipant newParticipant = new MBCParticipant("129", "testName", "testNameLast", "wastelands", "01",
-                "2016", "23-12-2015", "23-1-2000", updatedChanged);
-        DSMServer.putMBCParticipant("129", newParticipant);
-
-        String dbUrl = TransactionWrapper.getSqlFromConfig("mbc" + "." + MBC.URL);
-        //get ddp_institution_id of last physician
-        String maxPhysicianMBC = DBTestUtil.getQueryDetail(DBTestUtil.SELECT_MAXPARTICIPANT,
-                DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, "mbc", "ddp_instance_id"), "value");
-        //new search does not change participant because nothing is updated
-        ddpMedicalRecordDataRequest.requestFromDB();
-        participant = mbcParticipants.get("129");
-        //participant should still be the same as the one we set it to
-        Assert.assertEquals(participant.getUpdatedAt(), updatedChanged);
-
-        //setting update time back to before that participant was changed
-        String strDtWithoutNanoSec = originalUpdatedValue.substring(0, originalUpdatedValue.lastIndexOf("."));
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date date = sdf.parse(strDtWithoutNanoSec);
-
-        //using search method directly to be able to change the lastUpdate date
-        MBCParticipantInstitution.getPhysiciansFromDB("mbc", dbUrl, Integer.parseInt(maxPhysicianMBC), date.getTime() - 36000000, container, receiver, false);
-        participant = mbcParticipants.get("129");
-
-        //participant value should be back to original ones
-        Assert.assertNotEquals(participant.getUpdatedAt(), updatedChanged);
-        Assert.assertEquals(participant.getUpdatedAt(), originalUpdatedValue);
     }
 
     @Test
