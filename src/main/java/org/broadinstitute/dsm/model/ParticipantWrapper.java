@@ -55,9 +55,17 @@ public class ParticipantWrapper {
         if (filters == null) {
             Map<String, Map<String, Object>> participantESData = getESData(instance);
             Map<String, Participant> participants = Participant.getParticipants(instance.getName());
-            Map<String, List<MedicalRecord>> medicalRecords = MedicalRecord.getMedicalRecords(instance.getName());
-            Map<String, List<OncHistoryDetail>> oncHistoryDetails = OncHistoryDetail.getOncHistoryDetails(instance.getName());
-            Map<String, List<KitRequestShipping>> kitRequests = KitRequestShipping.getKitRequests(instance.getName());
+            Map<String, List<MedicalRecord>> medicalRecords = null;
+            Map<String, List<OncHistoryDetail>> oncHistoryDetails = null;
+            Map<String, List<KitRequestShipping>> kitRequests = null;
+
+            if (instance.isHasRole()) { //only needed if study has mr&tissue tracking
+                medicalRecords = MedicalRecord.getMedicalRecords(instance.getName());
+                oncHistoryDetails = OncHistoryDetail.getOncHistoryDetails(instance.getName());
+            }
+            if (DDPInstance.getRole(instance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
+                kitRequests = KitRequestShipping.getKitRequests(instance);
+            }
             Map<String, List<AbstractionActivity>> abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName());
             Map<String, List<AbstractionGroup>> abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName());
             Map<String, Map<String, Object>> proxyData = getProxyData(instance);
@@ -101,7 +109,7 @@ public class ParticipantWrapper {
                         baseList = getCommonEntries(baseList, new ArrayList<>(oncHistories.keySet()));
                     }
                     else if (DBConstants.DDP_KIT_REQUEST_ALIAS.equals(source)) {
-                        kitRequests = KitRequestShipping.getKitRequests(instance.getName(), filters.get(source));
+                        kitRequests = KitRequestShipping.getKitRequests(instance, filters.get(source));
                         baseList = getCommonEntries(baseList, new ArrayList<>(kitRequests.keySet()));
                     }
                     else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
@@ -126,14 +134,14 @@ public class ParticipantWrapper {
             if (participants == null) {
                 participants = Participant.getParticipants(instance.getName());
             }
-            if (medicalRecords == null) {
+            if (medicalRecords == null && instance.isHasRole()) {
                 medicalRecords = MedicalRecord.getMedicalRecords(instance.getName());
             }
-            if (oncHistories == null) {
+            if (oncHistories == null && instance.isHasRole()) {
                 oncHistories = OncHistoryDetail.getOncHistoryDetails(instance.getName());
             }
             if (kitRequests == null) {
-                kitRequests = KitRequestShipping.getKitRequests(instance.getName());
+                kitRequests = KitRequestShipping.getKitRequests(instance);
             }
             if (abstractionActivities == null) {
                 abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName());

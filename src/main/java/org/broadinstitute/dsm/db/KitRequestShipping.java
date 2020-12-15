@@ -38,6 +38,18 @@ public class KitRequestShipping extends KitRequest {
 
     private static final Logger logger = LoggerFactory.getLogger(KitRequestShipping.class);
 
+    //no kit settings
+    public static final String SQL_SELECT_KIT_REQUEST_NEW = "SELECT kt.kit_type_name, realm.instance_name, realm.ddp_instance_id, realm.base_url, realm.auth0_token, realm.billing_reference, " +
+            "realm.migrated_ddp, realm.collaborator_id_prefix, realm.es_participant_index, request.bsp_collaborator_participant_id, request.bsp_collaborator_sample_id, request.ddp_participant_id, request.ddp_label, request.dsm_kit_request_id, " +
+            "request.kit_type_id, request.external_order_status, request.external_order_number, request.external_order_date, request.external_response, kt.no_return, request.created_by, " +
+            "kit.dsm_kit_request_id, kit.dsm_kit_id, kit.kit_complete, kit.label_url_to, kit.label_url_return, kit.tracking_to_id, " +
+            "kit.tracking_return_id, kit.easypost_tracking_to_url, kit.easypost_tracking_return_url, kit.easypost_to_id, kit.easypost_shipment_status, kit.scan_date, kit.label_date, kit.error, kit.message, " +
+            "kit.receive_date, kit.deactivated_date, kit.easypost_address_id_to, kit.deactivation_reason, tracking.tracking_id, kit.kit_label, kit.express, kit.test_result, kit.needs_approval, kit.authorization, kit.denial_reason, " +
+            "kit.authorized_by, kit.ups_tracking_status, kit.ups_return_status, kit.CE_order " +
+            "FROM ddp_kit_request request " +
+            "LEFT JOIN ddp_kit kit on (kit.dsm_kit_request_id = request.dsm_kit_request_id) " +
+            "LEFT JOIN ddp_kit_tracking tracking ON (kit.kit_label = tracking.kit_label) " +
+            "LEFT JOIN kit_type kt on (request.kit_type_id = kt.kit_type_id) ";
     public static final String SQL_SELECT_KIT_REQUEST = "SELECT * FROM ( SELECT req.upload_reason, kt.kit_type_name, ddp_site.instance_name, ddp_site.ddp_instance_id, ddp_site.base_url, ddp_site.auth0_token, ddp_site.billing_reference, " +
             "ddp_site.migrated_ddp, ddp_site.collaborator_id_prefix, ddp_site.es_participant_index, req.bsp_collaborator_participant_id, req.bsp_collaborator_sample_id, req.ddp_participant_id, req.ddp_label, req.dsm_kit_request_id, " +
             "req.kit_type_id, req.external_order_status, req.external_order_number, req.external_order_date, req.external_response, kt.no_return, req.created_by FROM kit_type kt, ddp_kit_request req, ddp_instance ddp_site " +
@@ -264,11 +276,11 @@ public class KitRequestShipping extends KitRequest {
         return kitRequestShipping;
     }
 
-    public static Map<String, List<KitRequestShipping>> getKitRequests(@NonNull String realm) {
-        return getKitRequests(realm, null);
+    public static Map<String, List<KitRequestShipping>> getKitRequests(@NonNull DDPInstance instance) {
+        return getKitRequests(instance, null);
     }
 
-    public static Map<String, List<KitRequestShipping>> getKitRequests(@NonNull String realm, String queryAddition) {
+    public static Map<String, List<KitRequestShipping>> getKitRequests(@NonNull DDPInstance instance, String queryAddition) {
         logger.info("Collection sample information");
         Map<String, List<KitRequestShipping>> kitRequests = new HashMap<>();
         SimpleResult results = inTransaction((conn) -> {
@@ -277,8 +289,8 @@ public class KitRequestShipping extends KitRequest {
             if (StringUtils.isNotBlank(addition)) {
                 addition = addition.replaceAll("k\\.", "");
             }
-            try (PreparedStatement stmt = conn.prepareStatement(DBUtil.getFinalQuery(SQL_SELECT_KIT_REQUEST.concat(QueryExtension.BY_REALM), addition))) {
-                stmt.setString(1, realm);
+            try (PreparedStatement stmt = conn.prepareStatement(DBUtil.getFinalQuery(SQL_SELECT_KIT_REQUEST_NEW.concat(QueryExtension.WHERE_INSTANCE_ID), addition))) {
+                stmt.setString(1, instance.getDdpInstanceId());
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         addKitRequest(rs, kitRequests);
@@ -294,7 +306,7 @@ public class KitRequestShipping extends KitRequest {
         if (results.resultException != null) {
             throw new RuntimeException("Couldn't get list of samples ", results.resultException);
         }
-        logger.info("Got " + kitRequests.size() + " participants samples in DSM DB for " + realm);
+        logger.info("Got " + kitRequests.size() + " participants samples in DSM DB for " + instance.getName());
         return kitRequests;
     }
 
