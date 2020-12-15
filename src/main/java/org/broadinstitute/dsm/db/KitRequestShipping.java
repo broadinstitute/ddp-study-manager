@@ -38,7 +38,7 @@ public class KitRequestShipping extends KitRequest {
 
     private static final Logger logger = LoggerFactory.getLogger(KitRequestShipping.class);
 
-    public static final String SQL_SELECT_KIT_REQUEST = "SELECT * FROM (SELECT kt.kit_type_name, ddp_site.instance_name, ddp_site.ddp_instance_id, ddp_site.base_url, ddp_site.auth0_token, ddp_site.billing_reference, " +
+    public static final String SQL_SELECT_KIT_REQUEST = "SELECT * FROM ( SELECT req.upload_reason, kt.kit_type_name, ddp_site.instance_name, ddp_site.ddp_instance_id, ddp_site.base_url, ddp_site.auth0_token, ddp_site.billing_reference, " +
             "ddp_site.migrated_ddp, ddp_site.collaborator_id_prefix, ddp_site.es_participant_index, req.bsp_collaborator_participant_id, req.bsp_collaborator_sample_id, req.ddp_participant_id, req.ddp_label, req.dsm_kit_request_id, " +
             "req.kit_type_id, req.external_order_status, req.external_order_number, req.external_order_date, req.external_response, kt.no_return, req.created_by FROM kit_type kt, ddp_kit_request req, ddp_instance ddp_site " +
             "WHERE req.ddp_instance_id = ddp_site.ddp_instance_id AND req.kit_type_id = kt.kit_type_id) AS request " +
@@ -160,18 +160,21 @@ public class KitRequestShipping extends KitRequest {
     @ColumnName (DBConstants.CARE_EVOLVE)
     private boolean careEvolve;
 
+    @ColumnName(DBConstants.UPLOAD_REASON)
+    private String uploadReason;
+
     public KitRequestShipping(String collaboratorParticipantId, String kitType, String dsmKitRequestId, long scanDate, boolean error, long receiveDate, long deactivatedDate, String testResult,
-                              String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus, String externalOrderNumber, long externalOrderDate, boolean careEvolve) {
+                              String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus, String externalOrderNumber, long externalOrderDate, boolean careEvolve, String uploadReason) {
         this(null, collaboratorParticipantId, null, null, null, kitType, dsmKitRequestId, null, null, null,
                 null, null, null, null, scanDate, error, null, receiveDate,
                 null, deactivatedDate, null, null, false, null, 0, null, externalOrderNumber, false, externalOrderStatus, null, testResult,
-                upsTrackingStatus, upsReturnStatus, externalOrderDate, false);
+                upsTrackingStatus, upsReturnStatus, externalOrderDate, false, uploadReason);
     }
 
     public KitRequestShipping(String dsmKitRequestId, String dsmKitId, String easypostToId, String easypostAddressId, boolean error, String message) {
         this(null, null, null, null, null, null, dsmKitRequestId, dsmKitId, null, null,
                 null, null, null, null, 0, error, message, 0,
-                easypostAddressId, 0, null, null, false, easypostToId, 0, null, null, false, null, null, null, null, null, 0, false);
+                easypostAddressId, 0, null, null, false, easypostToId, 0, null, null, false, null, null, null, null, null, 0, false, null);
     }
 
     // shippingId = ddp_label !!!
@@ -182,7 +185,7 @@ public class KitRequestShipping extends KitRequest {
                               long receiveDate, String easypostAddressId, long deactivatedDate, String deactivationReason,
                               String kitLabel, boolean express, String easypostToId, long labelTriggeredDate, String easypostShipmentStatus,
                               String externalOrderNumber, boolean noReturn, String externalOrderStatus, String createdBy, String testResult,
-                              String upsTrackingStatus, String upsReturnStatus, long externalOrderDate, boolean careEvolve) {
+                              String upsTrackingStatus, String upsReturnStatus, long externalOrderDate, boolean careEvolve, String uploadReason) {
         super(dsmKitRequestId, participantId, null, shippingId, externalOrderNumber, null, externalOrderStatus, null, externalOrderDate);
         this.collaboratorParticipantId = collaboratorParticipantId;
         this.bspCollaboratorSampleId = bspCollaboratorSampleId;
@@ -213,6 +216,7 @@ public class KitRequestShipping extends KitRequest {
         this.upsTrackingStatus = upsTrackingStatus;
         this.upsReturnStatus = upsReturnStatus;
         this.careEvolve = careEvolve;
+        this.uploadReason = uploadReason;
     }
 
     public static KitRequestShipping getKitRequestShipping(@NonNull ResultSet rs) throws SQLException {
@@ -255,7 +259,7 @@ public class KitRequestShipping extends KitRequest {
                 rs.getString(DBConstants.UPS_TRACKING_STATUS),
                 rs.getString(DBConstants.UPS_RETURN_STATUS),
                 rs.getLong(DBConstants.EXTERNAL_ORDER_DATE),
-                rs.getBoolean(DBConstants.CARE_EVOLVE)
+                rs.getBoolean(DBConstants.CARE_EVOLVE),rs.getString(DBConstants.UPLOAD_REASON)
         );
         return kitRequestShipping;
     }
@@ -342,7 +346,8 @@ public class KitRequestShipping extends KitRequest {
                                 rs.getString(DBConstants.EXTERNAL_ORDER_STATUS),
                                 rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER),
                                 rs.getLong(DBConstants.EXTERNAL_ORDER_DATE),
-                                rs.getBoolean(DBConstants.CARE_EVOLVE)
+                                rs.getBoolean(DBConstants.CARE_EVOLVE),
+                                rs.getString(DBConstants.UPLOAD_REASON)
                         );
                         if (showNotReceived) {
                             if (kitRequest.getReceiveDate() == 0 && kitRequest.getDeactivatedDate() == 0) {
@@ -644,14 +649,15 @@ public class KitRequestShipping extends KitRequest {
 
     //adding kit request to db (called by hourly job to add kits into DSM)
     public static void addKitRequests(@NonNull String instanceId, @NonNull KitDetail kitDetail, @NonNull int kitTypeId,
-                                      @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, String externalOrderNumber) {
+                                      @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, String externalOrderNumber, String uploadReason) {
         addKitRequests(instanceId, kitDetail.getKitType(), kitDetail.getParticipantId(), kitDetail.getKitRequestId(), kitTypeId, kitRequestSettings,
-                collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber);
+                collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber,  uploadReason);
     }
 
     //adding kit request to db (called by hourly job to add kits into DSM)
     public static void addKitRequests(@NonNull String instanceId, @NonNull String kitType, @NonNull String participantId, @NonNull String kitRequestId,
-                                      @NonNull int kitTypeId, @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, boolean needsApproval, String externalOrderNumber) {
+                                      @NonNull int kitTypeId, @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, boolean needsApproval, String externalOrderNumber,
+                                      String uploadReason) {
         inTransaction((conn) -> {
             String errorMessage = "";
             String collaboratorSampleId = null;
@@ -669,7 +675,7 @@ public class KitRequestShipping extends KitRequest {
                 }
             }
             writeRequest(instanceId, kitRequestId, kitTypeId, participantId, collaboratorParticipantId, collaboratorSampleId,
-                    "SYSTEM", null, errorMessage, externalOrderNumber, needsApproval);
+                    "SYSTEM", null, errorMessage, externalOrderNumber, needsApproval, uploadReason);
             return null;
         });
     }
@@ -681,7 +687,7 @@ public class KitRequestShipping extends KitRequest {
     // 2. kit upload
     public static String writeRequest(@NonNull String instanceId, @NonNull String ddpKitRequestId, @NonNull int kitTypeId,
                                       @NonNull String ddpParticipantId, String collaboratorPatientId, String collaboratorSampleId,
-                                      @NonNull String createdBy, String addressIdTo, String errorMessage, String externalOrderNumber, boolean needsApproval) {
+                                      @NonNull String createdBy, String addressIdTo, String errorMessage, String externalOrderNumber, boolean needsApproval, String uploadReason) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult(0);
             try (PreparedStatement insertKitRequest = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.INSERT_KIT_REQUEST), Statement.RETURN_GENERATED_KEYS)) {
@@ -695,6 +701,7 @@ public class KitRequestShipping extends KitRequest {
                 insertKitRequest.setString(8, createdBy);
                 insertKitRequest.setLong(9, System.currentTimeMillis());
                 insertKitRequest.setObject(10, StringUtils.isNotBlank(externalOrderNumber) ? externalOrderNumber : null); //external_order_number
+                insertKitRequest.setString(11, uploadReason); //upload reason
                 insertKitRequest.executeUpdate();
                 try (ResultSet rs = insertKitRequest.getGeneratedKeys()) {
                     if (rs.next()) {

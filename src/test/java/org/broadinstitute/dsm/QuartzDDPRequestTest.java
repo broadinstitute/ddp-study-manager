@@ -164,7 +164,7 @@ public class QuartzDDPRequestTest extends TestHelper {
                     stmt.setString(3, DBConstants.PDF_DOWNLOAD_RELEASE);
                     try (ResultSet rs = stmt.executeQuery()) {
                         if (rs.next()) {
-                            dbVals.resultValue = rs.getString(DBConstants.DDP_KIT_REQUEST_ID);
+                            dbVals.resultValue = rs.getString(DBConstants.LAST_KIT);
                         }
                     }
                     catch (SQLException e) {

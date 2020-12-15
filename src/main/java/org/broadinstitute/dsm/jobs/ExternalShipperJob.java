@@ -13,6 +13,9 @@ import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,19 +33,10 @@ public class ExternalShipperJob implements Job {
                 ArrayList<KitRequest> kitRequests = shipper.getKitRequestsNotDone(kitType.getInstanceId());
                 shipper.orderStatus(kitRequests);
                 if (kitRequests != null && !kitRequests.isEmpty()) { // only if there are kits which are not yet having kit_label set
-                    JobDataMap dataMap = context.getJobDetail().getJobDataMap();
-                    String additionalCronExpression = (String) dataMap.get(DSMServer.ADDITIONAL_CRON_EXPRESSION);
-                    if (CronExpression.isValidExpression(additionalCronExpression)) {
-                        CronExpression cron = new CronExpression(additionalCronExpression);
-                        if (cron.isSatisfiedBy(context.getFireTime())) {
-                            long lastRun = DBUtil.getBookmark(DBConstants.GBF_CONFIRMATION);
-                            long now = System.currentTimeMillis();
-                            shipper.orderConfirmation(kitRequests, lastRun, now);
-                        }
-                    }
-                    else {
-                        throw new RuntimeException("Additional cron expression is not a valid cron expression");
-                    }
+                    logger.info("Working on " + kitRequests.size() + " incomplete external kits");
+                    Instant now = Instant.now();
+                    Instant dynamicStartTime = now.minus(5, ChronoUnit.DAYS);
+                    shipper.orderConfirmation(kitRequests, dynamicStartTime.toEpochMilli(), now.toEpochMilli());
                 }
             }
             catch (Exception e) {

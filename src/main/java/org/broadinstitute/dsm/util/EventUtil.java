@@ -2,7 +2,6 @@ package org.broadinstitute.dsm.util;
 
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.ddp.handlers.util.Event;
 import org.broadinstitute.dsm.db.ParticipantEvent;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.TestResultEvent;
@@ -28,7 +27,8 @@ public class EventUtil {
     private static final Logger logger = LoggerFactory.getLogger(EventUtil.class);
 
     public static final String SQL_SELECT_KIT_FOR_REMINDER_EMAILS = "SELECT eve.event_name, eve.event_type, request.ddp_participant_id, request.dsm_kit_request_id, realm.instance_name, realm.base_url, " +
-            "realm.ddp_instance_id, realm.auth0_token, realm.notification_recipients, kit.receive_date, kit.scan_date, (SELECT count(role.name) FROM ddp_instance realm2, ddp_instance_role inRol, instance_role role " +
+            "realm.ddp_instance_id, realm.auth0_token, realm.notification_recipients, kit.receive_date, kit.scan_date, request.upload_reason " +
+            "(SELECT count(role.name) FROM ddp_instance realm2, ddp_instance_role inRol, instance_role role " +
             "WHERE realm2.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id AND role.name = ? AND realm2.ddp_instance_id = realm.ddp_instance_id) AS 'has_role' " +
             "FROM ddp_kit_request request LEFT JOIN ddp_kit kit ON (kit.dsm_kit_request_id = request.dsm_kit_request_id) LEFT JOIN ddp_instance realm ON (request.ddp_instance_id = realm.ddp_instance_id) " +
             "LEFT JOIN ddp_participant_exit ex ON (ex.ddp_participant_id = request.ddp_participant_id AND ex.ddp_instance_id = request.ddp_instance_id) " +
@@ -64,7 +64,8 @@ public class EventUtil {
                                     rs.getString(DBConstants.BASE_URL),
                                     rs.getString(DBConstants.EVENT_NAME),
                                     rs.getString(DBConstants.EVENT_TYPE), System.currentTimeMillis(),
-                                    rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN)));
+                                    rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN), rs.getString(DBConstants.UPLOAD_REASON),
+                                    rs.getString(DBConstants.DDP_KIT_REQUEST_ID)));
                         }
                     }
                 }
@@ -108,7 +109,7 @@ public class EventUtil {
 
     private static void triggerDDP(@NonNull String eventType, @NonNull KitDDPNotification kitInfo) {
         try {
-            Event event = new Event(kitInfo.getParticipantId(), eventType, kitInfo.getDate() / 1000);
+            KitEvent event = new KitEvent(kitInfo.getParticipantId(), eventType, kitInfo.getDate() / 1000, kitInfo.getUploadReason(), kitInfo.getDdpKitRequestId());
             String sendRequest = kitInfo.getBaseUrl() + RoutePath.DDP_PARTICIPANT_EVENT_PATH + "/" + kitInfo.getParticipantId();
             DDPRequestUtil.postRequest(sendRequest, event, kitInfo.getInstanceName(), kitInfo.isHasAuth0Token());
             addEvent(eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId());
@@ -123,7 +124,7 @@ public class EventUtil {
     private static void triggerDDPWithTestResult(@NonNull String eventType, @NonNull KitDDPNotification kitInfo, @Nonnull TestBostonResult result) {
         try {
             DSMTestResult dsmTestResult = new DSMTestResult(result.getResult(), result.getTimeCompleted(), result.isCorrected());
-            TestResultEvent event = new TestResultEvent(kitInfo.getParticipantId(), eventType, kitInfo.getDate() / 1000, dsmTestResult);
+            TestResultEvent event = new TestResultEvent(kitInfo.getParticipantId(), eventType, kitInfo.getDate() / 1000,kitInfo.getUploadReason(), kitInfo.getDdpKitRequestId(),  dsmTestResult);
             String sendRequest = kitInfo.getBaseUrl() + RoutePath.DDP_PARTICIPANT_EVENT_PATH + "/" + kitInfo.getParticipantId();
             DDPRequestUtil.postRequest(sendRequest, event, kitInfo.getInstanceName(), kitInfo.isHasAuth0Token());
             addEvent(eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId());
@@ -150,7 +151,7 @@ public class EventUtil {
                 stmt.setBoolean(5, trigger);
                 int result = stmt.executeUpdate();
                 if (result != 1) {
-                    throw new RuntimeException("Error could not add event for kit request " + requestId );
+                    throw new RuntimeException("Error could not add event for kit request " + requestId);
                 }
             }
             catch (SQLException e) {
