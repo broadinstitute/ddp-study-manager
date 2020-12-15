@@ -46,12 +46,14 @@ public class DBConstants {
     public static final String KIT_TYPE_NAME = "kit_type_name";
     public static final String DSM_LABEL = "ddp_label";
     public static final String KIT_TYPE_ID = "kit_type_id";
-    public static final String DDP_KIT_REQUEST_ID = "last_kit";
+    public static final String LAST_KIT = "last_kit";
     public static final String DSM_KIT_REQUEST_ID = "dsm_kit_request_id";
+    public static final String DDP_KIT_REQUEST_ID = "ddp_kit_request_id";
     public static final String UPS_TRACKING_STATUS = "ups_tracking_status";
     public static final String UPS_RETURN_STATUS = "ups_return_status";
     public static final String UPS_TRACKING_DATE = "ups_tracking_date";
     public static final String UPS_RETURN_DATE = "ups_return_date";
+
 
 
     public static final String DSM_LABEL_TO = "label_url_to";
@@ -318,6 +320,10 @@ public class DBConstants {
     public static final String TOP_MARGIN = "top_margin";
     public static final String BOTTOM_MARGIN = "bottom_margin";
     public static final String LEFT_MARGIN = "left_margin";
+
+    //ddp_kit_request_settings
+    public static final String UPLOAD_REASONS = "upload_reasons";
+    public static final String UPLOAD_REASON = "upload_reason";
 
     //eventType
     public static final String EVENT_NAME = "event_name";

@@ -12,6 +12,8 @@ public class KitUploadObject extends KitRequest {
     private String country;
     private String easyPostAddressId;
     private String phoneNumber;
+    private String shippingCarrier;
+
 
     public KitUploadObject(String externalOrderNumber, String ddpParticipantId, String shortId, String firstName, String lastName,
                            String street1, String street2, String city, String state, String postalCode, String country, String phoneNumber) {
