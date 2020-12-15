@@ -17,7 +17,7 @@ public class KitRequestExternal extends KitRequest {
             "WHERE dsm_kit_request_id = (SELECT request.dsm_kit_request_id FROM ddp_kit_request request LEFT JOIN (SELECT * from (SELECT kit.dsm_kit_request_id, kit.kit_complete " +
             "FROM ddp_kit kit INNER JOIN(SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit " +
             "ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id AND kit.dsm_kit_id = groupedKit.kit_id)as wtf) as kit ON kit.dsm_kit_request_id = request.dsm_kit_request_id " +
-            "WHERE request.dsm_kit_request_id = ? and not kit.kit_complete <=> 1 limit 1)";
+            "WHERE request.dsm_kit_request_id = ? limit 1)";
     private static final String SQL_UPDATE_KIT_REQUEST_EXTERNAL_SHIPPER_STATUS = "UPDATE ddp_kit_request SET external_order_status = ?, external_order_date = ? WHERE dsm_kit_request_id = ? AND NOT external_order_status <=> ?";
     private static final String SQL_UPDATE_KIT_REQUEST_EXTERNAL_SHIPPER_RESPONSE = "UPDATE ddp_kit_request SET external_response = ? WHERE dsm_kit_request_id = ?";
 

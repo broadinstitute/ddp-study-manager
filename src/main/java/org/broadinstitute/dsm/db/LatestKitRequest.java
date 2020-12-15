@@ -75,7 +75,7 @@ public class LatestKitRequest {
                 try (ResultSet rs = bspStatement.executeQuery()) {
                     while (rs.next()) {
                         if (rs.getBoolean(DBConstants.HAS_ROLE)) {
-                            String latestKitRequestId = rs.getString(DBConstants.DDP_KIT_REQUEST_ID);
+                            String latestKitRequestId = rs.getString(DBConstants.LAST_KIT);
                             String instanceName = rs.getString(DBConstants.INSTANCE_NAME);
                             if (StringUtils.isNotBlank(latestKitRequestId)) {
                                 logger.info("Found latestKitRequestID " + latestKitRequestId + " via " + instanceName);
