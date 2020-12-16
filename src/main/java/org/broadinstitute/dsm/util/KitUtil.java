@@ -188,7 +188,7 @@ public class KitUtil {
                 }
             }
             catch (Exception e) {
-                throw new RuntimeException("Couldn't get address for participant "+kitLabelTriggered.getDdpParticipantId()+" in study "+kitLabelTriggered.getInstanceName(), e);
+                throw new RuntimeException("Couldn't get address for participant " + kitLabelTriggered.getDdpParticipantId() + " in study " + kitLabelTriggered.getInstanceName() + " w/ kit id " + kitLabelTriggered.getDsmKitId(), e);
             }
             if (toAddress != null) {
                 buyShipmentForKit(easyPostUtil, kitLabelTriggered.getDsmKitId(), kitLabelTriggered.getKitRequestSettings(),
