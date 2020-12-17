@@ -146,7 +146,7 @@ public class ParticipantWrapper {
             if (oncHistories == null && instance.isHasRole()) {
                 oncHistories = OncHistoryDetail.getOncHistoryDetails(instance.getName());
             }
-            if (kitRequests == null) {
+            if (kitRequests == null && DDPInstance.getRole(instance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
                 kitRequests = KitRequestShipping.getKitRequests(instance);
             }
             if (abstractionActivities == null) {
@@ -227,7 +227,7 @@ public class ParticipantWrapper {
     }
 
     private static List<Map<String, Object>> getProxyProfiles(Map<String, Object> participantData, Map<String, Map<String, Object>> proxyDataES) {
-        if (participantData != null && !participantData.isEmpty()) {
+        if (participantData != null && !participantData.isEmpty() && proxyDataES != null && !proxyDataES.isEmpty()) {
             List<String> proxies = (List<String>) participantData.get("proxies");
             List<Map<String, Object>> proxyData = new ArrayList<>();
             if (proxies != null && !proxies.isEmpty()) {
