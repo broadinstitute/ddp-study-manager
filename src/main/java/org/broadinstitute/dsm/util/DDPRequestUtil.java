@@ -271,7 +271,7 @@ public class DDPRequestUtil {
                 }
             }
             catch (Exception e) {
-                throw new RuntimeException("Couldn't save " + fileName + " pdf in google bucket " + bucketName + " from ddpParticipant " + ddpParticipantId, e);
+                throw new RuntimeException("Couldn't save " + fileName + " pdf in google bucket " + bucketName + " for ddpParticipant " + ddpParticipantId, e);
             }
         }
     }
