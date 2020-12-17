@@ -30,7 +30,7 @@ public class CarrierServiceRoute extends RequestHandler {
     protected Object processRequest(Request request, Response response, String userId) throws Exception {
         String realm = request.params(RequestParameter.REALM);
         if (request.url().contains(RoutePath.CARRIERS)) {
-                if (UserUtil.checkUserAccess(realm, userId, "kit_shipping")) {
+                if (UserUtil.checkUserAccess(realm, userId, "kit_shipping_view")) {
                 if (StringUtils.isNotBlank(realm)) {
                     String userIdRequest = UserUtil.getUserId(request);
                     if (!userId.equals(userIdRequest)) {
