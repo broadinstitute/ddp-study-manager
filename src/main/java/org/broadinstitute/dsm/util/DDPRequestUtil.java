@@ -271,7 +271,7 @@ public class DDPRequestUtil {
                 }
             }
             catch (Exception e) {
-                throw new RuntimeException("Couldn't save consent pdf in google bucket ", e);
+                throw new RuntimeException("Couldn't save " + fileName + " pdf in google bucket " + bucketName + " from ddpParticipant " + ddpParticipantId, e);
             }
         }
     }
