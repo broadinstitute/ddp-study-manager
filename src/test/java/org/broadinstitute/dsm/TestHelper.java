@@ -128,6 +128,7 @@ public class TestHelper {
             } else {
                 logger.info("Skipping DB update...");
             }
+            TransactionWrapper.reset(TestUtil.UNIT_TEST);
             TransactionWrapper.init(maxConnections, dbUrl, cfg, skipSsl);
             if (!Utility.dbCheck()) {
                 throw new RuntimeException("DB connection error.");

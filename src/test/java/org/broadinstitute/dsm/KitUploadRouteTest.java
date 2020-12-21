@@ -22,27 +22,27 @@ public class KitUploadRouteTest {
 
     @BeforeClass
     public static void doFirst() throws Exception {
-        cfg = ConfigFactory.load();
-        //secrets from vault in a config file
-        cfg = cfg.withFallback(ConfigFactory.parseFile(new File(System.getenv("TEST_CONFIG_FILE"))));
-        cfg = cfg.withValue("errorAlert.recipientAddress", ConfigValueFactory.fromAnyRef(""));
-
-        if (!cfg.getString("portal.environment").startsWith("Local")) {
-            throw new RuntimeException("Not local environment");
-        }
-
-        if (!cfg.getString("portal.dbUrl").contains("local")) {
-            throw new RuntimeException("Not your test db");
-        }
-
-        TransactionWrapper.configureSslProperties(cfg.getString("portal.dbSslKeyStore"),
-                cfg.getString("portal.dbSslKeyStorePwd"),
-                cfg.getString("portal.dbSslTrustStore"),
-                cfg.getString("portal.dbSslTrustStorePwd"));
-        TransactionWrapper.reset(TestUtil.UNIT_TEST);
-        TransactionWrapper.init(cfg.getInt("portal.maxConnections"), cfg.getString("portal.dbUrl"), cfg, false);
-
-        NotificationUtil notificationUtil = new NotificationUtil(cfg);
+//        cfg = ConfigFactory.load();
+//        //secrets from vault in a config file
+//        cfg = cfg.withFallback(ConfigFactory.parseFile(new File(System.getenv("TEST_CONFIG_FILE"))));
+//        cfg = cfg.withValue("errorAlert.recipientAddress", ConfigValueFactory.fromAnyRef(""));
+//
+//        if (!cfg.getString("portal.environment").startsWith("Local")) {
+//            throw new RuntimeException("Not local environment");
+//        }
+//
+//        if (!cfg.getString("portal.dbUrl").contains("local")) {
+//            throw new RuntimeException("Not your test db");
+//        }
+//
+//        TransactionWrapper.configureSslProperties(cfg.getString("portal.dbSslKeyStore"),
+//                cfg.getString("portal.dbSslKeyStorePwd"),
+//                cfg.getString("portal.dbSslTrustStore"),
+//                cfg.getString("portal.dbSslTrustStorePwd"));
+//        TransactionWrapper.reset(TestUtil.UNIT_TEST);
+//        TransactionWrapper.init(cfg.getInt("portal.maxConnections"), cfg.getString("portal.dbUrl"), cfg, false);
+        TestHelper.setupDB();
+        NotificationUtil notificationUtil = new NotificationUtil(TestHelper.cfg);
         route = new KitUploadRoute(notificationUtil);
     }
 

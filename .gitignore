@@ -38,7 +38,7 @@ Thumbs.db
 
 # DO NOT COMMIT RENDERED SECRETS INTO SOURCE CONTROL
 config/test-config.conf
-config/vault.conf
+vault.conf
 config/dev-keystore
 config/dev-keystore2
 config/dev-keystore3

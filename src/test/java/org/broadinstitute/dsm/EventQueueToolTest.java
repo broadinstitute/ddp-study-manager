@@ -33,28 +33,29 @@ public class EventQueueToolTest {
 
     @BeforeClass
     public static void first() {
-        cfg = ConfigFactory.load();
-        //secrets from vault in a config file
-        cfg = cfg.withFallback(ConfigFactory.parseFile(new File(System.getenv("TEST_CONFIG_FILE"))));
-        cfg = cfg.withValue("errorAlert.recipientAddress", ConfigValueFactory.fromAnyRef(""));
-
-        if (!cfg.getString("portal.environment").startsWith("Local")) {
-            throw new RuntimeException("Not local environment");
-        }
-
-        if (!cfg.getString("portal.dbUrl").contains("local")) {
-            throw new RuntimeException("Not your test db");
-        }
-
-        TransactionWrapper.configureSslProperties(cfg.getString("portal.dbSslKeyStore"),
-                cfg.getString("portal.dbSslKeyStorePwd"),
-                cfg.getString("portal.dbSslTrustStore"),
-                cfg.getString("portal.dbSslTrustStorePwd"));
-        TransactionWrapper.reset(TestUtil.UNIT_TEST);
-        TransactionWrapper.init(cfg.getInt("portal.maxConnections"), cfg.getString("portal.dbUrl"), cfg, false);
-
-        DBTestUtil.executeQuery("UPDATE ddp_instance set is_active = 1 where instance_name = \"" + TestHelper.TEST_DDP + "\"");
-        INSTANCE_ID = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TestHelper.TEST_DDP, TestHelper.DDP_INSTANCE_ID);
+//        cfg = ConfigFactory.load();
+//        //secrets from vault in a config file
+//        cfg = cfg.withFallback(ConfigFactory.parseFile(new File(System.getenv("TEST_CONFIG_FILE"))));
+//        cfg = cfg.withValue("errorAlert.recipientAddress", ConfigValueFactory.fromAnyRef(""));
+//
+//        if (!cfg.getString("portal.environment").startsWith("Local")) {
+//            throw new RuntimeException("Not local environment");
+//        }
+//
+//        if (!cfg.getString("portal.dbUrl").contains("local")) {
+//            throw new RuntimeException("Not your test db");
+//        }
+//
+//        TransactionWrapper.configureSslProperties(cfg.getString("portal.dbSslKeyStore"),
+//                cfg.getString("portal.dbSslKeyStorePwd"),
+//                cfg.getString("portal.dbSslTrustStore"),
+//                cfg.getString("portal.dbSslTrustStorePwd"));
+//        TransactionWrapper.reset(TestUtil.UNIT_TEST);
+//        TransactionWrapper.init(cfg.getInt("portal.maxConnections"), cfg.getString("portal.dbUrl"), cfg, false);
+//
+//        DBTestUtil.executeQuery("UPDATE ddp_instance set is_active = 1 where instance_name = \"" + TestHelper.TEST_DDP + "\"");
+//        INSTANCE_ID = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TestHelper.TEST_DDP, TestHelper.DDP_INSTANCE_ID);
+        TestHelper.setupDB();
         //delete second reminder
         if (DBTestUtil.checkIfValueExists("SELECT * from event_type where ddp_instance_id = " + INSTANCE_ID + " AND event_name = ?", "BLOOD_SENT_2WK")) {
             DBTestUtil.executeQuery("DELETE FROM event_type WHERE ddp_instance_id = " + INSTANCE_ID + " AND event_name = \"BLOOD_SENT_2WK\"");
