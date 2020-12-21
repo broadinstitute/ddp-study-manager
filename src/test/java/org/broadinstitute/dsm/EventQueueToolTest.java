@@ -56,6 +56,7 @@ public class EventQueueToolTest {
 //        DBTestUtil.executeQuery("UPDATE ddp_instance set is_active = 1 where instance_name = \"" + TestHelper.TEST_DDP + "\"");
 //        INSTANCE_ID = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TestHelper.TEST_DDP, TestHelper.DDP_INSTANCE_ID);
         TestHelper.setupDB();
+        cfg = TestHelper.cfg;
         //delete second reminder
         if (DBTestUtil.checkIfValueExists("SELECT * from event_type where ddp_instance_id = " + INSTANCE_ID + " AND event_name = ?", "BLOOD_SENT_2WK")) {
             DBTestUtil.executeQuery("DELETE FROM event_type WHERE ddp_instance_id = " + INSTANCE_ID + " AND event_name = \"BLOOD_SENT_2WK\"");
