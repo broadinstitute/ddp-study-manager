@@ -59,6 +59,7 @@ src/test/resources/output
 target/
 app-deploy
 
+liquibase.properties
 
 logs
 *.log

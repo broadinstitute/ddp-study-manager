@@ -385,6 +385,8 @@ public class DSMServer extends BasicServer {
 
             Liquibase liquibase = new liquibase.Liquibase("master-changelog.xml", new ClassLoaderResourceAccessor(), database);
 
+            liquibase.changeLogSync((String)null);
+
             liquibase.update(new Contexts());
         }
         catch (Exception e) {
