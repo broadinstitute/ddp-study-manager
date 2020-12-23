@@ -268,6 +268,7 @@ public class GBFRequestUtil implements ExternalShipper {
             }
         }
     }
+
     private void processingSingleConfirmation(Response gbfResponse, List<KitRequest> kitRequests, ShippingConfirmation confirmation) throws Exception {
         //update external shipper response at request
         logger.info("Got confirmation for " + confirmation.getOrderNumber());
@@ -299,7 +300,8 @@ public class GBFRequestUtil implements ExternalShipper {
             else {
                 logger.error("No kit requests found for kit with order number: " + confirmation.getOrderNumber());
             }
-        } else {
+        }
+        else {
             logger.error("No items for order " + confirmation.getOrderNumber());
         }
     }
@@ -322,7 +324,8 @@ public class GBFRequestUtil implements ExternalShipper {
                     for (ShippingConfirmation confirmation : confirmationList) {
                         try {
                             processingSingleConfirmation(gbfResponse, kitRequests, confirmation);
-                        } catch (Exception e) {
+                        }
+                        catch (Exception e) {
                             logger.error("Could not process confirmation for " + confirmation.getOrderNumber(), e);
                         }
                     }
@@ -340,7 +343,7 @@ public class GBFRequestUtil implements ExternalShipper {
 
     public ArrayList<KitRequest> getKitRequestsNotDone(int instanceId) {
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
-        Map participantsESData = getParticipants(ddpInstance.getName());
+
         ArrayList<KitRequest> kitRequests = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -349,20 +352,26 @@ public class GBFRequestUtil implements ExternalShipper {
 
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
-                        if (participantsESData != null && !participantsESData.isEmpty()) {
-                            DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData, rs.getString(DBConstants.DDP_PARTICIPANT_ID));
-                            if (ddpParticipant != null) {
-                                kitRequests.add(new KitRequest(rs.getString(DBConstants.DSM_KIT_REQUEST_ID), rs.getString(DBConstants.DDP_PARTICIPANT_ID),
-                                        null, null, rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER), ddpParticipant,
-                                        rs.getString(DBConstants.EXTERNAL_ORDER_STATUS),
-                                        rs.getString("subkits." + DBConstants.EXTERNAL_KIT_NAME),
-                                        rs.getLong(DBConstants.EXTERNAL_ORDER_DATE)));
+                        String ddpParticipantId = rs.getString("req.ddp_participant_id");
+                        logger.info("qyerying ES for ddpParticipantId: "+ddpParticipantId);
+                        if (StringUtils.isNotBlank(ddpParticipantId)) {
+                            Map participantsESData = getParticipants(ddpInstance.getName(), ddpParticipantId);
+                            if (participantsESData != null && !participantsESData.isEmpty()) {
+                                DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData, rs.getString(DBConstants.DDP_PARTICIPANT_ID));
+                                logger.info("ddpParticpant found: "+ddpParticipant.getParticipantId());
+                                if (ddpParticipant != null) {
+                                    kitRequests.add(new KitRequest(rs.getString(DBConstants.DSM_KIT_REQUEST_ID), rs.getString(DBConstants.DDP_PARTICIPANT_ID),
+                                            null, null, rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER), ddpParticipant,
+                                            rs.getString(DBConstants.EXTERNAL_ORDER_STATUS),
+                                            rs.getString("subkits." + DBConstants.EXTERNAL_KIT_NAME),
+                                            rs.getLong(DBConstants.EXTERNAL_ORDER_DATE)));
+                                }
+                                else {
+                                    logger.error("Participant not found in ES! " + rs.getString(DBConstants.DDP_PARTICIPANT_ID));
+                                }
                             }
-                            else {
-                                logger.error("Participant not found in ES! " + rs.getString(DBConstants.DDP_PARTICIPANT_ID));
-                            }
-                        }
 
+                        }
                     }
                 }
             }
@@ -503,6 +512,21 @@ public class GBFRequestUtil implements ExternalShipper {
         Map<String, Map<String, Object>> participantsESData = null;
         if (StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
             participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(ddpInstance.getName(), ddpInstance.getParticipantIndexES());
+        }
+        return participantsESData;
+    }
+
+    public static Map getParticipants(String realm, String ddpParticipantId) {
+        DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.NEEDS_NAME_LABELS);
+        Map<String, Map<String, Object>> participantsESData = null;
+        String filter = "AND profile.guid = '";
+
+        if (StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
+            StringBuilder builder = new StringBuilder();
+            builder.append(filter);
+            builder.append(ddpParticipantId);
+            builder.append("'");
+            participantsESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance, builder.toString());
         }
         return participantsESData;
     }
