@@ -13,8 +13,10 @@ import com.google.pubsub.v1.PubsubMessage;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import liquibase.Contexts;
+import liquibase.LabelExpression;
 import liquibase.Liquibase;
 import liquibase.changelog.ChangeLogHistoryServiceFactory;
+import liquibase.changelog.DatabaseChangeLog;
 import liquibase.changelog.StandardChangeLogHistoryService;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
@@ -65,6 +67,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -134,6 +137,7 @@ public class DSMServer extends BasicServer {
     private static final Duration DEFAULT_BOOT_WAIT = Duration.ofMinutes(10);
 
     private static Auth0Util auth0Util;
+    private static boolean isExistingNonLiquibaseDatabase;
 
     public static void main(String[] args) {
         // immediately lock isReady so that ah/start route will wait
@@ -388,32 +392,13 @@ public class DSMServer extends BasicServer {
                 + "&sessionVariables=innodb_strict_mode=on,tx_isolation='READ-COMMITTED',sql_mode='TRADITIONAL'")) {
             Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(conn));
 
-
-            //tu baza araa sheqmnili mashin liquibase gaaketos da gaushvas update
-            //tu baza sheqmnilia gaaketos changeLogSync tu databaseChangeLog araa da gaushvas update
             Liquibase liquibase = new liquibase.Liquibase("master-changelog.xml", new ClassLoaderResourceAccessor(), database);
 
-            boolean hasDatabaseChangeLogTable = ((StandardChangeLogHistoryService) ChangeLogHistoryServiceFactory.getInstance()
-                    .getChangeLogService(database)).hasDatabaseChangeLogTable();
-
-            Statement statement = conn.createStatement();
-            ResultSet resultSet = statement.executeQuery("SHOW TABLES LIKE DATABASECHANGELOGLOCK;");
-
-            boolean isFromScratch = !hasDatabaseChangeLogTable && resultSet != null;
-
-            if (hasDatabaseChangeLogTable || isFromScratch) {
-                liquibase.update(new Contexts());
-            } else {
+            if (isExistingNonLiquibaseDatabase) {
                 liquibase.changeLogSync((String)null);
-                liquibase.update(new Contexts());
             }
 
-//            if (resultSet == null || !resultSet.next()) {
-//                liquibase.changeLogSync((String)null);
-//            }
-
             liquibase.update(new Contexts());
-
         }
         catch (Exception e) {
             throw new RuntimeException("Failed to run DB update.", e);
