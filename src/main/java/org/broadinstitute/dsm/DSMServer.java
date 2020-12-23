@@ -143,6 +143,7 @@ public class DSMServer extends BasicServer {
         // immediately lock isReady so that ah/start route will wait
         synchronized (isReady) {
             logger.info("Starting up DSM");
+            isExistingNonLiquibaseDatabase = Boolean.parseBoolean(System.getProperty("isExistingNonLiquibaseDatabase"));;
             //config without secrets
             Config cfg = ConfigFactory.load();
             //secrets from vault in a config file
