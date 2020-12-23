@@ -14,10 +14,13 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import liquibase.Contexts;
 import liquibase.Liquibase;
+import liquibase.changelog.ChangeLogHistoryServiceFactory;
+import liquibase.changelog.StandardChangeLogHistoryService;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.ClassLoaderResourceAccessor;
+import liquibase.statement.SqlStatement;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
@@ -58,6 +61,8 @@ import spark.Spark;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
@@ -383,11 +388,32 @@ public class DSMServer extends BasicServer {
                 + "&sessionVariables=innodb_strict_mode=on,tx_isolation='READ-COMMITTED',sql_mode='TRADITIONAL'")) {
             Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(conn));
 
+
+            //tu baza araa sheqmnili mashin liquibase gaaketos da gaushvas update
+            //tu baza sheqmnilia gaaketos changeLogSync tu databaseChangeLog araa da gaushvas update
             Liquibase liquibase = new liquibase.Liquibase("master-changelog.xml", new ClassLoaderResourceAccessor(), database);
 
-            liquibase.changeLogSync((String)null);
+            boolean hasDatabaseChangeLogTable = ((StandardChangeLogHistoryService) ChangeLogHistoryServiceFactory.getInstance()
+                    .getChangeLogService(database)).hasDatabaseChangeLogTable();
+
+            Statement statement = conn.createStatement();
+            ResultSet resultSet = statement.executeQuery("SHOW TABLES LIKE DATABASECHANGELOGLOCK;");
+
+            boolean isFromScratch = !hasDatabaseChangeLogTable && resultSet != null;
+
+            if (hasDatabaseChangeLogTable || isFromScratch) {
+                liquibase.update(new Contexts());
+            } else {
+                liquibase.changeLogSync((String)null);
+                liquibase.update(new Contexts());
+            }
+
+//            if (resultSet == null || !resultSet.next()) {
+//                liquibase.changeLogSync((String)null);
+//            }
 
             liquibase.update(new Contexts());
+
         }
         catch (Exception e) {
             throw new RuntimeException("Failed to run DB update.", e);
