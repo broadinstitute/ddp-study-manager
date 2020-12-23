@@ -344,7 +344,7 @@ public class GBFRequestUtil implements ExternalShipper {
     public ArrayList<KitRequest> getKitRequestsNotDone(int instanceId) {
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
 
-        ArrayList<KitRequest> kitRequests = new ArrayList<>();
+            ArrayList<KitRequest> kitRequests = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_EXTERNAL_KIT_NOT_DONE)) {
@@ -352,7 +352,7 @@ public class GBFRequestUtil implements ExternalShipper {
 
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
-                        String ddpParticipantId = rs.getString("req.ddp_participant_id");
+                        String ddpParticipantId = rs.getString("ddp_participant_id");
                         logger.info("qyerying ES for ddpParticipantId: "+ddpParticipantId);
                         if (StringUtils.isNotBlank(ddpParticipantId)) {
                             Map participantsESData = getParticipants(ddpInstance.getName(), ddpParticipantId);
@@ -519,13 +519,12 @@ public class GBFRequestUtil implements ExternalShipper {
     public static Map getParticipants(String realm, String ddpParticipantId) {
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.NEEDS_NAME_LABELS);
         Map<String, Map<String, Object>> participantsESData = null;
-        String filter = "AND profile.guid = '";
+        String filter = "AND profile.guid = ";
 
         if (StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
             StringBuilder builder = new StringBuilder();
             builder.append(filter);
             builder.append(ddpParticipantId);
-            builder.append("'");
             participantsESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance, builder.toString());
         }
         return participantsESData;
