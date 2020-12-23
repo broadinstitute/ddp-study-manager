@@ -519,13 +519,15 @@ public class GBFRequestUtil implements ExternalShipper {
     public static Map getParticipants(String realm, String ddpParticipantId) {
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.NEEDS_NAME_LABELS);
         Map<String, Map<String, Object>> participantsESData = null;
-        String filter = "AND profile.guid = ";
+        String filter = "AND profile.guid = '";
 
         if (StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
             StringBuilder builder = new StringBuilder();
             builder.append(filter);
             builder.append(ddpParticipantId);
-            participantsESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance, builder.toString());
+            builder.append("'");
+            String queryFiler = builder.toString();
+            participantsESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance, queryFiler);
         }
         return participantsESData;
     }
