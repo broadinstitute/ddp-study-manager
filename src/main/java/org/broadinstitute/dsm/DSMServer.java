@@ -164,7 +164,7 @@ public class DSMServer extends BasicServer {
     protected void configureServer(@NonNull Config config) {
         logger.info("Property source: " + config.getString("portal.environment"));
         logger.info("Configuring the server...");
-        threadPool(-1, -1, 30000);
+        threadPool(-1, -1, 60000);
         int port = config.getInt("portal.port");
         String appEnginePort = System.getenv("PORT");
 
