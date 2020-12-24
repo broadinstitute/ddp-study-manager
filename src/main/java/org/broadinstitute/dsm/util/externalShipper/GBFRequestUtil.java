@@ -352,23 +352,23 @@ public class GBFRequestUtil implements ExternalShipper {
 
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
-                        String ddpParticipantId = rs.getString("ddp_participant_id");
-                        logger.info("qyerying ES for ddpParticipantId: "+ddpParticipantId);
+                        String ddpParticipantId = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
+                        logger.info("querying ES for ddpParticipantId: "+ddpParticipantId);
                         if (StringUtils.isNotBlank(ddpParticipantId)) {
-                            Map participantsESData = getParticipants(ddpInstance.getName(), ddpParticipantId);
+                            Map participantsESData = getParticipant(ddpInstance, ddpParticipantId);
                             if (participantsESData != null && !participantsESData.isEmpty()) {
                                 DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData, rs.getString(DBConstants.DDP_PARTICIPANT_ID));
-                                logger.info("ddpParticpant found: "+ddpParticipant.getParticipantId());
+                                logger.info("ddpParticipant found: "+ddpParticipant.getParticipantId());
                                 if (ddpParticipant != null) {
-                                    kitRequests.add(new KitRequest(rs.getString(DBConstants.DSM_KIT_REQUEST_ID), rs.getString(DBConstants.DDP_PARTICIPANT_ID),
+                                    kitRequests.add(new KitRequest(rs.getString(DBConstants.DSM_KIT_REQUEST_ID), ddpParticipantId,
                                             null, null, rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER), ddpParticipant,
                                             rs.getString(DBConstants.EXTERNAL_ORDER_STATUS),
                                             rs.getString("subkits." + DBConstants.EXTERNAL_KIT_NAME),
                                             rs.getLong(DBConstants.EXTERNAL_ORDER_DATE)));
                                 }
-                                else {
-                                    logger.error("Participant not found in ES! " + rs.getString(DBConstants.DDP_PARTICIPANT_ID));
-                                }
+                            }
+                            else {
+                                logger.error("Participant not found in ES! " + ddpParticipantId);
                             }
 
                         }
@@ -507,7 +507,7 @@ public class GBFRequestUtil implements ExternalShipper {
         return xmlOutput.getWriter().toString();
     }
 
-    public static Map getParticipants(String realm) {
+    public static Map getParticipant(String realm) {
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.NEEDS_NAME_LABELS);
         Map<String, Map<String, Object>> participantsESData = null;
         if (StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
@@ -516,18 +516,10 @@ public class GBFRequestUtil implements ExternalShipper {
         return participantsESData;
     }
 
-    public static Map getParticipants(String realm, String ddpParticipantId) {
-        DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.NEEDS_NAME_LABELS);
+    public static Map getParticipant(DDPInstance ddpInstance, String ddpParticipantId) {
         Map<String, Map<String, Object>> participantsESData = null;
-        String filter = "AND profile.guid = '";
-
         if (StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
-            StringBuilder builder = new StringBuilder();
-            builder.append(filter);
-            builder.append(ddpParticipantId);
-            builder.append("'");
-            String queryFiler = builder.toString();
-            participantsESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance, queryFiler);
+            participantsESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance, ElasticSearchUtil.BY_GUID + ddpParticipantId);
         }
         return participantsESData;
     }
