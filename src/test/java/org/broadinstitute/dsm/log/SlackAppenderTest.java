@@ -5,10 +5,7 @@ import static org.mockserver.model.HttpResponse.response;
 
 
 import org.broadinstitute.dsm.TestHelper;
-import org.junit.Before;
 import org.junit.Test;
-import org.mockserver.client.server.MockServerClient;
-import org.mockserver.integration.ClientAndServer;
 
 import static org.junit.Assert.*;
 
@@ -23,7 +20,11 @@ public class SlackAppenderTest extends TestHelper {
                     .respond(response()
                             .withStatusCode(200)
                             .withBody("ok"));
+
+            SlackAppender slackAppender = new SlackAppender("http://localhost:" + mockDDP.getPort() + "/mock_slack_test",
+                    "SlackChannel", 100, 10);
         }
+
 
     }
 
