@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.log;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import com.typesafe.config.Config;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.entity.ContentType;
@@ -48,7 +49,29 @@ public class SlackAppender extends AppenderSkeleton {
     private HttpClient httpClient;
     private ScheduledThreadPoolExecutor executorService;
 
+    public SlackAppender() {
+        Config cfg = ConfigManager.getInstance().getConfig();
+        String slackHook = null;
+        String slackChannel = null;
+        Integer configQueueSize = null;
+        Integer configIntervalInMillis = null;
+        if (cfg != null) {
+            if (cfg.hasPath(ConfigFile.SLACK_HOOK)) {
+                slackHook = cfg.getString(ConfigFile.SLACK_HOOK);
+            }
+            if (cfg.hasPath(ConfigFile.SLACK_CHANNEL)) {
+                slackChannel = cfg.getString(ConfigFile.SLACK_CHANNEL);
+            }
+            if (cfg.hasPath(ConfigFile.SLACK_QUEUE_SIZE)) {
+                configQueueSize = cfg.getInt(ConfigFile.SLACK_QUEUE_SIZE);
+            }
+            if (cfg.hasPath(ConfigFile.SLACK_INTERVAL_IN_MILLIS)) {
+                configIntervalInMillis = cfg.getInt(ConfigFile.SLACK_INTERVAL_IN_MILLIS);
+            }
+            init(slackHook, slackChannel, configQueueSize, configIntervalInMillis);
+        }
 
+    }
 
     public SlackAppender(String slackHookUrl, String slackChannel, int queueSize, int intervalInMillis) {
         init(slackHookUrl, slackChannel, queueSize, intervalInMillis);
@@ -126,14 +149,11 @@ public class SlackAppender extends AppenderSkeleton {
         if (canLog) {
             LOG.info("At most {} slack alerts will be sent to {} every {} ms", queueSize, slackChannel, intervalInMillis);
             executorService = new ScheduledThreadPoolExecutor(1,
-                    new ThreadFactory("SlackAppender", Thread.MIN_PRIORITY) {
-                        @Override
-                        public Thread newThread(Runnable r) {
-                            ThreadGroup threadGroup = new ThreadGroup("SlackAppender");
-                            Thread t = new Thread(threadGroup, r);
-                            t.setPriority(Thread.MIN_PRIORITY);
-                            return null;
-                        }
+                    runnable -> {
+                        ThreadGroup threadGroup = new ThreadGroup("SlackAppender");
+                        Thread t = new Thread(threadGroup, runnable);
+                        t.setPriority(Thread.MIN_PRIORITY);
+                        return t;
                     });
 
             executorService.scheduleWithFixedDelay(() -> {
