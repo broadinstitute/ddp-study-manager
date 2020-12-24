@@ -300,8 +300,7 @@ public class GBFRequestUtil implements ExternalShipper {
             else {
                 logger.error("No kit requests found for kit with order number: " + confirmation.getOrderNumber());
             }
-        }
-        else {
+        } else {
             logger.error("No items for order " + confirmation.getOrderNumber());
         }
     }
@@ -324,8 +323,7 @@ public class GBFRequestUtil implements ExternalShipper {
                     for (ShippingConfirmation confirmation : confirmationList) {
                         try {
                             processingSingleConfirmation(gbfResponse, kitRequests, confirmation);
-                        }
-                        catch (Exception e) {
+                        } catch (Exception e) {
                             logger.error("Could not process confirmation for " + confirmation.getOrderNumber(), e);
                         }
                     }
@@ -507,7 +505,7 @@ public class GBFRequestUtil implements ExternalShipper {
         return xmlOutput.getWriter().toString();
     }
 
-    public static Map getParticipant(String realm) {
+    public static Map getParticipants(String realm) {
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.NEEDS_NAME_LABELS);
         Map<String, Map<String, Object>> participantsESData = null;
         if (StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
