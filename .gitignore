@@ -60,6 +60,9 @@ target/
 app-deploy
 
 
+vault.conf
+liquibase.properties
+
 logs
 *.log
 *.iml
