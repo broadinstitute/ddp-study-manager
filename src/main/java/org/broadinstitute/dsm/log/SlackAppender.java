@@ -1,5 +1,9 @@
 package org.broadinstitute.dsm.log;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.IThrowableProxy;
+import ch.qos.logback.classic.spi.StackTraceElementProxy;
+import ch.qos.logback.core.AppenderBase;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.typesafe.config.Config;
@@ -27,7 +31,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-public class SlackAppender extends AppenderSkeleton {
+public class SlackAppender extends AppenderBase<ILoggingEvent> {
     private static final Logger LOG = LoggerFactory.getLogger(SlackAppender.class);
     private static final String VAULT_DOT_CONF = "vault.conf";
     public static final String SLACK_HOOK = "slack.hook";
@@ -86,41 +90,41 @@ public class SlackAppender extends AppenderSkeleton {
         init(slackHookUrl, slackChannel, queueSize, intervalInMillis);
     }
 
-    private String getExceptionMessage(LoggingEvent e) {
+    private String getExceptionMessage(ILoggingEvent e) {
         String exceptionMessage = "";
-        if (e.getRenderedMessage() != null) {
-            exceptionMessage = e.getRenderedMessage();
+        if (e.getFormattedMessage() != null) {
+            exceptionMessage = e.getFormattedMessage();
         }
-        ThrowableInformation throwableInformation = e.getThrowableInformation();
-        if (throwableInformation != null) {
+        IThrowableProxy throwableProxy = e.getThrowableProxy();
+        if (throwableProxy != null) {
             String causalMessage = "";
-            if (throwableInformation.getThrowable().getCause() != null) {
-                causalMessage = throwableInformation.getThrowable().getCause().getMessage();
+            if (throwableProxy.getCause() != null) {
+                causalMessage = throwableProxy.getCause().getMessage();
             } else {
-                causalMessage = throwableInformation.getThrowable().getMessage();
+                causalMessage = throwableProxy.getMessage();
             }
             exceptionMessage += " " + causalMessage;
         }
         return exceptionMessage;
     }
 
-    private String getStringifiedStackTrace(LoggingEvent e) {
+    private String getStringifiedStackTrace(ILoggingEvent e) {
         String stackTrace = "";
-        ThrowableInformation throwableInformation = e.getThrowableInformation();
-        if (throwableInformation != null) {
-            if (throwableInformation.getThrowable().getCause() != null) {
-                stackTrace = stringifyStackTrace(throwableInformation.getThrowable().getCause().getStackTrace());
+        IThrowableProxy throwableProxy = e.getThrowableProxy();
+        if (throwableProxy != null) {
+            if (throwableProxy.getCause() != null) {
+                stackTrace = stringifyStackTrace(throwableProxy.getCause().getStackTraceElementProxyArray());
             } else {
-                stackTrace = stringifyStackTrace(throwableInformation.getThrowable().getStackTrace());
+                stackTrace = stringifyStackTrace(throwableProxy.getStackTraceElementProxyArray());
             }
         }
         return stackTrace;
     }
 
-    private String stringifyStackTrace(StackTraceElement[] stackTrace) {
+    private String stringifyStackTrace(StackTraceElementProxy[] stackTrace) {
         StringBuilder stackTraceBuilder = new StringBuilder();
-        for (StackTraceElement stackTraceEl: stackTrace) {
-            stackTraceBuilder.append(stackTraceEl.toString()).append("\n");
+        for (StackTraceElementProxy stackTraceElt : stackTrace) {
+            stackTraceBuilder.append(stackTraceElt.toString()).append("\n");
         }
         return stackTraceBuilder.toString();
     }
@@ -180,7 +184,7 @@ public class SlackAppender extends AppenderSkeleton {
     }
 
     @Override
-    protected void append(LoggingEvent e) {
+    protected void append(ILoggingEvent e) {
         if (canLog) {
             synchronized (messagesToSend) {
                 if (!isQueueFull()) {
@@ -225,14 +229,14 @@ public class SlackAppender extends AppenderSkeleton {
         }
     }
 
-    @Override
-    public void close() {
-
-    }
-
-    @Override
-    public boolean requiresLayout() {
-        return false;
+    public synchronized void waitForClearToQueue(long timeoutMillis) {
+        if (!messagesToSend.isEmpty()) {
+            try {
+                wait(timeoutMillis);
+            } catch (InterruptedException e) {
+                LOG.error("Interrupted while waiting for queue to clear", e);
+            }
+        }
     }
 
     static class SlackMessagePayload {
