@@ -194,7 +194,7 @@ public class SlackAppender extends AppenderBase<ILoggingEvent> {
                     String message = MESSAGE.replace(TITLE, exceptionMessage);
                     message = message.replace(STACK_TRACE, stackTrace);
 
-                    SlackMessagePayload messagePayload = new SlackMessagePayload(message, channel, "Pepper",
+                    SlackMessagePayload messagePayload = new SlackMessagePayload(message, channel, "DSM",
                             ":nerd_face:");
                     messagesToSend.add(messagePayload);
                 }

@@ -14,7 +14,7 @@
             <param name="ConversionPattern" value="%d{ISO8601} %-5p %X{CLIENT_IP} [%t] (%C.%M:%L) - %m%n"/>
         </layout>
     </appender>
-    <appender name="errorNotification" class="org.broadinstitute.ddp.loggers.ErrorNotificationAppender">
+    <appender name="errorSlackNotification" class="org.broadinstitute.dsm.log.SlackAppender">
     </appender>
     <root>
         <priority value ="info" />
