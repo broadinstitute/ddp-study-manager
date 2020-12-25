@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.log;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.entity.ContentType;
@@ -12,6 +13,7 @@ import org.apache.log4j.spi.ThrowableInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -27,6 +29,11 @@ import java.util.concurrent.TimeUnit;
 
 public class SlackAppender extends AppenderSkeleton {
     private static final Logger LOG = LoggerFactory.getLogger(SlackAppender.class);
+    private static final String VAULT_DOT_CONF = "vault.conf";
+    public static final String SLACK_HOOK = "slack.hook";
+    public static final String SLACK_CHANNEL = "slack.channel";
+    public static final String SLACK_QUEUE_SIZE = "slack.queueSize";
+    public static final String SLACK_INTERVAL_IN_MILLIS = "slack.intervalInMillis";
 
     private URI slackHookUrl;
 
@@ -50,23 +57,25 @@ public class SlackAppender extends AppenderSkeleton {
     private ScheduledThreadPoolExecutor executorService;
 
     public SlackAppender() {
-        Config cfg = ConfigManager.getInstance().getConfig();
+        Config cfg = ConfigFactory.load();
+        File vaultConfig = new File(VAULT_DOT_CONF);
+        cfg = cfg.withFallback(ConfigFactory.parseFile(vaultConfig));
         String slackHook = null;
         String slackChannel = null;
         Integer configQueueSize = null;
         Integer configIntervalInMillis = null;
         if (cfg != null) {
-            if (cfg.hasPath(ConfigFile.SLACK_HOOK)) {
-                slackHook = cfg.getString(ConfigFile.SLACK_HOOK);
+            if (cfg.hasPath(SLACK_HOOK)) {
+                slackHook = cfg.getString(SLACK_HOOK);
             }
-            if (cfg.hasPath(ConfigFile.SLACK_CHANNEL)) {
-                slackChannel = cfg.getString(ConfigFile.SLACK_CHANNEL);
+            if (cfg.hasPath(SLACK_CHANNEL)) {
+                slackChannel = cfg.getString(SLACK_CHANNEL);
             }
-            if (cfg.hasPath(ConfigFile.SLACK_QUEUE_SIZE)) {
-                configQueueSize = cfg.getInt(ConfigFile.SLACK_QUEUE_SIZE);
+            if (cfg.hasPath(SLACK_QUEUE_SIZE)) {
+                configQueueSize = cfg.getInt(SLACK_QUEUE_SIZE);
             }
-            if (cfg.hasPath(ConfigFile.SLACK_INTERVAL_IN_MILLIS)) {
-                configIntervalInMillis = cfg.getInt(ConfigFile.SLACK_INTERVAL_IN_MILLIS);
+            if (cfg.hasPath(SLACK_INTERVAL_IN_MILLIS)) {
+                configIntervalInMillis = cfg.getInt(SLACK_INTERVAL_IN_MILLIS);
             }
             init(slackHook, slackChannel, configQueueSize, configIntervalInMillis);
         }
