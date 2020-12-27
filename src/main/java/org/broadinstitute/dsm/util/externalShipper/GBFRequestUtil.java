@@ -355,7 +355,7 @@ public class GBFRequestUtil implements ExternalShipper {
                         if (StringUtils.isNotBlank(ddpParticipantId)) {
                             Map participantsESData = getParticipant(ddpInstance, ddpParticipantId);
                             if (participantsESData != null && !participantsESData.isEmpty()) {
-                                DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData, rs.getString(DBConstants.DDP_PARTICIPANT_ID));
+                                DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData, ddpParticipantId);
                                 logger.info("ddpParticipant found: "+ddpParticipant.getParticipantId());
                                 if (ddpParticipant != null) {
                                     kitRequests.add(new KitRequest(rs.getString(DBConstants.DSM_KIT_REQUEST_ID), ddpParticipantId,
