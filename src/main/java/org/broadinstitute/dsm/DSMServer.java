@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 import org.broadinstitute.ddp.BasicServer;
+import org.broadinstitute.ddp.loggers.ErrorNotificationAppender;
 import org.broadinstitute.ddp.security.Auth0Util;
 import org.broadinstitute.ddp.security.CookieUtil;
 import org.broadinstitute.ddp.util.BasicTriggerListener;
@@ -32,6 +33,7 @@ import org.broadinstitute.dsm.careevolve.Authentication;
 import org.broadinstitute.dsm.careevolve.Provider;
 import org.broadinstitute.dsm.jetty.JettyConfig;
 import org.broadinstitute.dsm.jobs.*;
+import org.broadinstitute.dsm.log.SlackAppender;
 import org.broadinstitute.dsm.model.mbc.MBCHospital;
 import org.broadinstitute.dsm.model.mbc.MBCInstitution;
 import org.broadinstitute.dsm.model.mbc.MBCParticipant;
@@ -623,6 +625,23 @@ public class DSMServer extends BasicServer {
             }
         }
         setupErrorNotifications(cfg, schedulerName);
+    }
+
+
+    @Override
+    protected void setupErrorNotifications(Config config, String schedulerName) {
+        if (config == null) {
+            throw new NullPointerException("config");
+        } else {
+            logger.info("Setup error notifications...");
+            if (config.hasPath("slack.hook") && config.hasPath("slack.channel")) {
+                SlackAppender.configure(config, schedulerName);
+                logger.info("Error notification setup complete. If log4j.xml is configured, notifications will be sent to " + config.getString("slack.channel") + ".");
+            } else {
+                logger.warn("Skipping error notification setup.");
+            }
+
+        }
     }
 
     /**
