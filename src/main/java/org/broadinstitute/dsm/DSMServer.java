@@ -284,6 +284,8 @@ public class DSMServer extends BasicServer {
                     }
                 }
             }
+
+            throw new RuntimeException("runtime erroria");
         });
         setupDDPConfigurationLookup(cfg.getString(ApplicationConfigConstants.DDP));
 

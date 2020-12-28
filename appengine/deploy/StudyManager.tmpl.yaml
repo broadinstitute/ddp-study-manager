@@ -11,7 +11,7 @@ vpc_access_connector:
 network:
   instance_tag: study-manager
 
-entrypoint: java -javaagent:tcell/tcellagent.jar -Xms820m -Xmx820m -Dlog4j.configurationFile=log4j.xml -jar DSMServer.jar
+entrypoint: java -javaagent:tcell/tcellagent.jar -Xms820m -Xmx820m -Dlogback.configurationFile=logback.xml -jar DSMServer.jar
 
 env_variables:
   TCELL_AGENT_HOST_IDENTIFIER: study-manager

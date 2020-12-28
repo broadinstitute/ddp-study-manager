@@ -1,0 +1,28 @@
+<configuration>
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{ISO8601} %-5p C:%X{CLIENT_IP} U:%X{USER_EMAIL} [%t] (%C.%M:%L) - %m%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/DSM.log"</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>logFile.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- keep 30 days' worth of history capped at 3GB total size -->
+            <maxFileSize>100MB</maxFileSize>
+            <maxIndex>10</maxIndex>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{ISO8601} %-5p %X{CLIENT_IP} [%t] (%C.%M:%L) - %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- appender that sends error messages into slack.  Hook and channel are set in applcation.conf -->
+    <appender name="SLACK" class="org.broadinstitute.dsm.log.SlackAppender">
+    </appender>
+    <root>
+        <appender-ref ref="console" />
+        <appender-ref ref="SLACK" />
+    </root>
+</configuration>

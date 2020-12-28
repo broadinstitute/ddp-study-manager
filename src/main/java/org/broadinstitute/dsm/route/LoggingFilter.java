@@ -12,7 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.util.Utility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.log4j.MDC;
+import org.slf4j.MDC;
 import spark.Filter;
 import spark.Request;
 import spark.Response;
