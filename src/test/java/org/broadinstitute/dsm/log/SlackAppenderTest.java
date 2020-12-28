@@ -5,7 +5,10 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 import com.google.gson.Gson;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
+import org.apache.log4j.spi.RootLogger;
 import org.broadinstitute.dsm.TestHelper;
 import org.junit.Assert;
 import org.junit.Before;
@@ -20,12 +23,12 @@ public class SlackAppenderTest extends TestHelper {
     @Rule
     public MockServerRule mockServerRule = new MockServerRule(this);
 
-
-    private LoggingEvent loggingEvent = new LoggingEvent(null, null, null, null, null);
+    private LoggingEvent loggingEvent = new LoggingEvent(null, new RootLogger(Level.ERROR), Level.ERROR, null, null);
 
     @Before
     public void setUp() {
         loggingEvent.setProperty("Hi", "There");
+        setupDB();
     }
 
     @Test
@@ -41,12 +44,11 @@ public class SlackAppenderTest extends TestHelper {
 
             SlackAppender slackAppender = new SlackAppender();
 
-            slackAppender.;
+            SlackAppender.configure(TestHelper.cfg, null);
+
             slackAppender.doAppend(loggingEvent);
 
-            slackAppender.waitForClearToQueue(3000);
-
-            mockServerClient.verify(request().withPath("/mock_slack_test").withBody(JsonBody.json(
+            mockDDP.verify(request().withPath("/mock_slack_test").withBody(JsonBody.json(
                     new Gson().toJson(new SlackAppender.SlackMessagePayload("*Hi there*\n ``````",
                             "SlackChannel",
                             "Pepper",

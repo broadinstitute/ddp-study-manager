@@ -18,7 +18,6 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.entity.ContentType;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
-import org.broadinstitute.ddp.email.SendGridClient;
 import org.broadinstitute.ddp.util.Utility;
 
 public class SlackAppender extends AppenderSkeleton {
