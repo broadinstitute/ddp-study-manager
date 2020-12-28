@@ -21,7 +21,7 @@
     <!-- appender that sends error messages into slack.  Hook and channel are set in applcation.conf -->
     <appender name="SLACK" class="org.broadinstitute.dsm.log.SlackAppender">
     </appender>
-    <root>
+    <root level="info">
         <appender-ref ref="console" />
         <appender-ref ref="SLACK" />
     </root>

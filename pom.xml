@@ -27,7 +27,7 @@
 
         <dependency>
             <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
+            <artifactId>logback-core</artifactId>
             <version>1.2.3</version>
         </dependency>
 
@@ -39,6 +39,11 @@
                 <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <!-- need this to to avoid http://www.slf4j.org/codes.html#multiple_bindings -->
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -76,6 +81,7 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-pubsub</artifactId>
+            <version>1.50.0</version>
         </dependency>
         <dependency>
             <groupId>org.javalite</groupId>
@@ -295,45 +301,6 @@
                             <classpathPrefix>lib/</classpathPrefix>
                         </manifest>
                     </archive>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-maven-plugin</artifactId>
-                <version>9.4.28.v20200408</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>ch.qos.logback</groupId>
-                        <artifactId>logback-classic</artifactId>
-                        <version>1.2.3</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>ch.qos.logback</groupId>
-                        <artifactId>logback-access</artifactId>
-                        <version>1.2.3</version>
-                    </dependency>
-<!--                    <dependency>-->
-<!--                        <groupId>org.slf4j</groupId>-->
-<!--                        <artifactId>slf4j-api</artifactId>-->
-<!--                        <version>1.7.30</version>-->
-<!--                    </dependency>-->
-                </dependencies>
-                <configuration>
-                    <scanIntervalSeconds>10</scanIntervalSeconds>
-                    <webAppSourceDirectory>src/main/resources/htdocs</webAppSourceDirectory>
-                    <webApp>
-                        <descriptor>src/main/webapp/WEB-INF/web.xml</descriptor>
-                    </webApp>
-                    <systemProperties>
-<!--                        <systemProperty>-->
-<!--                            <name>org.eclipse.jetty.util.log.Log</name>-->
-<!--                            <value>org.eclipse.jetty.util.log.Slf4jLog</value>-->
-<!--                        </systemProperty>-->
-                        <systemProperty>
-                            <name>logback.configurationFile</name>
-                            <value>src/main/resources/logback.xml</value>
-                        </systemProperty>
-                    </systemProperties>
                 </configuration>
             </plugin>
         </plugins>
