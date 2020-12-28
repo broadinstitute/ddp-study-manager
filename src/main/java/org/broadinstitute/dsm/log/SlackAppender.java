@@ -22,6 +22,8 @@ import org.broadinstitute.ddp.email.SendGridClient;
 import org.broadinstitute.ddp.util.Utility;
 
 public class SlackAppender extends AppenderSkeleton {
+    public SlackAppender() {
+    }
 
     public static final String APPENDER_NAME = "slackAppender";
     private static HttpClient httpClient;
