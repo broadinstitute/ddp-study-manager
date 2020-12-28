@@ -4,10 +4,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.TestHelper;
+import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.model.KitRequest;
 import org.broadinstitute.dsm.model.gbf.*;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
+import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.DBUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.broadinstitute.dsm.util.externalShipper.ExternalShipper;
 import org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil;
@@ -16,8 +18,9 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,6 +30,8 @@ public class GBFTest extends TestHelper {
     private String GBF_URL = "https://www.gbfmedical.com/oap/api/";
     private String ORDER_NUMBER = "WEB123ABC4D5";
 
+    private static final Logger logger = LoggerFactory.getLogger(GBFTest.class);
+
     @BeforeClass
     public static void before() throws Exception {
         setupDB();
@@ -35,7 +40,7 @@ public class GBFTest extends TestHelper {
 
     public String getApiKey() {
         String apiKey = null;
-        JsonArray array = (JsonArray)(new JsonParser().parse(cfg.getString("externalShipper")));
+        JsonArray array = (JsonArray) (new JsonParser().parse(cfg.getString("externalShipper")));
         for (JsonElement ddpInfo : array) {
             if (ddpInfo.isJsonObject()) {
                 if ("gbf".equals(ddpInfo.getAsJsonObject().get(ApplicationConfigConstants.SHIPPER_NAME).getAsString().toLowerCase())) {
@@ -59,7 +64,7 @@ public class GBFTest extends TestHelper {
             ShippingInfo shippingInfo = new ShippingInfo(null, "FEDEX_2_DAY", address);
             List<LineItem> lineItems = new ArrayList<>();
             lineItems.add(new LineItem("K-DFC-PROMISE", "1"));
-            Order order = new Order(ORDER_NUMBER, "C7037154","00001", shippingInfo, lineItems);
+            Order order = new Order(ORDER_NUMBER, "C7037154", "00001", shippingInfo, lineItems);
             orders.getOrders().add(order);
 
             String orderXml = GBFRequestUtil.orderXmlToString(Orders.class, orders);
@@ -113,11 +118,11 @@ public class GBFTest extends TestHelper {
         String apiKey = "";
         if (apiKey != null) {
             List<String> orderNumbers = new ArrayList<>();
-            orderNumbers.addAll(Arrays.asList(new String[] {""}));
-//            logger.info("Starting the external shipper job");
+            orderNumbers.addAll(Arrays.asList(new String[] { "" }));
+            //            logger.info("Starting the external shipper job");
             ExternalShipper shipper = (ExternalShipper) Class.forName("org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil").newInstance(); //to get blindTestExecutor instance
-//            ArrayList<KitRequest> kitRequests = shipper.getKitRequestsNotDone(9);
-//            shipper.orderStatus(kitRequests);;
+            //            ArrayList<KitRequest> kitRequests = shipper.getKitRequestsNotDone(9);
+            //            shipper.orderStatus(kitRequests);;
             JSONObject payload = new JSONObject().put("orderNumbers", orderNumbers);
 
             String sendRequest = GBF_URL + GBFRequestUtil.STATUS_ENDPOINT;
@@ -125,10 +130,10 @@ public class GBFTest extends TestHelper {
 
             Assert.assertNotNull(gbfResponse);
             Assert.assertTrue(gbfResponse.isSuccess());
-//            Assert.assertTrue(StringUtils.isBlank(gbfResponse.getErrorMessage()));
-//            List<Status> statuses = gbfResponse.getStatuses();
-//            Assert.assertTrue(statuses.size() == 1);
-//            Assert.assertTrue(!statuses.get(0).getOrderStatus().equals("NOT FOUND"));
+            //            Assert.assertTrue(StringUtils.isBlank(gbfResponse.getErrorMessage()));
+            //            List<Status> statuses = gbfResponse.getStatuses();
+            //            Assert.assertTrue(statuses.size() == 1);
+            //            Assert.assertTrue(!statuses.get(0).getOrderStatus().equals("NOT FOUND"));
         }
         else {
             Assert.fail("No apiKey found");
@@ -140,13 +145,71 @@ public class GBFTest extends TestHelper {
     public void confirmationGBFKit() throws Exception {
         String apiKey = "";
         if (apiKey != null) {
-            long testDate = 1603468306000L; //change that to the date of testing!
-            long start = 1603252800000L;
+            long testDate = 1609172139000L; //change that to the date of testing!
+            long start = 0;
             long end = testDate;
 
             JSONObject payload = new JSONObject().put("startDate", SystemUtil.getDateFormatted(start)).put("endDate", SystemUtil.getDateFormatted(end));
             String sendRequest = GBF_URL + GBFRequestUtil.CONFIRM_ENDPOINT;
             Response gbfResponse = GBFRequestUtil.executePost(Response.class, sendRequest, payload.toString(), apiKey);
+            Assert.assertNotNull(gbfResponse);
+            Assert.assertTrue(StringUtils.isNotBlank(gbfResponse.getXML()));
+
+        }
+        else {
+            Assert.fail("No apiKey found");
+        }
+    }
+
+
+    @Test
+    @Ignore
+    public void inputConfirmationGBFKit() throws Exception {
+        String apiKey = "";
+        if (apiKey != null) {
+            long testDate = 1609172139000L; //change that to the date of testing!
+            long start = 0;
+            long end = testDate;
+
+            JSONObject payload = new JSONObject().put("startDate", SystemUtil.getDateFormatted(start)).put("endDate", SystemUtil.getDateFormatted(end));
+            String sendRequest = GBF_URL + GBFRequestUtil.CONFIRM_ENDPOINT;
+            Response gbfResponse = GBFRequestUtil.executePost(Response.class, sendRequest, payload.toString(), apiKey);
+
+            GBFRequestUtil gbf = new GBFRequestUtil();
+            String query = "SELECT * " +
+                    "FROM prod_dsm_db.ddp_kit_request req  " +
+                    "LEFT JOIN ddp_kit kit ON  " +
+                    "(req.dsm_kit_request_id = kit.dsm_kit_request_id) " +
+                    "WHERE " +
+                    "req.ddp_instance_id = ?  " +
+                    "AND external_order_status = 'SHIPPED' " +
+                    "AND external_response is null " +
+                    "ORDER BY external_order_date ASC ";
+
+            ArrayList<KitRequest> kitRequests = gbf.getKitRequestsNotDone(Integer.parseInt(DDPInstance.getDDPInstance("testboston").getDdpInstanceId()), query);
+
+            if (gbfResponse != null && StringUtils.isNotBlank(gbfResponse.getXML())) {
+                logger.info("Confirmation xmls received! ");
+                ShippingConfirmations shippingConfirmations = gbf.objectFromXMLString(ShippingConfirmations.class, gbfResponse.getXML());
+                if (shippingConfirmations != null) {
+                    List<ShippingConfirmation> confirmationList = shippingConfirmations.getShippingConfirmations();
+                    logger.info("Number of confirmations received: " + confirmationList.size());
+                    if (confirmationList != null && !confirmationList.isEmpty()) {
+                        for (ShippingConfirmation confirmation : confirmationList) {
+                            try {
+                                gbf.processingSingleConfirmation(gbfResponse, kitRequests, confirmation);
+                            }
+                            catch (Exception e) {
+                                logger.error("Could not process confirmation for " + confirmation.getOrderNumber(), e);
+                            }
+                        }
+                        DBUtil.updateBookmark(testDate, DBConstants.GBF_CONFIRMATION);
+                    }
+                    else {
+                        logger.info("No shipping confirmation returned");
+                    }
+                }
+            }
             Assert.assertNotNull(gbfResponse);
             Assert.assertTrue(StringUtils.isNotBlank(gbfResponse.getXML()));
 
