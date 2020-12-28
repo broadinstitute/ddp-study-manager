@@ -176,15 +176,15 @@ public class GBFTest extends TestHelper {
             Response gbfResponse = GBFRequestUtil.executePost(Response.class, sendRequest, payload.toString(), apiKey);
 
             GBFRequestUtil gbf = new GBFRequestUtil();
-            String query = "SELECT * " +
-                    "FROM prod_dsm_db.ddp_kit_request req  " +
-                    "LEFT JOIN ddp_kit kit ON  " +
-                    "(req.dsm_kit_request_id = kit.dsm_kit_request_id) " +
-                    "WHERE " +
-                    "req.ddp_instance_id = ?  " +
-                    "AND external_order_status = 'SHIPPED' " +
-                    "AND external_response is null " +
-                    "ORDER BY external_order_date ASC ";
+                String query = "SELECT * " +
+                        "FROM ddp_kit_request req  " +
+                        "LEFT JOIN ddp_kit kit ON  " +
+                        "(req.dsm_kit_request_id = kit.dsm_kit_request_id) " +
+                        "WHERE " +
+                        "req.ddp_instance_id = ?  " +
+                        "AND external_order_status = 'SHIPPED' " +
+                        "AND external_response is null " +
+                        "ORDER BY external_order_date ASC ";
 
             ArrayList<KitRequest> kitRequests = gbf.getKitRequestsNotDone(Integer.parseInt(DDPInstance.getDDPInstance("testboston").getDdpInstanceId()), query);
 

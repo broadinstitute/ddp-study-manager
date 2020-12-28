@@ -63,8 +63,7 @@ public class GBFRequestUtil implements ExternalShipper {
             "            LEFT JOIN ddp_participant_exit ex ON (ex.ddp_instance_id = request.ddp_instance_id AND ex.ddp_participant_id = request.ddp_participant_id) " +
             "            LEFT JOIN (SELECT subK.kit_type_id, subK.external_name from ddp_kit_request_settings dkc " +
             "            LEFT JOIN sub_kits_settings subK ON (subK.ddp_kit_request_settings_id = dkc.ddp_kit_request_settings_id)) as subkits ON (subkits.kit_type_id = request.kit_type_id) " +
-            "            WHERE ex.ddp_participant_exit_id is null AND request.ddp_instance_id = ? AND NOT external_order_status <=> 'CANCELLED' AND external_order_number IS NOT NULL " +
-            "            AND kit.kit_complete is null";
+            "            WHERE ex.ddp_participant_exit_id is null AND request.ddp_instance_id = ? AND NOT external_order_status <=> 'CANCELLED' AND external_order_number IS NOT NULL " ;
 
     private static final String SQL_SELECT_KIT_REQUEST_BY_EXTERNAL_ORDER_NUMBER = "SELECT dsm_kit_request_id FROM ddp_kit_request req WHERE external_order_number = ?";
     private static final String SQL_SELECT_SENT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label, request.upload_reason, request.ddp_kit_request_id, request.dsm_kit_request_id, realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
