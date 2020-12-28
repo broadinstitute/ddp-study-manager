@@ -55,6 +55,9 @@ config/test-gcloud-creds.json
 config/staging-gcloud-creds.json
 config/prod-gcloud-creds.json
 
+vault.conf
+liquibase.properties
+
 src/test/resources/output
 target/
 app-deploy
@@ -66,3 +69,4 @@ logs
 *.pem
 *.env
 *.jks
+
