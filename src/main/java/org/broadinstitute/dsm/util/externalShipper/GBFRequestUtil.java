@@ -354,7 +354,7 @@ public class GBFRequestUtil implements ExternalShipper {
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         String ddpParticipantId = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
-                        logger.info("querying ES for ddpParticipantId: "+ddpParticipantId);
+//                        logger.info("querying ES for ddpParticipantId: "+ddpParticipantId);
                         if (StringUtils.isNotBlank(ddpParticipantId)) {
 //                            Map participantsESData = getParticipant(ddpInstance, ddpParticipantId);
 //                            if (participantsESData != null && !participantsESData.isEmpty()) {

@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class GBFTest extends TestHelper {
@@ -168,7 +169,7 @@ public class GBFTest extends TestHelper {
         String apiKey = "";
         if (apiKey != null) {
             long testDate = 1609172139000L; //change that to the date of testing!
-            long start = 0;
+            long start = 1608613200000L;
             long end = testDate;
 
             JSONObject payload = new JSONObject().put("startDate", SystemUtil.getDateFormatted(start)).put("endDate", SystemUtil.getDateFormatted(end));
@@ -176,18 +177,22 @@ public class GBFTest extends TestHelper {
             Response gbfResponse = GBFRequestUtil.executePost(Response.class, sendRequest, payload.toString(), apiKey);
 
             GBFRequestUtil gbf = new GBFRequestUtil();
-                String query = "SELECT * " +
-                        "FROM ddp_kit_request req  " +
-                        "LEFT JOIN ddp_kit kit ON (req.dsm_kit_request_id = kit.dsm_kit_request_id)  " +
-                        "LEFT JOIN ddp_participant_exit ex ON (ex.ddp_instance_id = req.ddp_instance_id AND ex.ddp_participant_id = req.ddp_participant_id)   " +
-                        "LEFT JOIN (SELECT subK.kit_type_id, subK.external_name from ddp_kit_request_settings dkc   LEFT JOIN sub_kits_settings subK ON (subK.ddp_kit_request_settings_id = dkc.ddp_kit_request_settings_id)) as subkits ON (subkits.kit_type_id = req.kit_type_id)   " +
-                        "WHERE " +
-                        "req.ddp_instance_id = ?  " +
-                        "AND external_order_status = 'SHIPPED' " +
-                        "AND external_response is null " +
-                        "ORDER BY external_order_date ASC ";
+            String query = "SELECT * " +
+                    "FROM ddp_kit_request req  " +
+                    "LEFT JOIN ddp_kit kit ON (req.dsm_kit_request_id = kit.dsm_kit_request_id)  " +
+                    "LEFT JOIN ddp_participant_exit ex ON (ex.ddp_instance_id = req.ddp_instance_id AND ex.ddp_participant_id = req.ddp_participant_id)   " +
+                    "LEFT JOIN (SELECT subK.kit_type_id, subK.external_name from ddp_kit_request_settings dkc   LEFT JOIN sub_kits_settings subK ON (subK.ddp_kit_request_settings_id = dkc.ddp_kit_request_settings_id)) as subkits ON (subkits.kit_type_id = req.kit_type_id)   " +
+                    "WHERE " +
+                    "req.ddp_instance_id = ?  " +
+                    "AND external_order_status = 'SHIPPED' " +
+                    "AND external_response is null " +
+                    "ORDER BY external_order_date ASC ";
 
             ArrayList<KitRequest> kitRequests = gbf.getKitRequestsNotDone(Integer.parseInt(DDPInstance.getDDPInstance("testboston").getDdpInstanceId()), query);
+            HashMap<String, KitRequest> kits = new HashMap<>();
+            for (KitRequest kit : kitRequests) {
+                kits.put(kit.getExternalOrderNumber(), kit);
+            }
 
             if (gbfResponse != null && StringUtils.isNotBlank(gbfResponse.getXML())) {
                 logger.info("Confirmation xmls received! ");
@@ -197,11 +202,13 @@ public class GBFTest extends TestHelper {
                     logger.info("Number of confirmations received: " + confirmationList.size());
                     if (confirmationList != null && !confirmationList.isEmpty()) {
                         for (ShippingConfirmation confirmation : confirmationList) {
-                            try {
-                                gbf.processingSingleConfirmation(gbfResponse, kitRequests, confirmation);
-                            }
-                            catch (Exception e) {
-                                logger.error("Could not process confirmation for " + confirmation.getOrderNumber(), e);
+                            if (kits.containsKey(confirmation.getOrderNumber())) {
+                                try {
+                                    gbf.processingSingleConfirmation(gbfResponse, kitRequests, confirmation);
+                                }
+                                catch (Exception e) {
+                                    logger.error("Could not process confirmation for " + confirmation.getOrderNumber(), e);
+                                }
                             }
                         }
                         DBUtil.updateBookmark(testDate, DBConstants.GBF_CONFIRMATION);
