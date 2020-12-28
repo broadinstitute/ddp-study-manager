@@ -624,7 +624,7 @@ public class DSMServer extends BasicServer {
                 throw new RuntimeException("Could not create scheduler ", e);
             }
         }
-        setupErrorNotifications(cfg, schedulerName);
+        //setupErrorNotifications(cfg, schedulerName);
     }
 
     /**
