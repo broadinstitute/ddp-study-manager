@@ -178,8 +178,9 @@ public class GBFTest extends TestHelper {
             GBFRequestUtil gbf = new GBFRequestUtil();
                 String query = "SELECT * " +
                         "FROM ddp_kit_request req  " +
-                        "LEFT JOIN ddp_kit kit ON  " +
-                        "(req.dsm_kit_request_id = kit.dsm_kit_request_id) " +
+                        "LEFT JOIN ddp_kit kit ON (req.dsm_kit_request_id = kit.dsm_kit_request_id)  " +
+                        "LEFT JOIN ddp_participant_exit ex ON (ex.ddp_instance_id = req.ddp_instance_id AND ex.ddp_participant_id = req.ddp_participant_id)   " +
+                        "LEFT JOIN (SELECT subK.kit_type_id, subK.external_name from ddp_kit_request_settings dkc   LEFT JOIN sub_kits_settings subK ON (subK.ddp_kit_request_settings_id = dkc.ddp_kit_request_settings_id)) as subkits ON (subkits.kit_type_id = req.kit_type_id)   " +
                         "WHERE " +
                         "req.ddp_instance_id = ?  " +
                         "AND external_order_status = 'SHIPPED' " +

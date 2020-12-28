@@ -343,7 +343,7 @@ public class GBFRequestUtil implements ExternalShipper {
         return getKitRequestsNotDone(instanceId,SQL_SELECT_EXTERNAL_KIT_NOT_DONE );
     }
 
-    public  ArrayList<KitRequest> getKitRequestsNotDone(int instanceId, String query) {
+    public  ArrayList<KitRequest>   getKitRequestsNotDone(int instanceId, String query) {
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
 
         ArrayList<KitRequest> kitRequests = new ArrayList<>();
@@ -356,21 +356,21 @@ public class GBFRequestUtil implements ExternalShipper {
                         String ddpParticipantId = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
                         logger.info("querying ES for ddpParticipantId: "+ddpParticipantId);
                         if (StringUtils.isNotBlank(ddpParticipantId)) {
-                            Map participantsESData = getParticipant(ddpInstance, ddpParticipantId);
-                            if (participantsESData != null && !participantsESData.isEmpty()) {
-                                DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData, ddpParticipantId);
-                                logger.info("ddpParticipant found: "+ddpParticipant.getParticipantId());
-                                if (ddpParticipant != null) {
+//                            Map participantsESData = getParticipant(ddpInstance, ddpParticipantId);
+//                            if (participantsESData != null && !participantsESData.isEmpty()) {
+//                                DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData, ddpParticipantId);
+//                                logger.info("ddpParticipant found: "+ddpParticipant.getParticipantId());
+//                                if (ddpParticipant != null) {
                                     kitRequests.add(new KitRequest(rs.getString(DBConstants.DSM_KIT_REQUEST_ID), ddpParticipantId,
-                                            null, null, rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER), ddpParticipant,
+                                            null, null, rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER), null,
                                             rs.getString(DBConstants.EXTERNAL_ORDER_STATUS),
                                             rs.getString("subkits." + DBConstants.EXTERNAL_KIT_NAME),
                                             rs.getLong(DBConstants.EXTERNAL_ORDER_DATE)));
-                                }
-                            }
-                            else {
-                                logger.error("Participant not found in ES! " + ddpParticipantId);
-                            }
+//                                }
+//                            }
+//                            else {
+//                                logger.error("Participant not found in ES! " + ddpParticipantId);
+//                            }
 
                         }
                     }
