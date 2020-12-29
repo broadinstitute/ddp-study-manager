@@ -5,6 +5,8 @@ import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
 import com.google.gson.Gson;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigValueFactory;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
@@ -25,10 +27,14 @@ public class SlackAppenderTest extends TestHelper {
 
     private LoggingEvent loggingEvent = new LoggingEvent(null, new RootLogger(Level.ERROR), Level.ERROR, null, null);
 
+    public Config cfg;
+
+
     @Before
     public void setUp() {
         loggingEvent.setProperty("Hi", "There");
         setupDB();
+        cfg = TestHelper.cfg;
     }
 
     @Test
@@ -44,14 +50,17 @@ public class SlackAppenderTest extends TestHelper {
 
             SlackAppender slackAppender = new SlackAppender();
 
-            SlackAppender.configure(TestHelper.cfg, null);
+            cfg = cfg.withValue("slack.hook", ConfigValueFactory.fromAnyRef("http://localhost:" + mockDDP.getPort() + "/mock_slack_test"));
+            cfg = cfg.withValue("slack.channel", ConfigValueFactory.fromAnyRef("SlackChannel"));
+
+            SlackAppender.configure(cfg, null);
 
             slackAppender.doAppend(loggingEvent);
 
             mockDDP.verify(request().withPath("/mock_slack_test").withBody(JsonBody.json(
                     new Gson().toJson(new SlackAppender.SlackMessagePayload("*Hi there*\n ``````",
                             "SlackChannel",
-                            "Pepper",
+                            "DSM",
                             ":nerd_face:")))));
         } else {
             Assert.fail("Mock slack not running");
