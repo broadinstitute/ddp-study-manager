@@ -59,10 +59,7 @@ public class SlackAppender extends AppenderSkeleton {
     }
 
     private void sendSlackNotification(long currentEpoch, String note, String messageType) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String date = formatter.format(new Date(currentEpoch * 1000L));
-        SlackMessagePayload payload = new SlackMessagePayload(String.format("An error has been detected for *%s*. Please go check the backend logs around *%s UTC*. \n" +
-                "%s \n %s", appEnv, date, messageType, note), slackChannel, "DSM", ":nerd_face:");
+        SlackMessagePayload payload = getSlackMessagePayload(currentEpoch, note, messageType);
         HttpRequest httpRequest = HttpRequest.newBuilder()
                 .uri(slackHookUrl)
                 .POST(HttpRequest.BodyPublishers.ofString(new Gson().toJson(payload)))
@@ -78,6 +75,14 @@ public class SlackAppender extends AppenderSkeleton {
             System.out.println("Could not post error message to slack room " + slackChannel + " with hook " + slackHookUrl
                     + "\n" + ExceptionUtils.getStackTrace(e));
         }
+    }
+
+    public SlackMessagePayload getSlackMessagePayload(long currentEpoch, String note, String messageType) {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String date = formatter.format(new Date(currentEpoch * 1000L));
+        SlackMessagePayload payload = new SlackMessagePayload(String.format("An error has been detected for *%s*. Please go check the backend logs around *%s UTC*. \n" +
+                "%s \n %s", appEnv, date, messageType, note), slackChannel, "DSM", ":nerd_face:");
+        return payload;
     }
 
     @Override
