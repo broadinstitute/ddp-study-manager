@@ -1,10 +1,12 @@
 package org.broadinstitute.dsm.model;
 
+import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
@@ -53,55 +55,39 @@ public class KitRequestExternal extends KitRequest {
     }
 
     // update kit request with response of external shipper
-    public static void updateKitRequestResponse(String externalResponse, String dsmKitRequestId) {
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT_REQUEST_EXTERNAL_SHIPPER_RESPONSE)) {
-                stmt.setString(1, externalResponse);
-                stmt.setString(2, dsmKitRequestId);
+    public static void updateKitRequestResponse(@NonNull Connection conn, String externalResponse, String dsmKitRequestId) {
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT_REQUEST_EXTERNAL_SHIPPER_RESPONSE)) {
+            stmt.setString(1, externalResponse);
+            stmt.setString(2, dsmKitRequestId);
 
-                int result = stmt.executeUpdate();
-                if (result > 1) {
-                    throw new RuntimeException("Error updating kit request w/ dsm_kit_request_id " + dsmKitRequestId + " it was updating " + result + " rows");
-                }
+            int result = stmt.executeUpdate();
+            if (result > 1) {
+                throw new RuntimeException("Error updating kit request w/ dsm_kit_request_id " + dsmKitRequestId + " it was updating " + result + " rows");
             }
-            catch (Exception e) {
-                dbVals.resultException = e;
-            }
-            return dbVals;
-        });
-
-        if (results.resultException != null) {
-            logger.error("Error updating kit request w/ dsm_kit_request_id " + dsmKitRequestId, results.resultException);
+        }
+        catch (Exception e) {
+            logger.error("Error updating kit request w/ dsm_kit_request_id " + dsmKitRequestId, e);
         }
     }
 
     // update kit request with response of external shipper
-    public static void updateKitRequestResponse(String trackingIdTo, String trackingIdReturn, String kitLabel, long sentDate,
+    public static void updateKitRequestResponse(@NonNull Connection conn, String trackingIdTo, String trackingIdReturn, String kitLabel, long sentDate,
                                                 String sentBy, String dsmKitRequestId) {
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT_EXTERNAL_SHIPPER)) {
-                stmt.setString(1, trackingIdTo);
-                stmt.setString(2, trackingIdReturn);
-                stmt.setString(3, kitLabel);
-                stmt.setLong(4, sentDate);
-                stmt.setString(5, sentBy);
-                stmt.setString(6, dsmKitRequestId);
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT_EXTERNAL_SHIPPER)) {
+            stmt.setString(1, trackingIdTo);
+            stmt.setString(2, trackingIdReturn);
+            stmt.setString(3, kitLabel);
+            stmt.setLong(4, sentDate);
+            stmt.setString(5, sentBy);
+            stmt.setString(6, dsmKitRequestId);
 
-                int result = stmt.executeUpdate();
-                if (result != 1) {
-                    throw new RuntimeException("Error updating kit w/ dsm_kit_request_id " + dsmKitRequestId + " it was updating " + result + " rows");
-                }
+            int result = stmt.executeUpdate();
+            if (result != 1) {
+                throw new RuntimeException("Error updating kit w/ dsm_kit_request_id " + dsmKitRequestId + " it was updating " + result + " rows");
             }
-            catch (Exception e) {
-                dbVals.resultException = e;
-            }
-            return dbVals;
-        });
-
-        if (results.resultException != null) {
-            logger.error("Error updating kit w/ dsm_kit_request_id " + dsmKitRequestId, results.resultException);
+        }
+        catch (Exception e) {
+            logger.error("Error updating kit w/ dsm_kit_request_id " + dsmKitRequestId, e);
         }
     }
 }

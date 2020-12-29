@@ -38,6 +38,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import java.io.*;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -269,37 +270,36 @@ public class GBFRequestUtil implements ExternalShipper {
         }
     }
 
-    public static void processingSingleConfirmation(Response gbfResponse, List<KitRequest> kitRequests, ShippingConfirmation confirmation) throws Exception {
-        //update external shipper response at request
+    public static void processingSingleConfirmation(Response gbfResponse, ShippingConfirmation confirmation) throws Exception {
         logger.info("Got confirmation for " + confirmation.getOrderNumber());
         Node node = GBFRequestUtil.getXMLNode(gbfResponse.getXML(), XML_NODE_EXPRESSION.replace("%1", confirmation.getOrderNumber()));
-        List<String> dsmKitRequestIds = getDSMKitRequestId(confirmation.getOrderNumber());
-        if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
-            for (String dsmKitRequestId : dsmKitRequestIds) {
-                KitRequestExternal.updateKitRequestResponse(getStringFromNode(node), dsmKitRequestId);
-            }
-        }
-        //update kit shipping information
+        String externalResponse = getStringFromNode(node);
         if (confirmation.getItem() != null) {
             Item item = confirmation.getItem();
-            List<KitRequest> kitRequestsResult = getKitRequest(kitRequests, confirmation.getOrderNumber(), item.getItemNumber(), 1);
-            int counter = 0;
-            if (kitRequestsResult != null) {
-                for (KitRequest kitRequest : kitRequestsResult) {
-                    String kitLabel = item.getTubeSerial();
-                    if (counter > 0) {
-                        kitLabel += "_" + counter;
+            inTransaction((conn) -> {
+                List<String> dsmKitRequestIds = getDSMKitRequestId(conn, confirmation.getOrderNumber()); //dsm_kit_request_id
+                if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
+                    int counter = 0;
+                    for (String dsmKitRequestId : dsmKitRequestIds) {
+                        //update external shipper response at request
+                        KitRequestExternal.updateKitRequestResponse(conn, externalResponse, dsmKitRequestId);
+
+                        //update kit shipping information
+                        String kitLabel = item.getTubeSerial();
+                        if (counter > 0) {
+                            kitLabel += "_" + counter;
+                        }
+                        KitRequestExternal.updateKitRequestResponse(conn, confirmation.getTracking(), item.getReturnTracking(),
+                                kitLabel, SystemUtil.getLongFromDateString(confirmation.getShipDate()), EXTERNAL_SHIPPER_NAME,
+                                dsmKitRequestId);
+                        counter++;
+                        logger.info("Updated confirmation information for : " + dsmKitRequestId + " " + kitLabel);
                     }
-                    KitRequestExternal.updateKitRequestResponse(confirmation.getTracking(), item.getReturnTracking(),
-                            kitLabel, SystemUtil.getLongFromDateString(confirmation.getShipDate()), EXTERNAL_SHIPPER_NAME,
-                            kitRequest.getDsmKitRequestId());
-                    counter++;
-                    logger.info("Updated confirmation information for : " + kitRequest.getDsmKitRequestId() + " " + kitLabel);
+                } else {
+                    logger.error("No kit requests found for kit with order number: " + confirmation.getOrderNumber());
                 }
-            }
-            else {
-                logger.error("No kit requests found for kit with order number: " + confirmation.getOrderNumber());
-            }
+                return null;
+            });
         } else {
             logger.error("No items for order " + confirmation.getOrderNumber());
         }
@@ -307,7 +307,7 @@ public class GBFRequestUtil implements ExternalShipper {
 
     // The confirmation, dependent upon level of detail required, is a shipping receipt to prove completion.
     // Confirmation may include order number, client(participant) ID, outbound tracking number, return tracking number(s), line item(s), kit serial number(s), etc.
-    public void orderConfirmation(ArrayList<KitRequest> kitRequests, long startDate, long endDate) throws Exception {
+    public void orderConfirmation(long startDate, long endDate) throws Exception {
         JSONObject payload = new JSONObject().put("startDate", SystemUtil.getDateFormatted(startDate)).put("endDate", SystemUtil.getDateFormatted(endDate));
         String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + CONFIRM_ENDPOINT;
         logger.info("payload: " + payload.toString());
@@ -322,12 +322,13 @@ public class GBFRequestUtil implements ExternalShipper {
                 if (confirmationList != null && !confirmationList.isEmpty()) {
                     for (ShippingConfirmation confirmation : confirmationList) {
                         try {
-                            processingSingleConfirmation(gbfResponse, kitRequests, confirmation);
+                            processingSingleConfirmation(gbfResponse, confirmation);
                         } catch (Exception e) {
                             logger.error("Could not process confirmation for " + confirmation.getOrderNumber(), e);
                         }
                     }
-                    DBUtil.updateBookmark(endDate, DBConstants.GBF_CONFIRMATION);
+                    DBUtil.updateBookmark(endDate, DBConstants.GBF_CONFIRMATION); //TODO can be removed because not used anymore
+                    logger.info("Finished adding confirmations into db!");
                 }
                 else {
                     logger.info("No shipping confirmation returned");
@@ -387,6 +388,22 @@ public class GBFRequestUtil implements ExternalShipper {
         }
         logger.info("Found " + kitRequests.size() + " kit requests which do not have an end status yet");
         return kitRequests;
+    }
+
+    public static  List<String> getDSMKitRequestId(@NonNull Connection conn, String externalOrderNumber) {
+        List<String> dsmKitRequestIds = new ArrayList<>();
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KIT_REQUEST_BY_EXTERNAL_ORDER_NUMBER)) {
+            stmt.setString(1, externalOrderNumber);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    dsmKitRequestIds.add(rs.getString(DBConstants.DSM_KIT_REQUEST_ID));
+                }
+            }
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException("Error looking up kit requests  ", ex);
+        }
+        return dsmKitRequestIds;
     }
 
     public static  List<String> getDSMKitRequestId(String externalOrderNumber) {

@@ -204,7 +204,7 @@ public class GBFTest extends TestHelper {
                         for (ShippingConfirmation confirmation : confirmationList) {
                             if (kits.containsKey(confirmation.getOrderNumber())) {
                                 try {
-                                    gbf.processingSingleConfirmation(gbfResponse, kitRequests, confirmation);
+                                    gbf.processingSingleConfirmation(gbfResponse, confirmation);
                                 }
                                 catch (Exception e) {
                                     logger.error("Could not process confirmation for " + confirmation.getOrderNumber(), e);

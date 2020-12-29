@@ -14,7 +14,7 @@ public interface ExternalShipper {
 
     public void orderStatus(ArrayList<KitRequest> kitRequests) throws Exception;
 
-    public void orderConfirmation(ArrayList<KitRequest> kitRequests, long startDate, long endDate) throws Exception;
+    public void orderConfirmation(long startDate, long endDate) throws Exception;
 
     public void orderCancellation(ArrayList<KitRequest> kitRequests) throws Exception;
 

@@ -3,17 +3,12 @@ package org.broadinstitute.dsm.jobs;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.model.KitRequest;
 import org.broadinstitute.dsm.model.KitType;
-import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.util.DBUtil;
 import org.broadinstitute.dsm.util.externalShipper.ExternalShipper;
-import org.quartz.CronExpression;
 import org.quartz.Job;
-import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -32,12 +27,9 @@ public class ExternalShipperJob implements Job {
                 ExternalShipper shipper = (ExternalShipper) Class.forName(DSMServer.getClassName(kitType.getExternalShipper())).newInstance();//GBFRequestUtil
                 ArrayList<KitRequest> kitRequests = shipper.getKitRequestsNotDone(kitType.getInstanceId());
                 shipper.orderStatus(kitRequests);
-                if (kitRequests != null && !kitRequests.isEmpty()) { // only if there are kits which are not yet having kit_label set
-                    logger.info("Working on " + kitRequests.size() + " incomplete external kits");
-                    Instant now = Instant.now();
-                    Instant dynamicStartTime = now.minus(5, ChronoUnit.DAYS);
-                    shipper.orderConfirmation(kitRequests, dynamicStartTime.toEpochMilli(), now.toEpochMilli());
-                }
+                Instant now = Instant.now();
+                Instant dynamicStartTime = now.minus(5, ChronoUnit.DAYS);
+                shipper.orderConfirmation(dynamicStartTime.toEpochMilli(), now.toEpochMilli());
             }
             catch (Exception e) {
                 throw new RuntimeException("Failed to get status and/or confirmation ", e);
