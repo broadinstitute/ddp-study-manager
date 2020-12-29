@@ -274,7 +274,7 @@ public class GBFRequestUtil implements ExternalShipper {
         logger.info("Got confirmation for " + confirmation.getOrderNumber());
         Node node = GBFRequestUtil.getXMLNode(gbfResponse.getXML(), XML_NODE_EXPRESSION.replace("%1", confirmation.getOrderNumber()));
         String externalResponse = getStringFromNode(node);
-        if (confirmation.getItem() != null) {
+        if (confirmation.getItem() != null && StringUtils.isNotBlank(externalResponse)) {
             Item item = confirmation.getItem();
             inTransaction((conn) -> {
                 List<String> dsmKitRequestIds = getDSMKitRequestId(conn, confirmation.getOrderNumber()); //dsm_kit_request_id
@@ -301,7 +301,7 @@ public class GBFRequestUtil implements ExternalShipper {
                 return null;
             });
         } else {
-            logger.error("No items for order " + confirmation.getOrderNumber());
+            logger.error("No items or external response for order " + confirmation.getOrderNumber());
         }
     }
 
