@@ -29,18 +29,9 @@ public class ExternalShipperJob implements Job {
                 Instant now = Instant.now();
                 for( int i = 5; i > 0; i--) {
                     Instant dynamicStartTime = now.minus(i, ChronoUnit.DAYS);
-                    long end = 0L;
-                    if (i != 1) {
-                        Instant dynamicEndTime = now.minus(i - 1, ChronoUnit.DAYS);
-                        end = dynamicEndTime.toEpochMilli();
-                    }
-                    else {
-                        end = now.toEpochMilli();
-                    }
-                    shipper.orderConfirmation(dynamicStartTime.toEpochMilli(), end);
+                    Instant dynamicEndTime = now.minus(i - 1, ChronoUnit.DAYS);
+                    shipper.orderConfirmation(dynamicStartTime.toEpochMilli(), dynamicEndTime.toEpochMilli());
                 }
-//                Instant dynamicStartTime = now.minus(5, ChronoUnit.DAYS);
-//                shipper.orderConfirmation(dynamicStartTime.toEpochMilli(), now.toEpochMilli());
             }
             catch (Exception e) {
                 throw new RuntimeException("Failed to get status and/or confirmation ", e);
