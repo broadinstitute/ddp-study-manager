@@ -57,7 +57,7 @@ public class BSPKitQueryRoute implements Route {
             return null;
         }
 
-        boolean firstTimeReceived = KitUtil.setKitReceived(kitLabel);
+        boolean firstTimeReceived = KitUtil.setKitReceived(conn, kitLabel);
         if (StringUtils.isNotBlank(bspKitInfo.getParticipantExitId())) {
             String message = "Kit of exited participant " + bspKitInfo.getBspParticipantId() + " was received by GP.<br>";
             notificationUtil.sentNotification(bspKitInfo.getNotificationRecipient(), message, NotificationUtil.DSM_SUBJECT);
