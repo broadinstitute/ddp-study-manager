@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -50,6 +51,7 @@ public class EventQueueTool {
 
     public static void littleMain() {
         try {
+
             if (!testScenario) {
                 String confFile = "config/test-config.conf";
                 setup(confFile);
@@ -57,11 +59,17 @@ public class EventQueueTool {
                 String realm = "MBC";
                 String eventType = "BLOOD_SENT_4WK";
 
-                eventQueue(realm, eventType);
+                TransactionWrapper.inTransaction(conn -> {
+                    eventQueue(conn, realm, eventType);
+                    return null;
+                });
             }
             else {
                 setup(propFile);
-                eventQueue(realm, eventType);
+                TransactionWrapper.inTransaction(conn -> {
+                    eventQueue(conn, realm, eventType);
+                    return null;
+                });
             }
         }
         catch (Exception ex) {
@@ -84,7 +92,7 @@ public class EventQueueTool {
                 cfg.getString(ApplicationConfigConstants.DSM_DB_URL), cfg, false);
     }
 
-    private static void eventQueue(@NonNull String realm, @NonNull String eventName) {
+    private static void eventQueue(Connection conn, @NonNull String realm, @NonNull String eventName) {
         //find kits which need to get added to EVENT_QUEUE
         Collection<KitDDPNotification> kitsNotReceived = getKitsNotReceived(realm, eventName);
 
@@ -95,7 +103,7 @@ public class EventQueueTool {
             if (kitInfo.getEventName().equals(eventName) && kitInfo.getInstanceName().equals(realm)) {
                 //add kits to ddp_participant_event
                 ParticipantEvent.skipParticipantEvent(kitInfo.getParticipantId(), currentTime, "SYSTEM", ddpInstance, eventName);
-                EventUtil.addEvent(eventName, ddpInstance.getDdpInstanceId(), kitInfo.getDsmKitRequestId(), false);
+                EventUtil.addEvent(conn, eventName, ddpInstance.getDdpInstanceId(), kitInfo.getDsmKitRequestId(), false);
             }
         }
     }

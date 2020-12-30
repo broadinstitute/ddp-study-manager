@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.util.externalShipper;
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.gson.Gson;
 import lombok.NonNull;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.fluent.Executor;
 import org.broadinstitute.ddp.db.SimpleResult;
@@ -43,6 +44,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -199,65 +201,52 @@ public class GBFRequestUtil implements ExternalShipper {
     //  Status is as it sounds, a real-time status of the order progression through the GBF internal process
     // 'RECEIVED', 'PROCESSING', 'SHIPPED', 'DISTRIBUTION', 'FORMS PRINTED', 'CANCELLED', 'NOT FOUND', 'SHIPPED (SIMULATED)'
     // return the actual tube barcode for all tubes but only after the kit is shipped (around 7:00pm)
-    public void orderStatus(ArrayList<KitRequest> kitRequests) throws Exception {
-        if (kitRequests != null && !kitRequests.isEmpty()) {
-            List<String> orderNumbers = new ArrayList<>();
-            Map<String, KitRequest> externalOrdersStatus = new HashMap<>();
-            for (KitRequest kit : kitRequests) {
-                if (!orderNumbers.contains(kit.getExternalOrderNumber()) && StringUtils.isNotBlank(kit.getExternalOrderNumber())) {
-                    orderNumbers.add(kit.getExternalOrderNumber());
-                    externalOrdersStatus.put(kit.getExternalOrderNumber(), kit);
-                }
-            }
-            JSONObject payload = new JSONObject().put("orderNumbers", orderNumbers);
-            logger.info("payload size for order status: " + orderNumbers.size());
-            String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + STATUS_ENDPOINT;
-            logger.info("payload: " + payload.toString());
-            Response gbfResponse = executePost(Response.class, sendRequest, payload.toString(), DSMServer.getApiKey(getExternalShipperName()));
-            logger.info(gbfResponse.getXML());
-            if (gbfResponse != null && gbfResponse.isSuccess()) {
-                List<Status> statuses = gbfResponse.getStatuses();
-                logger.info("Got a list of " + statuses.size() + " responses from GBF status");
-                if (statuses != null && !statuses.isEmpty()) {
-                    for (Status status : statuses) {
-                        logger.info("Got Kit status in GBF Response is " + status.getOrderStatus() + " for " + status.getOrderNumber());
-                        KitRequest kit = externalOrdersStatus.get(status.getOrderNumber());
-                        if (!status.getOrderStatus().equals(kit.getExternalOrderStatus())) {
-                            logger.info("Kit status from GBF is changed from " + kit.getExternalOrderStatus() + " to " + status.getOrderStatus() + " for kit: " + kit.getExternalOrderNumber());
-                        }
-                        KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_SENT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER, kit.getExternalOrderNumber(), 2);//todo change this to the number of subkits but for now 2 for test boston works
-                        if (status.getOrderStatus().equals(NOT_FOUND) && StringUtils.isNotBlank(kit.getExternalOrderStatus()) && kit.getExternalOrderStatus().equals("NOT FOUND")
-                                && System.currentTimeMillis() - kit.getExternalOrderDate() >= TimeUnit.HOURS.toMillis(24)) {
-                            List<String> dsmKitRequestIds = getDSMKitRequestIds(status.getOrderNumber());
-                            if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
-                                for (String dsmKitRequestId : dsmKitRequestIds) {
-                                    KitRequestExternal.updateKitRequest(status.getOrderStatus(), System.currentTimeMillis(), dsmKitRequestId);// in order to update time for the  next 24 hour check we need this
-                                }
+    public void orderStatus(Connection conn, KitRequest kit) throws Exception {
+        logger.info("checking status of " + kit.getExternalOrderNumber() + " for participant " + kit.getParticipantId());
+        JSONObject payload = new JSONObject().put("orderNumbers", kit.getExternalOrderNumber());
+        String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + STATUS_ENDPOINT;
+        Response gbfResponse = executePost(Response.class, sendRequest, payload.toString(), DSMServer.getApiKey(getExternalShipperName()));
+        if (gbfResponse != null && gbfResponse.isSuccess()) {
+            List<Status> statuses = gbfResponse.getStatuses();
+            logger.info("Got a list of " + statuses.size() + " responses from GBF status");
+            if (statuses != null && !statuses.isEmpty()) {
+                for (Status status : statuses) {
+                    logger.info("Got Kit status in GBF Response is " + status.getOrderStatus() + " for " + status.getOrderNumber());
+                    if (!status.getOrderStatus().equals(kit.getExternalOrderStatus())) {
+                        logger.info("Kit status from GBF is changed from " + kit.getExternalOrderStatus() + " to " + status.getOrderStatus() + " for kit: " + kit.getExternalOrderNumber());
+                    }
+                    KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_SENT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER, kit.getExternalOrderNumber(), 2);//todo change this to the number of subkits but for now 2 for test boston works
+                    if (status.getOrderStatus().equals(NOT_FOUND) && StringUtils.isNotBlank(kit.getExternalOrderStatus()) && kit.getExternalOrderStatus().equals("NOT FOUND")
+                            && System.currentTimeMillis() - kit.getExternalOrderDate() >= TimeUnit.HOURS.toMillis(24)) {
+                        List<String> dsmKitRequestIds = getDSMKitRequestIds(status.getOrderNumber());
+                        if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
+                            for (String dsmKitRequestId : dsmKitRequestIds) {
+                                KitRequestExternal.updateKitRequest(conn, status.getOrderStatus(), System.currentTimeMillis(), dsmKitRequestId);// in order to update time for the  next 24 hour check we need this
                             }
-                            logger.warn("Kit Request with external order number " + kit.getExternalOrderNumber() + "has not been shipped in the last 24 hours! ");//todo pegah uncomment for production
                         }
-                        else if (status.getOrderStatus().contains(SHIPPED) && (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
-                                !kit.getExternalOrderStatus().contains(SHIPPED))) {
-                            if (kitDDPNotification != null) {
-                                logger.info("Triggering DDP for shipped kit with external order number: " + kit.getExternalOrderNumber());
-                                EventUtil.triggerDDP(kitDDPNotification);
+                        logger.warn("Kit Request with external order number " + kit.getExternalOrderNumber() + "has not been shipped in the last 24 hours! ");//todo pegah uncomment for production
+                    }
+                    else if (status.getOrderStatus().contains(SHIPPED) && (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
+                            !kit.getExternalOrderStatus().contains(SHIPPED))) {
+                        if (kitDDPNotification != null) {
+                            logger.info("Triggering DDP for shipped kit with external order number: " + kit.getExternalOrderNumber());
+                            EventUtil.triggerDDP(conn, kitDDPNotification);
 
-                            }
-                            else {
-                                logger.error("kitDDPNotification was null for " + kit.getExternalOrderNumber());
-                            }
                         }
-                        else if (status.getOrderStatus().contains("CANCELLED") && (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
-                                (StringUtils.isNotBlank(kit.getExternalOrderStatus()) && !kit.getExternalOrderStatus().contains("CANCELLED")))) {//todo uncomment for prod
-                            logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has got cancelled by GBF!");//todo pegah uncomment for production
+                        else {
+                            logger.error("kitDDPNotification was null for " + kit.getExternalOrderNumber());
                         }
-                        if (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
-                                !kit.getExternalOrderStatus().equals(status.getOrderStatus())) {// if changed
-                            List<String> dsmKitRequestIds = getDSMKitRequestIds(status.getOrderNumber());
-                            if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
-                                for (String dsmKitRequestId : dsmKitRequestIds) {
-                                    KitRequestExternal.updateKitRequest(status.getOrderStatus(), System.currentTimeMillis(), dsmKitRequestId);
-                                }
+                    }
+                    else if (status.getOrderStatus().contains("CANCELLED") && (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
+                            (StringUtils.isNotBlank(kit.getExternalOrderStatus()) && !kit.getExternalOrderStatus().contains("CANCELLED")))) {//todo uncomment for prod
+                        logger.error("Kit Request with external order number " + kit.getExternalOrderNumber() + "has got cancelled by GBF!");//todo pegah uncomment for production
+                    }
+                    if (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
+                            !kit.getExternalOrderStatus().equals(status.getOrderStatus())) {// if changed
+                        List<String> dsmKitRequestIds = getDSMKitRequestIds(status.getOrderNumber());
+                        if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
+                            for (String dsmKitRequestId : dsmKitRequestIds) {
+                                KitRequestExternal.updateKitRequest(conn, status.getOrderStatus(), System.currentTimeMillis(), dsmKitRequestId);
                             }
                         }
                     }
@@ -337,8 +326,59 @@ public class GBFRequestUtil implements ExternalShipper {
     }
 
     public void orderCancellation(ArrayList<KitRequest> kitRequests) throws Exception {
+        throw new NotImplementedException("Not implemented yet");
     }
 
+    public void updateOrderStatusForPendingKitRequests(int instanceId) {
+        updateOrderStatusForPendingKitRequests(instanceId, SQL_SELECT_EXTERNAL_KIT_NOT_DONE);
+    }
+
+    /**
+     * Streams through the list of pending requests from the
+     * database and updates the status based on the latest
+     * details from GBF
+     */
+    private void updateOrderStatusForPendingKitRequests(int instanceId, String query) {
+        final AtomicInteger numOrdersProcessed = new AtomicInteger();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setInt(1, instanceId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        String ddpParticipantId = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
+                        if (StringUtils.isNotBlank(ddpParticipantId)) {
+                            KitRequest kitRequest = new KitRequest(rs.getString(DBConstants.DSM_KIT_REQUEST_ID), ddpParticipantId,
+                                    null, null, rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER), null,
+                                    rs.getString(DBConstants.EXTERNAL_ORDER_STATUS),
+                                    rs.getString("subkits." + DBConstants.EXTERNAL_KIT_NAME),
+                                    rs.getLong(DBConstants.EXTERNAL_ORDER_DATE));
+                            numOrdersProcessed.incrementAndGet();
+                            try {
+                                orderStatus(conn, kitRequest);
+                            } catch (Exception e) {
+                                logger.error("Could not check status of kit request " + kitRequest.getExternalOrderNumber(), e);
+                            }
+                            logger.info("Processed  " + numOrdersProcessed.get() + " incomplete orders");
+                        }
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Error looking up kit requests  ", results.resultException);
+        }
+    }
+
+    /**
+     * Should only be used for testing.  Scaling issues
+     * will lead to crashes if used in production.
+     */
     public ArrayList<KitRequest> getKitRequestsNotDone(int instanceId) {
         return getKitRequestsNotDone(instanceId,SQL_SELECT_EXTERNAL_KIT_NOT_DONE );
     }
@@ -361,11 +401,11 @@ public class GBFRequestUtil implements ExternalShipper {
 //                                DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData, ddpParticipantId);
 //                                logger.info("ddpParticipant found: "+ddpParticipant.getParticipantId());
 //                                if (ddpParticipant != null) {
-                                    kitRequests.add(new KitRequest(rs.getString(DBConstants.DSM_KIT_REQUEST_ID), ddpParticipantId,
-                                            null, null, rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER), null,
-                                            rs.getString(DBConstants.EXTERNAL_ORDER_STATUS),
-                                            rs.getString("subkits." + DBConstants.EXTERNAL_KIT_NAME),
-                                            rs.getLong(DBConstants.EXTERNAL_ORDER_DATE)));
+                            kitRequests.add(new KitRequest(rs.getString(DBConstants.DSM_KIT_REQUEST_ID), ddpParticipantId,
+                                    null, null, rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER), null,
+                                    rs.getString(DBConstants.EXTERNAL_ORDER_STATUS),
+                                    rs.getString("subkits." + DBConstants.EXTERNAL_KIT_NAME),
+                                    rs.getLong(DBConstants.EXTERNAL_ORDER_DATE)));
 //                                }
 //                            }
 //                            else {

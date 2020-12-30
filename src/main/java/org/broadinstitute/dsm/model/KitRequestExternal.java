@@ -29,28 +29,20 @@ public class KitRequestExternal extends KitRequest {
     }
 
     // update kit request with status and date of external shipper
-    public static void updateKitRequest(String externalOrderStatus, long externalOrderDate, String dsmKitRequestId) {
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT_REQUEST_EXTERNAL_SHIPPER_STATUS)) {
-                stmt.setString(1, externalOrderStatus);
-                stmt.setLong(2, externalOrderDate);
-                stmt.setString(3, dsmKitRequestId);
-                stmt.setString(4, externalOrderStatus);
+    public static void updateKitRequest(Connection conn, String externalOrderStatus, long externalOrderDate, String dsmKitRequestId) {
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT_REQUEST_EXTERNAL_SHIPPER_STATUS)) {
+            stmt.setString(1, externalOrderStatus);
+            stmt.setLong(2, externalOrderDate);
+            stmt.setString(3, dsmKitRequestId);
+            stmt.setString(4, externalOrderStatus);
 
-                int result = stmt.executeUpdate();
-                if (result > 1) {
-                    throw new RuntimeException("Error updating kit request w/ dsm_kit_request_id " + dsmKitRequestId + " it was updating " + result + " rows");
-                }
+            int result = stmt.executeUpdate();
+            if (result > 1) {
+                throw new RuntimeException("Error updating kit request w/ dsm_kit_request_id " + dsmKitRequestId + " it was updating " + result + " rows");
             }
-            catch (Exception e) {
-                dbVals.resultException = e;
-            }
-            return dbVals;
-        });
-
-        if (results.resultException != null) {
-            logger.error("Error updating kit request w/ dsm_kit_request_id " + dsmKitRequestId, results.resultException);
+        }
+        catch (Exception e) {
+           throw new RuntimeException("Error updating kit request w/ dsm_kit_request_id " + dsmKitRequestId, e);
         }
     }
 

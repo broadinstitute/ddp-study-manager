@@ -25,9 +25,7 @@ public class ExternalShipperJob implements Job {
             try {
                 logger.info("Starting the external shipper job");
                 ExternalShipper shipper = (ExternalShipper) Class.forName(DSMServer.getClassName(kitType.getExternalShipper())).newInstance();//GBFRequestUtil
-                ArrayList<KitRequest> kitRequests = shipper.getKitRequestsNotDone(kitType.getInstanceId());
-                shipper.orderStatus(kitRequests);
-                kitRequests.clear();
+                shipper.updateOrderStatusForPendingKitRequests(kitType.getInstanceId());
                 Instant now = Instant.now();
                 Instant dynamicStartTime = now.minus(5, ChronoUnit.DAYS);
                 shipper.orderConfirmation(dynamicStartTime.toEpochMilli(), now.toEpochMilli());
