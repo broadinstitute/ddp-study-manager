@@ -11,7 +11,6 @@ import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.exception.ExternalShipperException;
 import org.broadinstitute.dsm.model.*;
-import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.gbf.*;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.*;
@@ -229,7 +228,7 @@ public class GBFRequestUtil implements ExternalShipper {
                         KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_SENT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER, kit.getExternalOrderNumber(), 2);//todo change this to the number of subkits but for now 2 for test boston works
                         if (status.getOrderStatus().equals(NOT_FOUND) && StringUtils.isNotBlank(kit.getExternalOrderStatus()) && kit.getExternalOrderStatus().equals("NOT FOUND")
                                 && System.currentTimeMillis() - kit.getExternalOrderDate() >= TimeUnit.HOURS.toMillis(24)) {
-                            List<String> dsmKitRequestIds = getDSMKitRequestId(status.getOrderNumber());
+                            List<String> dsmKitRequestIds = getDSMKitRequestIds(status.getOrderNumber());
                             if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
                                 for (String dsmKitRequestId : dsmKitRequestIds) {
                                     KitRequestExternal.updateKitRequest(status.getOrderStatus(), System.currentTimeMillis(), dsmKitRequestId);// in order to update time for the  next 24 hour check we need this
@@ -254,7 +253,7 @@ public class GBFRequestUtil implements ExternalShipper {
                         }
                         if (StringUtils.isBlank(kit.getExternalOrderStatus()) ||
                                 !kit.getExternalOrderStatus().equals(status.getOrderStatus())) {// if changed
-                            List<String> dsmKitRequestIds = getDSMKitRequestId(status.getOrderNumber());
+                            List<String> dsmKitRequestIds = getDSMKitRequestIds(status.getOrderNumber());
                             if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
                                 for (String dsmKitRequestId : dsmKitRequestIds) {
                                     KitRequestExternal.updateKitRequest(status.getOrderStatus(), System.currentTimeMillis(), dsmKitRequestId);
@@ -274,10 +273,10 @@ public class GBFRequestUtil implements ExternalShipper {
         logger.info("Got confirmation for " + confirmation.getOrderNumber());
         Node node = GBFRequestUtil.getXMLNode(gbfResponse.getXML(), XML_NODE_EXPRESSION.replace("%1", confirmation.getOrderNumber()));
         String externalResponse = getStringFromNode(node);
-        if (confirmation.getItem() != null && StringUtils.isNotBlank(externalResponse)) {
-            Item item = confirmation.getItem();
+        Item item = confirmation.getItem();
+        if (item != null && StringUtils.isNotBlank(externalResponse)) {
             inTransaction((conn) -> {
-                List<String> dsmKitRequestIds = getDSMKitRequestId(conn, confirmation.getOrderNumber()); //dsm_kit_request_id
+                List<String> dsmKitRequestIds = getDSMKitRequestIds(conn, confirmation.getOrderNumber()); //dsm_kit_request_id
                 if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
                     int counter = 0;
                     for (String dsmKitRequestId : dsmKitRequestIds) {
@@ -390,7 +389,7 @@ public class GBFRequestUtil implements ExternalShipper {
         return kitRequests;
     }
 
-    public static  List<String> getDSMKitRequestId(@NonNull Connection conn, String externalOrderNumber) {
+    public static  List<String> getDSMKitRequestIds(@NonNull Connection conn, String externalOrderNumber) {
         List<String> dsmKitRequestIds = new ArrayList<>();
         try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KIT_REQUEST_BY_EXTERNAL_ORDER_NUMBER)) {
             stmt.setString(1, externalOrderNumber);
@@ -401,12 +400,12 @@ public class GBFRequestUtil implements ExternalShipper {
             }
         }
         catch (SQLException ex) {
-            throw new RuntimeException("Error looking up kit requests  ", ex);
+            throw new RuntimeException("Error looking up kit requests for " + externalOrderNumber, ex);
         }
         return dsmKitRequestIds;
     }
 
-    public static  List<String> getDSMKitRequestId(String externalOrderNumber) {
+    public static  List<String> getDSMKitRequestIds(String externalOrderNumber) {
         List<String> dsmKitRequestIds = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
