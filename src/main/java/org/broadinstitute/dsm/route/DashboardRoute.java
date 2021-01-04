@@ -214,7 +214,7 @@ public class DashboardRoute extends RequestHandler {
      * @return DashboardInformation
      */
     public DashboardInformation getMedicalRecordDashboard(@NonNull long start, @NonNull long end, @NonNull String realm) {
-        DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
+        DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.MEDICAL_RECORD_ACTIVATED);
 
         Map<String, Map<String, Object>> participantESData = ParticipantWrapper.getESData(ddpInstance);
         Map<String, Participant> participants = Participant.getParticipants(realm);

@@ -348,34 +348,27 @@ public class KitUtil {
         }
     }
 
-    public static boolean setKitReceived(String kitLabel) {
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT_RECEIVED)) {
-                stmt.setLong(1, System.currentTimeMillis());
-                stmt.setString(2, BSP);
-                stmt.setString(3, kitLabel);
-                int result = stmt.executeUpdate();
-                if (result > 1) { // 1 row or 0 row updated is perfect
-                    throw new RuntimeException("Error updating kit w/label " + kitLabel + " (was updating " + result + " rows)");
-                }
-                if (result == 1) {
-                    dbVals.resultValue = true;
-                }
-                else {
-                    dbVals.resultValue = false;
-                }
+    public static boolean setKitReceived(Connection conn, String kitLabel) {
+        boolean resultBoolean = false;
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT_RECEIVED)) {
+            stmt.setLong(1, System.currentTimeMillis());
+            stmt.setString(2, BSP);
+            stmt.setString(3, kitLabel);
+            int result = stmt.executeUpdate();
+            if (result > 1) { // 1 row or 0 row updated is perfect
+                throw new RuntimeException("Error updating kit w/label " + kitLabel + " (was updating " + result + " rows)");
             }
-            catch (Exception ex) {
-                dbVals.resultException = ex;
+            if (result == 1) {
+                resultBoolean = true;
             }
-            return dbVals;
-        });
-        if (results.resultException != null) {
-            logger.error("Failed to set kit w/ label " + kitLabel + " as received ", results.resultException);
-            return false;
+            else {
+                resultBoolean = false;
+            }
         }
-        return (boolean) results.resultValue;
+        catch (Exception e) {
+            logger.error("Failed to set kit w/ label " + kitLabel + " as received ", e);
+        }
+        return resultBoolean;
     }
 
     public static void getKitStatus() {

@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 import org.broadinstitute.ddp.BasicServer;
+import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.security.Auth0Util;
 import org.broadinstitute.ddp.security.CookieUtil;
 import org.broadinstitute.ddp.util.BasicTriggerListener;
@@ -164,7 +165,7 @@ public class DSMServer extends BasicServer {
     protected void configureServer(@NonNull Config config) {
         logger.info("Property source: " + config.getString("portal.environment"));
         logger.info("Configuring the server...");
-        threadPool(-1, -1, 30000);
+        threadPool(-1, -1, 60000);
         int port = config.getInt("portal.port");
         String appEnginePort = System.getenv("PORT");
 
@@ -343,9 +344,13 @@ public class DSMServer extends BasicServer {
                     (PubsubMessage message, AckReplyConsumer consumer) -> {
                         // Handle incoming message, then ack the received message.
                         try {
-                            PubSubLookUp.processCovidTestResults(message, notificationUtil);
-                            logger.info("Processing the message finished");
-                            consumer.ack();
+                            TransactionWrapper.inTransaction(conn -> {
+                                PubSubLookUp.processCovidTestResults(conn, message, notificationUtil);
+                                logger.info("Processing the message finished");
+                                consumer.ack();
+                                return null;
+                            });
+
                         }catch(Exception ex){
                             logger.info("about to nack the message", ex);
                             consumer.nack();
