@@ -57,8 +57,8 @@ public class GBFRequestUtil implements ExternalShipper {
             "                        req.kit_type_id, req.external_order_status, req.external_order_number, req.external_order_date, req.external_response, kt.no_return, req.created_by, kit.kit_label FROM kit_type kt, ddp_kit_request req, ddp_kit kit, ddp_instance ddp_site\n" +
             "                        WHERE req.ddp_instance_id = ddp_site.ddp_instance_id AND req.kit_type_id = kt.kit_type_id AND kit.dsm_kit_request_id = req.dsm_kit_request_id\n" +
             "                        and kit.test_result is null and kit.CE_order is null\n" +
-            "                        and not (kit.ups_tracking_status is not null\n" +
-            "                                and kit.ups_return_status is not null)\n" +
+            "                        and (kit.ups_tracking_status is null\n" +
+            "                             or kit.ups_return_status is null)\n" +
             "                        ) AS request\n" +
             "                        LEFT JOIN ddp_participant_exit ex ON (ex.ddp_instance_id = request.ddp_instance_id AND ex.ddp_participant_id = request.ddp_participant_id)\n" +
             "                        LEFT JOIN (SELECT subK.kit_type_id, subK.external_name from ddp_kit_request_settings dkc\n" +
