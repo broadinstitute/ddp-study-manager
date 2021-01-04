@@ -54,7 +54,7 @@ public class FilterRoute extends RequestHandler {
         DDPInstance instance = null;
         if (queryParams.value(RoutePath.REALM) != null) {
             realm = queryParams.get(RoutePath.REALM).value();
-            instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
+            instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.MEDICAL_RECORD_ACTIVATED);
         }
         else {
             throw new RuntimeException("No realm is sent!");
@@ -330,7 +330,7 @@ public class FilterRoute extends RequestHandler {
 
     public static List<?> getListBasedOnFilterName(String filterName, String realm, String parent, String queryString, Map<String, String> filters) {
         if (TISSUE_LIST_PARENT.equals(parent)) {
-            DDPInstance instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
+            DDPInstance instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.MEDICAL_RECORD_ACTIVATED);
             String subQueryForFiltering = "";
             if (StringUtils.isNotBlank(filterName)) {
                 if (filterName.equals(ViewFilter.DESTROYING_FILTERS)) {
