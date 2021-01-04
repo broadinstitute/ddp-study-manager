@@ -138,7 +138,7 @@ public class KitStatusChangeRoute extends RequestHandler {
                         logger.info("Updated kitRequests w/ ddp_label " + kit);
                         KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_SENT_KIT_INFORMATION_FOR_NOTIFICATION_EMAIL), kit, 1);
                         if (kitDDPNotification != null) {
-                            EventUtil.triggerDDP(kitDDPNotification);
+                            EventUtil.triggerDDP(conn, kitDDPNotification);
                         }
                     }
                     else if (RoutePath.TRACKING_SCAN_REQUEST.equals(changeType)) {

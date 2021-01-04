@@ -181,8 +181,7 @@ public class TestBostonUPSTrackingJob implements Job {
                                            DdpKit kit,
                                            Instant earliestInTransitTime) {
         String upsUpdate = statusType + " " + statusDescription;
-        SimpleResult result = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
+        inTransaction((conn) -> {
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, upsUpdate);
                 stmt.setString(2, date);
@@ -191,56 +190,52 @@ public class TestBostonUPSTrackingJob implements Job {
                 if (r != 2) {//number of subkits
                     logger.error("Update query for UPS tracking updated " + r + " rows! with tracking/return id: " + trackingId);
                 }
+
+                if (!isReturn) {
+                    if (shouldTriggerEventForKitOnItsWayToParticipant(statusType, oldType)) {
+                        KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn,SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_TRACKING_NUMBER, new String[] { DELIVERED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
+                        if (kitDDPNotification != null) {
+                            logger.info("Triggering DDP for kit going to participant with external order number: " + kit.getExternalOrderNumber());
+                            EventUtil.triggerDDP(conn, kitDDPNotification);
+                        }
+                        else {
+                            logger.error("delivered kitDDPNotification was null for " + kit.getExternalOrderNumber());
+                        }
+                    }
+
+                }
+                else { // this is a return
+                    if (earliestInTransitTime != null && !kit.isCEOrdered()) {
+                        // if we have the first date of an inbound event, create an order in CE
+                        // using the earliest date of inbound event
+                        orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime);
+                        logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
+                        kit.changeCEOrdered(conn,true);
+                    }
+                    else {
+                        logger.info("No return events for " + kit.getKitLabel() + ".  Will not place order yet.");
+                    }
+                    if (shouldTriggerEventForReturnKitDelivery(statusType, oldType)) {
+                        KitUtil.setKitReceived(conn, kit.getKitLabel());
+                        logger.info("RECEIVED: " + trackingId);
+                        KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn,SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { RECEIVED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
+                        if (kitDDPNotification != null) {
+                            logger.info("Triggering DDP for received kit with external order number: " + kit.getExternalOrderNumber());
+                            EventUtil.triggerDDP(conn, kitDDPNotification);
+
+                        }
+                        else {
+                            logger.error("received kitDDPNotification was null for " + kit.getExternalOrderNumber());
+                        }
+                    }
+                }
+                logger.info("Updated status of tracking number " + trackingId + " to " + upsUpdate + " from " + oldType);
             }
             catch (Exception e) {
-                dbVals.resultException = e;
+                throw new RuntimeException("Could not update tracking info for tracking id " + trackingId, e);
             }
-            return dbVals;
+            return null;
         });
-        if (result.resultException != null) {
-            throw new RuntimeException(result.resultException);
-        }
-        else {
-            if (!isReturn) {
-                if (shouldTriggerEventForKitOnItsWayToParticipant(statusType, oldType)) {
-                    KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_TRACKING_NUMBER, new String[] { DELIVERED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
-                    if (kitDDPNotification != null) {
-                        logger.info("Triggering DDP for kit going to participant with external order number: " + kit.getExternalOrderNumber());
-                        EventUtil.triggerDDP(kitDDPNotification);
-                    }
-                    else {
-                        logger.error("delivered kitDDPNotification was null for " + kit.getExternalOrderNumber());
-                    }
-                }
-
-            }
-            else { // this is a return
-                if (earliestInTransitTime != null && !kit.isCEOrdered()) {
-                    // if we have the first date of an inbound event, create an order in CE
-                    // using the earliest date of inbound event
-                    orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime);
-                    logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
-                    kit.changeCEOrdered(true);
-                }
-                else {
-                    logger.info("No return events for " + kit.getKitLabel() + ".  Will not place order yet.");
-                }
-                if (shouldTriggerEventForReturnKitDelivery(statusType, oldType)) {
-                    KitUtil.setKitReceived(kit.getKitLabel());
-                    logger.info("RECEIVED: " + trackingId);
-                    KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { RECEIVED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
-                    if (kitDDPNotification != null) {
-                        logger.info("Triggering DDP for received kit with external order number: " + kit.getExternalOrderNumber());
-                        EventUtil.triggerDDP(kitDDPNotification);
-
-                    }
-                    else {
-                        logger.error("received kitDDPNotification was null for " + kit.getExternalOrderNumber());
-                    }
-                }
-            }
-            logger.info("Updated status of tracking number " + trackingId + " to " + upsUpdate + " from " + oldType);
-        }
     }
 
     /**
