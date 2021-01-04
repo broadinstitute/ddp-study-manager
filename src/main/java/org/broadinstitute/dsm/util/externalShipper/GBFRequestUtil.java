@@ -52,20 +52,19 @@ public class GBFRequestUtil implements ExternalShipper {
 
     private static final Logger logger = LoggerFactory.getLogger(GBFRequestUtil.class);
 
-    public static final String SQL_SELECT_EXTERNAL_KIT_NOT_DONE = "SELECT * FROM (SELECT kt.kit_type_name, ddp_site.instance_name, ddp_site.ddp_instance_id, ddp_site.base_url, ddp_site.auth0_token, ddp_site.migrated_ddp, " +
-            "            ddp_site.collaborator_id_prefix, req.bsp_collaborator_sample_id, req.ddp_participant_id, req.ddp_label, req.dsm_kit_request_id, req.bsp_collaborator_participant_id, " +
-            "            req.kit_type_id, req.external_order_status, req.external_order_number, req.external_order_date, req.external_response, kt.no_return, req.created_by, kit.kit_label FROM kit_type kt, ddp_kit_request req, ddp_kit kit, ddp_instance ddp_site " +
-            "            WHERE req.ddp_instance_id = ddp_site.ddp_instance_id AND req.kit_type_id = kt.kit_type_id AND kit.dsm_kit_request_id = req.dsm_kit_request_id " +
-            "            and kit.test_result is null " +
-            "            and not (kit.ups_tracking_status like 'D%' " +
-            "                    and kit.ups_return_status like 'D%' " +
-            "                    and kit.ups_tracking_status is not null " +
-            "                    and kit.ups_return_status is not null) " +
-            "            ) AS request " +
-            "            LEFT JOIN ddp_participant_exit ex ON (ex.ddp_instance_id = request.ddp_instance_id AND ex.ddp_participant_id = request.ddp_participant_id) " +
-            "            LEFT JOIN (SELECT subK.kit_type_id, subK.external_name from ddp_kit_request_settings dkc " +
-            "            LEFT JOIN sub_kits_settings subK ON (subK.ddp_kit_request_settings_id = dkc.ddp_kit_request_settings_id)) as subkits ON (subkits.kit_type_id = request.kit_type_id) " +
-            "            WHERE ex.ddp_participant_exit_id is null AND request.ddp_instance_id = ? AND NOT external_order_status <=> 'CANCELLED' AND external_order_number IS NOT NULL " ;
+    public static final String SQL_SELECT_EXTERNAL_KIT_NOT_DONE = "SELECT * FROM (SELECT kt.kit_type_name, ddp_site.instance_name, ddp_site.ddp_instance_id, ddp_site.base_url, ddp_site.auth0_token, ddp_site.migrated_ddp,\n" +
+            "                        ddp_site.collaborator_id_prefix, req.bsp_collaborator_sample_id, req.ddp_participant_id, req.ddp_label, req.dsm_kit_request_id, req.bsp_collaborator_participant_id,\n" +
+            "                        req.kit_type_id, req.external_order_status, req.external_order_number, req.external_order_date, req.external_response, kt.no_return, req.created_by, kit.kit_label FROM kit_type kt, ddp_kit_request req, ddp_kit kit, ddp_instance ddp_site\n" +
+            "                        WHERE req.ddp_instance_id = ddp_site.ddp_instance_id AND req.kit_type_id = kt.kit_type_id AND kit.dsm_kit_request_id = req.dsm_kit_request_id\n" +
+            "                        and kit.test_result is null and kit.CE_order is null\n" +
+            "                        and not (kit.ups_tracking_status is not null\n" +
+            "                                and kit.ups_return_status is not null)\n" +
+            "                        ) AS request\n" +
+            "                        LEFT JOIN ddp_participant_exit ex ON (ex.ddp_instance_id = request.ddp_instance_id AND ex.ddp_participant_id = request.ddp_participant_id)\n" +
+            "                        LEFT JOIN (SELECT subK.kit_type_id, subK.external_name from ddp_kit_request_settings dkc\n" +
+            "                        LEFT JOIN sub_kits_settings subK ON (subK.ddp_kit_request_settings_id = dkc.ddp_kit_request_settings_id)) as subkits ON (subkits.kit_type_id = request.kit_type_id)\n" +
+            "                    WHERE ex.ddp_participant_exit_id is null AND request.ddp_instance_id = ? AND NOT external_order_status <=> 'CANCELLED' AND external_order_number IS NOT NULL ";
+
 
     private static final String SQL_SELECT_KIT_REQUEST_BY_EXTERNAL_ORDER_NUMBER = "SELECT dsm_kit_request_id FROM ddp_kit_request req WHERE external_order_number = ?";
     private static final String SQL_SELECT_SENT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label, request.upload_reason, request.ddp_kit_request_id, request.dsm_kit_request_id, realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
@@ -341,6 +340,7 @@ public class GBFRequestUtil implements ExternalShipper {
      */
     private void updateOrderStatusForPendingKitRequests(int instanceId, String query) {
         final AtomicInteger numOrdersProcessed = new AtomicInteger();
+        final Set<String> queriedOrderIds = new HashSet<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -354,9 +354,12 @@ public class GBFRequestUtil implements ExternalShipper {
                                     rs.getString(DBConstants.EXTERNAL_ORDER_STATUS),
                                     rs.getString("subkits." + DBConstants.EXTERNAL_KIT_NAME),
                                     rs.getLong(DBConstants.EXTERNAL_ORDER_DATE));
-                            numOrdersProcessed.incrementAndGet();
                             try {
-                                orderStatus(conn, kitRequest);
+                                if (!queriedOrderIds.contains(kitRequest.getExternalOrderNumber())) {
+                                    orderStatus(conn, kitRequest);
+                                    numOrdersProcessed.incrementAndGet();
+                                    queriedOrderIds.add(kitRequest.getExternalOrderNumber());
+                                }
                             } catch (Exception e) {
                                 logger.error("Could not check status of kit request " + kitRequest.getExternalOrderNumber(), e);
                             }
