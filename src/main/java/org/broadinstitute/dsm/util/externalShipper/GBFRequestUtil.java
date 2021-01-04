@@ -63,7 +63,8 @@ public class GBFRequestUtil implements ExternalShipper {
             "                        LEFT JOIN ddp_participant_exit ex ON (ex.ddp_instance_id = request.ddp_instance_id AND ex.ddp_participant_id = request.ddp_participant_id)\n" +
             "                        LEFT JOIN (SELECT subK.kit_type_id, subK.external_name from ddp_kit_request_settings dkc\n" +
             "                        LEFT JOIN sub_kits_settings subK ON (subK.ddp_kit_request_settings_id = dkc.ddp_kit_request_settings_id)) as subkits ON (subkits.kit_type_id = request.kit_type_id)\n" +
-            "                    WHERE ex.ddp_participant_exit_id is null AND request.ddp_instance_id = ? AND NOT external_order_status <=> 'CANCELLED' AND external_order_number IS NOT NULL ";
+            "                    WHERE ex.ddp_participant_exit_id is null AND request.ddp_instance_id = ? AND (external_order_status not like '%CANCELLED%' or external_order_status is null) AND external_order_number IS NOT NULL\n" +
+            "                    order by request.dsm_kit_request_id desc ";
 
 
     private static final String SQL_SELECT_KIT_REQUEST_BY_EXTERNAL_ORDER_NUMBER = "SELECT dsm_kit_request_id FROM ddp_kit_request req WHERE external_order_number = ?";
@@ -355,6 +356,8 @@ public class GBFRequestUtil implements ExternalShipper {
                                     rs.getString("subkits." + DBConstants.EXTERNAL_KIT_NAME),
                                     rs.getLong(DBConstants.EXTERNAL_ORDER_DATE));
                             try {
+                                // keep track of which request ids we've already asked about, since this
+                                // result set may show subkits with the same external order id
                                 if (!queriedOrderIds.contains(kitRequest.getExternalOrderNumber())) {
                                     orderStatus(conn, kitRequest);
                                     numOrdersProcessed.incrementAndGet();
