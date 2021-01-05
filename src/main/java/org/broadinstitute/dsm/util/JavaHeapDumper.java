@@ -43,7 +43,6 @@ public class JavaHeapDumper {
         if (localDumpFile.exists()) {
             logger.info("Created local dump file: " + localDumpFile.getAbsolutePath() + " with size: " + localDumpFile.length());
         } else {
-            logger.error("Could not find dump file at:" + DEFAULT_LOCAL_PATH + "/" + fileName);
             throw new RuntimeException("Could not locate local dump file"  + DEFAULT_LOCAL_PATH + "/" + fileName);
         }
         try (FileInputStream localDumpFileStream = new FileInputStream(localDumpFile)) {
