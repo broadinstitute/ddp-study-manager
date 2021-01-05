@@ -151,6 +151,7 @@ public class ParticipantWrapper {
                 //get only kitRequests for the filtered pts
                 if (participantESData != null && !participantESData.isEmpty()) {
                     String filter = Arrays.stream(participantESData.keySet().toArray(new String[0])).collect(Collectors.joining("\",\""));
+                    logger.info("About to query for kits from " + participantESData.size() + " participants");
                     kitRequests = KitRequestShipping.getKitRequests(instance, BY_DDP_PARTICIPANT_ID_IN + filter + "\")");
                 }
                 else {
