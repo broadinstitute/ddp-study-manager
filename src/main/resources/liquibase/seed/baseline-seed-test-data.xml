@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet author="gmakhara" id="baseline-seed-test-access-role">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*) from access_role
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="access_role">
+            <column name="name" value="discard_sample"/>
+            <column name="name" value="drug_list_edit"/>
+            <column name="name" value="eel_view"/>
+            <column name="name" value="field_settings"/>
+            <column name="name" value="kit_authorization"/>
+            <column name="name" value="kit_authorization_view"/>
+            <column name="name" value="kit_deactivation"/>
+            <column name="name" value="kit_express"/>
+            <column name="name" value="kit_inventory_add"/>
+            <column name="name" value="kit_inventory_edit"/>
+            <column name="name" value="kit_inventory_view"/>
+            <column name="name" value="kit_receiving"/>
+            <column name="name" value="kit_shipping"/>
+            <column name="name" value="kit_shipping_fitbit"/>
+            <column name="name" value="kit_shipping_view"/>
+            <column name="name" value="kit_upload"/>
+            <column name="name" value="discard_sample"/>
+            <column name="name" value="discard_sample"/>
+            <column name="name" value="discard_sample"/>
+            <column name="name" value="discard_sample"/>
+            <column name="name" value="discard_sample"/>
+            <column name="name" value="discard_sample"/>
+            <column name="name" value="discard_sample"/>
+            <column name="name" value="discard_sample"/>
+            <column name="name" value="discard_sample"/>
+            <column name="name" value="discard_sample"/>
+            <column name="name" value="discard_sample"/>
+            <column name="name" value="discard_sample"/>
+            <column name="name" value="discard_sample"/>
+            <column name="name" value="discard_sample"/>
+        </insert>
+    </changeSet>
+
+
+</databaseChangeLog>
