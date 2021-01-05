@@ -335,7 +335,7 @@ public class DSMServer extends BasicServer {
             @Override
             public Object handle(Request request, Response response) throws Exception {
             String gcpName = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_NAME);
-            heapDumper.dumpHeapToBucket(gcpName + "_heapdumps");
+            heapDumper.dumpHeapToBucket(gcpName + "_dsm_heapdumps");
             return null;
             }
         }, new JsonTransformer());
