@@ -13,16 +13,11 @@ import com.google.pubsub.v1.PubsubMessage;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import liquibase.Contexts;
-import liquibase.LabelExpression;
 import liquibase.Liquibase;
-import liquibase.changelog.ChangeLogHistoryServiceFactory;
-import liquibase.changelog.DatabaseChangeLog;
-import liquibase.changelog.StandardChangeLogHistoryService;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.ClassLoaderResourceAccessor;
-import liquibase.statement.SqlStatement;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
@@ -35,6 +30,7 @@ import org.broadinstitute.ddp.util.JsonTransformer;
 import org.broadinstitute.ddp.util.Utility;
 import org.broadinstitute.dsm.careevolve.Authentication;
 import org.broadinstitute.dsm.careevolve.Provider;
+import org.broadinstitute.dsm.db.User;
 import org.broadinstitute.dsm.jetty.JettyConfig;
 import org.broadinstitute.dsm.jobs.*;
 import org.broadinstitute.dsm.model.mbc.MBCHospital;
@@ -63,11 +59,8 @@ import spark.Spark;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -138,12 +131,13 @@ public class DSMServer extends BasicServer {
 
     private static Auth0Util auth0Util;
     private static boolean isExistingNonLiquibaseDatabase;
+    private static String testEmail;
 
     public static void main(String[] args) {
         // immediately lock isReady so that ah/start route will wait
         synchronized (isReady) {
             logger.info("Starting up DSM");
-            isExistingNonLiquibaseDatabase = Boolean.parseBoolean(System.getProperty("isExistingNonLiquibaseDatabase"));;
+            isExistingNonLiquibaseDatabase = Boolean.parseBoolean(System.getProperty("isExistingNonLiquibaseDatabase"));
             //config without secrets
             Config cfg = ConfigFactory.load();
             //secrets from vault in a config file
@@ -158,6 +152,7 @@ public class DSMServer extends BasicServer {
                     System.setProperty("GOOGLE_APPLICATION_CREDENTIALS", cfg.getString("portal.googleProjectCredentials"));
                 }
             }
+            testEmail = cfg.hasPath("testEnv.email") ? cfg.getString("testEnv.email") : null;
 
             String preferredSourceIPHeader = null;
             if (cfg.hasPath(ApplicationConfigConstants.PREFERRED_SOURCE_IP_HEADER)) {
@@ -400,10 +395,21 @@ public class DSMServer extends BasicServer {
             }
 
             liquibase.update(new Contexts());
+
+            if (testEmail != null) {
+                liquibase = new liquibase.Liquibase("liquibase/seed/baseline-seed-test-data.xml", new ClassLoaderResourceAccessor(), database);
+                liquibase.update(new Contexts());
+                new UserUtil().insertUser();
+                generateTestUser();
+            }
         }
         catch (Exception e) {
             throw new RuntimeException("Failed to run DB update.", e);
         }
+    }
+
+    private void generateTestUser() {
+
     }
 
     private void setupShippingRoutes(@NonNull NotificationUtil notificationUtil, @NonNull Auth0Util auth0Util, @NonNull UserUtil userUtil) {
