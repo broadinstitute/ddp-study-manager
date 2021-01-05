@@ -4,133 +4,133 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
 
-    <changeSet author="gmakhara" id="baseline-seed-test-access-role">
-<!--        <preConditions onFail="MARK_RAN">-->
-<!--            <sqlCheck expectedResult="0">-->
-<!--                select count(*) from access_role-->
-<!--            </sqlCheck>-->
-<!--        </preConditions>-->
-        <insert tableName="access_role">
-            <column name="name" value="discard_sample"/>
-            <column name="role_id" value="1"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="drug_list_edit"/>
-            <column name="role_id" value="2"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="eel_view"/>
-            <column name="role_id" value="3"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="field_settings"/>
-            <column name="role_id" value="4"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="kit_authorization"/>
-            <column name="role_id" value="5"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="kit_authorization_view"/>
-            <column name="role_id" value="6"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="kit_deactivation"/>
-            <column name="role_id" value="7"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="kit_express"/>
-            <column name="role_id" value="8"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="kit_inventory_add"/>
-            <column name="role_id" value="9"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="kit_inventory_edit"/>
-            <column name="role_id" value="10"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="kit_inventory_view"/>
-            <column name="role_id" value="11"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="kit_receiving"/>
-            <column name="role_id" value="12"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="kit_shipping"/>
-            <column name="role_id" value="13"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="kit_shipping_fitbit"/>
-            <column name="role_id" value="14"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="kit_shipping_view"/>
-            <column name="role_id" value="15"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="kit_upload"/>
-            <column name="role_id" value="16"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="mailingList_view"/>
-            <column name="role_id" value="17"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="mr_abstracter"/>
-            <column name="role_id" value="18"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="mr_abstraction_admin"/>
-            <column name="role_id" value="19"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="mr_no_request_tissue"/>
-            <column name="role_id" value="20"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="mr_qc"/>
-            <column name="role_id" value="21"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="mr_request"/>
-            <column name="role_id" value="22"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="mr_view"/>
-            <column name="role_id" value="23"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="ndi_download"/>
-            <column name="role_id" value="24"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="participant_event"/>
-            <column name="role_id" value="25"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="participant_exit"/>
-            <column name="role_id" value="26"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="pdf_download"/>
-            <column name="role_id" value="27"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="pt_list_view"/>
-            <column name="role_id" value="28"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="study_admin"/>
-            <column name="role_id" value="29"/>
-        </insert>
-        <insert tableName="access_role">
-            <column name="name" value="survey_creation"/>
-            <column name="role_id" value="30"/>
-        </insert>
-    </changeSet>
+<!--    <changeSet author="gmakhara" id="baseline-seed-test-access-role">-->
+<!--&lt;!&ndash;        <preConditions onFail="MARK_RAN">&ndash;&gt;-->
+<!--&lt;!&ndash;            <sqlCheck expectedResult="0">&ndash;&gt;-->
+<!--&lt;!&ndash;                select count(*) from access_role&ndash;&gt;-->
+<!--&lt;!&ndash;            </sqlCheck>&ndash;&gt;-->
+<!--&lt;!&ndash;        </preConditions>&ndash;&gt;-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="discard_sample"/>-->
+<!--            <column name="role_id" value="1"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="drug_list_edit"/>-->
+<!--            <column name="role_id" value="2"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="eel_view"/>-->
+<!--            <column name="role_id" value="3"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="field_settings"/>-->
+<!--            <column name="role_id" value="4"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="kit_authorization"/>-->
+<!--            <column name="role_id" value="5"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="kit_authorization_view"/>-->
+<!--            <column name="role_id" value="6"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="kit_deactivation"/>-->
+<!--            <column name="role_id" value="7"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="kit_express"/>-->
+<!--            <column name="role_id" value="8"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="kit_inventory_add"/>-->
+<!--            <column name="role_id" value="9"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="kit_inventory_edit"/>-->
+<!--            <column name="role_id" value="10"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="kit_inventory_view"/>-->
+<!--            <column name="role_id" value="11"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="kit_receiving"/>-->
+<!--            <column name="role_id" value="12"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="kit_shipping"/>-->
+<!--            <column name="role_id" value="13"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="kit_shipping_fitbit"/>-->
+<!--            <column name="role_id" value="14"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="kit_shipping_view"/>-->
+<!--            <column name="role_id" value="15"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="kit_upload"/>-->
+<!--            <column name="role_id" value="16"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="mailingList_view"/>-->
+<!--            <column name="role_id" value="17"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="mr_abstracter"/>-->
+<!--            <column name="role_id" value="18"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="mr_abstraction_admin"/>-->
+<!--            <column name="role_id" value="19"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="mr_no_request_tissue"/>-->
+<!--            <column name="role_id" value="20"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="mr_qc"/>-->
+<!--            <column name="role_id" value="21"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="mr_request"/>-->
+<!--            <column name="role_id" value="22"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="mr_view"/>-->
+<!--            <column name="role_id" value="23"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="ndi_download"/>-->
+<!--            <column name="role_id" value="24"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="participant_event"/>-->
+<!--            <column name="role_id" value="25"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="participant_exit"/>-->
+<!--            <column name="role_id" value="26"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="pdf_download"/>-->
+<!--            <column name="role_id" value="27"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="pt_list_view"/>-->
+<!--            <column name="role_id" value="28"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="study_admin"/>-->
+<!--            <column name="role_id" value="29"/>-->
+<!--        </insert>-->
+<!--        <insert tableName="access_role">-->
+<!--            <column name="name" value="survey_creation"/>-->
+<!--            <column name="role_id" value="30"/>-->
+<!--        </insert>-->
+<!--    </changeSet>-->
 
     <changeSet author="irakli-khaladze" id="baseline-seed-test-ddp-instance">
         <preConditions onFail="MARK_RAN">
@@ -216,6 +216,24 @@
             <column name="name" value="testboston"/>
             <column name="description" value="Test Boston"/>
         </insert>
+    </changeSet>
+
+    <changeSet author="irakli-khaladze" id="baseline-seed-test-ddp-instance-group">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*) from ddp_instance_group
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="ddp_instance_group">
+            <column name="ddp_instance_id" value="1"/>
+            <column name="ddp_group_id" value="1"/>
+        </insert>
+
+        <insert tableName="ddp_instance_group">
+            <column name="ddp_instance_id" value="2"/>
+            <column name="ddp_group_id" value="8"/>
+        </insert>
+
     </changeSet>
 
 </databaseChangeLog>
