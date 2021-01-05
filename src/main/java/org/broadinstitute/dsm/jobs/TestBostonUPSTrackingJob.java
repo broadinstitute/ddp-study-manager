@@ -37,9 +37,9 @@ public class TestBostonUPSTrackingJob implements Job {
             " order by kit.dsm_kit_request_id ASC";
 
     private static final String SQL_UPDATE_UPS_TRACKING_STATUS = "UPDATE ddp_kit SET ups_tracking_status = ?, ups_tracking_date = ? " +
-            "WHERE dsm_kit_id <> 0 and  tracking_to_id = ? and (test_result is null or CE_order is null)";
+            "WHERE dsm_kit_id <> 0 and  tracking_to_id = ? and test_result is null";
         private static final String SQL_UPDATE_UPS_RETURN_STATUS = "UPDATE ddp_kit SET ups_return_status = ?, ups_return_date = ? " +
-                "WHERE dsm_kit_id <> 0 and tracking_return_id= ? and (test_result is null or CE_order is null)";
+                "WHERE dsm_kit_id <> 0 and tracking_return_id= ? and test_result is null";
 
     private static final String SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, request.ddp_kit_request_id, request.upload_reason, " +
             "        realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
