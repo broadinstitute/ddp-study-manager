@@ -26,6 +26,7 @@ public class ApplicationConfigConstants {
     public static final String GOOGLE_PROJECT_NAME = "portal.googleProjectName";
     public static final String GOOGLE_DISCARD_BUCKET = "portal.discardSampleBucket";
     public static final String GOOGLE_CONFIG_BUCKET = "portal.configBucket";
+    public static final String GOOGLE_CREDENTIALS = "portal.googleProjectCredentials";
 
     //ES
     public static final String ES_URL = "elasticSearch.url";
