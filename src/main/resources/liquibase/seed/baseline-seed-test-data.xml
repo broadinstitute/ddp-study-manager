@@ -12,37 +12,132 @@
         </preConditions>
         <insert tableName="access_role">
             <column name="name" value="discard_sample"/>
+        </insert>
+        <insert tableName="access_role">
             <column name="name" value="drug_list_edit"/>
+        </insert>
+        <insert tableName="access_role">
             <column name="name" value="eel_view"/>
+        </insert>
+        <insert tableName="access_role">
             <column name="name" value="field_settings"/>
+        </insert>
+        <insert tableName="access_role">
             <column name="name" value="kit_authorization"/>
+        </insert>
+        <insert tableName="access_role">
             <column name="name" value="kit_authorization_view"/>
+        </insert>
+        <insert tableName="access_role">
             <column name="name" value="kit_deactivation"/>
+        </insert>
+        <insert tableName="access_role">
             <column name="name" value="kit_express"/>
+        </insert>
+        <insert tableName="access_role">
             <column name="name" value="kit_inventory_add"/>
+        </insert>
+        <insert tableName="access_role">
             <column name="name" value="kit_inventory_edit"/>
+        </insert>
+        <insert tableName="access_role">
             <column name="name" value="kit_inventory_view"/>
+        </insert>
+        <insert tableName="access_role">
             <column name="name" value="kit_receiving"/>
+        </insert>
+        <insert tableName="access_role">
             <column name="name" value="kit_shipping"/>
+        </insert>
+        <insert tableName="access_role">
             <column name="name" value="kit_shipping_fitbit"/>
+        </insert>
+        <insert tableName="access_role">
             <column name="name" value="kit_shipping_view"/>
+        </insert>
+        <insert tableName="access_role">
             <column name="name" value="kit_upload"/>
-            <column name="name" value="discard_sample"/>
-            <column name="name" value="discard_sample"/>
-            <column name="name" value="discard_sample"/>
-            <column name="name" value="discard_sample"/>
-            <column name="name" value="discard_sample"/>
-            <column name="name" value="discard_sample"/>
-            <column name="name" value="discard_sample"/>
-            <column name="name" value="discard_sample"/>
-            <column name="name" value="discard_sample"/>
-            <column name="name" value="discard_sample"/>
-            <column name="name" value="discard_sample"/>
-            <column name="name" value="discard_sample"/>
-            <column name="name" value="discard_sample"/>
-            <column name="name" value="discard_sample"/>
+        </insert>
+        <insert tableName="access_role">
+            <column name="name" value="mailingList_view"/>
+        </insert>
+        <insert tableName="access_role">
+            <column name="name" value="mr_abstracter"/>
+        </insert>
+        <insert tableName="access_role">
+            <column name="name" value="mr_abstraction_admin"/>
+        </insert>
+        <insert tableName="access_role">
+            <column name="name" value="mr_no_request_tissue"/>
+        </insert>
+        <insert tableName="access_role">
+            <column name="name" value="mr_qc"/>
+        </insert>
+        <insert tableName="access_role">
+            <column name="name" value="mr_request"/>
+        </insert>
+        <insert tableName="access_role">
+            <column name="name" value="mr_view"/>
+        </insert>
+        <insert tableName="access_role">
+            <column name="name" value="ndi_download"/>
+        </insert>
+        <insert tableName="access_role">
+            <column name="name" value="participant_event"/>
+        </insert>
+        <insert tableName="access_role">
+            <column name="name" value="participant_exit"/>
+        </insert>
+        <insert tableName="access_role">
+            <column name="name" value="pdf_download"/>
+        </insert>
+        <insert tableName="access_role">
+            <column name="name" value="pt_list_view"/>
+        </insert>
+        <insert tableName="access_role">
+            <column name="name" value="study_admin"/>
+        </insert>
+        <insert tableName="access_role">
+            <column name="name" value="survey_creation"/>
         </insert>
     </changeSet>
 
+    <changeSet author="irakli-khaladze" id="baseline-seed-test-ddp-instance">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*) from ddp_instance
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="ddp_instance">
+            <column name="instance_name" value="Gen2 Prostate"/>
+            <column name="base_url" value="https://dev.mpcproject.org"/>
+            <column name="is_active" value="0"/>
+            <column name="bsp_group" value="Group Doo"/>
+            <column name="bsp_collection" value="SC-789"/>
+            <column name="bsp_organism" value="1"/>
+            <column name="collaborator_id_prefix" value="PCProject"/>
+            <column name="reminder_notification_wks" value="2"/>
+            <column name="mr_attention_flag_d" value="1"/>
+            <column name="tissue_attention_flag_d" value="1"/>
+            <column name="auth0_token" value="0"/>
+            <column name="migrated_ddp" value="0"/>
+        </insert>
 
+        <insert tableName="ddp_instance">
+            <column name="instance_name" value="testboston"/>
+            <column name="display_name" value="Test Boston"/>
+            <column name="base_url" value="https://pepper-dev.datadonationplatform.org/pepper/v1/dsm/studies/testboston"/>
+            <column name="is_active" value="1"/>
+            <column name="bsp_group" value="Group Test"/>
+            <column name="bsp_collection" value="SC-1515"/>
+            <column name="bsp_organism" value="1"/>
+            <column name="collaborator_id_prefix" value="TestBoston"/>
+            <column name="auth0_token" value="1"/>
+            <column name="migrated_ddp" value="0"/>
+            <column name="billing_reference" value="CO BOS"/>
+            <column name="es_participant_index" value="participants_structured.testboston.testboston"/>
+            <column name="es_activity_definition_index" value="activity_definition.testboston.testboston"/>
+        </insert>
+
+    </changeSet>
 </databaseChangeLog>
