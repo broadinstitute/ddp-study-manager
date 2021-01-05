@@ -18,11 +18,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 public class ParticipantWrapper {
 
     private static final Logger logger = LoggerFactory.getLogger(ParticipantWrapper.class);
+
+    public static final String BY_DDP_PARTICIPANT_ID_IN = " AND request.ddp_participant_id IN (\"";
+    public static final String ORDER_AND_LIMIT = " ORDER BY request.dsm_kit_request_id desc LIMIT 5000";
 
     private Map<String, Object> data;
     private Participant participant;
@@ -62,7 +66,7 @@ public class ParticipantWrapper {
                 oncHistoryDetails = OncHistoryDetail.getOncHistoryDetails(instance.getName());
             }
             if (DDPInstance.getRole(instance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
-                kitRequests = KitRequestShipping.getKitRequests(instance);
+                kitRequests = KitRequestShipping.getKitRequests(instance, ORDER_AND_LIMIT);
             }
             Map<String, List<AbstractionActivity>> abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName());
             Map<String, List<AbstractionGroup>> abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName());
@@ -124,7 +128,15 @@ public class ParticipantWrapper {
             }
             //get all the list which were not filtered
             if (participantESData == null) {
-                participantESData = getESData(instance);
+                //get only pts for the filtered kitRequests
+                if (kitRequests != null && !kitRequests.isEmpty()) {
+                    String filter = Arrays.stream(kitRequests.keySet().toArray(new String[0])).collect(Collectors.joining(ElasticSearchUtil.BY_GUIDS));
+                    participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_GUID + filter);
+                }
+                else {
+                    //get all pts
+                    participantESData = getESData(instance);
+                }
             }
             if (participants == null) {
                 participants = Participant.getParticipants(instance.getName());
@@ -136,7 +148,16 @@ public class ParticipantWrapper {
                 oncHistories = OncHistoryDetail.getOncHistoryDetails(instance.getName());
             }
             if (kitRequests == null && DDPInstance.getRole(instance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
-                kitRequests = KitRequestShipping.getKitRequests(instance);
+                //get only kitRequests for the filtered pts
+                if (participantESData != null && !participantESData.isEmpty()) {
+                    String filter = Arrays.stream(participantESData.keySet().toArray(new String[0])).collect(Collectors.joining("\",\""));
+                    logger.info("About to query for kits from " + participantESData.size() + " participants");
+                    kitRequests = KitRequestShipping.getKitRequests(instance, BY_DDP_PARTICIPANT_ID_IN + filter + "\")");
+                }
+                else {
+                    //get all kitRequests
+                    kitRequests = KitRequestShipping.getKitRequests(instance, ORDER_AND_LIMIT);
+                }
             }
             if (abstractionActivities == null) {
                 abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName());

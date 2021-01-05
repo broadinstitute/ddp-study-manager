@@ -329,6 +329,17 @@ public class DSMServer extends BasicServer {
 
         setupJobs(cfg, kitUtil, notificationUtil, eventUtil, container, receiver);
 
+        //TODO - redo with pubsub
+        JavaHeapDumper heapDumper = new JavaHeapDumper();
+        get(UI_ROOT + "/heapDump", new Route() {
+            @Override
+            public Object handle(Request request, Response response) throws Exception {
+                logger.info("Received request to create java heap dump");
+                String gcpName = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_NAME);
+                heapDumper.dumpHeapToBucket(gcpName + "_dsm_heapdumps");
+                return null;
+            }
+        }, new JsonTransformer());
         logger.info("Finished setting up DSM custom routes and jobs...");
     }
 
