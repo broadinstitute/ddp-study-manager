@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 public class ParticipantWrapper {
@@ -124,7 +125,15 @@ public class ParticipantWrapper {
             }
             //get all the list which were not filtered
             if (participantESData == null) {
-                participantESData = getESData(instance);
+                //get only pts for the filtered kitRequests
+                if (kitRequests != null && !kitRequests.isEmpty()) {
+                    String filter = Arrays.stream(kitRequests.keySet().toArray(new String[0])).collect(Collectors.joining(ElasticSearchUtil.BY_GUIDS));
+                    participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_GUID + filter);
+                }
+                else {
+                    //get all pts
+                    participantESData = getESData(instance);
+                }
             }
             if (participants == null) {
                 participants = Participant.getParticipants(instance.getName());
