@@ -37,10 +37,10 @@ public class TestBostonUPSTrackingJob implements Job {
     private static String SQL_AVOID_DELIVERD = " and (ups_tracking_status is null or ups_return_status is null or ups_tracking_status not like \"" + UPSStatus.DELIVERED_TYPE + " %\" or ups_return_status not like \"" + UPSStatus.DELIVERED_TYPE + " %\")" +
             " order by kit.dsm_kit_request_id ASC";
 
-    private static final String SQL_UPDATE_UPS_TRACKING_STATUS = "UPDATE ddp_kit kit, ddp_kit_request request SET ups_tracking_status = ?, ups_tracking_date = ? " +
-            "WHERE kit.dsm_kit_request_id = request.dsm_kit_request_id and dsm_kit_id <> 0 and  tracking_to_id = ? and external_order_number = ?";
-    private static final String SQL_UPDATE_UPS_RETURN_STATUS = "UPDATE ddp_kit kit, ddp_kit_request request SET ups_return_status = ?, ups_return_date = ? " +
-            "WHERE kit.dsm_kit_request_id = request.dsm_kit_request_id and dsm_kit_id <> 0 and tracking_return_id= ? and external_order_number = ?";
+    private static final String SQL_UPDATE_UPS_TRACKING_STATUS = "UPDATE ddp_kit SET ups_tracking_status = ?, ups_tracking_date = ? " +
+            "WHERE dsm_kit_id <> 0 and  tracking_to_id = ? and dsm_kit_request_id in ( SELECT dsm_kit_request_id FROM ddp_kit_request where external_order_number = ? )";
+    private static final String SQL_UPDATE_UPS_RETURN_STATUS = "UPDATE ddp_kit SET ups_return_status = ?, ups_return_date = ? " +
+            "WHERE dsm_kit_id <> 0 and tracking_return_id= ? and dsm_kit_request_id in ( SELECT dsm_kit_request_id FROM ddp_kit_request where external_order_number = ? )";
 
     private static final String SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, request.ddp_kit_request_id, request.upload_reason, " +
             "        realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
