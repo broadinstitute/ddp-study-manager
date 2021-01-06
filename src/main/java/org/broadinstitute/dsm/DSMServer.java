@@ -190,7 +190,7 @@ public class DSMServer extends BasicServer {
         setupDB(config);
 
         //Run for test environment
-        if (testEmail != null) {
+        if (testEmail != null && User.getUser(testEmail) == null) {
             UserUtil userUtil = new UserUtil();
             userUtil.insertUser(testEmail, testEmail);
             userUtil.insertUserRoleGroup(testEmail);
