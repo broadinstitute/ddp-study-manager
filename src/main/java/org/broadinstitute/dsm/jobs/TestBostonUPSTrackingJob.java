@@ -84,34 +84,23 @@ public class TestBostonUPSTrackingJob implements Job {
                                         rs.getString("req." + DBConstants.EXTERNAL_ORDER_NUMBER),
                                         rs.getBoolean("kit." + DBConstants.CE_ORDER)
                                 );
-                                String type;
-                                if (StringUtils.isNotBlank(kit.getTrackingToId())) {
-                                    type = kit.getUpsTrackingStatus();
-                                    if (StringUtils.isNotBlank(type)) {// get only type from it
-                                        type = type.substring(0, type.indexOf(' '));
-                                    }
-                                    if (!"D".equals(type)) {//don't include delivered ones
-                                        try {
-                                            updateKitStatus(conn, kit, false);
-                                        } catch (Exception e) {
-                                            logger.error("Could not update outbound status for " + kit.getExternalOrderNumber(), e);
-                                        }
+
+                                if (!kit.isDelivered()) {
+                                    try {
+                                        updateKitStatus(conn, kit, false);
+                                    } catch (Exception e) {
+                                        logger.error("Could not update outbound status for " + kit.getExternalOrderNumber(), e);
                                     }
                                 }
-                                if (StringUtils.isNotBlank(kit.getTrackingReturnId())) {
-                                    type = kit.getUpsReturnStatus();
-                                    if (StringUtils.isNotBlank(type)) {
-                                        type = type.substring(0, type.indexOf(' '));
+
+                                if (!kit.isReturned()) {
+                                    if (kit.getKitLabel().contains("_1") && kit.getKitLabel().indexOf("_1") == kit.getKitLabel().length() - 2) {
+                                        kit.setKitLabel(kit.getKitLabel().substring(0, kit.getKitLabel().length() - 2));
                                     }
-                                    if (!"D".equals(type)) {
-                                        if (kit.getKitLabel().contains("_1") && kit.getKitLabel().indexOf("_1") == kit.getKitLabel().length() - 2) {
-                                            kit.setKitLabel(kit.getKitLabel().substring(0, kit.getKitLabel().length() - 2));
-                                        }
-                                        try {
-                                            updateKitStatus(conn, kit, true);
-                                        } catch (Exception e) {
-                                            logger.error("Could not update return status for " + kit.getExternalOrderNumber(), e);
-                                        }
+                                    try {
+                                        updateKitStatus(conn, kit, true);
+                                    } catch (Exception e) {
+                                        logger.error("Could not update return status for " + kit.getExternalOrderNumber(), e);
                                     }
                                 }
                             }
