@@ -166,15 +166,20 @@ public class UserUtil {
 
         int userId = User.getUser(userEmail).getUserId();
         SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement updateStmt = conn.prepareStatement(SQL_SELECT_GROUP_ID)) {
-                updateStmt.executeUpdate();
+            Map<String, List<Integer>> dbVals = new HashMap<>();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_GROUP_ID)) {
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+
+                    }
+                }
             }
             catch (SQLException ex) {
-                logger.error("User " + email + " doesn't exist in the database");
+                logger.error(String.valueOf(ex));
             }
             return dbVals;
         });
+        List<Integer> groupIds = (ArrayList<Integer>)results.resultValue;
 
     }
 
