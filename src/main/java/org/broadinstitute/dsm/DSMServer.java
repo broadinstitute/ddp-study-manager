@@ -399,7 +399,9 @@ public class DSMServer extends BasicServer {
             if (testEmail != null) {
                 liquibase = new liquibase.Liquibase("liquibase/seed/baseline-seed-test-data.xml", new ClassLoaderResourceAccessor(), database);
                 liquibase.update(new Contexts());
-                new UserUtil().insertUser();
+                UserUtil userUtil = new UserUtil();
+                userUtil.insertUser(testEmail, testEmail);
+                userUtil.setUserActive(1, testEmail);
                 generateTestUser();
             }
         }

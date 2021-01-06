@@ -29,6 +29,7 @@ public class UserUtil {
 
     private static final String SQL_SELECT_USER = "SELECT user_id, name FROM access_user";
     private static final String SQL_INSERT_USER = "INSERT INTO access_user (name, email) VALUES (?,?)";
+    private static final String SQL_SET_USER_ACTIVE = "UPDATE access_user SET is_active = ? WHERE email = ?";
     private static final String SQL_SELECT_USER_ACCESS_ROLE = "SELECT role.name FROM access_user_role_group roleGroup, access_user user, access_role role " +
             "WHERE roleGroup.user_id = user.user_id AND roleGroup.role_id = role.role_id AND user.is_active = 1";
     public static final String SQL_USER_ROLES_PER_REALM = "SELECT role.name FROM  access_user_role_group roleGroup " +
@@ -137,6 +138,27 @@ public class UserUtil {
             throw new RuntimeException("Error getting list of realms ", results.resultException);
         }
     }
+
+    public void setUserActive(@NonNull int status, @NonNull String email) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement updateStmt = conn.prepareStatement(SQL_SET_USER_ACTIVE)) {
+                updateStmt.setInt(1, status);
+                updateStmt.setString(2, email);
+                updateStmt.executeUpdate();
+            }
+            catch (SQLException ex) {
+                logger.error("User " + email + " doesn't exist in the database");
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting list of realms ", results.resultException);
+        }
+    }
+
+    public void insertUserRoleGroup
 
     public static String getUserId(Request request) {
         QueryParamsMap queryParams = request.queryMap();
