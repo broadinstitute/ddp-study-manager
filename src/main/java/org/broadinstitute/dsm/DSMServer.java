@@ -189,6 +189,13 @@ public class DSMServer extends BasicServer {
         registerAppEngineStartupCallback(bootTimeoutSeconds);
         setupDB(config);
 
+        //Run for test environment
+        if (testEmail != null) {
+            UserUtil userUtil = new UserUtil();
+            userUtil.insertUser(testEmail, testEmail);
+            userUtil.insertUserRoleGroup(testEmail);
+            userUtil.setUserActive(1, testEmail);
+        }
 
         // don't run superclass routing--it won't work with JettyConfig changes for capturing proper IP address in GAE
         setupCustomRouting(config);
@@ -399,10 +406,7 @@ public class DSMServer extends BasicServer {
             if (testEmail != null) {
                 liquibase = new liquibase.Liquibase("liquibase/seed/baseline-seed-test-data.xml", new ClassLoaderResourceAccessor(), database);
                 liquibase.update(new Contexts());
-                UserUtil userUtil = new UserUtil();
-                userUtil.insertUser(testEmail, testEmail);
-                userUtil.insertUserRoleGroup(testEmail);
-                userUtil.setUserActive(1, testEmail);
+
             }
         }
         catch (Exception e) {
