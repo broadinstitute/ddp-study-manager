@@ -52,7 +52,7 @@ public class UserUtil {
             "WHERE realm.ddp_instance_id = realmGroup.ddp_instance_id AND realmGroup.ddp_group_id = ddp_group.group_id AND ddp_group.group_id = roleGroup.group_id " +
             "AND roleGroup.user_id = user.user_id AND role.role_id = roleGroup.role_id AND realm.is_active = 1 AND user.is_active = 1 AND user.user_id = ? ";
 
-    private static final String SQL_SELECT_GROUP_ID = "SELECT group_id FROM ddp_group";
+    private static final String SQL_SELECT_GROUP_ID = "SELECT group_id FROM ddp_group where name = 'testboston'";
     private static final String SQL_SELECT_ACCESS_ROLE_ID = "SELECT role_id FROM ddp_group WHERE name != 'mr_no_request_tissue'";
     private static final String SQL_INSERT_ACCESS_USER_ROLE_GROUP = "INSERT INTO access_user_role_group (user_id, role_id, group_d) VALUES (?,?,?)";
 
@@ -164,17 +164,18 @@ public class UserUtil {
         }
     }
 
+    //Only used for test environment
     public void insertUserRoleGroup(@NonNull String userEmail) {
-
         int userId = User.getUser(userEmail).getUserId();
-        Map<String, List<Integer>> results = inTransaction((conn) -> {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
             try {
                 PreparedStatement selectStmt = conn.prepareStatement(SQL_SELECT_GROUP_ID);
-                List<Integer> groupIds = new ArrayList<>();
+                int groupId = 0;
                 List<Integer> roleIds = new ArrayList<>();
                 try (ResultSet rs = selectStmt.executeQuery()) {
                     while (rs.next()) {
-                        groupIds.add(rs.getInt("group_id"));
+                        groupId = rs.getInt("group_id");
                     }
                 }
 
@@ -187,21 +188,23 @@ public class UserUtil {
 
                 try (PreparedStatement updateStmt = conn.prepareStatement(SQL_INSERT_ACCESS_USER_ROLE_GROUP)){
                     Random random = new Random();
-                    updateStmt.setInt(1, userId);
-                    updateStmt.setInt(2, roleIds.get(random.nextInt(roleIds.size())));
-                    updateStmt.setInt(3, groupIds.get(random.nextInt(groupIds.size())));
-                    updateStmt.executeUpdate();
+                    for (int roleId : roleIds) {
+                        updateStmt.setInt(1, userId);
+                        updateStmt.setInt(2, roleId);
+                        updateStmt.setInt(3, groupId);
+                        updateStmt.executeUpdate();
+                    }
                 }
             }
             catch (SQLException ex) {
                 logger.error(String.valueOf(ex));
             }
-
-
             return dbVals;
         });
 
-
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting list of realms ", results.resultException);
+        }
     }
 
     public static String getUserId(Request request) {

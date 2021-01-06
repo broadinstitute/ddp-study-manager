@@ -401,17 +401,13 @@ public class DSMServer extends BasicServer {
                 liquibase.update(new Contexts());
                 UserUtil userUtil = new UserUtil();
                 userUtil.insertUser(testEmail, testEmail);
+                userUtil.insertUserRoleGroup(testEmail);
                 userUtil.setUserActive(1, testEmail);
-                generateTestUser();
             }
         }
         catch (Exception e) {
             throw new RuntimeException("Failed to run DB update.", e);
         }
-    }
-
-    private void generateTestUser() {
-
     }
 
     private void setupShippingRoutes(@NonNull NotificationUtil notificationUtil, @NonNull Auth0Util auth0Util, @NonNull UserUtil userUtil) {
