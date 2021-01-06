@@ -142,7 +142,7 @@ public class TestBostonUPSTrackingJob implements Job {
             trackingId = kit.getTrackingReturnId();
         }
 
-        logger.info("Checking UPS status for " + trackingId);
+        logger.info("Checking UPS status for " + trackingId + " for kit w/ external order number "+ kit.getExternalOrderNumber());
         UPSTrackingResponse response = lookupTrackingInfo(trackingId);
         logger.info("UPS response for " + trackingId + " is " + response);
         String type;
@@ -223,7 +223,7 @@ public class TestBostonUPSTrackingJob implements Job {
             stmt.setString(4, kit.getExternalOrderNumber());
             int r = stmt.executeUpdate();
             if (r != 2) {//number of subkits
-                logger.error("Update query for UPS tracking updated " + r + " rows! with tracking/return id: " + trackingId);
+                logger.error("Update query for UPS tracking updated " + r + " rows! with tracking/return id: " + trackingId + " for kit w/ external order number "+ kit.getExternalOrderNumber());
             }
 
             if (!isReturn) {
@@ -264,7 +264,7 @@ public class TestBostonUPSTrackingJob implements Job {
                     }
                 }
             }
-            logger.info("Updated status of tracking number " + trackingId + " to " + upsUpdate + " from " + oldType);
+            logger.info("Updated status of tracking number " + trackingId + " to " + upsUpdate + " from " + oldType+ " for kit w/ external order number "+ kit.getExternalOrderNumber());
         }
         catch (Exception e) {
             throw new RuntimeException("Could not update tracking info for tracking id " + trackingId, e);
