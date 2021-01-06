@@ -53,8 +53,8 @@ public class UserUtil {
             "AND roleGroup.user_id = user.user_id AND role.role_id = roleGroup.role_id AND realm.is_active = 1 AND user.is_active = 1 AND user.user_id = ? ";
 
     private static final String SQL_SELECT_GROUP_ID = "SELECT group_id FROM ddp_group where name = 'testboston'";
-    private static final String SQL_SELECT_ACCESS_ROLE_ID = "SELECT role_id FROM ddp_group WHERE name != 'mr_no_request_tissue'";
-    private static final String SQL_INSERT_ACCESS_USER_ROLE_GROUP = "INSERT INTO access_user_role_group (user_id, role_id, group_d) VALUES (?,?,?)";
+    private static final String SQL_SELECT_ACCESS_ROLE_ID = "SELECT role_id FROM access_role WHERE name != 'mr_no_request_tissue'";
+    private static final String SQL_INSERT_ACCESS_USER_ROLE_GROUP = "INSERT INTO access_user_role_group (user_id, role_id, group_id) VALUES (?,?,?)";
 
 
     public static final String USER_ID = "userId";
@@ -173,18 +173,24 @@ public class UserUtil {
                 PreparedStatement selectStmt = conn.prepareStatement(SQL_SELECT_GROUP_ID);
                 int groupId = 0;
                 List<Integer> roleIds = new ArrayList<>();
-                try (ResultSet rs = selectStmt.executeQuery()) {
+                try {
+                    ResultSet rs = selectStmt.executeQuery();
                     while (rs.next()) {
                         groupId = rs.getInt("group_id");
                     }
-                }
+                } catch (SQLException ex) {
+                    logger.error(String.valueOf(ex));
+                };
 
                 selectStmt = conn.prepareStatement(SQL_SELECT_ACCESS_ROLE_ID);
-                try (ResultSet rs = selectStmt.executeQuery()) {
+                try {
+                    ResultSet rs = selectStmt.executeQuery();
                     while (rs.next()) {
                         roleIds.add(rs.getInt("role_id"));
                     }
-                }
+                } catch (SQLException ex) {
+                    logger.error(String.valueOf(ex));
+                };
 
                 try (PreparedStatement updateStmt = conn.prepareStatement(SQL_INSERT_ACCESS_USER_ROLE_GROUP)){
                     Random random = new Random();
