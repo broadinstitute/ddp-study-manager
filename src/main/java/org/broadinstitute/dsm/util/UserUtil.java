@@ -4,6 +4,7 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
+import org.broadinstitute.dsm.db.User;
 import org.broadinstitute.dsm.db.UserSettings;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
@@ -50,6 +51,9 @@ public class UserUtil {
             "access_user user, ddp_group, ddp_instance_group realmGroup, ddp_instance realm, access_role role " +
             "WHERE realm.ddp_instance_id = realmGroup.ddp_instance_id AND realmGroup.ddp_group_id = ddp_group.group_id AND ddp_group.group_id = roleGroup.group_id " +
             "AND roleGroup.user_id = user.user_id AND role.role_id = roleGroup.role_id AND realm.is_active = 1 AND user.is_active = 1 AND user.user_id = ? ";
+
+    private static final String SQL_SELECT_GROUP_ID = "SELECT group_id FROM ddp_group";
+
 
     public static final String USER_ID = "userId";
 
@@ -158,7 +162,21 @@ public class UserUtil {
         }
     }
 
-    public void insertUserRoleGroup
+    public void insertUserRoleGroup(@NonNull String userEmail) {
+
+        int userId = User.getUser(userEmail).getUserId();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement updateStmt = conn.prepareStatement(SQL_SELECT_GROUP_ID)) {
+                updateStmt.executeUpdate();
+            }
+            catch (SQLException ex) {
+                logger.error("User " + email + " doesn't exist in the database");
+            }
+            return dbVals;
+        });
+
+    }
 
     public static String getUserId(Request request) {
         QueryParamsMap queryParams = request.queryMap();
