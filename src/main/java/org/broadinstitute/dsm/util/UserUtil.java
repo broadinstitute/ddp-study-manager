@@ -53,6 +53,8 @@ public class UserUtil {
             "AND roleGroup.user_id = user.user_id AND role.role_id = roleGroup.role_id AND realm.is_active = 1 AND user.is_active = 1 AND user.user_id = ? ";
 
     private static final String SQL_SELECT_GROUP_ID = "SELECT group_id FROM ddp_group";
+    private static final String SQL_SELECT_ACCESS_ROLE_ID = "SELECT role_id FROM ddp_group WHERE name != 'mr_no_request_tissue'";
+    private static final String SQL_INSERT_ACCESS_USER_ROLE_GROUP = "INSERT INTO access_user_role_group (user_id, role_id, group_d) VALUES (?,?,?)";
 
 
     public static final String USER_ID = "userId";
@@ -165,21 +167,40 @@ public class UserUtil {
     public void insertUserRoleGroup(@NonNull String userEmail) {
 
         int userId = User.getUser(userEmail).getUserId();
-        SimpleResult results = inTransaction((conn) -> {
-            Map<String, List<Integer>> dbVals = new HashMap<>();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_GROUP_ID)) {
-                try (ResultSet rs = stmt.executeQuery()) {
+        Map<String, List<Integer>> results = inTransaction((conn) -> {
+            try {
+                PreparedStatement selectStmt = conn.prepareStatement(SQL_SELECT_GROUP_ID);
+                List<Integer> groupIds = new ArrayList<>();
+                List<Integer> roleIds = new ArrayList<>();
+                try (ResultSet rs = selectStmt.executeQuery()) {
                     while (rs.next()) {
-
+                        groupIds.add(rs.getInt("group_id"));
                     }
+                }
+
+                selectStmt = conn.prepareStatement(SQL_SELECT_ACCESS_ROLE_ID);
+                try (ResultSet rs = selectStmt.executeQuery()) {
+                    while (rs.next()) {
+                        roleIds.add(rs.getInt("role_id"));
+                    }
+                }
+
+                try (PreparedStatement updateStmt = conn.prepareStatement(SQL_INSERT_ACCESS_USER_ROLE_GROUP)){
+                    Random random = new Random();
+                    updateStmt.setInt(1, userId);
+                    updateStmt.setInt(2, roleIds.get(random.nextInt(roleIds.size())));
+                    updateStmt.setInt(3, groupIds.get(random.nextInt(groupIds.size())));
+                    updateStmt.executeUpdate();
                 }
             }
             catch (SQLException ex) {
                 logger.error(String.valueOf(ex));
             }
+
+
             return dbVals;
         });
-        List<Integer> groupIds = (ArrayList<Integer>)results.resultValue;
+
 
     }
 
