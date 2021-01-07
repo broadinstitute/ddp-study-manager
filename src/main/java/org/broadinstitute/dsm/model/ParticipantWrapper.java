@@ -185,12 +185,7 @@ public class ParticipantWrapper {
         }
         else {
             Map<String, ParticipantExit> exitedParticipants = ParticipantExit.getExitedParticipants(instance.getName(), false);
-            if (instance.isHasRole()) { //participant in db (MBC)
-                return parseGen1toESParticipant(DSMServer.getMbcParticipants(), exitedParticipants);
-            }
-            else { //other gen2 ddps
-                return parseGen2toESParticipant(DDPRequestUtil.getDDPParticipant(instance), instance.getName(), exitedParticipants);
-            }
+            return parseGen2toESParticipant(DDPRequestUtil.getDDPParticipant(instance), instance.getName(), exitedParticipants);
         }
     }
 
