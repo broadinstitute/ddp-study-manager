@@ -89,18 +89,15 @@ public class TestBostonUPSTrackingJob implements Job {
                                     try {
                                         updateKitStatus(conn, kit, false);
                                     } catch (Exception e) {
-                                        logger.error("Could not update outbound status for " + kit.getExternalOrderNumber(), e);
+                                        logger.error("Could not update outbound status for " + kit.getExternalOrderNumber() + " " + e.toString(), e);
                                     }
                                 }
 
                                 if (!kit.isReturned()) {
-                                    if (kit.getKitLabel().contains("_1") && kit.getKitLabel().indexOf("_1") == kit.getKitLabel().length() - 2) {
-                                        kit.setKitLabel(kit.getKitLabel().substring(0, kit.getKitLabel().length() - 2));
-                                    }
                                     try {
                                         updateKitStatus(conn, kit, true);
                                     } catch (Exception e) {
-                                        logger.error("Could not update return status for " + kit.getExternalOrderNumber(), e);
+                                        logger.error("Could not update return status for " + kit.getExternalOrderNumber() + " " + e.toString(), e);
                                     }
                                 }
                             }
@@ -232,15 +229,15 @@ public class TestBostonUPSTrackingJob implements Job {
                 if (earliestInTransitTime != null && !kit.isCEOrdered()) {
                     // if we have the first date of an inbound event, create an order in CE
                     // using the earliest date of inbound event
-                    orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime);
+                    orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime);
                     logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
                     kit.changeCEOrdered(conn,true);
                 }
                 else {
-                    logger.info("No return events for " + kit.getKitLabel() + ".  Will not place order yet.");
+                    logger.info("No return events for " + kit.getMainKitLabel() + ".  Will not place order yet.");
                 }
                 if (shouldTriggerEventForReturnKitDelivery(statusType, oldType)) {
-                    KitUtil.setKitReceived(conn, kit.getKitLabel());
+                    KitUtil.setKitReceived(conn, kit.getMainKitLabel());
                     logger.info("RECEIVED: " + trackingId);
                     KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn,SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_RETURN_NUMBER, new String[] { RECEIVED, trackingId }, 2);//todo change this to the number of subkits but for now 2 for test boston works
                     if (kitDDPNotification != null) {

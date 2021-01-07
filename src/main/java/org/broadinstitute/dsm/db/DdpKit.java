@@ -86,4 +86,11 @@ public class DdpKit {
         return false;
     }
 
+    public String getMainKitLabel() {
+        if (StringUtils.isNotBlank(kitLabel) && kitLabel.contains("_1") && kitLabel.indexOf("_1") == kitLabel.length() - 2) {
+            return kitLabel.substring(0, kitLabel.length() - 2);
+        }
+        return kitLabel;
+    }
+
 }
