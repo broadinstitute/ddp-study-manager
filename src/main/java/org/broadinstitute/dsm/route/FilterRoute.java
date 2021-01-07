@@ -77,7 +77,9 @@ public class FilterRoute extends RequestHandler {
                     if (StringUtils.isBlank(parent)) {
                         throw new RuntimeException("No parent was sent in the request.");
                     }
-                    return getListBasedOnFilterName(null, realm, parent, filterQuery, null);
+                    // return pt list as stream // return getListBasedOnFilterName(null, realm, parent, filterQuery, null);
+                    streamResponse(response, getListBasedOnFilterName(null, realm, parent, filterQuery, null));
+                    return "";
                 }
                 else {
                     String filterName = queryParams.get(RequestParameter.FILTER_NAME).value();
@@ -97,11 +99,11 @@ public class FilterRoute extends RequestHandler {
                                     String userEmail = queryParams.value("userMail");
                                     String defaultFilterName = ViewFilter.getDefaultFilterForUser(userEmail, "tissueList");
                                     if (StringUtils.isNotBlank(defaultFilterName)) {
-                                        return doFiltering(json, instance, defaultFilterName, parent, null);
+                                        // return pt list as stream // return doFiltering(json, instance, defaultFilterName, parent, null);
+                                        streamResponse(response, doFiltering(json, instance, defaultFilterName, parent, null));
+                                        return "";
                                     }
-
                                 }
-
                             }
                         }
                         if (StringUtils.isNotBlank(filterName)) {
@@ -121,14 +123,12 @@ public class FilterRoute extends RequestHandler {
                         }
                         if (filters != null) {
                             //quick and saved filter ptL
-//                            return filterParticipantList(filters, patchUtil.getColumnNameMap(), instance);
-                            // return pt list as stream
+                            // return pt list as stream // return filterParticipantList(filters, patchUtil.getColumnNameMap(), instance);
                             streamResponse(response, filterParticipantList(filters, patchUtil.getColumnNameMap(), instance));
                             return "";
                         }
                         //empty manual search
-//                        return ParticipantWrapper.getFilteredList(instance, null);
-                        // return pt list as stream
+                        // return pt list as stream // return ParticipantWrapper.getFilteredList(instance, null);
                         streamResponse(response, ParticipantWrapper.getFilteredList(instance, null));
                         return "";
                     }
@@ -137,8 +137,7 @@ public class FilterRoute extends RequestHandler {
                         if (StringUtils.isBlank(filterName)) {
                             filters = new Gson().fromJson(queryParams.get(RequestParameter.FILTERS).value(), Filter[].class);
                         }
-//                        return doFiltering(null, instance, filterName, parent, filters);
-                        // return pt list as stream
+                        // return list as stream // return doFiltering(null, instance, filterName, parent, filters);
                         streamResponse(response, doFiltering(null, instance, filterName, parent, filters));
                         return "";
                     }
@@ -193,8 +192,8 @@ public class FilterRoute extends RequestHandler {
                     logger.info("Found " + wrapperList.size() + " tissues for Tissue View");
                     return wrapperList;
                 }
-//                return doFiltering(json, instance, null, parent, null);
-                // return pt list as stream
+                //manual search
+                // return pt list as stream // return doFiltering(json, instance, null, parent, null);
                 streamResponse(response, doFiltering(json, instance, null, parent, null));
                 return "";
             }
@@ -379,7 +378,7 @@ public class FilterRoute extends RequestHandler {
 
     private void streamResponse(@NonNull Response response, List<?> result) throws IOException {
         OutputStreamWriter writer = new OutputStreamWriter(response.raw().getOutputStream());
-        new Gson().toJson(response, writer);
+        new Gson().toJson(result, writer);
         writer.flush();
         writer.close();
     }
