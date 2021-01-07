@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.util.DeliveryAddress;
-import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.mbc.MBCParticipant;
@@ -185,12 +184,7 @@ public class ParticipantWrapper {
         }
         else {
             Map<String, ParticipantExit> exitedParticipants = ParticipantExit.getExitedParticipants(instance.getName(), false);
-            if (instance.isHasRole()) { //participant in db (MBC)
-                return parseGen1toESParticipant(DSMServer.getMbcParticipants(), exitedParticipants);
-            }
-            else { //other gen2 ddps
-                return parseGen2toESParticipant(DDPRequestUtil.getDDPParticipant(instance), instance.getName(), exitedParticipants);
-            }
+            return parseGen2toESParticipant(DDPRequestUtil.getDDPParticipant(instance), instance.getName(), exitedParticipants);
         }
     }
 
