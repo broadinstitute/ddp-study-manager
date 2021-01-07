@@ -25,6 +25,8 @@ import spark.QueryParamsMap;
 import spark.Request;
 import spark.Response;
 
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.*;
 
 public class FilterRoute extends RequestHandler {
@@ -119,17 +121,26 @@ public class FilterRoute extends RequestHandler {
                         }
                         if (filters != null) {
                             //quick and saved filter ptL
-                            return filterParticipantList(filters, patchUtil.getColumnNameMap(), instance);
+//                            return filterParticipantList(filters, patchUtil.getColumnNameMap(), instance);
+                            // return pt list as stream
+                            streamResponse(response, filterParticipantList(filters, patchUtil.getColumnNameMap(), instance));
+                            return "";
                         }
                         //empty manual search
-                        return ParticipantWrapper.getFilteredList(instance, null);
+//                        return ParticipantWrapper.getFilteredList(instance, null);
+                        // return pt list as stream
+                        streamResponse(response, ParticipantWrapper.getFilteredList(instance, null));
+                        return "";
                     }
                     else {
                         Filter[] filters = null;
                         if (StringUtils.isBlank(filterName)) {
                             filters = new Gson().fromJson(queryParams.get(RequestParameter.FILTERS).value(), Filter[].class);
                         }
-                        return doFiltering(null, instance, filterName, parent, filters);
+//                        return doFiltering(null, instance, filterName, parent, filters);
+                        // return pt list as stream
+                        streamResponse(response, doFiltering(null, instance, filterName, parent, filters));
+                        return "";
                     }
                 }
             }
@@ -182,7 +193,10 @@ public class FilterRoute extends RequestHandler {
                     logger.info("Found " + wrapperList.size() + " tissues for Tissue View");
                     return wrapperList;
                 }
-                return doFiltering(json, instance, null, parent, null);
+//                return doFiltering(json, instance, null, parent, null);
+                // return pt list as stream
+                streamResponse(response, doFiltering(json, instance, null, parent, null));
+                return "";
             }
             throw new RuntimeException("Path was not known");
         }
@@ -192,7 +206,7 @@ public class FilterRoute extends RequestHandler {
         }
     }
 
-    public Object doFiltering(String json, DDPInstance instance, String filterName, String parent, Filter[] savedFilters) {
+    public List<?> doFiltering(String json, DDPInstance instance, String filterName, String parent, Filter[] savedFilters) {
         String filterQuery = "";
         Filter[] filters = null;
         String quickFilterName = "";
@@ -361,5 +375,12 @@ public class FilterRoute extends RequestHandler {
             return wrapperList;
         }
         return null;
+    }
+
+    private void streamResponse(@NonNull Response response, List<?> result) throws IOException {
+        OutputStreamWriter writer = new OutputStreamWriter(response.raw().getOutputStream());
+        new Gson().toJson(response, writer);
+        writer.flush();
+        writer.close();
     }
 }
