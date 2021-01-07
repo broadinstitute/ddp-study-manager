@@ -34,7 +34,7 @@ public class TestBostonUPSTrackingJob implements Job {
             " req.external_order_number, kit.CE_order FROM ddp_kit kit LEFT JOIN ddp_kit_request req " +
             " ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) WHERE req.ddp_instance_id = ? and kit_label not like \"%\\\\_1\"  ";
 
-    private static String SQL_AVOID_DELIVERD = " and (ups_tracking_status is null or ups_return_status is null or ups_tracking_status not like \"" + UPSStatus.DELIVERED_TYPE + " %\" or ups_return_status not like \"" + UPSStatus.DELIVERED_TYPE + " %\")" +
+    private static String SQL_AVOID_DELIVERED = "and (tracking_to_id is not null or tracking_return_id is not null ) and (ups_tracking_status is null or ups_return_status is null or ups_tracking_status not like \"" + UPSStatus.DELIVERED_TYPE + " %\" or ups_return_status not like \"" + UPSStatus.DELIVERED_TYPE + " %\")" +
             " order by kit.dsm_kit_request_id ASC";
 
     private static final String SQL_UPDATE_UPS_TRACKING_STATUS = "UPDATE ddp_kit SET ups_tracking_status = ?, ups_tracking_date = ? " +
@@ -50,7 +50,7 @@ public class TestBostonUPSTrackingJob implements Job {
     static String DELIVERED = "DELIVERED";
     static String RECEIVED = "RECEIVED";
 
-    private static String SELECT_BY_EXTERNAL_ORDER_NUMBER = "and req.external_order_number = ?";
+        private static String SELECT_BY_EXTERNAL_ORDER_NUMBER = "and request.external_order_number = ?";
     private static Covid19OrderRegistrar orderRegistrar;
 
     @Override
@@ -62,7 +62,7 @@ public class TestBostonUPSTrackingJob implements Job {
                 logger.info("tracking ups ids for " + ddpInstance.getName());
                 SimpleResult result = inTransaction((conn) -> {
                     SimpleResult dbVals = new SimpleResult();
-                    String query = SQL_SELECT_KITS + SQL_AVOID_DELIVERD;
+                    String query = SQL_SELECT_KITS + SQL_AVOID_DELIVERED;
                     try (PreparedStatement stmt = conn.prepareStatement(query)) {
                         stmt.setString(1, ddpInstance.getDdpInstanceId());
                         try (ResultSet rs = stmt.executeQuery()) {
@@ -84,7 +84,7 @@ public class TestBostonUPSTrackingJob implements Job {
                                         rs.getBoolean("kit." + DBConstants.CE_ORDER)
                                 );
 
-                                if (!kit.isDelivered()) {
+                                if (StringUtils.isNotBlank(kit.getTrackingToId()) && !kit.isDelivered()) {
                                     try {
                                         updateKitStatus(conn, kit, false);
                                     } catch (Exception e) {
@@ -92,7 +92,7 @@ public class TestBostonUPSTrackingJob implements Job {
                                     }
                                 }
 
-                                if (!kit.isReturned()) {
+                                if (StringUtils.isNotBlank(kit.getTrackingReturnId()) && !kit.isReturned()) {
                                     try {
                                         updateKitStatus(conn, kit, true);
                                     } catch (Exception e) {
