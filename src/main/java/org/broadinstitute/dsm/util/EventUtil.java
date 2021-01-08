@@ -120,7 +120,12 @@ public class EventUtil {
             addEvent(conn, eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId());
         }
         catch (IOException e) {
-            logger.error("Failed to trigger DDP to notify participant about " + eventType);
+            logger.error("Failed to trigger " + kitInfo.getInstanceName() + " to notify participant " +  kitInfo.getParticipantId() + " about " + eventType + " for dsm_kit_request_id " + kitInfo.getDsmKitRequestId());
+            //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
+            addEvent(conn, eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId(), false);
+        }
+        catch (RuntimeException e) {
+            logger.error("Failed to trigger " + kitInfo.getInstanceName() + " to notify participant " +  kitInfo.getParticipantId() + " about " + eventType + " for dsm_kit_request_id " + kitInfo.getDsmKitRequestId());
             //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
             addEvent(conn, eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId(), false);
         }

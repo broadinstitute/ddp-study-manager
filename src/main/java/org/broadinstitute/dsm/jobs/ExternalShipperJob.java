@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.jobs;
 
 import org.broadinstitute.dsm.DSMServer;
-import org.broadinstitute.dsm.model.KitRequest;
 import org.broadinstitute.dsm.model.KitType;
 import org.broadinstitute.dsm.util.externalShipper.ExternalShipper;
 import org.quartz.Job;
@@ -11,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 
 public class ExternalShipperJob implements Job {
