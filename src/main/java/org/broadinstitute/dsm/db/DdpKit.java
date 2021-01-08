@@ -1,14 +1,13 @@
 package org.broadinstitute.dsm.db;
 
 import lombok.Data;
-import org.broadinstitute.ddp.db.SimpleResult;
+import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.model.ups.UPSStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-
-import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 @Data
 public class DdpKit {
@@ -63,6 +62,35 @@ public class DdpKit {
         catch (Exception e) {
             throw new RuntimeException("Could not update ce_ordered status for " + this.getDsmKitRequestId(),e);
         }
+    }
+
+    public boolean isDelivered() {
+        if (StringUtils.isNotBlank(trackingToId)) {
+            return isTypeDelivered(upsTrackingStatus);
+        }
+        return false;
+    }
+
+    public boolean isReturned() {
+        if (StringUtils.isNotBlank(trackingReturnId)) {
+            return isTypeDelivered(upsReturnStatus);
+        }
+        return false;
+    }
+
+    private boolean isTypeDelivered(String statusDescription) {
+        if (StringUtils.isNotBlank(statusDescription) && statusDescription.indexOf(' ') > -1) {// get only type from it
+            String type = statusDescription.substring(0, statusDescription.indexOf(' '));
+            return UPSStatus.DELIVERED_TYPE.equals(type);
+        }
+        return false;
+    }
+
+    public String getMainKitLabel() {
+        if (StringUtils.isNotBlank(kitLabel) && kitLabel.contains("_1") && kitLabel.indexOf("_1") == kitLabel.length() - 2) {
+            return kitLabel.substring(0, kitLabel.length() - 2);
+        }
+        return kitLabel;
     }
 
 }
