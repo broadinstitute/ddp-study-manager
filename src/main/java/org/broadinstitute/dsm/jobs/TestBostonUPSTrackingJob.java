@@ -56,6 +56,8 @@ public class TestBostonUPSTrackingJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         logger.info("Starting the UPS lookup job");
+        orderRegistrar = new Covid19OrderRegistrar(DSMServer.careEvolveOrderEndpoint, DSMServer.careEvolveAccount, DSMServer.provider,
+                DSMServer.careEvolveMaxRetries, DSMServer.careEvolveRetyWaitSeconds);
         List<DDPInstance> ddpInstanceList = DDPInstance.getDDPInstanceListWithRole("ups_tracking");
         for (DDPInstance ddpInstance : ddpInstanceList) {
             if (ddpInstance != null && ddpInstance.isHasRole()) {
