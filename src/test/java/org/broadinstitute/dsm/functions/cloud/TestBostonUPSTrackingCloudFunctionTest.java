@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.functions.cloud;
 
 import static org.junit.Assert.*;
 
+import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.jobs.TestBostonUPSTrackingJob;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,6 +19,7 @@ public class TestBostonUPSTrackingCloudFunctionTest {
     @Before
     public void setUp() {
         testBostonUPSTrackingCloudFunction = new TestBostonUPSTrackingCloudFunction();
+        TestHelper.setupDB();
     }
 
     @Test
