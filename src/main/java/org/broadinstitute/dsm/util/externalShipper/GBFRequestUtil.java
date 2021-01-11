@@ -257,6 +257,9 @@ public class GBFRequestUtil implements ExternalShipper {
                 new RuntimeException("Failed to check status of kits from " + EXTERNAL_SHIPPER_NAME + ": " + gbfResponse.getErrorMessage());
             }
         }
+        else{
+            logger.error("GBFStatus call was not successful for order number: "+kit.getExternalOrderNumber());
+        }
     }
 
     public static void processingSingleConfirmation(Response gbfResponse, ShippingConfirmation confirmation) throws Exception {
