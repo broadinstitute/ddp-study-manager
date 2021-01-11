@@ -129,8 +129,14 @@ public class ParticipantWrapper {
             if (participantESData == null) {
                 //get only pts for the filtered kitRequests
                 if (kitRequests != null && !kitRequests.isEmpty()) {
-                    String filter = Arrays.stream(kitRequests.keySet().toArray(new String[0])).collect(Collectors.joining(ElasticSearchUtil.BY_GUIDS));
-                    participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_GUID + filter);
+                    if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
+                        String filter = Arrays.stream(kitRequests.keySet().toArray(new String[0])).collect(Collectors.joining(ElasticSearchUtil.BY_GUIDS));
+                        participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_GUID + filter);
+                    }
+                    else {
+                        Map<String, ParticipantExit> exitedParticipants = ParticipantExit.getExitedParticipants(instance.getName(), false);
+                        participantESData = parseGen2toESParticipant(DDPRequestUtil.getDDPParticipant(instance), instance.getName(), exitedParticipants);
+                    }
                 }
                 else {
                     //get all pts
