@@ -56,13 +56,13 @@ public class DDPKitRequest {
                     KitDetail[] kitDetails = DDPRequestUtil.getResponseObject(KitDetail[].class, dsmRequest, latestKit.getInstanceName(), latestKit.isHasAuth0Token());
                     if (kitDetails != null) {
                         logger.info("Got " + kitDetails.length + " 'new' KitRequests from " + latestKit.getInstanceName());
-                        Map<String, Map<String, Object>> participantsESData = null;
+//                        Map<String, Map<String, Object>> participantsESData = null;
                         if (kitDetails.length > 0) {
 
-                            if (StringUtils.isNotBlank(latestKit.getParticipantIndexES())) {
-                                //could be filtered as well to have a smaller list
-                                participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(latestKit.getInstanceName(), latestKit.getParticipantIndexES());
-                            }
+//                            if (StringUtils.isNotBlank(latestKit.getParticipantIndexES())) {
+//                                //could be filtered as well to have a smaller list
+//                                participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(latestKit.getInstanceName(), latestKit.getParticipantIndexES());
+//                            }
 
                             Map<String, KitType> kitTypes = KitType.getKitLookup();
                             Map<Integer, KitRequestSettings> kitRequestSettingsMap = KitRequestSettings.getKitRequestSettings(latestKit.getInstanceID());
@@ -90,6 +90,8 @@ public class DDPKitRequest {
                                             //kit requests from study-server
                                             if (StringUtils.isNotBlank(latestKit.getParticipantIndexES())) {
                                                 //without order list, that was only added for promise and currently is not used!
+                                                DDPInstance ddpInstance = DDPInstance.getDDPInstance(latestKit.getInstanceName());
+                                                Map<String, Map<String, Object>> participantsESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance, ElasticSearchUtil.BY_GUID + kitDetail.getParticipantId());
                                                 if (participantsESData != null && !participantsESData.isEmpty()) {
                                                     Map<String, Object> participantESData = participantsESData.get(kitDetail.getParticipantId());
                                                     if (participantESData != null && !participantESData.isEmpty()) {

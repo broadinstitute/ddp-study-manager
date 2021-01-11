@@ -106,7 +106,7 @@ public class DDPRequestUtil {
         return objects;
     }
     // make a post request
-    public static Integer postRequest(String sendRequest, Object objectToPost, String name, boolean auth0Token) throws IOException {
+    public static Integer postRequest(String sendRequest, Object objectToPost, String name, boolean auth0Token) throws IOException, RuntimeException {
         logger.info("Requesting data from " + name + " w/ " + sendRequest);
         org.apache.http.client.fluent.Request request = SecurityUtil.createPostRequestWithHeader(sendRequest, name, auth0Token, objectToPost);
 
@@ -271,7 +271,7 @@ public class DDPRequestUtil {
                 }
             }
             catch (Exception e) {
-                throw new RuntimeException("Couldn't save consent pdf in google bucket ", e);
+                throw new RuntimeException("Couldn't save " + fileName + " pdf in google bucket " + bucketName + " for ddpParticipant " + ddpParticipantId, e);
             }
         }
     }

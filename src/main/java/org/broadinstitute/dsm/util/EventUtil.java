@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.util;
 
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.ParticipantEvent;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.TestResultEvent;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -27,7 +29,7 @@ public class EventUtil {
     private static final Logger logger = LoggerFactory.getLogger(EventUtil.class);
 
     public static final String SQL_SELECT_KIT_FOR_REMINDER_EMAILS = "SELECT eve.event_name, eve.event_type, request.ddp_participant_id, request.dsm_kit_request_id, realm.instance_name, realm.base_url, " +
-            "realm.ddp_instance_id, realm.auth0_token, realm.notification_recipients, kit.receive_date, kit.scan_date, request.upload_reason " +
+            "realm.ddp_instance_id, realm.auth0_token, realm.notification_recipients, kit.receive_date, kit.scan_date, request.upload_reason, " +
             "(SELECT count(role.name) FROM ddp_instance realm2, ddp_instance_role inRol, instance_role role " +
             "WHERE realm2.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id AND role.name = ? AND realm2.ddp_instance_id = realm.ddp_instance_id) AS 'has_role' " +
             "FROM ddp_kit_request request LEFT JOIN ddp_kit kit ON (kit.dsm_kit_request_id = request.dsm_kit_request_id) LEFT JOIN ddp_instance realm ON (request.ddp_instance_id = realm.ddp_instance_id) " +
@@ -43,7 +45,10 @@ public class EventUtil {
         Collection<KitDDPNotification> kitDDPNotifications = getKitsNotReceived();
         for (KitDDPNotification kitInfo : kitDDPNotifications) {
             if (KitDDPNotification.REMINDER.equals(kitInfo.getEventType())) {
-                triggerDDP(kitInfo);
+                TransactionWrapper.inTransaction(conn -> {
+                    triggerDDP(conn, kitInfo);
+                    return null;
+                });
             }
         }
     }
@@ -83,85 +88,82 @@ public class EventUtil {
         return kitDDPNotifications;
     }
 
-    public static void triggerDDP(@NonNull KitDDPNotification kitDDPNotification) {
+    public static void triggerDDP(Connection conn,@NonNull KitDDPNotification kitDDPNotification) {
         Collection<String> events = ParticipantEvent.getParticipantEvent(kitDDPNotification.getParticipantId(), kitDDPNotification.getDdpInstanceId());
         if (!events.contains(kitDDPNotification.getEventName())) {
-            EventUtil.triggerDDP(kitDDPNotification.getEventName(), kitDDPNotification);
+            EventUtil.triggerDDP(conn, kitDDPNotification.getEventName(), kitDDPNotification);
         }
         else {
             logger.info("Participant direct event was added in the participant_event table. DDP will not get triggered");
             //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
-            addEvent(kitDDPNotification.getEventName(), kitDDPNotification.getDdpInstanceId(), kitDDPNotification.getDsmKitRequestId(), false);
+            addEvent(conn, kitDDPNotification.getEventName(), kitDDPNotification.getDdpInstanceId(), kitDDPNotification.getDsmKitRequestId(), false);
         }
     }
 
-    public static void triggerDDPWithTestResult(@NonNull KitDDPNotification kitDDPNotification, @Nonnull TestBostonResult result) {
+    public static void triggerDDPWithTestResult(Connection conn,@NonNull KitDDPNotification kitDDPNotification, @Nonnull TestBostonResult result) {
         Collection<String> events = ParticipantEvent.getParticipantEvent(kitDDPNotification.getParticipantId(), kitDDPNotification.getDdpInstanceId());
         if (!events.contains(kitDDPNotification.getEventName())) {
-            EventUtil.triggerDDPWithTestResult(kitDDPNotification.getEventName(), kitDDPNotification, result);
+            EventUtil.triggerDDPWithTestResult(conn, kitDDPNotification.getEventName(), kitDDPNotification, result);
         }
         else {
             logger.info("Participant direct event was added in the participant_event table. DDP will not get triggered");
             //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
-            addEvent(kitDDPNotification.getEventName(), kitDDPNotification.getDdpInstanceId(), kitDDPNotification.getDsmKitRequestId(), false);
+            addEvent(conn, kitDDPNotification.getEventName(), kitDDPNotification.getDdpInstanceId(), kitDDPNotification.getDsmKitRequestId(), false);
         }
     }
 
-    private static void triggerDDP(@NonNull String eventType, @NonNull KitDDPNotification kitInfo) {
+    private static void triggerDDP(Connection conn, @NonNull String eventType, @NonNull KitDDPNotification kitInfo) {
         try {
             KitEvent event = new KitEvent(kitInfo.getParticipantId(), eventType, kitInfo.getDate() / 1000, kitInfo.getUploadReason(), kitInfo.getDdpKitRequestId());
             String sendRequest = kitInfo.getBaseUrl() + RoutePath.DDP_PARTICIPANT_EVENT_PATH + "/" + kitInfo.getParticipantId();
             DDPRequestUtil.postRequest(sendRequest, event, kitInfo.getInstanceName(), kitInfo.isHasAuth0Token());
-            addEvent(eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId());
+            addEvent(conn, eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId());
         }
         catch (IOException e) {
-            logger.error("Failed to trigger DDP to notify participant about " + eventType);
+            logger.error("Failed to trigger " + kitInfo.getInstanceName() + " to notify participant " +  kitInfo.getParticipantId() + " about " + eventType + " for dsm_kit_request_id " + kitInfo.getDsmKitRequestId());
             //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
-            addEvent(eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId(), false);
+            addEvent(conn, eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId(), false);
+        }
+        catch (RuntimeException e) {
+            logger.error("Failed to trigger " + kitInfo.getInstanceName() + " to notify participant " +  kitInfo.getParticipantId() + " about " + eventType + " for dsm_kit_request_id " + kitInfo.getDsmKitRequestId());
+            //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
+            addEvent(conn, eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId(), false);
         }
     }
 
-    private static void triggerDDPWithTestResult(@NonNull String eventType, @NonNull KitDDPNotification kitInfo, @Nonnull TestBostonResult result) {
+    private static void triggerDDPWithTestResult(Connection conn,@NonNull String eventType, @NonNull KitDDPNotification kitInfo, @Nonnull TestBostonResult result) {
         try {
             DSMTestResult dsmTestResult = new DSMTestResult(result.getResult(), result.getTimeCompleted(), result.isCorrected());
             TestResultEvent event = new TestResultEvent(kitInfo.getParticipantId(), eventType, kitInfo.getDate() / 1000,kitInfo.getUploadReason(), kitInfo.getDdpKitRequestId(),  dsmTestResult);
             String sendRequest = kitInfo.getBaseUrl() + RoutePath.DDP_PARTICIPANT_EVENT_PATH + "/" + kitInfo.getParticipantId();
             DDPRequestUtil.postRequest(sendRequest, event, kitInfo.getInstanceName(), kitInfo.isHasAuth0Token());
-            addEvent(eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId());
+            addEvent(conn, eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId());
         }
         catch (IOException e) {
             logger.error("Failed to trigger DDP to notify participant about " + eventType);
             //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
-            addEvent(eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId(), false);
+            addEvent(conn, eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId(), false);
         }
     }
 
-    private static void addEvent(@NonNull String type, @NonNull String instanceID, @NonNull String requestId) {
-        addEvent(type, instanceID, requestId, true);
+    private static void addEvent(Connection conn, @NonNull String type, @NonNull String instanceID, @NonNull String requestId) {
+        addEvent(conn, type, instanceID, requestId, true);
     }
 
-    public static void addEvent(@NonNull String type, @NonNull String instanceID, @NonNull String requestId, boolean trigger) {
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_EVENT)) {
-                stmt.setLong(1, System.currentTimeMillis());
-                stmt.setString(2, type);
-                stmt.setString(3, instanceID);
-                stmt.setString(4, requestId);
-                stmt.setBoolean(5, trigger);
-                int result = stmt.executeUpdate();
-                if (result != 1) {
-                    throw new RuntimeException("Error could not add event for kit request " + requestId);
-                }
+    public static void addEvent(Connection conn, @NonNull String type, @NonNull String instanceID, @NonNull String requestId, boolean trigger) {
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_EVENT)) {
+            stmt.setLong(1, System.currentTimeMillis());
+            stmt.setString(2, type);
+            stmt.setString(3, instanceID);
+            stmt.setString(4, requestId);
+            stmt.setBoolean(5, trigger);
+            int result = stmt.executeUpdate();
+            if (result != 1) {
+                throw new RuntimeException("Error could not add event for kit request " + requestId);
             }
-            catch (SQLException e) {
-                dbVals.resultException = e;
-            }
-            return dbVals;
-        });
-
-        if (results.resultException != null) {
-            logger.error("Error inserting event ", results.resultException);
+        }
+        catch (SQLException e) {
+            logger.error("Error inserting event ", e);
         }
     }
 }
