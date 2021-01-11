@@ -202,7 +202,9 @@ public class GBFRequestUtil implements ExternalShipper {
     // return the actual tube barcode for all tubes but only after the kit is shipped (around 7:00pm)
     public void orderStatus(Connection conn, KitRequest kit) throws Exception {
         logger.info("checking status of " + kit.getExternalOrderNumber() + " for participant " + kit.getParticipantId());
-        JSONObject payload = new JSONObject().put("orderNumbers", kit.getExternalOrderNumber());
+        List<String> orderNumbers = new ArrayList<>();
+        orderNumbers.addAll(Arrays.asList(new String[] { kit.getExternalOrderNumber() }));
+        JSONObject payload = new JSONObject().put("orderNumbers", orderNumbers);
         String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + STATUS_ENDPOINT;
         Response gbfResponse = executePost(Response.class, sendRequest, payload.toString(), DSMServer.getApiKey(getExternalShipperName()));
         if (gbfResponse != null && gbfResponse.isSuccess()) {
@@ -254,6 +256,9 @@ public class GBFRequestUtil implements ExternalShipper {
             else {
                 new RuntimeException("Failed to check status of kits from " + EXTERNAL_SHIPPER_NAME + ": " + gbfResponse.getErrorMessage());
             }
+        }
+        else{
+            logger.error("GBFStatus call was not successful for order number: "+kit.getExternalOrderNumber());
         }
     }
 
