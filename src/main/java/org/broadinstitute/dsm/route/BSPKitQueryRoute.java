@@ -22,6 +22,7 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 
+import java.sql.Connection;
 import java.util.*;
 
 public class BSPKitQueryRoute implements Route {
@@ -40,10 +41,13 @@ public class BSPKitQueryRoute implements Route {
         if (StringUtils.isBlank(kitLabel)) {
             throw new RuntimeException("Please include a kit label as a path parameter");
         }
-        return getBSPKitInfo(kitLabel, response);
+
+        return TransactionWrapper.inTransaction(conn -> {
+            return getBSPKitInfo(conn, kitLabel, response);
+        });
     }
 
-    public Object getBSPKitInfo(@NonNull String kitLabel, @NonNull Response response) {
+    public Object getBSPKitInfo(Connection conn, @NonNull String kitLabel, @NonNull Response response) {
         logger.info("Checking label " + kitLabel);
         BSPKitQueryResult bspKitInfo = BSPKitQueryResult.getBSPKitQueryResult(kitLabel);
 
@@ -53,7 +57,7 @@ public class BSPKitQueryRoute implements Route {
             return null;
         }
 
-        boolean firstTimeReceived = KitUtil.setKitReceived(kitLabel);
+        boolean firstTimeReceived = KitUtil.setKitReceived(conn, kitLabel);
         if (StringUtils.isNotBlank(bspKitInfo.getParticipantExitId())) {
             String message = "Kit of exited participant " + bspKitInfo.getBspParticipantId() + " was received by GP.<br>";
             notificationUtil.sentNotification(bspKitInfo.getNotificationRecipient(), message, NotificationUtil.DSM_SUBJECT);
@@ -95,12 +99,12 @@ public class BSPKitQueryRoute implements Route {
                         }
                     }
                     else {
-                        triggerDDP(bspKitInfo, firstTimeReceived, kitLabel);
+                        triggerDDP(conn, bspKitInfo, firstTimeReceived, kitLabel);
                     }
                 }
             }
             else {
-                triggerDDP(bspKitInfo, firstTimeReceived, kitLabel);
+                triggerDDP(conn, bspKitInfo, firstTimeReceived, kitLabel);
             }
 
             String bspParticipantId = bspKitInfo.getBspParticipantId();
@@ -129,12 +133,12 @@ public class BSPKitQueryRoute implements Route {
         }
     }
 
-    private void triggerDDP(@NonNull BSPKitQueryResult bspKitInfo, boolean firstTimeReceived, String kitLabel) {
+    private void triggerDDP(Connection conn, @NonNull BSPKitQueryResult bspKitInfo, boolean firstTimeReceived, String kitLabel) {
         try {
             if (bspKitInfo.isHasParticipantNotifications() && firstTimeReceived) {
                 KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_RECEIVED_KIT_INFORMATION_FOR_NOTIFICATION_EMAIL), kitLabel, 1);
                 if (kitDDPNotification != null) {
-                    EventUtil.triggerDDP(kitDDPNotification);
+                    EventUtil.triggerDDP(conn, kitDDPNotification);
                 }
             }
         }

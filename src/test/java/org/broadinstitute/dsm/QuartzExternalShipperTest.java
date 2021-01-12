@@ -64,7 +64,7 @@ public class QuartzExternalShipperTest extends TestHelper {
     public void externalShipperJob() throws Exception {
 //        uploadKit();
 
-        ExternalShipper shipper = (ExternalShipper) Class.forName(DSMServer.getClassName("gbf")).newInstance();//GBFRequestUtil
+        GBFRequestUtil shipper = new GBFRequestUtil();
         ArrayList<KitRequest> kitRequests = shipper.getKitRequestsNotDone(15);
         Map<Integer, KitRequestSettings> kitRequestSettingsMap = KitRequestSettings.getKitRequestSettings("15");
         shipper.orderKitRequests(kitRequests, new EasyPostUtil("testboston"), kitRequestSettingsMap.get(11), null       );
