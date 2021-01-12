@@ -401,13 +401,11 @@ public class DSMServer extends BasicServer {
                 liquibase.changeLogSync((String)null);
             }
 
-            liquibase.update(new Contexts());
-
             if (testEmail != null) {
                 liquibase = new liquibase.Liquibase("liquibase/seed/baseline-seed-test-data.xml", new ClassLoaderResourceAccessor(), database);
-                liquibase.update(new Contexts());
-
             }
+
+            liquibase.update(new Contexts());
         }
         catch (Exception e) {
             throw new RuntimeException("Failed to run DB update.", e);

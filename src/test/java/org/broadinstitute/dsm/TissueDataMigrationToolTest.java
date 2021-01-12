@@ -28,8 +28,7 @@ public class TissueDataMigrationToolTest extends TestHelper {
     public void testMigrationTool() {
         TransactionWrapper.reset(TestUtil.UNIT_TEST);
 
-//        TissueDataMigrationTool tool = new TissueDataMigrationTool("AngioTissueMigrationTestFile.txt", "GEC");
-        setupDB();
+        TissueDataMigrationTool tool = new TissueDataMigrationTool("AngioTissueMigrationTestFile.txt", "GEC");
         String phone = DBTestUtil.getQueryDetail(query, "TEST_ACC_NUM1", "phone");
         Assert.assertEquals("111-222-3333", phone);//  phone was the same everytime this accession number was in there
         String accessionNumber = DBTestUtil.getQueryDetail(query, "TEST_ACC_NUM1", "accession_number");
@@ -158,9 +157,8 @@ public class TissueDataMigrationToolTest extends TestHelper {
         DBTestUtil.deleteAllParticipantData("FAKE_ANGIO_MIGRATION_2", true);
         DBTestUtil.deleteAllParticipantData("FAKE_ANGIO_MIGRATION_3", true);
         DBTestUtil.deleteAllParticipantData("FAKE_ANGIO_MIGRATION_4", true);
-        setupDB();
-//        TransactionWrapper.reset(TestUtil.UNIT_TEST);
-//        TransactionWrapper.init(cfg.getInt("portal.maxConnections"), cfg.getString("portal.dbUrl"), cfg, false);
+        TransactionWrapper.reset(TestUtil.UNIT_TEST);
+        TransactionWrapper.init(cfg.getInt("portal.maxConnections"), cfg.getString("portal.dbUrl"), cfg, false);
         //delete all KitRequests added by the test
     }
 
