@@ -42,5 +42,7 @@ public class QueryExtension {
     public static final String DISCARD_KIT_BY_DISCARD_ID = " and kit_discard_id = ?";
 
     public static final String WHERE_INSTANCE_ID = " where ddp_instance_id = ?";
+    public static final String WHERE_REALM_INSTANCE_ID = " where realm.ddp_instance_id = ?";
+
 
 }

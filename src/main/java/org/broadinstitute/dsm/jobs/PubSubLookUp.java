@@ -15,6 +15,7 @@ import org.broadinstitute.dsm.util.NotificationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 
 import java.sql.PreparedStatement;
@@ -30,7 +31,7 @@ public class PubSubLookUp {
             "WHERE kit.kit_label = ?";
     private static String UPDATE_TEST_RESULT = "UPDATE ddp_kit SET  test_result = ? WHERE dsm_kit_id <> 0 and  dsm_kit_request_id  in (select  dsm_kit_request_id from (select * from ddp_kit as something where something.kit_label = ? ) as t  )";
 
-    public static void processCovidTestResults(PubsubMessage message, @NonNull NotificationUtil notificationUtil) {
+    public static void processCovidTestResults(Connection conn, PubsubMessage message, @NonNull NotificationUtil notificationUtil) {
         String data = message.getData().toStringUtf8();
         TestBostonResult testBostonResult = new Gson().fromJson(data, TestBostonResult.class);
         List<DDPInstance> instanceList = DDPInstance.getDDPInstanceListWithRole("pubsub_lookup");
@@ -39,7 +40,7 @@ public class PubSubLookUp {
                 logger.info("Processing test results for " + testBostonResult.getSampleId());
                 if (shouldWriteResultIntoDB(testBostonResult)) {
                     writeResultsIntoDB(testBostonResult);
-                    tellPepperAboutTheNewResults(testBostonResult);// notify pepper if we update DB
+                    tellPepperAboutTheNewResults(conn, testBostonResult);// notify pepper if we update DB
                     notifyPIs(ddpInstance, testBostonResult, notificationUtil);
                 }
             }
@@ -89,7 +90,7 @@ public class PubSubLookUp {
         return true;
     }
 
-    public static void tellPepperAboutTheNewResults(TestBostonResult testBostonResult) {
+    public static void tellPepperAboutTheNewResults(Connection conn, TestBostonResult testBostonResult) {
         logger.info("Going to Notify Pepper");
         String query = "select eve.event_name, eve.event_type, request.ddp_participant_id, request.dsm_kit_request_id, request.ddp_kit_request_id, request.upload_reason, " +
                 "realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token,   realm.notification_recipients,   realm.migrated_ddp,   kit.receive_date,   kit.scan_date  " +
@@ -100,7 +101,7 @@ public class PubSubLookUp {
 
         KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(query, testBostonResult.getSampleId(), 1);
         if (kitDDPNotification != null) {
-            EventUtil.triggerDDPWithTestResult(kitDDPNotification, testBostonResult);
+            EventUtil.triggerDDPWithTestResult(conn, kitDDPNotification, testBostonResult);
             logger.info("Notified Pepper with test result notification");
         }
         else {
