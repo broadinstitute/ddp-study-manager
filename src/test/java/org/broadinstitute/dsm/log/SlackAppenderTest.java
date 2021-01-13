@@ -1,17 +1,12 @@
 package org.broadinstitute.dsm.log;
 
-import static org.junit.Assert.*;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import com.google.gson.Gson;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.spi.RootLogger;
 import org.broadinstitute.ddp.util.Utility;
@@ -56,7 +51,7 @@ public class SlackAppenderTest extends TestHelper {
             cfg = cfg.withValue("slack.hook", ConfigValueFactory.fromAnyRef("http://localhost:" + mockDDP.getPort() + "/mock_slack_test"));
             cfg = cfg.withValue("slack.channel", ConfigValueFactory.fromAnyRef("SlackChannel"));
 
-            SlackAppender.configure(cfg, null);
+            SlackAppender.configure(null, , , );
 
             slackAppender.doAppend(loggingEvent);
 

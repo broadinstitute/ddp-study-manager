@@ -23,7 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 import org.broadinstitute.ddp.BasicServer;
-import org.broadinstitute.ddp.loggers.ErrorNotificationAppender;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.security.Auth0Util;
 import org.broadinstitute.ddp.security.CookieUtil;
@@ -59,6 +58,8 @@ import spark.Route;
 import spark.Spark;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.Duration;
@@ -647,11 +648,20 @@ public class DSMServer extends BasicServer {
     @Override
     protected void setupErrorNotifications(Config config, String schedulerName) {
         if (config == null) {
-            throw new NullPointerException("config");
+            throw new IllegalArgumentException("Config should be provided");
         } else {
             logger.info("Setup error notifications...");
             if (config.hasPath("slack.hook") && config.hasPath("slack.channel")) {
-                SlackAppender.configure(config, schedulerName);
+                String appEnv = config.getString("portal.environment");
+                String slackHookUrlString = config.getString("slack.hook");
+                URI slackHookUrl;
+                String slackChannel = config.getString("slack.channel");
+                try {
+                    slackHookUrl = new URI(slackHookUrlString);
+                } catch (URISyntaxException e) {
+                    throw new IllegalArgumentException("Could not parse " + slackHookUrlString);
+                }
+                SlackAppender.configure(schedulerName, appEnv, slackHookUrl, slackChannel);
                 logger.info("Error notification setup complete. If log4j.xml is configured, notifications will be sent to " + config.getString("slack.channel") + ".");
             } else {
                 logger.warn("Skipping error notification setup.");
