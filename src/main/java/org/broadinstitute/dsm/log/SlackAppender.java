@@ -13,16 +13,21 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.logging.Log;
 import org.apache.http.HttpHeaders;
 import org.apache.http.entity.ContentType;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
 import org.broadinstitute.ddp.util.Utility;
+import org.broadinstitute.dsm.DSMServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SlackAppender extends AppenderSkeleton {
     public SlackAppender() {
     }
 
+    private static final Logger logger = LoggerFactory.getLogger(SlackAppender.class);
     public static final String APPENDER_NAME = "slackAppender";
     private static HttpClient httpClient;
     private static String appEnv;
@@ -48,11 +53,12 @@ public class SlackAppender extends AppenderSkeleton {
                             "throttled so you will only see 1 per %s minutes.", JOB_DELAY), MSG_TYPE_JOB_ERROR);
                     minEpochForNextJobError.set(currentEpoch + 3600L);
                 } else if (!jobError && currentEpoch >= minEpochForNextError.get()) {
-                    this.sendSlackNotification(currentEpoch, String.format("This does NOT look like a job error. Non-job error reporting is throttled so you will only see 1 per %s minutes.", NON_JOB_DELAY), MSG_TYPE_ERROR);
+                    this.sendSlackNotification(currentEpoch, String.format("This does NOT look like a job error. " +
+                            "Non-job error reporting is throttled so you will only see 1 per %s minutes.", NON_JOB_DELAY), MSG_TYPE_ERROR);
                     minEpochForNextError.set(currentEpoch + 1800L);
                 }
             } catch (Exception var5) {
-                System.out.println("ErrorNotificationAppender Error: " + ExceptionUtils.getStackTrace(var5));
+                logger.warn("ErrorNotificationAppender Error: " + ExceptionUtils.getStackTrace(var5));
             }
         }
     }
@@ -71,7 +77,7 @@ public class SlackAppender extends AppenderSkeleton {
                 throw new IOException("Could not post " + payload + " to slack.  Hook returned " + response.body());
             }
         } catch (IOException | InterruptedException e) {
-            System.out.println("Could not post error message to slack room " + slackChannel + " with hook " + slackHookUrl
+            logger.warn("Could not post error message to slack room " + slackChannel + " with hook " + slackHookUrl
                     + "\n" + ExceptionUtils.getStackTrace(e));
         }
     }
