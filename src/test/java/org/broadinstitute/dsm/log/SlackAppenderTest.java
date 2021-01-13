@@ -3,6 +3,9 @@ package org.broadinstitute.dsm.log;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import com.google.gson.Gson;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValueFactory;
@@ -51,7 +54,17 @@ public class SlackAppenderTest extends TestHelper {
             cfg = cfg.withValue("slack.hook", ConfigValueFactory.fromAnyRef("http://localhost:" + mockDDP.getPort() + "/mock_slack_test"));
             cfg = cfg.withValue("slack.channel", ConfigValueFactory.fromAnyRef("SlackChannel"));
 
-            SlackAppender.configure(null, , , );
+            String appEnv = cfg.getString("portal.environment");
+            String slackHookUrlString = cfg.getString("slack.hook");
+            URI slackHookUrl;
+            String slackChannel = cfg.getString("slack.channel");
+            try {
+                slackHookUrl = new URI(slackHookUrlString);
+            } catch (URISyntaxException e) {
+                throw new IllegalArgumentException("Could not parse " + slackHookUrlString);
+            }
+
+            SlackAppender.configure(null, appEnv, slackHookUrl, slackChannel);
 
             slackAppender.doAppend(loggingEvent);
 
