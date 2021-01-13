@@ -51,11 +51,11 @@ public class SlackAppender extends AppenderSkeleton {
                 if (jobError && currentEpoch >= minEpochForNextJobError.get()) {
                     this.sendSlackNotification(currentEpoch, String.format("This looks like a job error. Job error reporting is " +
                             "throttled so you will only see 1 per %s minutes.", JOB_DELAY), MSG_TYPE_JOB_ERROR);
-                    minEpochForNextJobError.set(currentEpoch + 3600L);
+                    minEpochForNextJobError.set(currentEpoch + JOB_DELAY * 60L);
                 } else if (!jobError && currentEpoch >= minEpochForNextError.get()) {
                     this.sendSlackNotification(currentEpoch, String.format("This does NOT look like a job error. " +
                             "Non-job error reporting is throttled so you will only see 1 per %s minutes.", NON_JOB_DELAY), MSG_TYPE_ERROR);
-                    minEpochForNextError.set(currentEpoch + 1800L);
+                    minEpochForNextError.set(currentEpoch + NON_JOB_DELAY * 60L);
                 }
             } catch (Exception var5) {
                 logger.warn("ErrorNotificationAppender Error: " + ExceptionUtils.getStackTrace(var5));
