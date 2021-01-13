@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-import com.typesafe.config.Config;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.entity.ContentType;
@@ -96,18 +95,12 @@ public class SlackAppender extends AppenderSkeleton {
     }
 
 
-    public static synchronized void configure(Config config, String scheduler) {
-        if (config == null) {
-            throw new NullPointerException("config");
-        } else if (!configured) {
-            appEnv = config.getString("portal.environment");
-            try {
-                slackHookUrl = new URI(config.getString("slack.hook"));
-            } catch (URISyntaxException e) {
-                throw new IllegalArgumentException("Could not parse " + slackHookUrl);
-            }
+    public static synchronized void configure(String scheduler, String appEnv, URI slackHookUri, String slackChannel) {
+        if (!configured) {
+            SlackAppender.appEnv = appEnv;
+            slackHookUrl = slackHookUri;
             httpClient = HttpClient.newHttpClient();
-            slackChannel = config.getString("slack.channel");
+            SlackAppender.slackChannel = slackChannel;
             schedulerName = scheduler;
             configured = true;
         } else {
