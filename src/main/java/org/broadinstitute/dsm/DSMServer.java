@@ -662,7 +662,7 @@ public class DSMServer extends BasicServer {
                     throw new IllegalArgumentException("Could not parse " + slackHookUrlString);
                 }
                 SlackAppender.configure(schedulerName, appEnv, slackHookUrl, slackChannel);
-                logger.info("Error notification setup complete. If log4j.xml is configured, notifications will be sent to " + config.getString("slack.channel") + ".");
+                logger.info("Error notification setup complete. If log4j.xml is configured, notifications will be sent to " + slackChannel + ".");
             } else {
                 logger.warn("Skipping error notification setup.");
             }
