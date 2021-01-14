@@ -39,9 +39,6 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
 
     @Override
     public void accept(PubsubMessage pubsubMessage, Context context) throws Exception {
-        String projectId = System.getenv("PROJECT_ID");
-        String secretId = System.getenv("SECRET_ID");
-
 
         String KIT_QUERY =
                 "select\n" +
@@ -78,18 +75,10 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                 "order by test_completion_time";
 
 
-        logger.info("Starting up in project " + projectId + " and secret " + secretId);
-        Config cfg = null;
-
-        try (SecretManagerServiceClient secretManagerServiceClient = SecretManagerServiceClient.create()) {
-            var latestSecretVersion = SecretVersionName.of(projectId, secretId, "latest");
-            SecretPayload secret = secretManagerServiceClient.accessSecretVersion(latestSecretVersion).getPayload();
-            String secretData = secret.getData().toStringUtf8();
-            cfg = ConfigFactory.parseString(secretData);
-        }
+        Config cfg = CFUtil.loadConfig();
         String dbUrl = cfg.getString("pepperDbUrl");
 
-        PoolingDataSource<PoolableConnection> dataSource = createDataSource(1, dbUrl);
+        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(1, dbUrl);
 
         // static vars are dangerous in CF https://cloud.google.com/functions/docs/bestpractices/tips#functions-tips-scopes-java
         try (Connection conn = dataSource.getConnection()) {
@@ -110,25 +99,7 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
         }
     }
 
-    // todo centralize this for stateless db connections.  statics in cloud functions
-    // can be shared across invocations, making things like TransactionWrapper.init() hard to predict.
-    private PoolingDataSource<PoolableConnection> createDataSource(int maxConnections, String dbUrl) {
-        ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(dbUrl, null);
-        PoolableConnectionFactory poolableConnectionFactory = new PoolableConnectionFactory(connectionFactory, null);
-        poolableConnectionFactory.setDefaultAutoCommit(false);
-        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
-        poolConfig.setMaxTotal(maxConnections);
-        poolConfig.setTestOnBorrow(false);
-        poolConfig.setBlockWhenExhausted(false);
-        poolConfig.setTestWhileIdle(true);
-        poolConfig.setMinIdle(5);
-        poolConfig.setMinEvictableIdleTimeMillis(60000L);
-        poolableConnectionFactory.setValidationQueryTimeout(1);
-        ObjectPool<PoolableConnection> connectionPool = new GenericObjectPool(poolableConnectionFactory, poolConfig);
-        poolableConnectionFactory.setPool(connectionPool);
-        PoolingDataSource<PoolableConnection> dataSource = new PoolingDataSource(connectionPool);
-        return dataSource;
-    }
+
 
 
 }

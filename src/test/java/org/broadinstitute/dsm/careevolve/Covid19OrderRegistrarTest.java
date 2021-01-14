@@ -1,12 +1,25 @@
 package org.broadinstitute.dsm.careevolve;
 
 import java.io.File;
+import java.sql.Connection;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.util.Map;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import org.apache.commons.dbcp2.PoolableConnection;
+import org.apache.commons.dbcp2.PoolingDataSource;
 import org.broadinstitute.ddp.db.TransactionWrapper;
+import org.broadinstitute.dsm.cf.CFUtil;
+import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
+import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -32,12 +45,17 @@ public class Covid19OrderRegistrarTest {
     @BeforeClass
     public static void beforeClass() throws Exception {
         cfg = ConfigFactory.load();
-        cfg = cfg.withFallback(ConfigFactory.parseFile(new File("config/test-config.conf")));
         TransactionWrapper.init(20, cfg.getString("portal.dbUrl"), cfg, true);
-        //startMockServer();
-        //setupUtils();
 
-        cfg = ConfigFactory.load().withFallback(ConfigFactory.parseFile(new File("config/ellkay.conf")));
+        // todo pull this out to a file, refresh from secret manager
+
+    }
+
+    @Ignore
+    @Test
+    public void testOrderForParticipant() throws Exception {
+        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(5, cfg.getString("portal.dbUrl"));
+
         careEvolveAccount = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_ACCOUNT);
         String careEvolveSubscriberKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SUBSCRIBER_KEY);
         String careEvolveServiceKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SERVICE_KEY);
@@ -46,14 +64,34 @@ public class Covid19OrderRegistrarTest {
         provider = new Provider(cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_FIRSTNAME),
                 cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_LAST_NAME),
                 cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_NPI));
-    }
 
-    @Ignore
-    @Test
-    public void testOrderForParticipant() throws Exception {
+
+
+        DDPInstance ddpInstance = null;
+
+        try (Connection conn = dataSource.getConnection()) {
+            ddpInstance = DDPInstance.getDDPInstanceWithRole(conn,"testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
+        }
+
+        String participantHruid = "PZHE3W";
+        String esUrl = cfg.getString(ApplicationConfigConstants.ES_URL);
+        String esUsername = cfg.getString(ApplicationConfigConstants.ES_USERNAME);
+        String esPassword = cfg.getString(ApplicationConfigConstants.ES_PASSWORD);
+        RestHighLevelClient esClient = ElasticSearchUtil.getClientForElasticsearchCloud(esUrl, esUsername, esPassword);
+
         Covid19OrderRegistrar orderRegistrar = new Covid19OrderRegistrar(careEvolveOrderEndpoint, careEvolveAccount, provider, 0, 0);
 
-        orderRegistrar.orderTest(auth,"PUTPKX","TBOS-112211221","kit130", Instant.now());
+        Map<String, Map<String, Object>> esData = ElasticSearchUtil.getSingleParticipantFromES(ddpInstance.getName(), ddpInstance.getParticipantIndexES(), esClient, participantHruid);
 
+        if (esData.size() == 1) {
+            JsonObject participantJsonData = new JsonParser().parse(new Gson().toJson(esData.values().iterator().next())).getAsJsonObject();
+            Patient cePatient = Covid19OrderRegistrar.fromElasticData(participantJsonData);
+            System.out.println(cePatient);
+
+            Instant collectionDate = new SimpleDateFormat("MM/dd/yyyy hh:mm").parse("01/11/2021 20:50").toInstant();
+            orderRegistrar.orderTest(auth,cePatient,"TBOS-ZSYKOJUO4","OSA5RV2UE9DHMMIHJMYV", collectionDate);
+        } else {
+            throw new RuntimeException("Could not find es data for " + participantHruid);
+        }
     }
 }
