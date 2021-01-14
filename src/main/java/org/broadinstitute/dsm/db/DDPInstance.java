@@ -11,6 +11,7 @@ import org.broadinstitute.dsm.statics.QueryExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -135,33 +136,26 @@ public class DDPInstance {
         return (DDPInstance) results.resultValue;
     }
 
-
-
     public static DDPInstance getDDPInstanceWithRole(@NonNull String realm, @NonNull String role) {
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_INSTANCE_WITH_ROLE + QueryExtension.BY_INSTANCE_NAME)) {
-                stmt.setString(1, role);
-                stmt.setString(2, realm);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        dbVals.resultValue = getDDPInstanceWithRoleFormResultSet(rs);
-                    }
-                }
-                catch (SQLException e) {
-                    throw new RuntimeException("Error getting list of ddps ", e);
-                }
-            }
-            catch (SQLException ex) {
-                dbVals.resultException = ex;
-            }
-            return dbVals;
+        return inTransaction((conn) -> {
+            return getDDPInstanceWithRole(conn, realm, role);
         });
+    }
 
-        if (results.resultException != null) {
-            throw new RuntimeException("Couldn't get list of ddps ", results.resultException);
+    public static DDPInstance getDDPInstanceWithRole(@NonNull Connection conn, @NonNull String realm, @NonNull String role) {
+        DDPInstance instance = null;
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_INSTANCE_WITH_ROLE + QueryExtension.BY_INSTANCE_NAME)) {
+            stmt.setString(1, role);
+            stmt.setString(2, realm);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    instance = getDDPInstanceWithRoleFormResultSet(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error getting list of ddps ", e);
         }
-        return (DDPInstance) results.resultValue;
+        return instance;
     }
 
     public static String getDDPGroupId(@NonNull String realm) {

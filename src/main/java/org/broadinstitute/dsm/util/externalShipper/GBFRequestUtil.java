@@ -159,9 +159,9 @@ public class GBFRequestUtil implements ExternalShipper {
 
                 //                logger.info("orderXML: " + orderXml);
                 boolean test = DSMServer.isTest(getExternalShipperName());//true for dev in `not-secret.conf`
-                JSONObject payload = new JSONObject().put("orderXml", orderXml).put("test", test);
-                String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + ORDER_ENDPOINT;
-                String apiKey = DSMServer.getApiKey(getExternalShipperName());
+                JSONObject payload = new JSONObject().put("orderXml", orderXml).put("test", false);
+                String sendRequest ="https://www.gbfmedical.com/oap/api/" + ORDER_ENDPOINT;
+                String apiKey = "ZDMxY2ZlMjctYTU0OS00Y2MxLWIyMmItNDYyNzI1MzJlOWJi";
                 Response gbfResponse = null;
                 int totalAttempts = 2 + additionalAttempts;
                 Exception ex = null;
