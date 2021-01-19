@@ -5,7 +5,7 @@ STUDY_SERVER_SCHEMA=$4
 
 echo "Will deploy to ${PROJECT_ID} using schemas ${STUDY_MANAGER_SCHEMA} and ${STUDY_SERVER_SCHEMA}"
 
-mvn -Pcloud-function -DskipTests clean install package
+# mvn -Pcloud-function -DskipTests clean install package
 
 
 #echo "Deploying kit dispatcher to ${PROJECT_ID}"
@@ -15,7 +15,9 @@ mvn -Pcloud-function -DskipTests clean install package
 #    --runtime=java11 \
 #    --trigger-topic=kit-report \
 #    --source=target/deployment \
-#    --set-env-vars="PROJECT_ID=${PROJECT_ID},SECRET_ID=cloud-functions,STUDY_MANAGER_SCHEMA=${STUDY_MANAGER_SCHEMA},STUDY_SERVER_SCHEMA=${STUDY_SERVER_SCHEMA}"
+#    --set-env-vars="PROJECT_ID=${PROJECT_ID},SECRET_ID=cloud-functions,STUDY_MANAGER_SCHEMA=${STUDY_MANAGER_SCHEMA},STUDY_SERVER_SCHEMA=${STUDY_SERVER_SCHEMA}" \
+#    --egress-settings=all \
+#    --vpc-connector=appengine-default-connect
 
 
 
@@ -27,4 +29,5 @@ gcloud --project=${PROJECT_ID} functions deploy \
     --trigger-topic=tbos-ce-orders \
     --source=target/deployment \
     --memory=1024MB \
-    --set-env-vars="PROJECT_ID=${PROJECT_ID},SECRET_ID=study-manager-config"
+    --set-env-vars="PROJECT_ID=${PROJECT_ID},SECRET_ID=study-manager-config" \
+    --vpc-connector=projects/broad-ddp-dev/locations/us-central1/connectors/appengine-default-connect
