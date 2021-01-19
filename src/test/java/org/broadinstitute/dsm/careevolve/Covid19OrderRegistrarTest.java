@@ -16,6 +16,7 @@ import org.apache.commons.dbcp2.PoolingDataSource;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.cf.CFUtil;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.DdpKit;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -73,7 +74,10 @@ public class Covid19OrderRegistrarTest {
             ddpInstance = DDPInstance.getDDPInstanceWithRole(conn,"testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
         }
 
-        String participantHruid = "PZHE3W";
+        String participantHruid = "";
+        String kitLabel = "";
+        String externalOrderNumber = "";
+        String collectionTime = "";
         String esUrl = cfg.getString(ApplicationConfigConstants.ES_URL);
         String esUsername = cfg.getString(ApplicationConfigConstants.ES_USERNAME);
         String esPassword = cfg.getString(ApplicationConfigConstants.ES_PASSWORD);
@@ -88,8 +92,12 @@ public class Covid19OrderRegistrarTest {
             Patient cePatient = Covid19OrderRegistrar.fromElasticData(participantJsonData);
             System.out.println(cePatient);
 
-            Instant collectionDate = new SimpleDateFormat("MM/dd/yyyy hh:mm").parse("01/11/2021 20:50").toInstant();
-            orderRegistrar.orderTest(auth,cePatient,"TBOS-ZSYKOJUO4","OSA5RV2UE9DHMMIHJMYV", collectionDate);
+            Instant collectionDate = new SimpleDateFormat("MM/dd/yyyy hh:mm").parse(collectionTime).toInstant();
+            orderRegistrar.orderTest(auth,cePatient, kitLabel, externalOrderNumber, collectionDate);
+            try (Connection conn = dataSource.getConnection()) {
+                DdpKit.updateCEOrdered(dataSource.getConnection(), true, kitLabel);
+                conn.commit();
+            }
         } else {
             throw new RuntimeException("Could not find es data for " + participantHruid);
         }

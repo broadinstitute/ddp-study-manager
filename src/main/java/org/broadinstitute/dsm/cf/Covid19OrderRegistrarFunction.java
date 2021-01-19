@@ -60,7 +60,7 @@ public class Covid19OrderRegistrarFunction  implements BackgroundFunction<Covid1
             ddpInstance = DDPInstance.getDDPInstanceWithRole(conn,"testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
             logger.info("Will use instance " + ddpInstance.getName());
 
-            if (DdpKit.hasKitBeenOrderedInCE(conn, orderPayload.getExternalOrderId())) {
+            if (DdpKit.hasKitBeenOrderedInCE(conn, orderPayload.getKitLabel())) {
                 logger.log(Level.WARNING, orderPayload.getKitLabel() + " has already been ordered in CE");
                 return;
             }
@@ -88,7 +88,7 @@ public class Covid19OrderRegistrarFunction  implements BackgroundFunction<Covid1
             } else {
                 logger.info(orderPayload.getKitLabel() + " has been placed for " + orderPayload.getParticipantHruid() + ".  CE id is " + orderResponse.getHandle());
                 try (Connection conn = dataSource.getConnection()) {
-                    DdpKit.updateCEOrdered(conn, true, orderPayload.getExternalOrderId());
+                    DdpKit.updateCEOrdered(conn, true, orderPayload.getKitLabel());
                 }
             }
         } else {

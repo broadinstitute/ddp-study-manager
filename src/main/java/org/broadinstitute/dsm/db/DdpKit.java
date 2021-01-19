@@ -65,43 +65,41 @@ public class DdpKit {
         }
     }
 
-    public static boolean hasKitBeenOrderedInCE(Connection conn,String externalOrderNumber) {
-        String query = "select k.ce_order from ddp_kit k, ddp_kit_request req where req.external_order_number = ? and req.dsm_kit_request_id = k.dsm_kit_request_id";
+    public static boolean hasKitBeenOrderedInCE(Connection conn,String kitLabel) {
+        String query = "select k.ce_order from ddp_kit k where k.kit_label = ?";
         boolean hasBeenOrdered = false;
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, externalOrderNumber);
+            stmt.setString(1, kitLabel);
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
                 hasBeenOrdered = rs.getBoolean(1);
                 if (rs.next()) {
-                    throw new RuntimeException("Too many rows found for kit order " + externalOrderNumber);
+                    throw new RuntimeException("Too many rows found for kit " + kitLabel);
                 }
             } else {
-                throw new RuntimeException("Could not find order " + externalOrderNumber);
+                throw new RuntimeException("Could not find kit " + kitLabel);
             }
 
         }
         catch (Exception e) {
-            throw new RuntimeException("Could not determine ce_ordered status for " + externalOrderNumber,e);
+            throw new RuntimeException("Could not determine ce_ordered status for " + kitLabel,e);
         }
         return hasBeenOrdered;
     }
 
-    public static void updateCEOrdered(Connection conn, boolean orderStatus, String externalOrderNumber) {
-        String query = "UPDATE ddp_kit SET CE_order = ? where dsm_kit_request_id = (select ddp_kit_request from dsm_kit_request where external_order_number = ?)";
+    public static void updateCEOrdered(Connection conn, boolean ordered, String kitLabel) {
+        String query = "UPDATE ddp_kit SET CE_order = ? where kit_label = ?";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setBoolean(1, orderStatus);
-            stmt.setString(2, externalOrderNumber);
+            stmt.setBoolean(1, ordered);
+            stmt.setString(2, kitLabel);
             int r = stmt.executeUpdate();
             if (r != 1) {//number of subkits
-                throw new RuntimeException("Update query for CE order flag updated " + r + " rows! with dsm kit request external id " + externalOrderNumber);
+                throw new RuntimeException("Update query for CE order flag updated " + r + " rows! with dsm kit " + kitLabel);
             }
-            logger.info("Updated CE_Order value for kit with dsm kit request external id " + externalOrderNumber
-                    + " to " + orderStatus);
         }
         catch (Exception e) {
-            throw new RuntimeException("Could not update ce_ordered status for " + externalOrderNumber,e);
+            throw new RuntimeException("Could not update ce_ordered status for " + kitLabel,e);
         }
     }
 
