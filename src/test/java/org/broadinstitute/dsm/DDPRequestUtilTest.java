@@ -22,6 +22,7 @@ public class DDPRequestUtilTest extends TestHelper {
     @BeforeClass
     public static void first() throws Exception {
         setupDB(true);
+        startDSMServer();
         startMockServer();
         setupUtils();
     }
@@ -45,7 +46,6 @@ public class DDPRequestUtilTest extends TestHelper {
 
         DDPInstance ddpInstance = DDPInstance.getDDPInstance(TEST_DDP);
         String sendRequest = ddpInstance.getBaseUrl() + "/ddp/followupsurvey/" + "test-consent";
-
         Integer ddpResponse  = DDPRequestUtil.postRequest(sendRequest, survey, ddpInstance.getName(), ddpInstance.isHasAuth0Token());
 
         Assert.assertTrue(404 == ddpResponse);
