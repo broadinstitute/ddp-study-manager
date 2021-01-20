@@ -131,14 +131,12 @@ public class DSMServer extends BasicServer {
     private static final Duration DEFAULT_BOOT_WAIT = Duration.ofMinutes(10);
 
     private static Auth0Util auth0Util;
-    private static boolean isExistingNonLiquibaseDatabase;
     private static String testEmail;
 
     public static void main(String[] args) {
         // immediately lock isReady so that ah/start route will wait
         synchronized (isReady) {
             logger.info("Starting up DSM");
-            isExistingNonLiquibaseDatabase = Boolean.parseBoolean(System.getProperty("isExistingNonLiquibaseDatabase"));
             //config without secrets
             Config cfg = ConfigFactory.load();
             //secrets from vault in a config file
@@ -413,16 +411,7 @@ public class DSMServer extends BasicServer {
 
             Liquibase liquibase = new liquibase.Liquibase("master-changelog.xml", new ClassLoaderResourceAccessor(), database);
 
-            if (isExistingNonLiquibaseDatabase) {
-                liquibase.changeLogSync((String)null);
-            }
-
             liquibase.update(new Contexts());
-
-            if (testEmail != null) {
-                liquibase = new liquibase.Liquibase("liquibase/seed/baseline-seed-test-data.xml", new ClassLoaderResourceAccessor(), database);
-                liquibase.update(new Contexts());
-            }
         }
         catch (Exception e) {
             throw new RuntimeException("Failed to run DB update.", e);

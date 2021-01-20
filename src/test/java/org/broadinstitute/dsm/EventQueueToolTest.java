@@ -51,7 +51,7 @@ public class EventQueueToolTest {
                 cfg.getString("portal.dbSslTrustStore"),
                 cfg.getString("portal.dbSslTrustStorePwd"));
         TransactionWrapper.reset(TestUtil.UNIT_TEST);
-        TransactionWrapper.init(cfg.getInt("portal.maxConnections"), cfg.getString("portal.dbUrl"), cfg, false);
+        TransactionWrapper.init(cfg.getInt("portal.maxConnections"), cfg.getString("portal.dbUrl"), cfg, cfg.getBoolean("portal.dbSkipSsl"));
 
         DBTestUtil.executeQuery("UPDATE ddp_instance set is_active = 1 where instance_name = \"" + TestHelper.TEST_DDP + "\"");
         INSTANCE_ID = DBTestUtil.getQueryDetail(DBUtil.GET_REALM_QUERY, TestHelper.TEST_DDP, TestHelper.DDP_INSTANCE_ID);
