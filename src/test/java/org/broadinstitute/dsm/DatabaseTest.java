@@ -6,6 +6,7 @@ import org.broadinstitute.dsm.util.DBTestUtil;
 import org.broadinstitute.dsm.util.TestUtil;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ public class DatabaseTest extends TestHelper{
         Assert.assertNotNull(instance);
     }
 
+    @Ignore
     @Test
     public void isDatabaseDifferent() {
         TransactionWrapper.reset(TestUtil.UNIT_TEST);
@@ -46,6 +48,7 @@ public class DatabaseTest extends TestHelper{
         Assert.assertNotEquals(usersLocal, usersDev);
     }
 
+    @Ignore
     @Test
     public void testMBCConnection() throws Exception {
         Connection con = null;
