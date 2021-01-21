@@ -33,10 +33,9 @@ public class EventQueueToolTest {
 
     @BeforeClass
     public static void first() {
-        TestHelper.setupDB();
-        cfg = ConfigFactory.load();
+        TestHelper.setDefaultTestConfig();
+        cfg = TestHelper.cfg;
         //secrets from vault in a config file
-        cfg = cfg.withFallback(TestHelper.cfg);
         //cfg = TestHelper.cfg;
         cfg = cfg.withValue("errorAlert.recipientAddress", ConfigValueFactory.fromAnyRef(""));
 

@@ -134,7 +134,7 @@ public class KitRequestMigrationTool {
         cfg = cfg.withFallback(ConfigFactory.parseFile(new File(config)));
 
         TransactionWrapper.init(cfg.getInt(ApplicationConfigConstants.DSM_DB_MAX_CONNECTIONS),
-                cfg.getString(ApplicationConfigConstants.DSM_DB_URL), cfg, false);
+                cfg.getString(ApplicationConfigConstants.DSM_DB_URL), cfg, cfg.getBoolean("portal.dbSkipSsl"));
 
         kitUtil = new KitUtil();
     }
