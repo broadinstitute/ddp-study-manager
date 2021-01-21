@@ -684,7 +684,7 @@ public class DBTestUtil {
     public static void insertLatestKitRequest(String insertKitRequestQuery, String insertKitQuery, String suffix, int kitType,
                                               String instanceId, String testAddress, String testShipment, String ddpParticipantId) {
         inTransaction((conn) -> {
-            try (PreparedStatement stmt = conn.prepareStatement(insertKitRequestQuery)) {
+            try (PreparedStatement stmt = conn.prepareStatement(insertKitRequestQuery, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, instanceId);
                 stmt.setString(2, TestHelper.FAKE_LATEST_KIT + suffix);
                 stmt.setInt(3, kitType);
@@ -695,6 +695,7 @@ public class DBTestUtil {
                 stmt.setString(8, "TEST");
                 stmt.setLong(9, System.currentTimeMillis());
                 stmt.setObject(10, null);
+                stmt.setString(11, null);
                 stmt.executeUpdate();
 
                 int kitRequestKey = -1;

@@ -83,7 +83,7 @@ public class EventQueueToolTest {
         TransactionWrapper.reset(TestUtil.UNIT_TEST);
 
         TransactionWrapper.init(cfg.getInt(ApplicationConfigConstants.DSM_DB_MAX_CONNECTIONS),
-                cfg.getString(ApplicationConfigConstants.DSM_DB_URL), cfg, false);
+                cfg.getString(ApplicationConfigConstants.DSM_DB_URL), cfg, cfg.getBoolean("portal.dbSkipSsl"));
 
         DBTestUtil.executeQuery("UPDATE ddp_instance set is_active = 0 where instance_name = \"" + TestHelper.TEST_DDP + "\"");
 
