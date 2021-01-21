@@ -28,7 +28,8 @@ public class EventUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(EventUtil.class);
 
-    public static final String SQL_SELECT_KIT_FOR_REMINDER_EMAILS = "SELECT eve.event_name, eve.event_type, request.ddp_participant_id, request.dsm_kit_request_id, realm.instance_name, realm.base_url, " +
+    public static final String SQL_SELECT_KIT_FOR_REMINDER_EMAILS = "SELECT eve.event_name, eve.event_type, request.ddp_participant_id, request.dsm_kit_request_id, request.ddp_kit_request_id," +
+            " realm.instance_name, realm.base_url, " +
             "realm.ddp_instance_id, realm.auth0_token, realm.notification_recipients, kit.receive_date, kit.scan_date, request.upload_reason, " +
             "(SELECT count(role.name) FROM ddp_instance realm2, ddp_instance_role inRol, instance_role role " +
             "WHERE realm2.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id AND role.name = ? AND realm2.ddp_instance_id = realm.ddp_instance_id) AS 'has_role' " +
