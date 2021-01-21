@@ -89,7 +89,7 @@ public class SlackAppender extends AppenderSkeleton {
         String date = formatter.format(new Date(currentEpoch * 1000L));
         SlackMessagePayload payload = new SlackMessagePayload(String.format("An error has been detected for *%s*." +
                 " Please go check the backend logs around *%s UTC*. \n" + "%s \n %s",
-                appEnv, date, messageType, note), slackChannel, "DSM", ":nerd_face:");
+                appEnv, date, messageType, note), slackChannel, "Study-Manager", ":nerd_face:");
         return payload;
     }
 
