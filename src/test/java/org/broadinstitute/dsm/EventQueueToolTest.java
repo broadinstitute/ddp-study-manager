@@ -34,10 +34,10 @@ public class EventQueueToolTest {
     @BeforeClass
     public static void first() {
         TestHelper.setupDB();
-        //cfg = ConfigFactory.load();
+        cfg = ConfigFactory.load();
         //secrets from vault in a config file
-        //cfg = cfg.withFallback(ConfigFactory.parseFile(new File(System.getenv("TEST_CONFIG_FILE"))));
-        cfg = TestHelper.cfg;
+        cfg = cfg.withFallback(TestHelper.cfg);
+        //cfg = TestHelper.cfg;
         cfg = cfg.withValue("errorAlert.recipientAddress", ConfigValueFactory.fromAnyRef(""));
 
         if (!cfg.getString("portal.environment").startsWith("Local")) {
