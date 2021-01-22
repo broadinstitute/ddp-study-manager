@@ -73,6 +73,8 @@ public class TestHelper {
     protected static String DDP_BASE_URL;
     protected static String DSM_BASE_URL;
 
+    public static final String TEST_CONFIG_PATH = "config/test-config.conf";
+
     public static Config cfg;
 
     public static DSMServer server;
@@ -225,7 +227,7 @@ public class TestHelper {
 
     public static void setDefaultTestConfig() {
         cfg = ConfigFactory.load();
-        cfg = cfg.withFallback(ConfigFactory.parseFile(new File("config/test-config.conf")));
+        cfg = cfg.withFallback(ConfigFactory.parseFile(new File(TEST_CONFIG_PATH)));
     }
 
     private static void checkRole(String role, List<String> roles, String user, String group) {

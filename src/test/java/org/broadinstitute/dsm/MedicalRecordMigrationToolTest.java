@@ -62,7 +62,7 @@ public class MedicalRecordMigrationToolTest extends TestHelper {
     @AfterClass
     public static void stopMockServer() {
         TransactionWrapper.reset(TestUtil.UNIT_TEST);
-        TransactionWrapper.init(cfg.getInt("portal.maxConnections"), cfg.getString("portal.dbUrl"), cfg, false);
+        TransactionWrapper.init(cfg.getInt("portal.maxConnections"), cfg.getString("portal.dbUrl"), cfg, cfg.getBoolean("portal.dbSkipSsl"));
         //delete all KitRequests added by the test
         DBTestUtil.deleteAllParticipantData("66666");
         DBTestUtil.deleteAllParticipantData("20160", true);

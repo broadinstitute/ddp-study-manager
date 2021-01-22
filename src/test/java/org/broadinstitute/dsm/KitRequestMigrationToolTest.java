@@ -75,7 +75,7 @@ public class KitRequestMigrationToolTest extends TestHelper {
         TransactionWrapper.reset(TestUtil.UNIT_TEST);
 
         TransactionWrapper.init(cfg.getInt(ApplicationConfigConstants.DSM_DB_MAX_CONNECTIONS),
-                cfg.getString(ApplicationConfigConstants.DSM_DB_URL), cfg, false);
+                cfg.getString(ApplicationConfigConstants.DSM_DB_URL), cfg, cfg.getBoolean("portal.dbSkipSsl"));
         //delete all KitRequests added by the test
         DBTestUtil.deleteAllKitData("66666");
         DBTestUtil.deleteAllKitData("66667");

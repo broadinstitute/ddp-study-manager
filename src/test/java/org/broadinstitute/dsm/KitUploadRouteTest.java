@@ -22,9 +22,9 @@ public class KitUploadRouteTest {
 
     @BeforeClass
     public static void doFirst() throws Exception {
-        cfg = ConfigFactory.load();
-        //secrets from vault in a config file
-        cfg = cfg.withFallback(ConfigFactory.parseFile(new File(System.getenv("TEST_CONFIG_FILE"))));
+        TestHelper.setDefaultTestConfig();
+        cfg = TestHelper.cfg;
+
         cfg = cfg.withValue("errorAlert.recipientAddress", ConfigValueFactory.fromAnyRef(""));
 
         if (!cfg.getString("portal.environment").startsWith("Local")) {

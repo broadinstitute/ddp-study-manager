@@ -22,9 +22,8 @@ public class MBCTest {
 
     @BeforeClass
     public static void doFirst() {
-        cfg = ConfigFactory.load();
-        //secrets from vault in a config file
-        cfg = cfg.withFallback(ConfigFactory.parseFile(new File(System.getenv("TEST_CONFIG_FILE"))));
+        TestHelper.setDefaultTestConfig();
+        cfg = TestHelper.cfg;
     }
 
     @Test

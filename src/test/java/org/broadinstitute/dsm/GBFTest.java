@@ -55,6 +55,7 @@ public class GBFTest extends TestHelper {
     }
 
     @Test
+    @Ignore
     public void orderGBFTestKit() throws Exception {
         String apiKey = getApiKey();
         if (apiKey != null) {
@@ -115,6 +116,7 @@ public class GBFTest extends TestHelper {
     }
 
     @Test
+    @Ignore
     public void statusGBFKit() throws Exception {
         String apiKey = "";
         if (apiKey != null) {

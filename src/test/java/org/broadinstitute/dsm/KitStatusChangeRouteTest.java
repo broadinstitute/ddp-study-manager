@@ -72,7 +72,7 @@ public class KitStatusChangeRouteTest extends TestHelper {
 
         TransactionWrapper.reset(TestUtil.UNIT_TEST);
         //update receive_date per tool
-        UpdateReceivedDateTool.argumentsForTesting("config/test-config.conf", "receivedUpdate.txt");
+        UpdateReceivedDateTool.argumentsForTesting(TEST_CONFIG_PATH, "receivedUpdate.txt");
         UpdateReceivedDateTool.littleMain();
 
         //check receive_dates
