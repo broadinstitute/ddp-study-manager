@@ -25,7 +25,7 @@ public class ParticipantMedicalRecordToolTest extends TestHelper {
         }
         TransactionWrapper.reset(TestUtil.UNIT_TEST);
 //        TransactionWrapper.reset(TestUtil.UNIT_TEST, DBConstants.EEL_DB_NAME);
-        ParticipantMedicalRecordTool.argumentsForTesting("config/test-config.conf", TEST_DDP, "/Users/simone/IdeaProjects/ddp-dsm/src/test/resources/AllFieldsDatStat.txt");
+        ParticipantMedicalRecordTool.argumentsForTesting(TEST_CONFIG_PATH, TEST_DDP, ALL_DATSTAT_FIELDS);
         ParticipantMedicalRecordTool.littleMain();
     }
 }

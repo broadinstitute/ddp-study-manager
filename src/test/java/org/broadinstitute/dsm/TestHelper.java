@@ -73,6 +73,7 @@ public class TestHelper {
     protected static String DDP_BASE_URL;
     protected static String DSM_BASE_URL;
 
+    public static final String ALL_DATSTAT_FIELDS = "src/test/resources/AllFieldsDatStat.txt";
     public static final String TEST_CONFIG_PATH = "config/test-config.conf";
 
     public static Config cfg;
