@@ -27,7 +27,7 @@ public class SlackAppenderTest extends TestHelper {
     @Rule
     public MockServerRule mockServerRule = new MockServerRule(this);
 
-    private LoggingEvent loggingEvent = new LoggingEvent(null, new RootLogger(Level.ERROR), Level.ERROR, null, null);
+    private LoggingEvent loggingEvent = new LoggingEvent(null, new RootLogger(Level.ERROR), Level.ERROR, null, new Throwable());
 
     public Config cfg;
 
@@ -69,10 +69,12 @@ public class SlackAppenderTest extends TestHelper {
             slackAppender.doAppend(loggingEvent);
 
             String note = String.format(
-                    "This does NOT look like a job error. Non-job error reporting is throttled so you will only see 1 per %s minutes.", 30);
+                    "%s \n" +
+                    "This does NOT look like a job error. Non-job error reporting is throttled so you will only see 1 per %s minutes.",
+                    slackAppender.getErrorMessageAndLocation(loggingEvent), 30);
 
             SlackAppender.SlackMessagePayload error_alert =
-                    slackAppender.getSlackMessagePayload(Utility.getCurrentEpoch(), note, "ERROR_ALERT");
+                    slackAppender.getSlackMessagePayload(Utility.getCurrentEpoch(), note);
 
             mockDDP.verify(request().withPath("/mock_slack_test").withBody(JsonBody.json(
                     new Gson().toJson(error_alert))));
