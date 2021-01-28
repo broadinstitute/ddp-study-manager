@@ -24,16 +24,15 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 @TableName(
         name = DBConstants.DDP_PARTICIPANT_DATA,
         alias = DBConstants.DDP_PARTICIPANT_DATA_ALIAS,
-        primaryKey = DBConstants.PARTICIPANT_ID,
+        primaryKey = DBConstants.DDP_PARTICIPANT_ID,
         columnPrefix = "")
 public class ParticipantData {
 
     private static final Logger logger = LoggerFactory.getLogger(ParticipantData.class);
 
-    public static final String SQL_SELECT_PARTICIPANT = "SELECT p.ddp_participant_id, d.participant_data_id, d.participant_id, d.field_type_id, d.data " +
+    public static final String SQL_SELECT_PARTICIPANT = "SELECT d.participant_data_id, d.ddp_participant_id, d.field_type_id, d.data " +
             "FROM ddp_participant_data d " +
-            "LEFT JOIN ddp_participant p on (p.participant_id = d.participant_id) " +
-            "LEFT JOIN ddp_instance realm on (p.ddp_instance_id = realm.ddp_instance_id) " +
+            "LEFT JOIN ddp_instance realm on (d.ddp_instance_id = realm.ddp_instance_id) " +
             "WHERE realm.instance_name = ? ";
 
     @ColumnName(DBConstants.FIELD_TYPE_ID)

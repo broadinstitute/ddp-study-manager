@@ -36,7 +36,7 @@ public class ElasticSearchTest extends TestHelper {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-osteo");
+            SearchRequest searchRequest = new SearchRequest("participants_structured.atcp.atcp");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
@@ -59,7 +59,7 @@ public class ElasticSearchTest extends TestHelper {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("activity_definition.testboston.testboston");
+            SearchRequest searchRequest = new SearchRequest("activity_definition.atcp.atcp");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
@@ -577,13 +577,13 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
-    public void searchPTByProfileData() throws Exception {
+    public void searchByHRUID() throws Exception {
         searchProfileValue("participants_structured.cmi.angio", "profile.hruid", "PMR4FU");
     }
 
     @Test
-    public void mbcLegacyPTGUID() throws Exception {
-        searchProfileValue("participants_structured.cmi.cmi-osteo", "profile.guid", "ZSNS8E4U838JPW7NU93Y");
+    public void searchByGUID() throws Exception {
+        searchProfileValue("participants_structured.cmi.angio", "profile.guid", "NG947P4C0LCN0R2CRO9Y");
     }
 
     @Test
