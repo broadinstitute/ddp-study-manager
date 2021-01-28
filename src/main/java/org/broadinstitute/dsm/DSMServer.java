@@ -33,6 +33,7 @@ import org.broadinstitute.dsm.careevolve.Authentication;
 import org.broadinstitute.dsm.careevolve.Provider;
 import org.broadinstitute.dsm.jetty.JettyConfig;
 import org.broadinstitute.dsm.jobs.*;
+import org.broadinstitute.dsm.log.SlackAppender;
 import org.broadinstitute.dsm.route.*;
 import org.broadinstitute.dsm.security.JWTConverter;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
@@ -53,6 +54,8 @@ import spark.Route;
 import spark.Spark;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.Duration;
@@ -613,6 +616,32 @@ public class DSMServer extends BasicServer {
             }
         }
         setupErrorNotifications(cfg, schedulerName);
+    }
+
+
+    @Override
+    protected void setupErrorNotifications(Config config, String schedulerName) {
+        if (config == null) {
+            throw new IllegalArgumentException("Config should be provided");
+        } else {
+            logger.info("Setup error notifications...");
+            if (config.hasPath("slack.hook") && config.hasPath("slack.channel")) {
+                String appEnv = config.getString("portal.environment");
+                String slackHookUrlString = config.getString("slack.hook");
+                URI slackHookUrl;
+                String slackChannel = config.getString("slack.channel");
+                try {
+                    slackHookUrl = new URI(slackHookUrlString);
+                } catch (URISyntaxException e) {
+                    throw new IllegalArgumentException("Could not parse " + slackHookUrlString + "\n" + e);
+                }
+                SlackAppender.configure(schedulerName, appEnv, slackHookUrl, slackChannel);
+                logger.info("Error notification setup complete. If log4j.xml is configured, notifications will be sent to " + slackChannel + ".");
+            } else {
+                logger.warn("Skipping error notification setup.");
+            }
+
+        }
     }
 
     /**
