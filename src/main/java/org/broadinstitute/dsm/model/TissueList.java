@@ -29,7 +29,7 @@ public class TissueList {
             "t.scrolls_count, t.h_e_count, t.uss_count, t.blocks_count " +
             "FROM ddp_participant p LEFT JOIN ddp_instance realm on (p.ddp_instance_id = realm.ddp_instance_id) " +
             "LEFT JOIN ddp_participant_exit ex on (p.ddp_participant_id = ex.ddp_participant_id AND p.ddp_instance_id = ex.ddp_instance_id) " +
-            "LEFT JOIN ddp_institution inst on (p.participant_id = inst.participant_id) LEFT JOIN ddp_medical_record m on (m.institution_id = inst.institution_id) " +
+            "LEFT JOIN ddp_institution inst on (p.participant_id = inst.participant_id) LEFT JOIN ddp_medical_record m on (m.institution_id = inst.institution_id AND NOT m.deleted <=> 1) " +
             "LEFT JOIN ddp_onc_history_detail oD on (m.medical_record_id = oD.medical_record_id AND NOT oD.deleted <=> 1) " +
             "LEFT JOIN ddp_tissue t on (oD.onc_history_detail_id = t.onc_history_detail_id AND NOT t.deleted <=> 1) WHERE realm.instance_name = ? AND ex.ddp_participant_exit_id IS NULL AND oD.onc_history_detail_id IS NOT NULL";
     public static final String SQL_ORDER_BY_ONC_HISTORY = " ORDER BY oD.onc_history_detail_id ";
