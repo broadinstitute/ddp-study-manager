@@ -39,7 +39,7 @@ public class OncHistoryDetail {
             "sent_gp, first_sm_id, additional_tissue_value_json, expected_return, return_date, return_fedex_id, shl_work_number, tumor_percentage, tissue_sequence, " +
             " scrolls_count, uss_count, h_e_count, blocks_count " +
             "FROM ddp_onc_history_detail oD " +
-            "LEFT JOIN ddp_medical_record m on (oD.medical_record_id = m.medical_record_id AND NOT oD.deleted <=> 1) " +
+            "LEFT JOIN ddp_medical_record m on (oD.medical_record_id = m.medical_record_id AND NOT oD.deleted <=> 1 AND NOT m.deleted <=> 1) " +
             "LEFT JOIN ddp_institution inst on (inst.institution_id = m.institution_id) " +
             "LEFT JOIN ddp_participant p on (p.participant_id = inst.participant_id) " +
             "LEFT JOIN ddp_instance realm on (p.ddp_instance_id = realm.ddp_instance_id) " +
@@ -54,7 +54,7 @@ public class OncHistoryDetail {
     public static final String SQL_ORDER_BY = " ORDER BY p.ddp_participant_id, inst.ddp_institution_id, oD.onc_history_detail_id ASC";
     public static final String SQL_SELECT_ONC_HISTORY_LAST_CHANGED = "SELECT oD.last_changed FROM ddp_institution inst " +
             "LEFT JOIN ddp_participant as p on (p.participant_id = inst.participant_id) LEFT JOIN ddp_instance as ddp on (ddp.ddp_instance_id = p.ddp_instance_id) " +
-            "LEFT JOIN ddp_medical_record as m on (m.institution_id = inst.institution_id) LEFT JOIN ddp_onc_history_detail as oD on (m.medical_record_id = oD.medical_record_id) " +
+            "LEFT JOIN ddp_medical_record as m on (m.institution_id = inst.institution_id AND NOT m.deleted <=> 1) LEFT JOIN ddp_onc_history_detail as oD on (m.medical_record_id = oD.medical_record_id) " +
             "WHERE p.participant_id = ?";
 
     public static final String STATUS_REVIEW = "review";
