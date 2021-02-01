@@ -6,6 +6,7 @@ import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitSubKits;
+import org.broadinstitute.dsm.model.ddp.PreferredLanguage;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
@@ -81,7 +82,10 @@ public class DisplaySettingsRoute extends RequestHandler {
                     displaySettings.put("hideMRTissueWorkflow", true);
                 }
                 if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
-                    displaySettings.put("preferredLanguages", DDPRequestUtil.getPreferredLanguages(instance));
+                    List<PreferredLanguage> preferredLanguages = DDPRequestUtil.getPreferredLanguages(instance);
+                    if (preferredLanguages != null) {
+                        displaySettings.put("preferredLanguages", preferredLanguages);
+                    }
                 }
                 Map<Integer, KitRequestSettings> kitRequestSettingsMap = KitRequestSettings.getKitRequestSettings(instance.getDdpInstanceId());
                 if (kitRequestSettingsMap != null) {
