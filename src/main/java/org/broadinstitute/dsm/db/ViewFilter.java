@@ -10,19 +10,17 @@ import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.exception.DuplicateException;
-import org.broadinstitute.dsm.model.*;
+import org.broadinstitute.dsm.model.Filter;
+import org.broadinstitute.dsm.model.NameValue;
+import org.broadinstitute.dsm.model.ParticipantColumn;
+import org.broadinstitute.dsm.model.TissueList;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.PatchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
-import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.sql.Statement;
+import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -572,10 +570,7 @@ public class ViewFilter {
                         case 2:// type is OPTIONS
                             if (word.contains(".")) {
                                 type = Filter.OPTIONS;
-                                String[] names = word.split("\\.");
-                                if (names.length != 2) {
-                                    throw new RuntimeException(word + " cannot be a column name!");
-                                }
+                                String[] names = getColumnTableNames(word);
                                 tableName = names[0];
                                 columnName = names[1];
                                 state = 12;
@@ -728,13 +723,14 @@ public class ViewFilter {
                             }
                             break;
                         case 17:// in additional fields query find the table and the column
-                            String[] names = word.split("\\.");
-                            if (names.length != 2) {
-                                throw new RuntimeException(word + " cannot be a column name!");
+                            if (word.contains(".")) {
+                                String[] names = getColumnTableNames(word);
+                                tableName = names[0];
+                                columnName = names[1];
+                                state = 18;
+
                             }
-                            tableName = names[0];
-                            columnName = names[1];
-                            state = 18;
+
                             break;
                         case 18:
                             if (word.equals(",")) {// need to look for the path in the query since it is a MySQL json query
@@ -785,10 +781,7 @@ public class ViewFilter {
                             }
                             break;
                         case 24:
-                            names = word.split("\\.");
-                            if (names.length != 2) {
-                                throw new RuntimeException(word + " cannot be a column name!");
-                            }
+                            String[] names = getColumnTableNames(word);
                             tableName = names[0];
                             columnName = names[1];
                             state = 1;
@@ -992,6 +985,13 @@ public class ViewFilter {
         return result;
     }
 
+    private static String[] getColumnTableNames(String word) {
+        String[] names = word.split("\\.");
+        if (names.length != 2) {
+            throw new RuntimeException(word + " cannot be a column name!");
+        }
+        return names;
+    }
 
     private static String parseToFrontEndQuery(String str) {
 
