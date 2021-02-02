@@ -37,6 +37,7 @@ import org.broadinstitute.dsm.log.SlackAppender;
 import org.broadinstitute.dsm.model.mbc.MBCHospital;
 import org.broadinstitute.dsm.model.mbc.MBCInstitution;
 import org.broadinstitute.dsm.model.mbc.MBCParticipant;
+import org.broadinstitute.dsm.pubsub.PubSubResultMessageSubscription;
 import org.broadinstitute.dsm.route.*;
 import org.broadinstitute.dsm.security.JWTConverter;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
@@ -45,6 +46,7 @@ import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.*;
 import org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil;
 import org.broadinstitute.dsm.util.triggerListener.*;
+import org.broadinstitute.dsm.websocket.EditParticipantWebSocketHandler;
 import org.jruby.embed.ScriptingContainer;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
@@ -122,6 +124,8 @@ public class DSMServer extends BasicServer {
     public static Provider provider;
     public static final String GCP_PATH_TO_PUBSUB_PROJECT_ID = "pubsub.projectId";
     public static final String GCP_PATH_TO_PUBSUB_SUB = "pubsub.subscription";
+    public static final String GCP_PATH_TO_DSM_TO_DSS_SUB = "pubsub.dsm_to_dss_subscription";
+    public static final String GCP_PATH_TO_DSM_TO_DSS_TOPIC = "pubsub.dsm_to_dss_topic";
 
     private static Map<String, MBCParticipant> mbcParticipants = new HashMap<>();
     private static Map<String, MBCInstitution> mbcInstitutions = new HashMap<>();
@@ -181,13 +185,16 @@ public class DSMServer extends BasicServer {
             bootTimeoutSeconds = config.getInt(ApplicationConfigConstants.BOOT_TIMEOUT);
         }
 
-
         logger.info("Using port {}", port);
         port(port);
 
-        registerAppEngineStartupCallback(bootTimeoutSeconds);
-        setupDB(config);
+        String projectId = config.getString(GCP_PATH_TO_PUBSUB_PROJECT_ID);
+        String dsmToDssTopicId = config.getString(GCP_PATH_TO_DSM_TO_DSS_TOPIC);
+        setupWebSocketRoutes(projectId, dsmToDssTopicId);
 
+        registerAppEngineStartupCallback(bootTimeoutSeconds);
+
+        setupDB(config);
 
         // don't run superclass routing--it won't work with JettyConfig changes for capturing proper IP address in GAE
         setupCustomRouting(config);
@@ -198,13 +205,16 @@ public class DSMServer extends BasicServer {
 
     protected void setupCustomRouting(@NonNull Config cfg) {
         logger.info("Setup DSM custom routes...");
+
+        //setupWebSocketRoutes();
+        //new Thread(this::setupWebSocketRoutes).start();
+
         //BSP route
         String bspSecret = cfg.getString(ApplicationConfigConstants.BSP_SECRET);
 
         if (StringUtils.isBlank(bspSecret)) {
             throw new RuntimeException("No secret supplied for BSP endpoint, system exiting.");
         }
-
         //  capture basic route info for logging
         before("*", new LoggingFilter());
         afterAfter((req, res) -> MDC.clear());
@@ -349,6 +359,7 @@ public class DSMServer extends BasicServer {
     private void setupPubSub(@NonNull Config cfg, NotificationUtil notificationUtil) {
         String projectId = cfg.getString(GCP_PATH_TO_PUBSUB_PROJECT_ID);
         String subscriptionId = cfg.getString(GCP_PATH_TO_PUBSUB_SUB);
+        String dsmToDssSubscriptionId = cfg.getString(GCP_PATH_TO_DSM_TO_DSS_SUB);
 
         logger.info("Setting up pubsub for {}/{}", projectId, subscriptionId);
 
@@ -390,6 +401,14 @@ public class DSMServer extends BasicServer {
         }
         catch (Exception e) {
             throw new RuntimeException("Failed to get results from pubsub ", e);
+        }
+
+        logger.info("Setting up pubsub for {}/{}", projectId, dsmToDssSubscriptionId);
+
+        try {
+            PubSubResultMessageSubscription.dssToDsmSubscriber(projectId, dsmToDssSubscriptionId);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         logger.info("Pubsub setup complete");
@@ -554,6 +573,11 @@ public class DSMServer extends BasicServer {
         get(UI_ROOT + RoutePath.CARRIERS + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM,  new CarrierServiceRoute(), new JsonTransformer());
 
         patch(UI_ROOT + RoutePath.PATCH, new PatchRoute(notificationUtil, patchUtil), new JsonTransformer());
+    }
+
+    private void setupWebSocketRoutes(String projectId, String topicId) {
+        EditParticipantWebSocketHandler editParticipantWebSocketHandler = new EditParticipantWebSocketHandler(projectId, topicId);
+        webSocket(UI_ROOT + RoutePath.EDIT_PARTICIPANT, editParticipantWebSocketHandler);
     }
 
     private void setupJobs(@NonNull Config cfg, @NonNull KitUtil kitUtil,
