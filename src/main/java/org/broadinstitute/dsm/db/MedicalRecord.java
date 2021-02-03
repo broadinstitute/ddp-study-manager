@@ -40,7 +40,7 @@ public class MedicalRecord {
             "LEFT JOIN ddp_medical_record_log log on (rec2.medical_record_id = log.medical_record_id) WHERE rec2.institution_id = inst.institution_id) as reviewMedicalRecord " +
             "FROM ddp_institution inst LEFT JOIN ddp_participant as p on (p.participant_id = inst.participant_id) " +
             "LEFT JOIN ddp_instance as ddp on (ddp.ddp_instance_id = p.ddp_instance_id) LEFT JOIN ddp_medical_record as m on (m.institution_id = inst.institution_id) " +
-            "WHERE ddp.instance_name = ? AND inst.type != 'NOT_SPECIFIED' ";
+            "WHERE ddp.instance_name = ? AND inst.type != 'NOT_SPECIFIED' AND NOT m.deleted <=> 1 ";
     public static final String SQL_SELECT_MEDICAL_RECORD_LAST_CHANGED = "SELECT m.last_changed FROM ddp_institution inst " +
             "LEFT JOIN ddp_participant as p on (p.participant_id = inst.participant_id) LEFT JOIN ddp_instance as ddp on (ddp.ddp_instance_id = p.ddp_instance_id) " +
             "LEFT JOIN ddp_medical_record as m on (m.institution_id = inst.institution_id) WHERE p.participant_id = ?";
