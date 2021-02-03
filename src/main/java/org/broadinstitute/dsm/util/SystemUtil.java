@@ -4,6 +4,7 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
+import spark.Request;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
@@ -11,6 +12,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 
 public class SystemUtil {
 
@@ -175,5 +177,15 @@ public class SystemUtil {
             throw new RuntimeException("JSON exception ", e);
         }
         return mergedJson;
+    }
+
+    public static String getTokenFromUrlIfExists(Request req) {
+        String token = "";
+        Map<String, String[]> urlParameters = req.queryMap().toMap();
+        boolean isTokenExist = urlParameters.containsKey("token");
+        if (isTokenExist) {
+            token = urlParameters.get("token").length > 0 ? urlParameters.get("token")[0] : "";;
+        }
+        return token;
     }
 }
