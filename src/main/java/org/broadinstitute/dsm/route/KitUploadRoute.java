@@ -13,8 +13,8 @@ import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.exception.FileColumnMissing;
-import org.broadinstitute.dsm.exception.UploadLineException;
 import org.broadinstitute.dsm.exception.FileWrongSeparator;
+import org.broadinstitute.dsm.exception.UploadLineException;
 import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -29,7 +29,10 @@ import spark.Request;
 import spark.Response;
 
 import javax.servlet.http.HttpServletRequest;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
@@ -108,7 +111,7 @@ public class KitUploadRoute extends RequestHandler {
                     kitUploadContent = Arrays.asList(new Gson().fromJson(content, KitUploadObject[].class));
                 }
                 else {
-                    kitUploadContent = isFileValid(content);
+                    kitUploadContent = isFileValid(content, realm);
                 }
                 final List<KitRequest> kitUploadObjects = kitUploadContent;
                 if (kitUploadObjects == null || kitUploadObjects.isEmpty()) {
@@ -343,7 +346,7 @@ public class KitUploadRoute extends RequestHandler {
         }
     }
 
-    public List<KitRequest> isFileValid(String fileContent) {
+    public List<KitRequest> isFileValid(String fileContent, String realm) {
         if (fileContent != null) {
             String linebreak = SystemUtil.lineBreak(fileContent);
             String[] rows = fileContent.split(linebreak);
@@ -368,7 +371,9 @@ public class KitUploadRoute extends RequestHandler {
                                     if (StringUtils.isBlank(shortId)) {
                                         shortId = obj.get(PARTICIPANT_ID);
                                     }
-
+                                    if (!userExistsInRealm(shortId, realm, obj.get(PARTICIPANT_ID))) {
+                                        throw new RuntimeException("user " + shortId + " does not belong to this study.");
+                                    }
                                     KitUploadObject object;
                                     if (nameInOneColumn) {
                                         object = new KitUploadObject(null, obj.get(PARTICIPANT_ID), shortId,
@@ -411,6 +416,27 @@ public class KitUploadRoute extends RequestHandler {
             }
         }
         return null;
+    }
+
+    private boolean userExistsInRealm(String shortId, String realm, String ddpParticipantId) {
+        if (StringUtils.isBlank(shortId) && shortId.matches("^[a-zA-Z0-9]*$")) {
+            return false;
+        }
+        Map<String, String> queryConditions = new HashMap<>();
+        queryConditions.put("ES", " AND profile.hruid = '" + shortId + "'");
+        DDPInstance instance = DDPInstance.getDDPInstance(realm);
+        List<ParticipantWrapper> participants = ParticipantWrapper.getFilteredList(instance, queryConditions);
+        if (participants.size() == 1) {
+            ParticipantWrapper participantWrapper = participants.get(0);
+            String participantId = participantWrapper.getParticipant().getParticipantId();
+            if (!ddpParticipantId.equals(participantId)) {
+                return false;
+            }
+        }
+        else {
+            logger.error("Short Id {} doesn't seem to exist in {}", shortId, realm);
+        }
+        return true;
     }
 
     public Map<String, KitRequest> checkAddress(List<KitRequest> kitUploadObjects, String phone) {
