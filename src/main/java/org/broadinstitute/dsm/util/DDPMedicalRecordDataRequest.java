@@ -32,7 +32,7 @@ public class DDPMedicalRecordDataRequest {
     private static final String SQL_SELECT_MEDICAL_RECORD_LOG = "SELECT rec.medical_record_id, log.type, log.date FROM ddp_medical_record rec " +
             "LEFT JOIN ddp_institution inst on (rec.institution_id = inst.institution_id) LEFT JOIN ddp_participant part on (part.participant_id = inst.participant_id) " +
             "LEFT JOIN ddp_medical_record_log log on (log.medical_record_id = rec.medical_record_id) WHERE part.ddp_participant_id = ? AND part.ddp_instance_id = ? " +
-            "AND rec.fax_sent is not null AND (log.type is null OR log.type = ?)";
+            "AND NOT rec.deleted <=> 1 AND rec.fax_sent is not null AND (log.type is null OR log.type = ?)";
     private static final String SQL_SELECT_LOG_FOR_MEDICAL_RECORD = "SELECT rec.medical_record_id, log.type, log.date, rec.fax_sent FROM ddp_medical_record rec " +
             "LEFT JOIN ddp_medical_record_log log on (log.medical_record_id = rec.medical_record_id) WHERE rec.medical_record_id = ? AND rec.fax_sent is not null " +
             "AND (log.type is null OR log.type = ?) ORDER BY medical_record_log_id desc";
