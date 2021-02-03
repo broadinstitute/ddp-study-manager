@@ -188,9 +188,7 @@ public class DSMServer extends BasicServer {
         logger.info("Using port {}", port);
         port(port);
 
-        String projectId = config.getString(GCP_PATH_TO_PUBSUB_PROJECT_ID);
-        String dsmToDssTopicId = config.getString(GCP_PATH_TO_DSM_TO_DSS_TOPIC);
-        setupWebSocketRoutes(projectId, dsmToDssTopicId);
+        setupWebSocketRoutes(config);
 
         registerAppEngineStartupCallback(bootTimeoutSeconds);
 
@@ -575,8 +573,11 @@ public class DSMServer extends BasicServer {
         patch(UI_ROOT + RoutePath.PATCH, new PatchRoute(notificationUtil, patchUtil), new JsonTransformer());
     }
 
-    private void setupWebSocketRoutes(String projectId, String topicId) {
-        EditParticipantWebSocketHandler editParticipantWebSocketHandler = new EditParticipantWebSocketHandler(projectId, topicId);
+    private void setupWebSocketRoutes(Config config) {
+        String projectId = config.getString(GCP_PATH_TO_PUBSUB_PROJECT_ID);
+        String dsmToDssTopicId = config.getString(GCP_PATH_TO_DSM_TO_DSS_TOPIC);
+
+        EditParticipantWebSocketHandler editParticipantWebSocketHandler = new EditParticipantWebSocketHandler(projectId, dsmToDssTopicId);
         webSocket(UI_ROOT + RoutePath.EDIT_PARTICIPANT, editParticipantWebSocketHandler);
     }
 

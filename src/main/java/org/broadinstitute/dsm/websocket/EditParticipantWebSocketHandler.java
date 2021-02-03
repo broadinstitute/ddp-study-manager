@@ -1,5 +1,7 @@
 package org.broadinstitute.dsm.websocket;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.broadinstitute.dsm.pubsub.EditParticipantMessagePublisher;
 import org.eclipse.jetty.websocket.api.*;
 import org.eclipse.jetty.websocket.api.annotations.*;
@@ -18,9 +20,7 @@ public class EditParticipantWebSocketHandler {
     private String projectId;
     private String topicId;
 
-    // Store sessions if you want to, for example, broadcast a message to all users
-    private static final Queue<Session> sessions = new ConcurrentLinkedQueue<>();
-    public static final Map<String, Session> sessionHashMap = new ConcurrentHashMap<>();
+    private static final Map<String, Session> sessionHashMap = new ConcurrentHashMap<>();
 
     public EditParticipantWebSocketHandler(String projectId, String topicId) {
         this.projectId = projectId;
@@ -29,23 +29,44 @@ public class EditParticipantWebSocketHandler {
 
     @OnWebSocketConnect
     public void connected(Session session) {
-        sessions.add(session);
+        String userId = getUserId(session);
+        sessionHashMap.put(userId, session);
     }
+
 
     @OnWebSocketClose
     public void closed(Session session, int statusCode, String reason) {
-        sessions.remove(session);
+        String userId = getUserId(session);
+        sessionHashMap.remove(userId);
     }
 
     @OnWebSocketMessage
     public void message(Session session, String message) throws IOException {
         logger.info("Got: " + message);   // Print message
+        JsonObject messageJsonObject = new Gson().fromJson(message, JsonObject.class);
+        messageJsonObject.addProperty("type", "UPDATE_PROFILE");
+        messageJsonObject.addProperty("userId", getUserId(session));
+        String updatedMessage = messageJsonObject.getAsString();
         try {
-            EditParticipantMessagePublisher.publishMessage(message, projectId, topicId);
+            EditParticipantMessagePublisher.publishMessage(updatedMessage, projectId, topicId);
         } catch (Exception e) {
             e.printStackTrace();
         }
         //session.getRemote().sendString(message); // and send it back
     }
 
+    public static Map<String, Session> getSessionHashMap() {
+        return sessionHashMap;
+    }
+
+    private static String getUserId(Session session) {
+        String access_token = session.getUpgradeRequest().getParameterMap().get("access_token").get(0);
+        Base64.Decoder decoder = Base64.getUrlDecoder();
+        String[] parts = access_token.split("\\."); // split out the "parts" (header, payload and signature)
+        String payloadJson = new String(decoder.decode(parts[1]));
+        Gson gson = new Gson(); // Or use new GsonBuilder().create();
+        JsonObject target = gson.fromJson(payloadJson, JsonObject.class);
+        return target.get("USER_ID").getAsString();
+    }
 }
+
