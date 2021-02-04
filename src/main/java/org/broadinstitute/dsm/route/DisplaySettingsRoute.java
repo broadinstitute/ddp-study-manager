@@ -6,6 +6,7 @@ import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitSubKits;
+import org.broadinstitute.dsm.model.ddp.PreferredLanguage;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
@@ -87,7 +88,10 @@ public class DisplaySettingsRoute extends RequestHandler {
                     displaySettings.put("hasProxyData", true);
                 }
                 if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
-                    displaySettings.put("preferredLanguages", DDPRequestUtil.getPreferredLanguages(instance));
+                    List<PreferredLanguage> preferredLanguages = DDPRequestUtil.getPreferredLanguages(instance);
+                    if (preferredLanguages != null) {
+                        displaySettings.put("preferredLanguages", preferredLanguages);
+                    }
                 }
                 if (DDPInstance.getRole(instance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
                     Map<Integer, KitRequestSettings> kitRequestSettingsMap = KitRequestSettings.getKitRequestSettings(instance.getDdpInstanceId());

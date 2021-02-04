@@ -10,18 +10,17 @@ import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.exception.DuplicateException;
-import org.broadinstitute.dsm.model.*;
+import org.broadinstitute.dsm.model.Filter;
+import org.broadinstitute.dsm.model.NameValue;
+import org.broadinstitute.dsm.model.ParticipantColumn;
+import org.broadinstitute.dsm.model.TissueList;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.PatchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.sql.Statement;
+import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -511,6 +510,12 @@ public class ViewFilter {
                                 state = 24;
                                 break;
                             }
+                            else if (word.equals(Filter.JSON_CONTAINS)) {// type is JSONARRAY
+                                type = Filter.JSON_ARRAY;
+                                range = false;
+                                state = 27;
+                            }
+
                             else {// beginning of other types of query
                                 tableName = word.substring(0, word.indexOf(Filter.DB_NAME_DELIMITER));
                                 columnName = word.substring(word.indexOf(Filter.DB_NAME_DELIMITER) + 1);
@@ -555,17 +560,21 @@ public class ViewFilter {
                                 state = 8;
                                 break;
                             }
+                            else if (word.equals("->")) {
+                                type = Filter.JSON_ARRAY;
+                                range = false;
+                                state = 38;
+                            }
                             break;
 
                         case 2:// type is OPTIONS
-                            type = Filter.OPTIONS;
-                            String[] names = word.split("\\.");
-                            if (names.length != 2) {
-                                throw new RuntimeException(word + " cannot be a column name!");
+                            if (word.contains(".")) {
+                                type = Filter.OPTIONS;
+                                String[] names = getColumnTableNames(word);
+                                tableName = names[0];
+                                columnName = names[1];
+                                state = 12;
                             }
-                            tableName = names[0];
-                            columnName = names[1];
-                            state = 12;
                             break;
 
                         case 3: // exact matching value
@@ -714,13 +723,14 @@ public class ViewFilter {
                             }
                             break;
                         case 17:// in additional fields query find the table and the column
-                            names = word.split("\\.");
-                            if (names.length != 2) {
-                                throw new RuntimeException(word + " cannot be a column name!");
+                            if (word.contains(".")) {
+                                String[] names = getColumnTableNames(word);
+                                tableName = names[0];
+                                columnName = names[1];
+                                state = 18;
+
                             }
-                            tableName = names[0];
-                            columnName = names[1];
-                            state = 18;
+
                             break;
                         case 18:
                             if (word.equals(",")) {// need to look for the path in the query since it is a MySQL json query
@@ -771,10 +781,7 @@ public class ViewFilter {
                             }
                             break;
                         case 24:
-                            names = word.split("\\.");
-                            if (names.length != 2) {
-                                throw new RuntimeException(word + " cannot be a column name!");
-                            }
+                            String[] names = getColumnTableNames(word);
                             tableName = names[0];
                             columnName = names[1];
                             state = 1;
@@ -791,10 +798,92 @@ public class ViewFilter {
                                 break;
                             }
                             break;
+                        case 27:
+                            if (word.equals(Filter.OPEN_PARENTHESIS)) {
+                                state = 28;
+                            }
+                            break;
+                        case 28:
+                            tableName = word.substring(0, word.indexOf(Filter.DB_NAME_DELIMITER));
+                            columnName = word.substring(word.indexOf(Filter.DB_NAME_DELIMITER) + 1);
+                            state = 29;
+                            break;
+                        case 29:
+                            if (word.equals(",")) {
+                                state = 30;
+                            }
+                            break;
+                        case 30:
+                            if (word.equals(Filter.JSON_OBJECT)) {
+                                state = 31;
+                            }
+                            break;
+                        case 31:
+                            if (word.equals(Filter.OPEN_PARENTHESIS)) {
+                                state = 32;
+                            }
+                            break;
+                        case 32:
+                            //todo set  filter2 name
+                            first = word.indexOf(Filter.SINGLE_QUOTE);
+                            last = word.lastIndexOf(Filter.SINGLE_QUOTE);
+                            if (first != -1) {
+                                word = word.substring(first + 1, last);
+                            }
+                            path = word;
+                            state = 33;
+                            exact = true;
+                            empty = false;
+                            notEmpty = false;
+                            break;
+                        case 33:
+                            if (word.equals(",")) {
+                                state = 34;
+                            }
+                            break;
+                        case 34:
+                            first = word.indexOf(Filter.SINGLE_QUOTE);
+                            last = word.lastIndexOf(Filter.SINGLE_QUOTE);
+                            if (first != -1) {
+                                word = word.substring(first + 1, last);
+                            }
+                            value = word;
+                            state = 35;
+                            break;
+                        case 35:
+                            if (word.equals(Filter.CLOSE_PARENTHESIS)) {
+                                state = 36;
+                            }
+                            break;
+                        case 36:
+                            if (word.equals(Filter.CLOSE_PARENTHESIS)) {
+                                state = 37;
+                            }
+                            break;
+                        case 37://termination state
+                            break;
+                        case 38:
+                            if (word.contains("'$[*].")) {
+                                path = word.substring("'$[*].".length());
+                                if (StringUtils.isNotBlank(path)) {
+                                    path = path.substring(0, path.length() - 1);
+                                }
+                            }
+                            exact = false;
+                            empty = false;
+                            notEmpty = false;
+                            state = 39;
+                            break;
+                        case 39:
+                            if (word.toUpperCase().equals(Filter.LIKE.trim())) {
+                                state = 8;
+                            }
+                            break;
+
                     }
                 }
             }
-            if (state != 7 && state != 9 && state != 10 && state != 11 && state != 13 && state != 22 && state != 25) {// terminal states
+            if (state != 7 && state != 9 && state != 10 && state != 11 && state != 13 && state != 22 && state != 25 && state != 37) {// terminal states
                 throw new RuntimeException("Query parsing ended in bad state: " + state);
             }
             String columnKey = columnName;
@@ -808,18 +897,28 @@ public class ViewFilter {
                 if (filter == null) {
                     throw new RuntimeException("Bad columnName! " + columnName);
                 }
-                filter.range = true;
-                if (StringUtils.isNotBlank(value)) {
-                    if (f1) {
-                        filter.filter1 = new NameValue(columnName, value);
-                    }
-                    else {
-                        filter.filter2 = new NameValue(columnName, value);
-                    }
+                if (Filter.JSON_ARRAY.equals(type)) {
+                    filter.type = type;
+                    filter.filter1 = new NameValue(columnName, value);
+                    filter.filter2 = new NameValue(path, null);
+                    filter.participantColumn = new ParticipantColumn(path, tableName);
                 }
-                filter.notEmpty = notEmpty;
-                filter.empty = empty;
-                filters.put(columnName, filter);
+                else {
+                    if (range) {
+                        filter.range = true;
+                    }
+                    if (StringUtils.isNotBlank(value)) {
+                        if (f1) {
+                            filter.filter1 = new NameValue(columnName, value);
+                        }
+                        else {
+                            filter.filter2 = new NameValue(columnName, value);
+                        }
+                    }
+                    filter.notEmpty = notEmpty;
+                    filter.empty = empty;
+                    filters.put(columnName, filter);
+                }
             }
             else {
                 Filter filter = new Filter();
@@ -828,11 +927,18 @@ public class ViewFilter {
                 filter.notEmpty = notEmpty;
                 filter.empty = empty;
                 filter.participantColumn = new ParticipantColumn(columnName, tableName);
+                if (StringUtils.isNotBlank(type) && type.equals(Filter.JSON_ARRAY) && StringUtils.isNotBlank(path)) {
+                    filter.participantColumn = new ParticipantColumn(path, tableName);
+                }
                 String[] b = new String[selectedOptions.size()];
                 filter.selectedOptions = selectedOptions.toArray(b);
                 filter.type = type == null ? Filter.TEXT : type;
                 if (isValidDate(value, false)) {
                     type = Filter.DATE;
+                }
+                if (Filter.JSON_ARRAY.equals(filter.type)) {
+                    filter.filter1 = new NameValue(columnName, value);
+                    filter.filter2 = new NameValue(path, null);
                 }
                 if (Filter.ADDITIONAL_VALUES.equals(filter.type)) {
                     filter.participantColumn = new ParticipantColumn(path, tableName);
@@ -879,6 +985,13 @@ public class ViewFilter {
         return result;
     }
 
+    private static String[] getColumnTableNames(String word) {
+        String[] names = word.split("\\.");
+        if (names.length != 2) {
+            throw new RuntimeException(word + " cannot be a column name!");
+        }
+        return names;
+    }
 
     private static String parseToFrontEndQuery(String str) {
 
