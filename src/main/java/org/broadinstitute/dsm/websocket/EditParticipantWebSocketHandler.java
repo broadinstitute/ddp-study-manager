@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import org.broadinstitute.dsm.pubsub.EditParticipantMessagePublisher;
 import org.eclipse.jetty.websocket.api.*;
 import org.eclipse.jetty.websocket.api.annotations.*;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

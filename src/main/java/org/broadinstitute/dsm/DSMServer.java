@@ -25,7 +25,6 @@ import org.apache.http.HttpStatus;
 import org.broadinstitute.ddp.BasicServer;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.security.Auth0Util;
-import org.broadinstitute.ddp.security.CookieUtil;
 import org.broadinstitute.ddp.util.BasicTriggerListener;
 import org.broadinstitute.ddp.util.JsonTransformer;
 import org.broadinstitute.ddp.util.Utility;
@@ -66,6 +65,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +85,7 @@ public class DSMServer extends BasicServer {
 
     private static final String API_ROOT = "/ddp/";
     private static final String UI_ROOT = "/ui/";
+    private static final String WEBSOCKET_ROOT = "/ui/websocket/";
 
     private static final String[] CORS_HTTP_METHODS = new String[] { "GET", "PUT", "POST", "OPTIONS", "PATCH" };
     private static final String[] CORS_HTTP_HEADERS = new String[] { "Content-Type", "Authorization", "X-Requested-With",
@@ -283,13 +284,16 @@ public class DSMServer extends BasicServer {
         before(UI_ROOT + "*", (req, res) -> {
             if (!"OPTIONS".equals(req.requestMethod())) {
                 if (!req.pathInfo().contains(RoutePath.AUTHENTICATION_REQUEST)) {
-                    String tokenFromHeader = Utility.getTokenFromHeader(req);
-
+                    String tokenFromRequest;
+                    boolean isWebSocketRequest = Arrays.asList(req.pathInfo().split("/")).contains("websocket");
+                    if (isWebSocketRequest) {
+                        tokenFromRequest = SystemUtil.getTokenFromUrlIfExists(req);
+                    } else {
+                        tokenFromRequest = Utility.getTokenFromHeader(req);
+                    }
                     boolean isTokenValid = false;
-                    if (StringUtils.isNotBlank(tokenFromHeader)) {
-                        isTokenValid = new CookieUtil().isCookieValid(req.cookie(cookieName), cookieSalt.getBytes(), tokenFromHeader, jwtSecret);
-                        isTokenValid = new JWTRouteFilter(jwtSecret, null).isAccessAllowed(req);
-
+                    if (StringUtils.isNotBlank(tokenFromRequest)) {
+                        isTokenValid = new JWTRouteFilter(jwtSecret, null).isAccessAllowed(tokenFromRequest);
                     }
                     if (!isTokenValid) {
                         halt(401, SecurityUtil.ResultType.AUTHENTICATION_ERROR.toString());
@@ -578,7 +582,7 @@ public class DSMServer extends BasicServer {
         String dsmToDssTopicId = config.getString(GCP_PATH_TO_DSM_TO_DSS_TOPIC);
 
         EditParticipantWebSocketHandler editParticipantWebSocketHandler = new EditParticipantWebSocketHandler(projectId, dsmToDssTopicId);
-        webSocket(UI_ROOT + RoutePath.EDIT_PARTICIPANT, editParticipantWebSocketHandler);
+        webSocket(WEBSOCKET_ROOT + RoutePath.EDIT_PARTICIPANT, editParticipantWebSocketHandler);
     }
 
     private void setupJobs(@NonNull Config cfg, @NonNull KitUtil kitUtil,
