@@ -205,9 +205,6 @@ public class DSMServer extends BasicServer {
     protected void setupCustomRouting(@NonNull Config cfg) {
         logger.info("Setup DSM custom routes...");
 
-        //setupWebSocketRoutes();
-        //new Thread(this::setupWebSocketRoutes).start();
-
         //BSP route
         String bspSecret = cfg.getString(ApplicationConfigConstants.BSP_SECRET);
 
@@ -278,7 +275,6 @@ public class DSMServer extends BasicServer {
         });
 
         get("/info/" + RoutePath.PARTICIPANT_STATUS_REQUEST, new ParticipantStatusRoute(), new JsonNullTransformer());
-
 
         // requests from frontend
         before(UI_ROOT + "*", (req, res) -> {
