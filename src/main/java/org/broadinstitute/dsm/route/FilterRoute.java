@@ -341,7 +341,7 @@ public class FilterRoute extends RequestHandler {
         return getListBasedOnFilterName(filterName, instance.getName(), TISSUE_LIST_PARENT, queryString, queryConditions);
     }
 
-    public static List<?> getListBasedOnFilterName(String filterName, String realm, String parent, String queryString, Map<String, String> filters) {
+    public static List<?>   getListBasedOnFilterName(String filterName, String realm, String parent, String queryString, Map<String, String> filters) {
         if (TISSUE_LIST_PARENT.equals(parent)) {
             DDPInstance instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.MEDICAL_RECORD_ACTIVATED);
             String subQueryForFiltering = "";

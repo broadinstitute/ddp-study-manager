@@ -27,9 +27,9 @@ public class MedicalRecordUtil {
     private static final String SQL_SELECT_PARTICIPANT_EXISTS = "SELECT count(ddp_participant_id) as participantCount FROM ddp_participant WHERE ddp_participant_id = ? AND ddp_instance_id = ?";
     private static final String SQL_SELECT_PARTICIPANT_LAST_VERSION = "SELECT last_version FROM ddp_participant WHERE ddp_participant_id = ? AND ddp_instance_id = ?";
     private static final String SQL_SELECT_MEDICAL_RECORD_ID_FOR_PARTICIPANT = "SELECT rec.medical_record_id FROM ddp_institution inst, ddp_participant part, ddp_medical_record rec " +
-            "WHERE part.participant_id = inst.participant_id AND rec.institution_id = inst.institution_id AND part.ddp_participant_id = ? AND inst.ddp_institution_id = ? AND part.ddp_instance_id = ? AND inst.type = ?";
+            "WHERE part.participant_id = inst.participant_id AND rec.institution_id = inst.institution_id AND NOT rec.deleted <=> 1 AND part.ddp_participant_id = ? AND inst.ddp_institution_id = ? AND part.ddp_instance_id = ? AND inst.type = ?";
     private static final String SQL_SELECT_MEDICAL_RECORD_ID_AND_TYPE_FOR_PARTICIPANT = "SELECT rec.medical_record_id, inst.type FROM ddp_institution inst, ddp_participant part, ddp_medical_record rec " +
-            "WHERE part.participant_id = inst.participant_id AND rec.institution_id = inst.institution_id AND part.participant_id = ? AND inst.type = ?";
+            "WHERE part.participant_id = inst.participant_id AND rec.institution_id = inst.institution_id AND NOT rec.deleted <=> 1 AND part.participant_id = ? AND inst.type = ?";
 
     public static final String SYSTEM = "SYSTEM";
     public static final String NOT_SPECIFIED = "NOT_SPECIFIED";

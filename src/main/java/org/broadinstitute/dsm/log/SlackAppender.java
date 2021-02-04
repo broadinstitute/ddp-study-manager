@@ -2,7 +2,6 @@ package org.broadinstitute.dsm.log;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -13,14 +12,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
 import org.apache.http.HttpHeaders;
 import org.apache.http.entity.ContentType;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
 import org.broadinstitute.ddp.util.Utility;
-import org.broadinstitute.dsm.DSMServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,12 +48,16 @@ public class SlackAppender extends AppenderSkeleton {
                 boolean jobError = schedulerName != null && event.getThreadName().contains(schedulerName);
                 long currentEpoch = Utility.getCurrentEpoch();
                 if (jobError && currentEpoch >= minEpochForNextJobError.get()) {
-                    this.sendSlackNotification(currentEpoch, String.format("This looks like a job error. Job error reporting is " +
-                            "throttled so you will only see 1 per %s minutes.", JOB_DELAY), MSG_TYPE_JOB_ERROR);
+                    this.sendSlackNotification(currentEpoch, String.format(
+                            "%s \n" +
+                            "This looks like a job error. Job error reporting is " +
+                            "throttled so you will only see 1 per %s minutes.", getErrorMessageAndLocation(event), JOB_DELAY));
                     minEpochForNextJobError.set(currentEpoch + JOB_DELAY * 60L);
                 } else if (!jobError && currentEpoch >= minEpochForNextError.get()) {
-                    this.sendSlackNotification(currentEpoch, String.format("This does NOT look like a job error. " +
-                            "Non-job error reporting is throttled so you will only see 1 per %s minutes.", NON_JOB_DELAY), MSG_TYPE_ERROR);
+                    this.sendSlackNotification(currentEpoch, String.format(
+                            "%s \n" +
+                            "This does NOT look like a job error. " +
+                            "Non-job error reporting is throttled so you will only see 1 per %s minutes.", getErrorMessageAndLocation(event), NON_JOB_DELAY));
                     minEpochForNextError.set(currentEpoch + NON_JOB_DELAY * 60L);
                 }
             } catch (Exception e) {
@@ -65,8 +66,19 @@ public class SlackAppender extends AppenderSkeleton {
         }
     }
 
-    private void sendSlackNotification(long currentEpoch, String note, String messageType) {
-        SlackMessagePayload payload = getSlackMessagePayload(currentEpoch, note, messageType);
+    String getErrorMessageAndLocation(LoggingEvent event) {
+        StringBuilder errorCauseAndPlace = new StringBuilder();
+        Throwable error = event.getThrowableInformation().getThrowable();
+        errorCauseAndPlace
+                .append(error.getMessage())
+                .append("\n")
+                .append(error.getStackTrace().length > 0 ? error.getStackTrace()[0].toString() : "")
+                .append("\n");
+        return errorCauseAndPlace.toString();
+    }
+
+    private void sendSlackNotification(long currentEpoch, String note) {
+        SlackMessagePayload payload = getSlackMessagePayload(currentEpoch, note);
         HttpRequest httpRequest = HttpRequest.newBuilder()
                 .uri(slackHookUrl)
                 .POST(HttpRequest.BodyPublishers.ofString(new Gson().toJson(payload)))
@@ -84,12 +96,12 @@ public class SlackAppender extends AppenderSkeleton {
         }
     }
 
-    public SlackMessagePayload getSlackMessagePayload(long currentEpoch, String note, String messageType) {
+    public SlackMessagePayload getSlackMessagePayload(long currentEpoch, String note) {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String date = formatter.format(new Date(currentEpoch * 1000L));
         SlackMessagePayload payload = new SlackMessagePayload(String.format("An error has been detected for *%s*." +
-                " Please go check the backend logs around *%s UTC*. \n" + "%s \n %s",
-                appEnv, date, messageType, note), slackChannel, "Study-Manager", ":nerd_face:");
+                " Please go check the backend logs around *%s UTC*. \n" + "\n %s"
+                ,appEnv, date, note), slackChannel, "Study-Manager", ":nerd_face:");
         return payload;
     }
 
