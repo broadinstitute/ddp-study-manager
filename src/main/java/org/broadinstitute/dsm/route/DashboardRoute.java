@@ -216,10 +216,9 @@ public class DashboardRoute extends RequestHandler {
         Map<String, List<KitRequestShipping>> kitRequests = KitRequestShipping.getAllKitRequestsByRealm(realm, null, null, true);
         Map<String, List<AbstractionActivity>> abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(realm);
         Map<String, List<AbstractionGroup>> abstractionSummary = AbstractionFinal.getAbstractionFinal(realm);
-        Map<String, List<ParticipantData>> participantData = ParticipantData.getParticipantData(realm);
 
         List<ParticipantWrapper> participantWrapperList = ParticipantWrapper.addAllData(new ArrayList<>(participantESData.keySet()), participantESData,
-                participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, null, participantData);
+                participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, null, null);
 
         Map<String, Integer> dashboardValues = new HashMap(); //counts only pt
         Map<String, Integer> dashboardValuesDetailed = new HashMap(); //counts number of institutions in total

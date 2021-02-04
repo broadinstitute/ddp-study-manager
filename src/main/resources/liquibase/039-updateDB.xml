@@ -19,6 +19,11 @@
         </addColumn>
     </changeSet>
 
+    <changeSet author="simone" id="fieldSettingSize">
+        <modifyDataType columnName="column_name" newDataType="VARCHAR(100)" tableName="field_settings"/>
+        <modifyDataType columnName="column_display" newDataType="VARCHAR(500)" tableName="field_settings"/>
+    </changeSet>
+
     <changeSet id="dynamicFormsData" author="simone">
         <createTable tableName="ddp_participant_data">
             <column autoIncrement="true" name="participant_data_id" type="INT">
@@ -49,7 +54,7 @@
         </addColumn>
     </changeSet>
 
-    <changeSet author="simone" id="test1">
+    <changeSet author="simone" id="atForm">
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
@@ -128,8 +133,7 @@
             <column name="column_name" value="GENOME_STUDY_HAS_SIBLING"/>
             <column name="column_display" value="Does participant have a sibling in the study?"/>
             <column name="display_type" value="RADIO"/>
-            <!--TODO double check possible values-->
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;No&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
             <column name="order_number" value="2"/>
         </insert>
         <insert tableName="field_settings">
@@ -249,8 +253,7 @@
             <column name="column_name" value="HAS_UPDATED_MEDICAL_HISTORY"/>
             <column name="column_display" value="Has updated medical history?"/>
             <column name="display_type" value="RADIO"/>
-            <!--TODO double check possible values-->
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;No&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
             <column name="order_number" value="3"/>
         </insert>
         <insert tableName="field_settings">

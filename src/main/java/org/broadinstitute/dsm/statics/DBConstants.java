@@ -295,6 +295,7 @@ public class DBConstants {
     public static final String IN_DDP = "in_ddp";
     public static final String FIELD_TYPE_ID = "field_type_id";
     public static final String DATA = "data";
+    public static final String PARTICIPANT_DATA_ID = "participant_data_id";
 
     //user settings
     public static final String ROWS_ON_PAGE = "rows_on_page";
