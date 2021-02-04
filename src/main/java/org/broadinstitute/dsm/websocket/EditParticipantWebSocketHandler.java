@@ -45,15 +45,28 @@ public class EditParticipantWebSocketHandler {
     public void message(Session session, String message) throws IOException {
         logger.info("Got: " + message);   // Print message
         JsonObject messageJsonObject = new Gson().fromJson(message, JsonObject.class);
-        messageJsonObject.addProperty("type", "UPDATE_PROFILE");
-        messageJsonObject.addProperty("userId", getUserId(session));
-        String updatedMessage = messageJsonObject.getAsString();
+
+        String data = messageJsonObject.get("data").toString();
+
+        Map<String, String> attributeMap = getStringStringMap(session, messageJsonObject);
+
         try {
-            EditParticipantMessagePublisher.publishMessage(updatedMessage, projectId, topicId);
+            EditParticipantMessagePublisher.publishMessage(data, attributeMap, projectId, topicId);
         } catch (Exception e) {
             e.printStackTrace();
         }
         //session.getRemote().sendString(message); // and send it back
+    }
+
+    public Map<String, String> getStringStringMap(Session session, JsonObject messageJsonObject) {
+        String participantGuid = messageJsonObject.get("participantGuid").getAsString();
+        String studyGuid = messageJsonObject.get("studyGuid").getAsString();
+        Map<String, String> attributeMap = new HashMap<>();
+        attributeMap.put("type", "UPDATE_PROFILE");
+        attributeMap.put("userId", getUserId(session));
+        attributeMap.put("participantGuid", participantGuid);
+        attributeMap.put("studyGuid", studyGuid);
+        return attributeMap;
     }
 
     public static Map<String, Session> getSessionHashMap() {
@@ -61,7 +74,7 @@ public class EditParticipantWebSocketHandler {
     }
 
     private static String getUserId(Session session) {
-        String access_token = session.getUpgradeRequest().getParameterMap().get("access_token").get(0);
+        String access_token = session.getUpgradeRequest().getParameterMap().get("token").get(0);
         Base64.Decoder decoder = Base64.getUrlDecoder();
         String[] parts = access_token.split("\\."); // split out the "parts" (header, payload and signature)
         String payloadJson = new String(decoder.decode(parts[1]));

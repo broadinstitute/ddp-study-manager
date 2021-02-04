@@ -6,6 +6,9 @@ import com.google.api.core.ApiFutures;
 import com.google.api.gax.rpc.ApiException;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.TopicName;
@@ -13,18 +16,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class EditParticipantMessagePublisher {
 
     private static final Logger logger = LoggerFactory.getLogger(EditParticipantMessagePublisher.class);
 
-    public static void publishMessage(String message, String projectId, String topicId) throws Exception {
+    public static void publishMessage(String data, Map<String, String> attributeMap, String projectId, String topicId) throws Exception {
         logger.info("Publishing message to dsm");
-        publishWithErrorHandler(projectId, topicId, message);
+        publishWithErrorHandler(projectId, topicId, data, attributeMap);
     }
 
-    public static void publishWithErrorHandler(String projectId, String topicId, String message)
+    public static void publishWithErrorHandler(String projectId, String topicId, String messageData, Map<String, String> attributeMap)
             throws IOException, InterruptedException {
         TopicName topicName = TopicName.of(projectId, topicId);
         Publisher publisher = null;
@@ -33,8 +37,11 @@ public class EditParticipantMessagePublisher {
             // Create a publisher instance with default settings bound to the topic
             publisher = Publisher.newBuilder(topicName).build();
 
-            ByteString data = ByteString.copyFromUtf8(message);
-            PubsubMessage pubsubMessage = PubsubMessage.newBuilder().setData(data).build();
+            ByteString data = ByteString.copyFromUtf8(messageData);
+            PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
+                    .setData(data)
+                    .putAllAttributes(attributeMap)
+                    .build();
 
             // Once published, returns a server-assigned message id (unique within the topic)
             ApiFuture<String> future = publisher.publish(pubsubMessage);
@@ -52,7 +59,7 @@ public class EditParticipantMessagePublisher {
                             logger.info(String.valueOf(apiException.getStatusCode().getCode()));
                             logger.info(String.valueOf(apiException.isRetryable()));
                         }
-                        logger.info("Error publishing message : " + message);
+                        logger.info("Error publishing message");
                     }
 
                     @Override

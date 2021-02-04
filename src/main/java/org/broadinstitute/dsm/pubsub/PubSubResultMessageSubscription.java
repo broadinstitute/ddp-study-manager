@@ -1,6 +1,8 @@
 package org.broadinstitute.dsm.pubsub;
 
 import com.google.api.gax.batching.FlowControlSettings;
+import com.google.api.gax.core.ExecutorProvider;
+import com.google.api.gax.core.InstantiatingExecutorProvider;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Subscriber;
@@ -14,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -27,8 +30,6 @@ public class PubSubResultMessageSubscription {
 
     public static void subscribeWithFlowControlSettings (
             String projectId, String subscriptionId) {
-        ProjectSubscriptionName subscriptionName =
-                ProjectSubscriptionName.of(projectId, subscriptionId);
 
         // Instantiate an asynchronous message receiver.
         MessageReceiver receiver =
@@ -36,8 +37,12 @@ public class PubSubResultMessageSubscription {
                     // Handle incoming message, then ack the received message.
                     logger.info("Id: " + pubsubMessage.getMessageId());
                     logger.info("Data: " + pubsubMessage.getData().toStringUtf8());
-                    String message = pubsubMessage.getData().toStringUtf8();
-                    String userId = new Gson().fromJson(message, JsonObject.class).get("userId").getAsString();
+                    String message = transformMessage(pubsubMessage);
+                    JsonObject jsonObject = new Gson().fromJson(message, JsonObject.class);
+                    String userId = null;
+                    if (jsonObject.has("userId")) {
+                        userId = jsonObject.get("userId").getAsString();
+                    }
 
                     try {
                         Session session = EditParticipantWebSocketHandler.getSessionHashMap().get(userId);
@@ -51,7 +56,7 @@ public class PubSubResultMessageSubscription {
                     consumer.ack();
                 };
 
-        Subscriber subscriber = null;
+        //Subscriber subscriber = null;
 
         // The subscriber will pause the message stream and stop receiving more messsages from the
         // server if any one of the conditions is met.
@@ -65,19 +70,31 @@ public class PubSubResultMessageSubscription {
                         .setMaxOutstandingRequestBytes(100L * 1024L * 1024L)
                         .build();
 
+        Subscriber subscriber = null;
+        ProjectSubscriptionName resultSubName = ProjectSubscriptionName.of(projectId, subscriptionId);
+        ExecutorProvider resultsSubExecProvider = InstantiatingExecutorProvider.newBuilder().setExecutorThreadCount(1).build();
+        subscriber = Subscriber.newBuilder(resultSubName, receiver)
+                .setParallelPullCount(1)
+                .setExecutorProvider(resultsSubExecProvider)
+                .setMaxAckExtensionPeriod(org.threeten.bp.Duration.ofSeconds(120))
+                .setFlowControlSettings(flowControlSettings)
+                .build();
         try {
-            subscriber =
-                    Subscriber.newBuilder(subscriptionName, receiver)
-                            .setFlowControlSettings(flowControlSettings)
-                            .build();
-
-            // Start the subscriber.
-            subscriber.startAsync().awaitRunning();
-            // Allow the subscriber to run for 30s unless an unrecoverable error occurs.
-            subscriber.awaitTerminated(30, TimeUnit.SECONDS);
-        } catch (TimeoutException timeoutException) {
-            // Shut down the subscriber after 30s. Stop receiving messages.
-            subscriber.stopAsync();
+            subscriber.startAsync().awaitRunning(1L, TimeUnit.MINUTES);
+            logger.info("Started pubsub subscription receiver for {}", subscriptionId);
         }
+        catch (TimeoutException e) {
+            throw new RuntimeException("Timed out while starting pubsub subscription " + subscriptionId, e);
+        }
+
+    }
+
+    public static String transformMessage(PubsubMessage pubsubMessage) {
+        String message = pubsubMessage.getData().toStringUtf8();
+        JsonObject myMessage = new Gson().fromJson(message, JsonObject.class);
+        Map<String, String> attributesMap = pubsubMessage.getAttributesMap();
+        attributesMap.forEach(myMessage::addProperty);
+        message = myMessage.toString();
+        return message;
     }
 }

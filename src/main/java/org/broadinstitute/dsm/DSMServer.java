@@ -125,7 +125,7 @@ public class DSMServer extends BasicServer {
     public static Provider provider;
     public static final String GCP_PATH_TO_PUBSUB_PROJECT_ID = "pubsub.projectId";
     public static final String GCP_PATH_TO_PUBSUB_SUB = "pubsub.subscription";
-    public static final String GCP_PATH_TO_DSM_TO_DSS_SUB = "pubsub.dsm_to_dss_subscription";
+    public static final String GCP_PATH_TO_DSM_TO_DSS_SUB = "pubsub.dss_to_dsm_subscription";
     public static final String GCP_PATH_TO_DSM_TO_DSS_TOPIC = "pubsub.dsm_to_dss_topic";
 
     private static Map<String, MBCParticipant> mbcParticipants = new HashMap<>();
