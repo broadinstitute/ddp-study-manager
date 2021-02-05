@@ -24,12 +24,12 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 @Data
 public class FieldSettings {
     public static final String GET_FIELD_SETTINGS = "SELECT setting.field_settings_id, setting.column_name, " +
-            "setting.column_display, setting.field_type, setting.display_type, setting.possible_values, setting.order_number FROM field_settings setting, ddp_instance realm WHERE " +
+            "setting.column_display, setting.field_type, setting.display_type, setting.possible_values, setting.order_number, actions FROM field_settings setting, ddp_instance realm WHERE " +
             "realm.ddp_instance_id = setting.ddp_instance_id AND NOT (setting.deleted <=>1) AND realm.instance_name=? ORDER BY order_number asc";
     public static final String UPDATE_FIELD_SETTINGS_TABLE = "UPDATE field_settings SET column_name = ?, " +
-            "column_display = ?, deleted = ?, field_type = ?, display_type = ?, possible_values = ?, order_number = ?, changed_by = ?, last_changed = ? WHERE field_settings_id = ?";
+            "column_display = ?, deleted = ?, field_type = ?, display_type = ?, possible_values = ?, changed_by = ?, last_changed = ? WHERE field_settings_id = ?";
     public static final String INSERT_FIELD_SETTINGS = "INSERT INTO field_settings SET column_name = ?, " +
-            "column_display = ?, field_type = ?, display_type = ?, possible_values = ?, order_number = ?, ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance " +
+            "column_display = ?, field_type = ?, display_type = ?, possible_values = ?, ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance " +
             "WHERE instance_name = ?), changed_by = ?, last_changed = ?";
 
     private static final Logger logger = LoggerFactory.getLogger(FieldSettings.class);
@@ -40,9 +40,11 @@ public class FieldSettings {
     private final List<Value> possibleValues; //Value of possible_values for the setting
     private boolean deleted; //Value of deleted for the setting
     private final String fieldType; //Value of field_type for the setting
-    private final int orderNumber; //Value of field_type for the setting
+    private final int orderNumber; //Value of order number for the setting
+    private final List<Value> actions; //Value of action for the setting
 
-    public FieldSettings(String fieldSettingId, String columnName, String columnDisplay, String fieldType, String displayType, List<Value> possibleValues, int orderNumber) {
+    public FieldSettings(String fieldSettingId, String columnName, String columnDisplay, String fieldType, String displayType,
+                         List<Value> possibleValues, int orderNumber, List<Value> actions) {
         this.fieldSettingId = fieldSettingId;
         this.columnName = columnName;
         this.columnDisplay = columnDisplay;
@@ -50,6 +52,7 @@ public class FieldSettings {
         this.displayType = displayType;
         this.possibleValues = possibleValues;
         this.orderNumber = orderNumber;
+        this.actions = actions;
     }
 
     /**
@@ -65,16 +68,13 @@ public class FieldSettings {
                 stmt.setString(1, realm);
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()){
-                        List<Value> possibleValues = null;
-                        String possible = rs.getString(DBConstants.POSSIBLE_VALUE);
-                        if (StringUtils.isNotBlank(possible)) {
-                            possibleValues = Arrays.asList(new Gson().fromJson(possible, Value[].class));
-                        }
+                        List<Value> possibleValues = getValueListFromJsonString(rs, DBConstants.POSSIBLE_VALUE);
+                        List<Value> actionValues = getValueListFromJsonString(rs, DBConstants.ACTIONS);
                         String type = rs.getString(DBConstants.FIELD_TYPE);
                         FieldSettings setting = new FieldSettings(rs.getString(DBConstants.FIELD_SETTING_ID),
                                 rs.getString(DBConstants.COLUMN_NAME), rs.getString(DBConstants.COLUMN_DISPLAY),
                                 type, rs.getString(DBConstants.DISPLAY_TYPE), possibleValues,
-                                rs.getInt(DBConstants.ORDER_NUMBER));
+                                rs.getInt(DBConstants.ORDER_NUMBER), actionValues);
                         if (fieldSettingsList.containsKey(type)){
                             // If we have already found settings with this field_type, add this
                             // setting to the list of settings with this field_type
@@ -172,10 +172,9 @@ public class FieldSettings {
                 else {
                     stmt.setString(6, null);
                 }
-                stmt.setInt(7, fieldSetting.getOrderNumber());
-                stmt.setString(8, userId);
-                stmt.setLong(9, System.currentTimeMillis());
-                stmt.setString(10, fieldSetting.getFieldSettingId());
+                stmt.setString(7, userId);
+                stmt.setLong(8, System.currentTimeMillis());
+                stmt.setString(9, fieldSetting.getFieldSettingId());
                 int result = stmt.executeUpdate();
                 if (result == 1){
                     logger.info("Updated field setting with id " + fieldSettingId);
@@ -205,16 +204,10 @@ public class FieldSettings {
                 stmt.setString(2, fieldSetting.getColumnDisplay());
                 stmt.setString(3, fieldSetting.getFieldType());
                 stmt.setString(4, fieldSetting.getDisplayType());
-                if (fieldSetting.getPossibleValues() != null && fieldSetting.getPossibleValues().size() > 0) {
-                    stmt.setString(5, possibleValues != null && !"null".equals(possibleValues) ? possibleValues : null);
-                }
-                else {
-                    stmt.setString(5, null);
-                }
-                stmt.setInt(6, fieldSetting.getOrderNumber());
-                stmt.setString(7, realm);
-                stmt.setString(8, userId);
-                stmt.setLong(9, System.currentTimeMillis());
+                stmt.setString(5, possibleValues != null && !"null".equals(possibleValues) ? possibleValues : null);
+                stmt.setString(6, realm);
+                stmt.setString(7, userId);
+                stmt.setLong(8, System.currentTimeMillis());
                 int result = stmt.executeUpdate();
                 if (result == 1){
                     logger.info("Added new setting for " + realm);
@@ -232,5 +225,14 @@ public class FieldSettings {
         if (results.resultException != null){
             throw new RuntimeException("Error adding new setting for " + realm, results.resultException);
         }
+    }
+
+    private static List<Value> getValueListFromJsonString(ResultSet rs, String column) throws SQLException {
+        List<Value> values = null;
+        String json = rs.getString(column);
+        if (StringUtils.isNotBlank(json)) {
+            values = Arrays.asList(new Gson().fromJson(json, Value[].class));
+        }
+        return values;
     }
 }

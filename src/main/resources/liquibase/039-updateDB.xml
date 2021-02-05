@@ -19,6 +19,13 @@
         </addColumn>
     </changeSet>
 
+    <changeSet author="simone" id="fieldSettingAction">
+        <addColumn tableName="field_settings">
+            <column name="actions" type="VARCHAR(500)" afterColumn="possible_values">
+            </column>
+        </addColumn>
+    </changeSet>
+
     <changeSet author="simone" id="fieldSettingSize">
         <modifyDataType columnName="column_name" newDataType="VARCHAR(100)" tableName="field_settings"/>
         <modifyDataType columnName="column_display" newDataType="VARCHAR(500)" tableName="field_settings"/>
