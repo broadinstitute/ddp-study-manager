@@ -128,9 +128,9 @@ public class ParticipantWrapper {
             //get all the list which were not filtered
             if (participantESData == null) {
                 //get only pts for the filtered kitRequests
-                if (kitRequests != null && !kitRequests.isEmpty()) {
+                if (baseList!= null && !baseList.isEmpty()){
                     if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
-                        String filter = Arrays.stream(kitRequests.keySet().toArray(new String[0])).collect(Collectors.joining(ElasticSearchUtil.BY_GUIDS));
+                        String filter = Arrays.stream(baseList.toArray(new String[0])).collect(Collectors.joining(ElasticSearchUtil.BY_GUIDS));
                         participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_GUID + filter);
                     }
                     else {
