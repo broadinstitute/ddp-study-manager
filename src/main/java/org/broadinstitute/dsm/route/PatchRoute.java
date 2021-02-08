@@ -232,18 +232,21 @@ public class PatchRoute extends RequestHandler {
                     }
                     else if (Patch.PARTICIPANT_DATA_ID.equals(patch.getParent())) {
                         String participantDataId = null;
+                        Map<String, String> map = new HashMap<>();
                         for (NameValue nameValue : patch.getNameValues()) {
                             DBElement dbElement = patchUtil.getColumnNameMap().get(nameValue.getName());
                             if (dbElement != null) {
-                                DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
-                                participantDataId = ParticipantData.createNewParticipantData(patch.getParentId(), ddpInstance.getDdpInstanceId(), patch.getFieldId(), String.valueOf(nameValue.getValue()), patch.getUser());
+                                if (participantDataId == null) {
+                                    DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+                                    participantDataId = ParticipantData.createNewParticipantData(patch.getParentId(), ddpInstance.getDdpInstanceId(), patch.getFieldId(), String.valueOf(nameValue.getValue()), patch.getUser());
+                                    map.put("participantDataId", participantDataId);
+                                }
+                                else if (participantDataId != null) {
+                                    Patch.patch(participantDataId, patch.getUser(), nameValue, dbElement);
+                                }
                             }
-                            Map<String, String> map = new HashMap<>();
-                            map.put("participantDataId", participantDataId);
-                            //todo add action
-                            //return map with nulls
-                            return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
                         }
+                        return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
                     }
                 }
                 throw new RuntimeException("Id and parentId was null");

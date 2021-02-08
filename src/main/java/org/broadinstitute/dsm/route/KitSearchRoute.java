@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.route;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.model.at.ATKitRequest;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
@@ -10,6 +11,9 @@ import org.broadinstitute.dsm.util.UserUtil;
 import spark.QueryParamsMap;
 import spark.Request;
 import spark.Response;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class KitSearchRoute extends RequestHandler {
 
@@ -35,7 +39,11 @@ public class KitSearchRoute extends RequestHandler {
             if (StringUtils.isBlank(field) || StringUtils.isBlank(value)) {
                 throw new RuntimeException("Information to perform a search was missing");
             }
-            return KitRequestShipping.findKitRequest(field, value, realms);
+            List<KitRequestShipping> kitRequestShipping = KitRequestShipping.findKitRequest(field, value, realms);
+            if (Arrays.asList(realms).contains("atcp")) { //only if user has right to see atcp
+                kitRequestShipping.addAll(ATKitRequest.findATKitRequest(field, value));
+            }
+            return kitRequestShipping;
         }
         else {
             response.status(500);
