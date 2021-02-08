@@ -427,7 +427,8 @@ public class DownloadPDFRoute extends RequestHandler {
                                         recipients, rs.getBoolean(DBConstants.MIGRATED_DDP),
                                         rs.getString(DBConstants.BILLING_REFERENCE),
                                         rs.getString(DBConstants.ES_PARTICIPANT_INDEX),
-                                        rs.getString(DBConstants.ES_ACTIVITY_DEFINITION_INDEX)));
+                                        rs.getString(DBConstants.ES_ACTIVITY_DEFINITION_INDEX),
+                                        rs.getString(DBConstants.ES_USERS_INDEX)));
                     }
                 }
             }
