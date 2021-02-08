@@ -56,7 +56,7 @@ public class ATKitRequest {
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KIT_REQUEST.concat(search))) {
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
-                        String ddpParticipantId = rs.getString(DBConstants.DDP_PARTICIPANT_ID); //TODO get hruid/gender from activity
+                        String ddpParticipantId = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
                         String bspParticipantId = rs.getString(COLLABORATOR_PARTICIPANT_ID);
                         String trackingId = rs.getString(TRACKING_ID);
                         String mfBarcode = rs.getString(MF_BARCODE);
@@ -79,6 +79,8 @@ public class ATKitRequest {
             throw new RuntimeException("Error searching for AT kit w/ field " + field + " and value " + value, results.resultException);
         }
         logger.info("Found " + kitRequests.values().size() + " AT kits");
+
+        //add ES information
         if (!kitRequests.isEmpty()) {
             DDPInstance ddpInstance = DDPInstance.getDDPInstance("atcp");
             String filter = Arrays.stream(kitRequests.keySet().toArray(new String[0])).collect(Collectors.joining(ElasticSearchUtil.BY_GUIDS));
@@ -87,8 +89,29 @@ public class ATKitRequest {
             if (participantESData != null && !participantESData.isEmpty()) {
                 kitRequests.forEach((s, kitRequestShipping) -> {
                     Map<String, Object> esParticipant = participantESData.get(s);
-                    if (esParticipant != null) {
-                        esParticipant
+                    if (esParticipant != null && !esParticipant.isEmpty()) {
+                        Map<String, Object> profile = (Map<String, Object>) participantESData.get("profile");
+                        if (profile != null && !profile.isEmpty()) {
+                            kitRequestShipping.setHruid((String) profile.get("hruid"));
+                        }
+                        List<Map<String, Object>> activities = (List<Map<String, Object>>) esParticipant.get("activities");
+                        if (activities != null && !activities.isEmpty()) {
+                            for (Map<String, Object> activity : activities) {
+                                Object activityCode = activity.get("activityCode");
+                                if ("GENOME_STUDY".equals(activityCode)) {
+                                    List<Map<String, Object>> questionAnswers = (List<Map<String, Object>>) activity.get("questionAnswers");
+                                    if (questionAnswers != null) {
+                                        for (Map<String, Object> questionAnswer : questionAnswers) {
+                                            Object stableId = questionAnswer.get("stableId");
+                                            if ("PARTICIPANT_GENDER".equals(stableId)) {
+                                                Object answer = questionAnswer.get("answer");
+                                                kitRequestShipping.setGender(String.valueOf(answer));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 });
             }
