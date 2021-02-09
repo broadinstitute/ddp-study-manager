@@ -29,6 +29,7 @@ public class Patch {
 
     public static final String PARTICIPANT_ID = "participantId";
     public static final String ONC_HISTORY_ID = "oncHistoryDetailId";
+    public static final String PARTICIPANT_DATA_ID = "participantDataId";
 
     private String id;
     private String parent; //for new added rows at oncHistoryDetails/tissue
@@ -40,6 +41,7 @@ public class Patch {
     private String tableAlias;
     private List<NameValue> nameValues;
     private Boolean isUnique;
+    private String realm;
 
     //regular patch
     public Patch(String id, String parent, String parentId, String user, NameValue nameValue, List<NameValue> nameValues) {
@@ -49,6 +51,18 @@ public class Patch {
         this.user = user;
         this.nameValue = nameValue;
         this.nameValues = nameValues;
+        this.isUnique = false;
+    }
+
+    //dynamic form patch
+    public Patch(String id, String parent, String parentId, String user, List<NameValue> nameValues, String realm) {
+        this.id = id;
+        this.parent = parent;
+        this.parentId = parentId;
+        this.user = user;
+        this.nameValue = nameValue;
+        this.nameValues = nameValues;
+        this.realm = realm;
         this.isUnique = false;
     }
 

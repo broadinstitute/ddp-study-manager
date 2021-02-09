@@ -35,10 +35,11 @@ public class ParticipantWrapper {
     private List<AbstractionActivity> abstractionActivities;
     private List<AbstractionGroup> abstractionSummary;
     private List<Map<String, Object>> proxyData;
+    private List<ParticipantData> participantData;
 
     public ParticipantWrapper(Map<String, Object> data, Participant participant, List<MedicalRecord> medicalRecords,
                               List<OncHistoryDetail> oncHistoryDetails, List<KitRequestShipping> kits, List<AbstractionActivity> abstractionActivities,
-                              List<AbstractionGroup> abstractionSummary, List<Map<String, Object>> proxyData) {
+                              List<AbstractionGroup> abstractionSummary, List<Map<String, Object>> proxyData, List<ParticipantData> participantData) {
         this.data = data;
         this.participant = participant;
         this.medicalRecords = medicalRecords;
@@ -47,6 +48,7 @@ public class ParticipantWrapper {
         this.abstractionActivities = abstractionActivities;
         this.abstractionSummary = abstractionSummary;
         this.proxyData = proxyData;
+        this.participantData = participantData;
     }
 
     public JsonObject getDataAsJson() {
@@ -72,6 +74,7 @@ public class ParticipantWrapper {
             Map<String, List<AbstractionActivity>> abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName());
             Map<String, List<AbstractionGroup>> abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName());
             Map<String, Map<String, Object>> proxyData = getProxyData(instance);
+            Map<String, List<ParticipantData>> participantData = ParticipantData.getParticipantData(instance.getName());
 
             //baselist should be not gen2/mbc db
             List<String> baseList = null;
@@ -82,7 +85,7 @@ public class ParticipantWrapper {
                 baseList = new ArrayList<>(participants.keySet());
             }
 
-            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, proxyData);
+            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, proxyData, participantData);
             return r;
         }
         else {
@@ -95,6 +98,7 @@ public class ParticipantWrapper {
             Map<String, List<AbstractionActivity>> abstractionActivities = null;
             Map<String, List<AbstractionGroup>> abstractionSummary = null;
             Map<String, Map<String, Object>> proxyData = null;
+            Map<String, List<ParticipantData>> participantData = null;
             List<String> baseList = null;
             //filter the lists depending on filter
             for (String source : filters.keySet()) {
@@ -177,6 +181,9 @@ public class ParticipantWrapper {
             if (proxyData == null) {
                 proxyData = getProxyData(instance);
             }
+            if (participantData == null) {
+                participantData = ParticipantData.getParticipantData(instance.getName());
+            }
             //baselist should be not gen2/mbc db
             if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
                 baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
@@ -186,7 +193,7 @@ public class ParticipantWrapper {
             }
             //bring together all the information
 
-            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistories, kitRequests, abstractionActivities, abstractionSummary, proxyData);
+            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistories, kitRequests, abstractionActivities, abstractionSummary, proxyData, participantData);
             return r;
         }
     }
@@ -222,7 +229,7 @@ public class ParticipantWrapper {
                                                       Map<String, Participant> participantMap, Map<String, List<MedicalRecord>> medicalRecordMap,
                                                       Map<String, List<OncHistoryDetail>> oncHistoryMap, Map<String, List<KitRequestShipping>> kitRequestMap,
                                                       Map<String, List<AbstractionActivity>> abstractionActivityMap, Map<String, List<AbstractionGroup>> abstractionSummary,
-                                                      Map<String, Map<String, Object>> proxyData) {
+                                                      Map<String, Map<String, Object>> proxyData, Map<String, List<ParticipantData>> participantData) {
         List<ParticipantWrapper> participantList = new ArrayList<>();
         for (String ddpParticipantId : baseList) {
             Participant participant = participantMap != null ? participantMap.get(ddpParticipantId) : null;
@@ -234,7 +241,8 @@ public class ParticipantWrapper {
                         kitRequestMap != null ? kitRequestMap.get(ddpParticipantId) : null,
                         abstractionActivityMap != null ? abstractionActivityMap.get(ddpParticipantId) : null,
                         abstractionSummary != null ? abstractionSummary.get(ddpParticipantId) : null,
-                        getProxyProfiles(participantESData, proxyData)));
+                        getProxyProfiles(participantESData, proxyData),
+                participantData != null ? participantData.get(ddpParticipantId) : null));
             }
         }
         logger.info("Returning list w/ " + participantList.size() + " pts now");
