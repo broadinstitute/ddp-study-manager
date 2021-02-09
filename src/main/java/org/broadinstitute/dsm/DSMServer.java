@@ -576,7 +576,7 @@ public class DSMServer extends BasicServer {
         String dsmToDssTopicId = config.getString(GCP_PATH_TO_DSM_TO_DSS_TOPIC);
 
         EditParticipantPublisherRoute editParticipantPublisherRoute = new EditParticipantPublisherRoute(projectId, dsmToDssTopicId);
-        post(UI_ROOT + RoutePath.EDIT_PARTICIPANT, editParticipantPublisherRoute);
+        put(UI_ROOT + RoutePath.EDIT_PARTICIPANT, editParticipantPublisherRoute);
 
         EditParticipantMessageReceiverRoute editParticipantMessageReceiverRoute = new EditParticipantMessageReceiverRoute();
         get(UI_ROOT + RoutePath.EDIT_PARTICIPANT_MESSAGE, editParticipantMessageReceiverRoute);
