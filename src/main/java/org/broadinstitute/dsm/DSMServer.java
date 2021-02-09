@@ -577,6 +577,9 @@ public class DSMServer extends BasicServer {
 
         EditParticipantPublisherRoute editParticipantPublisherRoute = new EditParticipantPublisherRoute(projectId, dsmToDssTopicId);
         post(UI_ROOT + RoutePath.EDIT_PARTICIPANT, editParticipantPublisherRoute);
+
+        EditParticipantMessageReceiverRoute editParticipantMessageReceiverRoute = new EditParticipantMessageReceiverRoute();
+        get(UI_ROOT + RoutePath.EDIT_PARTICIPANT_MESSAGE, editParticipantMessageReceiverRoute);
     }
 
     private void setupJobs(@NonNull Config cfg, @NonNull KitUtil kitUtil,

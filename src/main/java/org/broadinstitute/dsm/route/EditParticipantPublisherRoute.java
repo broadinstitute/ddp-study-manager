@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.route;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.pubsub.EditParticipantMessagePublisher;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.slf4j.Logger;
@@ -12,8 +13,6 @@ import spark.Response;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 public class EditParticipantPublisherRoute extends RequestHandler {
 
@@ -21,12 +20,6 @@ public class EditParticipantPublisherRoute extends RequestHandler {
 
     private final String projectId;
     private final String topicId;
-
-    private static final Map<String, String> messageHashMap = new ConcurrentHashMap<>();
-
-    public static Map<String, String> getMessageHashMap() {
-        return messageHashMap;
-    }
 
     public EditParticipantPublisherRoute(String projectId, String topicId) {
         this.projectId = projectId;
@@ -46,11 +39,9 @@ public class EditParticipantPublisherRoute extends RequestHandler {
 
         JsonObject data1 = messageJsonObject.get("data").getAsJsonObject();
 
-        //data1.getAsJsonObject().addProperty("resultType", "SUCCESS");
+        data1.getAsJsonObject().addProperty("resultType", "SUCCESS");
 
         String data = data1.toString();
-
-
 
         Map<String, String> attributeMap = getStringStringMap(userId, messageJsonObject);
 
@@ -59,10 +50,8 @@ public class EditParticipantPublisherRoute extends RequestHandler {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        TimeUnit.SECONDS.sleep(30);
-        JsonObject jsonObject = new Gson().fromJson(messageHashMap.get(userId), JsonObject.class);
-        return jsonObject.toString();
 
+        return new Result(200);
     }
 
     public Map<String, String> getStringStringMap(String userId, JsonObject messageJsonObject) {
