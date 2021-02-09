@@ -6,12 +6,11 @@ import com.google.api.core.ApiFutures;
 import com.google.api.gax.rpc.ApiException;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.TopicName;
+import org.broadinstitute.dsm.db.EditParticipantMessage;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +65,8 @@ public class EditParticipantMessagePublisher {
                     public void onSuccess(String messageId) {
                         // Once published, returns server-assigned message ids (unique within the topic)
                         logger.info("Published message ID: " + messageId);
+                        EditParticipantMessage.insertMessage(new EditParticipantMessage(Integer.parseInt(attributeMap.get("userId")),
+                                DBConstants.MESSAGE_PUBLISHED_STATUS, System.currentTimeMillis()));
                     }
                 },
                 MoreExecutors.directExecutor()

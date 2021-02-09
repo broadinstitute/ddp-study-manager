@@ -45,7 +45,6 @@ import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.*;
 import org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil;
 import org.broadinstitute.dsm.util.triggerListener.*;
-import org.broadinstitute.dsm.websocket.EditParticipantWebSocketHandler;
 import org.jruby.embed.ScriptingContainer;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
@@ -85,7 +84,6 @@ public class DSMServer extends BasicServer {
 
     private static final String API_ROOT = "/ddp/";
     private static final String UI_ROOT = "/ui/";
-    private static final String WEBSOCKET_ROOT = "/ui/websocket/";
 
     private static final String[] CORS_HTTP_METHODS = new String[] { "GET", "PUT", "POST", "OPTIONS", "PATCH" };
     private static final String[] CORS_HTTP_HEADERS = new String[] { "Content-Type", "Authorization", "X-Requested-With",
@@ -125,7 +123,7 @@ public class DSMServer extends BasicServer {
     public static Provider provider;
     public static final String GCP_PATH_TO_PUBSUB_PROJECT_ID = "pubsub.projectId";
     public static final String GCP_PATH_TO_PUBSUB_SUB = "pubsub.subscription";
-    public static final String GCP_PATH_TO_DSM_TO_DSS_SUB = "pubsub.dss_to_dsm_subscription";
+    public static final String GCP_PATH_TO_DSS_TO_DSM_SUB = "pubsub.dss_to_dsm_subscription";
     public static final String GCP_PATH_TO_DSM_TO_DSS_TOPIC = "pubsub.dsm_to_dss_topic";
 
     private static Map<String, MBCParticipant> mbcParticipants = new HashMap<>();
@@ -188,8 +186,6 @@ public class DSMServer extends BasicServer {
 
         logger.info("Using port {}", port);
         port(port);
-
-        setupWebSocketRoutes(config);
 
         registerAppEngineStartupCallback(bootTimeoutSeconds);
 
@@ -335,6 +331,8 @@ public class DSMServer extends BasicServer {
 
         setupSharedRoutes(kitUtil, notificationUtil, patchUtil, container, receiver);
 
+        setupPubSubPublisherRoutes(cfg);
+
         //no GET for USER_SETTINGS_REQUEST because UI gets them per AuthenticationRoute
         patch(UI_ROOT + RoutePath.USER_SETTINGS_REQUEST, new UserSettingRoute(), new JsonTransformer());
 
@@ -357,7 +355,7 @@ public class DSMServer extends BasicServer {
     private void setupPubSub(@NonNull Config cfg, NotificationUtil notificationUtil) {
         String projectId = cfg.getString(GCP_PATH_TO_PUBSUB_PROJECT_ID);
         String subscriptionId = cfg.getString(GCP_PATH_TO_PUBSUB_SUB);
-        String dsmToDssSubscriptionId = cfg.getString(GCP_PATH_TO_DSM_TO_DSS_SUB);
+        String dsmToDssSubscriptionId = cfg.getString(GCP_PATH_TO_DSS_TO_DSM_SUB);
 
         logger.info("Setting up pubsub for {}/{}", projectId, subscriptionId);
 
@@ -573,12 +571,12 @@ public class DSMServer extends BasicServer {
         patch(UI_ROOT + RoutePath.PATCH, new PatchRoute(notificationUtil, patchUtil), new JsonTransformer());
     }
 
-    private void setupWebSocketRoutes(Config config) {
+    private void setupPubSubPublisherRoutes(Config config) {
         String projectId = config.getString(GCP_PATH_TO_PUBSUB_PROJECT_ID);
         String dsmToDssTopicId = config.getString(GCP_PATH_TO_DSM_TO_DSS_TOPIC);
 
-        EditParticipantWebSocketHandler editParticipantWebSocketHandler = new EditParticipantWebSocketHandler(projectId, dsmToDssTopicId);
-        webSocket(WEBSOCKET_ROOT + RoutePath.EDIT_PARTICIPANT, editParticipantWebSocketHandler);
+        EditParticipantPublisherRoute editParticipantPublisherRoute = new EditParticipantPublisherRoute(projectId, dsmToDssTopicId);
+        post(UI_ROOT + RoutePath.EDIT_PARTICIPANT, editParticipantPublisherRoute);
     }
 
     private void setupJobs(@NonNull Config cfg, @NonNull KitUtil kitUtil,

@@ -10,12 +10,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.PubsubMessage;
-import org.broadinstitute.dsm.websocket.EditParticipantWebSocketHandler;
-import org.eclipse.jetty.websocket.api.Session;
+import org.broadinstitute.dsm.db.EditParticipantMessage;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -42,15 +40,8 @@ public class PubSubResultMessageSubscription {
                     String userId = null;
                     if (jsonObject.has("userId")) {
                         userId = jsonObject.get("userId").getAsString();
-                    }
-
-                    try {
-                        Session session = EditParticipantWebSocketHandler.getSessionHashMap().get(userId);
-                        if (session != null) {
-                            session.getRemote().sendString(message);
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                        EditParticipantMessage.updateMessage(userId, DBConstants.MESSAGE_RECEIVED_STATUS,
+                                message, System.currentTimeMillis());
                     }
 
                     consumer.ack();

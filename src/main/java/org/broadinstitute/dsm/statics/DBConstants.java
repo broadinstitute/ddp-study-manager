@@ -452,5 +452,11 @@ public class DBConstants {
 
     public static final String KIT_TEST_RESULT = "test_result";
 
+    //message for editing pariticipant
+    public static final String MESSAGE_STATUS = "message_status";
+    public static final String RECEIVED_MESSAGE = "received_message";
+    public static final String MESSAGE_PUBLISHED_STATUS = "Published";
+    public static final String MESSAGE_RECEIVED_STATUS = "Received";
+
     //DDPKit
 }
