@@ -40,7 +40,7 @@ public class PubSubResultMessageSubscription {
                     String userId = null;
                     if (jsonObject.has("userId")) {
                         userId = jsonObject.get("userId").getAsString();
-                        EditParticipantMessage.updateMessage(userId, DBConstants.MESSAGE_RECEIVED_STATUS,
+                        EditParticipantMessage.updateMessage(Integer.parseInt(userId), DBConstants.MESSAGE_RECEIVED_STATUS,
                                 message, System.currentTimeMillis());
                     }
 

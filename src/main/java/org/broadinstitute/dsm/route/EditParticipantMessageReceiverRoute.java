@@ -21,12 +21,18 @@ public class EditParticipantMessageReceiverRoute extends RequestHandler {
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         if (RoutePath.RequestMethod.GET.toString().equals(request.requestMethod())) {
-            List<String> messageWithStatus = EditParticipantMessage.getMessageWithStatus(userId);
-            String status = messageWithStatus.get(0);
-            String message = messageWithStatus.get(1);
+            EditParticipantMessage messageWithStatus = EditParticipantMessage.getMessageWithStatus(Integer.parseInt(userId));
+            int messageId = messageWithStatus.getMessageId();
+            String status = messageWithStatus.getMessageStatus();
+            String message = messageWithStatus.getReceived_message();
+
+            logger.info("Sending back answer according to message status");
+
             if (DBConstants.MESSAGE_RECEIVED_STATUS.equals(status)) {
+                EditParticipantMessage.updateMessageStatusById(messageId, DBConstants.MESSAGE_SENT_BACK_STATUS);
                 return message;
             }
+            return new Result(200);
         }
         logger.error("Request method not known");
         return new Result(500, UserErrorMessages.CONTACT_DEVELOPER);

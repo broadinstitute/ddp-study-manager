@@ -20,7 +20,7 @@ public class EditParticipantMessage {
 
     private static final String SQL_SELECT_MESSAGE_AND_STATUS =
             "SELECT " +
-                "message_status, received_message " +
+                "message_id, message_status, received_message " +
             "FROM " +
                 "message " +
             "WHERE " +
@@ -41,12 +41,24 @@ public class EditParticipantMessage {
             "SET " +
                     "message_status = ?, received_message = ?, received_at = ? " +
             "WHERE " +
-                    " user_id = ?";
+                    "user_id = ? " +
+            "ORDER BY published_at DESC " +
+            "LIMIT 1";
+
+    private static final String SQL_UPDATE_MESSAGE_STATUS =
+            "UPDATE " +
+                    "message " +
+            "SET " +
+                    "message_status = ? " +
+            "WHERE " +
+                    "message_id = ? ";
 
     private int messageId;
     private int userId;
     private String messageStatus;
     private long published_at;
+    private String received_message;
+    private long received_at;
 
     public EditParticipantMessage(int userId, String messageStatus, long published_at) {
         this.userId = userId;
@@ -54,12 +66,10 @@ public class EditParticipantMessage {
         this.published_at = published_at;
     }
 
-    public long getPublished_at() {
-        return published_at;
-    }
-
-    public void setPublished_at(long published_at) {
-        this.published_at = published_at;
+    public EditParticipantMessage(int messageId, String messageStatus, String received_message) {
+        this.messageId = messageId;
+        this.messageStatus = messageStatus;
+        this.received_message = received_message;
     }
 
     public int getMessageId() {
@@ -78,7 +88,7 @@ public class EditParticipantMessage {
         this.userId = userId;
     }
 
-    public String getMessageWithStatus() {
+    public String getMessageStatus() {
         return messageStatus;
     }
 
@@ -86,16 +96,43 @@ public class EditParticipantMessage {
         this.messageStatus = messageStatus;
     }
 
-    public static List<String> getMessageWithStatus(String userId) {
-        List<String> messagesWithStatus = new ArrayList<>();
+    public long getPublished_at() {
+        return published_at;
+    }
+
+    public void setPublished_at(long published_at) {
+        this.published_at = published_at;
+    }
+
+    public String getReceived_message() {
+        return received_message;
+    }
+
+    public void setReceived_message(String received_message) {
+        this.received_message = received_message;
+    }
+
+    public long getReceived_at() {
+        return received_at;
+    }
+
+    public void setReceived_at(long received_at) {
+        this.received_at = received_at;
+    }
+
+    public static EditParticipantMessage getMessageWithStatus(int userId) {
+        List<EditParticipantMessage> messagesWithStatus = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
 
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_MESSAGE_AND_STATUS)) {
-                stmt.setString(1, userId);
+                stmt.setInt(1, userId);
                 try (ResultSet rs = stmt.executeQuery()) {
-                    messagesWithStatus.add(rs.getString(DBConstants.MESSAGE_STATUS));
-                    messagesWithStatus.add(rs.getString(DBConstants.RECEIVED_MESSAGE));
+                    while (rs.next()) {
+                        messagesWithStatus.add(new EditParticipantMessage(rs.getInt(DBConstants.MESSAGE_ID),
+                                rs.getString(DBConstants.MESSAGE_STATUS),
+                                rs.getString(DBConstants.RECEIVED_MESSAGE)));
+                    }
                 }
             }
             catch (SQLException ex) {
@@ -108,7 +145,7 @@ public class EditParticipantMessage {
             throw new RuntimeException("Error getting message status ", results.resultException);
         }
 
-        return messagesWithStatus;
+        return messagesWithStatus.get(0);
     }
 
     public static void insertMessage(@NonNull EditParticipantMessage message) {
@@ -116,7 +153,7 @@ public class EditParticipantMessage {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_MESSAGE)) {
                 stmt.setInt(1, message.getUserId());
-                stmt.setString(2, message.getMessageWithStatus());
+                stmt.setString(2, message.getMessageStatus());
                 stmt.setLong(3, message.getPublished_at());
                 int result = stmt.executeUpdate();
                 if (result == 1) {
@@ -137,13 +174,15 @@ public class EditParticipantMessage {
         }
     }
 
-    public static void updateMessage(@NonNull String userId, @NonNull String messageStatus, @NonNull String message, @NonNull long received_at) {
+    public static void updateMessage(@NonNull int userId, @NonNull String messageStatus, @NonNull String message, @NonNull long received_at) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_MESSAGE)) {
                 stmt.setString(1, messageStatus);
                 stmt.setString(2, message);
                 stmt.setLong(3, received_at);
+                stmt.setInt(4, userId);
+
                 int result = stmt.executeUpdate();
                 if (result == 1) {
                     logger.info("Updating message status of user with id: " + userId);
@@ -159,6 +198,31 @@ public class EditParticipantMessage {
         });
         if (results.resultException != null) {
             throw new RuntimeException("Error updating message status of user with: " + userId, results.resultException);
+        }
+    }
+
+    public static void updateMessageStatusById(@NonNull int messageId, @NonNull String messageStatus) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_MESSAGE_STATUS)) {
+                stmt.setString(1, messageStatus);
+                stmt.setInt(2, messageId);
+
+                int result = stmt.executeUpdate();
+                if (result == 1) {
+                    logger.info("Updating status of message by id: " + messageId);
+                }
+                else {
+                    throw new RuntimeException("Error updating status of message with id: " + messageId + ". it was updating " + result + " rows");
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error updating status of message with id: " + messageId, results.resultException);
         }
     }
 

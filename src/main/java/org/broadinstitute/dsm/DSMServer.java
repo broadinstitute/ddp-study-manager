@@ -576,10 +576,10 @@ public class DSMServer extends BasicServer {
         String dsmToDssTopicId = config.getString(GCP_PATH_TO_DSM_TO_DSS_TOPIC);
 
         EditParticipantPublisherRoute editParticipantPublisherRoute = new EditParticipantPublisherRoute(projectId, dsmToDssTopicId);
-        put(UI_ROOT + RoutePath.EDIT_PARTICIPANT, editParticipantPublisherRoute);
+        put(UI_ROOT + RoutePath.EDIT_PARTICIPANT, editParticipantPublisherRoute, new JsonTransformer());
 
         EditParticipantMessageReceiverRoute editParticipantMessageReceiverRoute = new EditParticipantMessageReceiverRoute();
-        get(UI_ROOT + RoutePath.EDIT_PARTICIPANT_MESSAGE, editParticipantMessageReceiverRoute);
+        get(UI_ROOT + RoutePath.EDIT_PARTICIPANT_MESSAGE, editParticipantMessageReceiverRoute, new JsonTransformer());
     }
 
     private void setupJobs(@NonNull Config cfg, @NonNull KitUtil kitUtil,

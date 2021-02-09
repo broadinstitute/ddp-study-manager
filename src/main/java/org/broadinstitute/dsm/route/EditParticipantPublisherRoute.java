@@ -37,11 +37,11 @@ public class EditParticipantPublisherRoute extends RequestHandler {
 
         JsonObject messageJsonObject = new Gson().fromJson(messageData, JsonObject.class);
 
-        JsonObject data1 = messageJsonObject.get("data").getAsJsonObject();
+        JsonObject dataFromJson = messageJsonObject.get("data").getAsJsonObject();
 
-        data1.getAsJsonObject().addProperty("resultType", "SUCCESS");
+//        dataFromJson.getAsJsonObject().addProperty("resultType", "SUCCESS");
 
-        String data = data1.toString();
+        String data = dataFromJson.toString();
 
         Map<String, String> attributeMap = getStringStringMap(userId, messageJsonObject);
 
