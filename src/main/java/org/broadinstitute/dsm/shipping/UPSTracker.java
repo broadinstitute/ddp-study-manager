@@ -1,6 +1,5 @@
 package org.broadinstitute.dsm.shipping;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,12 +42,27 @@ public class UPSTracker {
         headers.put("AccessLicenseNumber", accessKey);
         headers.put("Content-Type", "application/json");
         headers.put("Accept", "application/json");
-        try {
-            UPSTrackingResponse response = DDPRequestUtil.getResponseObjectWithCustomHeader(UPSTrackingResponse.class, sendRequest, "UPS Tracking Test " + inquiryNumber, headers);
-            return response;
+
+        RuntimeException error = null;
+        for (int i = 0; i < 5; i++) {
+            try {
+                UPSTrackingResponse response = DDPRequestUtil.getResponseObjectWithCustomHeader(UPSTrackingResponse.class, sendRequest, "UPS Tracking Test " + inquiryNumber, headers);
+                return response;
+            }
+            catch (Exception e) {
+               error = new RuntimeException("couldn't get response from ups tracking of package " + trackingId, e);
+               logger.error(error.getMessage(), e);
+               logger.warn("Retrying ups round " + i);
+               try {
+                   Thread.sleep(5 * 1000);
+               } catch (InterruptedException interrupted) {
+                   logger.error("Error while waiting for UPS retry", interrupted);
+               }
+            }
         }
-        catch (IOException e) {
-            throw new RuntimeException("couldn't get response from ups tracking of package " + trackingId, e);
+        if (error != null) {
+            throw error;
         }
+        return null;
     }
 }
