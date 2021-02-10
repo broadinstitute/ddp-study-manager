@@ -44,6 +44,8 @@ public class EditParticipantMessagePublisher {
 
             // Once published, returns a server-assigned message id (unique within the topic)
             ApiFuture<String> future = publisher.publish(pubsubMessage);
+            EditParticipantMessage.insertMessage(new EditParticipantMessage(Integer.parseInt(attributeMap.get("userId")),
+                    DBConstants.MESSAGE_PUBLISHING_STATUS, System.currentTimeMillis()));
 
             // Add an asynchronous callback to handle success / failure
             ApiFutures.addCallback(
@@ -65,8 +67,6 @@ public class EditParticipantMessagePublisher {
                     public void onSuccess(String messageId) {
                         // Once published, returns server-assigned message ids (unique within the topic)
                         logger.info("Published message ID: " + messageId);
-                        EditParticipantMessage.insertMessage(new EditParticipantMessage(Integer.parseInt(attributeMap.get("userId")),
-                                DBConstants.MESSAGE_PUBLISHED_STATUS, System.currentTimeMillis()));
                     }
                 },
                 MoreExecutors.directExecutor()

@@ -456,7 +456,7 @@ public class DBConstants {
     public static final String MESSAGE_ID = "message_id";
     public static final String MESSAGE_STATUS = "message_status";
     public static final String RECEIVED_MESSAGE = "received_message";
-    public static final String MESSAGE_PUBLISHED_STATUS = "Published";
+    public static final String MESSAGE_PUBLISHING_STATUS = "Publishing";
     public static final String MESSAGE_RECEIVED_STATUS = "Received";
     public static final String MESSAGE_SENT_BACK_STATUS = "Sent back";
 
