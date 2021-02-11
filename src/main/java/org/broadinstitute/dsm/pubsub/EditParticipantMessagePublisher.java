@@ -23,7 +23,7 @@ public class EditParticipantMessagePublisher {
     private static final Logger logger = LoggerFactory.getLogger(EditParticipantMessagePublisher.class);
 
     public static void publishMessage(String data, Map<String, String> attributeMap, String projectId, String topicId) throws Exception {
-        logger.info("Publishing message to dsm");
+        logger.info("Publishing message to dss");
         publishWithErrorHandler(projectId, topicId, data, attributeMap);
     }
 

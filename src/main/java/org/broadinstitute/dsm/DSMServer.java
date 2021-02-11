@@ -25,6 +25,7 @@ import org.apache.http.HttpStatus;
 import org.broadinstitute.ddp.BasicServer;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.security.Auth0Util;
+import org.broadinstitute.ddp.security.CookieUtil;
 import org.broadinstitute.ddp.util.BasicTriggerListener;
 import org.broadinstitute.ddp.util.JsonTransformer;
 import org.broadinstitute.ddp.util.Utility;
@@ -184,12 +185,14 @@ public class DSMServer extends BasicServer {
             bootTimeoutSeconds = config.getInt(ApplicationConfigConstants.BOOT_TIMEOUT);
         }
 
+
         logger.info("Using port {}", port);
         port(port);
 
         registerAppEngineStartupCallback(bootTimeoutSeconds);
 
         setupDB(config);
+
 
         // don't run superclass routing--it won't work with JettyConfig changes for capturing proper IP address in GAE
         setupCustomRouting(config);
@@ -207,6 +210,7 @@ public class DSMServer extends BasicServer {
         if (StringUtils.isBlank(bspSecret)) {
             throw new RuntimeException("No secret supplied for BSP endpoint, system exiting.");
         }
+
         //  capture basic route info for logging
         before("*", new LoggingFilter());
         afterAfter((req, res) -> MDC.clear());
@@ -272,20 +276,18 @@ public class DSMServer extends BasicServer {
 
         get("/info/" + RoutePath.PARTICIPANT_STATUS_REQUEST, new ParticipantStatusRoute(), new JsonNullTransformer());
 
+
         // requests from frontend
         before(UI_ROOT + "*", (req, res) -> {
             if (!"OPTIONS".equals(req.requestMethod())) {
                 if (!req.pathInfo().contains(RoutePath.AUTHENTICATION_REQUEST)) {
-                    String tokenFromRequest;
-                    boolean isWebSocketRequest = Arrays.asList(req.pathInfo().split("/")).contains("websocket");
-                    if (isWebSocketRequest) {
-                        tokenFromRequest = SystemUtil.getTokenFromUrlIfExists(req);
-                    } else {
-                        tokenFromRequest = Utility.getTokenFromHeader(req);
-                    }
+                    String tokenFromHeader = Utility.getTokenFromHeader(req);
+
                     boolean isTokenValid = false;
-                    if (StringUtils.isNotBlank(tokenFromRequest)) {
-                        isTokenValid = new JWTRouteFilter(jwtSecret, null).isAccessAllowed(tokenFromRequest);
+                    if (StringUtils.isNotBlank(tokenFromHeader)) {
+                        isTokenValid = new CookieUtil().isCookieValid(req.cookie(cookieName), cookieSalt.getBytes(), tokenFromHeader, jwtSecret);
+                        isTokenValid = new JWTRouteFilter(jwtSecret, null).isAccessAllowed(req);
+
                     }
                     if (!isTokenValid) {
                         halt(401, SecurityUtil.ResultType.AUTHENTICATION_ERROR.toString());

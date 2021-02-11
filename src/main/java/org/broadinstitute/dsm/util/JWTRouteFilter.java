@@ -72,47 +72,41 @@ public class JWTRouteFilter {
                     if (parsedAuthHeader.length == 2) {
                         String jwtToken = parsedAuthHeader[1].trim();
                         if (StringUtils.isNotBlank(jwtToken)) {
-                            isAccessAllowed = isAccessAllowed(jwtToken);
-                        }
-                    }
-                }
-            }
-        }
-        return isAccessAllowed;
-    }
+                            try {
+                                Algorithm algorithm = Algorithm.HMAC256(jwtSecret);
+                                JWTVerifier verifier = JWT.require(algorithm).build(); //Reusable verifier instance
+                                DecodedJWT jwt = verifier.verify(jwtToken);
 
-    public boolean isAccessAllowed(String jwtToken) {
-        boolean isAccessAllowed = false;
-        try {
-            Algorithm algorithm = Algorithm.HMAC256(jwtSecret);
-            JWTVerifier verifier = JWT.require(algorithm).build(); //Reusable verifier instance
-            DecodedJWT jwt = verifier.verify(jwtToken);
-
-            Map<String, Claim> verifiedClaims = jwt.getClaims();
-            if (verifiedClaims != null) {
-                if (!expectedRoles.isEmpty()) {
-                    if (verifiedClaims.containsKey(DDP_ROLES_CLAIM)) {
-                        Object rolesObj = verifiedClaims.get(DDP_ROLES_CLAIM);
-                        if (rolesObj != null && rolesObj instanceof Collection) {
-                            Collection rolesInToken = (Collection) rolesObj;
-                            for (String expectedRole : expectedRoles) {
-                                if (rolesInToken.contains(expectedRole)) {
-                                    // token has at least one of the request roles, so allow access
-                                    isAccessAllowed = true;
-                                    break;
+                                Map<String, Claim> verifiedClaims = jwt.getClaims();
+                                if (verifiedClaims != null) {
+                                    if (!expectedRoles.isEmpty()) {
+                                        if (verifiedClaims.containsKey(DDP_ROLES_CLAIM)) {
+                                            Object rolesObj = verifiedClaims.get(DDP_ROLES_CLAIM);
+                                            if (rolesObj != null && rolesObj instanceof Collection) {
+                                                Collection rolesInToken = (Collection) rolesObj;
+                                                for (String expectedRole : expectedRoles) {
+                                                    if (rolesInToken.contains(expectedRole)) {
+                                                        // token has at least one of the request roles, so allow access
+                                                        isAccessAllowed = true;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        // no role restriction required, just a valid signature
+                                        isAccessAllowed = true;
+                                    }
                                 }
+                            }
+                            catch (Exception e) {
+                                logger.error("Invalid token: " + jwtToken, e);
                             }
                         }
                     }
                 }
-                else {
-                    // no role restriction required, just a valid signature
-                    isAccessAllowed = true;
-                }
             }
-        }
-        catch (Exception e) {
-            logger.error("Invalid token: " + jwtToken, e);
         }
         return isAccessAllowed;
     }
