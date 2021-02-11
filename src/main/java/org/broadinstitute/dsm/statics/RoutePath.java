@@ -100,6 +100,8 @@ public class RoutePath {
     public static final String NDI_REQUEST = "ndiRequest";
     public static final String ABSTRACTION_FORM_CONTROLS = "abstractionformcontrols";
     public static final String ABSTRACTION = "abstraction";
+    public static final String EDIT_PARTICIPANT = "editParticipant";
+    public static final String EDIT_PARTICIPANT_MESSAGE = "editParticipantMessageStatus";
 
     public static String getRealm(Request request) {
         QueryParamsMap queryParams = request.queryMap();
