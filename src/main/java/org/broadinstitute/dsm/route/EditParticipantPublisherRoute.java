@@ -6,8 +6,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.pubsub.EditParticipantMessagePublisher;
 import org.broadinstitute.dsm.security.RequestHandler;
+import org.broadinstitute.dsm.statics.RoutePath;
+import org.broadinstitute.dsm.statics.UserErrorMessages;
+import org.broadinstitute.dsm.util.UserUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import spark.QueryParamsMap;
 import spark.Request;
 import spark.Response;
 
@@ -29,30 +33,43 @@ public class EditParticipantPublisherRoute extends RequestHandler {
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
 
-        String messageData = request.body();
+        QueryParamsMap queryParams = request.queryMap();
 
-        if (StringUtils.isBlank(messageData)) {
-            logger.error("Message data is blank");
+        String realm = null;
+        if (queryParams.value(RoutePath.REALM) != null) {
+            realm = queryParams.get(RoutePath.REALM).value();
         }
 
-        JsonObject messageJsonObject = new Gson().fromJson(messageData, JsonObject.class);
+        if (UserUtil.checkUserAccess(realm, userId, "mr_view") || UserUtil.checkUserAccess(realm, userId, "pt_list_view")) {
+            String messageData = request.body();
 
-        JsonObject dataFromJson = messageJsonObject.get("data").getAsJsonObject();
+            if (StringUtils.isBlank(messageData)) {
+                logger.error("Message data is blank");
+            }
 
-        String data = dataFromJson.toString();
+            JsonObject messageJsonObject = new Gson().fromJson(messageData, JsonObject.class);
 
-        Map<String, String> attributeMap = getStringStringMap(userId, messageJsonObject);
+            JsonObject dataFromJson = messageJsonObject.get("data").getAsJsonObject();
 
-        try {
-            EditParticipantMessagePublisher.publishMessage(data, attributeMap, projectId, topicId);
-        } catch (Exception e) {
-            e.printStackTrace();
+            String data = dataFromJson.toString();
+
+            Map<String, String> attributeMap = getStringStringMap(userId, messageJsonObject);
+
+            try {
+                EditParticipantMessagePublisher.publishMessage(data, attributeMap, projectId, topicId);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            return new Result(200);
+        } else {
+            response.status(500);
+            return new Result(500, UserErrorMessages.NO_RIGHTS);
         }
 
-        return new Result(200);
     }
 
-    public Map<String, String> getStringStringMap(String userId, JsonObject messageJsonObject) {
+    public static Map<String, String> getStringStringMap(String userId, JsonObject messageJsonObject) {
         String participantGuid = messageJsonObject.get("participantGuid").getAsString();
         String studyGuid = messageJsonObject.get("studyGuid").getAsString();
         Map<String, String> attributeMap = new HashMap<>();
