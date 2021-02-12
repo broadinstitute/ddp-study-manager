@@ -9,6 +9,7 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.FieldSettings;
+import org.broadinstitute.dsm.db.User;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.util.tools.util.DBUtil;
 
@@ -64,6 +65,8 @@ public class DBTestUtil {
     public static final String DELETE_ALL_NDI_ADDED = "DELETE FROM ddp_ndi WHERE ndi_id = ?";
     private static final String SQL_SELECT_PK_FROM_TABLE = "SELECT %PK FROM %TABLE WHERE participant_id = ? LIMIT 1";
     private static final String SQL_DELETE_PK_FROM_TABLE = "DELETE FROM %TABLE WHERE %PK = ?";
+    private static final String SQL_INSERT_USER = "INSERT INTO access_user (user_id, name, email, is_active) VALUES (?, ?, ?, ?)";
+    private static final String SQL_DELETE_USER_BY_ID = "DELETE FROM access_user WHERE user_id = ?";
 
     public static final long WEEK = 7 * 24 * 60 * 60 * 1000;
 
@@ -471,6 +474,51 @@ public class DBTestUtil {
                         "tissue_type = ?, tumor_type= ?, sent_gp = ?, sk_id = ?, sm_id = ?, first_sm_id = ?, " +
                         "collaborator_sample_id = ?, last_changed = ?, changed_by = ? WHERE tissue_id = ?", values);
             }
+        }
+    }
+
+    public static void insertUser(@NonNull User user, int is_active) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_USER)) {
+                stmt.setInt(1, user.getUserId());
+                stmt.setString(2, user.getName());
+                stmt.setString(3, user.getEmail());
+                stmt.setInt(4, is_active);
+                int result = stmt.executeUpdate();
+                if (result != 1){
+                    throw new RuntimeException("Error adding new user, it was adding " + result + " rows");
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error inserting user with "
+                    + user.getUserId(), results.resultException);
+        }
+    }
+
+    public static void deleteUser(int userId) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_DELETE_USER_BY_ID)) {
+                stmt.setInt(1, userId);
+                int result = stmt.executeUpdate();
+                if (result != 1){
+                    throw new RuntimeException("Error deleting user, it was deleting " + result + " rows");
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error deleting user with "
+                    + userId, results.resultException);
         }
     }
 

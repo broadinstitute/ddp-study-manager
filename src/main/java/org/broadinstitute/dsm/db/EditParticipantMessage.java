@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.db;
 
+import lombok.Data;
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -14,6 +15,7 @@ import java.util.List;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
+@Data
 public class EditParticipantMessage {
 
     private static final Logger logger = LoggerFactory.getLogger(EditParticipantMessage.class);
@@ -53,6 +55,14 @@ public class EditParticipantMessage {
             "WHERE " +
                     "message_id = ? ";
 
+    private static final String SQL_DELETE_MESSAGE_BY_USER_ID =
+            "DELETE FROM " +
+                    "message " +
+            "WHERE " +
+                    "user_id = ? " +
+            "ORDER BY published_at DESC " +
+                    "LIMIT 1";
+
     private int messageId;
     private int userId;
     private String messageStatus;
@@ -72,54 +82,6 @@ public class EditParticipantMessage {
         this.received_message = received_message;
     }
 
-    public int getMessageId() {
-        return messageId;
-    }
-
-    public void setMessageId(int messageId) {
-        this.messageId = messageId;
-    }
-
-    public int getUserId() {
-        return userId;
-    }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
-
-    public String getMessageStatus() {
-        return messageStatus;
-    }
-
-    public void setMessageStatus(String messageStatus) {
-        this.messageStatus = messageStatus;
-    }
-
-    public long getPublished_at() {
-        return published_at;
-    }
-
-    public void setPublished_at(long published_at) {
-        this.published_at = published_at;
-    }
-
-    public String getReceived_message() {
-        return received_message;
-    }
-
-    public void setReceived_message(String received_message) {
-        this.received_message = received_message;
-    }
-
-    public long getReceived_at() {
-        return received_at;
-    }
-
-    public void setReceived_at(long received_at) {
-        this.received_at = received_at;
-    }
-
     public static EditParticipantMessage getMessageWithStatus(int userId) {
         List<EditParticipantMessage> messagesWithStatus = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
@@ -137,6 +99,9 @@ public class EditParticipantMessage {
             }
             catch (SQLException ex) {
                 dbVals.resultException = ex;
+            }
+            if (messagesWithStatus.size() != 1) {
+                throw new RuntimeException("Error getting last message of user: " + userId);
             }
             return dbVals;
         });
@@ -223,6 +188,27 @@ public class EditParticipantMessage {
         });
         if (results.resultException != null) {
             throw new RuntimeException("Error updating status of message with id: " + messageId, results.resultException);
+        }
+    }
+
+    public static void deleteMessage(int userId) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_DELETE_MESSAGE_BY_USER_ID)) {
+                stmt.setInt(1, userId);
+                int result = stmt.executeUpdate();
+                if (result != 1){
+                    throw new RuntimeException("Error deleting message, it was deleting " + result + " rows");
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error deleting message with user id: "
+                    + userId, results.resultException);
         }
     }
 
