@@ -47,8 +47,6 @@ public class EditParticipantTest extends TestHelper {
     @Test
     public void testEditParticipantFeature() {
 
-        TestHelper.startMockServer();
-
         String realm = null;
 
         if (UserUtil.checkUserAccess(realm, Integer.toString(userId), "mr_view") ||
