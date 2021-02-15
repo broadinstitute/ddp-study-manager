@@ -23,4 +23,17 @@
             </column>
         </addColumn>
     </changeSet>
+    <changeSet author="simone" id="DDP-5356-userIndex">
+        <addColumn tableName="ddp_instance">
+            <column name="es_users_index" type="VARCHAR(80)">
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="simone" id="hasInvitations">
+        <addColumn tableName="instance_settings">
+            <column name="has_invitations" type="TINYINT(1)">
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>
