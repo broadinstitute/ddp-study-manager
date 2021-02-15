@@ -6,9 +6,9 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
     <changeSet author="ikhaladz" id="addingStudyGuid">
-        <addColumn tableName="message">
+        <addColumn tableName="ddp_instance">
             <column name="study_guid" type="VARCHAR(200)"
-                afterColumn="user_id"/>
+                afterColumn="instance_name"/>
         </addColumn>
     </changeSet>
 
