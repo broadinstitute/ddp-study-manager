@@ -45,7 +45,6 @@ public class EditParticipantMessagePublisher {
             // Once published, returns a server-assigned message id (unique within the topic)
             ApiFuture<String> future = publisher.publish(pubsubMessage);
             EditParticipantMessage.insertMessage(new EditParticipantMessage(Integer.parseInt(attributeMap.get("userId")),
-                    attributeMap.get("studyGuid"),
                     DBConstants.MESSAGE_PUBLISHING_STATUS, System.currentTimeMillis()));
 
             // Add an asynchronous callback to handle success / failure
