@@ -111,7 +111,11 @@ public class KitUploadRoute extends RequestHandler {
                     kitUploadContent = Arrays.asList(new Gson().fromJson(content, KitUploadObject[].class));
                 }
                 else {
-                    kitUploadContent = isFileValid(content, realm);
+                    try {
+                        kitUploadContent = isFileValid(content, realm);
+                    } catch (Exception e) {
+                        return new Result(500, e.getMessage());
+                    }
                 }
                 final List<KitRequest> kitUploadObjects = kitUploadContent;
                 if (kitUploadObjects == null || kitUploadObjects.isEmpty()) {
@@ -347,75 +351,76 @@ public class KitUploadRoute extends RequestHandler {
     }
 
     public List<KitRequest> isFileValid(String fileContent, String realm) {
-        if (fileContent != null) {
-            String linebreak = SystemUtil.lineBreak(fileContent);
-            String[] rows = fileContent.split(linebreak);
-            if (rows.length > 1) {
-                String firstRow = rows[0];
-                if (firstRow.contains(SystemUtil.SEPARATOR)) {
-                    List<String> fieldNames = new ArrayList<>(Arrays.asList(firstRow.trim().split(SystemUtil.SEPARATOR)));
-                    String missingFieldName = fieldNameMissing(fieldNames);
-                    if (missingFieldName == null) {
-                        boolean nameInOneColumn = fieldNames.contains(SIGNATURE);
-                        boolean containsOrderNumber = fieldNames.contains(ORDER_NUMBER);
-                        List<KitRequest> uploadObjects = new ArrayList<>();
-                        for (int rowIndex = 1; rowIndex < rows.length; rowIndex++) {
-                            Map<String, String> obj = new LinkedHashMap<>();
-                            String[] row = rows[rowIndex].trim().split(SystemUtil.SEPARATOR);
-                            if (row.length == fieldNames.size()) {
-                                for (int columnIndex = 0; columnIndex < fieldNames.size(); columnIndex++) {
-                                    obj.put(fieldNames.get(columnIndex), row[columnIndex]);
-                                }
-                                try {
-                                    String shortId = obj.get(SHORT_ID);
-                                    if (StringUtils.isBlank(shortId)) {
-                                        shortId = obj.get(PARTICIPANT_ID);
-                                    }
-                                    if (!userExistsInRealm(shortId, realm, obj.get(PARTICIPANT_ID))) {
-                                        throw new RuntimeException("user " + shortId + " does not belong to this study.");
-                                    }
-                                    KitUploadObject object;
-                                    if (nameInOneColumn) {
-                                        object = new KitUploadObject(null, obj.get(PARTICIPANT_ID), shortId,
-                                                null, obj.get(SIGNATURE),
-                                                obj.get(STREET1), obj.get(STREET2), obj.get(CITY),
-                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY), obj.getOrDefault(PHONE_NUMBER, null));
-                                    }
-                                    else if (containsOrderNumber) {
-                                        object = new KitUploadObject(obj.get(ORDER_NUMBER), obj.get(PARTICIPANT_ID), null,
-                                                null, obj.get(NAME),
-                                                obj.get(STREET1), obj.get(STREET2), obj.get(CITY),
-                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY), obj.getOrDefault(PHONE_NUMBER, null));
-                                    }
-                                    else {
-                                        object = new KitUploadObject(null, obj.get(PARTICIPANT_ID), shortId,
-                                                obj.get(FIRST_NAME), obj.get(LAST_NAME),
-                                                obj.get(STREET1), obj.get(STREET2), obj.get(CITY),
-                                                obj.get(STATE), obj.get(POSTAL_CODE), obj.get(COUNTRY), obj.getOrDefault(PHONE_NUMBER, null));
-                                    }
-                                    uploadObjects.add(object);
-                                }
-                                catch (Exception e) {
-                                    throw new RuntimeException("Text file is not valid. Couldn't be parsed to upload object ", e);
-                                }
-                            }
-                            else {
-                                throw new UploadLineException("Error in line " + (rowIndex + 1));
-                            }
-                        }
-                        logger.info(uploadObjects.size() + " participants were uploaded for manual kits ");
-                        return uploadObjects;
-                    }
-                    else {
-                        throw new FileColumnMissing("File is missing column " + missingFieldName);
-                    }
-                }
-                else {
-                    throw new FileWrongSeparator("Please use tab as separator in the text file");
-                }
+        if (fileContent == null) throw new RuntimeException("File is empty");
+
+        String[] rows = fileContent.split(System.lineSeparator());
+
+        if (rows.length < 2) throw new RuntimeException("Text file does not contain enough information");
+
+        String firstRow = rows[0];
+
+        if (!firstRow.contains(SystemUtil.SEPARATOR)) throw new FileWrongSeparator("Please use tab as separator in the text file");
+
+        List<String> fieldNamesFromFileHeader = Arrays.asList(firstRow.trim().split(SystemUtil.SEPARATOR));
+        String missingHeader = getMissingHeader(fieldNamesFromFileHeader);
+
+        if (missingHeader != null) throw new FileColumnMissing("File is missing column " + missingHeader);
+
+        List<KitRequest> kitRequestsToUpload = new ArrayList<>();
+        parseParticipantDataToUpload(realm, rows, fieldNamesFromFileHeader, kitRequestsToUpload);
+        logger.info(kitRequestsToUpload.size() + " participants were uploaded for manual kits ");
+
+        return kitRequestsToUpload;
+    }
+
+    private void parseParticipantDataToUpload(String realm, String[] rows, List<String> fieldNamesFromHeader,
+                                              List<KitRequest> kitRequestsToUpload) {
+
+        boolean nameInOneColumn = fieldNamesFromHeader.contains(SIGNATURE);
+        boolean containsOrderNumber = fieldNamesFromHeader.contains(ORDER_NUMBER);
+
+        for (int rowIndex = 1; rowIndex < rows.length; rowIndex++) {
+
+            String[] row = rows[rowIndex].trim().split(SystemUtil.SEPARATOR);
+            if (row.length != fieldNamesFromHeader.size())
+                throw new UploadLineException("Error in line " + (rowIndex + 1));
+
+            Map<String, String> participantDataByFieldName = new LinkedHashMap<>();
+            for (int columnIndex = 0; columnIndex < fieldNamesFromHeader.size(); columnIndex++) {
+                participantDataByFieldName.put(fieldNamesFromHeader.get(columnIndex), row[columnIndex]);
             }
+
+            String shortId = participantDataByFieldName.get(SHORT_ID);
+            if (StringUtils.isBlank(shortId)) {
+                shortId = participantDataByFieldName.get(PARTICIPANT_ID);
+            }
+
+            if (!userExistsInRealm(shortId, realm, participantDataByFieldName.get(PARTICIPANT_ID))) {
+                throw new RuntimeException("user " + shortId + " does not belong to this study.");
+            }
+
+            KitUploadObject participantKitToUpload;
+            if (nameInOneColumn) {
+                participantKitToUpload = new KitUploadObject(null, participantDataByFieldName.get(PARTICIPANT_ID), shortId,
+                        null, participantDataByFieldName.get(SIGNATURE),
+                        participantDataByFieldName.get(STREET1), participantDataByFieldName.get(STREET2), participantDataByFieldName.get(CITY),
+                        participantDataByFieldName.get(STATE), participantDataByFieldName.get(POSTAL_CODE), participantDataByFieldName.get(COUNTRY), participantDataByFieldName.getOrDefault(PHONE_NUMBER, null));
+            }
+            else if (containsOrderNumber) {
+                participantKitToUpload = new KitUploadObject(participantDataByFieldName.get(ORDER_NUMBER), participantDataByFieldName.get(PARTICIPANT_ID), null,
+                        null, participantDataByFieldName.get(NAME),
+                        participantDataByFieldName.get(STREET1), participantDataByFieldName.get(STREET2), participantDataByFieldName.get(CITY),
+                        participantDataByFieldName.get(STATE), participantDataByFieldName.get(POSTAL_CODE), participantDataByFieldName.get(COUNTRY), participantDataByFieldName.getOrDefault(PHONE_NUMBER, null));
+            }
+            else {
+                participantKitToUpload = new KitUploadObject(null, participantDataByFieldName.get(PARTICIPANT_ID), shortId,
+                        participantDataByFieldName.get(FIRST_NAME), participantDataByFieldName.get(LAST_NAME),
+                        participantDataByFieldName.get(STREET1), participantDataByFieldName.get(STREET2), participantDataByFieldName.get(CITY),
+                        participantDataByFieldName.get(STATE), participantDataByFieldName.get(POSTAL_CODE), participantDataByFieldName.get(COUNTRY), participantDataByFieldName.getOrDefault(PHONE_NUMBER, null));
+            }
+            kitRequestsToUpload.add(participantKitToUpload);
+
         }
-        return null;
     }
 
     private boolean userExistsInRealm(String shortId, String realm, String ddpParticipantId) {
@@ -424,14 +429,12 @@ public class KitUploadRoute extends RequestHandler {
         }
         Map<String, String> queryConditions = new HashMap<>();
         queryConditions.put("ES", " AND profile.hruid = '" + shortId + "'");
-        DDPInstance instance = DDPInstance.getDDPInstance(realm);
-        List<ParticipantWrapper> participants = ParticipantWrapper.getFilteredList(instance, queryConditions);
-        if (participants.size() == 1) {
-            ParticipantWrapper participantWrapper = participants.get(0);
-            String participantId = participantWrapper.getParticipant().getParticipantId();
-            if (!ddpParticipantId.equals(participantId)) {
-                return false;
-            }
+        DDPInstance ddpInstanceByRealm = DDPInstance.getDDPInstance(realm);
+        List<ParticipantWrapper> participantsBelongToRealm = ParticipantWrapper.getFilteredList(ddpInstanceByRealm, queryConditions);
+        if (participantsBelongToRealm.size() == 1) {
+            ParticipantWrapper participantWrapper = participantsBelongToRealm.get(0);
+            String participantId = ((Map<String, String>)participantWrapper.getData().get("profile")).get("guid");
+            return ddpParticipantId.equals(participantId);
         }
         else {
             logger.error("Short Id {} doesn't seem to exist in {}", shortId, realm);
@@ -472,7 +475,7 @@ public class KitUploadRoute extends RequestHandler {
         return noValidAddress;
     }
 
-    public String fieldNameMissing(List<String> fieldName) {
+    public String getMissingHeader(List<String> fieldName) {
         if (fieldName.contains(ORDER_NUMBER)) {
             //Promise file upload
             if (!fieldName.contains(ORDER_NUMBER)) {
