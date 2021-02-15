@@ -31,9 +31,9 @@ public class EditParticipantMessage {
     private static final String SQL_INSERT_MESSAGE =
             "INSERT INTO " +
                     "message " +
-                    "(user_id, message_status, published_at) " +
+                    "(user_id, study_guid, message_status, published_at) " +
             "VALUES " +
-                    "(?, ?, ?)";
+                    "(?, ?, ?, ?)";
 
     private static final String SQL_UPDATE_MESSAGE =
             "UPDATE " +
@@ -55,13 +55,15 @@ public class EditParticipantMessage {
 
     private int messageId;
     private int userId;
+    private String studyGuid;
     private String messageStatus;
     private long published_at;
     private String received_message;
     private long received_at;
 
-    public EditParticipantMessage(int userId, String messageStatus, long published_at) {
+    public EditParticipantMessage(int userId, String studyGuid, String messageStatus, long published_at) {
         this.userId = userId;
+        this.studyGuid = studyGuid;
         this.messageStatus = messageStatus;
         this.published_at = published_at;
     }
@@ -86,6 +88,14 @@ public class EditParticipantMessage {
 
     public void setUserId(int userId) {
         this.userId = userId;
+    }
+
+    public String getStudyGuid() {
+        return studyGuid;
+    }
+
+    public void setStudyGuid(String studyGuid) {
+        this.studyGuid = studyGuid;
     }
 
     public String getMessageStatus() {
@@ -153,8 +163,9 @@ public class EditParticipantMessage {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_MESSAGE)) {
                 stmt.setInt(1, message.getUserId());
-                stmt.setString(2, message.getMessageStatus());
-                stmt.setLong(3, message.getPublished_at());
+                stmt.setString(2, message.getStudyGuid());
+                stmt.setString(3, message.getMessageStatus());
+                stmt.setLong(4, message.getPublished_at());
                 int result = stmt.executeUpdate();
                 if (result == 1) {
                     logger.info("Added new message ");
