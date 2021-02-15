@@ -37,6 +37,7 @@ import org.broadinstitute.dsm.log.SlackAppender;
 import org.broadinstitute.dsm.model.mbc.MBCHospital;
 import org.broadinstitute.dsm.model.mbc.MBCInstitution;
 import org.broadinstitute.dsm.model.mbc.MBCParticipant;
+import org.broadinstitute.dsm.pubsub.PubSubResultMessageSubscription;
 import org.broadinstitute.dsm.route.*;
 import org.broadinstitute.dsm.security.JWTConverter;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
@@ -64,6 +65,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,6 +124,8 @@ public class DSMServer extends BasicServer {
     public static Provider provider;
     public static final String GCP_PATH_TO_PUBSUB_PROJECT_ID = "pubsub.projectId";
     public static final String GCP_PATH_TO_PUBSUB_SUB = "pubsub.subscription";
+    public static final String GCP_PATH_TO_DSS_TO_DSM_SUB = "pubsub.dss_to_dsm_subscription";
+    public static final String GCP_PATH_TO_DSM_TO_DSS_TOPIC = "pubsub.dsm_to_dss_topic";
 
     private static Map<String, MBCParticipant> mbcParticipants = new HashMap<>();
     private static Map<String, MBCInstitution> mbcInstitutions = new HashMap<>();
@@ -186,6 +190,7 @@ public class DSMServer extends BasicServer {
         port(port);
 
         registerAppEngineStartupCallback(bootTimeoutSeconds);
+
         setupDB(config);
 
 
@@ -198,6 +203,7 @@ public class DSMServer extends BasicServer {
 
     protected void setupCustomRouting(@NonNull Config cfg) {
         logger.info("Setup DSM custom routes...");
+
         //BSP route
         String bspSecret = cfg.getString(ApplicationConfigConstants.BSP_SECRET);
 
@@ -327,6 +333,8 @@ public class DSMServer extends BasicServer {
 
         setupSharedRoutes(kitUtil, notificationUtil, patchUtil, container, receiver);
 
+        setupPubSubPublisherRoutes(cfg);
+
         //no GET for USER_SETTINGS_REQUEST because UI gets them per AuthenticationRoute
         patch(UI_ROOT + RoutePath.USER_SETTINGS_REQUEST, new UserSettingRoute(), new JsonTransformer());
 
@@ -349,6 +357,7 @@ public class DSMServer extends BasicServer {
     private void setupPubSub(@NonNull Config cfg, NotificationUtil notificationUtil) {
         String projectId = cfg.getString(GCP_PATH_TO_PUBSUB_PROJECT_ID);
         String subscriptionId = cfg.getString(GCP_PATH_TO_PUBSUB_SUB);
+        String dsmToDssSubscriptionId = cfg.getString(GCP_PATH_TO_DSS_TO_DSM_SUB);
 
         logger.info("Setting up pubsub for {}/{}", projectId, subscriptionId);
 
@@ -390,6 +399,14 @@ public class DSMServer extends BasicServer {
         }
         catch (Exception e) {
             throw new RuntimeException("Failed to get results from pubsub ", e);
+        }
+
+        logger.info("Setting up pubsub for {}/{}", projectId, dsmToDssSubscriptionId);
+
+        try {
+            PubSubResultMessageSubscription.dssToDsmSubscriber(projectId, dsmToDssSubscriptionId);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         logger.info("Pubsub setup complete");
@@ -554,6 +571,17 @@ public class DSMServer extends BasicServer {
         get(UI_ROOT + RoutePath.CARRIERS + RoutePath.ROUTE_SEPARATOR + RequestParameter.REALM,  new CarrierServiceRoute(), new JsonTransformer());
 
         patch(UI_ROOT + RoutePath.PATCH, new PatchRoute(notificationUtil, patchUtil), new JsonTransformer());
+    }
+
+    private void setupPubSubPublisherRoutes(Config config) {
+        String projectId = config.getString(GCP_PATH_TO_PUBSUB_PROJECT_ID);
+        String dsmToDssTopicId = config.getString(GCP_PATH_TO_DSM_TO_DSS_TOPIC);
+
+        EditParticipantPublisherRoute editParticipantPublisherRoute = new EditParticipantPublisherRoute(projectId, dsmToDssTopicId);
+        put(UI_ROOT + RoutePath.EDIT_PARTICIPANT, editParticipantPublisherRoute, new JsonTransformer());
+
+        EditParticipantMessageReceiverRoute editParticipantMessageReceiverRoute = new EditParticipantMessageReceiverRoute();
+        get(UI_ROOT + RoutePath.EDIT_PARTICIPANT_MESSAGE, editParticipantMessageReceiverRoute, new JsonTransformer());
     }
 
     private void setupJobs(@NonNull Config cfg, @NonNull KitUtil kitUtil,

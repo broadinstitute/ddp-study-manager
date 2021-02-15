@@ -78,8 +78,14 @@ public class DisplaySettingsRoute extends RequestHandler {
                 if (instanceSettings != null && instanceSettings.getHideESFields() != null && !instanceSettings.getHideESFields().isEmpty()) {
                     displaySettings.put("hideESFields", instanceSettings.getHideESFields());
                 }
+                if (instanceSettings != null && instanceSettings.isHasInvitations()) {
+                    displaySettings.put("hasInvitations", true);
+                }
                 if (!instance.isHasRole()) {
                     displaySettings.put("hideMRTissueWorkflow", true);
+                }
+                if (StringUtils.isNotBlank(instance.getUsersIndexES())) {
+                    displaySettings.put("hasProxyData", true);
                 }
                 if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
                     List<PreferredLanguage> preferredLanguages = DDPRequestUtil.getPreferredLanguages(instance);

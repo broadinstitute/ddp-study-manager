@@ -39,6 +39,7 @@ public class DBConstants {
     public static final String BILLING_REFERENCE = "billing_reference";
     public static final String ES_PARTICIPANT_INDEX = "es_participant_index";
     public static final String ES_ACTIVITY_DEFINITION_INDEX = "es_activity_definition_index";
+    public static final String ES_USERS_INDEX = "es_users_index";
 
     //kit request
     public static final String DSM_KIT_ID = "dsm_kit_id";
@@ -449,8 +450,17 @@ public class DBConstants {
     public static final String KIT_BEHAVIOR_CHANGE = "kit_behavior_change";
     public static final String SPECIAL_FORMAT = "special_format";
     public static final String HIDE_ES_FIELDS = "hide_ES_fields";
+    public static final String HAS_INVITATIONS = "has_invitations";
 
     public static final String KIT_TEST_RESULT = "test_result";
+
+    //message for editing pariticipant
+    public static final String MESSAGE_ID = "message_id";
+    public static final String MESSAGE_STATUS = "message_status";
+    public static final String RECEIVED_MESSAGE = "received_message";
+    public static final String MESSAGE_PUBLISHING_STATUS = "Publishing";
+    public static final String MESSAGE_RECEIVED_STATUS = "Received";
+    public static final String MESSAGE_SENT_BACK_STATUS = "Sent back";
 
     //DDPKit
 }
