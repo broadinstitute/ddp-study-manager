@@ -41,7 +41,7 @@ public class EditParticipantPublisherRoute extends RequestHandler {
             realm = queryParams.get(RoutePath.REALM).value();
         }
 
-        if (UserUtil.checkUserAccess(realm, userId, "mr_view") || UserUtil.checkUserAccess(realm, userId, "pt_list_view")) {
+        if (UserUtil.checkUserAccess(realm, userId, "participant_edit")) {
             String messageData = request.body();
 
             if (StringUtils.isBlank(messageData)) {

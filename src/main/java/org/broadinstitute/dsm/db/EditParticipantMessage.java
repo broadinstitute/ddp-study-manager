@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.db;
 
+import lombok.Data;
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -14,6 +15,7 @@ import java.util.List;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
+@Data
 public class EditParticipantMessage {
 
     private static final Logger logger = LoggerFactory.getLogger(EditParticipantMessage.class);
@@ -70,54 +72,6 @@ public class EditParticipantMessage {
         this.messageId = messageId;
         this.messageStatus = messageStatus;
         this.received_message = received_message;
-    }
-
-    public int getMessageId() {
-        return messageId;
-    }
-
-    public void setMessageId(int messageId) {
-        this.messageId = messageId;
-    }
-
-    public int getUserId() {
-        return userId;
-    }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
-
-    public String getMessageStatus() {
-        return messageStatus;
-    }
-
-    public void setMessageStatus(String messageStatus) {
-        this.messageStatus = messageStatus;
-    }
-
-    public long getPublished_at() {
-        return published_at;
-    }
-
-    public void setPublished_at(long published_at) {
-        this.published_at = published_at;
-    }
-
-    public String getReceived_message() {
-        return received_message;
-    }
-
-    public void setReceived_message(String received_message) {
-        this.received_message = received_message;
-    }
-
-    public long getReceived_at() {
-        return received_at;
-    }
-
-    public void setReceived_at(long received_at) {
-        this.received_at = received_at;
     }
 
     public static EditParticipantMessage getMessageWithStatus(int userId) {
