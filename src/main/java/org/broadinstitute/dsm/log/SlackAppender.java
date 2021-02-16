@@ -5,14 +5,15 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpHeaders;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
@@ -38,8 +39,17 @@ public class SlackAppender extends AppenderSkeleton {
     private static AtomicLong minEpochForNextError = new AtomicLong(0L);
     private static final int JOB_DELAY = 60;
     private static final int NON_JOB_DELAY = 30;
-    private static final String MSG_TYPE_JOB_ERROR = "JOB_ERROR_ALERT";
-    private static final String MSG_TYPE_ERROR = "ERROR_ALERT";
+    private static final String GCP_HOST = "console.cloud.google.com";
+    private static final String SECURED_SCHEME = "https";
+    private static final String GCP_ERROR_PATH = "/errors";
+    private static final String GCP_ERROR_FILTER_PARAMETER = "filter";
+    private static final String GCP_SERVICE_PARAMETER = "service";
+    private static String GCP_SERVICE;
+    private static String ROOT_PACKAGE;
+    final String JOB_ERROR_MESSAGE = String.format("This looks like a job error. Job error reporting is " +
+                                    "throttled so you will only see 1 per %s minutes.", JOB_DELAY);
+    final String NON_JOB_ERROR_MESSAGE = String.format("This does NOT look like a job error. " +
+                            "Non-job error reporting is throttled so you will only see 1 per %s minutes.", NON_JOB_DELAY);
 
     @Override
     protected void append(LoggingEvent event) {
@@ -47,17 +57,17 @@ public class SlackAppender extends AppenderSkeleton {
             try {
                 boolean jobError = schedulerName != null && event.getThreadName().contains(schedulerName);
                 long currentEpoch = Utility.getCurrentEpoch();
+                String linkToGcpError = buildLinkToGcpError(event);
+                String errorMessageAndLocation = getErrorMessageAndLocation(event);
                 if (jobError && currentEpoch >= minEpochForNextJobError.get()) {
-                    this.sendSlackNotification(currentEpoch, String.format(
-                            "%s \n" +
-                            "This looks like a job error. Job error reporting is " +
-                            "throttled so you will only see 1 per %s minutes.", getErrorMessageAndLocation(event), JOB_DELAY));
+                    this.sendSlackNotification(
+                            buildMessage(errorMessageAndLocation, linkToGcpError, JOB_ERROR_MESSAGE)
+                    );
                     minEpochForNextJobError.set(currentEpoch + JOB_DELAY * 60L);
                 } else if (!jobError && currentEpoch >= minEpochForNextError.get()) {
-                    this.sendSlackNotification(currentEpoch, String.format(
-                            "%s \n" +
-                            "This does NOT look like a job error. " +
-                            "Non-job error reporting is throttled so you will only see 1 per %s minutes.", getErrorMessageAndLocation(event), NON_JOB_DELAY));
+                    this.sendSlackNotification(
+                            buildMessage(errorMessageAndLocation, linkToGcpError, NON_JOB_ERROR_MESSAGE)
+                    );
                     minEpochForNextError.set(currentEpoch + NON_JOB_DELAY * 60L);
                 }
             } catch (Exception e) {
@@ -66,19 +76,49 @@ public class SlackAppender extends AppenderSkeleton {
         }
     }
 
+    String buildLinkToGcpError(LoggingEvent event) {
+        URIBuilder gcpErrorsUri = new URIBuilder();
+        gcpErrorsUri.setScheme(SECURED_SCHEME);
+        gcpErrorsUri.setHost(GCP_HOST);
+        gcpErrorsUri.setPath(GCP_ERROR_PATH);
+        gcpErrorsUri.setParameter(GCP_SERVICE_PARAMETER, GCP_SERVICE);
+        gcpErrorsUri.setParameter(GCP_ERROR_FILTER_PARAMETER, event.getThrowableInformation().getThrowable().toString());
+        return gcpErrorsUri.toString();
+    }
+
     String getErrorMessageAndLocation(LoggingEvent event) {
         StringBuilder errorCauseAndPlace = new StringBuilder();
         Throwable error = event.getThrowableInformation().getThrowable();
+
+        String developerDefinedCodeErrorLocation = Arrays.stream(error.getStackTrace())
+                .map(StackTraceElement::toString)
+                .filter(s -> s.contains(ROOT_PACKAGE))
+                .collect(Collectors.joining(System.lineSeparator()));
+
         errorCauseAndPlace
-                .append(error.getMessage())
-                .append("\n")
-                .append(error.getStackTrace().length > 0 ? error.getStackTrace()[0].toString() : "")
-                .append("\n");
+                .append(error.toString())
+                .append(System.lineSeparator())
+                .append(developerDefinedCodeErrorLocation)
+                .append(System.lineSeparator());
+
         return errorCauseAndPlace.toString();
     }
 
-    private void sendSlackNotification(long currentEpoch, String note) {
-        SlackMessagePayload payload = getSlackMessagePayload(currentEpoch, note);
+    String buildMessage(String exceptionWithLocation, String linkToGcpError, String defaultErrorMessage) {
+        StringBuilder prettifiedErrorMessage = new StringBuilder();
+        prettifiedErrorMessage
+                .append(exceptionWithLocation)
+                .append(System.lineSeparator())
+                .append(System.lineSeparator())
+                .append(linkToGcpError)
+                .append(System.lineSeparator())
+                .append(System.lineSeparator())
+                .append(defaultErrorMessage);
+        return prettifiedErrorMessage.toString();
+    }
+
+    private void sendSlackNotification(String note) {
+        SlackMessagePayload payload = buildSlackMessageWithPayload(note);
         HttpRequest httpRequest = HttpRequest.newBuilder()
                 .uri(slackHookUrl)
                 .POST(HttpRequest.BodyPublishers.ofString(new Gson().toJson(payload)))
@@ -96,13 +136,8 @@ public class SlackAppender extends AppenderSkeleton {
         }
     }
 
-    public SlackMessagePayload getSlackMessagePayload(long currentEpoch, String note) {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String date = formatter.format(new Date(currentEpoch * 1000L));
-        SlackMessagePayload payload = new SlackMessagePayload(String.format("An error has been detected for *%s*." +
-                " Please go check the backend logs around *%s UTC*. \n" + "\n %s"
-                ,appEnv, date, note), slackChannel, "Study-Manager", ":nerd_face:");
-        return payload;
+    public SlackMessagePayload buildSlackMessageWithPayload(String note) {
+        return new SlackMessagePayload(note, slackChannel, "Study-Manager", ":nerd_face:");
     }
 
     @Override
@@ -116,13 +151,16 @@ public class SlackAppender extends AppenderSkeleton {
     }
 
 
-    public static synchronized void configure(String scheduler, String appEnv, URI slackHookUri, String slackChannel) {
+    public static synchronized void configure(String scheduler, String appEnv, URI slackHookUri, String slackChannel,
+                                              String gcpServiceName, String rootPackage) {
         if (!configured) {
             SlackAppender.appEnv = appEnv;
             slackHookUrl = slackHookUri;
             httpClient = HttpClient.newHttpClient();
             SlackAppender.slackChannel = slackChannel;
             schedulerName = scheduler;
+            GCP_SERVICE = gcpServiceName;
+            ROOT_PACKAGE = rootPackage;
             configured = true;
         } else {
             throw new RuntimeException("Configure has already been called for this appender.");

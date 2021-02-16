@@ -65,7 +65,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -682,6 +681,8 @@ public class DSMServer extends BasicServer {
             if (config.hasPath("slack.hook") && config.hasPath("slack.channel")) {
                 String appEnv = config.getString("portal.environment");
                 String slackHookUrlString = config.getString("slack.hook");
+                String gcpServiceName = config.getString("slack.gcpServiceName");
+                String rootPackage = DSMServer.class.getPackageName();
                 URI slackHookUrl;
                 String slackChannel = config.getString("slack.channel");
                 try {
@@ -689,7 +690,7 @@ public class DSMServer extends BasicServer {
                 } catch (URISyntaxException e) {
                     throw new IllegalArgumentException("Could not parse " + slackHookUrlString + "\n" + e);
                 }
-                SlackAppender.configure(schedulerName, appEnv, slackHookUrl, slackChannel);
+                SlackAppender.configure(schedulerName, appEnv, slackHookUrl, slackChannel, gcpServiceName, rootPackage);
                 logger.info("Error notification setup complete. If log4j.xml is configured, notifications will be sent to " + slackChannel + ".");
             } else {
                 logger.warn("Skipping error notification setup.");
