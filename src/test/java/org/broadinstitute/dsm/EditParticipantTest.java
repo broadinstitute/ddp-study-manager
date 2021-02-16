@@ -3,6 +3,7 @@ package org.broadinstitute.dsm;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.typesafe.config.Config;
+import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.EditParticipantMessage;
 import org.broadinstitute.dsm.db.User;
 import org.broadinstitute.dsm.pubsub.EditParticipantMessagePublisher;
@@ -23,7 +24,7 @@ public class EditParticipantTest extends TestHelper {
     public static final String GCP_PATH_TO_PUBSUB_PROJECT_ID = "pubsub.projectId";
     public static final String GCP_PATH_TO_DSS_TO_DSM_SUB = "pubsub.dss_to_dsm_subscription";
     public static final String GCP_PATH_TO_DSM_TO_DSS_TOPIC = "pubsub.dsm_to_dss_topic";
-    public static final String TEST_PAYLOAD = "{\"participantGuid\":\"TEST\",\"studyGuid\":\"testboston\",\"data\":{\"firstName\":\"test\"}}";
+    public static final String TEST_PAYLOAD = "{\"participantGuid\":\"TEST\",\"instanceName\":\"Angio\",\"data\":{\"firstName\":\"test\"}}";
     public static final String UNIT_TESTER_EMAIL = "unitTesterEmail";
 
     public Config cfg;
@@ -87,7 +88,11 @@ public class EditParticipantTest extends TestHelper {
             Assert.assertEquals(DBConstants.MESSAGE_RECEIVED_STATUS, receivedStatus);
 
             Assert.assertEquals(messageJsonObject.get("participantGuid"), receivedMessageJsonObject.get("participantGuid"));
-            Assert.assertEquals(messageJsonObject.get("studyGuid"), receivedMessageJsonObject.get("studyGuid"));
+
+            String instanceName = messageJsonObject.get("instanceName").getAsString();
+            String studyGuid = DDPInstance.getStudyGuidByInstanceName(instanceName);
+
+            Assert.assertEquals(studyGuid, receivedMessageJsonObject.get("studyGuid").getAsString());
             Assert.assertEquals(messageJsonObject.get("data").getAsJsonObject().get("firstName"), receivedMessageJsonObject.get("firstName"));
             Assert.assertEquals(userId, receivedMessageJsonObject.get("userId").getAsInt());
 
