@@ -35,6 +35,7 @@ public class TestBostonUPSTrackingJob implements Job {
             " ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) WHERE req.ddp_instance_id = ? and kit_label not like \"%\\\\_1\"  ";
 
     private static String SQL_AVOID_DELIVERED = "and (tracking_to_id is not null or tracking_return_id is not null ) and (ups_tracking_status is null or ups_return_status is null or ups_tracking_status not like \"" + UPSStatus.DELIVERED_TYPE + " %\" or ups_return_status not like \"" + UPSStatus.DELIVERED_TYPE + " %\")" +
+            " and test_result is null"+
             " order by kit.dsm_kit_request_id ASC";
 
     private static final String SQL_UPDATE_UPS_TRACKING_STATUS = "UPDATE ddp_kit SET ups_tracking_status = ?, ups_tracking_date = ? " +
@@ -45,6 +46,8 @@ public class TestBostonUPSTrackingJob implements Job {
     private static final String SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, request.ddp_kit_request_id, request.upload_reason, " +
             "        realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
             "        from ddp_kit_request request, ddp_kit kit, event_type eve, ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
+            "        and kit.dsm_kit_request_id not in (select eq.dsm_kit_request_id  FROM event_type et left join EVENT_QUEUE eq on (et.ddp_instance_id=eq.ddp_instance_id) " +
+            "        where   eq.dsm_kit_request_id = ? and et.event_type= ?)"+
             "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = ? ";
 
     static String DELIVERED = "DELIVERED";
@@ -215,7 +218,7 @@ public class TestBostonUPSTrackingJob implements Job {
 
             if (!isReturn) {
                 if (shouldTriggerEventForKitOnItsWayToParticipant(statusType, oldType)) {
-                    KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn,SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] { DELIVERED, kit.getExternalOrderNumber() }, 2);//todo change this to the number of subkits but for now 2 for test boston works
+                    KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn,SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] {kit.getDsmKitRequestId(), DELIVERED,  DELIVERED, kit.getExternalOrderNumber() }, 2);//todo change this to the number of subkits but for now 2 for test boston works
                     if (kitDDPNotification != null) {
                         logger.info("Triggering DDP for kit going to participant with external order number: " + kit.getExternalOrderNumber());
                         EventUtil.triggerDDP(conn, kitDDPNotification);
@@ -240,7 +243,7 @@ public class TestBostonUPSTrackingJob implements Job {
                 if (shouldTriggerEventForReturnKitDelivery(statusType, oldType)) {
                     KitUtil.setKitReceived(conn, kit.getMainKitLabel());
                     logger.info("RECEIVED: " + trackingId);
-                    KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn,SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] { RECEIVED, kit.getExternalOrderNumber() }, 2);//todo change this to the number of subkits but for now 2 for test boston works
+                    KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn,SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] { kit.getDsmKitRequestId(), RECEIVED, RECEIVED, kit.getExternalOrderNumber() }, 2);//todo change this to the number of subkits but for now 2 for test boston works
                     if (kitDDPNotification != null) {
                         logger.info("Triggering DDP for received kit with external order number: " + kit.getExternalOrderNumber());
                         EventUtil.triggerDDP(conn, kitDDPNotification);
