@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.ParticipantData;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
@@ -14,15 +15,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
-public class ATKitRequest {
+public class SearchKitRequest {
 
-    private static final Logger logger = LoggerFactory.getLogger(ATKitRequest.class);
+    private static final Logger logger = LoggerFactory.getLogger(SearchKitRequest.class);
 
-    public static final String SQL_SELECT_KIT_REQUEST = "SELECT ddp_participant_id, JSON_EXTRACT(data,'$.GENOME_STUDY_KIT_TRACKING_NUMBER'), " +
+    public static final String SQL_SELECT_KIT_REQUEST = "SELECT participant_data_id, ddp_participant_id, data, JSON_EXTRACT(data,'$.GENOME_STUDY_KIT_TRACKING_NUMBER'), " +
             "JSON_EXTRACT(data,'$.GENOME_STUDY_SPIT_KIT_BARCODE'), JSON_EXTRACT(data,'$.GENOME_STUDY_CPT_ID'), JSON_EXTRACT(data,'$.GENOME_STUDY_DATE_RECEIVED') " +
             "FROM ddp_participant_data where ";
 
@@ -35,6 +35,28 @@ public class ATKitRequest {
     private static final String COLLABORATOR_PARTICIPANT_ID = "JSON_EXTRACT(data,'$.GENOME_STUDY_CPT_ID')";
     private static final String RECEIVED_DATE = "JSON_EXTRACT(data,'$.GENOME_STUDY_DATE_RECEIVED')";
 
+    public static ParticipantData findATKitRequest(@NonNull String mfBarcode) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KIT_REQUEST.concat(MF_BARCODE + " like \"%" + mfBarcode + "%\""))) {
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = new ParticipantData(rs.getString(DBConstants.PARTICIPANT_DATA_ID), null, rs.getString(DBConstants.DATA));
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Error searching for AT kit w/ mfBarcode " + mfBarcode, results.resultException);
+        }
+        logger.info("Found " + mfBarcode + " AT kit");
+        return (ParticipantData) results.resultValue;
+    }
 
     public static List<KitRequestShipping> findATKitRequest(@NonNull String field, @NonNull String value) {
         HashMap<String, KitRequestShipping> kitRequests = new HashMap<>();
@@ -83,14 +105,16 @@ public class ATKitRequest {
         //add ES information
         if (!kitRequests.isEmpty()) {
             DDPInstance ddpInstance = DDPInstance.getDDPInstance("atcp");
-            String filter = Arrays.stream(kitRequests.keySet().toArray(new String[0])).collect(Collectors.joining(ElasticSearchUtil.BY_GUIDS));
-            Map<String, Map<String, Object>> participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
-                    ElasticSearchUtil.BY_GUID + filter);
-            if (participantESData != null && !participantESData.isEmpty()) {
-                kitRequests.forEach((s, kitRequestShipping) -> {
-                    Map<String, Object> esParticipant = participantESData.get(s);
+            kitRequests.forEach((ddpParticipantId, kitRequestShipping) -> {
+                Map<String, Map<String, Object>> participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
+                        ElasticSearchUtil.BY_GUID + ddpParticipantId);
+                if (participantESData == null || participantESData.isEmpty()) {
+                    participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance, ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId);
+                }
+                if (participantESData != null && !participantESData.isEmpty()) {
+                    Map<String, Object> esParticipant = participantESData.get(ddpParticipantId);
                     if (esParticipant != null && !esParticipant.isEmpty()) {
-                        Map<String, Object> profile = (Map<String, Object>) participantESData.get("profile");
+                        Map<String, Object> profile = (Map<String, Object>) esParticipant.get("profile");
                         if (profile != null && !profile.isEmpty()) {
                             kitRequestShipping.setHruid((String) profile.get("hruid"));
                         }
@@ -99,13 +123,15 @@ public class ATKitRequest {
                             for (Map<String, Object> activity : activities) {
                                 Object activityCode = activity.get("activityCode");
                                 if ("GENOME_STUDY".equals(activityCode)) {
-                                    List<Map<String, Object>> questionAnswers = (List<Map<String, Object>>) activity.get("questionAnswers");
-                                    if (questionAnswers != null) {
-                                        for (Map<String, Object> questionAnswer : questionAnswers) {
-                                            Object stableId = questionAnswer.get("stableId");
+                                    List<Map<String, Object>> questionsAnswers = (List<Map<String, Object>>) activity.get("questionsAnswers");
+                                    if (questionsAnswers != null) {
+                                        for (Map<String, Object> questionsAnswer : questionsAnswers) {
+                                            Object stableId = questionsAnswer.get("stableId");
                                             if ("PARTICIPANT_GENDER".equals(stableId)) {
-                                                Object answer = questionAnswer.get("answer");
-                                                kitRequestShipping.setGender(String.valueOf(answer));
+                                                List<String> answer = (List<String>) questionsAnswer.get("answer");
+                                                if (answer != null && !answer.isEmpty() && answer.size() == 1) {
+                                                    kitRequestShipping.setGender(answer.get(0));
+                                                }
                                             }
                                         }
                                     }
@@ -113,8 +139,8 @@ public class ATKitRequest {
                             }
                         }
                     }
-                });
-            }
+                }
+            });
         }
         return new ArrayList<KitRequestShipping>(kitRequests.values());
     }
