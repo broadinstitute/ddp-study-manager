@@ -3,7 +3,7 @@ package org.broadinstitute.dsm.route;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.KitRequestShipping;
-import org.broadinstitute.dsm.model.at.ATKitRequest;
+import org.broadinstitute.dsm.model.at.SearchKitRequest;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
@@ -41,7 +41,7 @@ public class KitSearchRoute extends RequestHandler {
             }
             List<KitRequestShipping> kitRequestShipping = KitRequestShipping.findKitRequest(field, value, realms);
             if (Arrays.asList(realms).contains("atcp")) { //only if user has right to see atcp
-                kitRequestShipping.addAll(ATKitRequest.findATKitRequest(field, value));
+                kitRequestShipping.addAll(SearchKitRequest.findATKitRequest(field, value));
             }
             return kitRequestShipping;
         }

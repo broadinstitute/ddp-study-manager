@@ -155,7 +155,7 @@ public class FieldSettings {
         }
     }
 
-    private static void updateFieldSetting(@NonNull String fieldSettingId, @NonNull FieldSettings fieldSetting, @NonNull String userId){
+    private static void updateFieldSetting(@NonNull String fieldSettingId, @NonNull FieldSettings fieldSetting, @NonNull String userId) {
         String possibleValues = new GsonBuilder().create().toJson(fieldSetting.getPossibleValues(), ArrayList.class);
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -176,14 +176,14 @@ public class FieldSettings {
                 stmt.setLong(8, System.currentTimeMillis());
                 stmt.setString(9, fieldSetting.getFieldSettingId());
                 int result = stmt.executeUpdate();
-                if (result == 1){
+                if (result == 1) {
                     logger.info("Updated field setting with id " + fieldSettingId);
                 }
                 else {
                     throw new RuntimeException("Error updating field setting with id " + fieldSettingId + ": it was updating " + result + " rows");
                 }
             }
-            catch (SQLException ex){
+            catch (SQLException ex) {
                 dbVals.resultException = ex;
             }
             return dbVals;
