@@ -8,7 +8,6 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.model.KitDDPNotification;
-import org.broadinstitute.dsm.model.at.ReceiveKitRequest;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -159,11 +158,8 @@ public class KitStatusChangeRoute extends RequestHandler {
                         throw new RuntimeException("kit_label " + kit + " does not exist");
                     }
                     else if (RoutePath.RECEIVED_KIT_REQUEST.equals(changeType)) {
-                        //try to receive it as AT kit
-                        if (!ReceiveKitRequest.receiveATKitRequest(kit)) {
-                            scanErrorList.add(new ScanError(kit, "SM-ID \"" + kit + "\" does not exist or was already scanned as received.\n" + UserErrorMessages.IF_QUESTIONS_CONTACT_DEVELOPER));
-                            logger.warn("SM-ID kit_label " + kit + " does not exist or was already scanned as received");
-                        }
+                        scanErrorList.add(new ScanError(kit, "SM-ID \"" + kit + "\" does not exist or was already scanned as received.\n" + UserErrorMessages.IF_QUESTIONS_CONTACT_DEVELOPER));
+                        logger.warn("SM-ID kit_label " + kit + " does not exist or was already scanned as received");
                     }
                     else {
                         throw new RuntimeException("Error something went wrong at the scan pages");

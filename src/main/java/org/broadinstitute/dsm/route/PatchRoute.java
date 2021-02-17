@@ -230,24 +230,6 @@ public class PatchRoute extends RequestHandler {
                             throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
                         }
                     }
-                    else if (Patch.PARTICIPANT_DATA_ID.equals(patch.getParent())) {
-                        String participantDataId = null;
-                        Map<String, String> map = new HashMap<>();
-                        for (NameValue nameValue : patch.getNameValues()) {
-                            DBElement dbElement = patchUtil.getColumnNameMap().get(nameValue.getName());
-                            if (dbElement != null) {
-                                if (participantDataId == null) {
-                                    DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
-                                    participantDataId = ParticipantData.createNewParticipantData(patch.getParentId(), ddpInstance.getDdpInstanceId(), patch.getFieldId(), String.valueOf(nameValue.getValue()), patch.getUser());
-                                    map.put("participantDataId", participantDataId);
-                                }
-                                else if (participantDataId != null) {
-                                    Patch.patch(participantDataId, patch.getUser(), nameValue, dbElement);
-                                }
-                            }
-                        }
-                        return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
-                    }
                 }
                 throw new RuntimeException("Id and parentId was null");
             }

@@ -38,7 +38,6 @@ public class PatchUtil {
         getColumnNames(KitRequestShipping.class);
         getColumnNames(KitRequest.class);
         getColumnNames(Drug.class);
-        getColumnNames(ParticipantData.class);
         logger.info("Loaded patch utils");
     }
 
