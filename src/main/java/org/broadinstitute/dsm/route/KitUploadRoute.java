@@ -354,16 +354,13 @@ public class KitUploadRoute extends RequestHandler {
         if (fileContent == null) throw new RuntimeException("File is empty");
 
         String[] rows = fileContent.split(System.lineSeparator());
-
         if (rows.length < 2) throw new RuntimeException("Text file does not contain enough information");
 
         String firstRow = rows[0];
-
         if (!firstRow.contains(SystemUtil.SEPARATOR)) throw new FileWrongSeparator("Please use tab as separator in the text file");
 
         List<String> fieldNamesFromFileHeader = Arrays.asList(firstRow.trim().split(SystemUtil.SEPARATOR));
         String missingHeader = getMissingHeader(fieldNamesFromFileHeader);
-
         if (missingHeader != null) throw new FileColumnMissing("File is missing column " + missingHeader);
 
         List<KitRequest> kitRequestsToUpload = new ArrayList<>();
@@ -394,9 +391,11 @@ public class KitUploadRoute extends RequestHandler {
             if (StringUtils.isBlank(shortId)) {
                 shortId = participantDataByFieldName.get(PARTICIPANT_ID);
             }
-
-            if (!userExistsInRealm(shortId, realm, participantDataByFieldName.get(PARTICIPANT_ID))) {
-                throw new RuntimeException("user " + shortId + " does not belong to this study.");
+            String participantFirstNameFromDoc = participantDataByFieldName.get(FIRST_NAME);
+            String participantLastNameFromDoc = participantDataByFieldName.get(LAST_NAME);
+            if (!userExistsInRealm(shortId, realm, participantFirstNameFromDoc, participantLastNameFromDoc)) {
+                throw new RuntimeException("user with shortId: " + shortId + " and name: " +
+                        participantFirstNameFromDoc + " " + participantLastNameFromDoc + " does not belong to this study.");
             }
 
             KitUploadObject participantKitToUpload;
@@ -423,23 +422,30 @@ public class KitUploadRoute extends RequestHandler {
         }
     }
 
-    private boolean userExistsInRealm(String shortId, String realm, String ddpParticipantId) {
+    private boolean userExistsInRealm(String shortId, String realm, String participantFirstNameFromDoc,
+                                      String participantLastNameFromDoc) {
         if (StringUtils.isBlank(shortId) && shortId.matches("^[a-zA-Z0-9]*$")) {
             return false;
         }
+        if (participantFirstNameFromDoc == null && participantLastNameFromDoc == null) return false;
+
         Map<String, String> queryConditions = new HashMap<>();
         queryConditions.put("ES", " AND profile.hruid = '" + shortId + "'");
         DDPInstance ddpInstanceByRealm = DDPInstance.getDDPInstance(realm);
         List<ParticipantWrapper> participantsBelongToRealm = ParticipantWrapper.getFilteredList(ddpInstanceByRealm, queryConditions);
         if (participantsBelongToRealm.size() == 1) {
             ParticipantWrapper participantWrapper = participantsBelongToRealm.get(0);
-            String participantId = ((Map<String, String>)participantWrapper.getData().get("profile")).get("guid");
-            return ddpParticipantId.equals(participantId);
+            Map<String, String> participantProfileFromES = ((Map<String, String>) participantWrapper.getData().get("profile"));
+            String participantFirstNameFromES = participantProfileFromES.get("firstName");
+            String participantLastNameFromES = participantProfileFromES.get("lastName");
+            return participantFirstNameFromDoc.equals(participantFirstNameFromES)
+                    && participantLastNameFromDoc.equals(participantLastNameFromES);
         }
         else {
-            logger.error("Short Id {} doesn't seem to exist in {}", shortId, realm);
+            logger.error("Short Id {} with name {} {} doesn't seem to exist in {}",
+                    shortId, participantFirstNameFromDoc, participantLastNameFromDoc  ,realm);
         }
-        return true;
+        return false;
     }
 
     public Map<String, KitRequest> checkAddress(List<KitRequest> kitUploadObjects, String phone) {
@@ -498,9 +504,6 @@ public class KitUploadRoute extends RequestHandler {
                     return LAST_NAME + " or " + SIGNATURE;
                 }
             }
-        }
-        if (!fieldName.contains(PARTICIPANT_ID)) {
-            return PARTICIPANT_ID;
         }
         if (!fieldName.contains(STREET1)) {
             return STREET1;
