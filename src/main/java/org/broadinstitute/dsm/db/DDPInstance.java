@@ -48,6 +48,13 @@ public class DDPInstance {
             "FROM ddp_instance main, ddp_participant part WHERE main.ddp_instance_id = part.ddp_instance_id AND main.is_active = 1 AND part.ddp_participant_id = ? AND main.instance_name = ?";
     public static final String SQL_SELECT_GROUP = "SELECT ddp_group_id from ddp_instance_group g LEFT JOIN ddp_instance realm ON (g.ddp_instance_id = realm.ddp_instance_id) WHERE instance_name =?";
     public static final String BY_BASE_URL = " and base_url like \"%dsm/studies/%1\"";
+    private static final String SQL_SELECT_STUDY_GUID_BY_INSTANCE_NAME =
+            "SELECT " +
+                    "study_guid " +
+            "FROM " +
+                    "ddp_instance " +
+            "WHERE " +
+                    "instance_name = ?";
 
     private final String ddpInstanceId;
     private final String name;
@@ -135,6 +142,32 @@ public class DDPInstance {
             throw new RuntimeException("Couldn't get realm information for realm with instance id " + ddpInstanceId, results.resultException);
         }
         return (DDPInstance) results.resultValue;
+    }
+
+    public static String getStudyGuidByInstanceName(@NonNull String instanceName) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_STUDY_GUID_BY_INSTANCE_NAME)) {
+                stmt.setString(1, instanceName);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = rs.getString(1);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting study guid by instance name " + instanceName, e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get study guid by instance name " + instanceName, results.resultException);
+        }
+        return (String) results.resultValue;
     }
 
 
