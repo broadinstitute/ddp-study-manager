@@ -71,7 +71,8 @@ public class SlackAppenderTest extends TestHelper {
             String note = slackAppender.buildMessage(
                     slackAppender.getErrorMessageAndLocation(loggingEvent),
                     slackAppender.buildLinkToGcpError(loggingEvent),
-                    slackAppender.NON_JOB_ERROR_MESSAGE
+                    slackAppender.NON_JOB_ERROR_MESSAGE,
+                    slackAppender.buildLinkToGcpLog()
             );
 
             SlackAppender.SlackMessagePayload error_alert =

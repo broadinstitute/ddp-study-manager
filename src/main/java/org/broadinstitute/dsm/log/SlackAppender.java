@@ -5,6 +5,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -25,6 +27,7 @@ import org.slf4j.LoggerFactory;
 public class SlackAppender extends AppenderSkeleton {
 
 
+
     public SlackAppender() {
     }
 
@@ -42,8 +45,15 @@ public class SlackAppender extends AppenderSkeleton {
     private static final String GCP_HOST = "console.cloud.google.com";
     private static final String SECURED_SCHEME = "https";
     private static final String GCP_ERROR_PATH = "/errors";
+    private static final String GCP_LOG_PATH = "/logs/query";
     private static final String GCP_ERROR_FILTER_PARAMETER = "filter";
     private static final String GCP_SERVICE_PARAMETER = "service";
+    private static final String GCP_RESOURCE_TYPE = "gae_app";
+    private static final String urlEncodedSlash = "%2F";
+    private static final String urlEncodedEqualSign = "%3D";
+    private static final String urlEncodedNewLine = "%0A";
+    private static final String urlQuerySeparator = ";";
+
     private static String GCP_SERVICE;
     private static String ROOT_PACKAGE;
     final String JOB_ERROR_MESSAGE = String.format("This looks like a job error. Job error reporting is " +
@@ -58,15 +68,16 @@ public class SlackAppender extends AppenderSkeleton {
                 boolean jobError = schedulerName != null && event.getThreadName().contains(schedulerName);
                 long currentEpoch = Utility.getCurrentEpoch();
                 String linkToGcpError = buildLinkToGcpError(event);
+                String linkToGcpLog = buildLinkToGcpLog();
                 String errorMessageAndLocation = getErrorMessageAndLocation(event);
                 if (jobError && currentEpoch >= minEpochForNextJobError.get()) {
                     this.sendSlackNotification(
-                            buildMessage(errorMessageAndLocation, linkToGcpError, JOB_ERROR_MESSAGE)
+                            buildMessage(errorMessageAndLocation, linkToGcpError, JOB_ERROR_MESSAGE, linkToGcpLog)
                     );
                     minEpochForNextJobError.set(currentEpoch + JOB_DELAY * 60L);
                 } else if (!jobError && currentEpoch >= minEpochForNextError.get()) {
                     this.sendSlackNotification(
-                            buildMessage(errorMessageAndLocation, linkToGcpError, NON_JOB_ERROR_MESSAGE)
+                            buildMessage(errorMessageAndLocation, linkToGcpError, NON_JOB_ERROR_MESSAGE, linkToGcpLog)
                     );
                     minEpochForNextError.set(currentEpoch + NON_JOB_DELAY * 60L);
                 }
@@ -86,9 +97,33 @@ public class SlackAppender extends AppenderSkeleton {
         return gcpErrorsUri.toString();
     }
 
-    String buildGcpLogQuery() {
-        StringBuilder queryWithSeparator = new StringBuilder("");
-        return null;
+    String buildLinkToGcpLog() {
+        URIBuilder gcpLogUri = new URIBuilder();
+        gcpLogUri.setScheme(SECURED_SCHEME);
+        gcpLogUri.setHost(GCP_HOST);
+        gcpLogUri.setPath(GCP_LOG_PATH);
+
+        StringBuilder gcpLogUriWithParameters = new StringBuilder(gcpLogUri.toString());
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        String minuteTimeRange = currentDateTime.withNano(0).minusHours(4).minusSeconds(30).toInstant(ZoneOffset.UTC)
+                + urlEncodedSlash
+                + currentDateTime.withNano(0).minusHours(4).plusSeconds(30).toInstant(ZoneOffset.UTC);
+
+        gcpLogUriWithParameters
+                .append(urlQuerySeparator)
+                .append("query=")
+                .append("resource.type")
+                .append(urlEncodedEqualSign)
+                .append(String.format("\"%s\"", GCP_RESOURCE_TYPE))
+                .append(urlEncodedNewLine)
+                .append("resource.labels.module_id")
+                .append(urlEncodedEqualSign)
+                .append(String.format("\"%s\"", GCP_SERVICE))
+                .append(urlQuerySeparator)
+                .append("timeRange")
+                .append("=")
+                .append(minuteTimeRange);
+        return gcpLogUriWithParameters.toString();
     }
 
     String getErrorMessageAndLocation(LoggingEvent event) {
@@ -109,19 +144,6 @@ public class SlackAppender extends AppenderSkeleton {
         return errorCauseAndPlace.toString();
     }
 
-    String buildMessage(String exceptionWithLocation, String linkToGcpError, String defaultErrorMessage) {
-        StringBuilder prettifiedErrorMessage = new StringBuilder();
-        prettifiedErrorMessage
-                .append(exceptionWithLocation)
-                .append(System.lineSeparator())
-                .append(System.lineSeparator())
-                .append(linkToGcpError)
-                .append(System.lineSeparator())
-                .append(System.lineSeparator())
-                .append(defaultErrorMessage);
-        return prettifiedErrorMessage.toString();
-    }
-
     private void sendSlackNotification(String note) {
         SlackMessagePayload payload = buildSlackMessageWithPayload(note);
         HttpRequest httpRequest = HttpRequest.newBuilder()
@@ -139,6 +161,22 @@ public class SlackAppender extends AppenderSkeleton {
             logger.warn("Could not post error message to slack room " + slackChannel + " with hook " + slackHookUrl
                     + "\n" + ExceptionUtils.getStackTrace(e));
         }
+    }
+
+    String buildMessage(String exceptionWithLocation, String linkToGcpError, String defaultErrorMessage, String linkToGcpLog) {
+        StringBuilder prettifiedErrorMessage = new StringBuilder();
+        prettifiedErrorMessage
+                .append(exceptionWithLocation)
+                .append(System.lineSeparator())
+                .append(System.lineSeparator())
+                .append(linkToGcpError)
+                .append(System.lineSeparator())
+                .append(System.lineSeparator())
+                .append(linkToGcpLog)
+                .append(System.lineSeparator())
+                .append(System.lineSeparator())
+                .append(defaultErrorMessage);
+        return prettifiedErrorMessage.toString();
     }
 
     public SlackMessagePayload buildSlackMessageWithPayload(String note) {
