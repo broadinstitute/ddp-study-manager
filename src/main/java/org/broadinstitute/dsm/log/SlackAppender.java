@@ -86,6 +86,11 @@ public class SlackAppender extends AppenderSkeleton {
         return gcpErrorsUri.toString();
     }
 
+    String buildGcpLogQuery() {
+        StringBuilder queryWithSeparator = new StringBuilder("");
+        return null;
+    }
+
     String getErrorMessageAndLocation(LoggingEvent event) {
         StringBuilder errorCauseAndPlace = new StringBuilder();
         Throwable error = event.getThrowableInformation().getThrowable();
