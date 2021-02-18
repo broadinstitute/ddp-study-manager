@@ -39,11 +39,10 @@ public class ReceiveKitRequest {
             data.put(RECEIVED_DATE, formattedDate);
             data.put(GENOME_STUDY_STATUS, "3");
 
-//            String dataString = new Gson().toJson(participantData.getData());
-//            if (updateData(dataString, participantData.getDataId())) {
-//                //sent email
-//
-//            }
+            String dataString = new Gson().toJson(data);
+            if (updateData(dataString, participantData.getDataId())) {
+                //sent email
+            }
             return true;
         }//no else because if participantData then study manager wouldn't have been able to find the kit request!
         return false;
@@ -54,7 +53,7 @@ public class ReceiveKitRequest {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT_REQUEST)){
                 stmt.setString(1, data);
-                stmt.setString(2, participantDataId);
+                stmt.setObject(2, participantDataId);
                 int result = stmt.executeUpdate();
                 if (result == 1) {
                     logger.info("Set AT kit to received " + participantDataId);
