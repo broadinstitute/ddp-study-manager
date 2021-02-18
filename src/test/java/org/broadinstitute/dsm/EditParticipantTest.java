@@ -10,6 +10,7 @@ import org.broadinstitute.dsm.pubsub.EditParticipantMessagePublisher;
 import org.broadinstitute.dsm.pubsub.PubSubResultMessageSubscription;
 import org.broadinstitute.dsm.route.EditParticipantPublisherRoute;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.DBTestUtil;
 import org.broadinstitute.dsm.util.UserUtil;
 import org.junit.After;
 import org.junit.Assert;
@@ -50,9 +51,7 @@ public class EditParticipantTest extends TestHelper {
 
         String realm = null;
 
-        if (UserUtil.checkUserAccess(realm, Integer.toString(userId), "mr_view") ||
-                UserUtil.checkUserAccess(realm, Integer.toString(userId), "pt_list_view")) {
-
+        if (UserUtil.checkUserAccess(realm, Integer.toString(userId), "participant_edit")) {
             try {
                 PubSubResultMessageSubscription.dssToDsmSubscriber(projectId, dsmToDssSubscriptionId);
             } catch (Exception e) {
@@ -109,6 +108,6 @@ public class EditParticipantTest extends TestHelper {
 
     @After
     public void last() {
-        EditParticipantMessage.deleteMessage(userId);
+        DBTestUtil.deleteMessage(userId);
     }
 }

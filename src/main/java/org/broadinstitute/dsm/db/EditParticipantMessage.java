@@ -55,14 +55,6 @@ public class EditParticipantMessage {
             "WHERE " +
                     "message_id = ? ";
 
-    private static final String SQL_DELETE_MESSAGE_BY_USER_ID =
-            "DELETE FROM " +
-                    "message " +
-            "WHERE " +
-                    "user_id = ? " +
-            "ORDER BY published_at DESC " +
-                    "LIMIT 1";
-
     private int messageId;
     private int userId;
     private String messageStatus;
@@ -188,27 +180,6 @@ public class EditParticipantMessage {
         });
         if (results.resultException != null) {
             throw new RuntimeException("Error updating status of message with id: " + messageId, results.resultException);
-        }
-    }
-
-    public static void deleteMessage(int userId) {
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_DELETE_MESSAGE_BY_USER_ID)) {
-                stmt.setInt(1, userId);
-                int result = stmt.executeUpdate();
-                if (result != 1){
-                    throw new RuntimeException("Error deleting message, it was deleting " + result + " rows");
-                }
-            }
-            catch (SQLException ex) {
-                dbVals.resultException = ex;
-            }
-            return dbVals;
-        });
-        if (results.resultException != null) {
-            throw new RuntimeException("Error deleting message with user id: "
-                    + userId, results.resultException);
         }
     }
 

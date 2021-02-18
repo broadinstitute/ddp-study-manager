@@ -67,7 +67,13 @@ public class DBTestUtil {
     private static final String SQL_DELETE_PK_FROM_TABLE = "DELETE FROM %TABLE WHERE %PK = ?";
     private static final String SQL_INSERT_USER = "INSERT INTO access_user (user_id, name, email, is_active) VALUES (?, ?, ?, ?)";
     private static final String SQL_DELETE_USER_BY_ID = "DELETE FROM access_user WHERE user_id = ?";
-
+    private static final String SQL_DELETE_MESSAGE_BY_USER_ID =
+            "DELETE FROM " +
+                    "message " +
+            "WHERE " +
+                    "user_id = ? " +
+            "ORDER BY published_at DESC " +
+            "LIMIT 1";
     public static final long WEEK = 7 * 24 * 60 * 60 * 1000;
 
     public static void deleteAllParticipantData(String participantMaxVersionId) {
@@ -1001,6 +1007,27 @@ public class DBTestUtil {
                             " was missing the value " + v.getValue());
                 }
             }
+        }
+    }
+
+    public static void deleteMessage(int userId) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_DELETE_MESSAGE_BY_USER_ID)) {
+                stmt.setInt(1, userId);
+                int result = stmt.executeUpdate();
+                if (result != 1){
+                    throw new RuntimeException("Error deleting message, it was deleting " + result + " rows");
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error deleting message with user id: "
+                    + userId, results.resultException);
         }
     }
 }
