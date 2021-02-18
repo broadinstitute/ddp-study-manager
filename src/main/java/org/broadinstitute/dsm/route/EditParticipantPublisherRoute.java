@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
+import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.pubsub.EditParticipantMessagePublisher;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RoutePath;
@@ -40,7 +41,7 @@ public class EditParticipantPublisherRoute extends RequestHandler {
             realm = queryParams.get(RoutePath.REALM).value();
         }
 
-        if (UserUtil.checkUserAccess(realm, userId, "mr_view") || UserUtil.checkUserAccess(realm, userId, "pt_list_view")) {
+        if (UserUtil.checkUserAccess(realm, userId, "participant_edit")) {
             String messageData = request.body();
 
             if (StringUtils.isBlank(messageData)) {
@@ -71,7 +72,8 @@ public class EditParticipantPublisherRoute extends RequestHandler {
 
     public static Map<String, String> getStringStringMap(String userId, JsonObject messageJsonObject) {
         String participantGuid = messageJsonObject.get("participantGuid").getAsString();
-        String studyGuid = messageJsonObject.get("studyGuid").getAsString();
+        String instanceName = messageJsonObject.get("instanceName").getAsString();
+        String studyGuid = DDPInstance.getStudyGuidByInstanceName(instanceName);
         Map<String, String> attributeMap = new HashMap<>();
         attributeMap.put("taskType", "UPDATE_PROFILE");
         attributeMap.put("userId", userId);

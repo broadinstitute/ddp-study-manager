@@ -38,13 +38,14 @@ public class PubSubResultMessageSubscription {
                     String message = transformMessage(pubsubMessage);
                     JsonObject jsonObject = new Gson().fromJson(message, JsonObject.class);
                     String userId = null;
+
+                    consumer.ack();
+
                     if (jsonObject.has("userId")) {
                         userId = jsonObject.get("userId").getAsString();
                         EditParticipantMessage.updateMessage(Integer.parseInt(userId), DBConstants.MESSAGE_RECEIVED_STATUS,
                                 message, System.currentTimeMillis());
                     }
-
-                    consumer.ack();
                 };
 
         //Subscriber subscriber = null;
