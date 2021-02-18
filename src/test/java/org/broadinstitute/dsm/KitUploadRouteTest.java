@@ -50,14 +50,14 @@ public class KitUploadRouteTest {
     public void headerWithSignatureAndWithoutShortId() {
         String fileContent = "participantId\tsignature\tstreet1\tstreet2\tcity\tstate\tpostalCode\tcountry\n" +
                 "56\tSun Maid\t415 Main St\t\tCambridge\tMA\t2142\tUS";
-        Assert.assertTrue(route.isFileValid(fileContent).size() > 0);
+        Assert.assertTrue(route.isFileValid(fileContent, null).size() > 0);
     }
 
     @Test
     public void headerWithoutSignatureAndWithShortId() {
         String fileContent = "participantId\tshortId\tfirstName\tlastName\tstreet1\tstreet2\tcity\tstate\tpostalCode\tcountry\n" +
                 "56\t56\tSun\tMaid\t415 Main St\t\tCambridge\tMA\t2142\tUS";
-        Assert.assertTrue(route.isFileValid(fileContent).size() > 0);
+        Assert.assertTrue(route.isFileValid(fileContent, null).size() > 0);
     }
 
     @Test
@@ -65,7 +65,7 @@ public class KitUploadRouteTest {
         String fileContent = "participantId\tfirstName\tlastName\tstreet1\tstreet2\tcity\tstate\tpostalCode\tcountry\n" +
                 "56\tSun\tMaid\t415 Main St\t\tCambridge\tMA\t2142\tUS";
         try {
-            route.isFileValid(fileContent);
+            route.isFileValid(fileContent, null);
         }
         catch (FileColumnMissing e) {
             Assert.assertTrue(e.getMessage().endsWith("shortId"));
@@ -77,7 +77,7 @@ public class KitUploadRouteTest {
         String fileContent = "participantId\tsignature\tstreet1\tstreet2\tcity\tstate\tpostalCode\tcountry\n" +
                 "56\tSun Maid\t415 Main St\t\tCambridge\tMA\t2142\tUS";
         try {
-            route.isFileValid(fileContent);
+            route.isFileValid(fileContent, null);
         }
         catch (FileColumnMissing e) {
             Assert.assertTrue(e.getMessage().endsWith("shortId"));
@@ -89,7 +89,7 @@ public class KitUploadRouteTest {
         String fileContent = "participantId\tshortId\tlastName\tstreet1\tstreet2\tcity\tstate\tpostalCode\tcountry\n" +
                 "56\t56\tMaid\t415 Main St\t\tCambridge\tMA\t2142\tUS";
         try {
-            route.isFileValid(fileContent);
+            route.isFileValid(fileContent, null);
         }
         catch (FileColumnMissing e) {
             Assert.assertTrue(e.getMessage().endsWith("firstName or signature"));
