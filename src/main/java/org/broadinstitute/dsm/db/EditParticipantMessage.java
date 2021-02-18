@@ -92,6 +92,9 @@ public class EditParticipantMessage {
             catch (SQLException ex) {
                 dbVals.resultException = ex;
             }
+            if (messagesWithStatus.size() != 1) {
+                throw new RuntimeException("Error getting last message of user: " + userId);
+            }
             return dbVals;
         });
 
