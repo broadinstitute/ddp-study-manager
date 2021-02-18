@@ -375,6 +375,7 @@ public class KitUploadRoute extends RequestHandler {
 
         boolean nameInOneColumn = fieldNamesFromHeader.contains(SIGNATURE);
         boolean containsOrderNumber = fieldNamesFromHeader.contains(ORDER_NUMBER);
+        DDPInstance ddpInstanceByRealm = DDPInstance.getDDPInstance(realm);
 
         for (int rowIndex = 1; rowIndex < rows.length; rowIndex++) {
 
@@ -391,11 +392,8 @@ public class KitUploadRoute extends RequestHandler {
             if (StringUtils.isBlank(shortId)) {
                 shortId = participantDataByFieldName.get(PARTICIPANT_ID);
             }
-            String participantFirstNameFromDoc = participantDataByFieldName.get(FIRST_NAME);
-            String participantLastNameFromDoc = participantDataByFieldName.get(LAST_NAME);
-            if (!userExistsInRealm(shortId, realm, participantFirstNameFromDoc, participantLastNameFromDoc)) {
-                throw new RuntimeException("user with shortId: " + shortId + " and name: " +
-                        participantFirstNameFromDoc + " " + participantLastNameFromDoc + " does not belong to this study.");
+            if (!userExistsInRealm(ddpInstanceByRealm, participantDataByFieldName)) {
+                throw new RuntimeException("user with shortId: " + shortId + " and name, does not belong to this study.");
             }
 
             KitUploadObject participantKitToUpload;
@@ -422,18 +420,21 @@ public class KitUploadRoute extends RequestHandler {
         }
     }
 
-    private boolean userExistsInRealm(String shortId, String realm, String participantFirstNameFromDoc,
-                                      String participantLastNameFromDoc) {
-        if (StringUtils.isBlank(shortId) && shortId.matches("^[a-zA-Z0-9]*$")) {
+    private boolean userExistsInRealm(DDPInstance ddpInstanceByRealm,
+                                      Map<String, String> participantDataByFieldName) {
+        String participantShortIdFromDoc = participantDataByFieldName.get(SHORT_ID);
+        if (StringUtils.isBlank(participantShortIdFromDoc) && participantShortIdFromDoc.matches("^[a-zA-Z0-9]*$")) {
             return false;
         }
-        if (participantFirstNameFromDoc == null && participantLastNameFromDoc == null) return false;
+
+        String participantFirstNameFromDoc = participantDataByFieldName.get(FIRST_NAME);
+        String participantLastNameFromDoc = participantDataByFieldName.get(LAST_NAME);
+        if (participantFirstNameFromDoc == null || participantLastNameFromDoc == null) return false;
 
         Map<String, String> queryConditions = new HashMap<>();
-        queryConditions.put("ES", " AND profile.hruid = '" + shortId + "'");
-        DDPInstance ddpInstanceByRealm = DDPInstance.getDDPInstance(realm);
+        queryConditions.put("ES", " AND profile.hruid = '" + participantShortIdFromDoc + "'");
         List<ParticipantWrapper> participantsBelongToRealm = ParticipantWrapper.getFilteredList(ddpInstanceByRealm, queryConditions);
-        if (participantsBelongToRealm.size() == 1) {
+        if (participantsBelongToRealm.size() == 1 ) {
             ParticipantWrapper participantWrapper = participantsBelongToRealm.get(0);
             Map<String, String> participantProfileFromES = ((Map<String, String>) participantWrapper.getData().get("profile"));
             String participantFirstNameFromES = participantProfileFromES.get("firstName");
@@ -441,10 +442,8 @@ public class KitUploadRoute extends RequestHandler {
             return participantFirstNameFromDoc.equals(participantFirstNameFromES)
                     && participantLastNameFromDoc.equals(participantLastNameFromES);
         }
-        else {
-            logger.error("Short Id {} with name {} {} doesn't seem to exist in {}",
-                    shortId, participantFirstNameFromDoc, participantLastNameFromDoc  ,realm);
-        }
+        logger.error("User with Short Id {} doesn't seem to exist in {}",
+                participantShortIdFromDoc, ddpInstanceByRealm.getName());
         return false;
     }
 
