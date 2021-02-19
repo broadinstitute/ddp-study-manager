@@ -380,6 +380,9 @@ public class KitUploadRoute extends RequestHandler {
         for (int rowIndex = 1; rowIndex < rows.length; rowIndex++) {
 
             String[] row = rows[rowIndex].trim().split(SystemUtil.SEPARATOR);
+            if (rowIndex == rows.length - 1 && "".equals(String.join("", row))) {
+                continue;
+            }
             if (row.length != fieldNamesFromHeader.size())
                 throw new UploadLineException("Error in line " + (rowIndex + 1));
 
