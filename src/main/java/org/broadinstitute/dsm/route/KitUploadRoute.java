@@ -377,12 +377,12 @@ public class KitUploadRoute extends RequestHandler {
         boolean containsOrderNumber = fieldNamesFromHeader.contains(ORDER_NUMBER);
         DDPInstance ddpInstanceByRealm = DDPInstance.getDDPInstance(realm);
 
-        for (int rowIndex = 1; rowIndex < rows.length; rowIndex++) {
+        int lastNonEmptyRowIndex = getLastNonEmptyRowIndex(rows);
+
+        for (int rowIndex = 1; rowIndex <= lastNonEmptyRowIndex; rowIndex++) {
 
             String[] row = rows[rowIndex].trim().split(SystemUtil.SEPARATOR);
-            if (rowIndex == rows.length - 1 && "".equals(String.join("", row))) {
-                continue;
-            }
+
             if (row.length != fieldNamesFromHeader.size())
                 throw new UploadLineException("Error in line " + (rowIndex + 1));
 
@@ -421,6 +421,21 @@ public class KitUploadRoute extends RequestHandler {
             kitRequestsToUpload.add(participantKitToUpload);
 
         }
+    }
+
+    private int getLastNonEmptyRowIndex(String[] rows) {
+
+        int lastNonEmptyRowIndex = rows.length - 1;
+
+        for (int i = rows.length - 1; i > 0; i--) {
+            String[] row = rows[i].trim().split(SystemUtil.SEPARATOR);
+            if (!"".equals(String.join("", row))) {
+                lastNonEmptyRowIndex = i;
+                break;
+            }
+        }
+
+        return lastNonEmptyRowIndex;
     }
 
     private boolean userExistsInRealm(DDPInstance ddpInstanceByRealm,
