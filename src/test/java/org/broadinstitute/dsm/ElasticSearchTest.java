@@ -582,13 +582,13 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
-    public void mbcLegacyPTGUID() throws Exception {
-        searchProfileValue("participants_structured.cmi.cmi-osteo", "profile.guid", "ZSNS8E4U838JPW7NU93Y");
+    public void searchPTByGUID() throws Exception {
+        searchProfileValue("participants_structured.atcp.atcp", "profile.guid", "Y2SRM8TD4FXPO6GMTF7O");
     }
 
     @Test
-    public void mbcLegacyPTAltPID() throws Exception {
-        searchProfileValue("participants_structured.cmi.cmi-mbc", "profile.legacyAltPid", "8195-A16");
+    public void searchPTByLegacy() throws Exception {
+        searchProfileValue("participants_structured.atcp.atcp", "profile.legacyAltPid", "5db65f9f43f38f2ae0ec3efb1d3325b1356e0a6ffa4b7ef71938f73930269811");
     }
 
     public void searchProfileValue(String index, String field, String value) throws Exception {
@@ -610,7 +610,7 @@ public class ElasticSearchTest extends TestHelper {
                 ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
                 i++;
             }
-            Assert.assertNotEquals(0, esData.size());
+                Assert.assertNotEquals(0, esData.size());
         }
     }
 

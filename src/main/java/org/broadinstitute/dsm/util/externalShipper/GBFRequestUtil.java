@@ -159,7 +159,7 @@ public class GBFRequestUtil implements ExternalShipper {
                 String orderXml = GBFRequestUtil.orderXmlToString(Orders.class, orders);
 
                 //                logger.info("orderXML: " + orderXml);
-                boolean test = DSMServer.isTest(getExternalShipperName());//true for dev in `not-secret.conf`
+                boolean test = DSMServer.isTest(getExternalShipperName());
                 JSONObject payload = new JSONObject().put("orderXml", orderXml).put("test", test);
                 String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + ORDER_ENDPOINT;
                 String apiKey = DSMServer.getApiKey(getExternalShipperName());

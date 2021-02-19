@@ -1,8 +1,0 @@
-#withdrawal of particpants
-ALTER TABLE `ddp_participant_exit`
-ADD COLUMN `in_ddp` TINYINT(1) NULL DEFAULT NULL AFTER `exit_by`;
-
-ALTER TABLE `ddp_participant`
-ADD COLUMN `changed_by` VARCHAR(45) NOT NULL AFTER `last_changed`;
-
-INSERT INTO `instance_role` (`name`) VALUES ('has_medical_record_in_db');

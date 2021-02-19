@@ -1,3 +1,0 @@
-# fix for label creation Canada participants
-ALTER TABLE `kit_type`
-ADD COLUMN `customs_json` VARCHAR(500) NULL DEFAULT NULL AFTER `return_address_phone`;
