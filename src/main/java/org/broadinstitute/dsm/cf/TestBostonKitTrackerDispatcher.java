@@ -23,6 +23,7 @@ import org.apache.commons.dbcp2.PoolingDataSource;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.broadinstitute.dsm.model.ups.UPSStatus;
 
 /**
  * Identifies kits whose shipping history should be
@@ -35,44 +36,52 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
 
     private String STUDY_MANAGER_SCHEMA = System.getenv("STUDY_MANAGER_SCHEMA") + ".";
     private String STUDY_SERVER_SCHEMA = System.getenv("STUDY_SERVER_SCHEMA") + ".";
+    private static final String SQL_SELECT_KITS = "SELECT kit.dsm_kit_request_id, kit.kit_label, kit.tracking_to_id, kit.tracking_return_id, kit.error, kit.message, kit.receive_date, kit.ups_tracking_status, kit.ups_tracking_date, kit.ups_return_date, kit.ups_return_status, req.bsp_collaborator_participant_id, " +
+            " req.external_order_number, kit.CE_order FROM ddp_kit kit LEFT JOIN ddp_kit_request req " +
+            " ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) WHERE req.ddp_instance_id = ? and kit_label not like \"%\\\\_1\"  ";
+
+    private static String SQL_AVOID_DELIVERED = " and (tracking_to_id is not null or tracking_return_id is not null ) and (ups_tracking_status is null or ups_return_status is null or ups_tracking_status not like \"" + UPSStatus.DELIVERED_TYPE + " %\" or ups_return_status not like \"" + UPSStatus.DELIVERED_TYPE + " %\")" +
+            " order by kit.dsm_kit_request_id ASC";
 
 
     @Override
     public void accept(PubsubMessage pubsubMessage, Context context) throws Exception {
 
-        String KIT_QUERY =
-                "select\n" +
-                "u.guid,\n" +
-                "k.kit_label,\n" +
-                "from_unixtime(dkr.created_date/1000) as kit_requested_at,\n" +
-                "k.tracking_to_id,\n" +
-                "k.tracking_return_id,\n" +
-                "json_extract(k.test_result, '$[0].result') test_result,\n" +
-                "ifnull(STR_TO_DATE(replace(json_extract(k.test_result, '$[0].timeCompleted'),'\"',''), '%Y-%m-%dT%H:%i:%sZ'),\n" +
-                "    STR_TO_DATE(replace(json_extract(k.test_result, '$[0].timeCompleted'),'\"',''), '%Y-%m-%dT%H:%i:%s.%fZ')\n" +
-                ")as test_completion_time,\n" +
-                "u.hruid,\n" +
-                "dkr.upload_reason\n" +
-                "from\n" +
-                STUDY_MANAGER_SCHEMA + "ddp_kit k,\n" +
-                STUDY_MANAGER_SCHEMA + "ddp_kit_request dkr,\n" +
-                STUDY_SERVER_SCHEMA + "user u,\n" +
-                STUDY_MANAGER_SCHEMA + "ddp_instance study,\n" +
-                STUDY_MANAGER_SCHEMA + "kit_type kt\n" +
-                "where\n" +
-                "study.instance_name = 'testboston'\n" +
-                "and\n" +
-                "u.guid = dkr.ddp_participant_id\n" +
-                "and\n" +
-                "study.ddp_instance_id = dkr.ddp_instance_id\n" +
-                "and\n" +
-                "dkr.dsm_kit_request_id = k.dsm_kit_request_id\n" +
-                "and\n" +
-                "kt.kit_type_id = dkr.kit_type_id\n" +
-                "and\n" +
-                "kt.kit_type_name = 'AN'\n" +
-                "and k.kit_label like 'TBOS-%'\n" +
-                "order by test_completion_time";
+//        String KIT_QUERY =
+//                "select " +
+//                "u.guid, " +
+//                "k.kit_label, " +
+//                "from_unixtime(dkr.created_date/1000) as kit_requested_at, " +
+//                "k.tracking_to_id, " +
+//                "k.tracking_return_id, " +
+//                "json_extract(k.test_result, '$[0].result') test_result, " +
+//                "ifnull(STR_TO_DATE(replace(json_extract(k.test_result, '$[0].timeCompleted'),'\"',''), '%Y-%m-%dT%H:%i:%sZ'), " +
+//                "    STR_TO_DATE(replace(json_extract(k.test_result, '$[0].timeCompleted'),'\"',''), '%Y-%m-%dT%H:%i:%s.%fZ') " +
+//                ")as test_completion_time, " +
+//                "u.hruid, " +
+//                "dkr.upload_reason " +
+//                "from " +
+//                STUDY_MANAGER_SCHEMA + "ddp_kit k, " +
+//                STUDY_MANAGER_SCHEMA + "ddp_kit_request dkr, " +
+//                STUDY_SERVER_SCHEMA + "user u, " +
+//                STUDY_MANAGER_SCHEMA + "ddp_instance study, " +
+//                STUDY_MANAGER_SCHEMA + "kit_type kt " +
+//                "where " +
+//                "study.instance_name = 'testboston' " +
+//                "and " +
+//                "u.guid = dkr.ddp_participant_id " +
+//                "and " +
+//                "study.ddp_instance_id = dkr.ddp_instance_id " +
+//                "and " +
+//                "dkr.dsm_kit_request_id = k.dsm_kit_request_id " +
+//                "and " +
+//                "kt.kit_type_id = dkr.kit_type_id " +
+//                "and " +
+//                "kt.kit_type_name = 'AN' " +
+//                "and k.kit_label like 'TBOS-%' " +
+//                "order by test_completion_time";
+
+
 
 
         Config cfg = CFUtil.loadConfig();
@@ -82,12 +91,12 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
 
         // static vars are dangerous in CF https://cloud.google.com/functions/docs/bestpractices/tips#functions-tips-scopes-java
         try (Connection conn = dataSource.getConnection()) {
-            try (PreparedStatement stmt = conn.prepareStatement(KIT_QUERY)) {
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KITS + SQL_AVOID_DELIVERED)) {
                 stmt.setFetchSize(1000);
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
-                        String userGuid = rs.getString("guid");
-                        logger.info(userGuid);
+                        String kitLabel = rs.getString("kit.kit_label");
+                        logger.info(kitLabel);
 
                         // spawn threads or other cloud functions in fixed size blocks? Write to a separate queue for worker threads
                         // to grab history?
