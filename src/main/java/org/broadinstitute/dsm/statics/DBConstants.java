@@ -11,6 +11,7 @@ public class DBConstants {
     public static final String DDP_INSTITUTION = "ddp_institution";
     public static final String DDP_PARTICIPANT = "ddp_participant";
     public static final String DDP_PARTICIPANT_EXIT = "ddp_participant_exit";
+    public static final String DDP_PARTICIPANT_DATA = "ddp_participant_data";
     public static final String DRUG_LIST = "drug_list";
 
     public static final String DDP_PARTICIPANT_ID = "ddp_participant_id";
@@ -20,6 +21,7 @@ public class DBConstants {
     public static final String DDP_PARTICIPANT_ALIAS = "p";
     public static final String DDP_PARTICIPANT_RECORD_ALIAS = "r";
     public static final String DDP_PARTICIPANT_EXIT_ALIAS = "ex";
+    public static final String DDP_PARTICIPANT_DATA_ALIAS = "d";
     public static final String DDP_INSTITUTION_ALIAS = "inst";
     public static final String DDP_MEDICAL_RECORD_ALIAS = "m";
     public static final String DDP_ONC_HISTORY_ALIAS = "o";
@@ -39,6 +41,7 @@ public class DBConstants {
     public static final String BILLING_REFERENCE = "billing_reference";
     public static final String ES_PARTICIPANT_INDEX = "es_participant_index";
     public static final String ES_ACTIVITY_DEFINITION_INDEX = "es_activity_definition_index";
+    public static final String ES_USERS_INDEX = "es_users_index";
     public static final String CARRIER_USERNAME = "carrier_username";
     public static final String CARRIER_PASSWORD= "carrier_password";
     public static final String CARRIER_ACCESSKEY = "carrier_accesskey";
@@ -240,6 +243,7 @@ public class DBConstants {
     public static final String FIELD_SETTING_ID = "field_settings_id";
     public static final String FIELD_TYPE = "field_type";
     public static final String DISPLAY_TYPE = "display_type";
+    public static final String ACTIONS = "actions";
 
     //dashboards
     public static final String PARTICIPANT_COUNT = "participantCount";
@@ -296,6 +300,9 @@ public class DBConstants {
     public static final String NAME = "name";
     public static final String USER_ID = "user_id";
     public static final String IN_DDP = "in_ddp";
+    public static final String FIELD_TYPE_ID = "field_type_id";
+    public static final String DATA = "data";
+    public static final String PARTICIPANT_DATA_ID = "participant_data_id";
 
     //user settings
     public static final String ROWS_ON_PAGE = "rows_on_page";
@@ -455,8 +462,17 @@ public class DBConstants {
     public static final String KIT_BEHAVIOR_CHANGE = "kit_behavior_change";
     public static final String SPECIAL_FORMAT = "special_format";
     public static final String HIDE_ES_FIELDS = "hide_ES_fields";
+    public static final String HAS_INVITATIONS = "has_invitations";
 
     public static final String KIT_TEST_RESULT = "test_result";
+
+    //message for editing pariticipant
+    public static final String MESSAGE_ID = "message_id";
+    public static final String MESSAGE_STATUS = "message_status";
+    public static final String RECEIVED_MESSAGE = "received_message";
+    public static final String MESSAGE_PUBLISHING_STATUS = "Publishing";
+    public static final String MESSAGE_RECEIVED_STATUS = "Received";
+    public static final String MESSAGE_SENT_BACK_STATUS = "Sent back";
 
     //DDPKit
 }

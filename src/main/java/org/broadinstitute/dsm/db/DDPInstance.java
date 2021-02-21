@@ -27,28 +27,35 @@ public class DDPInstance {
     private static final Logger logger = LoggerFactory.getLogger(DDPInstance.class);
 
     private static final String SQL_SELECT_INSTANCE_WITH_ROLE = "SELECT ddp_instance_id, instance_name, base_url, collaborator_id_prefix, migrated_ddp, billing_reference, " +
-            "es_participant_index, es_activity_definition_index,  carrier_username, carrier_password, carrier_accesskey, carrier_tracking_url, (SELECT count(role.name) " +
+            "es_participant_index, es_activity_definition_index,  es_users_index,  carrier_username, carrier_password, carrier_accesskey, carrier_tracking_url, (SELECT count(role.name) " +
             "FROM ddp_instance realm, ddp_instance_role inRol, instance_role role WHERE realm.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id AND role.name = ? " +
             "AND realm.ddp_instance_id = main.ddp_instance_id) AS 'has_role', mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients FROM ddp_instance main " +
             "WHERE is_active = 1";
     private static final String SQL_SELECT_INSTANCE_WITH_KIT_BEHAVIOR = "SELECT main.ddp_instance_id, instance_name, base_url, collaborator_id_prefix, migrated_ddp, billing_reference, " +
-            "es_participant_index, es_activity_definition_index, mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients, kit_behavior_change,  carrier_username, carrier_password, carrier_accesskey, carrier_tracking_url " +
+            "es_participant_index, es_activity_definition_index, es_users_index, mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients, kit_behavior_change,  carrier_username, carrier_password, carrier_accesskey, carrier_tracking_url " +
             "FROM ddp_instance main, instance_settings setting WHERE main.ddp_instance_id = setting.ddp_instance_id " +
             "AND main.is_active = 1 AND setting.kit_behavior_change IS NOT NULL";
-    public static final String SQL_SELECT_ALL_ACTIVE_REALMS = "SELECT ddp_instance_id, instance_name, base_url, collaborator_id_prefix, es_participant_index, es_activity_definition_index, " +
+    public static final String SQL_SELECT_ALL_ACTIVE_REALMS = "SELECT ddp_instance_id, instance_name, base_url, collaborator_id_prefix, es_participant_index, es_activity_definition_index, es_users_index, " +
             "mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients, migrated_ddp, billing_reference, carrier_username, carrier_password, carrier_accesskey, carrier_tracking_url FROM ddp_instance WHERE is_active = 1";
     private static final String SQL_SELECT_ACTIVE_REALMS_WITH_ROLE_INFORMATION_BY_PARTICIPANT_ID = "SELECT main.ddp_instance_id, main.instance_name, main.base_url, " +
-            "main.collaborator_id_prefix, main.migrated_ddp, main.billing_reference, main.es_participant_index, main.es_activity_definition_index,  main.carrier_username, main.carrier_password, main.carrier_accesskey, main.carrier_tracking_url, (SELECT count(role.name) " +
+            "main.collaborator_id_prefix, main.migrated_ddp, main.billing_reference, main.es_participant_index, main.es_activity_definition_index, es_users_index, main.carrier_username, main.carrier_password, main.carrier_accesskey, main.carrier_tracking_url, (SELECT count(role.name) " +
             "FROM ddp_instance realm, ddp_instance_role inRol, instance_role role WHERE realm.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id " +
             "AND role.name = ? AND realm.ddp_instance_id = main.ddp_instance_id) as 'has_role', mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients " +
             "FROM ddp_instance main, ddp_participant part WHERE main.ddp_instance_id = part.ddp_instance_id AND main.is_active = 1 and part.participant_id = ?";
     private static final String SQL_SELECT_ACTIVE_REALMS_WITH_ROLE_INFORMATION_BY_DDP_PARTICIPANT_ID_REALM = "SELECT main.ddp_instance_id, main.instance_name, main.base_url, " +
-            "main.collaborator_id_prefix, main.migrated_ddp, main.billing_reference, main.es_participant_index, main.es_activity_definition_index, main.carrier_username, main.carrier_password, main.carrier_accesskey, main.carrier_tracking_url " +
+            "main.collaborator_id_prefix, main.migrated_ddp, main.billing_reference, main.es_participant_index, main.es_activity_definition_index, main.carrier_username, main.carrier_password, main.carrier_accesskey, main.carrier_tracking_url, es_users_index, " +
             "(SELECT count(role.name) FROM ddp_instance realm, ddp_instance_role inRol, instance_role role WHERE realm.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id "+
             "AND role.name = ? AND realm.ddp_instance_id = main.ddp_instance_id) as 'has_role', mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients "+
             "FROM ddp_instance main, ddp_participant part WHERE main.ddp_instance_id = part.ddp_instance_id AND main.is_active = 1 AND part.ddp_participant_id = ? AND main.instance_name = ?";
     public static final String SQL_SELECT_GROUP = "SELECT ddp_group_id from ddp_instance_group g LEFT JOIN ddp_instance realm ON (g.ddp_instance_id = realm.ddp_instance_id) WHERE instance_name =?";
     public static final String BY_BASE_URL = " and base_url like \"%dsm/studies/%1\"";
+    private static final String SQL_SELECT_STUDY_GUID_BY_INSTANCE_NAME =
+            "SELECT " +
+                    "study_guid " +
+            "FROM " +
+                    "ddp_instance " +
+            "WHERE " +
+                    "instance_name = ?";
 
     private final String ddpInstanceId;
     private final String name;
@@ -63,6 +70,7 @@ public class DDPInstance {
     private final String billingReference;
     private final String participantIndexES;
     private final String activityDefinitionIndexES;
+    private final String usersIndexES;
     private final String carrierUserName;
     private final String carrierPassword;
     private final String carrierAccesskey;
@@ -73,7 +81,7 @@ public class DDPInstance {
     public DDPInstance(String ddpInstanceId, String name, String baseUrl, String collaboratorIdPrefix, boolean hasRole,
                        int daysMrAttentionNeeded, int daysTissueAttentionNeeded, boolean hasAuth0Token, List<String> notificationRecipient,
                        boolean migratedDDP, String billingReference, String participantIndexES, String activityDefinitionIndexES,
-                       String carrierUserName, String carrierPassword, String carrierAccesskey, String carrierTrackingUrl) {
+                       String carrierUserName, String carrierPassword, String carrierAccesskey, String carrierTrackingUrl, String usersIndexES) {
         this.ddpInstanceId = ddpInstanceId;
         this.name = name;
         this.baseUrl = baseUrl;
@@ -91,6 +99,7 @@ public class DDPInstance {
         this.carrierPassword = carrierPassword;
         this.carrierAccesskey = carrierAccesskey;
         this.carrierTrackingUrl = carrierTrackingUrl;
+        this.usersIndexES = usersIndexES;
     }
 
     public static DDPInstance getDDPInstance(@NonNull String realm) {
@@ -144,6 +153,34 @@ public class DDPInstance {
         }
         return (DDPInstance) results.resultValue;
     }
+
+    public static String getStudyGuidByInstanceName(@NonNull String instanceName) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_STUDY_GUID_BY_INSTANCE_NAME)) {
+                stmt.setString(1, instanceName);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = rs.getString(1);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting study guid by instance name " + instanceName, e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get study guid by instance name " + instanceName, results.resultException);
+        }
+        return (String) results.resultValue;
+    }
+
+
 
     public static DDPInstance getDDPInstanceWithRole(@NonNull String realm, @NonNull String role) {
         return inTransaction((conn) -> {
@@ -320,7 +357,8 @@ public class DDPInstance {
                 rs.getString(DBConstants.CARRIER_USERNAME),
                 rs.getString(DBConstants.CARRIER_PASSWORD),
                 rs.getString(DBConstants.CARRIER_ACCESSKEY),
-                rs.getString(DBConstants.CARRIER_TRACKING_URL));
+                rs.getString(DBConstants.CARRIER_TRACKING_URL),
+                rs.getString(DBConstants.ES_USERS_INDEX));
     }
 
     private static DDPInstance getDDPInstanceFormResultSet(@NonNull ResultSet rs) throws SQLException {
@@ -343,7 +381,8 @@ public class DDPInstance {
                 rs.getString(DBConstants.CARRIER_USERNAME),
                 rs.getString(DBConstants.CARRIER_PASSWORD),
                 rs.getString(DBConstants.CARRIER_ACCESSKEY),
-                rs.getString(DBConstants.CARRIER_TRACKING_URL));
+                rs.getString(DBConstants.CARRIER_TRACKING_URL),
+                rs.getString(DBConstants.ES_USERS_INDEX));
     }
 
     //assumption: base url of pepper studies will always end like: dsm/studies/<STUDYNAME>
@@ -381,7 +420,7 @@ public class DDPInstance {
                     while (rs.next()) {
                         DDPInstance ddpInstance = getDDPInstanceFormResultSet(rs);
                         List<Value> kitBehavior = Arrays.asList(new Gson().fromJson(rs.getString(DBConstants.KIT_BEHAVIOR_CHANGE), Value[].class));
-                        InstanceSettings instanceSettings = new InstanceSettings(null, kitBehavior, null, null);
+                        InstanceSettings instanceSettings = new InstanceSettings(null, kitBehavior, null, null, false);
                         ddpInstance.setInstanceSettings(instanceSettings);
                         ddpInstances.add(ddpInstance);
                     }

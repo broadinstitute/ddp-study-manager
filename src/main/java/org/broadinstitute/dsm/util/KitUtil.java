@@ -51,7 +51,7 @@ public class KitUtil {
     private static final String SQL_SELECT_COLLABORATOR_ID_TISSUE = "SELECT tis.collaborator_sample_id FROM ddp_medical_record med " +
             "LEFT JOIN ddp_institution inst on (med.institution_id = inst.institution_id) LEFT JOIN ddp_participant as part on (part.participant_id = inst.participant_id) " +
             "LEFT JOIN ddp_onc_history_detail onc on (med.medical_record_id = onc.medical_record_id) LEFT JOIN ddp_tissue tis on (tis.onc_history_detail_id = onc.onc_history_detail_id) " +
-            "WHERE part.ddp_participant_id = ? AND part.ddp_instance_id = ? AND tis.collaborator_sample_id IS NOT NULL LIMIT 1";
+            "WHERE NOT med.deleted <=> 1 AND part.ddp_participant_id = ? AND part.ddp_instance_id = ? AND tis.collaborator_sample_id IS NOT NULL LIMIT 1";
     private static final String SQL_UPDATE_COLLABORATOR_IDS = "UPDATE ddp_kit_request set bsp_collaborator_participant_id = ?, bsp_collaborator_sample_id = ? WHERE dsm_kit_request_id = ?";
     public static final String SQL_UPDATE_KIT_RECEIVED = "UPDATE ddp_kit kit INNER JOIN( SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id " +
             "FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id " +

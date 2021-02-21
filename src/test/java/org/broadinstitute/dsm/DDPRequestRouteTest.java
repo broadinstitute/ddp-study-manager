@@ -108,7 +108,7 @@ public class DDPRequestRouteTest extends TestHelper {
                     "SALIVA", "1", "1", "https://easypost-files.s3-us-west-2.amazonaws.com/files/postage_label/20200214/8240f1b66535494a82b1ec0d566c3f0f.png",
                     "", "794685038506", "9405536897846100551129", "https://track.easypost.com/djE6dHJrXzY4NGJmYzU3ZjM5OTQ1Zjg5MjEzOGRmMWVmMjI1NWZl",
                     null, 12, false, "", 12, null, 12, "so what", "mf_testLabel", false, "shp_f470591c3fb441a68dbb9b76ecf3bb3d",
-                    12, null, "44445", false, "NOT FOUND", null, null, null, null, 0, false, "STANDALONE"));
+                    12, null, "44445", false, "NOT FOUND", null, null, null, null, 0, false, "STANDALONE", null, null, null));
             addedDefaultKitRequest = true;
             counter = 1;
         }
@@ -123,7 +123,7 @@ public class DDPRequestRouteTest extends TestHelper {
                         "SALIVA", "1", "1", "https://easypost-files.s3-us-west-2.amazonaws.com/files/postage_label/20200214/8240f1b66535494a82b1ec0d566c3f0f.png",
                         "", "794685038506", "9405536897846100551129", "https://track.easypost.com/djE6dHJrXzY4NGJmYzU3ZjM5OTQ1Zjg5MjEzOGRmMWVmMjI1NWZl",
                         null, 12, false, "", 12, null, 12, "so what", "mf_testLabel", false, "shp_f470591c3fb441a68dbb9b76ecf3bb3d",
-                        12, null, "44445", false, "NOT FOUND", null, null, null, null, 0 ,false, null));
+                        12, null, "44445", false, "NOT FOUND", null, null, null, null, 0 ,false, null, null, null, null));
                 counter++;
             }
         }

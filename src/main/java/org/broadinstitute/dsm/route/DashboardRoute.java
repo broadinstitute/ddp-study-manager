@@ -225,7 +225,7 @@ public class DashboardRoute extends RequestHandler {
         Map<String, List<AbstractionGroup>> abstractionSummary = AbstractionFinal.getAbstractionFinal(realm);
 
         List<ParticipantWrapper> participantWrapperList = ParticipantWrapper.addAllData(new ArrayList<>(participantESData.keySet()), participantESData,
-                participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary);
+                participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, null, null);
 
         Map<String, Integer> dashboardValues = new HashMap(); //counts only pt
         Map<String, Integer> dashboardValuesDetailed = new HashMap(); //counts number of institutions in total
