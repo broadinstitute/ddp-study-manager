@@ -54,6 +54,7 @@ config/dev-gcloud-creds-sql.json
 config/test-gcloud-creds.json
 config/staging-gcloud-creds.json
 config/prod-gcloud-creds.json
+appengine/deploy/vault.conf
 
 src/test/resources/output
 target/
