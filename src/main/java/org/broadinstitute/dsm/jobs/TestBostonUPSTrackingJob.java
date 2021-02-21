@@ -99,7 +99,7 @@ public class TestBostonUPSTrackingJob implements Job {
 
                                 if (StringUtils.isNotBlank(kit.getTrackingToId()) && !kit.isDelivered()) {
                                     try {
-                                        updateKitStatus(conn, kit, false);
+                                        updateKitStatus(conn, kit, false, ddpInstance);
                                     }
                                     catch (Exception e) {
                                         logger.error("Could not update outbound status for " + kit.getExternalOrderNumber() + " " + e.toString(), e);
@@ -108,7 +108,7 @@ public class TestBostonUPSTrackingJob implements Job {
 
                                 if (StringUtils.isNotBlank(kit.getTrackingReturnId()) && !kit.isReturned()) {
                                     try {
-                                        updateKitStatus(conn, kit, true);
+                                        updateKitStatus(conn, kit, true, ddpInstance);
                                     }
                                     catch (Exception e) {
                                         logger.error("Could not update return status for " + kit.getExternalOrderNumber() + " " + e.toString(), e);
@@ -207,7 +207,8 @@ public class TestBostonUPSTrackingJob implements Job {
                             statusType = status.getType();
                         }
                         if (lastActivity == null || (!lastActivity.equals(recentActivity))) {
-                            updateTrackingInfo(conn, upsHistory, activity, statusType, lastActivity, trackingId, sqlUpdate, isReturn, kit, earliestPackageMovement);
+                            updateTrackingInfo(conn, upsHistory, activity, statusType, lastActivity, trackingId, sqlUpdate,
+                                    isReturn, kit, earliestPackageMovement, ddpInstance);
                         }
                     }
                 }
