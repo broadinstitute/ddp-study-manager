@@ -39,6 +39,10 @@ public class DBConstants {
     public static final String BILLING_REFERENCE = "billing_reference";
     public static final String ES_PARTICIPANT_INDEX = "es_participant_index";
     public static final String ES_ACTIVITY_DEFINITION_INDEX = "es_activity_definition_index";
+    public static final String CARRIER_USERNAME = "carrier_username";
+    public static final String CARRIER_PASSWORD= "carrier_password";
+    public static final String CARRIER_ACCESSKEY = "carrier_accesskey";
+    public static final String CARRIER_TRACKING_URL = "carrier_tracking_url";
 
     //kit request
     public static final String DSM_KIT_ID = "dsm_kit_id";
@@ -113,6 +117,8 @@ public class DBConstants {
     public static final String GBF_CONFIRMATION = "gbf_confirmation";
     public static final String EXTERNAL_ORDER_NUMBER = "external_order_number";
     public static final String CE_ORDER = "CE_order";
+    public static final String KIT_SHIPPING_HISTORY = "kit_shipping_history";
+    public static final String KIT_RETURN_HISTORY = "kit_return_history";
     public static final String NO_RETURN = "no_return";
     public static final String EXTERNAL_ORDER_STATUS = "external_order_status";
     public static final String EXTERNAL_ORDER_DATE = "external_order_date";
