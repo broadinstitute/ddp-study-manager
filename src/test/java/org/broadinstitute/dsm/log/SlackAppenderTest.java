@@ -12,7 +12,6 @@ import com.typesafe.config.ConfigValueFactory;
 import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.spi.RootLogger;
-import org.broadinstitute.ddp.util.Utility;
 import org.broadinstitute.dsm.TestHelper;
 import org.junit.Assert;
 import org.junit.Before;
@@ -58,23 +57,26 @@ public class SlackAppenderTest extends TestHelper {
             String slackHookUrlString = cfg.getString("slack.hook");
             URI slackHookUrl;
             String slackChannel = cfg.getString("slack.channel");
+            String gcpServiceName = cfg.getString("slack.gcpServiceName");
             try {
                 slackHookUrl = new URI(slackHookUrlString);
             } catch (URISyntaxException e) {
                 throw new IllegalArgumentException("Could not parse " + slackHookUrlString);
             }
 
-            SlackAppender.configure(null, appEnv, slackHookUrl, slackChannel);
+            SlackAppender.configure(null, appEnv, slackHookUrl, slackChannel, gcpServiceName, TestHelper.class.getPackageName());
 
             slackAppender.doAppend(loggingEvent);
 
-            String note = String.format(
-                    "%s \n" +
-                    "This does NOT look like a job error. Non-job error reporting is throttled so you will only see 1 per %s minutes.",
-                    slackAppender.getErrorMessageAndLocation(loggingEvent), 30);
+            String note = slackAppender.buildMessage(
+                    slackAppender.getErrorMessageAndLocation(loggingEvent),
+                    slackAppender.buildLinkToGcpError(loggingEvent),
+                    slackAppender.NON_JOB_ERROR_MESSAGE,
+                    slackAppender.buildLinkToGcpLog()
+            );
 
             SlackAppender.SlackMessagePayload error_alert =
-                    slackAppender.getSlackMessagePayload(Utility.getCurrentEpoch(), note);
+                    slackAppender.buildSlackMessageWithPayload(note);
 
             mockDDP.verify(request().withPath("/mock_slack_test").withBody(JsonBody.json(
                     new Gson().toJson(error_alert))));
