@@ -52,7 +52,6 @@ public class KitUploadRoute extends RequestHandler {
             "AND kit.deactivated_date is null AND request.ddp_instance_id = ? AND request.kit_type_id = ? AND request.ddp_participant_id = ?";
 
     private static final String PARTICIPANT_ID = "participantId";
-    private static final String ORDER_NUMBER = "orderNumber";
     private static final String SHORT_ID = "shortId";
     private static final String SIGNATURE = "signature";
     private static final String FIRST_NAME = "firstName";
@@ -148,7 +147,7 @@ public class KitUploadRoute extends RequestHandler {
 
                 Map<Integer, KitRequestSettings> kitRequestSettingsMap = KitRequestSettings.getKitRequestSettings(ddpInstance.getDdpInstanceId());
                 KitRequestSettings kitRequestSettings = kitRequestSettingsMap.get(kitType.getKitTypeId());
-                // if the kit type has sub kits > like for promise
+                // if the kit type has sub kits > like for testBoston
                 boolean kitHasSubKits = kitRequestSettings.getHasSubKits() != 0;
 
                 logger.info("Setup EasyPost...");
@@ -374,7 +373,6 @@ public class KitUploadRoute extends RequestHandler {
                                               List<KitRequest> kitRequestsToUpload) {
 
         boolean nameInOneColumn = fieldNamesFromHeader.contains(SIGNATURE);
-        boolean containsOrderNumber = fieldNamesFromHeader.contains(ORDER_NUMBER);
         DDPInstance ddpInstanceByRealm = DDPInstance.getDDPInstance(realm);
 
         for (int rowIndex = 1; rowIndex < rows.length; rowIndex++) {
@@ -400,12 +398,6 @@ public class KitUploadRoute extends RequestHandler {
             if (nameInOneColumn) {
                 participantKitToUpload = new KitUploadObject(null, participantDataByFieldName.get(PARTICIPANT_ID), shortId,
                         null, participantDataByFieldName.get(SIGNATURE),
-                        participantDataByFieldName.get(STREET1), participantDataByFieldName.get(STREET2), participantDataByFieldName.get(CITY),
-                        participantDataByFieldName.get(STATE), participantDataByFieldName.get(POSTAL_CODE), participantDataByFieldName.get(COUNTRY), participantDataByFieldName.getOrDefault(PHONE_NUMBER, null));
-            }
-            else if (containsOrderNumber) {
-                participantKitToUpload = new KitUploadObject(participantDataByFieldName.get(ORDER_NUMBER), participantDataByFieldName.get(PARTICIPANT_ID), null,
-                        null, participantDataByFieldName.get(NAME),
                         participantDataByFieldName.get(STREET1), participantDataByFieldName.get(STREET2), participantDataByFieldName.get(CITY),
                         participantDataByFieldName.get(STATE), participantDataByFieldName.get(POSTAL_CODE), participantDataByFieldName.get(COUNTRY), participantDataByFieldName.getOrDefault(PHONE_NUMBER, null));
             }
@@ -481,27 +473,15 @@ public class KitUploadRoute extends RequestHandler {
     }
 
     public String getMissingHeader(List<String> fieldName) {
-        if (fieldName.contains(ORDER_NUMBER)) {
-            //Promise file upload
-            if (!fieldName.contains(ORDER_NUMBER)) {
-                return ORDER_NUMBER;
+        if (!fieldName.contains(SIGNATURE)) {
+            if (!fieldName.contains(SHORT_ID)) {
+                return SHORT_ID;
             }
-            if (!fieldName.contains(NAME)) {
-                return NAME;
+            if (!fieldName.contains(FIRST_NAME)) {
+                return FIRST_NAME + " or " + SIGNATURE;
             }
-        }
-        else {
-            //file upload for other ddps
-            if (!fieldName.contains(SIGNATURE)) {
-                if (!fieldName.contains(SHORT_ID)) {
-                    return SHORT_ID;
-                }
-                if (!fieldName.contains(FIRST_NAME)) {
-                    return FIRST_NAME + " or " + SIGNATURE;
-                }
-                if (!fieldName.contains(LAST_NAME)) {
-                    return LAST_NAME + " or " + SIGNATURE;
-                }
+            if (!fieldName.contains(LAST_NAME)) {
+                return LAST_NAME + " or " + SIGNATURE;
             }
         }
         if (!fieldName.contains(STREET1)) {

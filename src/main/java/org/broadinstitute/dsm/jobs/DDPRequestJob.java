@@ -3,7 +3,6 @@ package org.broadinstitute.dsm.jobs;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.LatestKitRequest;
 import org.broadinstitute.dsm.util.*;
-import org.jruby.embed.ScriptingContainer;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -26,8 +25,6 @@ public class DDPRequestJob implements Job {
     public void execute(JobExecutionContext context) {
         JobDataMap dataMap = context.getJobDetail().getJobDataMap();
         //fetch parameters from JobDataMap
-        ScriptingContainer container = (ScriptingContainer) dataMap.get(DSMServer.CONTAINER);
-        Object receiver = (Object) dataMap.get(DSMServer.RECEIVER);
         NotificationUtil notificationUtil = (NotificationUtil) dataMap.get(DSMServer.NOTIFICATION_UTIL);
         //get kit requests from ddps
         try {
@@ -39,7 +36,7 @@ public class DDPRequestJob implements Job {
         }
         //get new/changed participants from ddps
         try {
-            DDPMedicalRecordDataRequest medicalRecordDataRequest = new DDPMedicalRecordDataRequest(container, receiver);
+            DDPMedicalRecordDataRequest medicalRecordDataRequest = new DDPMedicalRecordDataRequest();
             medicalRecordDataRequest.requestAndWriteParticipantInstitutions();
         }
         catch (Exception e) {

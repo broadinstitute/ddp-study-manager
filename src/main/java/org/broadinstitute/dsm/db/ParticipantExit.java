@@ -4,12 +4,8 @@ import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
-import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.statics.RoutePath;
-import org.broadinstitute.dsm.util.DDPRequestUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,9 +21,11 @@ public class ParticipantExit {
 
     private static final Logger logger = LoggerFactory.getLogger(ParticipantExit.class);
 
-    private static final String SQL_SELECT_EXITED_PT = "SELECT realm.instance_name, ex.ddp_participant_id, u.name, ex.exit_date, " +
-            "ex.in_ddp FROM ddp_participant_exit ex, ddp_instance realm, access_user u WHERE ex.ddp_instance_id = realm.ddp_instance_id " +
+    private static final String SQL_SELECT_EXITED_PT = "SELECT realm.instance_name, ex.ddp_participant_id, u.name, ex.exit_date, ex.in_ddp " +
+            "FROM ddp_participant_exit ex, ddp_instance realm, access_user u WHERE ex.ddp_instance_id = realm.ddp_instance_id " +
             "AND ex.exit_by = u.user_id AND realm.instance_name = ?";
+    private static final String SQL_INSERT_EXIT_PT = "INSERT INTO ddp_participant_exit (ddp_instance_id, ddp_participant_id, exit_date, exit_by, in_ddp) " +
+            "VALUES (?,?,?,?,?)";
 
     private final String realm;
     private final String participantId;
@@ -84,7 +82,7 @@ public class ParticipantExit {
     }
 
     private static void addParticipantInformation(@NonNull String realm, @NonNull Collection<ParticipantExit> exitedParticipants) {
-        DDPInstance instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
+        DDPInstance instance = DDPInstance.getDDPInstance(realm);
         if (!instance.isHasRole()) {
             if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
                 Map<String, Map<String, Object>> participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(realm, instance.getParticipantIndexES());
@@ -96,26 +94,6 @@ public class ParticipantExit {
                     }
                 }
             }
-            else {
-                for (ParticipantExit exitParticipant : exitedParticipants) {
-                    if (exitParticipant.isInDDP()) {
-                        String sendRequest = instance.getBaseUrl() + RoutePath.DDP_PARTICIPANTS_PATH + "/" + exitParticipant.getParticipantId();
-                        try {
-                            DDPParticipant ddpParticipant = DDPRequestUtil.getResponseObject(DDPParticipant.class, sendRequest, realm, instance.isHasAuth0Token());
-                            if (ddpParticipant != null) {
-                                exitParticipant.setShortId(ddpParticipant.getShortId());
-                                exitParticipant.setLegacyShortId(ddpParticipant.getLegacyShortId());
-                            }
-                        }
-                        catch (Exception ioe) {
-                            logger.error("Couldn't get shortId of withdrawn participant from " + sendRequest, ioe);
-                        }
-                    }
-                    else {
-                        logger.info("Participant w/ id " + exitParticipant.getParticipantId() + " is flagged as deleted in the ddp");
-                    }
-                }
-            }
         }
     }
 
@@ -123,7 +101,7 @@ public class ParticipantExit {
                                        @NonNull DDPInstance instance, boolean inDDP) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.INSERT_EXITED_PARTICIPANT))) {
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_EXIT_PT)) {
                 stmt.setString(1, instance.getDdpInstanceId());
                 stmt.setString(2, ddpParticipantId);
                 stmt.setLong(3, currentTime);
