@@ -256,7 +256,89 @@ public class DDPInstance {
         return ddpInstances;
     }
 
-    private static DDPInstance getDDPInstanceWithRoleFormResultSet(@NonNull ResultSet rs) throws SQLException {
+    public static DDPInstance getDDPInstanceWithRoleByDDPParticipantAndRealm(@NonNull String realm, @NonNull String ddpParticipantId, @NonNull String role) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_ACTIVE_REALMS_WITH_ROLE_INFORMATION_BY_DDP_PARTICIPANT_ID_REALM)) {
+                stmt.setString(1, role);
+                stmt.setString(2, ddpParticipantId);
+                stmt.setString(3, realm);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = getDDPInstanceWithRoleFormResultSet(rs);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting ddps ", e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get list of participants ", results.resultException);
+        }
+        return (DDPInstance) results.resultValue;
+    }
+
+    public static DDPInstance getDDPInstanceWithRoleByParticipant(@NonNull String participantId, @NonNull String role) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_ACTIVE_REALMS_WITH_ROLE_INFORMATION_BY_PARTICIPANT_ID)) {
+                stmt.setString(1, role);
+                stmt.setString(2, participantId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = getDDPInstanceWithRoleFormResultSet(rs);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting ddps ", e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get list of participants ", results.resultException);
+        }
+        return (DDPInstance) results.resultValue;
+    }
+
+    public static boolean getRole(@NonNull String realm, @NonNull String role) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_INSTANCE_WITH_ROLE + QueryExtension.BY_INSTANCE_NAME)) {
+                stmt.setString(1, role);
+                stmt.setString(2, realm);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = rs.getBoolean(DBConstants.HAS_ROLE);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting role of realm " + realm, e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get role of realm " + realm, results.resultException);
+        }
+        return (boolean) results.resultValue;
+    }
+
+    public static DDPInstance getDDPInstanceWithRoleFormResultSet(@NonNull ResultSet rs) throws SQLException {
         String notificationRecipient = rs.getString(DBConstants.NOTIFICATION_RECIPIENT);
         List<String> recipients = null;
         if (StringUtils.isNotBlank(notificationRecipient)) {
