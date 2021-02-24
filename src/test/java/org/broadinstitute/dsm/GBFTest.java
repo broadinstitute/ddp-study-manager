@@ -1,15 +1,30 @@
 package org.broadinstitute.dsm;
 
+import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.ADDRESS_FIELD;
+import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.FIRST_NAME_FIELD;
+import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.GUID_FIELD;
+import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.LAST_NAME_FIELD;
+import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.PROFILE_FIELD;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.ddp.db.TransactionWrapper;
+import org.broadinstitute.dsm.careevolve.Covid19OrderRegistrarTest;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.exception.CareEvolveException;
 import org.broadinstitute.dsm.model.KitRequest;
+import org.broadinstitute.dsm.model.KitRequestSettings;
+import org.broadinstitute.dsm.model.ParticipantWrapper;
+import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.gbf.*;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.DBUtil;
+import org.broadinstitute.dsm.util.EasyPostUtil;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.broadinstitute.dsm.util.externalShipper.ExternalShipper;
 import org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil;
@@ -21,10 +36,15 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GBFTest extends TestHelper {
 
@@ -224,5 +244,62 @@ public class GBFTest extends TestHelper {
         else {
             Assert.fail("No apiKey found");
         }
+    }
+
+    @Test
+    public void orderGBFKit() throws Exception {
+        String externalOrderNumber = "T93CNUCZ8QHBSNRI1DJA";
+
+        String orderLookup = "select \n" +
+                "distinct req.ddp_participant_id\n" +
+                "FROM prod_dsm_db.ddp_kit_request req\n" +
+                "left join ddp_kit kit on\n" +
+                "(req.dsm_kit_request_id = kit.dsm_kit_request_id)\n" +
+                "where\n" +
+                "req.ddp_instance_id = 9\n" +
+                "and\n" +
+                "req.external_order_number = ?";
+
+        DDPInstance instance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
+          ArrayList<KitRequest> kitsToOrder = new ArrayList<>();
+
+          EasyPostUtil easyPostUtil = new EasyPostUtil(null,"");
+        Map<String, Map<String, Object>> elasticMap = ElasticSearchUtil.getDDPParticipantsFromES(instance.getName(), instance.getParticipantIndexES());
+
+        HashMap<Integer, KitRequestSettings> kitRequestSettings = KitRequestSettings.getKitRequestSettings("9");
+
+        GBFRequestUtil shipper = new GBFRequestUtil();
+
+        TransactionWrapper.inTransaction(conn -> {
+            try {
+                try (PreparedStatement stmt = conn.prepareStatement(orderLookup)) {
+                    stmt.setString(1, externalOrderNumber);
+
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) {
+                            String ddpParticipantId = rs.getString("ddp_participant_id");
+                            DDPParticipant participant = ElasticSearchUtil.getParticipantAsDDPParticipant(elasticMap, ddpParticipantId);
+
+                            kitsToOrder.add(new KitRequest(ddpParticipantId, participant.getShortId(), participant, externalOrderNumber));
+
+                            for (KitRequestSettings kitRequestSetting : kitRequestSettings.values()) {
+                                if ("gbf".equalsIgnoreCase(kitRequestSetting.getExternalShipper())) {
+                                    kitRequestSetting.setCarrierTo("3rd Day Air Residential");
+                                    kitRequestSetting.setServiceTo(kitRequestSetting.getCarrierTo());
+                                    System.out.println(kitRequestSetting.getCarrierTo());
+                                    shipper.orderKitRequests(kitsToOrder, easyPostUtil, kitRequestSetting, null);
+                                }
+                            }
+
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Could not order kit " + externalOrderNumber, e);
+            }
+
+            return null;
+        });
+
     }
 }

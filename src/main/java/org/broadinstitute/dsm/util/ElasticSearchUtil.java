@@ -90,13 +90,26 @@ public class ElasticSearchUtil {
     public static final String FIRST_NAME_FIELD = "firstName";
     public static final String LAST_NAME_FIELD = "lastName";
 
-    public static RestHighLevelClient getClientForElasticsearchCloud(@NonNull String baseUrl, @NonNull String userName, @NonNull String password) throws MalformedURLException {
+    public static RestHighLevelClient getClientForElasticsearchCloud(@NonNull String baseUrl,
+                                                                     @NonNull String userName,
+                                                                     @NonNull String password) throws MalformedURLException {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(userName, password));
 
         URL url = new URL(baseUrl);
         String proxy = TransactionWrapper.hasConfigPath(ApplicationConfigConstants.ES_PROXY)
                 ? TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PROXY) : null;
+        return getClientForElasticsearchCloud(baseUrl, userName, password, proxy);
+    }
+
+    public static RestHighLevelClient getClientForElasticsearchCloud(@NonNull String baseUrl,
+                                                                     @NonNull String userName,
+                                                                     @NonNull String password,
+                                                                     String proxy) throws MalformedURLException {
+        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(userName, password));
+
+        URL url = new URL(baseUrl);
         URL proxyUrl = (proxy != null && !proxy.isBlank()) ? new URL(proxy) : null;
         if (proxyUrl != null) {
             logger.info("Using Elasticsearch client proxy: {}", proxyUrl);
@@ -115,6 +128,70 @@ public class ElasticSearchUtil {
         return new RestHighLevelClient(builder);
     }
 
+    public static Map<String, Map<String, Object>> getSingleParticipantFromES(@NonNull String realm,
+                                                                            @NonNull String index,
+                                                                            RestHighLevelClient client,
+                                                                              String participantHruid) {
+        Map<String, Map<String, Object>> esData = new HashMap<>();
+        if (StringUtils.isNotBlank(index)) {
+            logger.info("Collecting ES data");
+            try {
+                int scrollSize = 1000;
+                SearchRequest searchRequest = new SearchRequest(index);
+                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+                SearchResponse response = null;
+                int i = 0;
+                searchSourceBuilder.query(QueryBuilders.matchQuery("profile.hruid", participantHruid)).sort(PROFILE_CREATED_AT, SortOrder.ASC);
+                while (response == null || response.getHits().getHits().length != 0) {
+                    searchSourceBuilder.size(scrollSize);
+                    searchSourceBuilder.from(i * scrollSize);
+                    searchRequest.source(searchSourceBuilder);
+
+                    response = client.search(searchRequest, RequestOptions.DEFAULT);
+                    addingParticipantStructuredHits(response, esData, realm);
+                    i++;
+                }
+            }
+            catch (Exception e) {
+                throw new RuntimeException("Couldn't get participants from ES for instance " + realm, e);
+            }
+            logger.info("Got " + esData.size() + " participants from ES for instance " + realm);
+        }
+        return esData;
+    }
+
+
+    public static Map<String, Map<String, Object>> getDDPParticipantsFromES(@NonNull String realm,
+                                                                            @NonNull String index,
+                                                                            RestHighLevelClient client) {
+        Map<String, Map<String, Object>> esData = new HashMap<>();
+        if (StringUtils.isNotBlank(index)) {
+            logger.info("Collecting ES data");
+            try {
+                int scrollSize = 1000;
+                SearchRequest searchRequest = new SearchRequest(index);
+                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+                SearchResponse response = null;
+                int i = 0;
+                searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(PROFILE_CREATED_AT, SortOrder.ASC);
+                while (response == null || response.getHits().getHits().length != 0) {
+                    searchSourceBuilder.size(scrollSize);
+                    searchSourceBuilder.from(i * scrollSize);
+                    searchRequest.source(searchSourceBuilder);
+
+                    response = client.search(searchRequest, RequestOptions.DEFAULT);
+                    addingParticipantStructuredHits(response, esData, realm);
+                    i++;
+                }
+            }
+            catch (Exception e) {
+                throw new RuntimeException("Couldn't get participants from ES for instance " + realm, e);
+            }
+            logger.info("Got " + esData.size() + " participants from ES for instance " + realm);
+        }
+        return esData;
+    }
+
     public static Map<String, Map<String, Object>> getDDPParticipantsFromES(@NonNull String realm, @NonNull String index) {
         Map<String, Map<String, Object>> esData = new HashMap<>();
         if (StringUtils.isNotBlank(index)) {
@@ -122,21 +199,7 @@ public class ElasticSearchUtil {
             try {
                 try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
                         TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
-                    int scrollSize = 1000;
-                    SearchRequest searchRequest = new SearchRequest(index);
-                    SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-                    SearchResponse response = null;
-                    int i = 0;
-                    searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(PROFILE_CREATED_AT, SortOrder.ASC);
-                    while (response == null || response.getHits().getHits().length != 0) {
-                        searchSourceBuilder.size(scrollSize);
-                        searchSourceBuilder.from(i * scrollSize);
-                        searchRequest.source(searchSourceBuilder);
-
-                        response = client.search(searchRequest, RequestOptions.DEFAULT);
-                        addingParticipantStructuredHits(response, esData, realm);
-                        i++;
-                    }
+                    esData = getDDPParticipantsFromES(realm, index, client);
                 }
             }
             catch (Exception e) {

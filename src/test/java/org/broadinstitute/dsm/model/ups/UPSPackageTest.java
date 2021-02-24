@@ -7,10 +7,10 @@ import org.junit.Test;
 
 public class UPSPackageTest {
 
-    UPSActivity LABEL_GENERATED = new UPSActivity(new UPSStatus("M","Shipper created a label, UPS has not received the package yet", "MP"), "20200910","114203");
-    UPSActivity DELIVERED = new UPSActivity(new UPSStatus("D","Delivered", "KB"), "20200913","114203");
-    UPSActivity IN_TRANSIT = new UPSActivity(new UPSStatus("I","Departed from Facility", "MP"), "20200912","114203");
-    UPSActivity PICKED_UP = new UPSActivity(new UPSStatus("P","Pickup", "XD"), "20200911","114203");
+    UPSActivity LABEL_GENERATED = new UPSActivity(null, new UPSStatus("M","Shipper created a label, UPS has not received the package yet", "MP"), "20200910","114203");
+    UPSActivity DELIVERED = new UPSActivity(null, new UPSStatus("D","Delivered", "KB"), "20200913","114203");
+    UPSActivity IN_TRANSIT = new UPSActivity(null, new UPSStatus("I","Departed from Facility", "MP"), "20200912","114203");
+    UPSActivity PICKED_UP = new UPSActivity(null, new UPSStatus("P","Pickup", "XD"), "20200911","114203");
 
     @Test
     public void testEarliestPickup() {
