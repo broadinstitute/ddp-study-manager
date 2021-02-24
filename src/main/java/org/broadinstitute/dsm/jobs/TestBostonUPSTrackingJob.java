@@ -9,7 +9,6 @@ import lombok.NonNull;
 import org.apache.commons.dbcp2.PoolableConnection;
 import org.apache.commons.dbcp2.PoolingDataSource;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar;
 import org.broadinstitute.dsm.cf.CFUtil;
@@ -36,27 +35,27 @@ import java.util.List;
 
 public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessage> {
 
-    private static String STUDY_MANAGER_SCHEMA = System.getenv("STUDY_MANAGER_SCHEMA") + ".";
+    private String STUDY_MANAGER_SCHEMA = System.getenv("STUDY_MANAGER_SCHEMA") + ".";
     private String STUDY_SERVER_SCHEMA = System.getenv("STUDY_SERVER_SCHEMA") + ".";
 
-    private static final Logger logger = LoggerFactory.getLogger(TestBostonUPSTrackingJob.class);
+    private final Logger logger = LoggerFactory.getLogger(TestBostonUPSTrackingJob.class);
 
-    private static String SQL_AVOID_DELIVERED = "and (tracking_to_id is not null or tracking_return_id is not null ) and (kit_shipping_history is null or kit_shipping_history not like \"" + UPSStatus.DELIVERED_TYPE + " %\" or kit_return_history is null or kit_return_history not like \"" + UPSStatus.DELIVERED_TYPE + " %\")" +
+    private  String SQL_AVOID_DELIVERED = "and (tracking_to_id is not null or tracking_return_id is not null ) and (kit_shipping_history is null or kit_shipping_history not like \"" + UPSStatus.DELIVERED_TYPE + " %\" or kit_return_history is null or kit_return_history not like \"" + UPSStatus.DELIVERED_TYPE + " %\")" +
             " order by kit.dsm_kit_request_id ASC";
 
 
 
 
-    static String DELIVERED = "DELIVERED";
-    static String RECEIVED = "RECEIVED";
+     String DELIVERED = "DELIVERED";
+     String RECEIVED = "RECEIVED";
 
-    private static String SELECT_BY_EXTERNAL_ORDER_NUMBER = "and request.external_order_number = ?";
-    private static Covid19OrderRegistrar orderRegistrar;
+    private  String SELECT_BY_EXTERNAL_ORDER_NUMBER = "and request.external_order_number = ?";
+    private  Covid19OrderRegistrar orderRegistrar;
 
     @Override
     public void accept(PubsubMessage pubsubMessage, Context context) throws Exception{
         Config cfg = CFUtil.loadConfig();
-        String dbUrl = cfg.getString("pepperDbUrl");
+        String dbUrl = cfg.getString("dsmDBUrl");
 
         PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(1, dbUrl);
 
@@ -69,8 +68,8 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
 
         // static vars are dangerous in CF https://cloud.google.com/functions/docs/bestpractices/tips#functions-tips-scopes-java
 
-//        orderRegistrar = new Covid19OrderRegistrar(DSMServer.careEvolveOrderEndpoint, DSMServer.careEvolveAccount, DSMServer.provider,
-//                DSMServer.careEvolveMaxRetries, DSMServer.careEvolveRetyWaitSeconds);
+        orderRegistrar = new Covid19OrderRegistrar(DSMServer.careEvolveOrderEndpoint, DSMServer.careEvolveAccount, DSMServer.provider,
+                DSMServer.careEvolveMaxRetries, DSMServer.careEvolveRetyWaitSeconds);
         try (Connection conn = dataSource.getConnection()){
         List<DDPInstance> ddpInstanceList = getDDPInstanceListWithRole(conn, "ups_tracking");
         for (DDPInstance ddpInstance : ddpInstanceList) {
@@ -79,6 +78,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                     String query = SQL_SELECT_KITS + SQL_AVOID_DELIVERED;
                     try (PreparedStatement stmt = conn.prepareStatement(query)) {
                         stmt.setString(1, ddpInstance.getDdpInstanceId());
+                        logger.info("Got results for "+ddpInstance.getName());
                         try (ResultSet rs = stmt.executeQuery()) {
                             while (rs.next()) {
                                 DdpKit kit = new DdpKit(
@@ -95,24 +95,25 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                                         rs.getString("kit." + DBConstants.KIT_SHIPPING_HISTORY),
                                         rs.getString("kit." + DBConstants.KIT_RETURN_HISTORY)
                                 );
+                                logger.info(kit.getExternalOrderNumber());
 
-                                if (StringUtils.isNotBlank(kit.getTrackingToId()) && !kit.isDelivered()) {
-                                    try {
-                                        updateKitStatus(conn, kit, false, ddpInstance);
-                                    }
-                                    catch (Exception e) {
-                                        logger.error("Could not update outbound status for " + kit.getExternalOrderNumber() + " " + e.toString(), e);
-                                    }
-                                }
-
-                                if (StringUtils.isNotBlank(kit.getTrackingReturnId()) && !kit.isReturned()) {
-                                    try {
-                                        updateKitStatus(conn, kit, true, ddpInstance);
-                                    }
-                                    catch (Exception e) {
-                                        logger.error("Could not update return status for " + kit.getExternalOrderNumber() + " " + e.toString(), e);
-                                    }
-                                }
+//                                if (StringUtils.isNotBlank(kit.getTrackingToId()) && !kit.isDelivered()) {
+//                                    try {
+//                                        updateKitStatus(conn, kit, false, ddpInstance);
+//                                    }
+//                                    catch (Exception e) {
+//                                        logger.error("Could not update outbound status for " + kit.getExternalOrderNumber() + " " + e.toString(), e);
+//                                    }
+//                                }
+//
+//                                if (StringUtils.isNotBlank(kit.getTrackingReturnId()) && !kit.isReturned()) {
+//                                    try {
+//                                        updateKitStatus(conn, kit, true, ddpInstance);
+//                                    }
+//                                    catch (Exception e) {
+//                                        logger.error("Could not update return status for " + kit.getExternalOrderNumber() + " " + e.toString(), e);
+//                                    }
+//                                }
                             }
                         }
                     }
@@ -124,11 +125,11 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         }
     }
 
-    public static UPSTrackingResponse lookupTrackingInfo(String trackingId) {
+    public  UPSTrackingResponse lookupTrackingInfo(String trackingId) {
         return new UPSTracker(DSMServer.UPS_ENDPOINT, DSMServer.UPS_USERNAME, DSMServer.UPS_PASSWORD, DSMServer.UPS_ACCESSKEY).lookupTrackingInfo(trackingId);
     }
 
-    public static void updateKitStatus(@NonNull Connection conn, DdpKit kit, boolean isReturn, DDPInstance ddpInstance) {
+    public void updateKitStatus(@NonNull Connection conn, DdpKit kit, boolean isReturn, DDPInstance ddpInstance) {
         String trackingId;
         if (!isReturn) {
             trackingId = kit.getTrackingToId();
@@ -149,7 +150,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             }
         }
         if (lastActivity != null && lastActivity.getStatus().isDelivery()) {
-            logger.info("Tracking id " + trackingId + " is already delivered, not going to check UPS anymore");
+            this.logger.info("Tracking id " + trackingId + " is already delivered, not going to check UPS anymore");
             return;
         }
 
@@ -165,7 +166,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         }
     }
 
-    private static void logError(String trackingId, UPSError[] errors) {
+    private void logError(String trackingId, UPSError[] errors) {
         String errorString = "";
         for (UPSError error : errors) {
             errorString += "Got Error: " + error.getCode() + " " + error.getMessage() + " For Tracking Number " + trackingId;
@@ -173,7 +174,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         logger.error(errorString);
     }
 
-    private static void updateStatus(@NonNull Connection conn, String trackingId, UPSActivity lastActivity, UPSTrackingResponse response, boolean isReturn, DdpKit kit, DDPInstance ddpInstance) {
+    private void updateStatus(@NonNull Connection conn, String trackingId, UPSActivity lastActivity, UPSTrackingResponse response, boolean isReturn, DdpKit kit, DDPInstance ddpInstance) {
         final String SQL_UPDATE_UPS_TRACKING_STATUS = "UPDATE "+STUDY_MANAGER_SCHEMA+".ddp_kit SET kit_shipping_history = ? " +
                 "WHERE dsm_kit_id <> 0 and  tracking_to_id = ? and dsm_kit_request_id in ( SELECT dsm_kit_request_id FROM "+STUDY_MANAGER_SCHEMA+".ddp_kit_request where external_order_number = ? )";
 
@@ -219,17 +220,17 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
     }
 
 
-    private static void updateTrackingInfo(@NonNull Connection conn,
-                                           String upsHistory,
-                                           UPSActivity[] upsActivities,
-                                           String statusType,
-                                           UPSActivity lastActivity,
-                                           String trackingId,
-                                           String query,
-                                           boolean isReturn,
-                                           DdpKit kit,
-                                           Instant earliestInTransitTime,
-                                           DDPInstance ddpInstance) {
+    private void updateTrackingInfo(@NonNull Connection conn,
+                                    String upsHistory,
+                                    UPSActivity[] upsActivities,
+                                    String statusType,
+                                    UPSActivity lastActivity,
+                                    String trackingId,
+                                    String query,
+                                    boolean isReturn,
+                                    DdpKit kit,
+                                    Instant earliestInTransitTime,
+                                    DDPInstance ddpInstance) {
         final String SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, request.ddp_kit_request_id, request.upload_reason, " +
                 "        realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
                 "        FROM "+STUDY_MANAGER_SCHEMA+".ddp_kit_request request, "+STUDY_MANAGER_SCHEMA+".ddp_kit kit, "+STUDY_MANAGER_SCHEMA+".event_type eve, "+STUDY_MANAGER_SCHEMA+".ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
@@ -307,7 +308,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
      * Determines whether or not a trigger should be sent to
      * study-server to respond to kit being sent to participant
      */
-    private static boolean shouldTriggerEventForKitOnItsWayToParticipant(String currentStatus, String previousStatus) {
+    private  boolean shouldTriggerEventForKitOnItsWayToParticipant(String currentStatus, String previousStatus) {
         List<String> triggerStates = Arrays.asList(UPSStatus.DELIVERED_TYPE, UPSStatus.IN_TRANSIT_TYPE);
         return triggerStates.contains(currentStatus) && !triggerStates.contains(previousStatus);
     }
@@ -316,12 +317,12 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
      * Determines whether or not a trigger should be sent to
      * study-server to respond to kit being delivered back at broad
      */
-    private static boolean shouldTriggerEventForReturnKitDelivery(String currentStatus, String previousStatus) {
+    private  boolean shouldTriggerEventForReturnKitDelivery(String currentStatus, String previousStatus) {
         List<String> triggerStates = Arrays.asList(UPSStatus.DELIVERED_TYPE);
         return triggerStates.contains(currentStatus) && !triggerStates.contains(previousStatus);
     }
 
-    public static List<DDPInstance> getDDPInstanceListWithRole(Connection conn, @NonNull String role) {
+    public  List<DDPInstance> getDDPInstanceListWithRole(Connection conn, @NonNull String role) {
         final String SQL_SELECT_INSTANCE_WITH_ROLE = "SELECT ddp_instance_id, instance_name, base_url, collaborator_id_prefix, migrated_ddp, billing_reference, " +
                 "es_participant_index, es_activity_definition_index,  es_users_index,  carrier_username, carrier_password, carrier_accesskey, carrier_tracking_url, (SELECT count(role.name) " +
                 "FROM "+STUDY_MANAGER_SCHEMA+".ddp_instance realm, "+STUDY_MANAGER_SCHEMA+".ddp_instance_role inRol, "+STUDY_MANAGER_SCHEMA+".instance_role role WHERE realm.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id AND role.name = ? " +
