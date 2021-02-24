@@ -93,30 +93,32 @@ public class DisplaySettingsRoute extends RequestHandler {
                         displaySettings.put("preferredLanguages", preferredLanguages);
                     }
                 }
-                Map<Integer, KitRequestSettings> kitRequestSettingsMap = KitRequestSettings.getKitRequestSettings(instance.getDdpInstanceId());
-                if (kitRequestSettingsMap != null) {
-                    List<KitType> kits = new ArrayList<>();
-                    List<KitType> kitTypes = KitType.getKitTypes(realm, null);
-                    if (kitTypes != null && !kitTypes.isEmpty()) {
-                        kitTypes.forEach( kitType -> {
-                            KitRequestSettings kitRequestSettings = kitRequestSettingsMap.get(kitType.getKitId());
-                            //kit has sub kits add them to displaySettings
-                            if (kitRequestSettings != null && kitRequestSettings.getHasSubKits() != 0) {
-                                List<KitSubKits> subKits = kitRequestSettings.getSubKits();
-                                if (subKits != null && !subKits.isEmpty()) {
-                                    subKits.forEach(subKit -> {
-                                        kits.add(new KitType(subKit.getKitTypeId(), subKit.getKitName(), subKit.getKitName(), kitType.isManualSentTrack(), kitType.isExternalShipper()));
-                                    });
+                if (DDPInstance.getRole(instance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
+                    Map<Integer, KitRequestSettings> kitRequestSettingsMap = KitRequestSettings.getKitRequestSettings(instance.getDdpInstanceId());
+                    if (kitRequestSettingsMap != null) {
+                        List<KitType> kits = new ArrayList<>();
+                        List<KitType> kitTypes = KitType.getKitTypes(realm, null);
+                        if (kitTypes != null && !kitTypes.isEmpty()) {
+                            kitTypes.forEach(kitType -> {
+                                KitRequestSettings kitRequestSettings = kitRequestSettingsMap.get(kitType.getKitId());
+                                //kit has sub kits add them to displaySettings
+                                if (kitRequestSettings != null && kitRequestSettings.getHasSubKits() != 0) {
+                                    List<KitSubKits> subKits = kitRequestSettings.getSubKits();
+                                    if (subKits != null && !subKits.isEmpty()) {
+                                        subKits.forEach(subKit -> {
+                                            kits.add(new KitType(subKit.getKitTypeId(), subKit.getKitName(), subKit.getKitName(),
+                                                    kitType.isManualSentTrack(), kitType.isExternalShipper(), kitType.getUploadReasons()));
+                                        });
+                                    }
+                                } else {
+                                    //kit doesn't have subkits add kitType
+                                    kits.add(kitType);
                                 }
-                            }
-                            else {
-                                //kit doesn't have subkits add kitType
-                                kits.add(kitType);
-                            }
-                        });
-                    }
-                    if (kits != null && !kits.isEmpty()) {
-                        displaySettings.put("kitTypes", kits);
+                            });
+                        }
+                        if (kits != null && !kits.isEmpty()) {
+                            displaySettings.put("kitTypes", kits);
+                        }
                     }
                 }
                 return displaySettings;
