@@ -21,4 +21,26 @@
     </changeSet>
     <!-- prefix for gen2 prostate pts in dev: 1771332079 on prod: -763171247  -->
     <!-- prod i.instance_id > 20000 are actual new added initial_biopsies for migrated pts  -->
+    <changeSet id="UPS_history" author="pegah">
+        <addColumn tableName="ddp_kit">
+            <column name="kit_shipping_history" type="VARCHAR(3000)"></column>
+        </addColumn>
+        <addColumn tableName="ddp_kit">
+            <column name="kit_return_history" type="VARCHAR(3000)"></column>
+        </addColumn>
+    </changeSet>
+    <changeSet id="carrier_per_study_key" author="pegah">
+        <addColumn tableName="ddp_instance">
+            <column name="carrier_username" type="VARCHAR(100)"></column>
+        </addColumn>
+        <addColumn tableName="ddp_instance">
+            <column name="carrier_password" type="VARCHAR(100)"></column>
+        </addColumn>
+        <addColumn tableName="ddp_instance">
+            <column name="carrier_accesskey" type="VARCHAR(100)"></column>
+        </addColumn>
+        <addColumn tableName="ddp_instance">
+            <column name="carrier_tracking_url" type="VARCHAR(500)"></column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

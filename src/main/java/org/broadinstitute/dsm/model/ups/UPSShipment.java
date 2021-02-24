@@ -10,6 +10,12 @@ public class UPSShipment {
 }
 
 class UPSLocation {
-    //address is here but I don't think we care about that
+    UPSAddress address;
+}
+class UPSAddress{
+    String city;
+    String stateProvince;
+    String postalCode;
+    String countryCode;
 }
 

@@ -65,6 +65,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -651,8 +652,8 @@ public class DSMServer extends BasicServer {
                         cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_LAST_NAME),
                         cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_NPI));
 
-                createScheduleJob(scheduler, null, null, TestBostonUPSTrackingJob.class, "UPS_TRACKING_JOB",
-                        cfg.getString(ApplicationConfigConstants.QUARTZ_UPS_LOOKUP_JOB), new UPSTriggerListener(), cfg);
+//                createScheduleJob(scheduler, null, null, TestBostonUPSTrackingJob.class, "UPS_TRACKING_JOB",
+//                        cfg.getString(ApplicationConfigConstants.QUARTZ_UPS_LOOKUP_JOB), new UPSTriggerListener(), cfg);
 
 
                 logger.info("Setup Job Scheduler...");
