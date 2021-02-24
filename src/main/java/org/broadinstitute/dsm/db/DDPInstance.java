@@ -337,7 +337,7 @@ public class DDPInstance {
         return (boolean) results.resultValue;
     }
 
-    private static DDPInstance getDDPInstanceWithRoleFormResultSet(@NonNull ResultSet rs) throws SQLException {
+    public static DDPInstance getDDPInstanceWithRoleFormResultSet(@NonNull ResultSet rs) throws SQLException {
         String notificationRecipient = rs.getString(DBConstants.NOTIFICATION_RECIPIENT);
         List<String> recipients = null;
         if (StringUtils.isNotBlank(notificationRecipient)) {

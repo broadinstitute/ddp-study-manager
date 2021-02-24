@@ -4,11 +4,15 @@ import com.google.cloud.functions.BackgroundFunction;
 import com.google.cloud.functions.Context;
 import com.google.gson.Gson;
 import com.google.pubsub.v1.PubsubMessage;
+import com.typesafe.config.Config;
 import lombok.NonNull;
+import org.apache.commons.dbcp2.PoolableConnection;
+import org.apache.commons.dbcp2.PoolingDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar;
+import org.broadinstitute.dsm.cf.CFUtil;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.DdpKit;
 import org.broadinstitute.dsm.model.KitDDPNotification;
@@ -17,51 +21,31 @@ import org.broadinstitute.dsm.shipping.UPSTracker;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.EventUtil;
 import org.broadinstitute.dsm.util.KitUtil;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessage> {
 
+    private static String STUDY_MANAGER_SCHEMA = System.getenv("STUDY_MANAGER_SCHEMA") + ".";
+    private String STUDY_SERVER_SCHEMA = System.getenv("STUDY_SERVER_SCHEMA") + ".";
+
     private static final Logger logger = LoggerFactory.getLogger(TestBostonUPSTrackingJob.class);
-    private static final String SQL_SELECT_KITS = "SELECT kit.dsm_kit_request_id, kit.kit_label, kit.tracking_to_id, kit.tracking_return_id, kit.error, kit.message, kit.receive_date, kit.kit_shipping_history,  kit.kit_return_history,  req.bsp_collaborator_participant_id, " +
-            " req.external_order_number, kit.CE_order FROM ddp_kit kit LEFT JOIN ddp_kit_request req " +
-            " ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) WHERE req.ddp_instance_id = ? and kit_label not like \"%\\\\_1\"  ";
 
     private static String SQL_AVOID_DELIVERED = "and (tracking_to_id is not null or tracking_return_id is not null ) and (kit_shipping_history is null or kit_shipping_history not like \"" + UPSStatus.DELIVERED_TYPE + " %\" or kit_return_history is null or kit_return_history not like \"" + UPSStatus.DELIVERED_TYPE + " %\")" +
             " order by kit.dsm_kit_request_id ASC";
 
-    private static final String SQL_UPDATE_UPS_TRACKING_STATUS = "UPDATE ddp_kit SET kit_shipping_history = ? " +
-            "WHERE dsm_kit_id <> 0 and  tracking_to_id = ? and dsm_kit_request_id in ( SELECT dsm_kit_request_id FROM ddp_kit_request where external_order_number = ? )";
-    private static final String SQL_UPDATE_UPS_RETURN_STATUS = "UPDATE ddp_kit SET kit_return_history = ? " +
-            "WHERE dsm_kit_id <> 0 and tracking_return_id= ? and dsm_kit_request_id in ( SELECT dsm_kit_request_id FROM ddp_kit_request where external_order_number = ? )";
 
-    private static final String SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, request.ddp_kit_request_id, request.upload_reason, " +
-            "        realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
-            "        from ddp_kit_request request, ddp_kit kit, event_type eve, ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
-            "        and not exists " +
-            "                    (select 1 from EVENT_QUEUE q" +
-            "                    where q.DDP_INSTANCE_ID = realm.ddp_instance_id" +
-            "                    and " +
-            "                    q.EVENT_TYPE = eve.event_name" +
-            "                    and " +
-            "                    q.DSM_KIT_REQUEST_ID = request.dsm_kit_request_id " +
-            "                    and q.event_triggered = true" +
-            "                    )"+
-            "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = ? "+
-            "         and realm.ddp_instance_id = ?" +
-            "          and kit.dsm_kit_request_id = ?";
+
 
     static String DELIVERED = "DELIVERED";
     static String RECEIVED = "RECEIVED";
@@ -71,15 +55,27 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
 
     @Override
     public void accept(PubsubMessage pubsubMessage, Context context) throws Exception{
+        Config cfg = CFUtil.loadConfig();
+        String dbUrl = cfg.getString("pepperDbUrl");
+
+        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(1, dbUrl);
+
+        // static vars are dangerous in CF https://cloud.google.com/functions/docs/bestpractices/tips#functions-tips-scopes-java
+        final String SQL_SELECT_KITS = "SELECT kit.dsm_kit_request_id, kit.kit_label, kit.tracking_to_id, kit.tracking_return_id, kit.error, kit.message, kit.receive_date, kit.kit_shipping_history,  kit.kit_return_history,  req.bsp_collaborator_participant_id, " +
+                " req.external_order_number, kit.CE_order FROM "+STUDY_MANAGER_SCHEMA+".ddp_kit kit LEFT JOIN "+STUDY_MANAGER_SCHEMA+".ddp_kit_request req " +
+                " ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) WHERE req.ddp_instance_id = ? and kit_label not like \"%\\\\_1\"  ";
+
         logger.info("Starting the UPS lookup job");
-        orderRegistrar = new Covid19OrderRegistrar(DSMServer.careEvolveOrderEndpoint, DSMServer.careEvolveAccount, DSMServer.provider,
-                DSMServer.careEvolveMaxRetries, DSMServer.careEvolveRetyWaitSeconds);
-        List<DDPInstance> ddpInstanceList = DDPInstance.getDDPInstanceListWithRole("ups_tracking");
+
+        // static vars are dangerous in CF https://cloud.google.com/functions/docs/bestpractices/tips#functions-tips-scopes-java
+
+//        orderRegistrar = new Covid19OrderRegistrar(DSMServer.careEvolveOrderEndpoint, DSMServer.careEvolveAccount, DSMServer.provider,
+//                DSMServer.careEvolveMaxRetries, DSMServer.careEvolveRetyWaitSeconds);
+        try (Connection conn = dataSource.getConnection()){
+        List<DDPInstance> ddpInstanceList = getDDPInstanceListWithRole(conn, "ups_tracking");
         for (DDPInstance ddpInstance : ddpInstanceList) {
             if (ddpInstance != null && ddpInstance.isHasRole()) {
                 logger.info("tracking ups ids for " + ddpInstance.getName());
-                SimpleResult result = inTransaction((conn) -> {
-                    SimpleResult dbVals = new SimpleResult();
                     String query = SQL_SELECT_KITS + SQL_AVOID_DELIVERED;
                     try (PreparedStatement stmt = conn.prepareStatement(query)) {
                         stmt.setString(1, ddpInstance.getDdpInstanceId());
@@ -121,12 +117,8 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                         }
                     }
                     catch (Exception e) {
-                        dbVals.resultException = e;
+                        throw new RuntimeException(e);
                     }
-                    return dbVals;
-                });
-                if (result.resultException != null) {
-                    throw new RuntimeException(result.resultException);
                 }
             }
         }
@@ -182,6 +174,13 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
     }
 
     private static void updateStatus(@NonNull Connection conn, String trackingId, UPSActivity lastActivity, UPSTrackingResponse response, boolean isReturn, DdpKit kit, DDPInstance ddpInstance) {
+        final String SQL_UPDATE_UPS_TRACKING_STATUS = "UPDATE "+STUDY_MANAGER_SCHEMA+".ddp_kit SET kit_shipping_history = ? " +
+                "WHERE dsm_kit_id <> 0 and  tracking_to_id = ? and dsm_kit_request_id in ( SELECT dsm_kit_request_id FROM "+STUDY_MANAGER_SCHEMA+".ddp_kit_request where external_order_number = ? )";
+
+        final String SQL_UPDATE_UPS_RETURN_STATUS = "UPDATE "+STUDY_MANAGER_SCHEMA+".ddp_kit SET kit_return_history = ? " +
+                "WHERE dsm_kit_id <> 0 and tracking_return_id= ? and dsm_kit_request_id in ( SELECT dsm_kit_request_id FROM "+STUDY_MANAGER_SCHEMA+".ddp_kit_request where external_order_number = ? )";
+
+
         if (response.getTrackResponse() != null) {
             UPSShipment[] shipment = response.getTrackResponse().getShipment();
 
@@ -231,6 +230,21 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                                            DdpKit kit,
                                            Instant earliestInTransitTime,
                                            DDPInstance ddpInstance) {
+        final String SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, request.ddp_kit_request_id, request.upload_reason, " +
+                "        realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
+                "        FROM "+STUDY_MANAGER_SCHEMA+".ddp_kit_request request, "+STUDY_MANAGER_SCHEMA+".ddp_kit kit, "+STUDY_MANAGER_SCHEMA+".event_type eve, "+STUDY_MANAGER_SCHEMA+".ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
+                "        and not exists " +
+                "                    (select 1 FROM "+STUDY_MANAGER_SCHEMA+".EVENT_QUEUE q" +
+                "                    where q.DDP_INSTANCE_ID = realm.ddp_instance_id" +
+                "                    and " +
+                "                    q.EVENT_TYPE = eve.event_name" +
+                "                    and " +
+                "                    q.DSM_KIT_REQUEST_ID = request.dsm_kit_request_id " +
+                "                    and q.event_triggered = true" +
+                "                    )"+
+                "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = ? "+
+                "         and realm.ddp_instance_id = ?" +
+                "          and kit.dsm_kit_request_id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, upsHistory);
             stmt.setString(2, trackingId);
@@ -305,5 +319,29 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
     private static boolean shouldTriggerEventForReturnKitDelivery(String currentStatus, String previousStatus) {
         List<String> triggerStates = Arrays.asList(UPSStatus.DELIVERED_TYPE);
         return triggerStates.contains(currentStatus) && !triggerStates.contains(previousStatus);
+    }
+
+    public static List<DDPInstance> getDDPInstanceListWithRole(Connection conn, @NonNull String role) {
+        final String SQL_SELECT_INSTANCE_WITH_ROLE = "SELECT ddp_instance_id, instance_name, base_url, collaborator_id_prefix, migrated_ddp, billing_reference, " +
+                "es_participant_index, es_activity_definition_index,  es_users_index,  carrier_username, carrier_password, carrier_accesskey, carrier_tracking_url, (SELECT count(role.name) " +
+                "FROM "+STUDY_MANAGER_SCHEMA+".ddp_instance realm, "+STUDY_MANAGER_SCHEMA+".ddp_instance_role inRol, "+STUDY_MANAGER_SCHEMA+".instance_role role WHERE realm.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id AND role.name = ? " +
+                "AND realm.ddp_instance_id = main.ddp_instance_id) AS 'has_role', mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients FROM FROM "+STUDY_MANAGER_SCHEMA+".ddp_instance main " +
+                "WHERE is_active = 1";
+
+        List<DDPInstance> ddpInstances = new ArrayList<>();
+            try (PreparedStatement bspStatement = conn.prepareStatement(SQL_SELECT_INSTANCE_WITH_ROLE)) {
+                bspStatement.setString(1, role);
+                try (ResultSet rs = bspStatement.executeQuery()) {
+                    while (rs.next()) {
+                        DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRoleFormResultSet(rs);
+                        ddpInstances.add(ddpInstance);
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                throw new RuntimeException("Error looking ddpInstances ", ex);
+            }
+
+        return ddpInstances;
     }
 }

@@ -54,7 +54,7 @@ public class CFUtil {
     public static Config loadConfig() throws IOException {
         String projectId = System.getenv("PROJECT_ID");
         String secretId = System.getenv("SECRET_ID");
-
+        System.out.println(projectId +"-"+secretId);
         return loadConfig(projectId, secretId);
     }
 }
