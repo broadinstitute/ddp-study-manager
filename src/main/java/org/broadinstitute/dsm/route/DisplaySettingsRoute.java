@@ -106,7 +106,8 @@ public class DisplaySettingsRoute extends RequestHandler {
                                     List<KitSubKits> subKits = kitRequestSettings.getSubKits();
                                     if (subKits != null && !subKits.isEmpty()) {
                                         subKits.forEach(subKit -> {
-                                            kits.add(new KitType(subKit.getKitTypeId(), subKit.getKitName(), subKit.getKitName(), kitType.isManualSentTrack(), kitType.isExternalShipper()));
+                                            kits.add(new KitType(subKit.getKitTypeId(), subKit.getKitName(), subKit.getKitName(),
+                                                    kitType.isManualSentTrack(), kitType.isExternalShipper(), kitType.getUploadReasons()));
                                         });
                                     }
                                 } else {
