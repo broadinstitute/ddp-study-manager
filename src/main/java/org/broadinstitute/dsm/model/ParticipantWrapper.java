@@ -14,6 +14,7 @@ import org.broadinstitute.dsm.model.mbc.MBCParticipant;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.DDPRequestUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.broadinstitute.dsm.util.UserUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +55,18 @@ public class ParticipantWrapper {
     }
 
     public ParticipantWrapper() {}
+    
+    //useful to get participant from ES if short id is either hruid or legacy short id
+    public static Optional<ParticipantWrapper> getParticipantByShortId(DDPInstance ddpInstance, String participantShortId) {
+        Optional<ParticipantWrapper> maybeParticipant;
+
+        if (UserUtil.isHruid(participantShortId)) {
+            maybeParticipant = getParticipantFromESByHruid(ddpInstance, participantShortId);
+        } else {
+            maybeParticipant = getParticipantFromESByLegacyShortId(ddpInstance, participantShortId);
+        }
+        return maybeParticipant;
+    }
 
     public JsonObject getDataAsJson() {
         return new JsonParser().parse(new Gson().toJson(data)).getAsJsonObject();
@@ -218,13 +231,13 @@ public class ParticipantWrapper {
 
     public static String getParticipantGuid(Optional<ParticipantWrapper> maybeParticipant) {
         return maybeParticipant
-                .map(p -> ((Map<String, String>)p.getData().get("profile")).get("guid"))
+                .map(p -> ((Map<String, String>)p.getData().get("profile")).get(ElasticSearchUtil.GUID))
                 .orElse("");
     }
 
     public static String getParticipantLegacyAltPid(Optional<ParticipantWrapper> maybeParticipant) {
         return maybeParticipant
-                .map(p -> ((Map<String, String>)p.getData().get("profile")).get("legacyAltPid"))
+                .map(p -> ((Map<String, String>)p.getData().get("profile")).get(ElasticSearchUtil.LEGACY_ALT_PID))
                 .orElse("");
     }
 

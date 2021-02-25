@@ -399,19 +399,10 @@ public class KitUploadRoute extends RequestHandler {
 
         for (int rowIndex = 1; rowIndex < rows.length; rowIndex++) {
 
-            String[] row = rows[rowIndex].trim().split(SystemUtil.SEPARATOR);
-            if (row.length != fieldNamesFromHeader.size())
-                throw new UploadLineException("Error in line " + (rowIndex + 1));
-
-            Map<String, String> participantDataByFieldName = new LinkedHashMap<>();
-            for (int columnIndex = 0; columnIndex < fieldNamesFromHeader.size(); columnIndex++) {
-                participantDataByFieldName.put(fieldNamesFromHeader.get(columnIndex), row[columnIndex]);
-            }
+            Map<String, String> participantDataByFieldName = getParticipantDataAsMap(rows[rowIndex], fieldNamesFromHeader, rowIndex);
 
             String shortId = participantDataByFieldName.get(SHORT_ID);
-            if (StringUtils.isBlank(shortId)) {
-                shortId = participantDataByFieldName.get(PARTICIPANT_ID);
-            }
+
             if (!userExistsInRealm(ddpInstanceByRealm, participantDataByFieldName)) {
                 throw new RuntimeException("user with shortId: " + shortId + " and name, does not belong to this study.");
             }
@@ -440,34 +431,31 @@ public class KitUploadRoute extends RequestHandler {
         }
     }
 
+    Map<String, String> getParticipantDataAsMap(String row, List<String> fieldNamesFromHeader, int rowIndex) {
+        Map<String, String> participantDataByFieldName = new LinkedHashMap<>();
+        String[] rowItems = row.trim().split(SystemUtil.SEPARATOR);
+        if (rowItems.length != fieldNamesFromHeader.size())
+            throw new UploadLineException("Error in line " + (rowIndex + 1));
+
+        for (int columnIndex = 0; columnIndex < fieldNamesFromHeader.size(); columnIndex++) {
+            participantDataByFieldName.put(fieldNamesFromHeader.get(columnIndex), rowItems[columnIndex]);
+        }
+        return participantDataByFieldName;
+    }
+
     private boolean userExistsInRealm(DDPInstance ddpInstanceByRealm,
                                       Map<String, String> participantDataByFieldName) {
         String participantIdFromDoc = participantDataByFieldName.get(SHORT_ID);
-        if (StringUtils.isBlank(participantIdFromDoc) && participantIdFromDoc.matches("^[a-zA-Z0-9]*$")) {
-            return false;
-        }
-
         String participantFirstNameFromDoc = participantDataByFieldName.get(FIRST_NAME);
         String participantLastNameFromDoc = participantDataByFieldName.get(LAST_NAME);
-        if (participantFirstNameFromDoc == null || participantLastNameFromDoc == null) return false;
 
-        Optional<ParticipantWrapper> maybeParticipant;
-
-        if (isHruid(participantIdFromDoc)) {
-            maybeParticipant = ParticipantWrapper.getParticipantFromESByHruid(ddpInstanceByRealm, participantIdFromDoc);
-        } else {
-            maybeParticipant = ParticipantWrapper.getParticipantFromESByLegacyShortId(ddpInstanceByRealm, participantIdFromDoc);
-        }
+        Optional<ParticipantWrapper> maybeParticipant =
+                ParticipantWrapper.getParticipantByShortId(ddpInstanceByRealm, participantIdFromDoc);
 
         return isKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, maybeParticipant);
     }
 
-    public static boolean isHruid(String participantId) {
-        final String hruidCheck = "^P\\w{5}$";
-        return participantId.matches(hruidCheck);
-    }
-
-    private boolean isKitUploadNameMatchesToEsName(String participantFirstNameFromDoc, String participantLastNameFromDoc,
+    boolean isKitUploadNameMatchesToEsName(String participantFirstNameFromDoc, String participantLastNameFromDoc,
                               Optional<ParticipantWrapper> maybeParticipant) {
 
         Map<String, String> participantProfile = new HashMap<>();
