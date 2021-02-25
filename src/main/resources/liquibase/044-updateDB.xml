@@ -15,4 +15,12 @@
             <column name="event_name"></column>
         </createIndex>
     </changeSet>
+
+    <changeSet author="ikhaladz" id="addingStudyGuid">
+        <addColumn tableName="ddp_instance">
+            <column name="study_guid" type="VARCHAR(200)"
+                afterColumn="instance_name"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>
