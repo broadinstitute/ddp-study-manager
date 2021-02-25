@@ -206,8 +206,11 @@ public class KitUploadRoute extends RequestHandler {
         inTransaction((conn) -> {
             for (KitRequest kit : kitUploadObjects) {
                 String externalOrderNumber = DDPKitRequest.generateExternalOrderNumber();
-                if (invalidAddressList.get(kit.getParticipantId()) == null) { //kit is not in the noValid list, so enter into db
+                if (invalidAddressList.get(kit.getShortId()) == null) { //kit is not in the noValid list, so enter into db
                     String errorMessage = "";
+                    String participantGuid = ParticipantWrapper.getParticipantGuid(ParticipantWrapper.getParticipantFromESByHruid(ddpInstance, kit.getShortId()));
+                    String participantLegacyAltPid = ParticipantWrapper.getParticipantLegacyAltPid(ParticipantWrapper.getParticipantFromESByLegacyShortId(ddpInstance, kit.getShortId()));
+                    kit.setParticipantId(!participantGuid.isEmpty() ? participantGuid : participantLegacyAltPid);
                     String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(ddpInstance.getBaseUrl(), ddpInstance.getDdpInstanceId(), ddpInstance.isMigratedDDP(),
                             ddpInstance.getCollaboratorIdPrefix(), kit.getParticipantId(), kit.getShortId(),
                             kitRequestSettings.getCollaboratorParticipantLengthOverwrite());
@@ -222,7 +225,9 @@ public class KitUploadRoute extends RequestHandler {
                                 shippingId += "_" + j;
                             }
                             //check with ddp_participant_id if participant already has a kit in DSM db
-                            if (checkIfKitAlreadyExists(conn, kit.getParticipantId(), ddpInstance.getDdpInstanceId(), subKit.getKitTypeId()) && !uploadAnyway) {
+                            boolean isKitExsist = checkAndSetParticipantIdIfKitExists(ddpInstance, conn, kit, participantGuid, participantLegacyAltPid, subKit.getKitTypeId());
+
+                            if (isKitExsist && !uploadAnyway) {
                                 alreadyExists = true;
                             }
                             else {
@@ -251,6 +256,19 @@ public class KitUploadRoute extends RequestHandler {
             }
             return null;
         });
+    }
+
+    private boolean checkAndSetParticipantIdIfKitExists(DDPInstance ddpInstance, Connection conn, KitRequest kit, String participantGuid,
+                                                        String participantLegacyAltPid, int kitTypeId) {
+        boolean isKitExsist = false;
+        if (checkIfKitAlreadyExists(conn, participantGuid, ddpInstance.getDdpInstanceId(), kitTypeId)) {
+            isKitExsist = true;
+            kit.setParticipantId(participantGuid);
+        } else if (checkIfKitAlreadyExists(conn, participantLegacyAltPid, ddpInstance.getDdpInstanceId(), kitTypeId)) {
+            isKitExsist = true;
+            kit.setParticipantId(participantLegacyAltPid);
+        }
+        return isKitExsist;
     }
 
     private void handleNormalKit(@NonNull Connection conn, @NonNull DDPInstance ddpInstance, @NonNull KitType kitType, @NonNull KitRequest kit,
@@ -292,7 +310,9 @@ public class KitUploadRoute extends RequestHandler {
                            @NonNull KitRequestSettings kitRequestSettings, @NonNull EasyPostUtil easyPostUtil, @NonNull String userIdRequest,
                            @NonNull String kitTypeName, String collaboratorParticipantId, String errorMessage, boolean uploadAnyway,
                            List<KitRequest> duplicateKitList, ArrayList<KitRequest> orderKits, String externalOrderNumber, String uploadReason, String carrier) {
-        if (checkIfKitAlreadyExists(conn, kit.getParticipantId(), ddpInstance.getDdpInstanceId(), kitType.getKitTypeId()) && !uploadAnyway) {
+        String participantGuid = ParticipantWrapper.getParticipantGuid(ParticipantWrapper.getParticipantFromESByHruid(ddpInstance, kit.getShortId()));
+        String participantLegacyAltPid = ParticipantWrapper.getParticipantLegacyAltPid(ParticipantWrapper.getParticipantFromESByLegacyShortId(ddpInstance, kit.getShortId()));
+        if (checkAndSetParticipantIdIfKitExists(ddpInstance, conn, kit, participantGuid, participantLegacyAltPid, kitType.getKitTypeId())) {
             duplicateKitList.add(kit);
         }
         else {
@@ -422,8 +442,8 @@ public class KitUploadRoute extends RequestHandler {
 
     private boolean userExistsInRealm(DDPInstance ddpInstanceByRealm,
                                       Map<String, String> participantDataByFieldName) {
-        String participantShortIdFromDoc = participantDataByFieldName.get(SHORT_ID);
-        if (StringUtils.isBlank(participantShortIdFromDoc) && participantShortIdFromDoc.matches("^[a-zA-Z0-9]*$")) {
+        String participantIdFromDoc = participantDataByFieldName.get(SHORT_ID);
+        if (StringUtils.isBlank(participantIdFromDoc) && participantIdFromDoc.matches("^[a-zA-Z0-9]*$")) {
             return false;
         }
 
@@ -431,20 +451,33 @@ public class KitUploadRoute extends RequestHandler {
         String participantLastNameFromDoc = participantDataByFieldName.get(LAST_NAME);
         if (participantFirstNameFromDoc == null || participantLastNameFromDoc == null) return false;
 
-        Map<String, String> queryConditions = new HashMap<>();
-        queryConditions.put("ES", " AND profile.hruid = '" + participantShortIdFromDoc + "'");
-        List<ParticipantWrapper> participantsBelongToRealm = ParticipantWrapper.getFilteredList(ddpInstanceByRealm, queryConditions);
-        if (participantsBelongToRealm.size() == 1 ) {
-            ParticipantWrapper participantWrapper = participantsBelongToRealm.get(0);
-            Map<String, String> participantProfileFromES = ((Map<String, String>) participantWrapper.getData().get("profile"));
-            String participantFirstNameFromES = participantProfileFromES.get("firstName");
-            String participantLastNameFromES = participantProfileFromES.get("lastName");
-            return participantFirstNameFromDoc.equals(participantFirstNameFromES)
-                    && participantLastNameFromDoc.equals(participantLastNameFromES);
+        Optional<ParticipantWrapper> maybeParticipant;
+
+        if (isHruid(participantIdFromDoc)) {
+            maybeParticipant = ParticipantWrapper.getParticipantFromESByHruid(ddpInstanceByRealm, participantIdFromDoc);
+        } else {
+            maybeParticipant = ParticipantWrapper.getParticipantFromESByLegacyShortId(ddpInstanceByRealm, participantIdFromDoc);
         }
-        logger.error("User with Short Id {} doesn't seem to exist in {}",
-                participantShortIdFromDoc, ddpInstanceByRealm.getName());
-        return false;
+
+        return isKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, maybeParticipant);
+    }
+
+    public static boolean isHruid(String participantId) {
+        final String hruidCheck = "^P\\w{5}$";
+        return participantId.matches(hruidCheck);
+    }
+
+    private boolean isKitUploadNameMatchesToEsName(String participantFirstNameFromDoc, String participantLastNameFromDoc,
+                              Optional<ParticipantWrapper> maybeParticipant) {
+
+        Map<String, String> participantProfile = new HashMap<>();
+        maybeParticipant.ifPresent(p -> {
+            Map<String, String> participantProfileFromEs = (Map<String, String>) p.getData().get("profile");
+            participantProfile.put("firstName", participantProfileFromEs.get("firstName"));
+            participantProfile.put("lastName", participantProfileFromEs.get("lastName"));
+        });
+        return participantFirstNameFromDoc.equals(participantProfile.get("firstName"))
+                && participantLastNameFromDoc.equals(participantProfile.get("lastName"));
     }
 
     public Map<String, KitRequest> checkAddress(List<KitRequest> kitUploadObjects, String phone) {
@@ -469,12 +502,12 @@ public class KitUploadRoute extends RequestHandler {
                     object.setEasyPostAddressId(deliveryAddress.getId());
                 }
                 else {
-                    logger.info("Address is not valid " + object.getParticipantId());
-                    noValidAddress.put(object.getParticipantId(), object);
+                    logger.info("Address is not valid " + object.getShortId());
+                    noValidAddress.put(object.getShortId(), object);
                 }
             }
             else {
-                noValidAddress.put(object.getParticipantId(), object);
+                noValidAddress.put(object.getShortId(), object);
             }
         }
         return noValidAddress;

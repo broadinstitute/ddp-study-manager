@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.util.DeliveryAddress;
 import org.broadinstitute.dsm.db.*;
@@ -20,6 +21,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
+@Setter
 public class ParticipantWrapper {
 
     private static final Logger logger = LoggerFactory.getLogger(ParticipantWrapper.class);
@@ -50,6 +52,8 @@ public class ParticipantWrapper {
         this.proxyData = proxyData;
         this.participantData = participantData;
     }
+
+    public ParticipantWrapper() {}
 
     public JsonObject getDataAsJson() {
         return new JsonParser().parse(new Gson().toJson(data)).getAsJsonObject();
@@ -196,6 +200,32 @@ public class ParticipantWrapper {
             List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistories, kitRequests, abstractionActivities, abstractionSummary, proxyData, participantData);
             return r;
         }
+    }
+
+    public static Optional<ParticipantWrapper> getParticipantFromESByHruid(DDPInstance ddpInstanceByRealm, String participantHruid) {
+        Map<String, String> queryConditions = new HashMap<>();
+        queryConditions.put("ES", ElasticSearchUtil.BY_HRUID + "'" + participantHruid + "'");
+        List<ParticipantWrapper> participantsBelongToRealm = ParticipantWrapper.getFilteredList(ddpInstanceByRealm, queryConditions);
+        return participantsBelongToRealm.stream().filter(Objects::nonNull).findFirst();
+    }
+
+    public static Optional<ParticipantWrapper> getParticipantFromESByLegacyShortId(DDPInstance ddpInstanceByRealm, String participantLegacyShortId) {
+        Map<String, String> queryConditions = new HashMap<>();
+        queryConditions.put("ES", ElasticSearchUtil.BY_LEGACY_SHORTID + "'" + participantLegacyShortId + "'");
+        List<ParticipantWrapper> participantsBelongToRealm = ParticipantWrapper.getFilteredList(ddpInstanceByRealm, queryConditions);
+        return participantsBelongToRealm.stream().filter(Objects::nonNull).findFirst();
+    }
+
+    public static String getParticipantGuid(Optional<ParticipantWrapper> maybeParticipant) {
+        return maybeParticipant
+                .map(p -> ((Map<String, String>)p.getData().get("profile")).get("guid"))
+                .orElse("");
+    }
+
+    public static String getParticipantLegacyAltPid(Optional<ParticipantWrapper> maybeParticipant) {
+        return maybeParticipant
+                .map(p -> ((Map<String, String>)p.getData().get("profile")).get("legacyAltPid"))
+                .orElse("");
     }
 
     public static Map<String, Map<String, Object>> getESData(@NonNull DDPInstance instance) {
