@@ -469,7 +469,7 @@ public class ViewFilter {
      * @return ViewFilter which the input string is parsed and is in as a Filter[]
      */
     public static ViewFilter parseFilteringQuery(String str, ViewFilter viewFilter) {
-        String[] conditions = str.split("(and\\s*)|(AND\\s*)");
+        String[] conditions = str.split("(and\\s)|(AND\\s)");
         Map<String, Filter> filters = new HashMap<>(conditions.length);
         for (String condition : conditions) {
             if (StringUtils.isBlank(condition)) {
@@ -492,7 +492,7 @@ public class ViewFilter {
             Boolean f1 = false;
             NameValue filter2 = null;
             NameValue filter1 = null;
-            String[] words = condition.split("(\\s+)");
+            String[] words = condition.trim().split("(\\s+)");
             for (String word : words) {
                 if (StringUtils.isNotBlank(word)) {
                     switch (state) {
