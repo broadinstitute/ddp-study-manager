@@ -397,7 +397,9 @@ public class KitUploadRoute extends RequestHandler {
         boolean containsOrderNumber = fieldNamesFromHeader.contains(ORDER_NUMBER);
         DDPInstance ddpInstanceByRealm = DDPInstance.getDDPInstance(realm);
 
-        for (int rowIndex = 1; rowIndex < rows.length; rowIndex++) {
+        int lastNonEmptyRowIndex = getLastNonEmptyRowIndex(rows);
+
+        for (int rowIndex = 1; rowIndex <= lastNonEmptyRowIndex; rowIndex++) {
 
             Map<String, String> participantDataByFieldName = getParticipantDataAsMap(rows[rowIndex], fieldNamesFromHeader, rowIndex);
 
@@ -441,6 +443,21 @@ public class KitUploadRoute extends RequestHandler {
             participantDataByFieldName.put(fieldNamesFromHeader.get(columnIndex), rowItems[columnIndex]);
         }
         return participantDataByFieldName;
+    }
+
+    private int getLastNonEmptyRowIndex(String[] rows) {
+
+        int lastNonEmptyRowIndex = rows.length - 1;
+
+        for (int i = rows.length - 1; i > 0; i--) {
+            String[] row = rows[i].trim().split(SystemUtil.SEPARATOR);
+            if (!"".equals(String.join("", row))) {
+                lastNonEmptyRowIndex = i;
+                break;
+            }
+        }
+
+        return lastNonEmptyRowIndex;
     }
 
     private boolean userExistsInRealm(DDPInstance ddpInstanceByRealm,
