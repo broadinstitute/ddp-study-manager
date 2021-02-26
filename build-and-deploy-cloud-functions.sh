@@ -13,6 +13,7 @@ gcloud --project=${PROJECT_ID} functions deploy \
     --entry-point=org.broadinstitute.dsm.jobs.TestBostonUPSTrackingJob \
     --runtime=java11 \
     --trigger-topic=cron-topic \
+    --timeout=540\
     --source=target/deployment \
     --set-env-vars="PROJECT_ID=${PROJECT_ID},SECRET_ID=cloud-functions,STUDY_MANAGER_SCHEMA=${STUDY_MANAGER_SCHEMA},STUDY_SERVER_SCHEMA=${STUDY_SERVER_SCHEMA}" \
     --vpc-connector=projects/${PROJECT_ID}/locations/us-central1/connectors/appengine-default-connect

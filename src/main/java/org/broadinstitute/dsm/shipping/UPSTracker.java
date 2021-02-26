@@ -51,12 +51,14 @@ public class UPSTracker {
             }
             catch (Exception e) {
                error = new RuntimeException("couldn't get response from ups tracking of package " + trackingId, e);
-               logger.warn("Retrying ups round " + i);
-               try {
-                   Thread.sleep(5 * 1000);
-               } catch (InterruptedException interrupted) {
-                   logger.warn("Error while waiting for UPS retry", interrupted);
-               }
+                logger.warn("Retrying ups round " + i);
+               throw error;
+
+//               try {
+//                   Thread.sleep(5 * 1000);
+//               } catch (InterruptedException interrupted) {
+//                   logger.warn("Error while waiting for UPS retry", interrupted);
+//               }
             }
         }
         if (error != null) {
