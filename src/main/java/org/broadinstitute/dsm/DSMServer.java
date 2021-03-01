@@ -65,6 +65,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -430,7 +431,7 @@ public class DSMServer extends BasicServer {
     private void setupShippingRoutes(@NonNull NotificationUtil notificationUtil, @NonNull Auth0Util auth0Util, @NonNull UserUtil userUtil) {
         get(UI_ROOT + RoutePath.KIT_REQUESTS_PATH, new KitRequestRoute(), new JsonTransformer());
 
-        KitStatusChangeRoute kitStatusChangeRoute = new KitStatusChangeRoute();
+        KitStatusChangeRoute kitStatusChangeRoute = new KitStatusChangeRoute(notificationUtil);
         post(UI_ROOT + RoutePath.FINAL_SCAN_REQUEST, kitStatusChangeRoute, new JsonTransformer());
         post(UI_ROOT + RoutePath.TRACKING_SCAN_REQUEST, kitStatusChangeRoute, new JsonTransformer());
         post(UI_ROOT + RoutePath.SENT_KIT_REQUEST, kitStatusChangeRoute, new JsonTransformer());
