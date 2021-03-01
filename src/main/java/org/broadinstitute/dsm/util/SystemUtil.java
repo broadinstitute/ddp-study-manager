@@ -10,6 +10,9 @@ import java.io.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Date;
 
 public class SystemUtil {
@@ -72,7 +75,7 @@ public class SystemUtil {
     public static long getLong(@NonNull String dateString, @NonNull SimpleDateFormat sdf) {
         try {
             Date date = sdf.parse(dateString);
-            return date.getTime();
+            return getUTCLongFromDate(date);
         }
         catch (ParseException e) {
             throw new RuntimeException("Couldn't parse date string to date ", e);
@@ -83,7 +86,7 @@ public class SystemUtil {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat(SystemUtil.DATE_FORMAT);
             Date date = sdf.parse(dateString);
-            return date.getTime();
+            return getUTCLongFromDate(date);
         }
         catch (ParseException e) {
             try {
@@ -100,6 +103,10 @@ public class SystemUtil {
                 return date.getTime();
             }
         }
+    }
+
+    private static long getUTCLongFromDate(Date date) {
+        return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()).toEpochSecond(ZoneOffset.UTC);
     }
 
     //TODO Simone - delete if not used at the end...
