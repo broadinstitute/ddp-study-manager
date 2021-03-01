@@ -43,4 +43,17 @@
             <column name="carrier_tracking_url" type="VARCHAR(500)"></column>
         </addColumn>
     </changeSet>
+    <changeSet id="DDP-5445-tracking_history_table" author="pegah">
+        <createTable tableName="kit_tracking_history">
+            <column name="dsm_kit_request_id" type="INT(11)" >
+                <constraints unique="true" nullable="false"></constraints>
+            </column>
+            <column name="kit_shipping_history" type="TEXT(10000)"></column>
+            <column name="kit_return_history" type="TEXT(10000)"></column>
+
+        </createTable>
+    </changeSet>
+    <changeSet id="kit_tracking_history-primaryKey" author="pegah">
+        <addPrimaryKey tableName="kit_tracking_history" columnNames="dsm_kit_request_id"/>
+    </changeSet>
 </databaseChangeLog>
