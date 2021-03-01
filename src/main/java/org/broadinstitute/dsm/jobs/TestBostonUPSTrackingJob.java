@@ -194,6 +194,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
 
         final String SQL_UPDATE_UPS_RETURN_STATUS = "UPDATE " + STUDY_MANAGER_SCHEMA + "ddp_kit SET kit_return_history = ? " +
                 "WHERE dsm_kit_id <> 0 and tracking_return_id= ? and dsm_kit_request_id in ( SELECT dsm_kit_request_id FROM " + STUDY_MANAGER_SCHEMA + "ddp_kit_request where external_order_number = ? )";
+//        final String SQL_
 
 
         if (response.getTrackResponse() != null) {

@@ -36,9 +36,6 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
 
     private String STUDY_MANAGER_SCHEMA = System.getenv("STUDY_MANAGER_SCHEMA") + ".";
     private String STUDY_SERVER_SCHEMA = System.getenv("STUDY_SERVER_SCHEMA") + ".";
-    private static final String SQL_SELECT_KITS = "SELECT kit.dsm_kit_request_id, kit.kit_label, kit.tracking_to_id, kit.tracking_return_id, kit.error, kit.message, kit.receive_date, kit.ups_tracking_status, kit.ups_tracking_date, kit.ups_return_date, kit.ups_return_status, req.bsp_collaborator_participant_id, " +
-            " req.external_order_number, kit.CE_order FROM ddp_kit kit LEFT JOIN ddp_kit_request req " +
-            " ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) WHERE req.ddp_instance_id = ? and kit_label not like \"%\\\\_1\"  ";
 
     private static String SQL_AVOID_DELIVERED = " and (tracking_to_id is not null or tracking_return_id is not null ) and (ups_tracking_status is null or ups_return_status is null or ups_tracking_status not like \"" + UPSStatus.DELIVERED_TYPE + " %\" or ups_return_status not like \"" + UPSStatus.DELIVERED_TYPE + " %\")" +
             " order by kit.dsm_kit_request_id ASC";
@@ -50,6 +47,11 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
         String dbUrl = cfg.getString("dbUrl");
 
         PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(1, dbUrl);
+        final String SQL_SELECT_KITS = "SELECT kit.dsm_kit_request_id, kit.kit_label, kit.tracking_to_id, kit.tracking_return_id, kit.error, kit.message, kit.receive_date, kit.kit_shipping_history,  kit.kit_return_history,  req.bsp_collaborator_participant_id, " +
+                " req.external_order_number, kit.CE_order FROM " + STUDY_MANAGER_SCHEMA + "ddp_kit kit LEFT JOIN " + STUDY_MANAGER_SCHEMA + "ddp_kit_request req " +
+                " ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) WHERE req.ddp_instance_id = ? and kit_label not like \"%\\\\_1\"  ";
+
+        logger.info("Starting the UPS lookup job");
 
         // static vars are dangerous in CF https://cloud.google.com/functions/docs/bestpractices/tips#functions-tips-scopes-java
         try (Connection conn = dataSource.getConnection()) {
@@ -59,7 +61,6 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                     while (rs.next()) {
                         String kitLabel = rs.getString("kit.kit_label");
                         logger.info(kitLabel);
-
                         // add thee TestBostonUPSTrackingJob to here
                     }
                 }
