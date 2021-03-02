@@ -40,7 +40,7 @@ public class ViewFilterRoute extends RequestHandler {
         DDPInstance instance = null;
         if (queryParams.value(RoutePath.REALM) != null) {
             realm = queryParams.get(RoutePath.REALM).value();
-            instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
+            instance = DDPInstance.getDDPInstance(realm);
         }
         else {
             throw new RuntimeException("No realm is sent!");

@@ -19,8 +19,6 @@ public class ApplicationConfigConstants {
     //db connection information
     public static final String DSM_DB_MAX_CONNECTIONS = "portal.maxConnections";
     public static final String DSM_DB_URL = "portal.dbUrl";
-    public static final String EEL_DB_MAX_CONNECTIONS = "eel.max_connections";
-    public static final String EEL_DB_URL = "eel.url";
 
     //google buckets
     public static final String GOOGLE_PROJECT_NAME = "portal.googleProjectName";
@@ -91,7 +89,6 @@ public class ApplicationConfigConstants {
     public static final String GET_DASHBOARD_INFORMATION_OF_KIT_REQUESTS_DEACTIVATED = "portal.dashboardKitDeactivated";
     public static final String GET_DASHBOARD_INFORMATION_OF_KIT_REQUESTS_SENT_REPORT = "portal.dashboardReportKitSent";
     public static final String GET_DASHBOARD_INFORMATION_OF_KIT_REQUESTS_RECEIVED_REPORT = "portal.dashboardReportKitReceived";
-    public static final String INSERT_EXITED_PARTICIPANT = "portal.insertExitParticipant";
     public static final String GET_FOUND_IF_KIT_WITH_DDP_LABEL_ALREADY_EXISTS = "portal.checkDdpLabelIdQuery";
     public static final String GET_FOUND_IF_KIT_LABEL_ALREADY_EXISTS_IN_TRACKING_TABLE = "portal.checkTrackingQuery";
     public static final String GET_KIT_TYPE_NEED_TRACKING_BY_DDP_LABEL = "portal.checkKitTypeNeedsTrackingQuery";
@@ -114,12 +111,6 @@ public class ApplicationConfigConstants {
     public static final String INSERT_KIT_DISCARD = "portal.insertKitDiscard";
     public static final String UPDATE_KIT_DISCARD = "portal.updateKitDiscard";
     public static final String SET_USER_CONFIRMED = "portal.userConfirmed";
-
-    public static final String GET_NEW_PHYSICIANS_MBC = "mbc.selectNewPhysicians";
-    public static final String GET_NEW_HOSPITALS_MBC = "mbc.selectNewHospital";
-    public static final String GET_ALL_PHYSICIAN_MBC = "mbc.selectAllPhysicians";
-    public static final String GET_ALL_HOSPITALS_MBC = "mbc.selectAllHospitals";
-    public static final String GET_PARTICIPANTS_MBC = "mbc.selectParticipants";
 
     public static final String PREFERRED_SOURCE_IP_HEADER = "preferredSourceIPHeader";
     public static final String BOOT_TIMEOUT = "bootTimeout";

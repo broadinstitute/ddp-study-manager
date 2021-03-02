@@ -1,5 +1,0 @@
-# fix for label creation
-ALTER TABLE `ddp_kit`
-CHANGE COLUMN `kit_complete` `kit_complete` TINYINT(1) NULL DEFAULT NULL ,
-ADD COLUMN `error` TINYINT(1) NULL DEFAULT NULL AFTER `kit_complete`,
-ADD COLUMN `message` VARCHAR(255) NULL DEFAULT NULL AFTER `error`;

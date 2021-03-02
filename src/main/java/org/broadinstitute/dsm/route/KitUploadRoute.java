@@ -52,7 +52,6 @@ public class KitUploadRoute extends RequestHandler {
             "AND kit.deactivated_date is null AND request.ddp_instance_id = ? AND request.kit_type_id = ? AND request.ddp_participant_id = ?";
 
     private static final String PARTICIPANT_ID = "participantId";
-    private static final String ORDER_NUMBER = "orderNumber";
     private static final String SHORT_ID = "shortId";
     private static final String SIGNATURE = "signature";
     private static final String FIRST_NAME = "firstName";
@@ -148,7 +147,7 @@ public class KitUploadRoute extends RequestHandler {
 
                 Map<Integer, KitRequestSettings> kitRequestSettingsMap = KitRequestSettings.getKitRequestSettings(ddpInstance.getDdpInstanceId());
                 KitRequestSettings kitRequestSettings = kitRequestSettingsMap.get(kitType.getKitTypeId());
-                // if the kit type has sub kits > like for promise
+                // if the kit type has sub kits > like for testBoston
                 boolean kitHasSubKits = kitRequestSettings.getHasSubKits() != 0;
 
                 logger.info("Setup EasyPost...");
@@ -206,8 +205,11 @@ public class KitUploadRoute extends RequestHandler {
         inTransaction((conn) -> {
             for (KitRequest kit : kitUploadObjects) {
                 String externalOrderNumber = DDPKitRequest.generateExternalOrderNumber();
-                if (invalidAddressList.get(kit.getParticipantId()) == null) { //kit is not in the noValid list, so enter into db
+                if (invalidAddressList.get(kit.getShortId()) == null) { //kit is not in the noValid list, so enter into db
                     String errorMessage = "";
+                    String participantGuid = ParticipantWrapper.getParticipantGuid(ParticipantWrapper.getParticipantFromESByHruid(ddpInstance, kit.getShortId()));
+                    String participantLegacyAltPid = ParticipantWrapper.getParticipantLegacyAltPid(ParticipantWrapper.getParticipantFromESByLegacyShortId(ddpInstance, kit.getShortId()));
+                    kit.setParticipantId(!participantGuid.isEmpty() ? participantGuid : participantLegacyAltPid);
                     String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(ddpInstance.getBaseUrl(), ddpInstance.getDdpInstanceId(), ddpInstance.isMigratedDDP(),
                             ddpInstance.getCollaboratorIdPrefix(), kit.getParticipantId(), kit.getShortId(),
                             kitRequestSettings.getCollaboratorParticipantLengthOverwrite());
@@ -222,7 +224,9 @@ public class KitUploadRoute extends RequestHandler {
                                 shippingId += "_" + j;
                             }
                             //check with ddp_participant_id if participant already has a kit in DSM db
-                            if (checkIfKitAlreadyExists(conn, kit.getParticipantId(), ddpInstance.getDdpInstanceId(), subKit.getKitTypeId()) && !uploadAnyway) {
+                            boolean isKitExsist = checkAndSetParticipantIdIfKitExists(ddpInstance, conn, kit, participantGuid, participantLegacyAltPid, subKit.getKitTypeId());
+
+                            if (isKitExsist && !uploadAnyway) {
                                 alreadyExists = true;
                             }
                             else {
@@ -251,6 +255,19 @@ public class KitUploadRoute extends RequestHandler {
             }
             return null;
         });
+    }
+
+    private boolean checkAndSetParticipantIdIfKitExists(DDPInstance ddpInstance, Connection conn, KitRequest kit, String participantGuid,
+                                                        String participantLegacyAltPid, int kitTypeId) {
+        boolean isKitExsist = false;
+        if (checkIfKitAlreadyExists(conn, participantGuid, ddpInstance.getDdpInstanceId(), kitTypeId)) {
+            isKitExsist = true;
+            kit.setParticipantId(participantGuid);
+        } else if (checkIfKitAlreadyExists(conn, participantLegacyAltPid, ddpInstance.getDdpInstanceId(), kitTypeId)) {
+            isKitExsist = true;
+            kit.setParticipantId(participantLegacyAltPid);
+        }
+        return isKitExsist;
     }
 
     private void handleNormalKit(@NonNull Connection conn, @NonNull DDPInstance ddpInstance, @NonNull KitType kitType, @NonNull KitRequest kit,
@@ -292,7 +309,9 @@ public class KitUploadRoute extends RequestHandler {
                            @NonNull KitRequestSettings kitRequestSettings, @NonNull EasyPostUtil easyPostUtil, @NonNull String userIdRequest,
                            @NonNull String kitTypeName, String collaboratorParticipantId, String errorMessage, boolean uploadAnyway,
                            List<KitRequest> duplicateKitList, ArrayList<KitRequest> orderKits, String externalOrderNumber, String uploadReason, String carrier) {
-        if (checkIfKitAlreadyExists(conn, kit.getParticipantId(), ddpInstance.getDdpInstanceId(), kitType.getKitTypeId()) && !uploadAnyway) {
+        String participantGuid = ParticipantWrapper.getParticipantGuid(ParticipantWrapper.getParticipantFromESByHruid(ddpInstance, kit.getShortId()));
+        String participantLegacyAltPid = ParticipantWrapper.getParticipantLegacyAltPid(ParticipantWrapper.getParticipantFromESByLegacyShortId(ddpInstance, kit.getShortId()));
+        if (checkAndSetParticipantIdIfKitExists(ddpInstance, conn, kit, participantGuid, participantLegacyAltPid, kitType.getKitTypeId())) {
             duplicateKitList.add(kit);
         }
         else {
@@ -374,27 +393,16 @@ public class KitUploadRoute extends RequestHandler {
                                               List<KitRequest> kitRequestsToUpload) {
 
         boolean nameInOneColumn = fieldNamesFromHeader.contains(SIGNATURE);
-        boolean containsOrderNumber = fieldNamesFromHeader.contains(ORDER_NUMBER);
         DDPInstance ddpInstanceByRealm = DDPInstance.getDDPInstance(realm);
 
         int lastNonEmptyRowIndex = getLastNonEmptyRowIndex(rows);
 
         for (int rowIndex = 1; rowIndex <= lastNonEmptyRowIndex; rowIndex++) {
 
-            String[] row = rows[rowIndex].trim().split(SystemUtil.SEPARATOR);
-
-            if (row.length != fieldNamesFromHeader.size())
-                throw new UploadLineException("Error in line " + (rowIndex + 1));
-
-            Map<String, String> participantDataByFieldName = new LinkedHashMap<>();
-            for (int columnIndex = 0; columnIndex < fieldNamesFromHeader.size(); columnIndex++) {
-                participantDataByFieldName.put(fieldNamesFromHeader.get(columnIndex), row[columnIndex]);
-            }
+            Map<String, String> participantDataByFieldName = getParticipantDataAsMap(rows[rowIndex], fieldNamesFromHeader, rowIndex);
 
             String shortId = participantDataByFieldName.get(SHORT_ID);
-            if (StringUtils.isBlank(shortId)) {
-                shortId = participantDataByFieldName.get(PARTICIPANT_ID);
-            }
+
             if (!userExistsInRealm(ddpInstanceByRealm, participantDataByFieldName)) {
                 throw new RuntimeException("user with shortId: " + shortId + " and name, does not belong to this study.");
             }
@@ -403,12 +411,6 @@ public class KitUploadRoute extends RequestHandler {
             if (nameInOneColumn) {
                 participantKitToUpload = new KitUploadObject(null, participantDataByFieldName.get(PARTICIPANT_ID), shortId,
                         null, participantDataByFieldName.get(SIGNATURE),
-                        participantDataByFieldName.get(STREET1), participantDataByFieldName.get(STREET2), participantDataByFieldName.get(CITY),
-                        participantDataByFieldName.get(STATE), participantDataByFieldName.get(POSTAL_CODE), participantDataByFieldName.get(COUNTRY), participantDataByFieldName.getOrDefault(PHONE_NUMBER, null));
-            }
-            else if (containsOrderNumber) {
-                participantKitToUpload = new KitUploadObject(participantDataByFieldName.get(ORDER_NUMBER), participantDataByFieldName.get(PARTICIPANT_ID), null,
-                        null, participantDataByFieldName.get(NAME),
                         participantDataByFieldName.get(STREET1), participantDataByFieldName.get(STREET2), participantDataByFieldName.get(CITY),
                         participantDataByFieldName.get(STATE), participantDataByFieldName.get(POSTAL_CODE), participantDataByFieldName.get(COUNTRY), participantDataByFieldName.getOrDefault(PHONE_NUMBER, null));
             }
@@ -421,6 +423,18 @@ public class KitUploadRoute extends RequestHandler {
             kitRequestsToUpload.add(participantKitToUpload);
 
         }
+    }
+
+    Map<String, String> getParticipantDataAsMap(String row, List<String> fieldNamesFromHeader, int rowIndex) {
+        Map<String, String> participantDataByFieldName = new LinkedHashMap<>();
+        String[] rowItems = row.trim().split(SystemUtil.SEPARATOR);
+        if (rowItems.length != fieldNamesFromHeader.size())
+            throw new UploadLineException("Error in line " + (rowIndex + 1));
+
+        for (int columnIndex = 0; columnIndex < fieldNamesFromHeader.size(); columnIndex++) {
+            participantDataByFieldName.put(fieldNamesFromHeader.get(columnIndex), rowItems[columnIndex]);
+        }
+        return participantDataByFieldName;
     }
 
     private int getLastNonEmptyRowIndex(String[] rows) {
@@ -440,29 +454,27 @@ public class KitUploadRoute extends RequestHandler {
 
     private boolean userExistsInRealm(DDPInstance ddpInstanceByRealm,
                                       Map<String, String> participantDataByFieldName) {
-        String participantShortIdFromDoc = participantDataByFieldName.get(SHORT_ID);
-        if (StringUtils.isBlank(participantShortIdFromDoc) && participantShortIdFromDoc.matches("^[a-zA-Z0-9]*$")) {
-            return false;
-        }
-
+        String participantIdFromDoc = participantDataByFieldName.get(SHORT_ID);
         String participantFirstNameFromDoc = participantDataByFieldName.get(FIRST_NAME);
         String participantLastNameFromDoc = participantDataByFieldName.get(LAST_NAME);
-        if (participantFirstNameFromDoc == null || participantLastNameFromDoc == null) return false;
 
-        Map<String, String> queryConditions = new HashMap<>();
-        queryConditions.put("ES", " AND profile.hruid = '" + participantShortIdFromDoc + "'");
-        List<ParticipantWrapper> participantsBelongToRealm = ParticipantWrapper.getFilteredList(ddpInstanceByRealm, queryConditions);
-        if (participantsBelongToRealm.size() == 1 ) {
-            ParticipantWrapper participantWrapper = participantsBelongToRealm.get(0);
-            Map<String, String> participantProfileFromES = ((Map<String, String>) participantWrapper.getData().get("profile"));
-            String participantFirstNameFromES = participantProfileFromES.get("firstName");
-            String participantLastNameFromES = participantProfileFromES.get("lastName");
-            return participantFirstNameFromDoc.equals(participantFirstNameFromES)
-                    && participantLastNameFromDoc.equals(participantLastNameFromES);
-        }
-        logger.error("User with Short Id {} doesn't seem to exist in {}",
-                participantShortIdFromDoc, ddpInstanceByRealm.getName());
-        return false;
+        Optional<ParticipantWrapper> maybeParticipant =
+                ParticipantWrapper.getParticipantByShortId(ddpInstanceByRealm, participantIdFromDoc);
+
+        return isKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, maybeParticipant);
+    }
+
+    boolean isKitUploadNameMatchesToEsName(String participantFirstNameFromDoc, String participantLastNameFromDoc,
+                              Optional<ParticipantWrapper> maybeParticipant) {
+
+        Map<String, String> participantProfile = new HashMap<>();
+        maybeParticipant.ifPresent(p -> {
+            Map<String, String> participantProfileFromEs = (Map<String, String>) p.getData().get("profile");
+            participantProfile.put("firstName", participantProfileFromEs.get("firstName"));
+            participantProfile.put("lastName", participantProfileFromEs.get("lastName"));
+        });
+        return participantFirstNameFromDoc.equals(participantProfile.get("firstName"))
+                && participantLastNameFromDoc.equals(participantProfile.get("lastName"));
     }
 
     public Map<String, KitRequest> checkAddress(List<KitRequest> kitUploadObjects, String phone) {
@@ -487,39 +499,27 @@ public class KitUploadRoute extends RequestHandler {
                     object.setEasyPostAddressId(deliveryAddress.getId());
                 }
                 else {
-                    logger.info("Address is not valid " + object.getParticipantId());
-                    noValidAddress.put(object.getParticipantId(), object);
+                    logger.info("Address is not valid " + object.getShortId());
+                    noValidAddress.put(object.getShortId(), object);
                 }
             }
             else {
-                noValidAddress.put(object.getParticipantId(), object);
+                noValidAddress.put(object.getShortId(), object);
             }
         }
         return noValidAddress;
     }
 
     public String getMissingHeader(List<String> fieldName) {
-        if (fieldName.contains(ORDER_NUMBER)) {
-            //Promise file upload
-            if (!fieldName.contains(ORDER_NUMBER)) {
-                return ORDER_NUMBER;
+        if (!fieldName.contains(SIGNATURE)) {
+            if (!fieldName.contains(SHORT_ID)) {
+                return SHORT_ID;
             }
-            if (!fieldName.contains(NAME)) {
-                return NAME;
+            if (!fieldName.contains(FIRST_NAME)) {
+                return FIRST_NAME + " or " + SIGNATURE;
             }
-        }
-        else {
-            //file upload for other ddps
-            if (!fieldName.contains(SIGNATURE)) {
-                if (!fieldName.contains(SHORT_ID)) {
-                    return SHORT_ID;
-                }
-                if (!fieldName.contains(FIRST_NAME)) {
-                    return FIRST_NAME + " or " + SIGNATURE;
-                }
-                if (!fieldName.contains(LAST_NAME)) {
-                    return LAST_NAME + " or " + SIGNATURE;
-                }
+            if (!fieldName.contains(LAST_NAME)) {
+                return LAST_NAME + " or " + SIGNATURE;
             }
         }
         if (!fieldName.contains(STREET1)) {

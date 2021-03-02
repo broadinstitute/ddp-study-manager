@@ -9,7 +9,6 @@ import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.handlers.util.MedicalInfo;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.ddp.util.GoogleBucket;
-import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.MedicalRecord;
@@ -19,7 +18,6 @@ import org.broadinstitute.dsm.files.PDFProcessor;
 import org.broadinstitute.dsm.files.RequestPDFProcessor;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
-import org.broadinstitute.dsm.model.mbc.MBCParticipant;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.*;
 import org.broadinstitute.dsm.util.*;
@@ -47,10 +45,10 @@ public class DownloadPDFRoute extends RequestHandler {
     private static final Logger logger = LoggerFactory.getLogger(DownloadPDFRoute.class);
 
     private static final String SQL_SELECT_REALM_FOR_PARTICIPANT = "SELECT inst.instance_name, inst.base_url, inst.ddp_instance_id, inst.mr_attention_flag_d, " +
-            "inst.tissue_attention_flag_d, inst.es_participant_index, inst.es_activity_definition_index, inst.es_users_index, inst.auth0_token, inst.notification_recipients, inst.migrated_ddp, inst.billing_reference, inst.carrier_username, inst.carrier_password, inst.carrier_accesskey," +
-            "inst.carrier_tracking_url, part.ddp_participant_id, (SELECT count(role.name) " +
-            "FROM ddp_instance realm, ddp_instance_role inRol, instance_role role WHERE realm.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id " +
-            "AND role.name = ? AND realm.ddp_instance_id = inst.ddp_instance_id) as 'has_role' FROM ddp_participant part, ddp_instance inst WHERE inst.ddp_instance_id = part.ddp_instance_id " +
+            "inst.tissue_attention_flag_d, inst.es_participant_index, inst.es_activity_definition_index, inst.es_users_index, inst.auth0_token, " +
+            "inst.notification_recipients, inst.migrated_ddp, inst.billing_reference, inst.carrier_username, inst.carrier_password, inst.carrier_accesskey," +
+            "inst.carrier_tracking_url, part.ddp_participant_id " +
+            "FROM ddp_participant part, ddp_instance inst WHERE inst.ddp_instance_id = part.ddp_instance_id " +
             "AND part.ddp_participant_id = ?";
 
     public static final String CONSENT_PDF = "/consentpdf";
@@ -145,16 +143,13 @@ public class DownloadPDFRoute extends RequestHandler {
                         ddpParticipantId = queryParams.get(RequestParameter.DDP_PARTICIPANT_ID).value();
                     }
                     if (StringUtils.isNotBlank(ddpParticipantId)) {
-                        DDPInstance instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
+                        DDPInstance instance = DDPInstance.getDDPInstance(realm);
                         Map<String, Map<String, Object>> participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance,
                                 ElasticSearchUtil.BY_GUID + ddpParticipantId);
-                        if (participantESData != null && !participantESData.isEmpty()) {
-                            return returnPDFS(participantESData, ddpParticipantId);
-                        }
-                        else {
+                        if (participantESData == null && participantESData.isEmpty()) {
                             participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId);
-                            return returnPDFS(participantESData, ddpParticipantId);
                         }
+                        return returnPDFS(participantESData, ddpParticipantId);
                     }
                     else {
                         return getPDFs(realm);
@@ -261,14 +256,9 @@ public class DownloadPDFRoute extends RequestHandler {
                         }
                     }
 
-                    if (ddpInstance.isHasRole()) {
-                        //get information from ddp db
-                        addMBCParticipantDataToValueMap(ddpParticipantId, valueMap, true);
-                    }
-                    else {
-                        //get information from ddp
-                        addDDPParticipantDataToValueMap(ddpInstance, ddpParticipantId, valueMap, true);
-                    }
+                    //get information from ddp
+                    addDDPParticipantDataToValueMap(ddpInstance, ddpParticipantId, valueMap, true);
+
                     valueMap.put(CoverPDFProcessor.START_DATE_2, StringUtils.isNotBlank(startDate) ? startDate : valueMap.get(CoverPDFProcessor.FIELD_DATE_OF_DIAGNOSIS)); //start date
                     InputStream stream = null;
                     try {
@@ -304,15 +294,8 @@ public class DownloadPDFRoute extends RequestHandler {
                     String today = new SimpleDateFormat("MM/dd/yyyy").format(new Date());
                     valueMap.put(RequestPDFProcessor.FIELD_DATE, today);
                     valueMap.put(RequestPDFProcessor.FIELD_DATE_2, "(" + today + ")");
-
-                    if (ddpInstance.isHasRole()) {
-                        //get information from ddp db
-                        addMBCParticipantDataToValueMap(ddpParticipantId, valueMap, false);
-                    }
-                    else {
-                        //get information from ddp
-                        addDDPParticipantDataToValueMap(ddpInstance, ddpParticipantId, valueMap, false);
-                    }
+                    //get information from ddp
+                    addDDPParticipantDataToValueMap(ddpInstance, ddpParticipantId, valueMap, false);
                     InputStream stream = null;
                     try {
                         int counter = 0;
@@ -407,8 +390,7 @@ public class DownloadPDFRoute extends RequestHandler {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_REALM_FOR_PARTICIPANT)) {
-                stmt.setString(1, DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
-                stmt.setString(2, ddpParticipantId);
+                stmt.setString(1, ddpParticipantId);
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         String notificationRecipient = rs.getString(DBConstants.NOTIFICATION_RECIPIENT);
@@ -421,7 +403,7 @@ public class DownloadPDFRoute extends RequestHandler {
                                 new DDPInstance(rs.getString(DBConstants.DDP_INSTANCE_ID),
                                         rs.getString(DBConstants.INSTANCE_NAME),
                                         rs.getString(DBConstants.BASE_URL), null,
-                                        rs.getBoolean(DBConstants.HAS_ROLE),
+                                        false,
                                         rs.getInt(DBConstants.DAYS_MR_ATTENTION_NEEDED),
                                         rs.getInt(DBConstants.DAYS_TISSUE_ATTENTION_NEEDED),
                                         rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN),
@@ -478,13 +460,6 @@ public class DownloadPDFRoute extends RequestHandler {
             medicalInfo = ElasticSearchUtil.getParticipantAsMedicalInfo(participantsESData, ddpParticipantId);
             dob = SystemUtil.changeDateFormat(SystemUtil.DATE_FORMAT, SystemUtil.US_DATE_FORMAT, medicalInfo.getDob());
         }
-        else {
-            //DDP requested pt
-            ddpParticipant = DDPParticipant.getDDPParticipant(ddpInstance.getBaseUrl(), ddpInstance.getName(),
-                    ddpParticipantId, ddpInstance.isHasAuth0Token());
-            medicalInfo = getMedicalInfo(ddpInstance, ddpParticipantId);
-            dob = SystemUtil.changeDateFormat(SystemUtil.DDP_DATE_FORMAT, SystemUtil.US_DATE_FORMAT, medicalInfo.getDob());
-        }
 
         //fill fields of pdf (needs to match the fields in template!)
         valueMap.put(CoverPDFProcessor.FIELD_FULL_NAME, ddpParticipant.getFirstName() + " " + ddpParticipant.getLastName());
@@ -499,46 +474,6 @@ public class DownloadPDFRoute extends RequestHandler {
                 valueMap.put(CoverPDFProcessor.FIELD_DATE_OF_DIAGNOSIS, medicalInfo.getDateOfDiagnosis());
             }
         }
-    }
-
-    private void addMBCParticipantDataToValueMap(@NonNull String ddpParticipantId,
-                                                 @NonNull Map<String, Object> valueMap, boolean addDateOfDiagnosis) {
-
-        MBCParticipant mbcParticipant = DSMServer.getMbcParticipants().get(ddpParticipantId);
-        if (mbcParticipant != null) {
-            String fullName = mbcParticipant.getFirstName() + " " +
-                    mbcParticipant.getLastName();
-
-            //fill fields of pdf (needs to match the fields in template!)
-            valueMap.put(CoverPDFProcessor.FIELD_FULL_NAME, fullName);
-            String dob = "";
-            String consentDOB = mbcParticipant.getDOBConsent();
-            String bloodDOB = mbcParticipant.getDOBBlood();
-            if (StringUtils.isNotBlank(consentDOB)) {
-                dob = consentDOB;
-            }
-            else if (StringUtils.isNotBlank(bloodDOB)) {
-                dob = bloodDOB;
-            }
-            dob = SystemUtil.changeDateFormat(SystemUtil.DATE_FORMAT, SystemUtil.US_DATE_FORMAT, dob);
-            valueMap.put(CoverPDFProcessor.FIELD_DATE_OF_BIRTH, dob);
-
-            if (addDateOfDiagnosis) {
-                String diagnosed = "0/0";
-                String diagnosedYear = mbcParticipant.getDiagnosedYear();
-                String diagnosedMonth = mbcParticipant.getDiagnosedMonth();
-                if (StringUtils.isNotBlank(diagnosedYear)) {
-                    if (StringUtils.isNotBlank(diagnosedMonth)) {
-                        diagnosed = diagnosedMonth + "/" + diagnosedYear;
-                    }
-                    else {
-                        diagnosed = diagnosedYear;
-                    }
-                }
-                valueMap.put(CoverPDFProcessor.FIELD_DATE_OF_DIAGNOSIS, diagnosed);
-            }
-        }
-
     }
 
     public class InstanceWithDDPParticipantId {

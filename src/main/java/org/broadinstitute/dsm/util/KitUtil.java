@@ -128,17 +128,14 @@ public class KitUtil {
             Address toAddress = null;
             try {
                 if (StringUtils.isBlank(kitLabelTriggered.getAddressIdTo())) {
-                    DDPParticipant ddpParticipant = null;
-                    if (StringUtils.isNotBlank(kitLabelTriggered.getParticipantIndexES())) {
-                        Map<String, Map<String, Object>> participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(kitLabelTriggered.getInstanceName(), kitLabelTriggered.getParticipantIndexES());
-                        ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData, kitLabelTriggered.getDdpParticipantId());
-                    }
-                    else {
-                        //DDP requested pt
-                        ddpParticipant = DDPParticipant.getDDPParticipant(kitLabelTriggered.getBaseURL(), kitLabelTriggered.getInstanceName(),
-                                kitLabelTriggered.getDdpParticipantId(), kitLabelTriggered.isHasAuth0Token());
+                    DDPInstance ddpInstance = DDPInstance.getDDPInstance(kitLabelTriggered.getInstanceName());
 
+                    Map<String, Map<String, Object>> participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
+                            ElasticSearchUtil.BY_GUID + kitLabelTriggered.getDdpParticipantId());
+                    if (participantESData == null || participantESData.isEmpty()) {
+                        participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance, ElasticSearchUtil.BY_LEGACY_ALTPID + kitLabelTriggered.getDdpParticipantId());
                     }
+                    DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantESData, kitLabelTriggered.getDdpParticipantId());
                     if (ddpParticipant != null) {
                         toAddress = KitRequestShipping.getToAddressId(easyPostUtil, kitLabelTriggered.getKitRequestSettings(), null, ddpParticipant);
                         KitRequestShipping.updateRequest(kitLabelTriggered, ddpParticipant, kitLabelTriggered.getKitTyp(), kitLabelTriggered.getKitRequestSettings());
