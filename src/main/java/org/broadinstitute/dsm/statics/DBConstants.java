@@ -270,7 +270,6 @@ public class DBConstants {
     public static final String DAYS_MR_ATTENTION_NEEDED = "mr_attention_flag_d";
     public static final String DAYS_TISSUE_ATTENTION_NEEDED = "tissue_attention_flag_d";
     public static final String SURVEY_CREATION_ENDPOINTS = "survey_creation_endpoints";
-    public static final String HAS_MEDICAL_RECORD_INFORMATION_IN_DB = "has_medical_record_in_db";
     public static final String NEEDS_AUTH0_TOKEN = "auth0_token";
     public static final String SURVEY_STATUS_ENDPOINTS = "survey_status_endpoints";
     public static final String PDF_DOWNLOAD_CONSENT = "pdf_download_consent";
@@ -307,15 +306,6 @@ public class DBConstants {
     public static final String DATE_FORMAT = "date_format";
     public static final String DEFAULT_PARTICIPANT_FILTER = "default_participant_filter";
 
-    //eel
-    public static final String EEL_DB_NAME = "eel";
-    public static final String SGE_ID = "SGE_ID";
-    public static final String TEMPLATE_ID = "template_id";
-    public static final String WORKFLOW_ID = "workflow_id";
-    public static final String RESPONSE_DAYS = "response_days";
-    public static final String FOLLOW_UP = "follow_up";
-    public static final String COUNT = "count";
-
     //label settings
     public static final String LABEL_SETTING_ID = "label_setting_id";
     public static final String DESCRIPTION = "description";
@@ -336,28 +326,6 @@ public class DBConstants {
     public static final String EVENT_TYPE = "event_type";
     public static final String EVENT_DESCRIPTION = "event_description";
     public static final String EVENT = "event";
-
-    //mbc
-    public static final String ID = "id";
-    public static final String UPDATED_AT = "updated_at";
-    public static final String PHY_UPDATED_AT = "phy_updated_at";
-    public static final String HP_UPDATED_AT = "hp_updated_at";
-    public static final String PT_UPDATED_AT = "pt_updated_at";
-    public static final String ENCRYPTED_NAME = "encrypted_name";
-    public static final String ENCRYPTED_PHONE = "encrypted_phone";
-    public static final String ENCRYPTED_STREET = "encrypted_street";
-    public static final String ENCRYPTED_CITY = "encrypted_city";
-    public static final String ENCRYPTED_STATE = "encrypted_state";
-    public static final String ENCRYPTED_ZIP = "encrypted_zip";
-    public static final String ENCRYPTED_INSTITUTION = "encrypted_institution";
-    public static final String ENCRYPTED_FIRST_NAME = "encrypted_first_name";
-    public static final String ENCRYPTED_LAST_NAME = "encrypted_last_name";
-    public static final String ENCRYPTED_DIAGNOSED_AT_MONTH = "encrypted_diagnosed_at_month";
-    public static final String ENCRYPTED_DIAGNOSED_AT_YEAR = "encrypted_diagnosed_at_year";
-    public static final String ENCRYPTED_BD_BIRTHDAY = "encrypted_bd_birthday";
-    public static final String ENCRYPTED_BIRTHDAY = "encrypted_birthday";
-    public static final String ENCRYPTED_COUNTRY = "encrypted_country";
-    public static final String IS_BLOOD_RELEASE = "is_bb";
 
     // drug list: list uses display_name, test uses generic_name
     public static final String DISPLAY_NAME = "display_name";

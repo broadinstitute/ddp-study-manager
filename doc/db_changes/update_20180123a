@@ -1,6 +1,0 @@
-#if kit type needs to be scanned in tracking before final scan
-ALTER TABLE `kit_type`
-ADD COLUMN `requires_insert_in_kit_tracking` TINYINT(1) NULL DEFAULT 0 AFTER `manual_sent_track`;
-
-ALTER TABLE `ddp_kit_tracking`
-ADD UNIQUE INDEX `tracking_id_UNIQUE` (`tracking_id` ASC);

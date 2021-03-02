@@ -104,7 +104,7 @@ public class TriggerSurveyRoute extends RequestHandler {
             DDPInstance instance;
             if (queryParams.value(RoutePath.REALM) != null) {
                 realm = queryParams.get(RoutePath.REALM).value();
-                instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
+                instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.SURVEY_STATUS_ENDPOINTS);
             }
             else {
                 throw new RuntimeException("No realm query param was sent");
@@ -143,12 +143,11 @@ public class TriggerSurveyRoute extends RequestHandler {
                 final boolean triggerAgain = triggerAgainQueryParam;
 
                 if (instance != null) {
-                    boolean hasSurveyStatusEndpoint = DDPInstance.getRole(instance.getName(), DBConstants.SURVEY_STATUS_ENDPOINTS);
                     long currentTime = System.currentTimeMillis();
                     List<ParticipantSurveyInfo> surveyInfos = null;
                     String comment = null;
                     Long surveyTriggerId = null;
-                    if (hasSurveyStatusEndpoint) {
+                    if (instance.isHasRole()) {
                         if (queryParams.value("comment") != null) {
                             comment = queryParams.get("comment").value();
                         }
@@ -176,7 +175,7 @@ public class TriggerSurveyRoute extends RequestHandler {
                         List<ParticipantSurveyUploadObject> alreadyUploaded = new ArrayList<>();
                         for (ParticipantSurveyUploadObject participant : participantList) {
                             if (triggerAgain) {
-                                if (!triggerSurvey(instance, participant, surveyTriggerId, surveyName, hasSurveyStatusEndpoint)) {
+                                if (!triggerSurvey(instance, participant, surveyTriggerId, surveyName, instance.isHasRole())) {
                                     failed.add(participant);
                                 }
                             }
@@ -191,7 +190,7 @@ public class TriggerSurveyRoute extends RequestHandler {
                                     }
                                 }
                                 if (!alreadyTriggered) {
-                                    if (!triggerSurvey(instance, participant, surveyTriggerId, surveyName, hasSurveyStatusEndpoint)) {
+                                    if (!triggerSurvey(instance, participant, surveyTriggerId, surveyName, instance.isHasRole())) {
                                         failed.add(participant);
                                     }
                                 }
@@ -223,12 +222,7 @@ public class TriggerSurveyRoute extends RequestHandler {
                                 return new ParticipantSurveyUploadResponse(failed, alreadyUploaded);
                             }
                         }
-                        if (hasSurveyStatusEndpoint) {
-                            followUpSurvey = new SimpleFollowUpSurvey(ddpParticipantId, surveyTriggerId);
-                        }
-                        else {
-                            followUpSurvey = new SimpleFollowUpSurvey(ddpParticipantId);
-                        }
+                        followUpSurvey = new SimpleFollowUpSurvey(ddpParticipantId, surveyTriggerId);
                         if (followUpSurvey != null) {
                             return DDPRequestUtil.triggerFollowupSurvey(instance, followUpSurvey, surveyName);
                         }
@@ -282,17 +276,11 @@ public class TriggerSurveyRoute extends RequestHandler {
     private boolean triggerSurvey(@NonNull DDPInstance instance, @NonNull ParticipantSurveyUploadObject participant, Long surveyTriggerId,
                                   @NonNull String surveyName, boolean hasSurveyStatusEndpoint) {
         SimpleFollowUpSurvey survey = null;
-        if (instance.isHasRole()) { // HAS_MEDICAL_RECORD_INFORMATION_IN_DB
-            Recipient recipient = new Recipient(participant.getFirstName(), participant.getLastName(), participant.getEmail(), participant.getDDPParticipantID());
-            survey = new SimpleFollowUpSurvey(participant.getDDPParticipantID(), recipient, surveyTriggerId);
+        if (hasSurveyStatusEndpoint) {
+            survey = new SimpleFollowUpSurvey(participant.getDDPParticipantID(), surveyTriggerId);
         }
         else {
-            if (hasSurveyStatusEndpoint) {
-                survey = new SimpleFollowUpSurvey(participant.getDDPParticipantID(), surveyTriggerId);
-            }
-            else {
-                survey = new SimpleFollowUpSurvey(participant.getDDPParticipantID());
-            }
+            survey = new SimpleFollowUpSurvey(participant.getDDPParticipantID());
         }
         try {
             if (DDPRequestUtil.triggerFollowupSurvey(instance, survey, surveyName).getCode() != 200) {
