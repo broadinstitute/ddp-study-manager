@@ -3,7 +3,7 @@ package org.broadinstitute.dsm.model;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.util.DeliveryAddress;
@@ -13,13 +13,14 @@ import org.broadinstitute.dsm.model.mbc.MBCParticipant;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.DDPRequestUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Getter
+@Data
 public class ParticipantWrapper {
 
     private static final Logger logger = LoggerFactory.getLogger(ParticipantWrapper.class);
@@ -49,6 +50,20 @@ public class ParticipantWrapper {
         this.abstractionSummary = abstractionSummary;
         this.proxyData = proxyData;
         this.participantData = participantData;
+    }
+
+    public ParticipantWrapper() {}
+    
+    //useful to get participant from ES if short id is either hruid or legacy short id
+    public static Optional<ParticipantWrapper> getParticipantByShortId(DDPInstance ddpInstance, String participantShortId) {
+        Optional<ParticipantWrapper> maybeParticipant;
+
+        if (ParticipantUtil.isHruid(participantShortId)) {
+            maybeParticipant = getParticipantFromESByHruid(ddpInstance, participantShortId);
+        } else {
+            maybeParticipant = getParticipantFromESByLegacyShortId(ddpInstance, participantShortId);
+        }
+        return maybeParticipant;
     }
 
     public JsonObject getDataAsJson() {
@@ -196,6 +211,32 @@ public class ParticipantWrapper {
             List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistories, kitRequests, abstractionActivities, abstractionSummary, proxyData, participantData);
             return r;
         }
+    }
+
+    public static Optional<ParticipantWrapper> getParticipantFromESByHruid(DDPInstance ddpInstanceByRealm, String participantHruid) {
+        Map<String, String> queryConditions = new HashMap<>();
+        queryConditions.put("ES", ElasticSearchUtil.BY_HRUID + "'" + participantHruid + "'");
+        List<ParticipantWrapper> participantsBelongToRealm = ParticipantWrapper.getFilteredList(ddpInstanceByRealm, queryConditions);
+        return participantsBelongToRealm.stream().filter(Objects::nonNull).findFirst();
+    }
+
+    public static Optional<ParticipantWrapper> getParticipantFromESByLegacyShortId(DDPInstance ddpInstanceByRealm, String participantLegacyShortId) {
+        Map<String, String> queryConditions = new HashMap<>();
+        queryConditions.put("ES", ElasticSearchUtil.BY_LEGACY_SHORTID + "'" + participantLegacyShortId + "'");
+        List<ParticipantWrapper> participantsBelongToRealm = ParticipantWrapper.getFilteredList(ddpInstanceByRealm, queryConditions);
+        return participantsBelongToRealm.stream().filter(Objects::nonNull).findFirst();
+    }
+
+    public static String getParticipantGuid(Optional<ParticipantWrapper> maybeParticipant) {
+        return maybeParticipant
+                .map(p -> ((Map<String, String>)p.getData().get("profile")).get(ElasticSearchUtil.GUID))
+                .orElse("");
+    }
+
+    public static String getParticipantLegacyAltPid(Optional<ParticipantWrapper> maybeParticipant) {
+        return maybeParticipant
+                .map(p -> ((Map<String, String>)p.getData().get("profile")).get(ElasticSearchUtil.LEGACY_ALT_PID))
+                .orElse("");
     }
 
     public static Map<String, Map<String, Object>> getESData(@NonNull DDPInstance instance) {
