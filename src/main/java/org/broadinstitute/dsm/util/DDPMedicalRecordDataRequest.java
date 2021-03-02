@@ -2,16 +2,12 @@ package org.broadinstitute.dsm.util;
 
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.handlers.util.Institution;
 import org.broadinstitute.ddp.handlers.util.InstitutionRequest;
-import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.model.mbc.*;
 import org.broadinstitute.dsm.db.MedicalRecordLog;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
-import org.jruby.embed.ScriptingContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,14 +33,7 @@ public class DDPMedicalRecordDataRequest {
             "LEFT JOIN ddp_medical_record_log log on (log.medical_record_id = rec.medical_record_id) WHERE rec.medical_record_id = ? AND rec.fax_sent is not null " +
             "AND (log.type is null OR log.type = ?) ORDER BY medical_record_log_id desc";
 
-    private ScriptingContainer container;
-    private Object receiver;
     private long lastTimeChecked = System.currentTimeMillis();
-
-    public DDPMedicalRecordDataRequest(@NonNull ScriptingContainer container, @NonNull Object receiver) {
-        this.container = container;
-        this.receiver = receiver;
-    }
 
     /**
      * Requesting 'new' DDPKitRequests and write them into ddp_kit_request
@@ -53,9 +42,6 @@ public class DDPMedicalRecordDataRequest {
      */
     public void requestAndWriteParticipantInstitutions() {
         requestFromDDPs();
-        if (container != null && receiver != null) {
-            requestFromDB();
-        }
     }
 
     public void requestFromDDPs() {
@@ -99,111 +85,6 @@ public class DDPMedicalRecordDataRequest {
         }
         catch (Exception e) {
             throw new RuntimeException("Error getting participant information ", e);
-        }
-    }
-
-    //TODO can be removed after mbc migration
-    public void requestFromDB() {
-        try {
-            List<DDPInstance> ddpInstances = DDPInstance.getDDPInstanceListWithRole(DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
-            if (ddpInstances != null) {
-                for (DDPInstance ddpInstance : ddpInstances) {
-                    if (ddpInstance.isHasRole()) {
-                        String dbUrl = TransactionWrapper.getSqlFromConfig(ddpInstance.getName().toLowerCase() + "." + MBC.URL);
-                        if (StringUtils.isNotBlank(dbUrl)) {
-                            Long value = DBUtil.getBookmark(ddpInstance.getDdpInstanceId());
-                            Long mbcHospitalsMigrated = DBUtil.getBookmark("mbc_hospital_migration");
-                            if (value != null && value != -1) {
-                                logger.info("Get all institution information after pk " + value + " from " + ddpInstance.getName());
-                                Map<String, MBCParticipant> mbcParticipant = DSMServer.getMbcParticipants();
-                                boolean alreadyAddedOnServerStart = false;
-                                lastTimeChecked = System.currentTimeMillis();
-                                //server startup - map will be empty
-                                if (mbcParticipant.isEmpty()) {
-                                    //load participant and institution lists
-                                    MBCParticipant.getParticipantsFromDB(ddpInstance.getName(), dbUrl, container, receiver);
-                                    MBCInstitution.getAllPhysiciansInformationFromDB(ddpInstance.getName(), dbUrl, container, receiver);
-                                    MBCHospital.getAllHospitalInformationFromDB(ddpInstance.getName(), dbUrl, container, receiver);
-                                    alreadyAddedOnServerStart = true;//so to not decrypt values again, which where just added
-                                    if (mbcHospitalsMigrated == 0) {
-                                        Map<String, MBCParticipantHospital> mbcParticipantHospital = MBCParticipantHospital.getHospitalsFromDB(
-                                                ddpInstance.getName().toLowerCase(), dbUrl, mbcHospitalsMigrated, lastTimeChecked, container, receiver, alreadyAddedOnServerStart);
-                                        handleParticipantHospitals(mbcParticipantHospital, ddpInstance, true);
-                                    }
-                                }
-                                Map<String, MBCParticipantInstitution> mbcDataMap = MBCParticipantInstitution.getPhysiciansFromDB(
-                                        ddpInstance.getName().toLowerCase(), dbUrl, value, lastTimeChecked, container, receiver, alreadyAddedOnServerStart);
-                                if (mbcDataMap != null && !mbcDataMap.isEmpty()) {
-                                    inTransaction((conn) -> {
-                                        int maxId = -1;
-                                        Iterator it = mbcDataMap.entrySet().iterator();
-                                        while (it.hasNext()) {
-                                            Map.Entry pair = (Map.Entry) it.next();
-                                            MBCParticipantInstitution mbcData = ((MBCParticipantInstitution) pair.getValue());
-                                            writePhysiciansIntoDb(conn, ddpInstance.getDdpInstanceId(), mbcData.getMbcParticipant().getParticipantId(),
-                                                    mbcData.getMbcParticipant().getUpdatedAt(), mbcData.getMbcInstitution().getPhysicianId(),
-                                                    mbcData.getMbcInstitution().isChangedSinceLastChecked(), MBCInstitution.PHYSICIAN, false);
-                                            maxId = Math.max(maxId, Integer.parseInt(mbcData.getMbcInstitution().getPhysicianId()));
-                                        }
-                                        DBUtil.updateBookmark(conn, maxId, ddpInstance.getDdpInstanceId());
-                                        return null;
-                                    });
-                                }
-                                else {
-                                    logger.info("No new institutions from " + ddpInstance.getName());
-                                }
-                                mbcHospitalsMigrated = DBUtil.getBookmark("mbc_hospital_migration");
-                                Map<String, MBCParticipantHospital> mbcParticipantHospital = MBCParticipantHospital.getHospitalsFromDB(
-                                        ddpInstance.getName().toLowerCase(), dbUrl, mbcHospitalsMigrated, lastTimeChecked, container, receiver, alreadyAddedOnServerStart);
-                                handleParticipantHospitals(mbcParticipantHospital, ddpInstance, false);
-                            }
-                            else {
-                                logger.error("Couldn't get last pk of institution for ddpInstance " + ddpInstance.getName());
-                            }
-                        }
-                        else {
-                            logger.error("Config didn't have db url for ddpInstance " + ddpInstance.getName());
-                        }
-                    }
-                    else {
-                        logger.info(ddpInstance.getName() + " doesn't have medical record information in db");
-                    }
-                }
-            }
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Error getting participant information from db", e);
-        }
-    }
-
-    public void handleParticipantHospitals(Map<String, MBCParticipantHospital> mbcParticipantHospitals, DDPInstance ddpInstance, boolean setDuplicateFlag) {
-        if (mbcParticipantHospitals != null && !mbcParticipantHospitals.isEmpty()) {
-            List<MBCParticipantHospital> participantHospitals = new ArrayList<>(mbcParticipantHospitals.values());
-            Collections.sort(participantHospitals, Comparator.comparingInt(MBCParticipantHospital::getParticipantId).thenComparingInt(MBCParticipantHospital::getHospitalId));
-            inTransaction((conn) -> {
-                int maxId = -1;
-
-                int participantId = -1;
-                for (MBCParticipantHospital participantHospital : participantHospitals) {
-                    String type = MBCHospital.INSTITUTION;
-                    if (participantHospital != null && participantHospital.getMbcParticipant() != null && participantHospital.getMbcHospital() != null) {
-                        if (participantId == -1 || participantId != participantHospital.getParticipantId()) {
-                            //first hospital in list is initial_biopsy
-                            participantId = participantHospital.getParticipantId();
-                            type = MBCHospital.INITIAL_BIOPSY;
-                        }
-                        writePhysiciansIntoDb(conn, ddpInstance.getDdpInstanceId(), participantHospital.getMbcParticipant().getParticipantId(),
-                                participantHospital.getMbcParticipant().getUpdatedAt(), participantHospital.getMbcHospital().getHospitalId(),
-                                participantHospital.getMbcHospital().isChangedSinceLastChecked(), type, setDuplicateFlag);
-                        maxId = Math.max(maxId, Integer.parseInt(participantHospital.getMbcHospital().getHospitalId()));
-                    }
-                }
-                DBUtil.updateBookmark(conn, maxId, "mbc_hospital_migration");
-                return null;
-            });
-        }
-        else {
-            logger.info("No new institutions from " + ddpInstance.getName());
         }
     }
 

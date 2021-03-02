@@ -1,6 +1,0 @@
-# required for better performance ui shipping and the other one for medical records
-ALTER TABLE `ddp_instance`
-ADD COLUMN `has_additional_info_to_display` TINYINT(1) NOT NULL AFTER `has_mailing_list`;
-
-ALTER TABLE `ddp_medical_record`
-ADD COLUMN `international` TINYINT(1) NULL DEFAULT NULL AFTER `duplicate`;

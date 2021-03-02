@@ -1,9 +1,0 @@
-# required for csv upload
-ALTER TABLE `ddp_kit`
-ADD COLUMN `easypost_address_id_to` VARCHAR(45) NULL DEFAULT NULL AFTER `receive_date`;
-
-ALTER TABLE `ddp_instance`
-CHANGE COLUMN `base_url` `base_url` VARCHAR(1000) NULL ,
-CHANGE COLUMN `token_secret` `token_secret` VARCHAR(1000) NULL ;
-
-INSERT INTO `access_role` (`role_id`, `name`) VALUES ('5', 'kit_upload');
