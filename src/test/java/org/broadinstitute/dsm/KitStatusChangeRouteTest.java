@@ -28,7 +28,7 @@ public class KitStatusChangeRouteTest extends TestHelper {
     public static void first() {
         setupDB();
 
-        route = new KitStatusChangeRoute();
+        route = new KitStatusChangeRoute(notificationUtil);
     }
 
     @AfterClass
