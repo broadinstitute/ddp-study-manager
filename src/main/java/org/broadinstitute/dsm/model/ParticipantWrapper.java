@@ -3,9 +3,8 @@ package org.broadinstitute.dsm.model;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NonNull;
-import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.util.DeliveryAddress;
 import org.broadinstitute.dsm.db.*;
@@ -14,15 +13,14 @@ import org.broadinstitute.dsm.model.mbc.MBCParticipant;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.DDPRequestUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
-import org.broadinstitute.dsm.util.UserUtil;
+import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Getter
-@Setter
+@Data
 public class ParticipantWrapper {
 
     private static final Logger logger = LoggerFactory.getLogger(ParticipantWrapper.class);
@@ -60,7 +58,7 @@ public class ParticipantWrapper {
     public static Optional<ParticipantWrapper> getParticipantByShortId(DDPInstance ddpInstance, String participantShortId) {
         Optional<ParticipantWrapper> maybeParticipant;
 
-        if (UserUtil.isHruid(participantShortId)) {
+        if (ParticipantUtil.isHruid(participantShortId)) {
             maybeParticipant = getParticipantFromESByHruid(ddpInstance, participantShortId);
         } else {
             maybeParticipant = getParticipantFromESByLegacyShortId(ddpInstance, participantShortId);

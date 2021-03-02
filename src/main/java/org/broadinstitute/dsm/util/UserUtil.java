@@ -64,11 +64,6 @@ public class UserUtil {
     private static final String DISCARD_SAMPLE_MENU = "discardSamples";
     private static final String PDF_DOWNLOAD_MENU = "pdfDownload";
 
-    public static boolean isHruid(@NonNull String participantId) {
-        final String hruidCheck = "^P\\w{5}$";
-        return participantId.matches(hruidCheck);
-    }
-
     public ArrayList<String> getUserAccessRoles(@NonNull String email) {
         ArrayList<String> roles = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {

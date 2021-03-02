@@ -6,8 +6,8 @@ import org.broadinstitute.dsm.exception.FileColumnMissing;
 import org.broadinstitute.dsm.exception.UploadLineException;
 import org.broadinstitute.dsm.model.ParticipantWrapper;
 import org.broadinstitute.dsm.util.NotificationUtil;
+import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
-import org.broadinstitute.dsm.util.UserUtil;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -110,7 +110,7 @@ public class KitUploadRouteTest {
         Map<String, String> participantProfile = new HashMap<>();
         participantProfile.put("firstName", firstName);
         participantProfile.put("lastName", lastName);
-        if (UserUtil.isHruid(shortId)) {
+        if (ParticipantUtil.isHruid(shortId)) {
             participantProfile.put("hruid", shortId);
         } else {
             participantProfile.put("legacyShortId", shortId);
