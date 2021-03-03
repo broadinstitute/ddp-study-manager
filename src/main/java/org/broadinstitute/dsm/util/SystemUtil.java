@@ -104,7 +104,7 @@ public class SystemUtil {
     public static long getLong(@NonNull String dateString, @NonNull DateTimeFormatter dateTimeFormatter) {
         try {
             LocalDateTime parsedDateTime = LocalDateTime.parse(dateString, dateTimeFormatter);
-            return Instant.ofEpochSecond(parsedDateTime.toEpochSecond(ZoneOffset.UTC)).toEpochMilli();
+            return parsedDateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
         }
         catch (DateTimeParseException e) {
             throw new RuntimeException("Couldn't parse date string to date ", e);
@@ -113,30 +113,27 @@ public class SystemUtil {
 
     public static long getLongFromString(@NonNull String dateString) throws ParseException {
         DateTimeFormatter dateTimeFormatter;
+        LocalDateTime startDate;
         try {
             dateTimeFormatter = FULL_DATE;
-            LocalDateTime begginingOfDay = LocalDateTime.parse(dateString, dateTimeFormatter);
-            return begginingOfDay.toInstant(ZoneOffset.UTC).toEpochMilli();
+            startDate = LocalDateTime.parse(dateString, dateTimeFormatter);
+            return startDate.toInstant(ZoneOffset.UTC).toEpochMilli();
         }
         catch (DateTimeParseException e) {
             try {
                 dateTimeFormatter = PARTIAL_DATE;
-                LocalDateTime begginingOfDay = LocalDateTime.parse(dateString, dateTimeFormatter);
-                return begginingOfDay.toInstant(ZoneOffset.UTC).toEpochMilli();
+                startDate = LocalDateTime.parse(dateString, dateTimeFormatter);
+                return startDate.toInstant(ZoneOffset.UTC).toEpochMilli();
             }
             catch (DateTimeParseException e1) {
                 if (dateString.length() != 4) {
                     throw new ParseException("String " + dateString + " is not a year", 0);
                 }
                 dateTimeFormatter = ONLY_YEAR;
-                LocalDateTime begginingOfDay = LocalDateTime.parse(dateString, dateTimeFormatter);
-                return begginingOfDay.toInstant(ZoneOffset.UTC).toEpochMilli();
+                startDate = LocalDateTime.parse(dateString, dateTimeFormatter);
+                return startDate.toInstant(ZoneOffset.UTC).toEpochMilli();
             }
         }
-    }
-
-    private static long getUTCLongFromDate(Date date) {
-        return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()).toEpochSecond(ZoneOffset.UTC);
     }
 
     //TODO Simone - delete if not used at the end...
