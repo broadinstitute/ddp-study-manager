@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Getter
 public class ParticipantWrapper {
@@ -136,6 +137,12 @@ public class ParticipantWrapper {
                     if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
                         String filter = Arrays.stream(baseList.toArray(new String[0])).collect(Collectors.joining(ElasticSearchUtil.BY_GUIDS));
                         participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_GUID + filter);
+                        if (instance.isMigratedDDP()) {//also check for legacyAltPid
+                            String filterLegacy = Arrays.stream(baseList.toArray(new String[0])).collect(Collectors.joining(ElasticSearchUtil.BY_LEGACY_ALTPIDS));
+                            Map<String, Map<String, Object>> tmp = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_LEGACY_ALTPID + filterLegacy);
+                            participantESData = Stream.of(participantESData, tmp).flatMap(m -> m.entrySet().stream())
+                                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        }
                     }
                     else {
                         Map<String, ParticipantExit> exitedParticipants = ParticipantExit.getExitedParticipants(instance.getName(), false);

@@ -62,6 +62,7 @@ public class ElasticSearchUtil {
     public static final String BY_GUID = " AND profile.guid = ";
     public static final String BY_GUIDS = " OR profile.guid = ";
     public static final String BY_LEGACY_ALTPID = " AND profile.legacyAltPid = ";
+    public static final String BY_LEGACY_ALTPIDS = " OR profile.legacyAltPid = ";
     public static final String END_OF_DAY = " 23:59:59";
     public static final String CREATED_AT = "createdAt";
     public static final String COMPLETED_AT = "completedAt";
