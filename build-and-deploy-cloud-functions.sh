@@ -9,14 +9,27 @@ echo "Will deploy to ${PROJECT_ID} using schemas ${STUDY_MANAGER_SCHEMA} and ${S
 
 echo "Deploying kit dispatcher to ${PROJECT_ID}"
 gcloud --project=${PROJECT_ID} functions deploy \
-    tbos-kit-tracking-dispatcher \
-    --entry-point=org.broadinstitute.dsm.jobs.TestBostonUPSTrackingJob \
+    tbos-kit-tracking-id-finder \
+    --entry-point=org.broadinstitute.dsm.cf.TestBostonKitTrackerDispatcher \
     --runtime=java11 \
     --trigger-topic=cron-topic \
     --timeout=540\
     --source=target/deployment \
     --set-env-vars="PROJECT_ID=${PROJECT_ID},SECRET_ID=cloud-functions,STUDY_MANAGER_SCHEMA=${STUDY_MANAGER_SCHEMA},STUDY_SERVER_SCHEMA=${STUDY_SERVER_SCHEMA}" \
     --vpc-connector=projects/${PROJECT_ID}/locations/us-central1/connectors/appengine-default-connect
+
+
+echo "Deploying kit boston tracking to ${PROJECT_ID}"
+gcloud --project=${PROJECT_ID} functions deploy \
+    tbos-kit-ups-tracker \
+    --entry-point=org.broadinstitute.dsm.jobs.TestBostonUPSTrackingJob \
+    --runtime=java11 \
+    --trigger-topic=cf-kit-tracking \
+    --timeout=540\
+    --source=target/deployment \
+    --set-env-vars="PROJECT_ID=${PROJECT_ID},SECRET_ID=cloud-functions,STUDY_MANAGER_SCHEMA=${STUDY_MANAGER_SCHEMA},STUDY_SERVER_SCHEMA=${STUDY_SERVER_SCHEMA}" \
+    --vpc-connector=projects/${PROJECT_ID}/locations/us-central1/connectors/appengine-default-connect
+
 
 
 

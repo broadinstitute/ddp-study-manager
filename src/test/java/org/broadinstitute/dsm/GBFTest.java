@@ -133,6 +133,30 @@ public class GBFTest extends TestHelper {
             Assert.fail("No apiKey found");
         }
     }
+    @Test
+    @Ignore
+    public void reorderKits() throws Exception {
+        String query = "Select *, from_unixtime(req.created_date/1000) as created_time " +
+                "FROM prod_dsm_db.ddp_kit_request req \n" +
+                "left join ddp_kit kit on \n" +
+                "(req.dsm_kit_request_id = kit.dsm_kit_request_id)\n" +
+                "LEFT JOIN (SELECT subK.kit_type_id, subK.external_name from ddp_kit_request_settings dkc   LEFT JOIN sub_kits_settings subK ON (subK.ddp_kit_request_settings_id = dkc.ddp_kit_request_settings_id)) as subkits ON (subkits.kit_type_id = req.kit_type_id)   " +
+                "where \n" +
+                "req.ddp_instance_id = ? \n" +
+                "and (external_order_status is null or external_order_status = 'NOT FOUND')\n" +
+                "and external_order_number is not null\n" +
+                "and req.kit_type_id = 7\n" +
+                "and from_unixtime(created_date/1000) like \"2021-02-27%\"\n" +
+                "order by created_time DESC\n";
+        GBFRequestUtil gbf =  new GBFRequestUtil();
+        DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(9);
+        ArrayList<KitRequest> kitRequests =gbf.getKitRequestsNotDone(9, query);
+        HashMap<Integer, KitRequestSettings> krs = KitRequestSettings.getKitRequestSettings("9");
+        gbf.orderKitRequests(kitRequests, new EasyPostUtil(ddpInstance.getName()), krs.values().iterator().next(), null);
+
+
+
+    }
 
     @Test
     public void statusGBFKit() throws Exception {
