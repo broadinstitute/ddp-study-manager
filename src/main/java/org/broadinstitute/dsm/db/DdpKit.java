@@ -30,11 +30,13 @@ public class DdpKit {
     String kitShippingHistory;
     String kitReturnHistory;
     boolean CEOrdered;
+    String ddpInstanceId;
+
     private static final Logger logger = LoggerFactory.getLogger(DdpKit.class);
 
     public DdpKit(String DsmKitRequestId, String kitLabel, String trackingToId, String trackingReturnId, String error,
                   String message, String receiveDate, String bspCollaboratodId, String externalOrderNumber,
-                  boolean CEOrdered, String kitShippingHistory, String kitReturnHistory) {
+                  boolean CEOrdered, String kitShippingHistory, String kitReturnHistory, String ddpInstanceId) {
         this.DsmKitRequestId = DsmKitRequestId;
         this.kitLabel = kitLabel;
         this.trackingToId = trackingToId;
@@ -47,6 +49,7 @@ public class DdpKit {
         this.CEOrdered = CEOrdered;
         this.kitShippingHistory = kitShippingHistory;
         this.kitReturnHistory = kitReturnHistory;
+        this.ddpInstanceId = ddpInstanceId;
     }
 
     public void changeCEOrdered(Connection conn, boolean orderStatus) {
