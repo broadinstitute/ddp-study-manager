@@ -10,7 +10,6 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.*;
 import org.broadinstitute.dsm.util.tools.util.DBUtil;
 import org.broadinstitute.dsm.util.triggerListener.DDPRequestTriggerListener;
-import org.jruby.embed.ScriptingContainer;
 import org.junit.*;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
@@ -99,21 +98,6 @@ public class QuartzDDPRequestTest extends TestHelper {
                 //pass parameters to JobDataMap for JobDetail
                 job.getJobDataMap().put(DSMServer.KIT_UTIL, kitUtil);
                 job.getJobDataMap().put(DSMServer.DDP_UTIL, ddpRequestUtil);
-
-                Object receiver = null;
-                ScriptingContainer container = null;
-                try {
-                    container = new ScriptingContainer();
-                    container.getLoadPaths().add(container.getClassLoader().getResource("encryptorGem").getPath());
-                    container.runScriptlet("require 'encryptor'");
-                    receiver = container.runScriptlet(DSMServer.SCRIPT);
-                }
-                catch (Exception e) {
-                    logger.error("Couldn't setup ruby for MBC decryption");
-                }
-                job.getJobDataMap().put(DSMServer.CONTAINER, container);
-                job.getJobDataMap().put(DSMServer.RECEIVER, receiver);
-
 
                 //create trigger
                 TriggerKey triggerKey = new TriggerKey("TEST_DDPREQUEST_JOB_TRIGGER", "DDP");

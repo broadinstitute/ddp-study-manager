@@ -1,8 +1,0 @@
-# required for collaorator id prefix
-ALTER TABLE `ddp_instance`
-ADD COLUMN `collaborator_id_prefix` VARCHAR(45) NULL DEFAULT NULL AFTER `has_additional_info_to_display`;
-
-ALTER TABLE `ddp_kit_request`
-CHANGE COLUMN `bsp_collaborator_participant_id` `bsp_collaborator_participant_id` VARCHAR(200) NULL ,
-CHANGE COLUMN `bsp_collaborator_sample_id` `bsp_collaborator_sample_id` VARCHAR(200) NULL ;
-

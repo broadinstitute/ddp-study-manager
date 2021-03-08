@@ -1,9 +1,0 @@
-#needed for name labels
-INSERT INTO `instance_role` (`name`) VALUES ('needs_name_labels');
-
-#needed for bsp_collaborator_sample_ids
-ALTER TABLE `ddp_kit_carrier`
-ADD COLUMN `collaborator_sample_type_overwrite` VARCHAR(45) NULL DEFAULT NULL AFTER `kit_dimension_id`, RENAME TO `ddp_kit_request_settings` ;
-ALTER TABLE `ddp_kit_request_settings`
-ADD COLUMN `collaborator_participant_length_overwrite` INT NULL DEFAULT NULL AFTER `collaborator_sample_type_overwrite`;
-

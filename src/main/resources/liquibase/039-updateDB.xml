@@ -77,16 +77,17 @@
             <column name="column_name" value="ELIGIBILITY"/>
             <column name="column_display" value="Eligibility"/>
             <column name="display_type" value="RADIO"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Eligible&#34;},{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;Not Eligible&#34;},{&#34;value&#34;:&#34;2&#34;,&#34;name&#34;:&#34;Pending&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;2&#34;,&#34;name&#34;:&#34;Pending&#34;},{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Eligible&#34;},{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;Not Eligible&#34;}]"/>
             <column name="order_number" value="1"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
             <column name="field_type" value="AT_GROUP_ELIGIBILITY"/>
-            <column name="column_name" value="PARTICIPANT_DEATH_AGE"/>
-            <column name="column_display" value="Age of participant at time of death"/>
-            <column name="display_type" value="NUMBER"/>
+            <column name="column_name" value="PARTICIPANT_DECEASED"/>
+            <column name="column_display" value="Check here if this participant is deceased"/>
+            <column name="display_type" value="RADIO"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
             <column name="order_number" value="2"/>
         </insert>
         <insert tableName="field_settings">
@@ -102,10 +103,19 @@
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
             <column name="field_type" value="AT_GROUP_ELIGIBILITY"/>
+            <column name="column_name" value="PARTICIPANT_DEATH_AGE"/>
+            <column name="column_display" value="Age of participant at time of death"/>
+            <column name="display_type" value="NUMBER"/>
+            <column name="order_number" value="4"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
+            <column name="field_type" value="AT_GROUP_ELIGIBILITY"/>
             <column name="column_name" value="PARTICIPANT_DEATH_CAUSE"/>
             <column name="column_display" value="Cause of death for participant"/>
             <column name="display_type" value="TEXTAREA"/>
-            <column name="order_number" value="4"/>
+            <column name="order_number" value="5"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -114,7 +124,45 @@
             <column name="column_name" value="PARTICIPANT_DEATH_CAUSE_NOTES"/>
             <column name="column_display" value="Notes about participant cause of death"/>
             <column name="display_type" value="TEXTAREA"/>
-            <column name="order_number" value="5"/>
+            <column name="order_number" value="6"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
+            <column name="column_name" value="AT_GROUP_MISCELLANEOUS"/>
+            <column name="column_display" value="Registration"/>
+            <column name="display_type" value="TAB"/>
+            <column name="order_number" value="3"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
+            <column name="field_type" value="AT_GROUP_MISCELLANEOUS"/>
+            <column name="column_name" value="REGISTRATION_TYPE"/>
+            <column name="column_display" value="Type of participant registration"/>
+            <column name="display_type" value="RADIO"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;2&#34;,&#34;name&#34;:&#34;Dependent&#34;},{&#34;value&#34;:&#34;3&#34;,&#34;name&#34;:&#34;Portal User&#34;},{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Self&#34;}]"/>
+            <column name="order_number" value="1"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
+            <column name="field_type" value="AT_GROUP_MISCELLANEOUS"/>
+            <column name="column_name" value="REGISTRATION_STATUS"/>
+            <column name="column_display" value="Status of participant registration"/>
+            <column name="display_type" value="RADIO"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;Not Registered&#34;},{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Registered&#34;},{&#34;value&#34;:&#34;3&#34;,&#34;name&#34;:&#34;Consented&#34;},{&#34;value&#34;:&#34;2&#34;,&#34;name&#34;:&#34;Consented, Needs Assent&#34;},{&#34;value&#34;:&#34;4&#34;,&#34;name&#34;:&#34;Submitted Physician Info&#34;},{&#34;value&#34;:&#34;5&#34;,&#34;name&#34;:&#34;Submitted Medical History&#34;},{&#34;value&#34;:&#34;6&#34;,&#34;name&#34;:&#34;Submitted Genome Study Shipping Info&#34;},{&#34;value&#34;:&#34;7&#34;,&#34;name&#34;:&#34;Submitted Enrollment/Pending Confirmation&#34;},{&#34;value&#34;:&#34;8&#34;,&#34;name&#34;:&#34;Enrolled&#34;},{&#34;value&#34;:&#34;9&#34;,&#34;name&#34;:&#34;Not Eligible&#34;},{&#34;value&#34;:&#34;10&#34;,&#34;name&#34;:&#34;Duplicate&#34;}]"/>
+            <column name="order_number" value="2"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
+            <column name="field_type" value="AT_GROUP_MISCELLANEOUS"/>
+            <column name="column_name" value="HAS_UPDATED_MEDICAL_HISTORY"/>
+            <column name="column_display" value="Has updated medical history?"/>
+            <column name="display_type" value="RADIO"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="3"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -150,7 +198,7 @@
             <column name="column_name" value="GENOME_STUDY_STATUS"/>
             <column name="column_display" value="Status of genome study sample kit"/>
             <column name="display_type" value="RADIO"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;5&#34;,&#34;name&#34;:&#34;Completed, de-identified data available&#34;},{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Consented, sample kit not shipped&#34;},{&#34;value&#34;:&#34;6&#34;,&#34;name&#34;:&#34;Repeat sample collection pending&#34;},{&#34;value&#34;:&#34;3&#34;,&#34;name&#34;:&#34;Sample kit received from participant&#34;},{&#34;value&#34;:&#34;2&#34;,&#34;name&#34;:&#34;Sample kit sent to participant&#34;},{&#34;value&#34;:&#34;4&#34;,&#34;name&#34;:&#34;Sample sequenced, pending release&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Consented, sample kit not shipped&#34;},{&#34;value&#34;:&#34;2&#34;,&#34;name&#34;:&#34;Sample kit sent to participant&#34;},{&#34;value&#34;:&#34;3&#34;,&#34;name&#34;:&#34;Sample kit received from participant&#34;},{&#34;value&#34;:&#34;4&#34;,&#34;name&#34;:&#34;Sample sequenced, pending release&#34;},{&#34;value&#34;:&#34;5&#34;,&#34;name&#34;:&#34;Completed, de-identified data available&#34;},{&#34;value&#34;:&#34;6&#34;,&#34;name&#34;:&#34;Repeat sample collection pending&#34;}]"/>
             <column name="order_number" value="3"/>
         </insert>
         <insert tableName="field_settings">
@@ -224,44 +272,6 @@
             <column name="column_display" value="Notes about previous sample kits"/>
             <column name="display_type" value="TEXTAREA"/>
             <column name="order_number" value="11"/>
-        </insert>
-        <insert tableName="field_settings">
-            <column name="ddp_instance_id"
-                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
-            <column name="column_name" value="AT_GROUP_MISCELLANEOUS"/>
-            <column name="column_display" value="Miscellaneous"/>
-            <column name="display_type" value="TAB"/>
-            <column name="order_number" value="4"/>
-        </insert>
-        <insert tableName="field_settings">
-            <column name="ddp_instance_id"
-                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
-            <column name="field_type" value="AT_GROUP_MISCELLANEOUS"/>
-            <column name="column_name" value="REGISTRATION_TYPE"/>
-            <column name="column_display" value="Type of participant registration"/>
-            <column name="display_type" value="RADIO"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;2&#34;,&#34;name&#34;:&#34;Dependent&#34;},{&#34;value&#34;:&#34;3&#34;,&#34;name&#34;:&#34;Portal User&#34;},{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Self&#34;}]"/>
-            <column name="order_number" value="1"/>
-        </insert>
-        <insert tableName="field_settings">
-            <column name="ddp_instance_id"
-                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
-            <column name="field_type" value="AT_GROUP_MISCELLANEOUS"/>
-            <column name="column_name" value="REGISTRATION_STATUS"/>
-            <column name="column_display" value="Status of participant registration"/>
-            <column name="display_type" value="RADIO"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;Not registered&#34;},{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Registered&#34;},{&#34;value&#34;:&#34;2&#34;,&#34;name&#34;:&#34;Consented, needs assent&#34;},{&#34;value&#34;:&#34;3&#34;,&#34;name&#34;:&#34;Consented&#34;},{&#34;value&#34;:&#34;4&#34;,&#34;name&#34;:&#34;Submitted physician info&#34;},{&#34;value&#34;:&#34;5&#34;,&#34;name&#34;:&#34;Submitted medical history&#34;},{&#34;value&#34;:&#34;6&#34;,&#34;name&#34;:&#34;Submitted genome study shipping info&#34;},{&#34;value&#34;:&#34;7&#34;,&#34;name&#34;:&#34;Submitted enrollment/pending confirmation&#34;},{&#34;value&#34;:&#34;9&#34;,&#34;name&#34;:&#34;Eligibility not confirmed&#34;},{&#34;value&#34;:&#34;8&#34;,&#34;name&#34;:&#34;Enrolled&#34;}]"/>
-            <column name="order_number" value="2"/>
-        </insert>
-        <insert tableName="field_settings">
-            <column name="ddp_instance_id"
-                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
-            <column name="field_type" value="AT_GROUP_MISCELLANEOUS"/>
-            <column name="column_name" value="HAS_UPDATED_MEDICAL_HISTORY"/>
-            <column name="column_display" value="Has updated medical history?"/>
-            <column name="display_type" value="RADIO"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
-            <column name="order_number" value="3"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"

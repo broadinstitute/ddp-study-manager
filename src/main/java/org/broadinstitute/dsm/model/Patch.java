@@ -116,12 +116,7 @@ public class Patch {
                     stmt.setNull(1, Types.VARCHAR);
                 }
                 else {
-                    if (StringUtils.isBlank(String.valueOf(nameValue.getValue()))) {
-                        stmt.setNull(1, Types.VARCHAR);
-                    }
-                    else {
-                        stmt.setObject(1, nameValue.getValue());
-                    }
+                    stmt.setObject(1, nameValue.getValue());
                 }
 
                 stmt.setLong(2, System.currentTimeMillis());
