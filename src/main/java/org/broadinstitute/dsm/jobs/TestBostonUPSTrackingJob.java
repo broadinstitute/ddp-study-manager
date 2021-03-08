@@ -167,20 +167,20 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         final String SQL_UPDATE_UPS_RETURN_STATUS = "UPDATE " + STUDY_MANAGER_SCHEMA + "ddp_kit SET kit_return_history = ? " +
                 "WHERE dsm_kit_id <> 0 and tracking_return_id= ? and dsm_kit_request_id in ( SELECT dsm_kit_request_id FROM " + STUDY_MANAGER_SCHEMA + "ddp_kit_request where external_order_number = ? )";
         final String SQL_UPDATE_UPS_SHIPPING_HISTORY = "INSERT INTO " + STUDY_MANAGER_SCHEMA + "kit_tracking_history " +
-                "-- ( dsm_kit_request_id  " +
-                "--  kit_shipping_history  )" +
-                "-- VALUES " +
-                "-- ( ?, " +
-                "-- ? )" +
-                "--  ON DUPLICATE KEY UPDATE  kit_shipping_history  = ? ";
+                " ( dsm_kit_request_id  " +
+                "   kit_shipping_history  )" +
+                "  VALUES " +
+                "  ( ?, " +
+                "  ? )" +
+                "   ON DUPLICATE KEY UPDATE  kit_shipping_history  = ? ";
 
         final String SQL_UPDATE_UPS_RETURN_HISTORY = "INSERT INTO " + STUDY_MANAGER_SCHEMA + "kit_tracking_history " +
-                "-- ( dsm_kit_request_id  " +
-                "--  kit_return_history  )" +
-                "-- VALUES " +
-                "-- (?, " +
-                "-- ? )" +
-                "--  ON DUPLICATE KEY UPDATE  kit_return_history  = ? ";
+                "  ( dsm_kit_request_id  " +
+                "   kit_return_history  )" +
+                "  VALUES " +
+                "  (?, " +
+                "  ? )" +
+                "   ON DUPLICATE KEY UPDATE  kit_return_history  = ? ";
 
 
         if (response.getTrackResponse() != null) {
@@ -249,14 +249,11 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         try (Connection conn = dataSource.getConnection()) {
 
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setString(1, upsHistory);
-                stmt.setString(2, trackingId);
-                stmt.setString(3, kit.getExternalOrderNumber());
+                stmt.setString(1, kit.getDsmKitRequestId());
+                stmt.setString(2, upsHistory);
+                stmt.setString(3, upsHistory);
                 //            logger.info(stmt.toString());
-                int r = stmt.executeUpdate();
-                if (r != 2) {//number of subkits
-                    logger.error("Update query for UPS tracking updated " + r + " rows! with tracking/return id: " + trackingId + " for kit w/ external order number " + kit.getExternalOrderNumber());
-                }
+                 stmt.executeUpdate();
                 String oldType = null;
                 if (lastActivity != null && lastActivity.getStatus() != null) {
                     oldType = lastActivity.getStatus().getType();
