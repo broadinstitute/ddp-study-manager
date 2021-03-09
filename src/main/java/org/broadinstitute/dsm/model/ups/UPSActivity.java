@@ -16,6 +16,7 @@ public class UPSActivity {
     public UPSActivity() {}
 
     public UPSActivity(UPSLocation location, UPSStatus status, String date, String time) {
+        this.location = location;
         this.status = status;
         this.date = date;
         this.time = time;
