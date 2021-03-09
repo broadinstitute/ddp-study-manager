@@ -159,7 +159,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         final String SQL_UPDATE_UPS_RETURN_STATUS = "UPDATE " + STUDY_MANAGER_SCHEMA + "ddp_kit SET kit_return_history = ? " +
                 "WHERE dsm_kit_id <> 0 and tracking_return_id= ? and dsm_kit_request_id in ( SELECT dsm_kit_request_id FROM " + STUDY_MANAGER_SCHEMA + "ddp_kit_request where external_order_number = ? )";
         final String SQL_UPDATE_UPS_SHIPPING_HISTORY = "INSERT INTO " + STUDY_MANAGER_SCHEMA + "kit_tracking_history " +
-                " ( dsm_kit_request_id  " +
+                " ( dsm_kit_request_id , " +
                 "   kit_shipping_history  )" +
                 "  VALUES " +
                 "  ( ?, " +
@@ -167,7 +167,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "   ON DUPLICATE KEY UPDATE  kit_shipping_history  = ? ";
 
         final String SQL_UPDATE_UPS_RETURN_HISTORY = "INSERT INTO " + STUDY_MANAGER_SCHEMA + "kit_tracking_history " +
-                "  ( dsm_kit_request_id  " +
+                "  ( dsm_kit_request_id , " +
                 "   kit_return_history  )" +
                 "  VALUES " +
                 "  (?, " +
@@ -238,14 +238,16 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = ? " +
                 "         and realm.ddp_instance_id = ?" +
                 "          and kit.dsm_kit_request_id = ?";
-        try (Connection conn = dataSource.getConnection()) {
-
+        Connection conn = null;
+        try  {
+            conn = dataSource.getConnection();
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, kit.getDsmKitRequestId());
                 stmt.setString(2, upsHistory);
                 stmt.setString(3, upsHistory);
-                //            logger.info(stmt.toString());
-                 stmt.executeUpdate();
+                int r = stmt.executeUpdate();
+                conn.commit();
+                logger.info("Updated "+ r+ " rows");
                 String oldType = null;
                 if (lastActivity != null && lastActivity.getStatus() != null) {
                     oldType = lastActivity.getStatus().getType();
@@ -290,14 +292,26 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 }
                 logger.info("Updated status of tracking number " + trackingId + " to " + statusType + " from " + oldType + " for kit w/ external order number " + kit.getExternalOrderNumber());
             }
+            catch (SQLException ex){
+                throw new RuntimeException(ex);
+            }
             catch (Exception e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
             }
-            conn.close();
         }
         catch (Exception e) {
             throw new RuntimeException("unable to connect to DB " + e);
+        }
+        finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                }
+                catch (Throwable ex) {
+                    logger.debug("Could not close JDBC Connection on shutdown", ex);
+                }
+            }
         }
     }
 
