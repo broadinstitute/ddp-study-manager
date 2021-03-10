@@ -121,6 +121,9 @@ public class DisplaySettingsRoute extends RequestHandler {
                         }
                     }
                 }
+                if (DDPInstance.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
+                    displaySettings.put("addFamilyMember", true);
+                }
                 return displaySettings;
             }
         }
