@@ -523,6 +523,9 @@ public class DSMServer extends BasicServer {
         DrugListRoute drugListRoute = new DrugListRoute();
         get(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, drugListRoute, new JsonTransformer());
         patch(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, drugListRoute, new JsonTransformer());
+
+        AddFamilyMemberRoute addFamilyMemberRoute = new AddFamilyMemberRoute();
+        post(UI_ROOT + RoutePath.ADD_FAMILY_MEMBER, addFamilyMemberRoute, new JsonTransformer());
     }
 
     private void setupSharedRoutes(@NonNull KitUtil kitUtil, @NonNull NotificationUtil notificationUtil,
