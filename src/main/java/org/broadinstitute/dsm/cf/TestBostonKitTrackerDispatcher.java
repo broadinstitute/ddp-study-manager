@@ -46,12 +46,12 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
 
         PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(20, dbUrl);
         final String SQL_SELECT_KITS = "SELECT kit.dsm_kit_request_id,req.ddp_instance_id, kit.kit_label, kit.tracking_to_id, kit.tracking_return_id, kit.error, kit.message, kit.receive_date, " +
-                "kth.kit_shipping_history,  kth.kit_return_history,  req.bsp_collaborator_participant_id, " +
+                "kth.kit_shipping_history,  kth.kit_return_history,  req.bsp_collaborator_participant_id, kit.ups_tracking_status, kit.ups_return_status, kit.ups_tracking_date, kit.ups_return_date, " +
                 " req.external_order_number, kit.CE_order FROM " + STUDY_MANAGER_SCHEMA + "ddp_kit kit LEFT JOIN " + STUDY_MANAGER_SCHEMA + "ddp_kit_request req " +
                 " ON (kit.dsm_kit_request_id = req.dsm_kit_request_id) " +
                 "left join " + STUDY_MANAGER_SCHEMA + "kit_tracking_history kth on ( kth.dsm_kit_request_id = kit.dsm_kit_request_id) " +
                 " WHERE req.ddp_instance_id = ? and kit_label not like \"%\\\\_1\"  ";
-        String SQL_AVOID_DELIVERED = " and (tracking_to_id is not null or tracking_return_id is not null ) and (kit_shipping_history is null or kit_return_history is null or kit_shipping_history not like \"" + UPSStatus.DELIVERED_TYPE + " %\" or kit_return_history not like \"" + UPSStatus.DELIVERED_TYPE + " %\")" +
+        String SQL_AVOID_DELIVERED = " and (tracking_to_id is not null or tracking_return_id is not null ) and (kth.kit_shipping_history is null or kth.kit_return_history is null or kth.kit_shipping_history not like \"" + UPSStatus.DELIVERED_TYPE + " %\" or kth.kit_return_history not like \"" + UPSStatus.DELIVERED_TYPE + " %\")" +
                 " order by kit.dsm_kit_request_id ASC";
 
         logger.info("Starting the UPS lookup job");
