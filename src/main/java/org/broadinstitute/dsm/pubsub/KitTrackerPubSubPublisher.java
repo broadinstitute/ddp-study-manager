@@ -45,6 +45,8 @@ public class KitTrackerPubSubPublisher {
             } catch (InterruptedException | ExecutionException e) {
                 logger.error("Error publishing Pub/Sub message: " + e.getMessage(), e);
                 responseMessage = "Error publishing Pub/Sub message; see logs for more info. ";
+            }finally {
+                publisher.shutdown();
             }
 
 
