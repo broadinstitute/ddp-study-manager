@@ -17,6 +17,7 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.*;
 import org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil;
 import org.broadinstitute.dsm.util.tools.util.DBUtil;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Assert;
 import org.mockserver.integration.ClientAndServer;
 import org.slf4j.Logger;
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import spark.Spark;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import org.broadinstitute.ddp.BasicServer;
@@ -72,6 +74,7 @@ public class TestHelper {
     public static String PROMISE_INSTANCE_ID = null;
     protected static String DDP_BASE_URL;
     protected static String DSM_BASE_URL;
+    protected static RestHighLevelClient esClient;
 
     public static Config cfg;
 
@@ -103,9 +106,6 @@ public class TestHelper {
         cfg = cfg.withValue("portal.port", ConfigValueFactory.fromAnyRef("9999"));
         cfg = cfg.withValue("errorAlert.recipientAddress", ConfigValueFactory.fromAnyRef(""));
 //
-        if (!cfg.getString("portal.environment").startsWith("Local")) {
-            throw new RuntimeException("Not local environment");
-        }
 
 //        if (!cfg.getString("portal.dbUrl").contains("local")) {
 //            throw new RuntimeException("Not your test db");
@@ -290,6 +290,20 @@ public class TestHelper {
 
         userUtil = new UserUtil();
         eventUtil = new EventUtil();
+    }
+
+    public static void setupEsClient() {
+        if (esClient == null) {
+            if (cfg == null) {
+                setupDB();
+            }
+            try {
+                esClient = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"));
+            } catch (MalformedURLException e) {
+                throw new RuntimeException("Could not initialize es client",e);
+            }
+        }
+
     }
 
     //Methods shared by more than 2 classes!!!
