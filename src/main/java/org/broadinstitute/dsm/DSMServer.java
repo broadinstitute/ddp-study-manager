@@ -594,38 +594,11 @@ public class DSMServer extends BasicServer {
                 createScheduleJob(scheduler, null, null, EasypostShipmentStatusJob.class, "CHECK_STATUS_SHIPMENT",
                         cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_STATUS_SHIPMENT), new EasypostShipmentStatusTriggerListener(), cfg);
 
-                //pegah todo
 
                 UPS_ACCESSKEY = cfg.getString(UPS_PATH_TO_ACCESSKEY);
                 UPS_USERNAME = cfg.getString(UPS_PATH_TO_USERNAME);
                 UPS_PASSWORD = cfg.getString(UPS_PATH_TO_PASSWORD);
                 UPS_ENDPOINT = cfg.getString(UPS_PATH_TO_ENDPOINT);
-
-                careEvolveSubscriberKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SUBSCRIBER_KEY);
-                careEvolveServiceKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SERVICE_KEY);
-                careEvolveAuth = new Authentication(careEvolveSubscriberKey, careEvolveServiceKey);
-                careEvolveAccount = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_ACCOUNT);
-                careEvolveSubscriberKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SUBSCRIBER_KEY);
-                careEvolveServiceKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SERVICE_KEY);
-                careEvolveOrderEndpoint = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_ORDER_ENDPOINT);
-                if (cfg.hasPath(ApplicationConfigConstants.CARE_EVOLVE_MAX_RETRIES)) {
-                    careEvolveMaxRetries = cfg.getInt(ApplicationConfigConstants.CARE_EVOLVE_MAX_RETRIES);
-                } else {
-                    careEvolveMaxRetries = 5;
-                }
-                if (cfg.hasPath(ApplicationConfigConstants.CARE_EVOLVE_RETRY_WAIT_SECONDS)) {
-                    careEvolveRetyWaitSeconds = cfg.getInt(ApplicationConfigConstants.CARE_EVOLVE_RETRY_WAIT_SECONDS);
-                } else {
-                    careEvolveRetyWaitSeconds = 10;
-                }
-                logger.info("Will retry CareEvolve at most {} times after {} seconds", careEvolveMaxRetries, careEvolveRetyWaitSeconds);
-                provider = new Provider(cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_FIRSTNAME),
-                        cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_LAST_NAME),
-                        cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_NPI));
-
-//                createScheduleJob(scheduler, null, null, TestBostonUPSTrackingJob.class, "UPS_TRACKING_JOB",
-//                        cfg.getString(ApplicationConfigConstants.QUARTZ_UPS_LOOKUP_JOB), new UPSTriggerListener(), cfg);
-
 
                 logger.info("Setup Job Scheduler...");
                 try {

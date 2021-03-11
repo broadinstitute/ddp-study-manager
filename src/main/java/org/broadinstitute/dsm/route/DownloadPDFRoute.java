@@ -46,7 +46,7 @@ public class DownloadPDFRoute extends RequestHandler {
 
     private static final String SQL_SELECT_REALM_FOR_PARTICIPANT = "SELECT inst.instance_name, inst.base_url, inst.ddp_instance_id, inst.mr_attention_flag_d, " +
             "inst.tissue_attention_flag_d, inst.es_participant_index, inst.es_activity_definition_index, inst.es_users_index, inst.auth0_token, " +
-            "inst.notification_recipients, inst.migrated_ddp, inst.billing_reference, inst.carrier_username, inst.carrier_password, inst.carrier_accesskey," +
+            "inst.notification_recipients, inst.migrated_ddp, inst.billing_reference," +
             "inst.carrier_tracking_url, part.ddp_participant_id " +
             "FROM ddp_participant part, ddp_instance inst WHERE inst.ddp_instance_id = part.ddp_instance_id " +
             "AND part.ddp_participant_id = ?";
@@ -411,9 +411,6 @@ public class DownloadPDFRoute extends RequestHandler {
                                         rs.getString(DBConstants.BILLING_REFERENCE),
                                         rs.getString(DBConstants.ES_PARTICIPANT_INDEX),
                                         rs.getString(DBConstants.ES_ACTIVITY_DEFINITION_INDEX),
-                                        rs.getString(DBConstants.CARRIER_USERNAME),
-                                        rs.getString(DBConstants.CARRIER_PASSWORD),
-                                        rs.getString(DBConstants.CARRIER_ACCESSKEY),
                                         rs.getString(DBConstants.CARRIER_TRACKING_URL),
                                         rs.getString(DBConstants.ES_USERS_INDEX)));
                     }

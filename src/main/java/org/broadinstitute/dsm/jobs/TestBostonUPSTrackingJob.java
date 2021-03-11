@@ -7,12 +7,17 @@ import com.typesafe.config.Config;
 import lombok.NonNull;
 import org.apache.commons.dbcp2.PoolableConnection;
 import org.apache.commons.dbcp2.PoolingDataSource;
+import org.apache.commons.lang3.tuple.Pair;
+import org.broadinstitute.dsm.careevolve.Authentication;
+import org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar;
+import org.broadinstitute.dsm.careevolve.Provider;
 import org.broadinstitute.dsm.cf.CFUtil;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.DdpKit;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.ups.*;
 import org.broadinstitute.dsm.shipping.UPSTracker;
+import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.util.EventUtil;
 import org.broadinstitute.dsm.util.KitUtil;
 import org.slf4j.Logger;
@@ -46,7 +51,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
     String RECEIVED = "RECEIVED";
 
     private String SELECT_BY_EXTERNAL_ORDER_NUMBER = "and request.external_order_number = ?";
-    //    private Covid19OrderRegistrar orderRegistrar;
+    private Covid19OrderRegistrar orderRegistrar;
 
     @Override
     public void accept(PubsubMessage message, Context context) throws Exception {
@@ -67,8 +72,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         logger.info("Starting the UPS lookup job");
 
 
-        //        orderRegistrar = new Covid19OrderRegistrar(DSMServer.careEvolveOrderEndpoint, DSMServer.careEvolveAccount, DSMServer.provider,
-        //                DSMServer.careEvolveMaxRetries, DSMServer.careEvolveRetyWaitSeconds);
+        //
 
         String data = new String(Base64.getDecoder().decode(message.data));
         logger.info("data " + data);
@@ -137,7 +141,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         logger.info("UPS response for " + trackingId + " is " + response);
 
         if (response != null && response.getErrors() == null) {
-            updateStatus(dataSource, trackingId, lastActivity, response, isReturn, kit, ddpInstanceId);
+            updateStatus(dataSource, trackingId, lastActivity, response, isReturn, kit, ddpInstanceId, cfg);
         }
         else {
             logError(trackingId, response.getErrors());
@@ -152,12 +156,9 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         logger.error(errorString);
     }
 
-    private void updateStatus(PoolingDataSource<PoolableConnection> dataSource, String trackingId, UPSActivity lastActivity, UPSTrackingResponse response, boolean isReturn, DdpKit kit, String ddpInstanceId) {
-        final String SQL_UPDATE_UPS_TRACKING_STATUS = "UPDATE " + STUDY_MANAGER_SCHEMA + "ddp_kit SET kit_shipping_history = ? " +
-                "WHERE dsm_kit_id <> 0 and  tracking_to_id = ? and dsm_kit_request_id in ( SELECT dsm_kit_request_id FROM " + STUDY_MANAGER_SCHEMA + "ddp_kit_request where external_order_number = ? )";
 
-        final String SQL_UPDATE_UPS_RETURN_STATUS = "UPDATE " + STUDY_MANAGER_SCHEMA + "ddp_kit SET kit_return_history = ? " +
-                "WHERE dsm_kit_id <> 0 and tracking_return_id= ? and dsm_kit_request_id in ( SELECT dsm_kit_request_id FROM " + STUDY_MANAGER_SCHEMA + "ddp_kit_request where external_order_number = ? )";
+    private void updateStatus(PoolingDataSource<PoolableConnection> dataSource, String trackingId, UPSActivity lastActivity, UPSTrackingResponse response,
+                              boolean isReturn, DdpKit kit, String ddpInstanceId, Config cfg) {
         final String SQL_UPDATE_UPS_SHIPPING_HISTORY = "INSERT INTO " + STUDY_MANAGER_SCHEMA + "kit_tracking_history " +
                 " ( dsm_kit_request_id , " +
                 "   kit_shipping_history  )" +
@@ -204,7 +205,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                         }
                         if (lastActivity == null || (!lastActivity.equals(recentActivity))) {
                             updateTrackingInfo(dataSource, upsHistory, statusType, lastActivity, trackingId, sqlUpdate,
-                                    isReturn, kit, earliestPackageMovement, ddpInstanceId);
+                                    isReturn, kit, earliestPackageMovement, ddpInstanceId, cfg);
                         }
                     }
                 }
@@ -222,7 +223,8 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                                     boolean isReturn,
                                     DdpKit kit,
                                     Instant earliestInTransitTime,
-                                    String ddpInstanceId) {
+                                    String ddpInstanceId,
+                                    Config cfg) {
         final String SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, request.ddp_kit_request_id, request.upload_reason, " +
                 "        realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
                 "        FROM " + STUDY_MANAGER_SCHEMA + "ddp_kit_request request, " + STUDY_MANAGER_SCHEMA + "ddp_kit kit, " + STUDY_MANAGER_SCHEMA + "event_type eve, " + STUDY_MANAGER_SCHEMA + "ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
@@ -239,7 +241,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "         and realm.ddp_instance_id = ?" +
                 "          and kit.dsm_kit_request_id = ?";
         Connection conn = null;
-        try  {
+        try {
             conn = dataSource.getConnection();
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, kit.getDsmKitRequestId());
@@ -247,7 +249,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 stmt.setString(3, upsHistory);
                 int r = stmt.executeUpdate();
                 conn.commit();
-                logger.info("Updated "+ r+ " rows");
+                logger.info("Updated " + r + " rows");
                 String oldType = null;
                 if (lastActivity != null && lastActivity.getStatus() != null) {
                     oldType = lastActivity.getStatus().getType();
@@ -269,9 +271,16 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                     if (earliestInTransitTime != null && !kit.isCEOrdered()) {
                         // if we have the first date of an inbound event, create an order in CE
                         // using the earliest date of inbound event
-                        //                    orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime);
+                        Authentication careEvolveAuth = null;
+                        if (orderRegistrar == null) {
+                            Pair<Covid19OrderRegistrar, Authentication> careEvolveOrderingTools = createCEOrderRegistrar(cfg);
+                            orderRegistrar = careEvolveOrderingTools.getLeft();
+                            careEvolveAuth = careEvolveOrderingTools.getRight();
+
+                        }
+                        orderRegistrar.orderTest(careEvolveAuth, kit.getHRUID(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime);
                         logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
-                        //                        kit.changeCEOrdered(conn, true);
+                        kit.changeCEOrdered(conn, true);
                     }
                     else {
                         logger.info("No return events for " + kit.getMainKitLabel() + ".  Will not place order yet.");
@@ -292,7 +301,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 }
                 logger.info("Updated status of tracking number " + trackingId + " to " + statusType + " from " + oldType + " for kit w/ external order number " + kit.getExternalOrderNumber());
             }
-            catch (SQLException ex){
+            catch (SQLException ex) {
                 throw new RuntimeException(ex);
             }
             catch (Exception e) {
@@ -333,28 +342,38 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         return triggerStates.contains(currentStatus) && !triggerStates.contains(previousStatus);
     }
 
-    public List<DDPInstance> getDDPInstanceListWithRole(Connection conn, @NonNull String role) {
-        final String SQL_SELECT_INSTANCE_WITH_ROLE = "SELECT ddp_instance_id, instance_name, base_url, collaborator_id_prefix, migrated_ddp, billing_reference, " +
-                "es_participant_index, es_activity_definition_index,  es_users_index,  carrier_username, carrier_password, carrier_accesskey, carrier_tracking_url, (SELECT count(role.name) " +
-                "FROM " + STUDY_MANAGER_SCHEMA + "ddp_instance realm, " + STUDY_MANAGER_SCHEMA + "ddp_instance_role inRol, " + STUDY_MANAGER_SCHEMA + "instance_role role WHERE realm.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id AND role.name = ? " +
-                "AND realm.ddp_instance_id = main.ddp_instance_id) AS 'has_role', mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients FROM  " + STUDY_MANAGER_SCHEMA + "ddp_instance main " +
-                "WHERE is_active = 1";
 
-        List<DDPInstance> ddpInstances = new ArrayList<>();
-        try (PreparedStatement bspStatement = conn.prepareStatement(SQL_SELECT_INSTANCE_WITH_ROLE)) {
-            bspStatement.setString(1, role);
-            try (ResultSet rs = bspStatement.executeQuery()) {
-                while (rs.next()) {
-                    DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRoleFormResultSet(rs);
-                    ddpInstances.add(ddpInstance);
-                }
-            }
-        }
-        catch (SQLException ex) {
-            throw new RuntimeException("Error looking ddpInstances ", ex);
-        }
 
-        return ddpInstances;
+    private Pair<Covid19OrderRegistrar, Authentication> createCEOrderRegistrar(Config cfg) {
+        Covid19OrderRegistrar orderRegistrar;
+        String careEvolveSubscriberKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SUBSCRIBER_KEY);
+        String careEvolveServiceKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SERVICE_KEY);
+        Authentication careEvolveAuth = new Authentication(careEvolveSubscriberKey, careEvolveServiceKey);
+        String careEvolveAccount = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_ACCOUNT);
+        String careEvolveOrderEndpoint = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_ORDER_ENDPOINT);
+        Integer careEvolveMaxRetries;
+        Integer careEvolveRetyWaitSeconds;
+        if (cfg.hasPath(ApplicationConfigConstants.CARE_EVOLVE_MAX_RETRIES)) {
+            careEvolveMaxRetries = cfg.getInt(ApplicationConfigConstants.CARE_EVOLVE_MAX_RETRIES);
+        }
+        else {
+            careEvolveMaxRetries = 5;
+        }
+        if (cfg.hasPath(ApplicationConfigConstants.CARE_EVOLVE_RETRY_WAIT_SECONDS)) {
+            careEvolveRetyWaitSeconds = cfg.getInt(ApplicationConfigConstants.CARE_EVOLVE_RETRY_WAIT_SECONDS);
+        }
+        else {
+            careEvolveRetyWaitSeconds = 10;
+        }
+        logger.info("Will retry CareEvolve at most {} times after {} seconds", careEvolveMaxRetries, careEvolveRetyWaitSeconds);
+        Provider provider;
+        provider = new Provider(cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_FIRSTNAME),
+                cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_LAST_NAME),
+                cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_NPI));
+        orderRegistrar = new Covid19OrderRegistrar(careEvolveOrderEndpoint, careEvolveAccount, provider,
+                careEvolveMaxRetries, careEvolveRetyWaitSeconds);
+        Pair result = Pair.of(orderRegistrar, careEvolveAuth);
+        return result;
     }
 
 }
