@@ -13,6 +13,13 @@ public class AddFamilyMemberPayload {
     private FamilyMemberDetails data;
     private Integer userId;
 
+    public AddFamilyMemberPayload(String participantGuid, String realm, FamilyMemberDetails data, Integer userId) {
+        this.participantGuid = participantGuid;
+        this.realm = realm;
+        this.data = data;
+        this.userId = userId;
+    }
+
     public Optional<String> getParticipantGuid() {
         return Optional.ofNullable(participantGuid);
     }

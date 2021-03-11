@@ -1,26 +1,22 @@
 package org.broadinstitute.dsm.route;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.db.FieldSettings;
 import org.broadinstitute.dsm.db.ParticipantData;
 import org.broadinstitute.dsm.db.User;
 import org.broadinstitute.dsm.model.ddp.AddFamilyMemberPayload;
 import org.broadinstitute.dsm.model.ddp.FamilyMemberDetails;
 import org.broadinstitute.dsm.security.RequestHandler;
-import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.util.UserUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
+import spark.utils.StringUtils;
 
 public class AddFamilyMemberRoute extends RequestHandler {
 
@@ -40,9 +36,13 @@ public class AddFamilyMemberRoute extends RequestHandler {
                 addFamilyMemberPayload.getRealm().orElseThrow(() -> new NoSuchElementException("Realm is not provided"));
         String ddpInstanceId = DDPInstance.getDDPInstance(realm).getDdpInstanceId();
 
-        FamilyMemberDetails familyMemberData =
-                addFamilyMemberPayload.getData().orElseThrow(() -> new NoSuchElementException("Family member information is not provided"));
-//        FamilyMemberDetails familyMemberDetails = gson.fromJson(gson.toJson(familyMemberData), FamilyMemberDetails.class);
+        Optional<FamilyMemberDetails> maybeFamilyMemberData = addFamilyMemberPayload.getData();
+        if (maybeFamilyMemberData.isEmpty() || isFamilyMemberFieldsEmpty(maybeFamilyMemberData)) {
+            response.status(400);
+            return new Result(400, "Family member information is not provided");
+        }
+        FamilyMemberDetails familyMemberData = addFamilyMemberPayload.getData().get();
+
         Integer uId =
                 addFamilyMemberPayload.getUserId().orElseThrow(() -> new NoSuchElementException("User id is not provided"));
         if (Integer.parseInt(userId) != uId) {
@@ -55,5 +55,16 @@ public class AddFamilyMemberRoute extends RequestHandler {
             throw new RuntimeException("Could not create family member " + e);
         }
         return new Result(200);
+    }
+
+    boolean isFamilyMemberFieldsEmpty(Optional<FamilyMemberDetails> maybeFamilyMemberData) {
+        AtomicBoolean allFieldsFilled = new AtomicBoolean(false); //AtomicBoolean used to change its value in lambda expression
+        maybeFamilyMemberData.ifPresent(data -> {
+            if (StringUtils.isBlank(data.getFirstName()) || StringUtils.isBlank(data.getLastName()) || StringUtils.isBlank(data.getMemberType())
+            || StringUtils.isBlank(data.getFamilyId()) || StringUtils.isBlank(data.getCollaboratorParticipantId())) {
+                allFieldsFilled.set(true);
+            }
+        });
+        return allFieldsFilled.get();
     }
 }
