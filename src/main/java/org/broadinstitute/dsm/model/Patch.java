@@ -42,6 +42,7 @@ public class Patch {
     private List<NameValue> nameValues;
     private Boolean isUnique;
     private String realm;
+    private List<Value> actions;
 
     //regular patch
     public Patch(String id, String parent, String parentId, String user, NameValue nameValue, List<NameValue> nameValues) {
@@ -55,15 +56,14 @@ public class Patch {
     }
 
     //dynamic form patch
-    public Patch(String id, String parent, String parentId, String user, List<NameValue> nameValues, String realm) {
+    public Patch(String id, String parent, String parentId, String user, List<NameValue> nameValues, String realm, List<Value> actions) {
         this.id = id;
         this.parent = parent;
         this.parentId = parentId;
         this.user = user;
-        this.nameValue = nameValue;
         this.nameValues = nameValues;
         this.realm = realm;
-        this.isUnique = false;
+        this.actions = actions;
     }
 
     //unique field patch

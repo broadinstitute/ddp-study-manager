@@ -78,6 +78,7 @@
             <column name="column_display" value="Eligibility"/>
             <column name="display_type" value="RADIO"/>
             <column name="possible_values" value="[{&#34;value&#34;:&#34;2&#34;,&#34;name&#34;:&#34;Pending&#34;},{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Eligible&#34;},{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;Not Eligible&#34;}]"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;workflows&#34;,&#34;value&#34;:&#34;ELIGIBILITY&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT&#34;}]"/>
             <column name="order_number" value="1"/>
         </insert>
         <insert tableName="field_settings">
@@ -152,6 +153,7 @@
             <column name="column_display" value="Status of participant registration"/>
             <column name="display_type" value="RADIO"/>
             <column name="possible_values" value="[{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;Not Registered&#34;},{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Registered&#34;},{&#34;value&#34;:&#34;3&#34;,&#34;name&#34;:&#34;Consented&#34;},{&#34;value&#34;:&#34;2&#34;,&#34;name&#34;:&#34;Consented, Needs Assent&#34;},{&#34;value&#34;:&#34;4&#34;,&#34;name&#34;:&#34;Submitted Physician Info&#34;},{&#34;value&#34;:&#34;5&#34;,&#34;name&#34;:&#34;Submitted Medical History&#34;},{&#34;value&#34;:&#34;6&#34;,&#34;name&#34;:&#34;Submitted Genome Study Shipping Info&#34;},{&#34;value&#34;:&#34;7&#34;,&#34;name&#34;:&#34;Submitted Enrollment/Pending Confirmation&#34;},{&#34;value&#34;:&#34;8&#34;,&#34;name&#34;:&#34;Enrolled&#34;},{&#34;value&#34;:&#34;9&#34;,&#34;name&#34;:&#34;Not Eligible&#34;},{&#34;value&#34;:&#34;10&#34;,&#34;name&#34;:&#34;Duplicate&#34;}]"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;workflows&#34;,&#34;value&#34;:&#34;REGISTRATION_STATUS&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT&#34;}]"/>
             <column name="order_number" value="2"/>
         </insert>
         <insert tableName="field_settings">
@@ -226,6 +228,7 @@
             <column name="column_name" value="GENOME_STUDY_DATE_SHIPPED"/>
             <column name="column_display" value="Genome study sample kit shipped on"/>
             <column name="display_type" value="DATE"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;GENOME_STUDY_STATUS&#34;,&#34;value&#34;:&#34;2&#34;}]"/>
             <column name="order_number" value="6"/>
         </insert>
         <insert tableName="field_settings">

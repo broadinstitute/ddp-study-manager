@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.route;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
@@ -11,13 +12,11 @@ import org.broadinstitute.dsm.exception.DuplicateException;
 import org.broadinstitute.dsm.model.AbstractionWrapper;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Patch;
+import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
-import org.broadinstitute.dsm.util.MedicalRecordUtil;
-import org.broadinstitute.dsm.util.NotificationUtil;
-import org.broadinstitute.dsm.util.PatchUtil;
-import org.broadinstitute.dsm.util.UserUtil;
+import org.broadinstitute.dsm.util.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -86,6 +85,20 @@ public class PatchRoute extends RequestHandler {
                                             return new RuntimeException("An error occurred while attempting to patch ");
                                         }
                                         nameValues.add(nameValue);
+                                    }
+                                }
+                                if (patch.getActions() != null) {
+                                    for (Value action : patch.getActions()) {
+                                        if ("ELASTIC_EXPORT".equals(action.getType()) && "workflows".equals(action.getName())) {
+                                            DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+                                            String status = nameValue.getValue() != null ? String.valueOf(nameValue.getValue()) : null;
+                                            if (StringUtils.isNotBlank(status)) {
+                                                Map<String,String> data = new Gson().fromJson(status, new TypeToken<Map<String, String>>(){}.getType());
+                                                if (data.containsKey(action.getValue())) {
+                                                    ElasticSearchUtil.writeWorkflow(ddpInstance, patch.getParentId(), action.getValue(), data.get(action.getValue()));
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -243,6 +256,15 @@ public class PatchRoute extends RequestHandler {
                                 }
                                 else if (participantDataId != null) {
                                     Patch.patch(participantDataId, patch.getUser(), nameValue, dbElement);
+                                }
+                                if (patch.getActions() != null) {
+                                    for (Value action : patch.getActions()) {
+                                        if ("ELASTIC_EXPORT".equals(action.getType()) && "workflows".equals(action.getName())) {
+                                            DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+                                            String status = nameValue.getValue() != null ? String.valueOf(nameValue.getValue()) : null;
+                                            ElasticSearchUtil.writeWorkflow(ddpInstance, patch.getParentId(), action.getValue(), status);
+                                        }
+                                    }
                                 }
                             }
                         }
