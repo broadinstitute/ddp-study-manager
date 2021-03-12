@@ -22,7 +22,7 @@ public class AddFamilyMemberRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(AddFamilyMemberRoute.class);
 
-    private static final String FIELD_TYPE = "RGP_PARTICIPANTS";
+    static final String FIELD_TYPE = "RGP_PARTICIPANTS";
 
     @Override
     protected Object processRequest(Request request, Response response, String userId) throws Exception {
