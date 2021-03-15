@@ -33,6 +33,9 @@ public class PatchRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PatchRoute.class);
 
+    private static final String ELASTIC_EXPORT = "ELASTIC_EXPORT";
+    private static final String PARTICIPANT_DATA_ID = "participantDataId";
+
     private NotificationUtil notificationUtil;
     private PatchUtil patchUtil;
 
@@ -89,15 +92,8 @@ public class PatchRoute extends RequestHandler {
                                 }
                                 if (patch.getActions() != null) {
                                     for (Value action : patch.getActions()) {
-                                        if ("ELASTIC_EXPORT".equals(action.getType()) && "workflows".equals(action.getName())) {
-                                            DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
-                                            String status = nameValue.getValue() != null ? String.valueOf(nameValue.getValue()) : null;
-                                            if (StringUtils.isNotBlank(status)) {
-                                                Map<String,String> data = new Gson().fromJson(status, new TypeToken<Map<String, String>>(){}.getType());
-                                                if (data.containsKey(action.getValue())) {
-                                                    ElasticSearchUtil.writeWorkflow(ddpInstance, patch.getParentId(), action.getValue(), data.get(action.getValue()));
-                                                }
-                                            }
+                                        if (ELASTIC_EXPORT.equals(action.getType()) && ElasticSearchUtil.WORKFLOWS.equals(action.getName())) {
+                                            writeESWorkflow(patch, nameValue, action);
                                         }
                                     }
                                 }
@@ -252,17 +248,15 @@ public class PatchRoute extends RequestHandler {
                                 if (participantDataId == null) {
                                     DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
                                     participantDataId = ParticipantData.createNewParticipantData(patch.getParentId(), ddpInstance.getDdpInstanceId(), patch.getFieldId(), String.valueOf(nameValue.getValue()), patch.getUser());
-                                    map.put("participantDataId", participantDataId);
+                                    map.put(PARTICIPANT_DATA_ID, participantDataId);
                                 }
                                 else if (participantDataId != null) {
                                     Patch.patch(participantDataId, patch.getUser(), nameValue, dbElement);
                                 }
                                 if (patch.getActions() != null) {
                                     for (Value action : patch.getActions()) {
-                                        if ("ELASTIC_EXPORT".equals(action.getType()) && "workflows".equals(action.getName())) {
-                                            DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
-                                            String status = nameValue.getValue() != null ? String.valueOf(nameValue.getValue()) : null;
-                                            ElasticSearchUtil.writeWorkflow(ddpInstance, patch.getParentId(), action.getValue(), status);
+                                        if (ELASTIC_EXPORT.equals(action.getType()) && ElasticSearchUtil.WORKFLOWS.equals(action.getName())) {
+                                            writeESWorkflow(patch, nameValue, action);
                                         }
                                     }
                                 }
@@ -283,6 +277,17 @@ public class PatchRoute extends RequestHandler {
         else {
             response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
+        }
+    }
+
+    private void writeESWorkflow(@NonNull Patch patch, @NonNull NameValue nameValue, @NonNull Value action) {
+        DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+        String status = nameValue.getValue() != null ? String.valueOf(nameValue.getValue()) : null;
+        if (StringUtils.isNotBlank(status)) {
+            Map<String,String> data = new Gson().fromJson(status, new TypeToken<Map<String, String>>(){}.getType());
+            if (data.containsKey(action.getValue())) {
+                ElasticSearchUtil.writeWorkflow(ddpInstance, patch.getParentId(), action.getValue(), data.get(action.getValue()));
+            }
         }
     }
 

@@ -70,6 +70,7 @@ public class ElasticSearchUtil {
     public static final String LAST_UPDATED = "lastUpdatedAt";
     public static final String STATUS = "status";
     public static final String PROFILE_CREATED_AT = "profile." + CREATED_AT;
+    public static final String WORKFLOWS = "workflows";
 
     public static RestHighLevelClient getClientForElasticsearchCloud(@NonNull String baseUrl, @NonNull String userName, @NonNull String password) throws MalformedURLException {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
@@ -180,7 +181,7 @@ public class ElasticSearchUtil {
                     workflowList.add(workflowMap);
 
                     Map<String, Object> jsonMap = new HashMap<>();
-                    jsonMap.put("workflows", workflowList);
+                    jsonMap.put(WORKFLOWS, workflowList);
 
                     UpdateRequest updateRequest = new UpdateRequest()
                             .index(index)
