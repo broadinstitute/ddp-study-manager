@@ -1,8 +1,11 @@
 package org.broadinstitute.dsm.db.dao.ddp.instance;
 
+import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
+import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.QueryExtension;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -36,6 +39,40 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
             "es_users_index = ?";
 
     private static final String SQL_DELETE_DDP_INSTANCE = "DELETE FROM ddp_instance WHERE ddp_instance_id = ?";
+
+    public static final String SQL_SELECT_INSTANCE_WITH_ROLE = "SELECT ddp_instance_id, instance_name, base_url, collaborator_id_prefix, migrated_ddp, billing_reference, " +
+            "es_participant_index, es_activity_definition_index, es_users_index, (SELECT count(role.name) " +
+            "FROM ddp_instance realm, ddp_instance_role inRol, instance_role role WHERE realm.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id AND role.name = ? " +
+            "AND realm.ddp_instance_id = main.ddp_instance_id) AS 'has_role', mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients FROM ddp_instance main " +
+            "WHERE is_active = 1";
+
+    public static boolean getRole(@NonNull String realm, @NonNull String role) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            dbVals.resultValue = Boolean.FALSE;
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_INSTANCE_WITH_ROLE + QueryExtension.BY_INSTANCE_NAME)) {
+                stmt.setString(1, role);
+                stmt.setString(2, realm);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = rs.getBoolean(DBConstants.HAS_ROLE);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting role of realm " + realm, e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get role of realm " + realm, results.resultException);
+        }
+        return (boolean) results.resultValue;
+    }
 
     @Override
     public int create(DDPInstanceDto ddpInstanceDto) {

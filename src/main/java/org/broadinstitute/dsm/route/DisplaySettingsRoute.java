@@ -4,6 +4,7 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.*;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitSubKits;
 import org.broadinstitute.dsm.model.ddp.PreferredLanguage;
@@ -93,7 +94,7 @@ public class DisplaySettingsRoute extends RequestHandler {
                         displaySettings.put("preferredLanguages", preferredLanguages);
                     }
                 }
-                if (DDPInstance.getRole(instance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
+                if (DDPInstanceDao.getRole(instance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
                     Map<Integer, KitRequestSettings> kitRequestSettingsMap = KitRequestSettings.getKitRequestSettings(instance.getDdpInstanceId());
                     if (kitRequestSettingsMap != null) {
                         List<KitType> kits = new ArrayList<>();
@@ -121,7 +122,7 @@ public class DisplaySettingsRoute extends RequestHandler {
                         }
                     }
                 }
-                if (DDPInstance.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
+                if (DDPInstanceDao.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
                     displaySettings.put("addFamilyMember", true);
                 }
                 return displaySettings;
