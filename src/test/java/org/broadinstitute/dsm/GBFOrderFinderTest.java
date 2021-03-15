@@ -41,8 +41,8 @@ public class GBFOrderFinderTest extends TestHelper {
 
     private static final String MARK_KIT_DELIVERED_AT = "update ddp_kit\n" +
             "set\n" +
-            "ups_return_status = 'D Fake Delivered',\n" +
-            "ups_return_date = ?\n" +
+            "ups_tracking_status = 'D Fake Delivered',\n" +
+            "ups_tracking_date = ?\n" +
             "where\n" +
             "dsm_kit_request_id in (select req.dsm_kit_request_id from ddp_kit_request req where req.external_order_number = ?)";
 
@@ -88,6 +88,10 @@ public class GBFOrderFinderTest extends TestHelper {
             "and\n"+
             "ddp_instance_id = (select i.ddp_instance_id from ddp_instance i where i.instance_name = ?)\n";
 
+    private static final String MARK_ORDER_AS_TRANSMITTED = "\n"+
+            "update ddp_kit_request set order_transmitted_at = ?\n"+
+            "where\n"+
+            "external_order_number = ?";
 
     @BeforeClass
     public static void setUp() {
@@ -218,6 +222,7 @@ public class GBFOrderFinderTest extends TestHelper {
                 Collection<SimpleKitOrder> kitsToOrder = finder.findKitsToOrder("testboston", conn);
                 Assert.assertEquals(1, kitsToOrder.size());
                 Assert.assertEquals(firstKit, kitsToOrder.iterator().next().getExternalKitOrderNumber());
+                markOrderTransmittedAt(conn, firstKit, Instant.now());
                 kitsToOrder = finder.findKitsToOrder("testboston", conn);
                 Assert.assertTrue("Should not have found the same order since we just transmitted it",kitsToOrder.isEmpty());
             } finally {
@@ -241,6 +246,8 @@ public class GBFOrderFinderTest extends TestHelper {
                 hidePendingKitRequests(conn);
                 String firstKit = createTestKit(conn);
                 Collection<SimpleKitOrder> kitsToOrder = finder.findKitsToOrder("testboston", conn);
+                Assert.assertEquals(1, kitsToOrder.size());
+                Assert.assertEquals(firstKit, kitsToOrder.iterator().next().getExternalKitOrderNumber());
                 for (SimpleKitOrder simpleKitOrder : kitsToOrder) {
                     markOrderTransmittedAt(conn, simpleKitOrder.getExternalKitOrderNumber(), Instant.now());
                     markOrderDeliveredToRecipientAt(conn, simpleKitOrder.getExternalKitOrderNumber(), Instant.now());
@@ -248,7 +255,10 @@ public class GBFOrderFinderTest extends TestHelper {
                 }
                 String secondKit = createTestKit(conn);
 
+                logger.info("Created 2nd kit {}", secondKit);
+
                 kitsToOrder = finder.findKitsToOrder("testboston", conn);
+
 
                 Assert.assertEquals("Second kit should have gone out since the first one came back on schedule", 1, kitsToOrder.size());
                 SimpleKitOrder kitToOrder = kitsToOrder.iterator().next();
@@ -256,7 +266,6 @@ public class GBFOrderFinderTest extends TestHelper {
                 Assert.assertEquals(TEST_PARTICIPANT_GUID, kitToOrder.getParticipantGuid());
                 // todo arz check address?
                 Assert.assertEquals("Subsequent kit order should have gone through because the previous one was recently returned",1, kitsToOrder.size());
-                //
             } finally {
                 try {
                     conn.rollback();
@@ -304,7 +313,16 @@ public class GBFOrderFinderTest extends TestHelper {
     }
 
     private void markOrderTransmittedAt(Connection conn, String kitExternalOrderId, Instant transmittedAt) {
+        try (PreparedStatement stmt = conn.prepareStatement(MARK_ORDER_AS_TRANSMITTED)) {
+            stmt.setTimestamp(1,Timestamp.from(transmittedAt));
+            stmt.setString(2, kitExternalOrderId);
 
+            int numRows = stmt.executeUpdate();
+
+            logger.info("Updated {} rows when setting order transmission date for {} to {}", numRows, transmittedAt, kitExternalOrderId);
+        } catch(SQLException e) {
+            throw new RuntimeException("Could not set order transmission date for " + kitExternalOrderId, e);
+        }
     }
 
     private void markOrderDeliveredToRecipientAt(Connection conn, String kitExternalOrderId, Instant arrivedToRecipientAt) {
