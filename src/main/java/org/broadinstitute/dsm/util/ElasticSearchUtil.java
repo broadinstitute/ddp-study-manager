@@ -17,6 +17,8 @@ import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
@@ -31,10 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ElasticSearchUtil {
 
@@ -71,6 +70,7 @@ public class ElasticSearchUtil {
     public static final String LAST_UPDATED = "lastUpdatedAt";
     public static final String STATUS = "status";
     public static final String PROFILE_CREATED_AT = "profile." + CREATED_AT;
+    public static final String WORKFLOWS = "workflows";
 
     public static RestHighLevelClient getClientForElasticsearchCloud(@NonNull String baseUrl, @NonNull String userName, @NonNull String password) throws MalformedURLException {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
@@ -165,6 +165,41 @@ public class ElasticSearchUtil {
             return esData;
         }
         return null;
+    }
+
+    public static boolean writeWorkflow(@NonNull DDPInstance instance, @NonNull String ddpParticipantId, @NonNull String workflow, @NonNull String status) {
+        String index = instance.getParticipantIndexES();
+        if (StringUtils.isNotBlank(index)) {
+            try {
+                try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
+                        TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
+                    Map<String, Object> workflowMap = new HashMap<>();
+                    workflowMap.put("workflow", workflow);
+                    workflowMap.put("status", status);
+
+                    List<Map<String, Object>> workflowList = new ArrayList<>();
+                    workflowList.add(workflowMap);
+
+                    Map<String, Object> jsonMap = new HashMap<>();
+                    jsonMap.put(WORKFLOWS, workflowList);
+
+                    UpdateRequest updateRequest = new UpdateRequest()
+                            .index(index)
+                            .type("_doc")
+                            .id(ddpParticipantId)
+                            .doc(jsonMap)
+                            .docAsUpsert(true);
+
+                    UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+                    logger.info("Updated workflow information for participant " + ddpParticipantId + " in ES for instance " + instance.getName());
+                    return true;
+                }
+            }
+            catch (Exception e) {
+                throw new RuntimeException("Couldn't write workflow information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName(), e);
+            }
+        }
+        return false;
     }
 
     public static DDPParticipant getParticipantAsDDPParticipant(@NonNull Map<String, Map<String, Object>> participantsESData, @NonNull String ddpParticipantId) {
