@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.ddp.util.DeliveryAddress;
 import org.broadinstitute.dsm.DSMServer;
@@ -30,6 +31,7 @@ import spark.Response;
 
 import javax.servlet.http.HttpServletRequest;
 import java.sql.*;
+import java.time.Instant;
 import java.util.*;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
@@ -161,6 +163,13 @@ public class KitUploadRoute extends RequestHandler {
                         logger.info("placing order with external shipper");
                         ExternalShipper shipper = (ExternalShipper) Class.forName(DSMServer.getClassName(kitRequestSettings.getExternalShipper())).newInstance();
                         shipper.orderKitRequests(orderKits, easyPostUtil, kitRequestSettings, shippingCarrier);
+                        // mark kits as transmitted so that background jobs don't try to double order it
+                        TransactionWrapper.inTransaction(conn -> {
+                            for (KitRequest orderKit : orderKits) {
+                                KitRequestShipping.markOrderTransmittedAt(conn, orderKit.getExternalOrderStatus(), Instant.now());
+                            }
+                            return null;
+                        });
                     }
                     catch (RuntimeException e) {
                         logger.error("Failed to sent kit request order to " + kitRequestSettings.getExternalShipper(), e);

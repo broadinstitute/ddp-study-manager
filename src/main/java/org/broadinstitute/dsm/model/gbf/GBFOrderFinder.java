@@ -20,7 +20,7 @@ public class GBFOrderFinder {
     private final int maxOrdersToProcess;
     private final String esIndex;
     private final RestHighLevelClient esClient;
-    private int maxDaysToReturnPreviousKit = Integer.MAX_VALUE;
+    private int maxDaysToReturnPreviousKit = 99999; // many years later
 
     private static final String FIND_KITS_TO_ORDER_QUERY =
             "\n" +
@@ -35,17 +35,32 @@ public class GBFOrderFinder {
                     "ddp_instance i,\n" +
                     "ddp_kit_request_settings s,\n" +
                     "sub_kits_settings subkit,\n" +
-                    "(select req2.external_order_number, req2.ddp_participant_id,  req2.ddp_instance_id,\n" +
-                    "      req2.kit_type_id, req2.dsm_kit_request_id\n" +
-                    "      from ddp_kit_request req2,\n" +
+                    "(select distinct untransmitted.external_order_number, untransmitted.ddp_participant_id,  untransmitted.ddp_instance_id,\n" +
+                    "      untransmitted.kit_type_id, untransmitted.dsm_kit_request_id\n" +
+                    "      from\n" +
+                    "      ddp_kit_request untransmitted,\n" +
+                    "      ddp_instance i\n" +
+                    "      where\n" +
+                    "      i.instance_name = ?\n" +
+                    "      and\n" +
+                    "      i.ddp_instance_id = untransmitted.ddp_instance_id\n" +
+                    "      and\n" +
+                    "      untransmitted.order_transmitted_at is null\n" +
+                    "      and\n" +
+                    "      exists\n" +
+                    "      (select delivered.external_order_number, delivered.ddp_participant_id,  delivered.ddp_instance_id,\n" +
+                    "      delivered.kit_type_id, delivered.dsm_kit_request_id\n" +
+                    "      from ddp_kit_request delivered,\n" +
                     "           ddp_kit k2,\n" +
                     "           ddp_instance i\n" +
-                    "      where i.instance_name = ?\n" +
-                    "        and req2.upload_reason is not null\n" +
-                    "        and req2.ddp_instance_id = i.ddp_instance_id\n" +
-                    "        and k2.dsm_kit_request_id = req2.dsm_kit_request_id\n" +
+                    "      where\n" +
+                    "        delivered.ddp_participant_id = untransmitted.ddp_participant_id\n" +
+                    "        and i.instance_name = ?\n" +
+                    "        and untransmitted.dsm_kit_request_id != delivered.dsm_kit_request_id\n" +
+                    "        and delivered.ddp_instance_id = i.ddp_instance_id\n" +
+                    "        and k2.dsm_kit_request_id = delivered.dsm_kit_request_id\n" +
                     "-- any of: any kit for the ptp has been sent back, has a CE order or a result\n" +
-                    "        and (k2.CE_order is null\n" +
+                    "        and (k2.CE_order is not null\n" +
                     "          or\n" +
                     "             k2.test_result is not null\n" +
                     "          or\n" +
@@ -60,7 +75,7 @@ public class GBFOrderFinder {
                     "           DATE_ADD(str_to_date(k2.ups_tracking_date, '%Y%m%d %H%i%s'), INTERVAL ? DAY) > now())\n" +
                     "          )\n" +
                     "        and\n" +
-                    "        req2.order_transmitted_at is null\n" +
+                    "        delivered.order_transmitted_at is not null)" +
                     "\n" +
                     "      union\n" +
                     "\n" +
@@ -76,7 +91,6 @@ public class GBFOrderFinder {
                     "                 from ddp_kit_request req2\n" +
                     "                 where req.ddp_participant_id = req2.ddp_participant_id\n" +
                     "                   and req.ddp_instance_id = req2.ddp_instance_id)\n" +
-                    // todo arz need to join through to subkit type id?  yes
                     "     ) as orders\n" +
                     "where\n" +
                     "i.instance_name = ?\n" +
@@ -84,6 +98,9 @@ public class GBFOrderFinder {
                     "i.ddp_instance_id = s.ddp_instance_id\n" +
                     "and\n" +
                     "subkit.ddp_kit_request_settings_id = s.ddp_kit_request_settings_id\n" +
+                    "and\n" +
+                    // todo arz do we have a better place for "GBF" constant?
+                    "s.external_shipper = 'gbf'\n" +
                     "and\n" +
                     "subkit.kit_type_id = orders.kit_type_id\n" +
                     "order by max_kit_request_id asc limit ?\n";
@@ -105,10 +122,11 @@ public class GBFOrderFinder {
         List<SimpleKitOrder> kitsToOrder = new ArrayList<>();
         try (PreparedStatement stmt = conn.prepareStatement(FIND_KITS_TO_ORDER_QUERY,ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
             stmt.setString(1, ddpInstanceName);
-            stmt.setInt(2, maxDaysToReturnPreviousKit);
-            stmt.setString(3, ddpInstanceName);
+            stmt.setString(2, ddpInstanceName);
+            stmt.setInt(3, maxDaysToReturnPreviousKit);
             stmt.setString(4, ddpInstanceName);
-            stmt.setInt(5, maxOrdersToProcess);
+            stmt.setString(5, ddpInstanceName);
+            stmt.setInt(6, maxOrdersToProcess);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 // loop through once to get participants

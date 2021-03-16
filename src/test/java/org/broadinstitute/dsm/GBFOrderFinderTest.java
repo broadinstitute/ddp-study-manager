@@ -1,21 +1,20 @@
 package org.broadinstitute.dsm;
 
+import static org.broadinstitute.dsm.db.KitRequestShipping.markOrderTransmittedAt;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.model.gbf.GBFOrderFinder;
-import org.broadinstitute.dsm.model.gbf.GBFOrderTransmitter;
 import org.broadinstitute.dsm.model.gbf.SimpleKitOrder;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -32,8 +31,6 @@ public class GBFOrderFinderTest extends TestHelper {
     private static final String TEST_PARTICIPANT_GUID = "4ECA6IHNZT4S13NSOEMT";
 
     private static final String TEST_PREFIX = "GBF_TESTING_X";
-
-    private static final String GBF = "gbf";
 
     private static final int MAX_DAY_WAIT = 30;
 
@@ -88,18 +85,12 @@ public class GBFOrderFinderTest extends TestHelper {
             "and\n"+
             "ddp_instance_id = (select i.ddp_instance_id from ddp_instance i where i.instance_name = ?)\n";
 
-    private static final String MARK_ORDER_AS_TRANSMITTED = "\n"+
-            "update ddp_kit_request set order_transmitted_at = ?\n"+
-            "where\n"+
-            "external_order_number = ?";
-
     @BeforeClass
     public static void setUp() {
         setupEsClient();
     }
 
     private String createTestKit(Connection conn) {
-        // todo arz put insert and rollback into one txn for test
         String externalOrderId = TEST_PREFIX + randomStringGenerator(10, true, false, true);
 
         try (PreparedStatement stmt = conn.prepareStatement(INSERT_KIT_REQUEST, Statement.RETURN_GENERATED_KEYS)) {
@@ -264,15 +255,14 @@ public class GBFOrderFinderTest extends TestHelper {
                 SimpleKitOrder kitToOrder = kitsToOrder.iterator().next();
                 Assert.assertEquals(secondKit, kitToOrder.getExternalKitOrderNumber());
                 Assert.assertEquals(TEST_PARTICIPANT_GUID, kitToOrder.getParticipantGuid());
-                // todo arz check address?
                 Assert.assertEquals("Subsequent kit order should have gone through because the previous one was recently returned",1, kitsToOrder.size());
+
             } finally {
                 try {
                     conn.rollback();
                 } catch (SQLException e) {
                     logger.error("Could not roll back after test");
                 }
-
             }
             return null;
         });
@@ -290,7 +280,6 @@ public class GBFOrderFinderTest extends TestHelper {
                 Collection<SimpleKitOrder> kitsToOrder = finder.findKitsToOrder("testboston", conn);
                 for (SimpleKitOrder simpleKitOrder : kitsToOrder) {
                     // if the kit was returned long after delivery, a new kit should not be ordered
-                    //markOrderTransmittedAt(conn, simpleKitOrder.getExternalKitOrderNumber(), Instant.now()); // time of transmission doesn't matter, as long as it's not null
                     markOrderDeliveredToRecipientAt(conn, simpleKitOrder.getExternalKitOrderNumber(), Instant.now().minus(daysPrior, ChronoUnit.DAYS));
                     markOrderAsReturned(conn, simpleKitOrder.getExternalKitOrderNumber());
                 }
@@ -310,19 +299,6 @@ public class GBFOrderFinderTest extends TestHelper {
             }
             return null;
         });
-    }
-
-    private void markOrderTransmittedAt(Connection conn, String kitExternalOrderId, Instant transmittedAt) {
-        try (PreparedStatement stmt = conn.prepareStatement(MARK_ORDER_AS_TRANSMITTED)) {
-            stmt.setTimestamp(1,Timestamp.from(transmittedAt));
-            stmt.setString(2, kitExternalOrderId);
-
-            int numRows = stmt.executeUpdate();
-
-            logger.info("Updated {} rows when setting order transmission date for {} to {}", numRows, transmittedAt, kitExternalOrderId);
-        } catch(SQLException e) {
-            throw new RuntimeException("Could not set order transmission date for " + kitExternalOrderId, e);
-        }
     }
 
     private void markOrderDeliveredToRecipientAt(Connection conn, String kitExternalOrderId, Instant arrivedToRecipientAt) {

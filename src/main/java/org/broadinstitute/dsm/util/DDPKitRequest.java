@@ -173,25 +173,6 @@ public class DDPKitRequest {
                                     throw new RuntimeException("Important information for kitRequest is missing");
                                 }
                             }
-                            //TODO PEGAH GET UNORDERED OR NOT FOUND ORDERS AND ADD THEM  TO THE LIST
-                            //                            addOtherUnorderedKitsToList(kitsToOrder);
-
-                            //only order if kit were added to kits to order hash (which should only be if a kit has an external shipper)
-                            if (!kitsToOrder.isEmpty()) {
-                                Iterator<KitRequestSettings> iter = kitsToOrder.keySet().iterator();
-                                while (iter.hasNext()) {
-                                    KitRequestSettings setting = iter.next();
-                                    ArrayList<KitRequest> kits = kitsToOrder.get(setting);
-                                    try {
-                                        logger.info("placing order with external shipper");
-                                        ExternalShipper shipper = (ExternalShipper) Class.forName(DSMServer.getClassName(setting.getExternalShipper())).newInstance();
-                                        shipper.orderKitRequests(kits, new EasyPostUtil(latestKit.getInstanceName()), setting, null);
-                                    }
-                                    catch (Exception e) {
-                                        logger.error("Failed to sent external shipper kit request order to " + setting.getExternalShipper(), e);
-                                    }
-                                }
-                            }
                         }
                     }
                     else {

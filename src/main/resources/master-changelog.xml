@@ -46,4 +46,5 @@
     <include file="liquibase/042-updateDB.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/043-updateDB.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/044-updateDB.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/DDP-5672-longitudinal-wait.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
+import java.time.Instant;
 import java.util.*;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
@@ -82,6 +83,10 @@ public class KitRequestShipping extends KitRequest {
     private static final String UPDATE_KIT_AUTHORIZE = "UPDATE ddp_kit kit INNER JOIN(SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit " +
             "ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id AND kit.dsm_kit_id = groupedKit.kit_id SET authorization = ?, authorization_date = ?, " +
             "denial_reason = ?, authorized_by = ? WHERE kit.dsm_kit_request_id = ?";
+    private static final String MARK_ORDER_AS_TRANSMITTED = "\n"+
+            "update ddp_kit_request set order_transmitted_at = ?\n"+
+            "where\n"+
+            "external_order_number = ?";
 
     public static final String DEACTIVATION_REASON = "Generated Express";
 
@@ -1369,6 +1374,25 @@ public class KitRequestShipping extends KitRequest {
 
         if (results.resultException != null) {
             throw new RuntimeException("Error changing authorization status for kitRequest w/ dsm_kit_request_id " + kitRequestId, results.resultException);
+        }
+    }
+
+    /**
+     * Marks the order as transmitted (successfully) at the given time
+     * @param conn
+     * @param kitExternalOrderId
+     * @param transmittedAt
+     */
+    public static void markOrderTransmittedAt(Connection conn, String kitExternalOrderId, Instant transmittedAt) {
+        try (PreparedStatement stmt = conn.prepareStatement(MARK_ORDER_AS_TRANSMITTED)) {
+            stmt.setTimestamp(1,Timestamp.from(transmittedAt));
+            stmt.setString(2, kitExternalOrderId);
+
+            int numRows = stmt.executeUpdate();
+
+            logger.info("Updated {} rows when setting order transmission date for {} to {}", numRows, transmittedAt, kitExternalOrderId);
+        } catch(SQLException e) {
+            throw new RuntimeException("Could not set order transmission date for " + kitExternalOrderId, e);
         }
     }
 }
