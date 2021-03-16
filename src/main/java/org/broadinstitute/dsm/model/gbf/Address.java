@@ -66,7 +66,6 @@ public class Address {
                 esAddress.get("city").getAsString(),
                 esAddress.get("state").getAsString(),
                 esAddress.get("zip").getAsString(),
-                // todo arz check these
                 esAddress.get("country").getAsString(),
                 esAddress.get("phone").getAsString());
     }

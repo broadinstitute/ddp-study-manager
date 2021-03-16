@@ -15,6 +15,9 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.elasticsearch.client.RestHighLevelClient;
 
+/**
+ * Finds kit requests that should be sent to GBF.
+ */
 public class GBFOrderFinder {
 
     private final int maxOrdersToProcess;

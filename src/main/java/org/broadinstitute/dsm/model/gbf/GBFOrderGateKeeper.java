@@ -2,12 +2,13 @@ package org.broadinstitute.dsm.model.gbf;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Instant;
 
-import org.broadinstitute.ddp.db.TransactionWrapper;
-
+/**
+ * Uses a {@link GBFOrderTransmitter} and {@link GBFOrderFinder}
+ * to find and transmit orders to GBF for a given
+ * DDP instance
+ */
 public class GBFOrderGateKeeper {
 
     private final GBFOrderFinder orderFinder;
