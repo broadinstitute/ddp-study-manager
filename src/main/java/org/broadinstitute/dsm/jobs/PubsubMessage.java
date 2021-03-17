@@ -1,7 +1,9 @@
 package org.broadinstitute.dsm.jobs;
 
-import java.util.Map;
+import lombok.Data;
 
+import java.util.Map;
+@Data
 public class PubsubMessage {
         String data;
         Map<String, String> attributes;

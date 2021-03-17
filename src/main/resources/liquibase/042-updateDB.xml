@@ -23,7 +23,7 @@
     <!-- prod i.instance_id > 20000 are actual new added initial_biopsies for migrated pts  -->
 
     <changeSet id="carrier_per_study_key" author="pegah">
-        <addColumn tableName="ddp_instance">
+        <addColumn tableName="carrier_service">
             <column name="carrier_tracking_url" type="VARCHAR(500)"></column>
         </addColumn>
     </changeSet>

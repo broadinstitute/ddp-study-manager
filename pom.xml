@@ -247,6 +247,11 @@
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-secretmanager</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.8.5</version>
+        </dependency>
 
     </dependencies>
 
@@ -330,7 +335,6 @@
         <profile>
             <id>backend</id>
             <build>
-
                 <resources>
                     <resource>
                         <directory>src/main/resources</directory>
@@ -373,47 +377,5 @@
             <sourceDirectory>src/main/java</sourceDirectory>
             <testSourceDirectory>src/test/java</testSourceDirectory>
     </build>
-
-<!--    <build>-->
-<!--        <sourceDirectory>src/main/java</sourceDirectory>-->
-<!--        <testSourceDirectory>src/test/java</testSourceDirectory>-->
-<!--    </build>-->
-
-<!--        <resources>-->
-<!--            <resource>-->
-<!--                <directory>src/main/resources</directory>-->
-<!--                <filtering>true</filtering>-->
-<!--            </resource>-->
-<!--        </resources>-->
-<!--        <testResources>-->
-<!--            <testResource>-->
-<!--                <directory>src/test/resources</directory>-->
-<!--            </testResource>-->
-<!--        </testResources>-->
-<!--        <plugins>-->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-compiler-plugin</artifactId>-->
-<!--                <version>3.8.0</version>-->
-<!--                <configuration>-->
-<!--                    <release>11</release>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-jar-plugin</artifactId>-->
-<!--                <configuration>-->
-<!--                    <finalName>DSMServer</finalName>-->
-<!--                    <archive>-->
-<!--                        <manifest>-->
-<!--                            <addClasspath>true</addClasspath>-->
-<!--                            <mainClass>org.broadinstitute.dsm.DSMServer</mainClass>-->
-<!--                            <classpathPrefix>lib/</classpathPrefix>-->
-<!--                        </manifest>-->
-<!--                    </archive>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
-<!--        </plugins>-->
-<!--    </build>-->
 
 </project>

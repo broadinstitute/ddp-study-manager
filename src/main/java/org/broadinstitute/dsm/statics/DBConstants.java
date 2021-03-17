@@ -45,7 +45,6 @@ public class DBConstants {
     public static final String CARRIER_USERNAME = "carrier_username";
     public static final String CARRIER_PASSWORD= "carrier_password";
     public static final String CARRIER_ACCESSKEY = "carrier_accesskey";
-    public static final String CARRIER_TRACKING_URL = "carrier_tracking_url";
 
     //kit request
     public static final String DSM_KIT_ID = "dsm_kit_id";
@@ -59,6 +58,7 @@ public class DBConstants {
     public static final String UPS_RETURN_STATUS = "ups_return_status";
     public static final String UPS_TRACKING_DATE = "ups_tracking_date";
     public static final String UPS_RETURN_DATE = "ups_return_date";
+    public static final String DDP_KIT_REQUEST_TABLE_ABBR = "req.";
 
 
 
@@ -120,14 +120,18 @@ public class DBConstants {
     public static final String GBF_CONFIRMATION = "gbf_confirmation";
     public static final String EXTERNAL_ORDER_NUMBER = "external_order_number";
     public static final String CE_ORDER = "CE_order";
-    public static final String KIT_SHIPPING_HISTORY = "kit_shipping_history";
-    public static final String KIT_RETURN_HISTORY = "kit_return_history";
     public static final String NO_RETURN = "no_return";
     public static final String EXTERNAL_ORDER_STATUS = "external_order_status";
     public static final String EXTERNAL_ORDER_DATE = "external_order_date";
     public static final String EASYPOST_SHIPMENT_STATUS = "easypost_shipment_status";
     public static final String EASYPOST_SHIPMENT_DATE = "easypost_shipment_date";
     public static final String CARE_EVOLVE = "CE_order";
+    public static final String DDP_KIT_TABLE_ABBR = "kit.";
+
+
+    public static final String KIT_SHIPPING_HISTORY = "kit_shipping_history";
+    public static final String KIT_RETURN_HISTORY = "kit_return_history";
+    public static final String KIT_TRACKING_HISTORY_TABLE_ABBR = "kth.";
 
     //medical record
     public static final String PARTICIPANT_ID = "participant_id";
@@ -281,6 +285,7 @@ public class DBConstants {
     public static final String PDF_DOWNLOAD_CONSENT = "pdf_download_consent";
     public static final String PDF_DOWNLOAD_RELEASE = "pdf_download_release";
     public static final String PARTICIPANT_STATUS_ENDPOINT = "participant_status_endpoint";
+    public static final String UPS_TRACKING_ROLE = "ups_tracking";
 
     //user role
     public static final String MAILINGLIST_VIEW = "mailingList_view";

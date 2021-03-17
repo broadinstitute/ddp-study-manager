@@ -4,7 +4,6 @@ import com.google.cloud.functions.BackgroundFunction;
 import com.google.cloud.functions.Context;
 import com.google.gson.Gson;
 import com.typesafe.config.Config;
-import lombok.NonNull;
 import org.apache.commons.dbcp2.PoolableConnection;
 import org.apache.commons.dbcp2.PoolingDataSource;
 import org.apache.commons.lang3.tuple.Pair;
@@ -12,7 +11,6 @@ import org.broadinstitute.dsm.careevolve.Authentication;
 import org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar;
 import org.broadinstitute.dsm.careevolve.Provider;
 import org.broadinstitute.dsm.cf.CFUtil;
-import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.DdpKit;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.ups.*;
@@ -27,10 +25,8 @@ import spark.utils.StringUtils;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
@@ -66,7 +62,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
 
         String dbUrl = cfg.getString("dsmDBUrl");
 
-        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(20, dbUrl);
+        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(1, dbUrl);
 
 
         logger.info("Starting the UPS lookup job");
@@ -302,7 +298,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 logger.info("Updated status of tracking number " + trackingId + " to " + statusType + " from " + oldType + " for kit w/ external order number " + kit.getExternalOrderNumber());
             }
             catch (SQLException ex) {
-                throw new RuntimeException(ex);
+                logger.error("Error getting connection to db ",ex);
             }
             catch (Exception e) {
                 e.printStackTrace();

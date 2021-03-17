@@ -98,17 +98,6 @@ public class DSMServer extends BasicServer {
     public static final String UPS_PATH_TO_ACCESSKEY = "ups.accesskey";
     public static final String UPS_PATH_TO_ENDPOINT = "ups.url";
 
-    public static String UPS_USERNAME;
-    public static String UPS_PASSWORD;
-    public static String UPS_ENDPOINT;
-    public static String UPS_ACCESSKEY;
-    public static String careEvolveSubscriberKey;
-    public static String careEvolveServiceKey;
-    public static String careEvolveOrderEndpoint;
-    public static int careEvolveMaxRetries;
-    public static int careEvolveRetyWaitSeconds;
-    public static String careEvolveAccount;
-    public static Authentication careEvolveAuth;
     public static Provider provider;
     public static final String GCP_PATH_TO_PUBSUB_PROJECT_ID = "pubsub.projectId";
     public static final String GCP_PATH_TO_PUBSUB_SUB = "pubsub.subscription";
@@ -594,11 +583,6 @@ public class DSMServer extends BasicServer {
                 createScheduleJob(scheduler, null, null, EasypostShipmentStatusJob.class, "CHECK_STATUS_SHIPMENT",
                         cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_STATUS_SHIPMENT), new EasypostShipmentStatusTriggerListener(), cfg);
 
-
-                UPS_ACCESSKEY = cfg.getString(UPS_PATH_TO_ACCESSKEY);
-                UPS_USERNAME = cfg.getString(UPS_PATH_TO_USERNAME);
-                UPS_PASSWORD = cfg.getString(UPS_PATH_TO_PASSWORD);
-                UPS_ENDPOINT = cfg.getString(UPS_PATH_TO_ENDPOINT);
 
                 logger.info("Setup Job Scheduler...");
                 try {
