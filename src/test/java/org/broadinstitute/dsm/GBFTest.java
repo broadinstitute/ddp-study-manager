@@ -310,7 +310,6 @@ public class GBFTest extends TestHelper {
                                 if ("gbf".equalsIgnoreCase(kitRequestSetting.getExternalShipper())) {
                                     kitRequestSetting.setCarrierTo("3rd Day Air Residential");
                                     kitRequestSetting.setServiceTo(kitRequestSetting.getCarrierTo());
-                                    System.out.println(kitRequestSetting.getCarrierTo());
                                     shipper.orderKitRequests(kitsToOrder, easyPostUtil, kitRequestSetting, null);
                                 }
                             }

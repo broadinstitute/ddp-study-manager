@@ -21,7 +21,6 @@ public class CFUtil {
 
     private static final Logger logger = Logger.getLogger(CFUtil.class.getName());
 
-    // todo centralize this for stateless db connections.  statics in cloud functions
     // can be shared across invocations, making things like TransactionWrapper.init() hard to predict.
     public static PoolingDataSource<PoolableConnection> createDataSource(int maxConnections, String dbUrl) {
         ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(dbUrl, null);

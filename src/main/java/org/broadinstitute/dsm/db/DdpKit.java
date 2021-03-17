@@ -11,6 +11,13 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.Period;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 @Data
 public class DdpKit {
@@ -115,14 +122,14 @@ public class DdpKit {
 
     public boolean isDelivered() {
         if (StringUtils.isNotBlank(trackingToId)) {
-            return isTypeDelivered(upsTrackingStatus);
+            return isTypeDelivered(kitShippingHistory);
         }
         return false;
     }
 
     public boolean isReturned() {
         if (StringUtils.isNotBlank(trackingReturnId)) {
-            return isTypeDelivered(upsReturnStatus);
+            return isTypeDelivered(kitReturnHistory);
         }
         return false;
     }
@@ -134,6 +141,15 @@ public class DdpKit {
                 UPSActivity lastActivity = activities[0];
                 if (lastActivity != null) {
                     String type = lastActivity.getStatus().getType();
+                    String date = lastActivity.getDate();
+                    DateFormat formatter =  new SimpleDateFormat("yyyyMMdd kkmmss");
+                    try {
+                        Date lastDateOnRecord = formatter.parse(date);
+                        if(lastDateOnRecord.before(new Date(System.currentTimeMillis()))){}
+                    }
+                    catch (ParseException e) {
+                        e.printStackTrace();
+                    }
                     return UPSStatus.DELIVERED_TYPE.equals(type);
                 }
             }
