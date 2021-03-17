@@ -527,4 +527,68 @@
             <column name="order_number" value="4"/>
         </insert>
     </changeSet>
+
+    <changeSet author="simone" id="rgpForm">
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="column_name" value="RGP_PARTICIPANTS"/>
+            <column name="column_display" value="#DATSTAT_FIRSTNAME #DATSTAT_LASTNAME #MEMBER_TYPE"/>
+            <column name="display_type" value="TAB"/>
+            <column name="order_number" value="1"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_PARTICIPANTS"/>
+            <column name="column_name" value="RGP_SUBJECT_STATUS_GROUP"/>
+            <column name="column_display" value="Subject Status"/>
+            <column name="display_type" value="GROUP"/>
+            <column name="order_number" value="1"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
+            <column name="column_name" value="ACCEPTANCE_STATUS"/>
+            <column name="column_display" value="Acceptance Status *"/>
+            <column name="display_type" value="OPTIONS"/>
+<!--            TODO add possible values-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT_EDIT.CONSENT_MAKE_CHANGES_PHONE&#34;}]"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;workflows&#34;,&#34;value&#34;:&#34;ACCEPTANCE_STATUS&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT&#34;}]"/>
+            <column name="order_number" value="1"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
+            <column name="column_name" value="ACTIVE"/>
+            <column name="column_display" value="Active/Inactive/HOLD *"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO add possible values-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT_EDIT.CONSENT_MAKE_CHANGES_PHONE&#34;}]"/>
+            <column name="order_number" value="2"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
+            <column name="column_name" value="ALIVE_DECEASED"/>
+            <column name="column_display" value="Alive/Deceased *"/>
+            <column name="display_type" value="RADIO"/>
+            <!--            TODO add possible values-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT_EDIT.CONSENT_MAKE_CHANGES_PHONE&#34;}]"/>
+            <column name="order_number" value="3"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
+            <column name="column_name" value="FAMILY_ID"/>
+            <column name="column_display" value="Family ID *"/>
+            <column name="display_type" value="ACTIVITY"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;profile.HRUID&#34;}]"/>
+            <column name="order_number" value="4"/>
+        </insert>
+    </changeSet>
 </databaseChangeLog>
