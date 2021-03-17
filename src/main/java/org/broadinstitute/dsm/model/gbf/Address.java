@@ -1,4 +1,5 @@
 package org.broadinstitute.dsm.model.gbf;
+import com.google.gson.JsonObject;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
@@ -33,10 +34,15 @@ public class Address {
     public Address() {
     }
 
-    public Address(String company, String addressLine1, String addressLine2, String city, String state, String zipCode,
+    public Address(String addressLine1, String city, String state, String zipCode,
+                   String country, String phoneNumber) {
+        this(null, addressLine1, null, city, state, zipCode, country, phoneNumber);
+    }
+
+    public Address(String recipientName, String addressLine1, String addressLine2, String city, String state, String zipCode,
                    String country, String phoneNumber) {
 
-        this.company = company;
+        this.company = recipientName;
         this.addressLine1 = addressLine1;
         this.addressLine2 = addressLine2;
         this.city = city;
@@ -46,10 +52,35 @@ public class Address {
         this.phoneNumber = phoneNumber;
 
     }
+
     public boolean isComplete(){
         return  StringUtils.isNotBlank(this.company) && StringUtils.isNotBlank(this.addressLine1) &&
                 StringUtils.isNotBlank(this.city) && StringUtils.isNotBlank(this.state) &&
                 StringUtils.isNotBlank(this.zipCode) && StringUtils.isNotBlank(this.country) &&
                 StringUtils.isNotBlank(this.phoneNumber);
+    }
+
+    public static Address fromElasticParticipantAddress(String fullName, JsonObject esAddress) {
+        return new Address(fullName, esAddress.get("street1").getAsString(),
+                esAddress.get("street2").getAsString(),
+                esAddress.get("city").getAsString(),
+                esAddress.get("state").getAsString(),
+                esAddress.get("zip").getAsString(),
+                esAddress.get("country").getAsString(),
+                esAddress.get("phone").getAsString());
+    }
+
+    @Override
+    public String toString() {
+        return "Address{" +
+                "company='" + company + '\'' +
+                ", addressLine1='" + addressLine1 + '\'' +
+                ", addressLine2='" + addressLine2 + '\'' +
+                ", city='" + city + '\'' +
+                ", state='" + state + '\'' +
+                ", zipCode='" + zipCode + '\'' +
+                ", country='" + country + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                '}';
     }
 }
