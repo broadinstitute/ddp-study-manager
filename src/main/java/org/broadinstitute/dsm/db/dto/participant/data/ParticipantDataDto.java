@@ -7,18 +7,30 @@ import lombok.Setter;
 @Setter
 public class ParticipantDataDto {
 
-    private long participantDataId;
+    private int participantDataId;
     private String ddpParticipantId;
-    private long ddpInstanceId;
+    private int ddpInstanceId;
     private String fieldTypeId;
     private String data;
+    private long lastChanged;
+    private String changedBy;
 
-    public ParticipantDataDto(long participantDataId, String ddpParticipantId, long ddpInstanceId, String fieldTypeId, String data) {
-        this.participantDataId = participantDataId;
+    public ParticipantDataDto(String ddpParticipantId, int ddpInstanceId, String fieldTypeId, String data, long lastChanged,
+                              String changedBy) {
         this.ddpParticipantId = ddpParticipantId;
         this.ddpInstanceId = ddpInstanceId;
         this.fieldTypeId = fieldTypeId;
         this.data = data;
+        this.lastChanged = lastChanged;
+        this.changedBy = changedBy;
     }
+
+    public ParticipantDataDto(int participantDataId, String ddpParticipantId, int ddpInstanceId,
+                              String fieldTypeId, String data, long lastChanged, String changedBy) {
+        this(ddpParticipantId, ddpInstanceId, fieldTypeId, data, lastChanged, changedBy);
+        this.participantDataId = participantDataId;
+    }
+
+
 }
 

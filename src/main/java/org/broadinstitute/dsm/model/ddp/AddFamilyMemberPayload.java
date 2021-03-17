@@ -2,7 +2,11 @@ package org.broadinstitute.dsm.model.ddp;
 
 
 import java.util.Optional;
+import java.util.OptionalInt;
 
+import lombok.Setter;
+
+@Setter
 public class AddFamilyMemberPayload {
 
     private String participantGuid;
@@ -10,10 +14,10 @@ public class AddFamilyMemberPayload {
     private FamilyMemberDetails data;
     private Integer userId;
     private Boolean copyProbandInfo;
-    private Long probandDataId;
+    private int probandDataId;
 
     public AddFamilyMemberPayload(String participantGuid, String realm, FamilyMemberDetails data, Integer userId,
-                                  Boolean copyProbandInfo, Long probandDataId) {
+                                  Boolean copyProbandInfo, int probandDataId) {
         this.participantGuid = participantGuid;
         this.realm = realm;
         this.data = data;
@@ -40,5 +44,5 @@ public class AddFamilyMemberPayload {
 
     public Optional<Boolean> getCopyProbandInfo() { return Optional.ofNullable(copyProbandInfo); }
 
-    public Optional<Long> getProbandDataId() { return Optional.ofNullable(probandDataId); }
+    public OptionalInt getProbandDataId() { return OptionalInt.of(probandDataId); }
 }

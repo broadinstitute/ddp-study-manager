@@ -5,12 +5,12 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.dsm.db.ParticipantData;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
 
@@ -19,11 +19,42 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
     private static final String SQL_PARTICIPANT_DATA_BY_PARTICIPANT_ID = "SELECT * FROM ddp_participant_data WHERE ddp_participant_id = ?";
     private static final String SQL_DELETE_DDP_PARTICIPANT_DATA = "DELETE FROM ddp_participant_data WHERE participant_data_id = ?";
     private static final String SQL_PARTICIPANT_DATA_BY_ID = "SELECT * FROM ddp_participant_data WHERE participant_data_id = ?";
+    private static final String SQL_INSERT_DATA_TO_PARTICIPANT_DATA = "INSERT INTO ddp_participant_data SET " +
+            "ddp_participant_id = ?," +
+            "ddp_instance_id = ?," +
+            "field_type_id = ?," +
+            "data = ?," +
+            "last_changed = ?," +
+            "changed_by = ?";
 
 
     @Override
     public int create(ParticipantDataDto participantDataDto) {
-        return 0;
+        SimpleResult simpleResult = inTransaction(conn -> {
+            SimpleResult dbVals = new SimpleResult(-1);
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_DATA_TO_PARTICIPANT_DATA, Statement.RETURN_GENERATED_KEYS)) {
+                stmt.setString(1, participantDataDto.getDdpParticipantId());
+                stmt.setInt(2, participantDataDto.getDdpInstanceId());
+                stmt.setString(3, participantDataDto.getFieldTypeId());
+                stmt.setString(4, participantDataDto.getData());
+                stmt.setLong(5, participantDataDto.getLastChanged());
+                stmt.setString(6, participantDataDto.getChangedBy());
+                stmt.executeUpdate();
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = rs.getInt(1);
+                    }
+                }
+            } catch (SQLException sqle) {
+                dbVals.resultException = sqle;
+            }
+            return dbVals;
+        });
+        if (simpleResult.resultException != null) {
+            throw new RuntimeException("Error inserting ddp instance ", simpleResult.resultException);
+        }
+        return (int) simpleResult.resultValue;
+
     }
 
     @Override
@@ -55,11 +86,13 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
                 try(ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                          execResult.resultValue = new ParticipantDataDto(
-                                        rs.getLong(1),
+                                        rs.getInt(1),
                                         rs.getString(2),
-                                        rs.getLong(3),
+                                        rs.getInt(3),
                                         rs.getString(4),
-                                        rs.getString(5)
+                                        rs.getString(5),
+                                        rs.getLong(6),
+                                        rs.getString(7)
                          );
                     }
                 }
@@ -86,11 +119,13 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
                     while (rs.next()) {
                         participantDataDtoList.add(
                                 new ParticipantDataDto(
-                                        rs.getLong(1),
+                                        rs.getInt(1),
                                         rs.getString(2),
-                                        rs.getLong(3),
+                                        rs.getInt(3),
                                         rs.getString(4),
-                                        rs.getString(5)
+                                        rs.getString(5),
+                                        rs.getLong(6),
+                                        rs.getString(7)
                                 )
                         );
                     }
