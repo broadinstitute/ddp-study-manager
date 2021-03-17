@@ -72,8 +72,6 @@ public class DDPKitRequest {
                                         if (kitType != null) {
                                             KitRequestSettings kitRequestSettings = kitRequestSettingsMap.get(kitType.getKitTypeId());
 
-                                            ArrayList<KitRequest> orderKit = new ArrayList<>();
-
                                             boolean kitHasSubKits = kitRequestSettings.getHasSubKits() != 0;
 
                                             //kit requests from study-server
@@ -91,14 +89,7 @@ public class DDPKitRequest {
 
                                                             if (kitHasSubKits) {
                                                                 List<KitSubKits> subKits = kitRequestSettings.getSubKits();
-                                                                String externalOrderNumber = addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID(), null);
-                                                                DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData, kitDetail.getParticipantId());
-                                                                if (ddpParticipant != null) {
-                                                                    if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
-                                                                        orderKit.add(new KitRequest(kitDetail.getParticipantId(), (String) profile.get("hruid"), ddpParticipant, externalOrderNumber));
-                                                                        logger.info("Added kit with external order number " + orderKit.get(orderKit.size() - 1).getExternalOrderNumber() + " to the order list");
-                                                                    }
-                                                                }
+                                                                addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID(), null);
                                                             }
                                                             else {
                                                                 KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, kitType.getKitTypeId(),
@@ -124,18 +115,12 @@ public class DDPKitRequest {
                                                     //only testboston for now which is not gen2 so it won't matter
                                                     if (kitHasSubKits) {
                                                         List<KitSubKits> subKits = kitRequestSettings.getSubKits();
-                                                        String externalOrderNumber = addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID(), null);
-                                                        if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
-                                                            orderKit.add(new KitRequest(kitDetail.getParticipantId(), participant.getShortId(), participant, externalOrderNumber));
-                                                        }
+                                                        addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID(), null);
                                                     }
                                                     else {
                                                         // all other ddps
                                                         KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, kitType.getKitTypeId(),
                                                                 kitRequestSettings, collaboratorParticipantId, null, null);
-                                                        if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
-                                                            orderKit.add(new KitRequest(kitDetail.getParticipantId(), participant.getShortId(), participant, null));
-                                                        }
                                                     }
                                                 }
                                                 else {
