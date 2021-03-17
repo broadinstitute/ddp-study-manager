@@ -206,7 +206,7 @@ public class ElasticSearchUtil {
                 if (participantJson.has(ADDRESS) && participantJson.has(PROFILE)) {
                     ESAddress address = gson.fromJson(participantJson.get(ADDRESS), ESAddress.class);
                     ESProfile profile = gson.fromJson(participantJson.get(PROFILE), ESProfile.class);
-                    Address gbfAddress = new Address(profile.getShippingRecipientName(), address.getStreet1(), address.getStreet1(),
+                    Address gbfAddress = new Address(address.getRecipient(), address.getStreet1(), address.getStreet1(),
                             address.getCity(), address.getState(), address.getZip(), address.getCountry(), address.getPhone());
                     addressByParticipant.put(profile.getParticipantGuid(), gbfAddress);
                 }
@@ -889,9 +889,6 @@ public class ElasticSearchUtil {
             return participantGuid;
         }
 
-        public String getShippingRecipientName() {
-            return firstName + " " + lastName;
-        }
     }
 
     private static class ESAddress {
@@ -916,6 +913,9 @@ public class ElasticSearchUtil {
 
         @SerializedName("phone")
         private String phone;
+
+        @SerializedName("mailToName")
+        private String recipient;
 
         public String getStreet1() {
             return street1;
@@ -943,6 +943,10 @@ public class ElasticSearchUtil {
 
         public String getPhone() {
             return phone;
+        }
+
+        public String getRecipient() {
+            return recipient;
         }
     }
 }

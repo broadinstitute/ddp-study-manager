@@ -3,6 +3,8 @@ package org.broadinstitute.dsm.model.gbf;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
 
 /**
  * Uses a {@link GBFOrderTransmitter} and {@link GBFOrderFinder}
@@ -29,7 +31,7 @@ public class GBFOrderGateKeeper {
 
             if (orderResponse.isSuccess()) {
                 try (PreparedStatement stmt = conn.prepareStatement(UPDATE_TRANSMISSION_DATE)) {
-                    //stmt.setTimestamp(1, Instant.now());
+                    stmt.setTimestamp(1, Timestamp.from(Instant.now()));
                     stmt.setString(2, simpleKitOrder.getExternalKitOrderNumber());
                     int numRowsUpdated = stmt.executeUpdate();
 

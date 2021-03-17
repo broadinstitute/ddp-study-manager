@@ -83,9 +83,9 @@ public class KitRequestShipping extends KitRequest {
     private static final String UPDATE_KIT_AUTHORIZE = "UPDATE ddp_kit kit INNER JOIN(SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit " +
             "ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id AND kit.dsm_kit_id = groupedKit.kit_id SET authorization = ?, authorization_date = ?, " +
             "denial_reason = ?, authorized_by = ? WHERE kit.dsm_kit_request_id = ?";
-    private static final String MARK_ORDER_AS_TRANSMITTED = "\n"+
-            "update ddp_kit_request set order_transmitted_at = ?\n"+
-            "where\n"+
+    private static final String MARK_ORDER_AS_TRANSMITTED =
+            "update ddp_kit_request set order_transmitted_at = ? "+
+            "where "+
             "external_order_number = ?";
 
     public static final String DEACTIVATION_REASON = "Generated Express";
