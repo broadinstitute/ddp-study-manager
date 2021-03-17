@@ -14,6 +14,7 @@ import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
+import org.broadinstitute.dsm.model.NewParticipantData;
 import org.broadinstitute.dsm.model.ddp.AddFamilyMemberPayload;
 import org.broadinstitute.dsm.model.ddp.FamilyMemberDetails;
 import org.junit.AfterClass;
@@ -23,8 +24,6 @@ import org.junit.Test;
 import spark.utils.StringUtils;
 
 public class AddFamilyMemberRouteTest {
-
-    private static AddFamilyMemberRoute addFamilyMemberRoute;
 
     private static Gson gson;
 
@@ -47,7 +46,6 @@ public class AddFamilyMemberRouteTest {
     public static void doFirst() {
         setupDB();
         gson = new Gson();
-        addFamilyMemberRoute = new AddFamilyMemberRoute();
 
         createTestDdpInstance();
 
@@ -114,7 +112,7 @@ public class AddFamilyMemberRouteTest {
         String payload = payloadFactory(participantId, ddpInstanceDto.getInstanceName(), Map.of(), user.getUserId());
         Result res = new Result(200);
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
-        if (addFamilyMemberPayload.getData().isEmpty() || addFamilyMemberRoute.isFamilyMemberFieldsEmpty(addFamilyMemberPayload.getData())) {
+        if (addFamilyMemberPayload.getData().isEmpty() || addFamilyMemberPayload.getData().orElseGet(FamilyMemberDetails::new).isFamilyMemberFieldsEmpty()) {
             res = new Result(400, "Family member information is not provided");
         }
         Assert.assertEquals(400, res.getCode());
@@ -151,6 +149,13 @@ public class AddFamilyMemberRouteTest {
         Assert.assertEquals(200, result.getCode());
     }
 
+    @Test
+    public void copyProbandDatatToFamilyMember() {
+        String payload = payloadFactory(participantId, ddpInstanceDto.getInstanceName(), data, user.getUserId());
+        AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
+
+    }
+
     public static String payloadFactory(String participantGuid, String realm, Map<String, String> data, Integer userId) {
         FamilyMemberDetails familyMemberDetails;
         if (data == null) {
@@ -164,7 +169,8 @@ public class AddFamilyMemberRouteTest {
                 data.get("collaboratorParticipantId")
             );
         }
-        AddFamilyMemberPayload addFamilyMemberPayload = new AddFamilyMemberPayload(participantGuid, realm, familyMemberDetails, userId);
+        AddFamilyMemberPayload addFamilyMemberPayload = new AddFamilyMemberPayload(participantGuid, realm, familyMemberDetails, userId,
+                false, null);
 
         return gson.toJson(addFamilyMemberPayload);
     }

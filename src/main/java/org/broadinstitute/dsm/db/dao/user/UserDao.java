@@ -5,6 +5,7 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
 
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.User;
@@ -59,5 +60,10 @@ public class UserDao implements Dao<User> {
                     + id, results.resultException);
         }
         return (int) results.resultValue;
+    }
+
+    @Override
+    public Optional<User> get(long id) {
+        return Optional.empty();
     }
 }

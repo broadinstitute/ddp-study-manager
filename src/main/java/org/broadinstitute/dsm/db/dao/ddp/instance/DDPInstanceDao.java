@@ -14,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.Optional;
 
 public class DDPInstanceDao implements Dao<DDPInstanceDto> {
 
@@ -132,5 +133,10 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
             throw new RuntimeException("Error deleting ddp instance ", simpleResult.resultException);
         }
         return (int) simpleResult.resultValue;
+    }
+
+    @Override
+    public Optional<DDPInstanceDto> get(long id) {
+        return Optional.empty();
     }
 }

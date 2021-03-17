@@ -526,6 +526,9 @@ public class DSMServer extends BasicServer {
 
         AddFamilyMemberRoute addFamilyMemberRoute = new AddFamilyMemberRoute();
         post(UI_ROOT + RoutePath.ADD_FAMILY_MEMBER, addFamilyMemberRoute, new JsonTransformer());
+
+        GetParticipantDataRoute getParticipantDataRoute = new GetParticipantDataRoute();
+        get(UI_ROOT + RoutePath.GET_PARTICIPANT_DATA, getParticipantDataRoute, new JsonTransformer());
     }
 
     private void setupSharedRoutes(@NonNull KitUtil kitUtil, @NonNull NotificationUtil notificationUtil,

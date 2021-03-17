@@ -96,6 +96,7 @@ public class RoutePath {
     public static final String GET_FILTERS = "getFilters";
     public static final String GET_DEFAULT_FILTERS = "getFiltersDefault";
     public static final String GET_PARTICIPANT = "getParticipant";
+    public static final String GET_PARTICIPANT_DATA = "getParticipantData";
     public static final String TISSUE_LIST = "tissueList";
     public static final String NDI_REQUEST = "ndiRequest";
     public static final String ABSTRACTION_FORM_CONTROLS = "abstractionformcontrols";
