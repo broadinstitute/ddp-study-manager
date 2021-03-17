@@ -194,7 +194,7 @@ public class GBFOrderFinder {
         TransactionWrapper.inTransaction(conn -> {
             Collection<SimpleKitOrder> kits = orderFinder.findKitsToOrder("testboston", conn);
             for (SimpleKitOrder kit : kits) {
-                System.out.println(kit.getExternalKitOrderNumber());
+                logger.info("Found {}",kit.getExternalKitOrderNumber());
             }
             return null;
         });
