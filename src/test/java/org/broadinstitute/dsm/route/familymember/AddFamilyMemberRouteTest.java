@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.route;
+package org.broadinstitute.dsm.route.familymember;
 
 import static org.broadinstitute.dsm.TestHelper.setupDB;
 
@@ -15,9 +15,9 @@ import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
-import org.broadinstitute.dsm.model.NewParticipantData;
-import org.broadinstitute.dsm.model.ddp.AddFamilyMemberPayload;
-import org.broadinstitute.dsm.model.ddp.FamilyMemberDetails;
+import org.broadinstitute.dsm.model.familymember.AddFamilyMemberPayload;
+import org.broadinstitute.dsm.model.familymember.FamilyMemberDetails;
+import org.broadinstitute.dsm.model.participant.data.NewParticipantData;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;

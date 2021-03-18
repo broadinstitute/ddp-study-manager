@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.route;
+package org.broadinstitute.dsm.route.familymember;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -9,9 +9,9 @@ import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.User;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
-import org.broadinstitute.dsm.model.NewParticipantData;
-import org.broadinstitute.dsm.model.ddp.AddFamilyMemberPayload;
-import org.broadinstitute.dsm.model.ddp.FamilyMemberDetails;
+import org.broadinstitute.dsm.model.participant.data.NewParticipantData;
+import org.broadinstitute.dsm.model.familymember.AddFamilyMemberPayload;
+import org.broadinstitute.dsm.model.familymember.FamilyMemberDetails;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;

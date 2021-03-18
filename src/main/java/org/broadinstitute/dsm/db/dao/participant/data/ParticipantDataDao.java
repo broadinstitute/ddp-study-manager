@@ -16,9 +16,25 @@ import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
 
 public class ParticipantDataDao implements Dao<ParticipantDataDto> {
 
-    private static final String SQL_PARTICIPANT_DATA_BY_PARTICIPANT_ID = "SELECT * FROM ddp_participant_data WHERE ddp_participant_id = ?";
+    private static final String SQL_PARTICIPANT_DATA_BY_PARTICIPANT_ID = "SELECT " +
+            "participant_data_id," +
+            "ddp_participant_id," +
+            "ddp_instance_id," +
+            "field_type_id," +
+            "data," +
+            "last_changed," +
+            "changed_by" +
+            " FROM ddp_participant_data WHERE ddp_participant_id = ?";
     private static final String SQL_DELETE_DDP_PARTICIPANT_DATA = "DELETE FROM ddp_participant_data WHERE participant_data_id = ?";
-    private static final String SQL_PARTICIPANT_DATA_BY_ID = "SELECT * FROM ddp_participant_data WHERE participant_data_id = ?";
+    private static final String SQL_PARTICIPANT_DATA_BY_ID = "SELECT " +
+            "participant_data_id," +
+            "ddp_participant_id," +
+            "ddp_instance_id," +
+            "field_type_id," +
+            "data," +
+            "last_changed," +
+            "changed_by" +
+            " FROM ddp_participant_data WHERE participant_data_id = ?";
     private static final String SQL_INSERT_DATA_TO_PARTICIPANT_DATA = "INSERT INTO ddp_participant_data SET " +
             "ddp_participant_id = ?," +
             "ddp_instance_id = ?," +
@@ -26,6 +42,13 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
             "data = ?," +
             "last_changed = ?," +
             "changed_by = ?";
+    private static final String PARTICIPANT_DATA_ID = "participant_data_id";
+    private static final String DDP_PARTICIPANT_ID = "ddp_participant_id";
+    private static final String DDP_INSTANCE_ID = "ddp_instance_id";
+    private static final String FIELD_TYPE_ID = "field_type_id";
+    private static final String DATA = "data";
+    private static final String LAST_CHANGED = "last_changed";
+    private static final String CHANGED_BY = "changed_by";
 
 
     @Override
@@ -86,13 +109,13 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
                 try(ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                          execResult.resultValue = new ParticipantDataDto(
-                                        rs.getInt(1),
-                                        rs.getString(2),
-                                        rs.getInt(3),
-                                        rs.getString(4),
-                                        rs.getString(5),
-                                        rs.getLong(6),
-                                        rs.getString(7)
+                                        rs.getInt(PARTICIPANT_DATA_ID),
+                                        rs.getString(DDP_PARTICIPANT_ID),
+                                        rs.getInt(DDP_INSTANCE_ID),
+                                        rs.getString(FIELD_TYPE_ID),
+                                        rs.getString(DATA),
+                                        rs.getLong(LAST_CHANGED),
+                                        rs.getString(CHANGED_BY)
                          );
                     }
                 }
@@ -119,13 +142,13 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
                     while (rs.next()) {
                         participantDataDtoList.add(
                                 new ParticipantDataDto(
-                                        rs.getInt(1),
-                                        rs.getString(2),
-                                        rs.getInt(3),
-                                        rs.getString(4),
-                                        rs.getString(5),
-                                        rs.getLong(6),
-                                        rs.getString(7)
+                                        rs.getInt(PARTICIPANT_DATA_ID),
+                                        rs.getString(DDP_PARTICIPANT_ID),
+                                        rs.getInt(DDP_INSTANCE_ID),
+                                        rs.getString(FIELD_TYPE_ID),
+                                        rs.getString(DATA),
+                                        rs.getLong(LAST_CHANGED),
+                                        rs.getString(CHANGED_BY)
                                 )
                         );
                     }

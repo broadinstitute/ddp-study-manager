@@ -1,11 +1,9 @@
-package org.broadinstitute.dsm.route;
+package org.broadinstitute.dsm.route.participant;
 
-import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
-import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
-import org.broadinstitute.dsm.model.NewParticipantData;
+import org.broadinstitute.dsm.model.participant.data.NewParticipantData;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.broadinstitute.dsm.util.UserUtil;
@@ -28,10 +26,10 @@ public class GetParticipantDataRoute extends RequestHandler {
             throw new RuntimeException("User id was not equal. User id in token " + userId + " user id in request " + uId);
         }
 
-        if (!queryParamsMap.hasKey(ParticipantUtil.PARTICIPANT_ID) && !queryParamsMap.get(ParticipantUtil.PARTICIPANT_ID).hasValue()) {
+        if (!queryParamsMap.hasKey(ParticipantUtil.DDP_PARTICIPANT_ID) && !queryParamsMap.get(ParticipantUtil.DDP_PARTICIPANT_ID).hasValue()) {
             throw new NoSuchElementException("Participant Id is not provided");
         }
-        String ddpParticipantId = queryParamsMap.get(ParticipantUtil.PARTICIPANT_ID).value();
+        String ddpParticipantId = queryParamsMap.get(ParticipantUtil.DDP_PARTICIPANT_ID).value();
         ParticipantDataDao participantDataDao = new ParticipantDataDao();
 
         return NewParticipantData.parseDtoList(participantDataDao.getParticipantDataByParticipantId(ddpParticipantId));

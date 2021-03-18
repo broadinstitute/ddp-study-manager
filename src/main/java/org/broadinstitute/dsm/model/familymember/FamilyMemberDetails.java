@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.ddp;
+package org.broadinstitute.dsm.model.familymember;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -6,8 +6,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import com.google.gson.annotations.SerializedName;

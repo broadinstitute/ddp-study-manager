@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.ddp;
+package org.broadinstitute.dsm.model.familymember;
 
 
 import java.util.Optional;
