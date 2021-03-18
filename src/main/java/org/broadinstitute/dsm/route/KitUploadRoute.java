@@ -397,7 +397,7 @@ public class KitUploadRoute extends RequestHandler {
                                 }
                             }
                             else {
-                                throw new UploadLineException("Error in line " + (rowIndex + 1));
+                                throw new UploadLineException("Expected " + fieldNames.size() + " items in line " + (rowIndex + 1) + " but found " + row.length);
                             }
                         }
                         logger.info(uploadObjects.size() + " participants were uploaded for manual kits ");
