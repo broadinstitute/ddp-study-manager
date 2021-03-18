@@ -181,6 +181,7 @@
             <column name="column_name" value="GENOME_STUDY_CPT_ID"/>
             <column name="column_display" value="Genome study Collaborator Participant ID"/>
             <column name="display_type" value="ACTIVITY"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;profile.HRUID&#34;}]"/>
             <column name="order_number" value="1"/>
         </insert>
         <insert tableName="field_settings">
@@ -589,6 +590,744 @@
             <column name="display_type" value="ACTIVITY"/>
             <column name="possible_values" value="[{&#34;value&#34;:&#34;profile.HRUID&#34;}]"/>
             <column name="order_number" value="4"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
+            <column name="column_name" value="INACTIVE_REASON"/>
+            <column name="column_display" value="Inactive Reason"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO add possible values-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT_EDIT.CONSENT_MAKE_CHANGES_PHONE&#34;}]"/>
+            <column name="order_number" value="5"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
+            <column name="column_name" value="SEND_SECURE"/>
+            <column name="column_display" value="Send Secure *"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO add possible values-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT_EDIT.CONSENT_MAKE_CHANGES_PHONE&#34;}]"/>
+            <column name="order_number" value="6"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
+            <column name="column_name" value="COLLABORATOR_PARTICIPANT_ID"/>
+            <column name="column_display" value="Subject ID *"/>
+            <column name="display_type" value="TEXT"/>
+            <column name="order_number" value="7"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
+            <column name="column_name" value="ACCEPTANCE_STATUS_DATE"/>
+            <column name="column_display" value="Acceptance Status Date"/>
+            <column name="display_type" value="DATE"/>
+            <column name="order_number" value="8"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
+            <column name="column_name" value="AFFECTED"/>
+            <column name="column_display" value="Affected Status *"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO add possible values-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT_EDIT.CONSENT_MAKE_CHANGES_PHONE&#34;}]"/>
+            <column name="order_number" value="9"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
+            <column name="column_name" value="AGE"/>
+            <column name="column_display" value="Age Today *"/>
+<!--            TODO ADD validation/calculation-->
+            <column name="display_type" value="NUMBER"/>
+            <column name="order_number" value="10"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
+            <column name="column_name" value="COHORT"/>
+            <column name="column_display" value="Cohort"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO add possible values-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT_EDIT.CONSENT_MAKE_CHANGES_PHONE&#34;}]"/>
+            <column name="order_number" value="11"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
+            <column name="column_name" value="EXPECTED_NUMBER_TO_SEQUENCE"/>
+            <column name="column_display" value="Expected # to Sequence"/>
+            <column name="display_type" value="NUMBER"/>
+            <column name="order_number" value="12"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
+            <column name="column_name" value="IMPORTANT_NOTES"/>
+            <column name="column_display" value="Important Notes"/>
+            <column name="display_type" value="TEXTAREA"/>
+            <column name="order_number" value="13"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
+            <column name="column_name" value="MEMBER_TYPE"/>
+            <column name="column_display" value="Relationship to Proband *"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO add possible values-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT_EDIT.CONSENT_MAKE_CHANGES_PHONE&#34;}]"/>
+            <column name="order_number" value="14"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
+            <column name="column_name" value="PORTAL_MESSAGE"/>
+            <column name="column_display" value="Portal Message *"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO add possible values-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT_EDIT.CONSENT_MAKE_CHANGES_PHONE&#34;}]"/>
+            <column name="order_number" value="15"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_PARTICIPANTS"/>
+            <column name="column_name" value="RGP_CONSENT_GROUP"/>
+            <column name="column_display" value="Consent"/>
+            <column name="display_type" value="GROUP"/>
+            <column name="order_number" value="2"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_CONSENT_GROUP"/>
+            <column name="column_name" value="ETHNICITY"/>
+            <column name="column_display" value="Ethnicity *"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO add possible values-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT_EDIT.CONSENT_MAKE_CHANGES_PHONE&#34;}]"/>
+            <column name="order_number" value="1"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_CONSENT_GROUP"/>
+            <column name="column_name" value="RACE"/>
+            <column name="column_display" value="Race *"/>
+            <column name="display_type" value="TEXT"/>
+            <column name="order_number" value="2"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_CONSENT_GROUP"/>
+            <column name="column_name" value="FAMILY_CONTACT_ALTPID"/>
+            <column name="column_display" value="Alt PID for Contact Member *"/>
+            <column name="display_type" value="ACTIVITY"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;profile.GUID&#34;}]"/>
+            <column name="order_number" value="3"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_CONSENT_GROUP"/>
+            <column name="column_name" value="CONSENT_DOC_COMPLETE_NEW"/>
+            <column name="column_display" value="Consent Documentation Complete"/>
+            <column name="display_type" value="RADIO"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="4"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_CONSENT_GROUP"/>
+            <column name="column_name" value="CONSENTING_NOTES"/>
+            <column name="column_display" value="Consenting Notes"/>
+            <column name="display_type" value="TEXTAREA"/>
+            <column name="order_number" value="5"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_CONSENT_GROUP"/>
+            <column name="column_name" value="DATE_CONSENTED"/>
+            <column name="column_display" value="Date of Consent Call"/>
+            <column name="display_type" value="DATE"/>
+            <column name="order_number" value="6"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_CONSENT_GROUP"/>
+            <column name="column_name" value="DATE_ENROLLED"/>
+            <column name="column_display" value="Enrollment Date"/>
+            <column name="display_type" value="DATE"/>
+            <column name="order_number" value="7"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_CONSENT_GROUP"/>
+            <column name="column_name" value="MIXED_RACE_NOTES"/>
+            <column name="column_display" value="Mixed Race Notes"/>
+            <column name="display_type" value="TEXTAREA"/>
+            <column name="order_number" value="8"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_CONSENT_GROUP"/>
+            <column name="column_name" value="CONSENT_DOC_COMPLETE"/>
+            <column name="column_display" value="OLD Consent Documentation Complete"/>
+            <column name="display_type" value="TEXT"/>
+            <column name="order_number" value="9"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_PARTICIPANTS"/>
+            <column name="column_name" value="RGP_MEDICAL_RECORDS_GROUP"/>
+            <column name="column_display" value="Medical Records"/>
+            <column name="display_type" value="GROUP"/>
+            <column name="order_number" value="3"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_MEDICAL_RECORDS_GROUP"/>
+            <column name="column_name" value="MEDICAL_RECORDS_RELEASE_OBTAINED"/>
+            <column name="column_display" value="Medical Records Release Obtained"/>
+            <column name="display_type" value="RADIO"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="1"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_MEDICAL_RECORDS_GROUP"/>
+            <column name="column_name" value="FAMILY_PROVIDED_URL"/>
+            <column name="column_display" value="Family Provided URL (if any)"/>
+            <column name="display_type" value="TEXT"/>
+            <column name="order_number" value="2"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_MEDICAL_RECORDS_GROUP"/>
+            <column name="column_name" value="MEDICAL_RECORDS_NOTES"/>
+            <column name="column_display" value="Medical Records Notes"/>
+            <column name="display_type" value="TEXTAREA"/>
+            <column name="order_number" value="3"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_MEDICAL_RECORDS_GROUP"/>
+            <column name="column_name" value="PHENOTIPS_ENTERED"/>
+            <column name="column_display" value="PhenoTips Entered"/>
+            <column name="display_type" value="RADIO"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="4"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_MEDICAL_RECORDS_GROUP"/>
+            <column name="column_name" value="PHYSICAL_RECORDS_RECEIVED"/>
+            <column name="column_display" value="Physician Records Received"/>
+            <column name="display_type" value="RADIO"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="5"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_MEDICAL_RECORDS_GROUP"/>
+            <column name="column_name" value="PHOTO_PERMISSIONS"/>
+            <column name="column_display" value="Photo Permissions"/>
+            <column name="display_type" value="OPTIONS"/>
+<!--            TODO update options-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="6"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_MEDICAL_RECORDS_GROUP"/>
+            <column name="column_name" value="RECORDS_LAST_REQUESTED"/>
+            <column name="column_display" value="Records Last Requested"/>
+            <column name="display_type" value="DATE"/>
+            <column name="order_number" value="7"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_MEDICAL_RECORDS_GROUP"/>
+            <column name="column_name" value="FAMILY_NOTES"/>
+            <column name="column_display" value="Family Notes"/>
+            <column name="display_type" value="TEXTAREA"/>
+            <column name="order_number" value="8"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_MEDICAL_RECORDS_GROUP"/>
+            <column name="column_name" value="REFERRING_CLINICIAN"/>
+            <column name="column_display" value="Referring Clinician"/>
+            <column name="display_type" value="TEXT"/>
+            <column name="order_number" value="9"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_PARTICIPANTS"/>
+            <column name="column_name" value="RGP_SAMPLE_COLLECTION_GROUP"/>
+            <column name="column_display" value="Primary Sample Collection"/>
+            <column name="display_type" value="GROUP"/>
+            <column name="order_number" value="4"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SAMPLE_COLLECTION_GROUP"/>
+            <column name="column_name" value="BLOOD_SALIVA_PROCESSING"/>
+            <column name="column_display" value="Blood/Saliva Processing"/>
+            <column name="display_type" value="OPTIONS"/>
+<!--            todo add options-->
+            <column name="order_number" value="1"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SAMPLE_COLLECTION_GROUP"/>
+            <column name="column_name" value="CLIA_KIT_SENT"/>
+            <column name="column_display" value="CLIA or NonCLIA Kit Sent"/>
+            <column name="display_type" value="OPTIONS"/>
+<!--            todo add options-->
+            <column name="order_number" value="2"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SAMPLE_COLLECTION_GROUP"/>
+            <column name="column_name" value="DATE_KIT_SENT"/>
+            <column name="column_display" value="Date Kit Sent"/>
+            <column name="display_type" value="DATE"/>
+            <column name="order_number" value="3"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SAMPLE_COLLECTION_GROUP"/>
+            <column name="column_name" value="DATE_KIT_RECEIVED"/>
+            <column name="column_display" value="Date Kit Received"/>
+            <column name="display_type" value="DATE"/>
+            <column name="order_number" value="4"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SAMPLE_COLLECTION_GROUP"/>
+            <column name="column_name" value="KIT_TYPE_TO_REQUEST"/>
+            <column name="column_display" value="Kit Type to Request"/>
+            <column name="display_type" value="OPTIONS"/>
+<!--            todo add options-->
+            <column name="order_number" value="5"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SAMPLE_COLLECTION_GROUP"/>
+            <column name="column_name" value="SAMPLE_NOTES"/>
+            <column name="column_display" value="Sample Notes"/>
+            <column name="display_type" value="TEXTAREA"/>
+            <column name="order_number" value="6"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SAMPLE_COLLECTION_GROUP"/>
+            <column name="column_name" value="SENT_TO_GP"/>
+            <column name="column_display" value="Sent to GP"/>
+            <column name="display_type" value="DATE"/>
+            <column name="order_number" value="7"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SAMPLE_COLLECTION_GROUP"/>
+            <column name="column_name" value="RNA_SEQ"/>
+            <column name="column_display" value="RNAseqP"/>
+            <column name="display_type" value="RADIO"/>
+<!--            todo add options-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="8"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_SAMPLE_COLLECTION_GROUP"/>
+            <column name="column_name" value="UPLOADED_INTO_SEQR"/>
+            <column name="column_display" value="Uploaded into seqr"/>
+            <column name="display_type" value="DATE"/>
+            <column name="order_number" value="9"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_PARTICIPANTS"/>
+            <column name="column_name" value="RGP_OTHER_SAMPLE_GROUP"/>
+            <column name="column_display" value="Other Sample Information"/>
+            <column name="display_type" value="GROUP"/>
+            <column name="order_number" value="5"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_OTHER_SAMPLE_GROUP"/>
+<!--            todo add column_name-->
+            <column name="column_name" value="UPLOADED_INTO_SEQR"/>
+            <column name="column_display" value="Tissue processing"/>
+            <!--            todo add type-->
+            <column name="display_type" value="DATE"/>
+            <column name="order_number" value="1"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_OTHER_SAMPLE_GROUP"/>
+            <column name="column_name" value="POTENTIAL_TISSUE_SAMPLE_AVAILABLE"/>
+            <column name="column_display" value="Potential tissue sample available"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO update options-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="2"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_OTHER_SAMPLE_GROUP"/>
+            <column name="column_name" value="TISSUE_NOTES"/>
+            <column name="column_display" value="Tissue Notes"/>
+            <column name="display_type" value="TEXTAREA"/>
+            <column name="order_number" value="3"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_OTHER_SAMPLE_GROUP"/>
+            <column name="column_name" value="TISSUE_SAMPLE_ID"/>
+            <column name="column_display" value="Tissue Sample ID"/>
+            <column name="display_type" value="TEXT"/>
+            <column name="order_number" value="4"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_OTHER_SAMPLE_GROUP"/>
+            <column name="column_name" value="TISSUE_TYPE_RECEIVED"/>
+            <column name="column_display" value="Tissue Type Received"/>
+            <column name="display_type" value="TEXT"/>
+            <column name="order_number" value="5"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_PARTICIPANTS"/>
+            <column name="column_name" value="RGP_RETURN_RESULTS_GROUP"/>
+            <column name="column_display" value="Return of Results"/>
+            <column name="display_type" value="GROUP"/>
+            <column name="order_number" value="6"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RETURN_RESULTS_GROUP"/>
+            <column name="column_name" value="REPORTABLE_RESULT"/>
+            <column name="column_display" value="Reportable result"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO update options-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="1"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RETURN_RESULTS_GROUP"/>
+            <column name="column_name" value="SOLVED"/>
+            <column name="column_display" value="Solved"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO update options-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="2"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RETURN_RESULTS_GROUP"/>
+            <column name="column_name" value="GENE_NAME"/>
+            <column name="column_display" value="Gene name"/>
+            <column name="display_type" value="TEXT"/>
+            <column name="order_number" value="3"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RETURN_RESULTS_GROUP"/>
+            <column name="column_name" value="ROR_LETTER_SENT"/>
+            <column name="column_display" value="ROR notification"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO update options-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="4"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RETURN_RESULTS_GROUP"/>
+            <column name="column_name" value="CONFIRM_LAN"/>
+            <column name="column_display" value="Confirm lab accession number"/>
+            <column name="display_type" value="TEXT"/>
+            <column name="order_number" value="5"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RETURN_RESULTS_GROUP"/>
+            <column name="column_name" value="PROCEED_CONFIRM"/>
+            <column name="column_display" value="Proceeding to confirm"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO update options-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="6"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RETURN_RESULTS_GROUP"/>
+            <column name="column_name" value="DATE_CONFIRM_RPT"/>
+            <column name="column_display" value="Date of confirm report"/>
+            <column name="display_type" value="DATE"/>
+            <column name="order_number" value="7"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RETURN_RESULTS_GROUP"/>
+            <column name="column_name" value="PROV_CONTACT_INFO"/>
+            <column name="column_display" value="Provider contact info"/>
+            <column name="display_type" value="TEXT"/>
+            <column name="order_number" value="8"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RETURN_RESULTS_GROUP"/>
+            <column name="column_name" value="POST_DISCLOSE_NOTES"/>
+            <column name="column_display" value="Post-disclosure notes"/>
+            <column name="display_type" value="TEXTAREA"/>
+            <column name="order_number" value="9"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RETURN_RESULTS_GROUP"/>
+            <column name="column_name" value="CONFIRM_LAB"/>
+            <column name="column_display" value="Confirm Lab"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO update options-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="10"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RETURN_RESULTS_GROUP"/>
+            <column name="column_name" value="COLLABORATION"/>
+            <column name="column_display" value="Collaboration?"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO update options-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="11"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RETURN_RESULTS_GROUP"/>
+            <column name="column_name" value="DATE_CONFIRM_KIT_SENT"/>
+            <column name="column_display" value="Date confirm kit sent"/>
+            <column name="display_type" value="DATE"/>
+            <column name="order_number" value="12"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RETURN_RESULTS_GROUP"/>
+            <column name="column_name" value="MTA"/>
+            <column name="column_display" value="MTA"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO update options-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="13"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RETURN_RESULTS_GROUP"/>
+            <column name="column_name" value="ROR_STATUS_NOTES"/>
+            <column name="column_display" value="ROR Status/Notes"/>
+            <column name="display_type" value="TEXTAREA"/>
+            <column name="order_number" value="14"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RETURN_RESULTS_GROUP"/>
+            <column name="column_name" value="PUBLICATION"/>
+            <column name="column_display" value="Publication"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO update options-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="15"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_PARTICIPANTS"/>
+            <column name="column_name" value="RGP_RGP_GROUP"/>
+            <column name="column_display" value="RGP"/>
+            <column name="display_type" value="GROUP"/>
+            <column name="order_number" value="7"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RGP_GROUP"/>
+            <column name="column_name" value="DATE_PT_NOT_ACCEPTED"/>
+            <column name="column_display" value="Date PT Not Accepted"/>
+            <column name="display_type" value="DATE"/>
+            <column name="order_number" value="1"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RGP_GROUP"/>
+            <column name="column_name" value="DOCTOR_EMAIL"/>
+            <column name="column_display" value="Doctor Email"/>
+            <column name="display_type" value="TEXT"/>
+            <column name="order_number" value="2"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RGP_GROUP"/>
+            <column name="column_name" value="DOCTOR_FAX"/>
+            <column name="column_display" value="Doctor Fax"/>
+            <column name="display_type" value="TEXT"/>
+            <column name="order_number" value="3"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RGP_GROUP"/>
+            <column name="column_name" value="DOCTOR_FIRSTNAME"/>
+            <column name="column_display" value="Doctor First Name"/>
+            <column name="display_type" value="TEXT"/>
+            <column name="order_number" value="4"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RGP_GROUP"/>
+            <column name="column_name" value="DOCTOR_INSTNAME"/>
+            <column name="column_display" value="Doctor Institution Name"/>
+            <column name="display_type" value="TEXT"/>
+            <column name="order_number" value="5"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RGP_GROUP"/>
+            <column name="column_name" value="DOCTOR_LASTNAME"/>
+            <column name="column_display" value="Doctor Last Name"/>
+            <column name="display_type" value="TEXT"/>
+            <column name="order_number" value="6"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RGP_GROUP"/>
+            <column name="column_name" value="DOCTOR_PHONE"/>
+            <column name="column_display" value="Doctor Phone"/>
+            <column name="display_type" value="TEXT"/>
+            <column name="order_number" value="7"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RGP_GROUP"/>
+            <column name="column_name" value="REASON_NOT_ACCEPT_PT"/>
+            <column name="column_display" value="Reason PT Not Accepted"/>
+            <column name="display_type" value="TEXTAREA"/>
+            <column name="order_number" value="8"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RGP_GROUP"/>
+            <column name="column_name" value="SAMPLE_STATUS"/>
+            <column name="column_display" value="Sample Status"/>
+            <column name="display_type" value="OPTIONS"/>
+            <!--            TODO update options-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="9"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RGP_GROUP"/>
+            <column name="column_name" value="UNAFFECTED"/>
+            <column name="column_display" value="Unaffected"/>
+            <column name="display_type" value="RADIO"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="order_number" value="10"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RGP_GROUP"/>
+            <column name="column_name" value="DATE_LAST_UPDATED"/>
+            <column name="column_display" value="Last Updated Date"/>
+            <column name="display_type" value="ACTIVITY"/>
+            <!--            TODO update activity info-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;ASSENT.ASSENT_CAN_DO_TESTS&#34;,&#34;type&#34;:&#34;DATE&#34;}]"/>
+            <column name="order_number" value="11"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RGP_GROUP"/>
+            <column name="column_name" value="COMPLETION_STATUS"/>
+            <column name="column_display" value="Survey Complete Status"/>
+            <column name="display_type" value="ACTIVITY"/>
+<!--            TODO update activity info-->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;ASSENT.ASSENT_CAN_DO_TESTS&#34;,&#34;type&#34;:&#34;RADIO&#34;}]"/>
+            <column name="order_number" value="12"/>
         </insert>
     </changeSet>
 </databaseChangeLog>
