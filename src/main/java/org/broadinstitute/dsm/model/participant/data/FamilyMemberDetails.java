@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.familymember;
+package org.broadinstitute.dsm.model.participant.data;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;

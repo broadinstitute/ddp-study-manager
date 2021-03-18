@@ -13,8 +13,6 @@ import lombok.Data;
 import lombok.NonNull;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
-import org.broadinstitute.dsm.model.familymember.AddFamilyMemberPayload;
-import org.broadinstitute.dsm.model.familymember.FamilyMemberDetails;
 
 @Data
 public class NewParticipantData {
