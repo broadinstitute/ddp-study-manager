@@ -166,7 +166,7 @@ public class KitUploadRoute extends RequestHandler {
                             shipper.orderKitRequests(orderKits, easyPostUtil, kitRequestSettings, shippingCarrier.get());
                             // mark kits as transmitted so that background jobs don't try to double order it
                             for (KitRequest orderKit : orderKits) {
-                                KitRequestShipping.markOrderTransmittedAt(conn, orderKit.getExternalOrderStatus(), Instant.now());
+                                KitRequestShipping.markOrderTransmittedAt(conn, orderKit.getExternalOrderNumber(), Instant.now());
                             }
                         }
                         catch (Exception e) {

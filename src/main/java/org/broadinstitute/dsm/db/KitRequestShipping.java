@@ -1390,6 +1390,9 @@ public class KitRequestShipping extends KitRequest {
 
             int numRows = stmt.executeUpdate();
 
+            if (numRows == 0) {
+                throw new RuntimeException("No rows updated when setting transmission date for " + kitExternalOrderId);
+            }
             logger.info("Updated {} rows when setting order transmission date for {} to {}", numRows, transmittedAt, kitExternalOrderId);
         } catch(SQLException e) {
             throw new RuntimeException("Could not set order transmission date for " + kitExternalOrderId, e);
