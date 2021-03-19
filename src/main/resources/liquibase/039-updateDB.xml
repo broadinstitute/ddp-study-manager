@@ -682,7 +682,7 @@
             <column name="column_name" value="MEMBER_TYPE"/>
             <column name="column_display" value="Relationship to Proband *"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;SELF&#34;,&#34;name&#34;:&#34;Self&#34;},{&#34;value&#34;:&#34;SISTER&#34;,&#34;name&#34;:&#34;Sister&#34;},{&#34;value&#34;:&#34;BROTHER&#34;,&#34;name&#34;:&#34;Brother&#34;},{&#34;value&#34;:&#34;MOTHER&#34;,&#34;name&#34;:&#34;Mother&#34;},{&#34;value&#34;:&#34;FATHER&#34;,&#34;name&#34;:&#34;Father&#34;},{&#34;value&#34;:&#34;PATERNAL_GRANDMOTHER&#34;,&#34;name&#34;:&#34;Paternal Grandmother&#34;},{&#34;value&#34;:&#34;PATERNAL_GRANDFATHER&#34;,&#34;name&#34;:&#34;Paternal Grandfather&#34;},{&#34;value&#34;:&#34;MATERNAL_GRANDMOTHER&#34;,&#34;name&#34;:&#34;Maternal Grandmother&#34;},{&#34;value&#34;:&#34;MATERNAL_GRANDFATHER&#34;,&#34;name&#34;:&#34;Maternal Grandfather&#34;},{&#34;value&#34;:&#34;DAUGHTER&#34;,&#34;name&#34;:&#34;Daughter&#34;},{&#34;value&#34;:&#34;SON&#34;,&#34;name&#34;:&#34;Son&#34;},{&#34;value&#34;:&#34;OTHER&#34;,&#34;name&#34;:&#34;Other&#34;},{&#34;value&#34;:&#34;HALF_SIBLING_MATERNAL&#34;,&#34;name&#34;:&#34;Half Sibling Maternal&#34;},{&#34;value&#34;:&#34;HALF_SIBLING_PATERNAL&#34;,&#34;name&#34;:&#34;Half Sibling Paternal&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;SELF&#34;,&#34;name&#34;:&#34;Self&#34;},{&#34;value&#34;:&#34;SISTER&#34;,&#34;name&#34;:&#34;Sister&#34;},{&#34;value&#34;:&#34;BROTHER&#34;,&#34;name&#34;:&#34;Brother&#34;},{&#34;value&#34;:&#34;MOTHER&#34;,&#34;name&#34;:&#34;Mother&#34;},{&#34;value&#34;:&#34;FATHER&#34;,&#34;name&#34;:&#34;Father&#34;},{&#34;value&#34;:&#34;PATERNAL_GRANDMOTHER&#34;,&#34;name&#34;:&#34;Paternal Grandmother&#34;},{&#34;value&#34;:&#34;PATERNAL_GRANDFATHER&#34;,&#34;name&#34;:&#34;Paternal Grandfather&#34;},{&#34;value&#34;:&#34;MATERNAL_GRANDMOTHER&#34;,&#34;name&#34;:&#34;Maternal Grandmother&#34;},{&#34;value&#34;:&#34;MATERNAL_GRANDFATHER&#34;,&#34;name&#34;:&#34;Maternal Grandfather&#34;},{&#34;value&#34;:&#34;DAUGHTER&#34;,&#34;name&#34;:&#34;Daughter&#34;},{&#34;value&#34;:&#34;SON&#34;,&#34;name&#34;:&#34;Son&#34;},{&#34;value&#34;:&#34;OTHER&#34;,&#34;name&#34;:&#34;Other&#34;},{&#34;value&#34;:&#34;HALF_SIBLING_MATERNAL&#34;,&#34;name&#34;:&#34;Half Sibling Maternal&#34;},{&#34;value&#34;:&#34;HALF_SIBLING_PATERNAL&#34;,&#34;name&#34;:&#34;Half Sibling Paternal&#34;},{&#34;value&#34;:&#34;MATERNAL_AUNT&#34;,&#34;name&#34;:&#34;Maternal Aunt&#34;},{&#34;value&#34;:&#34;MATERNAL_FIRST_COUSIN&#34;,&#34;name&#34;:&#34;Maternal First Cousin&#34;},{&#34;value&#34;:&#34;MATERNAL_UNCLE&#34;,&#34;name&#34;:&#34;Maternal Uncle&#34;},{&#34;value&#34;:&#34;PATERNAL_AUNT&#34;,&#34;name&#34;:&#34;Paternal Aunt&#34;},{&#34;value&#34;:&#34;PATERNAL_FIRST_COUSIN&#34;,&#34;name&#34;:&#34;Paternal First Cousin&#34;},{&#34;value&#34;:&#34;PATERNAL_UNCLE&#34;,&#34;name&#34;:&#34;Paternal Uncle&#34;}]"/>
             <column name="order_number" value="14"/>
         </insert>
         <insert tableName="field_settings">
@@ -801,6 +801,25 @@
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_CONSENT_GROUP"/>
+            <column name="column_name" value="ACUITY_APPOINTMENT_DATE"/>
+            <column name="column_display" value="Acuity Appointment Date"/>
+            <column name="display_type" value="DATE"/>
+            <column name="order_number" value="10"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_CONSENT_GROUP"/>
+            <column name="column_name" value="CONSENT_APPOINTMENT_SCHEDULED"/>
+            <column name="column_display" value="Consent Appointment Scheduled"/>
+            <column name="display_type" value="OPTIONS"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
+            <column name="order_number" value="11"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
             <column name="field_type" value="RGP_PARTICIPANTS"/>
             <column name="column_name" value="RGP_MEDICAL_RECORDS_GROUP"/>
             <column name="column_display" value="Medical Records"/>
@@ -859,11 +878,20 @@
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
             <column name="field_type" value="RGP_MEDICAL_RECORDS_GROUP"/>
+            <column name="column_name" value="PHYSICIAN_RECORDS_LAST_RECEIVED"/>
+            <column name="column_display" value="Physician Records Last Received"/>
+            <column name="display_type" value="DATE"/>
+            <column name="order_number" value="6"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_MEDICAL_RECORDS_GROUP"/>
             <column name="column_name" value="PHOTO_PERMISSIONS"/>
             <column name="column_display" value="Photo Permissions"/>
             <column name="display_type" value="OPTIONS"/>
             <column name="possible_values" value="[{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;},{&#34;value&#34;:&#34;INTERNAL_ONLY&#34;,&#34;name&#34;:&#34;Internal only&#34;},{&#34;value&#34;:&#34;EXTERNAL_INTERNAL&#34;,&#34;name&#34;:&#34;External and Internal&#34;},{&#34;value&#34;:&#34;DECLINED&#34;,&#34;name&#34;:&#34;Declined&#34;},{&#34;value&#34;:&#34;OTHER&#34;,&#34;name&#34;:&#34;Other&#34;},{&#34;value&#34;:&#34;REQUESTED&#34;,&#34;name&#34;:&#34;Requested&#34;}]"/>
-            <column name="order_number" value="6"/>
+            <column name="order_number" value="7"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -872,7 +900,7 @@
             <column name="column_name" value="RECORDS_LAST_REQUESTED"/>
             <column name="column_display" value="Records Last Requested"/>
             <column name="display_type" value="DATE"/>
-            <column name="order_number" value="7"/>
+            <column name="order_number" value="8"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -881,7 +909,7 @@
             <column name="column_name" value="FAMILY_NOTES"/>
             <column name="column_display" value="Family Notes"/>
             <column name="display_type" value="TEXTAREA"/>
-            <column name="order_number" value="8"/>
+            <column name="order_number" value="9"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -890,7 +918,7 @@
             <column name="column_name" value="REFERRING_CLINICIAN"/>
             <column name="column_display" value="Referring Clinician"/>
             <column name="display_type" value="TEXT"/>
-            <column name="order_number" value="9"/>
+            <column name="order_number" value="10"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -999,11 +1027,9 @@
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
             <column name="field_type" value="RGP_OTHER_SAMPLE_GROUP"/>
-<!--            todo add column_name-->
-            <column name="column_name" value="UPLOADED_INTO_SEQR"/>
+            <column name="column_name" value="TISSUE_PROCESSING"/>
             <column name="column_display" value="Tissue processing"/>
-            <!--            todo add type-->
-            <column name="display_type" value="DATE"/>
+            <column name="display_type" value="TEXT"/>
             <column name="order_number" value="1"/>
         </insert>
         <insert tableName="field_settings">
@@ -1107,8 +1133,7 @@
             <column name="column_name" value="PROCEED_CONFIRM"/>
             <column name="column_display" value="Proceeding to confirm"/>
             <column name="display_type" value="OPTIONS"/>
-            <!--            TODO update options-->
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;UNDECIDED&#34;,&#34;name&#34;:&#34;Undecided&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
             <column name="order_number" value="6"/>
         </insert>
         <insert tableName="field_settings">
@@ -1145,8 +1170,7 @@
             <column name="column_name" value="CONFIRM_LAB"/>
             <column name="column_display" value="Confirm Lab"/>
             <column name="display_type" value="OPTIONS"/>
-            <!--            TODO update options-->
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;LMM&#34;,&#34;name&#34;:&#34;LMM&#34;},{&#34;value&#34;:&#34;PREVENTION&#34;,&#34;name&#34;:&#34;Prevention&#34;},{&#34;value&#34;:&#34;MGH&#34;,&#34;name&#34;:&#34;MGH&#34;},{&#34;value&#34;:&#34;OUTSIDE_OF_RGP&#34;,&#34;name&#34;:&#34;Outside of RGP&#34;},{&#34;value&#34;:&#34;MULTIPLE&#34;,&#34;name&#34;:&#34;Multiple&#34;},{&#34;value&#34;:&#34;OTHER&#34;,&#34;name&#34;:&#34;Other&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
             <column name="order_number" value="10"/>
         </insert>
         <insert tableName="field_settings">
@@ -1156,8 +1180,7 @@
             <column name="column_name" value="COLLABORATION"/>
             <column name="column_display" value="Collaboration?"/>
             <column name="display_type" value="OPTIONS"/>
-            <!--            TODO update options-->
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;SAMPLES&#34;,&#34;name&#34;:&#34;Yes - samples&#34;},{&#34;value&#34;:&#34;CLINICAL&#34;,&#34;name&#34;:&#34;Yes - clinical info/photos&#34;},{&#34;value&#34;:&#34;BOTH&#34;,&#34;name&#34;:&#34;Yes - both&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
             <column name="order_number" value="11"/>
         </insert>
         <insert tableName="field_settings">
@@ -1176,8 +1199,7 @@
             <column name="column_name" value="MTA"/>
             <column name="column_display" value="MTA"/>
             <column name="display_type" value="OPTIONS"/>
-            <!--            TODO update options-->
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;COMPLETED&#34;,&#34;name&#34;:&#34;Completed&#34;},{&#34;value&#34;:&#34;PROCESS&#34;,&#34;name&#34;:&#34;In process&#34;},{&#34;value&#34;:&#34;NEEDED&#34;,&#34;name&#34;:&#34;Needed&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
             <column name="order_number" value="13"/>
         </insert>
         <insert tableName="field_settings">
@@ -1196,8 +1218,7 @@
             <column name="column_name" value="PUBLICATION"/>
             <column name="column_display" value="Publication"/>
             <column name="display_type" value="OPTIONS"/>
-            <!--            TODO update options-->
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;TBD&#34;,&#34;name&#34;:&#34;TBD&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
             <column name="order_number" value="15"/>
         </insert>
         <insert tableName="field_settings">
@@ -1288,8 +1309,7 @@
             <column name="column_name" value="SAMPLE_STATUS"/>
             <column name="column_display" value="Sample Status"/>
             <column name="display_type" value="OPTIONS"/>
-            <!--            TODO update options-->
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;ANALYSIS&#34;,&#34;name&#34;:&#34;Analysis&#34;},{&#34;value&#34;:&#34;EXTRACTED&#34;,&#34;name&#34;:&#34;Extracted&#34;},{&#34;value&#34;:&#34;IN_SEQUENCING&#34;,&#34;name&#34;:&#34;In Sequencing&#34;},{&#34;value&#34;:&#34;RECEIVED&#34;,&#34;name&#34;:&#34;Received&#34;},{&#34;value&#34;:&#34;REPORT_ISSUED&#34;,&#34;name&#34;:&#34;Report Issued&#34;},{&#34;value&#34;:&#34;SANGER_DECLINED&#34;,&#34;name&#34;:&#34;Sanger Declined&#34;},{&#34;value&#34;:&#34;SANGER_ORDERED&#34;,&#34;name&#34;:&#34;Sanger Ordered&#34;},{&#34;value&#34;:&#34;SEQUENCED&#34;,&#34;name&#34;:&#34;Sequenced&#34;},{&#34;value&#34;:&#34;VARIANT_CALLING&#34;,&#34;name&#34;:&#34;Variant Calling&#34;},{&#34;value&#34;:&#34;VARIANT_CURATION&#34;,&#34;name&#34;:&#34;Variant Curation&#34;}]"/>
             <column name="order_number" value="9"/>
         </insert>
         <insert tableName="field_settings">
@@ -1309,8 +1329,7 @@
             <column name="column_name" value="DATE_LAST_UPDATED"/>
             <column name="column_display" value="Last Updated Date"/>
             <column name="display_type" value="ACTIVITY"/>
-            <!--            TODO update activity info-->
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;ASSENT.ASSENT_CAN_DO_TESTS&#34;,&#34;type&#34;:&#34;DATE&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;ENROLLMENT.lastUpdatedAt&#34;,&#34;type&#34;:&#34;DATE&#34;}]"/>
             <column name="order_number" value="11"/>
         </insert>
         <insert tableName="field_settings">
@@ -1320,9 +1339,26 @@
             <column name="column_name" value="COMPLETION_STATUS"/>
             <column name="column_display" value="Survey Complete Status"/>
             <column name="display_type" value="ACTIVITY"/>
-<!--            TODO update activity info-->
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;ASSENT.ASSENT_CAN_DO_TESTS&#34;,&#34;type&#34;:&#34;RADIO&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;ENROLLMENT.status&#34;,&#34;type&#34;:&#34;RADIO&#34;}]"/>
             <column name="order_number" value="12"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RGP_GROUP"/>
+            <column name="column_name" value="REDCAP_SURVEY_TAKEN"/>
+            <column name="column_display" value="RedCap Survey Taken"/>
+            <column name="display_type" value="OPTIONS"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>            <column name="order_number" value="13"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_RGP_GROUP"/>
+            <column name="column_name" value="REDCAP_SURVEY_COMPLETED_DATE"/>
+            <column name="column_display" value="RedCap Survey Completed Date"/>
+            <column name="display_type" value="DATE"/>
+            <column name="order_number" value="14"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"

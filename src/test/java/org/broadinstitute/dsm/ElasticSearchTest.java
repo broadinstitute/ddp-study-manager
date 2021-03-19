@@ -1,6 +1,5 @@
 package org.broadinstitute.dsm;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
@@ -16,7 +15,6 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.*;
-import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -41,7 +39,7 @@ public class ElasticSearchTest extends TestHelper {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.atcp.atcp");
+            SearchRequest searchRequest = new SearchRequest("participants_structured.rgp.rgp");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
