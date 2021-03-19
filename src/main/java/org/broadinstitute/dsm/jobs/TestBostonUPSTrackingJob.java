@@ -2,7 +2,6 @@ package org.broadinstitute.dsm.jobs;
 
 import com.google.cloud.functions.BackgroundFunction;
 import com.google.cloud.functions.Context;
-import com.google.gson.Gson;
 import com.typesafe.config.Config;
 import org.apache.commons.dbcp2.PoolableConnection;
 import org.apache.commons.dbcp2.PoolingDataSource;
@@ -25,13 +24,13 @@ import spark.utils.StringUtils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.List;
 
 
-public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessage> {
+public class TestBostonUPSTrackingJob implements BackgroundFunction<UPSKit[]> {
 
     private String STUDY_MANAGER_SCHEMA = System.getenv("STUDY_MANAGER_SCHEMA") + ".";
     private String STUDY_SERVER_SCHEMA = System.getenv("STUDY_SERVER_SCHEMA") + ".";
@@ -50,8 +49,8 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
     Connection conn = null;
 
     @Override
-    public void accept(PubsubMessage message, Context context) throws Exception {
-        if (message.data == null) {
+    public void accept(UPSKit[] kitsToLookFor, Context context) throws Exception {
+        if (kitsToLookFor == null || kitsToLookFor.length == 0) {
             logger.info("No message provided");
             return;
         }
@@ -63,9 +62,6 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         accessKey = cfg.getString("ups.accesskey");
         PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(1, dbUrl);
         logger.info("Starting the UPS lookup job");
-        String data = new String(Base64.getDecoder().decode(message.data));
-
-        UPSKit[] kitsToLookFor = new Gson().fromJson(data, UPSKit[].class);
 
         try {
             conn = dataSource.getConnection();
@@ -114,7 +110,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "  VALUES " +
                 "  (?, ? ,?)," +
                 "  (?, ? ,?) ";
-        try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_SHIPMENT)) {
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_SHIPMENT, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, kit.getDsmKitRequestId());
             int result = stmt.executeUpdate();
             if (result == 1) {
@@ -141,7 +137,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         }
         if (insertedShipmentId != null) {
 
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_UPSPackage)) {
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_UPSPackage, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, kit.getDsmKitRequestId());
                 stmt.setString(2, insertedShipmentId);
                 stmt.setString(3, kit.getTrackingToId());//first row is the shipping one
@@ -455,6 +451,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         Pair result = Pair.of(orderRegistrar, careEvolveAuth);
         return result;
     }
+
 
 }
 
