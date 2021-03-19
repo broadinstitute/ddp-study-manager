@@ -40,7 +40,7 @@ public class GBFOrderFinder {
                     "orders.external_order_number, " +
                     "orders.ddp_participant_id, " +
                     "(select max(req.dsm_kit_request_id) from ddp_kit_request req where req.external_order_number = orders.external_order_number) as max_kit_request_id, " +
-                    "(select req.order_transmitted_at from ddp_kit_request req where req.dsm_kit_request_id = orders.external_order_number " +
+                    "(select req.order_transmitted_at from ddp_kit_request req where req.dsm_kit_request_id = orders.dsm_kit_request_id " +
                     "for update) as order_transmission_date " +
                     "from " +
                     "ddp_instance i, " +
@@ -147,6 +147,7 @@ public class GBFOrderFinder {
                 }
 
                 if (!participantGuids.isEmpty()) {
+                    logger.info("Found {} participants", participantGuids.size());
                     Map<String, Address> addressForParticipants = ElasticSearchUtil.getParticipantAddresses(esClient, esIndex, participantGuids);
                     // now iterate again to get address
                     while (rs.previous()) {
@@ -179,6 +180,7 @@ public class GBFOrderFinder {
         String esUser = args[1];
         String esPassword = args[2];
         String esUrl = args[3];
+        int numDays = Integer.parseInt(args[4]);
         Config cfg = ConfigFactory.load();
         TransactionWrapper.init(1, dbUrl,cfg, true);
 
@@ -188,14 +190,18 @@ public class GBFOrderFinder {
         } catch (MalformedURLException e) {
             throw new RuntimeException("Could not initialize es client",e);
         }
-        GBFOrderFinder orderFinder = new GBFOrderFinder(30, 10000, esClient, "participants_structured.testboston.testboston");
+        GBFOrderFinder orderFinder = new GBFOrderFinder(numDays, 10000, esClient, "participants_structured.testboston.testboston");
 
 
         TransactionWrapper.inTransaction(conn -> {
             Collection<SimpleKitOrder> kits = orderFinder.findKitsToOrder("testboston", conn);
+            StringBuilder guids = new StringBuilder();
             for (SimpleKitOrder kit : kits) {
-                logger.info("Found {}",kit.getExternalKitOrderNumber());
+                guids.append("'").append(kit.getParticipantGuid()).append("',\n");
             }
+
+            logger.info("Found {} kits with {} day return window", kits.size(), numDays);
+            logger.info(guids.toString());
             return null;
         });
         System.exit(0);
