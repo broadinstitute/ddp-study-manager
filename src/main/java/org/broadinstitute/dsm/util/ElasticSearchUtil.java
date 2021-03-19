@@ -183,6 +183,8 @@ public class ElasticSearchUtil {
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         SearchResponse response = null;
         int hitNumber = 0;
+        int pageNumber = 0;
+        long totalHits = 0;
 
 
         BoolQueryBuilder qb = QueryBuilders.boolQuery();
@@ -190,14 +192,15 @@ public class ElasticSearchUtil {
 
         searchSourceBuilder.fetchSource(new String[] {PROFILE, ADDRESS}, null);
         searchSourceBuilder.query(qb).sort(PROFILE_CREATED_AT, SortOrder.ASC).docValueField(ADDRESS).docValueField(PROFILE);
-        while (response == null || response.getHits().getHits().length != 0) {
+        while (pageNumber == 0 || hitNumber < totalHits) {
             searchSourceBuilder.size(scrollSize);
-            searchSourceBuilder.from(hitNumber * scrollSize);
+            searchSourceBuilder.from(pageNumber * scrollSize);
             searchRequest.source(searchSourceBuilder);
 
-            response = null;
             try {
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
+                totalHits = response.getHits().getTotalHits();
+                pageNumber++;
             } catch (IOException e) {
                 throw new RuntimeException("Could not query elastic index " + indexName + " for " + participantGuids.size() + " participants", e);
             }

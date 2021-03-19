@@ -41,7 +41,7 @@ public class GBFOrderFinder {
                     "orders.ddp_participant_id, " +
                     "(select max(req.dsm_kit_request_id) from ddp_kit_request req where req.external_order_number = orders.external_order_number) as max_kit_request_id, " +
                     "(select req.order_transmitted_at from ddp_kit_request req where req.dsm_kit_request_id = orders.external_order_number " +
-                    "for update) as order_transmission_date " +
+                    ") as order_transmission_date " +
                     "from " +
                     "ddp_instance i, " +
                     "ddp_kit_request_settings s, " +
