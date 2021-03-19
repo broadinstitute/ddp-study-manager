@@ -174,7 +174,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                     conn.close();
                 }
                 catch (Throwable ex) {
-                    logger.debug("Could not close JDBC Connection on shutdown", ex);
+                    logger.error("Could not close JDBC Connection ", ex);
                 }
             }
             catch (Exception e) {
@@ -305,7 +305,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                     conn.close();
                 }
                 catch (Throwable ex) {
-                    logger.debug("Could not close JDBC Connection on shutdown", ex);
+                    logger.error("Could not close JDBC Connection ", ex);
                 }
             }
         }
@@ -442,7 +442,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                     conn.close();
                 }
                 catch (Throwable ex) {
-                    logger.debug("Could not close JDBC Connection on shutdown", ex);
+                    logger.error("Could not close JDBC Connection ", ex);
                 }
             }
         }
