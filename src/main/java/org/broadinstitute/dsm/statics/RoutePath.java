@@ -96,12 +96,14 @@ public class RoutePath {
     public static final String GET_FILTERS = "getFilters";
     public static final String GET_DEFAULT_FILTERS = "getFiltersDefault";
     public static final String GET_PARTICIPANT = "getParticipant";
+    public static final String GET_PARTICIPANT_DATA = "getParticipantData";
     public static final String TISSUE_LIST = "tissueList";
     public static final String NDI_REQUEST = "ndiRequest";
     public static final String ABSTRACTION_FORM_CONTROLS = "abstractionformcontrols";
     public static final String ABSTRACTION = "abstraction";
     public static final String EDIT_PARTICIPANT = "editParticipant";
     public static final String EDIT_PARTICIPANT_MESSAGE = "editParticipantMessageStatus";
+    public static final String ADD_FAMILY_MEMBER = "familyMember";
 
     public static String getRealm(Request request) {
         QueryParamsMap queryParams = request.queryMap();
