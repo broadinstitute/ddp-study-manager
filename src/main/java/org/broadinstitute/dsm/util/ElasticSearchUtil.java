@@ -679,7 +679,7 @@ public class ElasticSearchUtil {
                     long end = SystemUtil.getLongFromDetailDateString(endDate);
                     rangeQueryBuilder(queryBuilder, INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1], start, end, must);
                 }
-                catch (ParseException e) {
+                catch (Exception e) {
                     if (wildCard) {
                         if (must) {
                             queryBuilder.must(QueryBuilders.wildcardQuery(INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1].trim(), userEntered + "*"));

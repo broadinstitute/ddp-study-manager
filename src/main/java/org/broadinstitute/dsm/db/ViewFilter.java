@@ -372,28 +372,28 @@ public class ViewFilter {
                 if (!tissueList.getOncHistoryDetails().getDestructionPolicy().equals("indefinitely")) {
                     destructionPolicy = Integer.parseInt(tissueList.getOncHistoryDetails().getDestructionPolicy());
                 }
-                SimpleDateFormat sdf = null;
+                DateTimeFormatter dateTimeFormatter = null;
                 switch (len) {
                     case 4: {
-                        sdf = new SimpleDateFormat("yyyy");
+                        dateTimeFormatter = SystemUtil.ONLY_YEAR;
                         break;
                     }
 
                     case 7: {
-                        sdf = new SimpleDateFormat("yyyy-MM");
+                        dateTimeFormatter = SystemUtil.PARTIAL_DATE;
                         break;
                     }
 
                     case 10: {
-                        sdf = new SimpleDateFormat("yyyy-MM-dd");
+                        dateTimeFormatter = SystemUtil.FULL_DATE;
                         break;
                     }
                 }
-                if (sdf == null) {
+                if (dateTimeFormatter == null) {
                     logger.warn("The date px " + dateString + " has an unknown format!");
                     continue loop;
                 }
-                long datePx = SystemUtil.getLong(dateString, sdf);
+                long datePx = SystemUtil.getLong(dateString, dateTimeFormatter);
                 long lastDay = datePx + destructionPolicy * (SystemUtil.MILLIS_PER_DAY * 365);
                 long current = System.currentTimeMillis();
                 int days = (int) ((lastDay - current) / SystemUtil.MILLIS_PER_DAY);
