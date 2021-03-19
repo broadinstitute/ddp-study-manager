@@ -1,27 +1,17 @@
 package org.broadinstitute.dsm.db;
 
-import com.google.gson.Gson;
 import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.model.ups.UPSActivity;
-import org.broadinstitute.dsm.model.ups.UPSStatus;
+import org.broadinstitute.dsm.model.ups.UPSShipment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.Period;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
 
 @Data
 public class DdpKit {
-    String DsmKitRequestId;
+    String dsmKitRequestId;
     String kitLabel;
     String trackingToId;
     String trackingReturnId;
@@ -34,18 +24,17 @@ public class DdpKit {
     String upsReturnDate;
     String HRUID;
     String externalOrderNumber;
-    String kitShippingHistory;
-    String kitReturnHistory;
     boolean CEOrdered;
     String ddpInstanceId;
+    UPSShipment shipment;
 
     private static final Logger logger = LoggerFactory.getLogger(DdpKit.class);
 
-    public DdpKit(String DsmKitRequestId, String kitLabel, String trackingToId, String trackingReturnId, String error,
+    public DdpKit(String dsmKitRequestId, String kitLabel, String trackingToId, String trackingReturnId, String error,
                   String message, String receiveDate, String bspCollaboratodId, String externalOrderNumber,
-                  boolean CEOrdered, String kitShippingHistory, String kitReturnHistory, String ddpInstanceId,
-                  String upsTrackingStatus, String upsTrackingDate, String upsReturnStatus, String upsReturnDate) {
-        this.DsmKitRequestId = DsmKitRequestId;
+                  boolean CEOrdered, String ddpInstanceId,
+                  String upsTrackingStatus, String upsTrackingDate, String upsReturnStatus, String upsReturnDate, UPSShipment shipment) {
+        this.dsmKitRequestId = dsmKitRequestId;
         this.kitLabel = kitLabel;
         this.trackingToId = trackingToId;
         this.trackingReturnId = trackingReturnId;
@@ -59,27 +48,10 @@ public class DdpKit {
         this.HRUID = bspCollaboratodId;
         this.externalOrderNumber = externalOrderNumber;
         this.CEOrdered = CEOrdered;
-        this.kitShippingHistory = kitShippingHistory;
-        this.kitReturnHistory = kitReturnHistory;
         this.ddpInstanceId = ddpInstanceId;
+        this.shipment = shipment;
     }
 
-    public void changeCEOrdered(Connection conn, boolean orderStatus) {
-        String query = "UPDATE ddp_kit SET CE_order = ? where dsm_kit_request_id = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setBoolean(1, orderStatus);
-            stmt.setString(2, this.getDsmKitRequestId());
-            int r = stmt.executeUpdate();
-            if (r != 1) {//number of subkits
-                throw new RuntimeException("Update query for CE order flag updated " + r + " rows! with dsm kit request id: " + this.getDsmKitRequestId());
-            }
-            logger.info("Updated CE_Order value for kit with dsm kit request id " + this.getDsmKitRequestId()
-                    + " to " + orderStatus);
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Could not update ce_ordered status for " + this.getDsmKitRequestId(), e);
-        }
-    }
 
     public static boolean hasKitBeenOrderedInCE(Connection conn, String kitLabel) {
         String query = "select k.ce_order from ddp_kit k where k.kit_label = ?";
@@ -120,48 +92,5 @@ public class DdpKit {
         }
     }
 
-    public boolean isDelivered() {
-        if (StringUtils.isNotBlank(trackingToId)) {
-            return isTypeDelivered(kitShippingHistory);
-        }
-        return false;
-    }
-
-    public boolean isReturned() {
-        if (StringUtils.isNotBlank(trackingReturnId)) {
-            return isTypeDelivered(kitReturnHistory);
-        }
-        return false;
-    }
-
-    private boolean isTypeDelivered(String upsHistory) {
-        if (StringUtils.isNotBlank(upsHistory)) {
-            UPSActivity[] activities = new Gson().fromJson(upsHistory, UPSActivity[].class);
-            if (activities != null) {
-                UPSActivity lastActivity = activities[0];
-                if (lastActivity != null) {
-                    String type = lastActivity.getStatus().getType();
-                    String date = lastActivity.getDate();
-                    DateFormat formatter =  new SimpleDateFormat("yyyyMMdd kkmmss");
-                    try {
-                        Date lastDateOnRecord = formatter.parse(date);
-                        if(lastDateOnRecord.before(new Date(System.currentTimeMillis()))){}
-                    }
-                    catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-                    return UPSStatus.DELIVERED_TYPE.equals(type);
-                }
-            }
-        }
-        return false;
-    }
-
-    public String getMainKitLabel() {
-        if (StringUtils.isNotBlank(kitLabel) && kitLabel.contains("_1") && kitLabel.indexOf("_1") == kitLabel.length() - 2) {
-            return kitLabel.substring(0, kitLabel.length() - 2);
-        }
-        return kitLabel;
-    }
 
 }

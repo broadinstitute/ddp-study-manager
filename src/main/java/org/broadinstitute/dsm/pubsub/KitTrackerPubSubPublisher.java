@@ -37,7 +37,7 @@ public class KitTrackerPubSubPublisher {
 
         String responseMessage;
         try {
-            ApiFuture<String> future = publisher.publish(pubsubMessage);
+//            ApiFuture<String> future = publisher.publish(pubsubMessage);
             String messageId = publisher.publish(pubsubMessage).get();
             responseMessage = "Pubsub message published. MessageId: " + messageId;
         }
@@ -48,7 +48,6 @@ public class KitTrackerPubSubPublisher {
         finally {
             publisher.shutdown();
         }
-
 
         logger.info(responseMessage + kits);
 
