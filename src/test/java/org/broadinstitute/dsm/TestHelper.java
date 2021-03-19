@@ -131,10 +131,13 @@ public class TestHelper {
             } else {
                 logger.info("Skipping DB update...");
             }
-        TransactionWrapper.configureSslProperties(cfg.getString("portal.dbSslKeyStore"),
-                cfg.getString("portal.dbSslKeyStorePwd"),
-                cfg.getString("portal.dbSslTrustStore"),
-                cfg.getString("portal.dbSslTrustStorePwd"));
+
+            if (!skipSsl) {
+                TransactionWrapper.configureSslProperties(cfg.getString("portal.dbSslKeyStore"),
+                        cfg.getString("portal.dbSslKeyStorePwd"),
+                        cfg.getString("portal.dbSslTrustStore"),
+                        cfg.getString("portal.dbSslTrustStorePwd"));
+            }
 
         TransactionWrapper.reset(TestUtil.UNIT_TEST);
             TransactionWrapper.init(maxConnections, dbUrl, cfg, skipSsl);
