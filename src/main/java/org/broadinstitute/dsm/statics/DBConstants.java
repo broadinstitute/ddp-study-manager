@@ -128,11 +128,6 @@ public class DBConstants {
     public static final String CARE_EVOLVE = "CE_order";
     public static final String DDP_KIT_TABLE_ABBR = "kit.";
 
-
-    public static final String KIT_SHIPPING_HISTORY = "kit_shipping_history";
-    public static final String KIT_RETURN_HISTORY = "kit_return_history";
-    public static final String KIT_TRACKING_HISTORY_TABLE_ABBR = "kth.";
-
     //medical record
     public static final String PARTICIPANT_ID = "participant_id";
     public static final String EMAIL = "email";

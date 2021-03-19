@@ -12,14 +12,30 @@ public class UPSActivity {
     UPSStatus status;
     String date;
     String time;
+    String activityId;
+    String packageId;
+    String dsmKitRequestId;
+    String locationString;
 
-    public UPSActivity() {}
 
-    public UPSActivity(UPSLocation location, UPSStatus status, String date, String time) {
+    public UPSActivity(UPSLocation location, UPSStatus status, String date, String time, String activityId, String packageId, String dsmKitRequestId) {
         this.location = location;
         this.status = status;
         this.date = date;
         this.time = time;
+        this.activityId = activityId;
+        this.packageId = packageId;
+        this.dsmKitRequestId = dsmKitRequestId;
+    }
+
+    public UPSActivity(String locationString, UPSStatus status, String date, String time, String activityId, String packageId, String dsmKitRequestId) {
+        this.locationString = locationString;
+        this.status = status;
+        this.date = date;
+        this.time = time;
+        this.activityId = activityId;
+        this.packageId = packageId;
+        this.dsmKitRequestId = dsmKitRequestId;
     }
 
     public String getDateTimeString() {
