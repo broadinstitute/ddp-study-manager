@@ -111,7 +111,7 @@ public class UserUtil {
         return users;
     }
 
-    public void insertUser(@NonNull String name, @NonNull String email) {
+    public int insertUser(@NonNull String name, @NonNull String email) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement insertStmt = conn.prepareStatement(SQL_INSERT_USER, Statement.RETURN_GENERATED_KEYS)) {
@@ -121,6 +121,7 @@ public class UserUtil {
                 try (ResultSet rs = insertStmt.getGeneratedKeys()) {
                     if (rs.next()) {
                         UserSettings.insertUserSetting(conn, rs.getInt(1));
+                        dbVals.resultValue = rs.getInt(1);
                     }
                 }
                 catch (Exception e) {
@@ -136,6 +137,8 @@ public class UserUtil {
         if (results.resultException != null) {
             throw new RuntimeException("Error getting list of realms ", results.resultException);
         }
+
+        return (int) results.resultValue;
     }
 
     public static String getUserId(Request request) {

@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
@@ -26,27 +27,12 @@ public class DDPInstance {
 
     private static final Logger logger = LoggerFactory.getLogger(DDPInstance.class);
 
-    private static final String SQL_SELECT_INSTANCE_WITH_ROLE = "SELECT ddp_instance_id, instance_name, base_url, collaborator_id_prefix, migrated_ddp, billing_reference, " +
-            "es_participant_index, es_activity_definition_index,  es_users_index,   (SELECT count(role.name) " +
-            "FROM ddp_instance realm, ddp_instance_role inRol, instance_role role WHERE realm.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id AND role.name = ? " +
-            "AND realm.ddp_instance_id = main.ddp_instance_id) AS 'has_role', mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients FROM ddp_instance main " +
-            "WHERE is_active = 1";
     private static final String SQL_SELECT_INSTANCE_WITH_KIT_BEHAVIOR = "SELECT main.ddp_instance_id, instance_name, base_url, collaborator_id_prefix, migrated_ddp, billing_reference, " +
             "es_participant_index, es_activity_definition_index, es_users_index, mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients, kit_behavior_change  " +
             "FROM ddp_instance main, instance_settings setting WHERE main.ddp_instance_id = setting.ddp_instance_id " +
             "AND main.is_active = 1 AND setting.kit_behavior_change IS NOT NULL";
     public static final String SQL_SELECT_ALL_ACTIVE_REALMS = "SELECT ddp_instance_id, instance_name, base_url, collaborator_id_prefix, es_participant_index, es_activity_definition_index, es_users_index, " +
-            "mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients, migrated_ddp, billing_reference  FROM ddp_instance WHERE is_active = 1";
-    private static final String SQL_SELECT_ACTIVE_REALMS_WITH_ROLE_INFORMATION_BY_PARTICIPANT_ID = "SELECT main.ddp_instance_id, main.instance_name, main.base_url, " +
-            "main.collaborator_id_prefix, main.migrated_ddp, main.billing_reference, main.es_participant_index, main.es_activity_definition_index, es_users_index,   (SELECT count(role.name) " +
-            "FROM ddp_instance realm, ddp_instance_role inRol, instance_role role WHERE realm.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id " +
-            "AND role.name = ? AND realm.ddp_instance_id = main.ddp_instance_id) as 'has_role', mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients " +
-            "FROM ddp_instance main, ddp_participant part WHERE main.ddp_instance_id = part.ddp_instance_id AND main.is_active = 1 and part.participant_id = ?";
-    private static final String SQL_SELECT_ACTIVE_REALMS_WITH_ROLE_INFORMATION_BY_DDP_PARTICIPANT_ID_REALM = "SELECT main.ddp_instance_id, main.instance_name, main.base_url, " +
-            "main.collaborator_id_prefix, main.migrated_ddp, main.billing_reference, main.es_participant_index, main.es_activity_definition_index, es_users_index, " +
-            "(SELECT count(role.name) FROM ddp_instance realm, ddp_instance_role inRol, instance_role role WHERE realm.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id "+
-            "AND role.name = ? AND realm.ddp_instance_id = main.ddp_instance_id) as 'has_role', mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients "+
-            "FROM ddp_instance main, ddp_participant part WHERE main.ddp_instance_id = part.ddp_instance_id AND main.is_active = 1 AND part.ddp_participant_id = ? AND main.instance_name = ?";
+            "mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients, migrated_ddp, billing_reference FROM ddp_instance WHERE is_active = 1";
     public static final String SQL_SELECT_GROUP = "SELECT ddp_group_id from ddp_instance_group g LEFT JOIN ddp_instance realm ON (g.ddp_instance_id = realm.ddp_instance_id) WHERE instance_name =?";
     public static final String BY_BASE_URL = " and base_url like \"%dsm/studies/%1\"";
     private static final String SQL_SELECT_STUDY_GUID_BY_INSTANCE_NAME =
@@ -175,25 +161,30 @@ public class DDPInstance {
 
 
     public static DDPInstance getDDPInstanceWithRole(@NonNull String realm, @NonNull String role) {
-        return inTransaction((conn) -> {
-            return getDDPInstanceWithRole(conn, realm, role);
-        });
-    }
-
-    public static DDPInstance getDDPInstanceWithRole(@NonNull Connection conn, @NonNull String realm, @NonNull String role) {
-        DDPInstance instance = null;
-        try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_INSTANCE_WITH_ROLE + QueryExtension.BY_INSTANCE_NAME)) {
-            stmt.setString(1, role);
-            stmt.setString(2, realm);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    instance = getDDPInstanceWithRoleFormResultSet(rs);
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(DDPInstanceDao.SQL_SELECT_INSTANCE_WITH_ROLE + QueryExtension.BY_INSTANCE_NAME)) {
+                stmt.setString(1, role);
+                stmt.setString(2, realm);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = getDDPInstanceWithRoleFormResultSet(rs);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting list of ddps ", e);
                 }
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error getting list of ddps ", e);
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get list of ddps ", results.resultException);
         }
-        return instance;
+        return (DDPInstance) results.resultValue;
     }
 
     public static String getDDPGroupId(@NonNull String realm) {
@@ -226,7 +217,7 @@ public class DDPInstance {
         List<DDPInstance> ddpInstances = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement bspStatement = conn.prepareStatement(SQL_SELECT_INSTANCE_WITH_ROLE)) {
+            try (PreparedStatement bspStatement = conn.prepareStatement(DDPInstanceDao.SQL_SELECT_INSTANCE_WITH_ROLE)) {
                 bspStatement.setString(1, role);
                 try (ResultSet rs = bspStatement.executeQuery()) {
                     while (rs.next()) {

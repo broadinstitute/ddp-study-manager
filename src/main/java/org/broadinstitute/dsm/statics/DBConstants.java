@@ -281,6 +281,7 @@ public class DBConstants {
     public static final String PDF_DOWNLOAD_RELEASE = "pdf_download_release";
     public static final String PARTICIPANT_STATUS_ENDPOINT = "participant_status_endpoint";
     public static final String UPS_TRACKING_ROLE = "ups_tracking";
+    public static final String ADD_FAMILY_MEMBER = "add_family_member";
 
     //user role
     public static final String MAILINGLIST_VIEW = "mailingList_view";

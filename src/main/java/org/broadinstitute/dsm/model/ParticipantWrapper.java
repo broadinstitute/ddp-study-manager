@@ -6,11 +6,9 @@ import com.google.gson.JsonParser;
 import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.ddp.util.DeliveryAddress;
 import org.broadinstitute.dsm.db.*;
-import org.broadinstitute.dsm.model.ddp.DDPParticipant;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.util.DDPRequestUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
@@ -87,7 +85,7 @@ public class ParticipantWrapper {
                 medicalRecords = MedicalRecord.getMedicalRecords(instance.getName());
                 oncHistoryDetails = OncHistoryDetail.getOncHistoryDetails(instance.getName());
             }
-            if (DDPInstance.getRole(instance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
+            if (DDPInstanceDao.getRole(instance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
                 kitRequests = KitRequestShipping.getKitRequests(instance, ORDER_AND_LIMIT);
             }
             Map<String, List<AbstractionActivity>> abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName());
@@ -171,7 +169,7 @@ public class ParticipantWrapper {
             if (oncHistories == null && instance.isHasRole()) {
                 oncHistories = OncHistoryDetail.getOncHistoryDetails(instance.getName());
             }
-            if (kitRequests == null && DDPInstance.getRole(instance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
+            if (kitRequests == null && DDPInstanceDao.getRole(instance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
                 //get only kitRequests for the filtered pts
                 if (participantESData != null && !participantESData.isEmpty()) {
                     String filter = Arrays.stream(participantESData.keySet().toArray(new String[0])).collect(Collectors.joining("\",\""));
