@@ -8,6 +8,7 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.model.KitDDPNotification;
+import org.broadinstitute.dsm.model.at.ReceiveKitRequest;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -15,6 +16,7 @@ import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
 import org.broadinstitute.dsm.util.EventUtil;
 import org.broadinstitute.dsm.util.KitUtil;
+import org.broadinstitute.dsm.util.NotificationUtil;
 import org.broadinstitute.dsm.util.UserUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,12 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 public class KitStatusChangeRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(KitStatusChangeRoute.class);
+
+    private NotificationUtil notificationUtil;
+
+    public KitStatusChangeRoute(@NonNull NotificationUtil notificationUtil) {
+        this.notificationUtil = notificationUtil;
+    }
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
@@ -158,8 +166,11 @@ public class KitStatusChangeRoute extends RequestHandler {
                         throw new RuntimeException("kit_label " + kit + " does not exist");
                     }
                     else if (RoutePath.RECEIVED_KIT_REQUEST.equals(changeType)) {
-                        scanErrorList.add(new ScanError(kit, "SM-ID \"" + kit + "\" does not exist or was already scanned as received.\n" + UserErrorMessages.IF_QUESTIONS_CONTACT_DEVELOPER));
-                        logger.warn("SM-ID kit_label " + kit + " does not exist or was already scanned as received");
+                        //try to receive it as AT kit
+                        if (!ReceiveKitRequest.receiveATKitRequest(notificationUtil, kit)) {
+                            scanErrorList.add(new ScanError(kit, "SM-ID \"" + kit + "\" does not exist or was already scanned as received.\n" + UserErrorMessages.IF_QUESTIONS_CONTACT_DEVELOPER));
+                            logger.warn("SM-ID kit_label " + kit + " does not exist or was already scanned as received");
+                        }
                     }
                     else {
                         throw new RuntimeException("Error something went wrong at the scan pages");

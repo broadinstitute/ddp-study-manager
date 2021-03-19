@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.route;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
@@ -11,13 +12,11 @@ import org.broadinstitute.dsm.exception.DuplicateException;
 import org.broadinstitute.dsm.model.AbstractionWrapper;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Patch;
+import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
-import org.broadinstitute.dsm.util.MedicalRecordUtil;
-import org.broadinstitute.dsm.util.NotificationUtil;
-import org.broadinstitute.dsm.util.PatchUtil;
-import org.broadinstitute.dsm.util.UserUtil;
+import org.broadinstitute.dsm.util.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -33,6 +32,9 @@ import java.util.Map;
 public class PatchRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PatchRoute.class);
+
+    private static final String ELASTIC_EXPORT = "ELASTIC_EXPORT";
+    private static final String PARTICIPANT_DATA_ID = "participantDataId";
 
     private NotificationUtil notificationUtil;
     private PatchUtil patchUtil;
@@ -86,6 +88,13 @@ public class PatchRoute extends RequestHandler {
                                             return new RuntimeException("An error occurred while attempting to patch ");
                                         }
                                         nameValues.add(nameValue);
+                                    }
+                                }
+                                if (patch.getActions() != null) {
+                                    for (Value action : patch.getActions()) {
+                                        if (ELASTIC_EXPORT.equals(action.getType()) && ElasticSearchUtil.WORKFLOWS.equals(action.getName())) {
+                                            writeESWorkflow(patch, nameValue, action);
+                                        }
                                     }
                                 }
                             }
@@ -230,6 +239,31 @@ public class PatchRoute extends RequestHandler {
                             throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
                         }
                     }
+                    else if (Patch.PARTICIPANT_DATA_ID.equals(patch.getParent())) {
+                        String participantDataId = null;
+                        Map<String, String> map = new HashMap<>();
+                        for (NameValue nameValue : patch.getNameValues()) {
+                            DBElement dbElement = patchUtil.getColumnNameMap().get(nameValue.getName());
+                            if (dbElement != null) {
+                                if (participantDataId == null) {
+                                    DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+                                    participantDataId = ParticipantData.createNewParticipantData(patch.getParentId(), ddpInstance.getDdpInstanceId(), patch.getFieldId(), String.valueOf(nameValue.getValue()), patch.getUser());
+                                    map.put(PARTICIPANT_DATA_ID, participantDataId);
+                                }
+                                else if (participantDataId != null) {
+                                    Patch.patch(participantDataId, patch.getUser(), nameValue, dbElement);
+                                }
+                                if (patch.getActions() != null) {
+                                    for (Value action : patch.getActions()) {
+                                        if (ELASTIC_EXPORT.equals(action.getType()) && ElasticSearchUtil.WORKFLOWS.equals(action.getName())) {
+                                            writeESWorkflow(patch, nameValue, action);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
+                    }
                 }
                 throw new RuntimeException("Id and parentId was null");
             }
@@ -243,6 +277,17 @@ public class PatchRoute extends RequestHandler {
         else {
             response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
+        }
+    }
+
+    private void writeESWorkflow(@NonNull Patch patch, @NonNull NameValue nameValue, @NonNull Value action) {
+        DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+        String status = nameValue.getValue() != null ? String.valueOf(nameValue.getValue()) : null;
+        if (StringUtils.isNotBlank(status)) {
+            Map<String,String> data = new Gson().fromJson(status, new TypeToken<Map<String, String>>(){}.getType());
+            if (data.containsKey(action.getValue())) {
+                ElasticSearchUtil.writeWorkflow(ddpInstance, patch.getParentId(), action.getValue(), data.get(action.getValue()));
+            }
         }
     }
 

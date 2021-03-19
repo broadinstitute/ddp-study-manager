@@ -11,6 +11,7 @@ public class DBConstants {
     public static final String DDP_INSTITUTION = "ddp_institution";
     public static final String DDP_PARTICIPANT = "ddp_participant";
     public static final String DDP_PARTICIPANT_EXIT = "ddp_participant_exit";
+    public static final String DDP_PARTICIPANT_DATA = "ddp_participant_data";
     public static final String DRUG_LIST = "drug_list";
 
     public static final String DDP_PARTICIPANT_ID = "ddp_participant_id";
@@ -20,6 +21,7 @@ public class DBConstants {
     public static final String DDP_PARTICIPANT_ALIAS = "p";
     public static final String DDP_PARTICIPANT_RECORD_ALIAS = "r";
     public static final String DDP_PARTICIPANT_EXIT_ALIAS = "ex";
+    public static final String DDP_PARTICIPANT_DATA_ALIAS = "d";
     public static final String DDP_INSTITUTION_ALIAS = "inst";
     public static final String DDP_MEDICAL_RECORD_ALIAS = "m";
     public static final String DDP_ONC_HISTORY_ALIAS = "o";
@@ -235,6 +237,7 @@ public class DBConstants {
     public static final String FIELD_SETTING_ID = "field_settings_id";
     public static final String FIELD_TYPE = "field_type";
     public static final String DISPLAY_TYPE = "display_type";
+    public static final String ACTIONS = "actions";
 
     //dashboards
     public static final String PARTICIPANT_COUNT = "participantCount";
@@ -267,12 +270,12 @@ public class DBConstants {
     public static final String DAYS_MR_ATTENTION_NEEDED = "mr_attention_flag_d";
     public static final String DAYS_TISSUE_ATTENTION_NEEDED = "tissue_attention_flag_d";
     public static final String SURVEY_CREATION_ENDPOINTS = "survey_creation_endpoints";
-    public static final String HAS_MEDICAL_RECORD_INFORMATION_IN_DB = "has_medical_record_in_db";
     public static final String NEEDS_AUTH0_TOKEN = "auth0_token";
     public static final String SURVEY_STATUS_ENDPOINTS = "survey_status_endpoints";
     public static final String PDF_DOWNLOAD_CONSENT = "pdf_download_consent";
     public static final String PDF_DOWNLOAD_RELEASE = "pdf_download_release";
     public static final String PARTICIPANT_STATUS_ENDPOINT = "participant_status_endpoint";
+    public static final String ADD_FAMILY_MEMBER = "add_family_member";
 
     //user role
     public static final String MAILINGLIST_VIEW = "mailingList_view";
@@ -291,6 +294,9 @@ public class DBConstants {
     public static final String NAME = "name";
     public static final String USER_ID = "user_id";
     public static final String IN_DDP = "in_ddp";
+    public static final String FIELD_TYPE_ID = "field_type_id";
+    public static final String DATA = "data";
+    public static final String PARTICIPANT_DATA_ID = "participant_data_id";
 
     //user settings
     public static final String ROWS_ON_PAGE = "rows_on_page";
@@ -300,15 +306,6 @@ public class DBConstants {
     public static final String FAVORITE_VIEWS = "fav_views";
     public static final String DATE_FORMAT = "date_format";
     public static final String DEFAULT_PARTICIPANT_FILTER = "default_participant_filter";
-
-    //eel
-    public static final String EEL_DB_NAME = "eel";
-    public static final String SGE_ID = "SGE_ID";
-    public static final String TEMPLATE_ID = "template_id";
-    public static final String WORKFLOW_ID = "workflow_id";
-    public static final String RESPONSE_DAYS = "response_days";
-    public static final String FOLLOW_UP = "follow_up";
-    public static final String COUNT = "count";
 
     //label settings
     public static final String LABEL_SETTING_ID = "label_setting_id";
@@ -330,28 +327,6 @@ public class DBConstants {
     public static final String EVENT_TYPE = "event_type";
     public static final String EVENT_DESCRIPTION = "event_description";
     public static final String EVENT = "event";
-
-    //mbc
-    public static final String ID = "id";
-    public static final String UPDATED_AT = "updated_at";
-    public static final String PHY_UPDATED_AT = "phy_updated_at";
-    public static final String HP_UPDATED_AT = "hp_updated_at";
-    public static final String PT_UPDATED_AT = "pt_updated_at";
-    public static final String ENCRYPTED_NAME = "encrypted_name";
-    public static final String ENCRYPTED_PHONE = "encrypted_phone";
-    public static final String ENCRYPTED_STREET = "encrypted_street";
-    public static final String ENCRYPTED_CITY = "encrypted_city";
-    public static final String ENCRYPTED_STATE = "encrypted_state";
-    public static final String ENCRYPTED_ZIP = "encrypted_zip";
-    public static final String ENCRYPTED_INSTITUTION = "encrypted_institution";
-    public static final String ENCRYPTED_FIRST_NAME = "encrypted_first_name";
-    public static final String ENCRYPTED_LAST_NAME = "encrypted_last_name";
-    public static final String ENCRYPTED_DIAGNOSED_AT_MONTH = "encrypted_diagnosed_at_month";
-    public static final String ENCRYPTED_DIAGNOSED_AT_YEAR = "encrypted_diagnosed_at_year";
-    public static final String ENCRYPTED_BD_BIRTHDAY = "encrypted_bd_birthday";
-    public static final String ENCRYPTED_BIRTHDAY = "encrypted_birthday";
-    public static final String ENCRYPTED_COUNTRY = "encrypted_country";
-    public static final String IS_BLOOD_RELEASE = "is_bb";
 
     // drug list: list uses display_name, test uses generic_name
     public static final String DISPLAY_NAME = "display_name";

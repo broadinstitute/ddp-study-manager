@@ -34,11 +34,10 @@ import org.broadinstitute.dsm.careevolve.Provider;
 import org.broadinstitute.dsm.jetty.JettyConfig;
 import org.broadinstitute.dsm.jobs.*;
 import org.broadinstitute.dsm.log.SlackAppender;
-import org.broadinstitute.dsm.model.mbc.MBCHospital;
-import org.broadinstitute.dsm.model.mbc.MBCInstitution;
-import org.broadinstitute.dsm.model.mbc.MBCParticipant;
 import org.broadinstitute.dsm.pubsub.PubSubResultMessageSubscription;
 import org.broadinstitute.dsm.route.*;
+import org.broadinstitute.dsm.route.familymember.AddFamilyMemberRoute;
+import org.broadinstitute.dsm.route.participant.GetParticipantDataRoute;
 import org.broadinstitute.dsm.security.JWTConverter;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
@@ -46,7 +45,6 @@ import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.*;
 import org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil;
 import org.broadinstitute.dsm.util.triggerListener.*;
-import org.jruby.embed.ScriptingContainer;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.KeyMatcher;
@@ -65,7 +63,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,19 +87,11 @@ public class DSMServer extends BasicServer {
     private static final String[] CORS_HTTP_HEADERS = new String[] { "Content-Type", "Authorization", "X-Requested-With",
             "Content-Length", "Accept", "Origin", "" };
 
-    public static final String ENCRYPTION_PATH = "encryptorGem";
-    public static final String SCRIPT = "def decrypt(encryptedValue, key)\n" +
-            "str = Encryptor.decrypt(:value => encryptedValue.unpack('m')[0], :key => key)\n" +
-            "str = str.force_encoding('UTF-8')\n" +
-            "end";
-
     public static final String CONFIG = "config";
     public static final String NOTIFICATION_UTIL = "NotificationUtil";
     public static final String KIT_UTIL = "KitUtil";
     public static final String DDP_UTIL = "DDPRequestUtil";
     public static final String EVENT_UTIL = "EventUtil";
-    public static final String CONTAINER = "Container";
-    public static final String RECEIVER = "Receiver";
     public static final String ADDITIONAL_CRON_EXPRESSION = "externalShipper_cron_expression_additional";
     public static final String GCP_PATH_TO_SERVICE_ACCOUNT = "portal.googleProjectCredentials";
     public static final String UPS_PATH_TO_USERNAME = "ups.username";
@@ -127,9 +116,6 @@ public class DSMServer extends BasicServer {
     public static final String GCP_PATH_TO_DSS_TO_DSM_SUB = "pubsub.dss_to_dsm_subscription";
     public static final String GCP_PATH_TO_DSM_TO_DSS_TOPIC = "pubsub.dsm_to_dss_topic";
 
-    private static Map<String, MBCParticipant> mbcParticipants = new HashMap<>();
-    private static Map<String, MBCInstitution> mbcInstitutions = new HashMap<>();
-    private static Map<String, MBCHospital> mbcHospitals = new HashMap<>();
     private static Map<String, JsonElement> ddpConfigurationLookup = new HashMap<>();
     private static final String VAULT_DOT_CONF = "vault.conf";
     private static final String GAE_DEPLOY_DIR = "appengine/deploy";
@@ -304,19 +290,6 @@ public class DSMServer extends BasicServer {
 
         KitUtil kitUtil = new KitUtil();
 
-        Object receiver = null;
-        ScriptingContainer container = null;
-        try {
-            container = new ScriptingContainer();
-            //put path to encryptor gem here
-            container.getLoadPaths().add(container.getClassLoader().getResource(ENCRYPTION_PATH).getPath());
-            container.runScriptlet("require 'encryptor'");
-            receiver = container.runScriptlet(SCRIPT);
-        }
-        catch (Exception e) {
-            logger.error("Couldn't setup ruby for MBC decryption");
-        }
-
         DDPRequestUtil ddpRequestUtil = new DDPRequestUtil();
         PatchUtil patchUtil = new PatchUtil();
 
@@ -331,14 +304,14 @@ public class DSMServer extends BasicServer {
 
         setupMiscellaneousRoutes();
 
-        setupSharedRoutes(kitUtil, notificationUtil, patchUtil, container, receiver);
+        setupSharedRoutes(kitUtil, notificationUtil, patchUtil);
 
         setupPubSubPublisherRoutes(cfg);
 
         //no GET for USER_SETTINGS_REQUEST because UI gets them per AuthenticationRoute
         patch(UI_ROOT + RoutePath.USER_SETTINGS_REQUEST, new UserSettingRoute(), new JsonTransformer());
 
-        setupJobs(cfg, kitUtil, notificationUtil, eventUtil, container, receiver);
+        setupJobs(cfg, kitUtil, notificationUtil, eventUtil);
 
         //TODO - redo with pubsub
         JavaHeapDumper heapDumper = new JavaHeapDumper();
@@ -431,7 +404,7 @@ public class DSMServer extends BasicServer {
     private void setupShippingRoutes(@NonNull NotificationUtil notificationUtil, @NonNull Auth0Util auth0Util, @NonNull UserUtil userUtil) {
         get(UI_ROOT + RoutePath.KIT_REQUESTS_PATH, new KitRequestRoute(), new JsonTransformer());
 
-        KitStatusChangeRoute kitStatusChangeRoute = new KitStatusChangeRoute();
+        KitStatusChangeRoute kitStatusChangeRoute = new KitStatusChangeRoute(notificationUtil);
         post(UI_ROOT + RoutePath.FINAL_SCAN_REQUEST, kitStatusChangeRoute, new JsonTransformer());
         post(UI_ROOT + RoutePath.TRACKING_SCAN_REQUEST, kitStatusChangeRoute, new JsonTransformer());
         post(UI_ROOT + RoutePath.SENT_KIT_REQUEST, kitStatusChangeRoute, new JsonTransformer());
@@ -551,11 +524,17 @@ public class DSMServer extends BasicServer {
         DrugListRoute drugListRoute = new DrugListRoute();
         get(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, drugListRoute, new JsonTransformer());
         patch(UI_ROOT + RoutePath.FULL_DRUG_LIST_REQUEST, drugListRoute, new JsonTransformer());
+
+        AddFamilyMemberRoute addFamilyMemberRoute = new AddFamilyMemberRoute();
+        post(UI_ROOT + RoutePath.ADD_FAMILY_MEMBER, addFamilyMemberRoute, new JsonTransformer());
+
+        GetParticipantDataRoute getParticipantDataRoute = new GetParticipantDataRoute();
+        get(UI_ROOT + RoutePath.GET_PARTICIPANT_DATA, getParticipantDataRoute, new JsonTransformer());
     }
 
     private void setupSharedRoutes(@NonNull KitUtil kitUtil, @NonNull NotificationUtil notificationUtil,
-                                   @NonNull PatchUtil patchUtil, @NonNull ScriptingContainer container, @NonNull Object receiver) {
-        DashboardRoute dashboardRoute = new DashboardRoute(kitUtil, container, receiver);
+                                   @NonNull PatchUtil patchUtil) {
+        DashboardRoute dashboardRoute = new DashboardRoute(kitUtil);
         get(UI_ROOT + RoutePath.DASHBOARD_REQUEST, dashboardRoute, new JsonTransformer());
         get(UI_ROOT + RoutePath.DASHBOARD_REQUEST + RoutePath.ROUTE_SEPARATOR + RequestParameter.START + RoutePath.ROUTE_SEPARATOR + RequestParameter.END, dashboardRoute, new JsonTransformer());
         get(UI_ROOT + RoutePath.SAMPLE_REPORT_REQUEST, dashboardRoute, new JsonTransformer());
@@ -585,8 +564,7 @@ public class DSMServer extends BasicServer {
     }
 
     private void setupJobs(@NonNull Config cfg, @NonNull KitUtil kitUtil,
-                           @NonNull NotificationUtil notificationUtil, @NonNull EventUtil eventUtil,
-                           @NonNull ScriptingContainer container, @NonNull Object receiver) {
+                           @NonNull NotificationUtil notificationUtil, @NonNull EventUtil eventUtil) {
         String schedulerName = null;
         if (cfg.getBoolean(ApplicationConfigConstants.QUARTZ_ENABLE_JOBS)) {
             logger.info("Setting up jobs");
@@ -595,7 +573,7 @@ public class DSMServer extends BasicServer {
                 schedulerName = scheduler.getSchedulerName();
                 createDDPRequestScheduledJobs(scheduler, DDPRequestJob.class, "DDPREQUEST_JOB",
                         cfg.getInt(ApplicationConfigConstants.QUARTZ_DDP_REQUEST_JOB_INTERVAL_SEC),
-                        new DDPRequestTriggerListener(), container, receiver, notificationUtil);
+                        new DDPRequestTriggerListener(), notificationUtil);
 
                 createScheduledJob(scheduler, cfg,
                         NotificationJob.class, "NOTIFICATION_JOB",
@@ -682,6 +660,8 @@ public class DSMServer extends BasicServer {
             if (config.hasPath("slack.hook") && config.hasPath("slack.channel")) {
                 String appEnv = config.getString("portal.environment");
                 String slackHookUrlString = config.getString("slack.hook");
+                String gcpServiceName = config.getString("slack.gcpServiceName");
+                String rootPackage = DSMServer.class.getPackageName();
                 URI slackHookUrl;
                 String slackChannel = config.getString("slack.channel");
                 try {
@@ -689,7 +669,7 @@ public class DSMServer extends BasicServer {
                 } catch (URISyntaxException e) {
                     throw new IllegalArgumentException("Could not parse " + slackHookUrlString + "\n" + e);
                 }
-                SlackAppender.configure(schedulerName, appEnv, slackHookUrl, slackChannel);
+                SlackAppender.configure(schedulerName, appEnv, slackHookUrl, slackChannel, gcpServiceName, rootPackage);
                 logger.info("Error notification setup complete. If log4j.xml is configured, notifications will be sent to " + slackChannel + ".");
             } else {
                 logger.warn("Skipping error notification setup.");
@@ -703,15 +683,12 @@ public class DSMServer extends BasicServer {
      */
     public static void createDDPRequestScheduledJobs(@NonNull Scheduler scheduler, @NonNull Class<? extends Job> jobClass,
                                                      @NonNull String identity, @NonNull int jobIntervalInSeconds,
-                                                     BasicTriggerListener triggerListener, @NonNull ScriptingContainer container,
-                                                     @NonNull Object receiver, @NonNull NotificationUtil notificationUtil) throws SchedulerException {
+                                                     BasicTriggerListener triggerListener, @NonNull NotificationUtil notificationUtil) throws SchedulerException {
         //create job
         JobDetail job = JobBuilder.newJob(jobClass)
                 .withIdentity(identity, BasicTriggerListener.NO_CONCURRENCY_GROUP + ".DSM").build();
 
         //pass parameters to JobDataMap for JobDetail
-        job.getJobDataMap().put(CONTAINER, container);
-        job.getJobDataMap().put(RECEIVER, receiver);
         job.getJobDataMap().put(NOTIFICATION_UTIL, notificationUtil);
 
         //create trigger
@@ -811,30 +788,6 @@ public class DSMServer extends BasicServer {
 
         //add listener for all triggers
         scheduler.getListenerManager().addTriggerListener(basicTriggerListener, KeyMatcher.keyEquals(triggerKey));
-    }
-
-    public static synchronized void putMBCInstitution(@NonNull String institutionId, @NonNull MBCInstitution mbcInstitution) {
-        mbcInstitutions.put(institutionId, mbcInstitution);
-    }
-
-    public static Map<String, MBCInstitution> getMbcInstitutions() {
-        return mbcInstitutions;
-    }
-
-    public static synchronized void putMBCHospital(@NonNull String hospitalId, @NonNull MBCHospital mbcHospital) {
-        mbcHospitals.put(hospitalId, mbcHospital);
-    }
-
-    public static Map<String, MBCHospital> getMbcHospitals() {
-        return mbcHospitals;
-    }
-
-    public static synchronized void putMBCParticipant(@NonNull String participantId, @NonNull MBCParticipant mbcParticipant) {
-        mbcParticipants.put(participantId, mbcParticipant);
-    }
-
-    public static Map<String, MBCParticipant> getMbcParticipants() {
-        return mbcParticipants;
     }
 
     public static void setupDDPConfigurationLookup(@NonNull String ddpConf) {

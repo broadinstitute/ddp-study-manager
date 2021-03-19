@@ -42,14 +42,9 @@ public class InstitutionRoute extends RequestHandler {
                 String realm = (String) jsonObject.get(RequestParameter.DDP_REALM);
                 if (UserUtil.checkUserAccess(realm, userId, "mr_view")) {
                     if (StringUtils.isNotBlank(ddpParticipantId) && StringUtils.isNotBlank(realm)) {
-                        DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRoleByDDPParticipantAndRealm(realm, ddpParticipantId, DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
+                        DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
                         if (ddpInstance != null) {
-                            if (!ddpInstance.isHasRole()) { // if ddp does not have info in db (all others except mbc)
-                                return MedicalRecord.getDDPInstitutionInfo(ddpInstance, ddpParticipantId);
-                            }
-                            else { //mbc (get institution information from db)
-                                return MedicalRecord.getInstitutionInfoFromDB(realm, ddpParticipantId);
-                            }
+                            return MedicalRecord.getDDPInstitutionInfo(ddpInstance, ddpParticipantId);
                         }
                     }
                     logger.warn("Error missing ddpParticipantId " + ddpParticipantId + " or realm " + realm + " w/ userId " + user);

@@ -10,6 +10,12 @@ import java.io.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.util.Date;
 
 public class SystemUtil {
@@ -29,6 +35,32 @@ public class SystemUtil {
     private static final String LINEBREAK = "\r";
     public static final String SEPARATOR = "\t";
 
+    public static final DateTimeFormatter FULL_DATE = new DateTimeFormatterBuilder()
+            .appendPattern(DATE_FORMAT)
+            .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
+            .parseDefaulting(ChronoField.MINUTE_OF_DAY, 0)
+            .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
+            .toFormatter();
+
+    public static final DateTimeFormatter PARTIAL_DATE = new DateTimeFormatterBuilder()
+            .appendPattern(PARTIAL_DATE_FORMAT)
+            .parseDefaulting(ChronoField.DAY_OF_MONTH, 1)
+            .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
+            .parseDefaulting(ChronoField.MINUTE_OF_DAY, 0)
+            .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
+            .toFormatter();
+
+    public static final DateTimeFormatter ONLY_YEAR = new DateTimeFormatterBuilder()
+            .appendPattern(YEAR_DATE_FORMAT)
+            .parseDefaulting(ChronoField.MONTH_OF_YEAR, 1)
+            .parseDefaulting(ChronoField.DAY_OF_MONTH, 1)
+            .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
+            .parseDefaulting(ChronoField.MINUTE_OF_DAY, 0)
+            .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
+            .toFormatter();
+
+
+
     public static String getDateFormatted(@NonNull long inputDate) {
         Date date = new Date(inputDate);
         SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
@@ -37,15 +69,13 @@ public class SystemUtil {
 
     public static long getLongFromDateString(String dateString) {
         if (StringUtils.isNotBlank(dateString)) {
-            SimpleDateFormat sdf = new SimpleDateFormat(SystemUtil.DATE_FORMAT);
-            return getLong(dateString, sdf);
+            return getLong(dateString, FULL_DATE);
         }
         return 0;
     }
 
     public static long getLongFromDetailDateString(@NonNull String dateString) {
-        SimpleDateFormat sdf = new SimpleDateFormat(SystemUtil.END_DATE_FORMAT);
-        return getLong(dateString, sdf);
+        return getLong(dateString, DateTimeFormatter.ofPattern(END_DATE_FORMAT));
     }
 
     public static String changeDateFormat(@NonNull String inputDateFormat, @NonNull String outputDateFormat, @NonNull String dateString) {
@@ -69,35 +99,37 @@ public class SystemUtil {
         return dateString;
     }
 
-    public static long getLong(@NonNull String dateString, @NonNull SimpleDateFormat sdf) {
+    public static long getLong(@NonNull String dateString, @NonNull DateTimeFormatter dateTimeFormatter) {
         try {
-            Date date = sdf.parse(dateString);
-            return date.getTime();
+            LocalDateTime parsedDateTime = LocalDateTime.parse(dateString, dateTimeFormatter);
+            return parsedDateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
         }
-        catch (ParseException e) {
+        catch (DateTimeParseException e) {
             throw new RuntimeException("Couldn't parse date string to date ", e);
         }
     }
 
     public static long getLongFromString(@NonNull String dateString) throws ParseException {
+        DateTimeFormatter dateTimeFormatter;
+        LocalDateTime startDate;
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat(SystemUtil.DATE_FORMAT);
-            Date date = sdf.parse(dateString);
-            return date.getTime();
+            dateTimeFormatter = FULL_DATE;
+            startDate = LocalDateTime.parse(dateString, dateTimeFormatter);
+            return startDate.toInstant(ZoneOffset.UTC).toEpochMilli();
         }
-        catch (ParseException e) {
+        catch (DateTimeParseException e) {
             try {
-                SimpleDateFormat sdf = new SimpleDateFormat(SystemUtil.PARTIAL_DATE_FORMAT);
-                Date date = sdf.parse(dateString);
-                return date.getTime();
+                dateTimeFormatter = PARTIAL_DATE;
+                startDate = LocalDateTime.parse(dateString, dateTimeFormatter);
+                return startDate.toInstant(ZoneOffset.UTC).toEpochMilli();
             }
-            catch (ParseException e1) {
-                SimpleDateFormat sdf = new SimpleDateFormat(SystemUtil.YEAR_DATE_FORMAT);
+            catch (DateTimeParseException e1) {
                 if (dateString.length() != 4) {
                     throw new ParseException("String " + dateString + " is not a year", 0);
                 }
-                Date date = sdf.parse(dateString);
-                return date.getTime();
+                dateTimeFormatter = ONLY_YEAR;
+                startDate = LocalDateTime.parse(dateString, dateTimeFormatter);
+                return startDate.toInstant(ZoneOffset.UTC).toEpochMilli();
             }
         }
     }

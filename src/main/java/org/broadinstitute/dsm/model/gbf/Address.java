@@ -1,5 +1,4 @@
 package org.broadinstitute.dsm.model.gbf;
-import com.google.gson.JsonObject;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
@@ -34,6 +33,10 @@ public class Address {
     public Address() {
     }
 
+    public Address(String company, String addressLine1, String addressLine2, String city, String state, String zipCode,
+                   String country, String phoneNumber) {
+
+        this.company = company;
     public Address(String addressLine1, String city, String state, String zipCode,
                    String country, String phoneNumber) {
         this(null, addressLine1, null, city, state, zipCode, country, phoneNumber);
@@ -52,7 +55,6 @@ public class Address {
         this.phoneNumber = phoneNumber;
 
     }
-
     public boolean isComplete(){
         return  StringUtils.isNotBlank(this.company) && StringUtils.isNotBlank(this.addressLine1) &&
                 StringUtils.isNotBlank(this.city) && StringUtils.isNotBlank(this.state) &&

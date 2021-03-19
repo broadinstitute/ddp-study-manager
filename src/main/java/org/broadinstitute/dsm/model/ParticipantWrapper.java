@@ -3,16 +3,14 @@ package org.broadinstitute.dsm.model;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.ddp.util.DeliveryAddress;
 import org.broadinstitute.dsm.db.*;
-import org.broadinstitute.dsm.model.ddp.DDPParticipant;
-import org.broadinstitute.dsm.model.mbc.MBCParticipant;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.util.DDPRequestUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +18,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Getter
+@Data
 public class ParticipantWrapper {
 
     private static final Logger logger = LoggerFactory.getLogger(ParticipantWrapper.class);
@@ -36,10 +34,11 @@ public class ParticipantWrapper {
     private List<AbstractionActivity> abstractionActivities;
     private List<AbstractionGroup> abstractionSummary;
     private List<Map<String, Object>> proxyData;
+    private List<ParticipantData> participantData;
 
     public ParticipantWrapper(Map<String, Object> data, Participant participant, List<MedicalRecord> medicalRecords,
                               List<OncHistoryDetail> oncHistoryDetails, List<KitRequestShipping> kits, List<AbstractionActivity> abstractionActivities,
-                              List<AbstractionGroup> abstractionSummary, List<Map<String, Object>> proxyData) {
+                              List<AbstractionGroup> abstractionSummary, List<Map<String, Object>> proxyData, List<ParticipantData> participantData) {
         this.data = data;
         this.participant = participant;
         this.medicalRecords = medicalRecords;
@@ -48,6 +47,21 @@ public class ParticipantWrapper {
         this.abstractionActivities = abstractionActivities;
         this.abstractionSummary = abstractionSummary;
         this.proxyData = proxyData;
+        this.participantData = participantData;
+    }
+
+    public ParticipantWrapper() {}
+
+    //useful to get participant from ES if short id is either hruid or legacy short id
+    public static Optional<ParticipantWrapper> getParticipantByShortId(DDPInstance ddpInstance, String participantShortId) {
+        Optional<ParticipantWrapper> maybeParticipant;
+
+        if (ParticipantUtil.isHruid(participantShortId)) {
+            maybeParticipant = getParticipantFromESByHruid(ddpInstance, participantShortId);
+        } else {
+            maybeParticipant = getParticipantFromESByLegacyShortId(ddpInstance, participantShortId);
+        }
+        return maybeParticipant;
     }
 
     public JsonObject getDataAsJson() {
@@ -56,6 +70,10 @@ public class ParticipantWrapper {
 
     public static List<ParticipantWrapper> getFilteredList(@NonNull DDPInstance instance, Map<String, String> filters) {
         logger.info("Getting list of participant information");
+
+        if (StringUtils.isBlank(instance.getParticipantIndexES())) {
+            throw new RuntimeException("No participant index setup in ddp_instance table for " + instance.getName());
+        }
         if (filters == null) {
             Map<String, Map<String, Object>> participantESData = getESData(instance);
             Map<String, Participant> participants = Participant.getParticipants(instance.getName());
@@ -67,23 +85,16 @@ public class ParticipantWrapper {
                 medicalRecords = MedicalRecord.getMedicalRecords(instance.getName());
                 oncHistoryDetails = OncHistoryDetail.getOncHistoryDetails(instance.getName());
             }
-            if (DDPInstance.getRole(instance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
+            if (DDPInstanceDao.getRole(instance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
                 kitRequests = KitRequestShipping.getKitRequests(instance, ORDER_AND_LIMIT);
             }
             Map<String, List<AbstractionActivity>> abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName());
             Map<String, List<AbstractionGroup>> abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName());
             Map<String, Map<String, Object>> proxyData = getProxyData(instance);
+            Map<String, List<ParticipantData>> participantData = ParticipantData.getParticipantData(instance.getName());
 
-            //baselist should be not gen2/mbc db
-            List<String> baseList = null;
-            if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
-                baseList = new ArrayList<>(participantESData.keySet());
-            }
-            else {
-                baseList = new ArrayList<>(participants.keySet());
-            }
-
-            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, proxyData);
+            List<String> baseList = new ArrayList<>(participantESData.keySet());
+            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, proxyData, participantData);
             return r;
         }
         else {
@@ -96,6 +107,7 @@ public class ParticipantWrapper {
             Map<String, List<AbstractionActivity>> abstractionActivities = null;
             Map<String, List<AbstractionGroup>> abstractionSummary = null;
             Map<String, Map<String, Object>> proxyData = null;
+            Map<String, List<ParticipantData>> participantData = null;
             List<String> baseList = null;
             //filter the lists depending on filter
             for (String source : filters.keySet()) {
@@ -124,7 +136,7 @@ public class ParticipantWrapper {
                     //                    abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName(), filters.get(source));
                     //                    baseList = getCommonEntries(baseList, new ArrayList<>(abstractionSummary.keySet()));
                     //                }
-                    else if (StringUtils.isNotBlank(instance.getParticipantIndexES())){
+                    else { //source is not of any study-manager table so it must be ES
                         participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filters.get(source));
                         baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
                     }
@@ -132,21 +144,15 @@ public class ParticipantWrapper {
             }
             //get all the list which were not filtered
             if (participantESData == null) {
-                //get only pts for the filtered kitRequests
-                if (baseList!= null && !baseList.isEmpty()){
-                    if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
-                        String filter = Arrays.stream(baseList.toArray(new String[0])).collect(Collectors.joining(ElasticSearchUtil.BY_GUIDS));
-                        participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_GUID + filter);
-                        if (instance.isMigratedDDP()) {//also check for legacyAltPid
-                            String filterLegacy = Arrays.stream(baseList.toArray(new String[0])).collect(Collectors.joining(ElasticSearchUtil.BY_LEGACY_ALTPIDS));
-                            Map<String, Map<String, Object>> tmp = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_LEGACY_ALTPID + filterLegacy);
-                            participantESData = Stream.of(participantESData, tmp).flatMap(m -> m.entrySet().stream())
-                                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-                        }
-                    }
-                    else {
-                        Map<String, ParticipantExit> exitedParticipants = ParticipantExit.getExitedParticipants(instance.getName(), false);
-                        participantESData = parseGen2toESParticipant(DDPRequestUtil.getDDPParticipant(instance), instance.getName(), exitedParticipants);
+                //get only pts for the filtered data
+                if (baseList != null && !baseList.isEmpty()){
+                    String filter = Arrays.stream(baseList.toArray(new String[0])).collect(Collectors.joining(ElasticSearchUtil.BY_GUIDS));
+                    participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_GUID + filter);
+                    if (instance.isMigratedDDP()) {//also check for legacyAltPid
+                        String filterLegacy = Arrays.stream(baseList.toArray(new String[0])).collect(Collectors.joining(ElasticSearchUtil.BY_LEGACY_ALTPIDS));
+                        Map<String, Map<String, Object>> tmp = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_LEGACY_ALTPID + filterLegacy);
+                        participantESData = Stream.of(participantESData, tmp).flatMap(m -> m.entrySet().stream())
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                     }
                 }
                 else {
@@ -163,7 +169,7 @@ public class ParticipantWrapper {
             if (oncHistories == null && instance.isHasRole()) {
                 oncHistories = OncHistoryDetail.getOncHistoryDetails(instance.getName());
             }
-            if (kitRequests == null && DDPInstance.getRole(instance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
+            if (kitRequests == null && DDPInstanceDao.getRole(instance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
                 //get only kitRequests for the filtered pts
                 if (participantESData != null && !participantESData.isEmpty()) {
                     String filter = Arrays.stream(participantESData.keySet().toArray(new String[0])).collect(Collectors.joining("\",\""));
@@ -184,28 +190,48 @@ public class ParticipantWrapper {
             if (proxyData == null) {
                 proxyData = getProxyData(instance);
             }
-            //baselist should be not gen2/mbc db
-            if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
-                baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
+            if (participantData == null) {
+                participantData = ParticipantData.getParticipantData(instance.getName());
             }
-            else {
-                baseList = getCommonEntries(baseList, new ArrayList<>(participants.keySet()));
-            }
-            //bring together all the information
+            baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
 
-            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistories, kitRequests, abstractionActivities, abstractionSummary, proxyData);
+            //bring together all the information
+            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistories, kitRequests, abstractionActivities, abstractionSummary, proxyData, participantData);
             return r;
         }
+    }
+
+    public static Optional<ParticipantWrapper> getParticipantFromESByHruid(DDPInstance ddpInstanceByRealm, String participantHruid) {
+        Map<String, String> queryConditions = new HashMap<>();
+        queryConditions.put("ES", ElasticSearchUtil.BY_HRUID + "'" + participantHruid + "'");
+        List<ParticipantWrapper> participantsBelongToRealm = ParticipantWrapper.getFilteredList(ddpInstanceByRealm, queryConditions);
+        return participantsBelongToRealm.stream().filter(Objects::nonNull).findFirst();
+    }
+
+    public static Optional<ParticipantWrapper> getParticipantFromESByLegacyShortId(DDPInstance ddpInstanceByRealm, String participantLegacyShortId) {
+        Map<String, String> queryConditions = new HashMap<>();
+        queryConditions.put("ES", ElasticSearchUtil.BY_LEGACY_SHORTID + "'" + participantLegacyShortId + "'");
+        List<ParticipantWrapper> participantsBelongToRealm = ParticipantWrapper.getFilteredList(ddpInstanceByRealm, queryConditions);
+        return participantsBelongToRealm.stream().filter(Objects::nonNull).findFirst();
+    }
+
+    public static String getParticipantGuid(Optional<ParticipantWrapper> maybeParticipant) {
+        return maybeParticipant
+                .map(p -> ((Map<String, String>)p.getData().get("profile")).get(ElasticSearchUtil.GUID))
+                .orElse("");
+    }
+
+    public static String getParticipantLegacyAltPid(Optional<ParticipantWrapper> maybeParticipant) {
+        return maybeParticipant
+                .map(p -> ((Map<String, String>)p.getData().get("profile")).get(ElasticSearchUtil.LEGACY_ALT_PID))
+                .orElse("");
     }
 
     public static Map<String, Map<String, Object>> getESData(@NonNull DDPInstance instance) {
         if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
             return ElasticSearchUtil.getDDPParticipantsFromES(instance.getName(), instance.getParticipantIndexES());
         }
-        else {
-            Map<String, ParticipantExit> exitedParticipants = ParticipantExit.getExitedParticipants(instance.getName(), false);
-            return parseGen2toESParticipant(DDPRequestUtil.getDDPParticipant(instance), instance.getName(), exitedParticipants);
-        }
+        return null;
     }
 
     public static Map<String, Map<String, Object>> getProxyData(@NonNull DDPInstance instance) {
@@ -229,7 +255,7 @@ public class ParticipantWrapper {
                                                       Map<String, Participant> participantMap, Map<String, List<MedicalRecord>> medicalRecordMap,
                                                       Map<String, List<OncHistoryDetail>> oncHistoryMap, Map<String, List<KitRequestShipping>> kitRequestMap,
                                                       Map<String, List<AbstractionActivity>> abstractionActivityMap, Map<String, List<AbstractionGroup>> abstractionSummary,
-                                                      Map<String, Map<String, Object>> proxyData) {
+                                                      Map<String, Map<String, Object>> proxyData, Map<String, List<ParticipantData>> participantData) {
         List<ParticipantWrapper> participantList = new ArrayList<>();
         for (String ddpParticipantId : baseList) {
             Participant participant = participantMap != null ? participantMap.get(ddpParticipantId) : null;
@@ -241,7 +267,8 @@ public class ParticipantWrapper {
                         kitRequestMap != null ? kitRequestMap.get(ddpParticipantId) : null,
                         abstractionActivityMap != null ? abstractionActivityMap.get(ddpParticipantId) : null,
                         abstractionSummary != null ? abstractionSummary.get(ddpParticipantId) : null,
-                        getProxyProfiles(participantESData, proxyData)));
+                        getProxyProfiles(participantESData, proxyData),
+                participantData != null ? participantData.get(ddpParticipantId) : null));
             }
         }
         logger.info("Returning list w/ " + participantList.size() + " pts now");
@@ -263,74 +290,5 @@ public class ParticipantWrapper {
             }
         }
         return null;
-    }
-
-    private static Map<String, Map<String, Object>> parseGen1toESParticipant(Map<String, MBCParticipant> mbcParticipants, Map<String, ParticipantExit> exitedParticipants) {
-        Map<String, Map<String, Object>> participantsData = new HashMap<>();
-        if (!mbcParticipants.isEmpty()) {
-            for (String ddpParticipantId : mbcParticipants.keySet()) {
-                ParticipantExit participantExit = null;
-                if (exitedParticipants != null && !exitedParticipants.isEmpty()) {
-                    participantExit = exitedParticipants.get(ddpParticipantId);
-                }
-                participantsData.put(ddpParticipantId, parseGen1toESParticipant(ddpParticipantId, mbcParticipants.get(ddpParticipantId), participantExit));
-            }
-        }
-        return participantsData;
-    }
-
-    private static Map<String, Object> parseGen1toESParticipant(String ddpParticipantId, MBCParticipant mbcParticipant, ParticipantExit participantExit) {
-        Map<String, Object> participantDataMap = new HashMap<>();
-        Map<String, Object> participantProfileDataMap = new HashMap<>();
-        participantProfileDataMap.put(ElasticSearchUtil.GUID, ddpParticipantId);
-        participantProfileDataMap.put(ElasticSearchUtil.HRUID, ddpParticipantId);
-        participantProfileDataMap.put("firstName", mbcParticipant.getFirstName());
-        participantProfileDataMap.put("lastName", mbcParticipant.getLastName());
-        participantDataMap.put(ElasticSearchUtil.PROFILE, participantProfileDataMap);
-        participantDataMap.put("status", "ENROLLED");
-        if (participantExit != null) {
-            participantDataMap.put("status", "EXITED_AFTER_ENROLLMENT");
-        }
-        participantDataMap.put("ddp", "MBC");
-        Map<String, Object> participantAddressMap = new HashMap<>();
-        participantAddressMap.put("country", mbcParticipant.getCountry());
-        participantDataMap.put(ElasticSearchUtil.ADDRESS, participantAddressMap);
-        return participantDataMap;
-    }
-
-    private static Map<String, Map<String, Object>> parseGen2toESParticipant(Map<String, DDPParticipant> gen2Participants, String realm, Map<String, ParticipantExit> exitedParticipants) {
-        Map<String, Map<String, Object>> participantsData = new HashMap<>();
-        if (!gen2Participants.isEmpty()) {
-            for (String ddpParticipantId : gen2Participants.keySet()) {
-                ParticipantExit participantExit = null;
-                if (exitedParticipants != null && !exitedParticipants.isEmpty()) {
-                    participantExit = exitedParticipants.get(ddpParticipantId);
-                }
-                participantsData.put(ddpParticipantId, parseGen2toESParticipant(ddpParticipantId, gen2Participants.get(ddpParticipantId), realm, participantExit));
-            }
-        }
-        return participantsData;
-    }
-
-    private static Map<String, Object> parseGen2toESParticipant(String ddpParticipantId, DDPParticipant ddpParticipant, String realm, ParticipantExit participantExit) {
-        Map<String, Object> participantDataMap = new HashMap<>();
-        Map<String, Object> participantProfileDataMap = new HashMap<>();
-        participantProfileDataMap.put(ElasticSearchUtil.GUID, ddpParticipantId);
-        participantProfileDataMap.put(ElasticSearchUtil.HRUID, ddpParticipant.getShortId());
-        participantProfileDataMap.put("firstName", ddpParticipant.getFirstName());
-        participantProfileDataMap.put("lastName", ddpParticipant.getLastName());
-        participantDataMap.put(ElasticSearchUtil.PROFILE, participantProfileDataMap);
-        participantDataMap.put("status", "ENROLLED");
-        if (participantExit != null) {
-            participantDataMap.put("status", "EXITED_AFTER_ENROLLMENT");
-        }
-        participantDataMap.put("ddp", realm);
-        Map<String, Object> participantAddressMap = new HashMap<>();
-        DeliveryAddress address = ddpParticipant.getAddress();
-        if (address != null && StringUtils.isNotBlank(address.getCountry())) {
-            participantAddressMap.put("country", address.getCountry());
-        }
-        participantDataMap.put(ElasticSearchUtil.ADDRESS, participantAddressMap);
-        return participantDataMap;
     }
 }

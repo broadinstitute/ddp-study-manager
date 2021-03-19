@@ -8,6 +8,7 @@ import java.util.List;
 @XmlRootElement(name="Orders")
 public class Orders {
 
+    private List<Order> orders;
     private List<Order> orders = new ArrayList<>();
 
     public Orders(Order order) {

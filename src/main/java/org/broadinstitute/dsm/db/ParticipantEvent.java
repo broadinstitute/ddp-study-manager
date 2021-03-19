@@ -63,19 +63,17 @@ public class ParticipantEvent {
             logger.error("Couldn't get list of skipped participant events for " + realm, results.resultException);
         }
         else {
-            DDPInstance instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.HAS_MEDICAL_RECORD_INFORMATION_IN_DB);
-            if (!instance.isHasRole()) {
-                for (ParticipantEvent skippedParticipant : skippedParticipantEvents) {
-                    String sendRequest = instance.getBaseUrl() + RoutePath.DDP_PARTICIPANTS_PATH + "/" + skippedParticipant.getParticipantId();
-                    try {
-                        DDPParticipant ddpParticipant = DDPRequestUtil.getResponseObject(DDPParticipant.class, sendRequest, realm, instance.isHasAuth0Token());
-                        if (ddpParticipant != null) {
-                            skippedParticipant.setShortId(ddpParticipant.getShortId());
-                        }
+            DDPInstance instance = DDPInstance.getDDPInstance(realm);
+            for (ParticipantEvent skippedParticipant : skippedParticipantEvents) {
+                String sendRequest = instance.getBaseUrl() + RoutePath.DDP_PARTICIPANTS_PATH + "/" + skippedParticipant.getParticipantId();
+                try {
+                    DDPParticipant ddpParticipant = DDPRequestUtil.getResponseObject(DDPParticipant.class, sendRequest, realm, instance.isHasAuth0Token());
+                    if (ddpParticipant != null) {
+                        skippedParticipant.setShortId(ddpParticipant.getShortId());
                     }
-                    catch (Exception ioe) {
-                        logger.error("Couldn't get shortId of skipped participant from " + sendRequest, ioe);
-                    }
+                }
+                catch (Exception ioe) {
+                    logger.error("Couldn't get shortId of skipped participant from " + sendRequest, ioe);
                 }
             }
         }

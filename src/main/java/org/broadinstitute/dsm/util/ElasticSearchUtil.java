@@ -22,6 +22,8 @@ import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
@@ -34,6 +36,10 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.*;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -66,17 +72,20 @@ public class ElasticSearchUtil {
     public static final String PDFS = "pdfs";
     public static final String GUID = "guid";
     public static final String HRUID = "hruid";
-    private static final String LEGACY_ALT_PID = "legacyAltPid";
+    public static final String LEGACY_ALT_PID = "legacyAltPid";
     public static final String BY_GUID = " AND profile.guid = ";
+    public static final String BY_HRUID = " AND profile.hruid = ";
     public static final String BY_GUIDS = " OR profile.guid = ";
     public static final String BY_LEGACY_ALTPID = " AND profile.legacyAltPid = ";
     public static final String BY_LEGACY_ALTPIDS = " OR profile.legacyAltPid = ";
+    public static final String BY_LEGACY_SHORTID = " AND profile.legacyShortId = ";
     public static final String END_OF_DAY = " 23:59:59";
     public static final String CREATED_AT = "createdAt";
     public static final String COMPLETED_AT = "completedAt";
     public static final String LAST_UPDATED = "lastUpdatedAt";
     public static final String STATUS = "status";
     public static final String PROFILE_CREATED_AT = "profile." + CREATED_AT;
+    public static final String WORKFLOWS = "workflows";
     public static final String FIRST_NAME_FIELD = "firstName";
     public static final String LAST_NAME_FIELD = "lastName";
 
@@ -219,6 +228,41 @@ public class ElasticSearchUtil {
 
         }
         return addressByParticipant;
+    }
+
+    public static boolean writeWorkflow(@NonNull DDPInstance instance, @NonNull String ddpParticipantId, @NonNull String workflow, @NonNull String status) {
+        String index = instance.getParticipantIndexES();
+        if (StringUtils.isNotBlank(index)) {
+            try {
+                try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
+                        TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
+                    Map<String, Object> workflowMap = new HashMap<>();
+                    workflowMap.put("workflow", workflow);
+                    workflowMap.put("status", status);
+
+                    List<Map<String, Object>> workflowList = new ArrayList<>();
+                    workflowList.add(workflowMap);
+
+                    Map<String, Object> jsonMap = new HashMap<>();
+                    jsonMap.put(WORKFLOWS, workflowList);
+
+                    UpdateRequest updateRequest = new UpdateRequest()
+                            .index(index)
+                            .type("_doc")
+                            .id(ddpParticipantId)
+                            .doc(jsonMap)
+                            .docAsUpsert(true);
+
+                    UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+                    logger.info("Updated workflow information for participant " + ddpParticipantId + " in ES for instance " + instance.getName());
+                    return true;
+                }
+            }
+            catch (Exception e) {
+                throw new RuntimeException("Couldn't write workflow information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName(), e);
+            }
+        }
+        return false;
     }
 
     public static DDPParticipant getParticipantAsDDPParticipant(@NonNull Map<String, Map<String, Object>> participantsESData, @NonNull String ddpParticipantId) {
@@ -698,7 +742,7 @@ public class ElasticSearchUtil {
                     long end = SystemUtil.getLongFromDetailDateString(endDate);
                     rangeQueryBuilder(queryBuilder, INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1], start, end, must);
                 }
-                catch (ParseException e) {
+                catch (Exception e) {
                     if (wildCard) {
                         if (must) {
                             queryBuilder.must(QueryBuilders.wildcardQuery(INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1].trim(), userEntered + "*"));

@@ -9,6 +9,7 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.FieldSettings;
+import org.broadinstitute.dsm.db.User;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.util.tools.util.DBUtil;
 
@@ -64,7 +65,15 @@ public class DBTestUtil {
     public static final String DELETE_ALL_NDI_ADDED = "DELETE FROM ddp_ndi WHERE ndi_id = ?";
     private static final String SQL_SELECT_PK_FROM_TABLE = "SELECT %PK FROM %TABLE WHERE participant_id = ? LIMIT 1";
     private static final String SQL_DELETE_PK_FROM_TABLE = "DELETE FROM %TABLE WHERE %PK = ?";
-
+    private static final String SQL_INSERT_USER = "INSERT INTO access_user (user_id, name, email, is_active) VALUES (?, ?, ?, ?)";
+    private static final String SQL_DELETE_USER_BY_ID = "DELETE FROM access_user WHERE user_id = ?";
+    private static final String SQL_DELETE_MESSAGE_BY_USER_ID =
+            "DELETE FROM " +
+                    "message " +
+            "WHERE " +
+                    "user_id = ? " +
+            "ORDER BY published_at DESC " +
+            "LIMIT 1";
     public static final long WEEK = 7 * 24 * 60 * 60 * 1000;
 
     public static void deleteAllParticipantData(String participantMaxVersionId) {
@@ -474,6 +483,51 @@ public class DBTestUtil {
         }
     }
 
+    public static void insertUser(@NonNull User user, int is_active) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_USER)) {
+                stmt.setInt(1, user.getUserId());
+                stmt.setString(2, user.getName());
+                stmt.setString(3, user.getEmail());
+                stmt.setInt(4, is_active);
+                int result = stmt.executeUpdate();
+                if (result != 1){
+                    throw new RuntimeException("Error adding new user, it was adding " + result + " rows");
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error inserting user with "
+                    + user.getUserId(), results.resultException);
+        }
+    }
+
+    public static void deleteUser(int userId) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_DELETE_USER_BY_ID)) {
+                stmt.setInt(1, userId);
+                int result = stmt.executeUpdate();
+                if (result != 1){
+                    throw new RuntimeException("Error deleting user, it was deleting " + result + " rows");
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error deleting user with "
+                    + userId, results.resultException);
+        }
+    }
+
     public static String getQueryDetail(@NonNull String query, @NonNull String value, @NonNull String returnColumn) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -866,6 +920,7 @@ public class DBTestUtil {
         String columnName = getQueryDetail(columnQuery, settingId, "column_name");
         String columnDisplay = getQueryDetail(columnQuery, settingId, "column_display");
         String displayType = getQueryDetail(columnQuery, settingId, "display_type");
+        String orderNumber = getQueryDetail(columnQuery, settingId, "order_number");
 
         List<Value> possibleValues;
         String possibleValuesString = getQueryDetail(columnQuery, settingId, "possible_values");
@@ -884,7 +939,7 @@ public class DBTestUtil {
             deleted = true;
         }
 
-        FieldSettings setting = new FieldSettings(settingId, columnName, columnDisplay, fieldType, displayType, possibleValues);
+        FieldSettings setting = new FieldSettings(settingId, columnName, columnDisplay, fieldType, displayType, possibleValues, new Integer(orderNumber).intValue(), null);
         setting.setDeleted(deleted);
         checkSettingMatch(setting, expectedFieldType, expectedColumnDisplay, expectedColumnName, expectedDisplayType,
                 expectedPossibleValues, expectedDeleted, "setting with id " + settingId);
@@ -952,6 +1007,27 @@ public class DBTestUtil {
                             " was missing the value " + v.getValue());
                 }
             }
+        }
+    }
+
+    public static void deleteMessage(int userId) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_DELETE_MESSAGE_BY_USER_ID)) {
+                stmt.setInt(1, userId);
+                int result = stmt.executeUpdate();
+                if (result != 1){
+                    throw new RuntimeException("Error deleting message, it was deleting " + result + " rows");
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error deleting message with user id: "
+                    + userId, results.resultException);
         }
     }
 }

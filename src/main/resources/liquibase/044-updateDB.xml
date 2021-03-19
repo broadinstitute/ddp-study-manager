@@ -4,11 +4,11 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
-  <changeSet id="index_for_event_queue" author="pegah">
-      <createIndex tableName="EVENT_QUEUE" indexName="event_queue_idx">
-          <column name="event_type"></column>
-      </createIndex>
-  </changeSet>
+    <changeSet id="index_for_event_queue" author="pegah">
+        <createIndex tableName="EVENT_QUEUE" indexName="event_queue_idx">
+            <column name="event_type"></column>
+        </createIndex>
+    </changeSet>
     <changeSet id="index_for_event_type" author="pegah">
         <createIndex tableName="event_type" indexName="event_type_idx">
             <column name="event_type"></column>

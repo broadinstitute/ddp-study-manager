@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
-import java.time.Instant;
 import java.util.*;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
@@ -165,6 +164,9 @@ public class KitRequestShipping extends KitRequest {
 
     private String createdBy;
     private String preferredLanguage;
+    private String hruid;
+    private String gender;
+    private String receiveDateString;
 
     @ColumnName (DBConstants.UPS_TRACKING_STATUS)
     private final String upsTrackingStatus;
@@ -183,13 +185,21 @@ public class KitRequestShipping extends KitRequest {
         this(null, collaboratorParticipantId, null, null, null, kitType, dsmKitRequestId, null, null, null,
                 null, null, null, null, scanDate, error, null, receiveDate,
                 null, deactivatedDate, null, null, false, null, 0, null, externalOrderNumber, false, externalOrderStatus, null, testResult,
-                upsTrackingStatus, upsReturnStatus, externalOrderDate, false, uploadReason);
+                upsTrackingStatus, upsReturnStatus, externalOrderDate, false, uploadReason, null, null, null);
+    }
+
+    public KitRequestShipping(String participantId, String collaboratorParticipantId, String dsmKitId, String realm, String trackingNumberTo, String receiveDateString, String hruid, String gender) {
+        this(participantId, collaboratorParticipantId, null, null, realm, null, null, null, null, null,
+                trackingNumberTo, null, null, null, 0, false, null, 0,
+                null, 0, null, dsmKitId, false, null, 0, null, null, false, null, null, null, null, null, 0, false, null,
+                receiveDateString, hruid, gender);
     }
 
     public KitRequestShipping(String dsmKitRequestId, String dsmKitId, String easypostToId, String easypostAddressId, boolean error, String message) {
         this(null, null, null, null, null, null, dsmKitRequestId, dsmKitId, null, null,
                 null, null, null, null, 0, error, message, 0,
-                easypostAddressId, 0, null, null, false, easypostToId, 0, null, null, false, null, null, null, null, null, 0, false, null);
+                easypostAddressId, 0, null, null, false, easypostToId, 0, null, null, false, null, null, null, null, null, 0, false, null,
+                null, null, null);
     }
 
     // shippingId = ddp_label !!!
@@ -200,7 +210,8 @@ public class KitRequestShipping extends KitRequest {
                               long receiveDate, String easypostAddressId, long deactivatedDate, String deactivationReason,
                               String kitLabel, boolean express, String easypostToId, long labelTriggeredDate, String easypostShipmentStatus,
                               String externalOrderNumber, boolean noReturn, String externalOrderStatus, String createdBy, String testResult,
-                              String upsTrackingStatus, String upsReturnStatus, long externalOrderDate, boolean careEvolve, String uploadReason) {
+                              String upsTrackingStatus, String upsReturnStatus, long externalOrderDate, boolean careEvolve, String uploadReason,
+                              String receiveDateString, String hruid, String gender) {
         super(dsmKitRequestId, participantId, null, shippingId, externalOrderNumber, null, externalOrderStatus, null, externalOrderDate);
         this.collaboratorParticipantId = collaboratorParticipantId;
         this.bspCollaboratorSampleId = bspCollaboratorSampleId;
@@ -232,6 +243,9 @@ public class KitRequestShipping extends KitRequest {
         this.upsReturnStatus = upsReturnStatus;
         this.careEvolve = careEvolve;
         this.uploadReason = uploadReason;
+        this.receiveDateString = receiveDateString;
+        this.hruid = hruid;
+        this.gender = gender;
     }
 
     public static KitRequestShipping getKitRequestShipping(@NonNull ResultSet rs) throws SQLException {
@@ -275,7 +289,8 @@ public class KitRequestShipping extends KitRequest {
                 rs.getString(DBConstants.UPS_RETURN_STATUS),
                 rs.getLong(DBConstants.EXTERNAL_ORDER_DATE),
                 rs.getBoolean(DBConstants.CARE_EVOLVE),
-                rs.getString(DBConstants.UPLOAD_REASON)
+                rs.getString(DBConstants.UPLOAD_REASON),
+                null, null, null
         );
         return kitRequestShipping;
     }
@@ -463,10 +478,10 @@ public class KitRequestShipping extends KitRequest {
                     || TRIGGERED.equals(target) || OVERVIEW.equals(target) || WAITING.equals(target)) {
 
                 DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.NEEDS_NAME_LABELS);
-                Map<String, Map<String, Object>> participantsESData = null;
-                if (StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
-                    participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(ddpInstance.getName(), ddpInstance.getParticipantIndexES());
+                if (StringUtils.isBlank(ddpInstance.getParticipantIndexES())) {
+                    throw new RuntimeException("No participant index setup in ddp_instance table for " + ddpInstance.getName());
                 }
+                Map<String, Map<String, Object>> participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(ddpInstance.getName(), ddpInstance.getParticipantIndexES());;
 
                 for (String key : kitRequests.keySet()) {
                     List<KitRequestShipping> kitRequest = kitRequests.get(key);
@@ -497,25 +512,6 @@ public class KitRequestShipping extends KitRequest {
                                         else {
                                             kit.setMessage(PARTICIPANT_NOT_FOUND_MESSAGE + kit.getRealm());
                                             kit.setError(true);
-                                        }
-                                    }
-                                    else if (ddpInstance.getBaseUrl() != null) {
-                                        String sendRequest = ddpInstance.getBaseUrl() + RoutePath.DDP_PARTICIPANTS_PATH + "/" + key;
-                                        try {
-                                            if (ddpParticipant == null && !checkedParticipant) {
-                                                ddpParticipant = DDPRequestUtil.getResponseObject(DDPParticipant.class, sendRequest, kit.getRealm(), ddpInstance.isHasAuth0Token());
-                                                checkedParticipant = true;
-                                            }
-                                            if (ddpParticipant != null) {
-                                                kit.setParticipant(ddpParticipant);
-                                            }
-                                            else {
-                                                kit.setMessage(PARTICIPANT_NOT_FOUND_MESSAGE + kit.getRealm());
-                                                kit.setError(true);
-                                            }
-                                        }
-                                        catch (Exception ioe) {
-                                            logger.error("Couldn't get participants from " + sendRequest, ioe);
                                         }
                                     }
                                     else {
@@ -1227,8 +1223,8 @@ public class KitRequestShipping extends KitRequest {
         }
     }
 
-    public static Collection<KitRequestShipping> findKitRequest(@NonNull String field, @NonNull String value, String[] realms) {
-        HashMap<String, KitRequestShipping> kitRequests = new HashMap<>();
+    public static List<KitRequestShipping> findKitRequest(@NonNull String field, @NonNull String value, String[] realms) {
+        Map<String, KitRequestShipping> kitRequests = new HashMap<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             String search = "";
@@ -1269,7 +1265,7 @@ public class KitRequestShipping extends KitRequest {
             throw new RuntimeException("Error searching for kit w/ field " + field + " and value " + value, results.resultException);
         }
         logger.info("Found " + kitRequests.values().size() + " kits");
-        return kitRequests.values();
+        return new ArrayList<KitRequestShipping>(kitRequests.values());
     }
 
     public static List<KitRequestShipping> getKitRequestsAfterBookmark(long bookmark) {

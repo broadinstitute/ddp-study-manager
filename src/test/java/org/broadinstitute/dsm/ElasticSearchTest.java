@@ -3,12 +3,15 @@ package org.broadinstitute.dsm;
 import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.*;
@@ -36,7 +39,7 @@ public class ElasticSearchTest extends TestHelper {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-osteo");
+            SearchRequest searchRequest = new SearchRequest("participants_structured.rgp.rgp");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
@@ -582,13 +585,13 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
-    public void mbcLegacyPTGUID() throws Exception {
-        searchProfileValue("participants_structured.cmi.cmi-osteo", "profile.guid", "ZSNS8E4U838JPW7NU93Y");
+    public void searchPTByGUID() throws Exception {
+        searchProfileValue("participants_structured.rgp.rgp", "profile.guid", "W92X9ACM03OSH4161NCF");
     }
 
     @Test
-    public void mbcLegacyPTAltPID() throws Exception {
-        searchProfileValue("participants_structured.cmi.cmi-mbc", "profile.legacyAltPid", "8195-A16");
+    public void searchPTByLegacy() throws Exception {
+        searchProfileValue("participants_structured.atcp.atcp", "profile.legacyAltPid", "5db65f9f43f38f2ae0ec3efb1d3325b1356e0a6ffa4b7ef71938f73930269811");
     }
 
     public void searchProfileValue(String index, String field, String value) throws Exception {
@@ -610,7 +613,7 @@ public class ElasticSearchTest extends TestHelper {
                 ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
                 i++;
             }
-            Assert.assertNotEquals(0, esData.size());
+                Assert.assertNotEquals(0, esData.size());
         }
     }
 
@@ -666,6 +669,44 @@ public class ElasticSearchTest extends TestHelper {
                 Assert.assertNotNull(sourceAfter);
                 logger.info("added participant #" + i);
             }
+        }
+    }
+
+    @Test
+    public void updateWorkflowValue() throws Exception {
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
+
+            Map<String, Object> workflowMap = new HashMap<>();
+            workflowMap.put("workflow", "ACCEPTANCE_STATUS");
+            workflowMap.put("status", "ACCEPTED");
+
+            List<Map<String, Object>> workflowList = new ArrayList<>();
+            workflowList.add(workflowMap);
+
+            Map<String, Object> jsonMap = new HashMap<>();
+            jsonMap.put("workflows", workflowList);
+
+            UpdateRequest updateRequest = new UpdateRequest()
+                    .index("participants_structured.rgp.rgp")
+                    .type("_doc")
+                    .id("UCULFNVQWATQ0CT7KZG4")
+                    .doc(jsonMap)
+                    .docAsUpsert(true);
+
+            UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+            searchProfileValue("participants_structured.rgp.rgp", "profile.guid", "UCULFNVQWATQ0CT7KZG4");
+        }
+    }
+
+    @Test
+    public void deletePT() throws Exception {
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
+
+            DeleteRequest deleteRequest = new DeleteRequest()
+                    .index("participants_structured.rgp.rgp")
+                    .type("_doc")
+                    .id("A04IPQGMRUCGH6XMW3D6");
+            DeleteResponse deleteResponse = client.delete(deleteRequest, RequestOptions.DEFAULT);
         }
     }
 }
