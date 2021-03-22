@@ -238,6 +238,7 @@ public class DBConstants {
     public static final String FIELD_TYPE = "field_type";
     public static final String DISPLAY_TYPE = "display_type";
     public static final String ACTIONS = "actions";
+    public static final String READONLY = "readonly";
 
     //dashboards
     public static final String PARTICIPANT_COUNT = "participantCount";
