@@ -285,11 +285,11 @@ public class PatchRoute extends RequestHandler {
         String status = nameValue.getValue() != null ? String.valueOf(nameValue.getValue()) : null;
         if (StringUtils.isNotBlank(status)) {
             Map<String,String> data = new Gson().fromJson(status, new TypeToken<Map<String, String>>(){}.getType());
-            if (action.getName() != null && StringUtils.isNotBlank(action.getName()) && data.containsKey(action.getName())) {
-                ElasticSearchUtil.writeWorkflow(ddpInstance, patch.getParentId(), action.getName(), data.get(action.getName()));
-            }
-            else if (action.getValue() != null && StringUtils.isNotBlank(action.getValue())) {
+            if (action.getValue() != null && StringUtils.isNotBlank(action.getValue())) {
                 ElasticSearchUtil.writeWorkflow(ddpInstance, patch.getParentId(), action.getName(), action.getValue());
+            }
+            else if (action.getName() != null && StringUtils.isNotBlank(action.getName()) && data.containsKey(action.getName())) {
+                ElasticSearchUtil.writeWorkflow(ddpInstance, patch.getParentId(), action.getName(), data.get(action.getName()));
             }
         }
     }

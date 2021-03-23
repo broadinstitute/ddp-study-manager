@@ -586,7 +586,7 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void searchPTByGUID() throws Exception {
-        searchProfileValue("participants_structured.atcp.atcp", "profile.guid", "5db65f9f43f38f2ae0ec3efb1d3325b1356e0a6ffa4b7ef71938f73930269811");
+        searchProfileValue("participants_structured.rgp.rgp", "profile.guid", "UCULFNVQWATQ0CT7KZG4");
     }
 
     @Test
