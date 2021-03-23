@@ -37,21 +37,25 @@
                 <constraints nullable="false" primaryKey="true"></constraints>
             </column>
             <column name="dsm_kit_request_id" type="INT">
-                <constraints nullable="false"></constraints>
+                <constraints nullable="false" unique="true" foreignKeyName="dsm_kit_request_id_fk"
+                             referencedTableName="ddp_kit" referencedColumnNames="dsm_kit_request_id"></constraints>
             </column>
         </createTable>
 
     </changeSet>
+
     <changeSet id="DDP-5445-ups_package-table" author="pegah">
         <createTable tableName="ups_package">
             <column name="ups_package_id" type="INT" autoIncrement="true">
                 <constraints nullable="false" primaryKey="true"></constraints>
             </column>
             <column name="dsm_kit_request_id" type="INT">
-                <constraints nullable="false"></constraints>
+                <constraints nullable="false" foreignKeyName="dsm_kit_request_id_fk" referencedTableName="ddp_kit"
+                             referencedColumnNames="dsm_kit_request_id"></constraints>
             </column>
             <column name="ups_shipment_id" type="INT">
-                <constraints nullable="false"></constraints>
+                <constraints nullable="false" foreignKeyName="ups_shipment_id_fk" referencedTableName="ups_shipment"
+                             referencedColumnNames="ups_shipment_id"></constraints>
             </column>
             <column name="tracking_number" type="varchar(50)"></column>
             <column name="delivery_date" type="varchar(10)"></column><!-- Format: MMDDYYYY-->
@@ -68,10 +72,12 @@
                 <constraints nullable="false" primaryKey="true"></constraints>
             </column>
             <column name="ups_package_id" type="INT">
-                <constraints nullable="false"></constraints>
+                <constraints nullable="false" foreignKeyName="ups_package_id_fk" referencedTableName="ups_package"
+                             referencedColumnNames="ups_package_id"></constraints>
             </column>
             <column name="dsm_kit_request_id" type="INT">
-                <constraints nullable="false"></constraints>
+                <constraints nullable="false" foreignKeyName="dsm_kit_request_id_fk" referencedTableName="ddp_kit"
+                             referencedColumnNames="dsm_kit_request_id"></constraints>
             </column>
             <column name="ups_location" type="TEXT(10000)"></column>
             <column name="ups_status_type" type="VARCHAR(10)"></column>
@@ -81,5 +87,6 @@
             <column name="ups_activity_time" type="VARCHAR(16)"></column>
         </createTable>
     </changeSet>
+
 
 </databaseChangeLog>

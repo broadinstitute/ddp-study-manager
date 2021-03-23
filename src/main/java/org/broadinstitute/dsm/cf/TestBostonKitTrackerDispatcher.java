@@ -46,9 +46,9 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
     public void accept(PubsubMessage pubsubMessage, Context context) throws Exception {
         Config cfg = CFUtil.loadConfig();
         String dbUrl = cfg.getString("dsmDBUrl");
-        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(1, dbUrl);
+        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(2, dbUrl);
         String data = new String(Base64.getDecoder().decode(pubsubMessage.getData()));
-        final String SQL_SELECT_KITS = "SELECT  * " +
+        final String SQL_SELECT_KITS_WITH_LATEST_ACTIVITY = "SELECT  * " +
                 " FROM  " + STUDY_MANAGER_SCHEMA + "ddp_kit kit  " +
                 " LEFT JOIN     " + STUDY_MANAGER_SCHEMA + "ddp_kit_request req  ON (kit.dsm_kit_request_id = req.dsm_kit_request_id)   " +
                 " left join    " + STUDY_MANAGER_SCHEMA + "ups_shipment shipment on (shipment.dsm_kit_request_id = kit.dsm_kit_request_id) " +
@@ -83,7 +83,7 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                     logger.info("tracking ups ids for " + ddpInstance.getName());
                     while (!(kit == null && count != 0)) {
                         count++;
-                        try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KITS + SQL_AVOID_DELIVERED)) {
+                        try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KITS_WITH_LATEST_ACTIVITY + SQL_AVOID_DELIVERED)) {
                             stmt.setString(1, ddpInstance.getDdpInstanceId());
                             stmt.setInt(2, lastKitId);
                             stmt.setInt(3, LOOKUP_CHUNK_SIZE);
@@ -91,6 +91,7 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                             stmt.setFetchSize(LOOKUP_CHUNK_SIZE);
                             try (ResultSet rs = stmt.executeQuery()) {
                                 while (rs.next()) {
+                                    logger.info(kit == null ? "null" : kit.getDsmKitRequestId());
                                     if (kit == null) {
                                         String shipmentId = rs.getString("ups_shipment_id");
                                         UPSPackage upsPackage;
