@@ -37,7 +37,7 @@
                 <constraints nullable="false" primaryKey="true"></constraints>
             </column>
             <column name="dsm_kit_request_id" type="INT">
-                <constraints nullable="false" unique="true" foreignKeyName="dsm_kit_request_id_fk"
+                <constraints nullable="false" unique="true" foreignKeyName="dsm_kit_request_id_shipment_fk"
                              referencedTableName="ddp_kit" referencedColumnNames="dsm_kit_request_id"></constraints>
             </column>
         </createTable>
@@ -50,7 +50,8 @@
                 <constraints nullable="false" primaryKey="true"></constraints>
             </column>
             <column name="dsm_kit_request_id" type="INT">
-                <constraints nullable="false" foreignKeyName="dsm_kit_request_id_fk" referencedTableName="ddp_kit"
+                <constraints nullable="false" foreignKeyName="dsm_kit_request_id_package_fk"
+                             referencedTableName="ddp_kit"
                              referencedColumnNames="dsm_kit_request_id"></constraints>
             </column>
             <column name="ups_shipment_id" type="INT">
@@ -76,7 +77,8 @@
                              referencedColumnNames="ups_package_id"></constraints>
             </column>
             <column name="dsm_kit_request_id" type="INT">
-                <constraints nullable="false" foreignKeyName="dsm_kit_request_id_fk" referencedTableName="ddp_kit"
+                <constraints nullable="false" foreignKeyName="dsm_kit_request_id_activity_fk"
+                             referencedTableName="ddp_kit"
                              referencedColumnNames="dsm_kit_request_id"></constraints>
             </column>
             <column name="ups_location" type="TEXT(10000)"></column>
