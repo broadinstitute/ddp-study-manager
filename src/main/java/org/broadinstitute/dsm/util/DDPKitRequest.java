@@ -78,42 +78,19 @@ public class DDPKitRequest {
                                                             if (kitHasSubKits) {
                                                                 List<KitSubKits> subKits = kitRequestSettings.getSubKits();
                                                                 addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID(), null);
-                                                            }
-                                                            else {
+                                                            } else {
                                                                 KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, kitType.getKitTypeId(),
                                                                         kitRequestSettings, collaboratorParticipantId, null, null);
                                                             }
-                                                        }
-                                                        else {
+                                                        } else {
                                                             logger.error("ES profile data was empty for participant with ddp_kit_request_id " + kitDetail.getKitRequestId());
                                                         }
-                                                    }
-                                                    else {
+                                                    } else {
                                                         logger.error("Participant of ddp_kit_request_id " + kitDetail.getKitRequestId() + " not found in ES ");
                                                     }
                                                 }
-                                            }
-                                            else {
-                                                //kit requests from gen2 can be removed after all studies are migrated
-                                                DDPParticipant participant = DDPParticipant.getDDPParticipant(latestKit.getBaseURL(), latestKit.getInstanceName(), kitDetail.getParticipantId(), latestKit.isHasAuth0Token());
-                                                if (participant != null) {
-                                                    // if the kit type has sub kits > like for promise
-                                                    String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(latestKit.getBaseURL(), latestKit.getInstanceID(), latestKit.isMigrated(),
-                                                            latestKit.getCollaboratorIdPrefix(), participant.getParticipantId(), participant.getShortId(), kitRequestSettings.getCollaboratorParticipantLengthOverwrite());
-                                                    //only testboston for now which is not gen2 so it won't matter
-                                                    if (kitHasSubKits) {
-                                                        List<KitSubKits> subKits = kitRequestSettings.getSubKits();
-                                                        addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID(), null);
-                                                    }
-                                                    else {
-                                                        // all other ddps
-                                                        KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, kitType.getKitTypeId(),
-                                                                kitRequestSettings, collaboratorParticipantId, null, null);
-                                                    }
-                                                }
-                                                else {
-                                                    throw new RuntimeException("No participant returned w/ " + kitDetail.getParticipantId() + " for " + latestKit.getInstanceName());
-                                                }
+                                            } else {
+                                                logger.error("Cannot process gen2 kit request for {}", latestKit.getInstanceName());
                                             }
                                         }
                                         else {
