@@ -10,11 +10,14 @@ public class SimpleKitOrder {
 
     private final String participantGuid;
 
-    public SimpleKitOrder(Address recipientAddress, String externalKitOrderNumber, String externalKitName, String participantGuid) {
+    private final String shortId;
+
+    public SimpleKitOrder(Address recipientAddress, String externalKitOrderNumber, String externalKitName, String participantGuid, String shortId) {
         this.recipientAddress = recipientAddress;
         this.externalKitOrderNumber = externalKitOrderNumber;
         this.externalKitName = externalKitName;
         this.participantGuid = participantGuid;
+        this.shortId = shortId;
     }
 
     public Address getRecipientAddress() {
@@ -31,5 +34,9 @@ public class SimpleKitOrder {
 
     public String getParticipantGuid() {
         return participantGuid;
+    }
+
+    public String getShortId() {
+        return shortId;
     }
 }

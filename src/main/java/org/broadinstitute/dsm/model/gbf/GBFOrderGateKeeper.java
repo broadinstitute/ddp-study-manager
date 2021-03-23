@@ -88,7 +88,7 @@ public class GBFOrderGateKeeper {
         } catch (MalformedURLException e) {
             throw new RuntimeException("Could not initialize es client",e);
         }
-        GBFOrderFinder orderFinder = new GBFOrderFinder(45, 10000, esClient, "participants_structured.testboston.testboston");
+        GBFOrderFinder orderFinder = new GBFOrderFinder(30, 10000, esClient, "participants_structured.testboston.testboston");
 
         GBFOrderTransmitter transmitter = new GBFOrderTransmitter(false, gbfUrl, apiKey, 2, 1000, carrierService,externalClientId);
         GBFOrderGateKeeper keeper = new GBFOrderGateKeeper(orderFinder, transmitter, "testboston");

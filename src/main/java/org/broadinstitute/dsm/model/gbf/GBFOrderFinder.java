@@ -41,7 +41,9 @@ public class GBFOrderFinder {
                     "orders.ddp_participant_id, " +
                     "(select max(req.dsm_kit_request_id) from ddp_kit_request req where req.external_order_number = orders.external_order_number) as max_kit_request_id, " +
                     "(select req.order_transmitted_at from ddp_kit_request req where req.dsm_kit_request_id = orders.external_order_number " +
-                    ") as order_transmission_date " +
+                    ") as order_transmission_date, " +
+                    // todo arz enable view from dsm -> dss in all envs
+                    "(select u.hruid from dss_user u where u.guid = orders.ddp_participant_id) as hruid " +
                     "from " +
                     "ddp_instance i, " +
                     "ddp_kit_request_settings s, " +
@@ -153,9 +155,10 @@ public class GBFOrderFinder {
                         String participantGuid = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
                         String externalOrderId = rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER);
                         String kitName = rs.getString(DBConstants.EXTERNAL_KIT_NAME);
+                        String shortId = rs.getString("hruid");
                         if (addressForParticipants.containsKey(participantGuid)) {
                             Address recipientAddress = addressForParticipants.get(participantGuid);
-                            kitsToOrder.add(new SimpleKitOrder(recipientAddress, externalOrderId, kitName, participantGuid));
+                            kitsToOrder.add(new SimpleKitOrder(recipientAddress, externalOrderId, kitName, participantGuid, shortId));
                         } else {
                             logger.error("No address found in elastic for {}",participantGuid);
                         }
@@ -192,10 +195,14 @@ public class GBFOrderFinder {
 
 
         TransactionWrapper.inTransaction(conn -> {
+            StringBuilder csvString = new StringBuilder();
+            csvString.append("short id,kit order number\n");
             Collection<SimpleKitOrder> kits = orderFinder.findKitsToOrder("testboston", conn);
             for (SimpleKitOrder kit : kits) {
                 logger.info("Found {}",kit.getExternalKitOrderNumber());
+                csvString.append(kit.getShortId()).append(",").append(kit.getExternalKitOrderNumber()).append("\n");
             }
+            logger.info(csvString.toString());
             return null;
         });
         System.exit(0);
