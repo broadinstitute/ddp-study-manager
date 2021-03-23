@@ -125,6 +125,9 @@ public class DisplaySettingsRoute extends RequestHandler {
                 if (DDPInstanceDao.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
                     displaySettings.put("addFamilyMember", true);
                 }
+                if (DDPInstanceDao.getRole(instance.getName(), DBConstants.SHOW_TAB_FIELDS)) {
+                    displaySettings.put("showTabFields", true);
+                }
                 return displaySettings;
             }
         }
