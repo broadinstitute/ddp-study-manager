@@ -55,7 +55,8 @@
                              referencedColumnNames="dsm_kit_request_id"></constraints>
             </column>
             <column name="ups_shipment_id" type="INT">
-                <constraints nullable="false" foreignKeyName="ups_shipment_id_fk" referencedTableName="ups_shipment"
+                <constraints nullable="false" foreignKeyName="ups_shipment_id_fk"
+                             referencedTableName="ups_shipment"
                              referencedColumnNames="ups_shipment_id"></constraints>
             </column>
             <column name="tracking_number" type="varchar(50)"></column>
