@@ -245,6 +245,7 @@ public class TestBostonUPSTrackingJob implements Job {
                             logger.error("delivered kitDDPNotification was null for " + kit.getExternalOrderNumber());
                         }
                     }
+
                 }
                 else { // this is a return
                     if (earliestInTransitTime != null && !kit.isCEOrdered()) {
