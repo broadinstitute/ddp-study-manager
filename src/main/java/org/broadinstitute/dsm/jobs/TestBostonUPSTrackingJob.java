@@ -236,7 +236,7 @@ public class TestBostonUPSTrackingJob implements Job {
 
                 if (!isReturn) {
                     if (shouldTriggerEventForKitOnItsWayToParticipant(statusType, oldType)) {
-                        KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[]{DELIVERED, ddpInstance.getDdpInstanceId(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber()}, 1);//todo change this to the number of subkits but for now 2 for test boston works
+                        KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[]{DELIVERED, ddpInstance.getDdpInstanceId(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber()}, 1);
                         if (kitDDPNotification != null) {
                             logger.info("Triggering DDP for kit going to participant with external order number: " + kit.getExternalOrderNumber());
                             EventUtil.triggerDDP(conn, kitDDPNotification);
@@ -260,7 +260,7 @@ public class TestBostonUPSTrackingJob implements Job {
                     if (shouldTriggerEventForReturnKitDelivery(statusType, oldType)) {
                         KitUtil.setKitReceived(conn, kit.getMainKitLabel());
                         logger.info("RECEIVED: " + trackingId);
-                        KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[]{RECEIVED, ddpInstance.getDdpInstanceId(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber()}, 1);//todo change this to the number of subkits but for now 2 for test boston works
+                        KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[]{RECEIVED, ddpInstance.getDdpInstanceId(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber()}, 1);
                         if (kitDDPNotification != null) {
                             logger.info("Triggering DDP for received kit with external order number: " + kit.getExternalOrderNumber());
                             EventUtil.triggerDDP(conn, kitDDPNotification);
