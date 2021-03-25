@@ -868,7 +868,7 @@
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
             <column name="field_type" value="RGP_MEDICAL_RECORDS_GROUP"/>
-            <column name="column_name" value="PHYSICAL_RECORDS_RECEIVED"/>
+            <column name="column_name" value="PHYSICIAN_RECORDS_RECEIVED"/>
             <column name="column_display" value="Physician Records Received"/>
             <column name="display_type" value="RADIO"/>
             <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;PARTIAL&#34;,&#34;name&#34;:&#34;Partial&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
@@ -1346,8 +1346,8 @@
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
             <column name="field_type" value="RGP_RGP_GROUP"/>
-            <column name="column_name" value="REDCAP_SURVEY_TAKEN"/>
-            <column name="column_display" value="RedCap Survey Taken"/>
+            <column name="column_name" value="REDCAP_SURVEY_TAKER"/>
+            <column name="column_display" value="RedCap Survey Taker"/>
             <column name="display_type" value="OPTIONS"/>
             <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>            <column name="order_number" value="13"/>
         </insert>
