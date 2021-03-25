@@ -20,6 +20,7 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.Instant;
@@ -193,17 +194,14 @@ public class TestBostonUPSTrackingJob implements Job {
                             String statusType = status.getType();
                             String statusDescription = status.getDescription();
                             String date = activity.getDateTimeString();
-                            String sqlUpdate = SQL_UPDATE_UPS_TRACKING_STATUS;
 
                             UPSActivity earliestPackageMovementEvent = upsPackage.getEarliestPackageMovementEvent();
-                            Instant earliestPackageMovement = null;
-                            if (earliestPackageMovementEvent != null) {
-                                earliestPackageMovement = earliestPackageMovementEvent.getInstant();
-                            }
-                            if (isReturn) {
-                                sqlUpdate = SQL_UPDATE_UPS_RETURN_STATUS;
-                            }
-                            updateTrackingInfo(statusType, oldType, statusDescription, trackingId, date, sqlUpdate, isReturn, kit, earliestPackageMovement, ddpInstance);
+                            TransactionWrapper.inTransaction(conn -> {
+                                updateTrackingInfo(conn, statusType, oldType, statusDescription, trackingId, date, isReturn, kit,
+                                        earliestPackageMovementEvent != null ? earliestPackageMovementEvent.getInstant() : null,
+                                        ddpInstance);
+                                return null;
+                            });
                         }
                     }
                 }
@@ -212,73 +210,73 @@ public class TestBostonUPSTrackingJob implements Job {
     }
 
 
-    private static void updateTrackingInfo(String statusType,
+    private static void updateTrackingInfo(@NonNull Connection conn, String statusType,
                                            String oldType,
                                            String statusDescription,
                                            String trackingId,
                                            String date,
-                                           String query,
                                            boolean isReturn,
                                            DdpKit kit,
                                            Instant earliestInTransitTime,
                                            DDPInstance ddpInstance) {
+        String query = SQL_UPDATE_UPS_TRACKING_STATUS;
+        if (isReturn) {
+            query = SQL_UPDATE_UPS_RETURN_STATUS;
+        }
         String upsUpdate = statusType + " " + statusDescription;
-        TransactionWrapper.inTransaction(conn -> {
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setString(1, upsUpdate);
-                stmt.setString(2, date);
-                stmt.setString(3, trackingId);
-                stmt.setString(4, kit.getExternalOrderNumber());
-                int r = stmt.executeUpdate();
-                if (r != 2) {//number of subkits
-                    logger.error("Update query for UPS tracking updated " + r + " rows! with tracking/return id: " + trackingId + " for kit w/ external order number " + kit.getExternalOrderNumber());
-                }
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, upsUpdate);
+            stmt.setString(2, date);
+            stmt.setString(3, trackingId);
+            stmt.setString(4, kit.getExternalOrderNumber());
+            int r = stmt.executeUpdate();
+            if (r != 2) {//number of subkits
+                logger.error("Update query for UPS tracking updated " + r + " rows! with tracking/return id: " + trackingId + " for kit w/ external order number "+ kit.getExternalOrderNumber());
+            }
 
-                if (!isReturn) {
-                    if (shouldTriggerEventForKitOnItsWayToParticipant(statusType, oldType)) {
-                        KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[]{DELIVERED, ddpInstance.getDdpInstanceId(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber()}, 1);
-                        if (kitDDPNotification != null) {
-                            logger.info("Triggering DDP for kit going to participant with external order number: " + kit.getExternalOrderNumber());
-                            EventUtil.triggerDDP(conn, kitDDPNotification);
-                        }
-                        else {
-                            logger.error("delivered kitDDPNotification was null for " + kit.getExternalOrderNumber());
-                        }
-                    }
-
-                }
-                else { // this is a return
-                    if (earliestInTransitTime != null && !kit.isCEOrdered()) {
-                        // if we have the first date of an inbound event, create an order in CE
-                        // using the earliest date of inbound event
-                        orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime);
-                        logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
-                        kit.changeCEOrdered(conn, true);
+            if (!isReturn) {
+                if (shouldTriggerEventForKitOnItsWayToParticipant(statusType, oldType)) {
+                    KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn,SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] {  DELIVERED, ddpInstance.getDdpInstanceId(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber() }, 1);//todo change this to the number of subkits but for now 2 for test boston works
+                    if (kitDDPNotification != null) {
+                        logger.info("Triggering DDP for kit going to participant with external order number: " + kit.getExternalOrderNumber());
+                        EventUtil.triggerDDP(conn, kitDDPNotification);
                     }
                     else {
-                        logger.info("No return events for " + kit.getMainKitLabel() + ".  Will not place order yet.");
-                    }
-                    if (shouldTriggerEventForReturnKitDelivery(statusType, oldType)) {
-                        KitUtil.setKitReceived(conn, kit.getMainKitLabel());
-                        logger.info("RECEIVED: " + trackingId);
-                        KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[]{RECEIVED, ddpInstance.getDdpInstanceId(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber()}, 1);
-                        if (kitDDPNotification != null) {
-                            logger.info("Triggering DDP for received kit with external order number: " + kit.getExternalOrderNumber());
-                            EventUtil.triggerDDP(conn, kitDDPNotification);
-
-                        }
-                        else {
-                            logger.error("received kitDDPNotification was null for " + kit.getExternalOrderNumber());
-                        }
+                        logger.error("delivered kitDDPNotification was null for " + kit.getExternalOrderNumber());
                     }
                 }
-                logger.info("Updated status of tracking number " + trackingId + " to " + upsUpdate + " from " + oldType + " for kit w/ external order number " + kit.getExternalOrderNumber());
+
             }
-            catch (Exception e) {
-                throw new RuntimeException("Could not update tracking info for tracking id " + trackingId, e);
+            else { // this is a return
+                if (earliestInTransitTime != null && !kit.isCEOrdered()) {
+                    // if we have the first date of an inbound event, create an order in CE
+                    // using the earliest date of inbound event
+                    orderRegistrar.orderTest(DSMServer.careEvolveAuth, kit.getHRUID(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime);
+                    logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
+                    kit.changeCEOrdered(conn,true);
+                }
+                else {
+                    logger.info("No return events for " + kit.getMainKitLabel() + ".  Will not place order yet.");
+                }
+                if (shouldTriggerEventForReturnKitDelivery(statusType, oldType)) {
+                    KitUtil.setKitReceived(conn, kit.getMainKitLabel());
+                    logger.info("RECEIVED: " + trackingId);
+                    KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn,SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] { RECEIVED,  ddpInstance.getDdpInstanceId(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber() }, 1);//todo change this to the number of subkits but for now 2 for test boston works
+                    if (kitDDPNotification != null) {
+                        logger.info("Triggering DDP for received kit with external order number: " + kit.getExternalOrderNumber());
+                        EventUtil.triggerDDP(conn, kitDDPNotification);
+
+                    }
+                    else {
+                        logger.error("received kitDDPNotification was null for " + kit.getExternalOrderNumber());
+                    }
+                }
             }
-            return null;
-        });
+            logger.info("Updated status of tracking number " + trackingId + " to " + upsUpdate + " from " + oldType+ " for kit w/ external order number "+ kit.getExternalOrderNumber());
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Could not update tracking info for tracking id " + trackingId, e);
+        }
     }
 
     /**
