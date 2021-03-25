@@ -554,8 +554,7 @@
             <column name="column_name" value="ACCEPTANCE_STATUS"/>
             <column name="column_display" value="Acceptance Status *"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;ACCEPTED&#34;,&#34;name&#34;:&#34;Accepted&#34;},{&#34;value&#34;:&#34;IN_REVIEW&#34;,&#34;name&#34;:&#34;In Review&#34;},{&#34;value&#34;:&#34;MORE_INFO_NEEDED&#34;,&#34;name&#34;:&#34;More Info Needed&#34;,&#34;actions&#34;:[{&#34;name&#34;:&#34;ACCEPTANCE_STATUS&#34;,&#34;value&#34;:&#34;Our team is reviewing your application, but needs more information from you.&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]},{&#34;value&#34;:&#34;NOT_ACCEPTED&#34;,&#34;name&#34;:&#34;Not Accepted&#34;},{&#34;value&#34;:&#34;WAITLIST&#34;,&#34;name&#34;:&#34;Waitlist&#34;},{&#34;value&#34;:&#34;PRE_REVIEW&#34;,&#34;name&#34;:&#34;Pre-review&#34;}]"/>
-<!--            TODO check with Jeff about actions -->
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;ACCEPTED&#34;,&#34;name&#34;:&#34;Accepted&#34;},{&#34;value&#34;:&#34;IN_REVIEW&#34;,&#34;name&#34;:&#34;In Review&#34;},{&#34;value&#34;:&#34;MORE_INFO_NEEDED&#34;,&#34;name&#34;:&#34;More Info Needed&#34;},{&#34;value&#34;:&#34;NOT_ACCEPTED&#34;,&#34;name&#34;:&#34;Not Accepted&#34;},{&#34;value&#34;:&#34;WAITLIST&#34;,&#34;name&#34;:&#34;Waitlist&#34;},{&#34;value&#34;:&#34;PRE_REVIEW&#34;,&#34;name&#34;:&#34;Pre-review&#34;}]"/>
             <column name="actions" value="[{&#34;name&#34;:&#34;ACCEPTANCE_STATUS&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
             <column name="order_number" value="1"/>
         </insert>
@@ -643,8 +642,8 @@
             <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
             <column name="column_name" value="AGE"/>
             <column name="column_display" value="Age Today *"/>
-<!--            TODO ADD validation/calculation DDP-5712-->
             <column name="display_type" value="NUMBER"/>
+            <column name="actions" value="[{&#34;value&#34;:&#34;DATSTAT_DATEOFBIRTH&#34;,&#34;type&#34;:&#34;CALC&#34;}]"/>
             <column name="order_number" value="10"/>
         </insert>
         <insert tableName="field_settings">
@@ -751,6 +750,7 @@
             <column name="column_display" value="Consent Documentation Complete"/>
             <column name="display_type" value="RADIO"/>
             <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;CONSENT_DOC_COMPLETE_NEW&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
             <column name="order_number" value="4"/>
         </insert>
         <insert tableName="field_settings">
@@ -778,6 +778,7 @@
             <column name="column_name" value="DATE_ENROLLED"/>
             <column name="column_display" value="Enrollment Date"/>
             <column name="display_type" value="DATE"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;DATE_ENROLLED&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
             <column name="order_number" value="7"/>
         </insert>
         <insert tableName="field_settings">
@@ -805,6 +806,7 @@
             <column name="column_name" value="ACUITY_APPOINTMENT_DATE"/>
             <column name="column_display" value="Acuity Appointment Date"/>
             <column name="display_type" value="DATE"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;ACUITY_APPOINTMENT_DATE&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
             <column name="order_number" value="10"/>
         </insert>
         <insert tableName="field_settings">
@@ -872,6 +874,7 @@
             <column name="column_display" value="Physician Records Received"/>
             <column name="display_type" value="RADIO"/>
             <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;PARTIAL&#34;,&#34;name&#34;:&#34;Partial&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;PHYSICIAN_RECORDS_RECEIVED&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
             <column name="order_number" value="5"/>
         </insert>
         <insert tableName="field_settings">
@@ -956,6 +959,7 @@
             <column name="column_name" value="DATE_KIT_SENT"/>
             <column name="column_display" value="Date Kit Sent"/>
             <column name="display_type" value="SAMPLE"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;DATE_KIT_SENT&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
             <column name="order_number" value="3"/>
         </insert>
         <insert tableName="field_settings">
@@ -965,6 +969,7 @@
             <column name="column_name" value="DATE_KIT_RECEIVED"/>
             <column name="column_display" value="Date Kit Received"/>
             <column name="display_type" value="SAMPLE"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;DATE_KIT_RECEIVED&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
             <column name="order_number" value="4"/>
         </insert>
         <insert tableName="field_settings">
@@ -975,6 +980,7 @@
             <column name="column_display" value="Kit Type to Request"/>
             <column name="display_type" value="OPTIONS"/>
             <column name="possible_values" value="[{&#34;value&#34;:&#34;BLOOD&#34;,&#34;name&#34;:&#34;Blood&#34;},{&#34;value&#34;:&#34;SALIVA&#34;,&#34;name&#34;:&#34;Saliva&#34;},{&#34;value&#34;:&#34;NONE&#34;,&#34;name&#34;:&#34;None&#34;},{&#34;value&#34;:&#34;NONEDO&#34;,&#34;name&#34;:&#34;None - data only&#34;},{&#34;value&#34;:&#34;NONE_EXT_DNA&#34;,&#34;name&#34;:&#34;None - external DNA&#34;}]"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;KIT_TYPE_TO_REQUEST&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
             <column name="order_number" value="5"/>
         </insert>
         <insert tableName="field_settings">
@@ -1349,7 +1355,9 @@
             <column name="column_name" value="REDCAP_SURVEY_TAKER"/>
             <column name="column_display" value="RedCap Survey Taker"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>            <column name="order_number" value="13"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;REDCAP_SURVEY_TAKER&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
+            <column name="order_number" value="13"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -1358,6 +1366,7 @@
             <column name="column_name" value="REDCAP_SURVEY_COMPLETED_DATE"/>
             <column name="column_display" value="RedCap Survey Completed Date"/>
             <column name="display_type" value="DATE"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;REDCAP_SURVEY_COMPLETED_DATE&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
             <column name="order_number" value="14"/>
         </insert>
         <insert tableName="field_settings">
