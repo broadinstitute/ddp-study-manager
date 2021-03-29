@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.jobs;
 
 import com.google.cloud.functions.BackgroundFunction;
 import com.google.cloud.functions.Context;
+import com.google.gson.Gson;
 import com.typesafe.config.Config;
 import org.apache.commons.dbcp2.PoolableConnection;
 import org.apache.commons.dbcp2.PoolingDataSource;
@@ -27,10 +28,11 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 
 
-public class TestBostonUPSTrackingJob implements BackgroundFunction<UPSKit[]> {
+public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessage> {
 
     private String STUDY_MANAGER_SCHEMA = System.getenv("STUDY_MANAGER_SCHEMA") + ".";
     private String STUDY_SERVER_SCHEMA = System.getenv("STUDY_SERVER_SCHEMA") + ".";
@@ -49,8 +51,8 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<UPSKit[]> {
     Connection conn = null;
 
     @Override
-    public void accept(UPSKit[] kitsToLookFor, Context context) throws Exception {
-        if (kitsToLookFor == null || kitsToLookFor.length == 0) {
+    public void accept(PubsubMessage message, Context context) throws Exception {
+        if (message.data == null) {
             logger.info("No message provided");
             return;
         }
@@ -62,7 +64,8 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<UPSKit[]> {
         accessKey = cfg.getString("ups.accesskey");
         PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(1, dbUrl);
         logger.info("Starting the UPS lookup job");
-
+        String data = new String(Base64.getDecoder().decode(message.data));
+        UPSKit[] kitsToLookFor = new Gson().fromJson(data, UPSKit[].class);
         try {
             conn = dataSource.getConnection();
             Arrays.stream(kitsToLookFor).forEach(
@@ -97,8 +100,10 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<UPSKit[]> {
 
     private void insertShipmentAndPackageForNewKit(Connection conn, UPSKit kit, Config cfg) {
         String insertedShipmentId = null;
+        String[] insertedPackageIds = new String[2];
         String shippingKitPackageId = null;
         String returnKitPackageId = null;
+        logger.info("Inserting new kit information for kit " + kit.getDsmKitRequestId());
         final String SQL_INSERT_SHIPMENT = "INSERT INTO " + STUDY_MANAGER_SCHEMA + "ups_shipment" +
                 "  ( dsm_kit_request_id )" +
                 "  VALUES " +
@@ -106,7 +111,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<UPSKit[]> {
         final String SQL_INSERT_UPSPackage = "INSERT INTO " + STUDY_MANAGER_SCHEMA + "ups_package" +
                 "  ( dsm_kit_request_id ," +
                 " ups_shipment_id ," +
-                " tracking_number ,)" +
+                " tracking_number )" +
                 "  VALUES " +
                 "  (?, ? ,?)," +
                 "  (?, ? ,?) ";
@@ -115,6 +120,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<UPSKit[]> {
             int result = stmt.executeUpdate();
             if (result == 1) {
                 try (ResultSet rs = stmt.getGeneratedKeys()) {
+
                     if (rs.next()) {
                         insertedShipmentId = rs.getString(1);
                         logger.info("Added new ups shipment with id " + insertedShipmentId + " for " + kit.getDsmKitRequestId());
@@ -136,7 +142,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<UPSKit[]> {
             return;
         }
         if (insertedShipmentId != null) {
-
+            logger.info("Inserting new package information for kit " + kit.getDsmKitRequestId());
             try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_UPSPackage, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, kit.getDsmKitRequestId());
                 stmt.setString(2, insertedShipmentId);
@@ -147,12 +153,17 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<UPSKit[]> {
                 int result = stmt.executeUpdate();
                 if (result == 2) {
                     try (ResultSet rs = stmt.getGeneratedKeys()) {
-                        if (rs.next()) {
-                            shippingKitPackageId = rs.getString(1);
-                            returnKitPackageId = rs.getString(2);
-                            logger.info("Added new ups package with id " + shippingKitPackageId + " for " + kit.getDsmKitRequestId());
-                            logger.info("Added new ups package with id " + returnKitPackageId + " for " + kit.getDsmKitRequestId());
+                        int i = 0;
+                        while (rs.next()) {
+                            insertedPackageIds[i] = rs.getString(1);
                         }
+                        if (i != 2) {
+                            throw new RuntimeException("Didn't insert right amount of packages. Num of Packages = " + i);
+                        }
+                        shippingKitPackageId = insertedPackageIds[0];
+                        returnKitPackageId = insertedPackageIds[1];
+                        logger.info("Added new ups package with id " + shippingKitPackageId + " for " + kit.getDsmKitRequestId());
+                        logger.info("Added new ups package with id " + returnKitPackageId + " for " + kit.getDsmKitRequestId());
                     }
                     catch (Exception e) {
                         logger.error("Error getting id of new packages  ", e);
@@ -320,6 +331,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<UPSKit[]> {
                 "          and kit.dsm_kit_request_id = ?";
         int i = 0;
         for (UPSActivity activity : activities) {
+            logger.info(activity.getStatus().getDescription());
             if (activity.getInstant().isBefore(lastActivity.getInstant())) {
                 i++;
             }
@@ -328,13 +340,13 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<UPSKit[]> {
             UPSActivity currentInsertingActivity = activities[i];
             try (PreparedStatement stmt = conn.prepareStatement(INSERT_NEW_ACTIVITIES)) {
                 stmt.setString(1, kit.getUpsPackage().getUpsPackageId());
-                stmt.setString(1, kit.getDsmKitRequestId());
-                stmt.setString(1, currentInsertingActivity.getLocation().getString());
-                stmt.setString(1, currentInsertingActivity.getStatus().getType());
-                stmt.setString(1, currentInsertingActivity.getStatus().getDescription());
-                stmt.setString(1, currentInsertingActivity.getStatus().getCode());
-                stmt.setString(1, currentInsertingActivity.getDate());
-                stmt.setString(1, currentInsertingActivity.getTime());
+                stmt.setString(2, kit.getDsmKitRequestId());
+                stmt.setString(3, currentInsertingActivity.getLocation().getString());
+                stmt.setString(4, currentInsertingActivity.getStatus().getType());
+                stmt.setString(5, currentInsertingActivity.getStatus().getDescription());
+                stmt.setString(6, currentInsertingActivity.getStatus().getCode());
+                stmt.setString(7, currentInsertingActivity.getDate());
+                stmt.setString(8, currentInsertingActivity.getTime());
                 int r = stmt.executeUpdate();
 
                 logger.info("Updated " + r + " rows for a new activity");

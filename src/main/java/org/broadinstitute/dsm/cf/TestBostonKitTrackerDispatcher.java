@@ -55,7 +55,7 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                 " left join  " + STUDY_MANAGER_SCHEMA + "ups_package pack on (pack .dsm_kit_request_id = kit.dsm_kit_request_id and pack.ups_shipment_id = shipment.ups_shipment_id) " +
                 " left join  " + STUDY_MANAGER_SCHEMA + "ups_activity activity on (activity.dsm_kit_request_id = kit.dsm_kit_request_id and pack.ups_package_id = activity.ups_package_id) " +
                 " WHERE req.ddp_instance_id = ? and ( kit_label not like \"%\\\\_1\") and kit.dsm_kit_request_id > ? " +
-                " and (shipment.ups_shipment_id is null or  activity.ups_activity_id in  " +
+                " and (shipment.ups_shipment_id is null or activity.ups_activity_id is null  or  activity.ups_activity_id in  " +
                 " ( SELECT ac.ups_activity_id  " +
                 " FROM ups_package pac INNER JOIN  " +
                 "    ( SELECT  ups_package_id, MAX(ups_activity_id) maxId  " +
@@ -79,10 +79,9 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                 if (ddpInstance != null && ddpInstance.isHasRole()) {
                     int lastKitId = 0;
                     UPSKit kit = null;
-                    int count = 0;
                     logger.info("tracking ups ids for " + ddpInstance.getName());
-                    while (!(kit == null && count != 0)) {
-                        count++;
+                    loop:
+                    while (true) {
                         try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KITS_WITH_LATEST_ACTIVITY + SQL_AVOID_DELIVERED)) {
                             stmt.setString(1, ddpInstance.getDdpInstanceId());
                             stmt.setInt(2, lastKitId);
@@ -92,53 +91,54 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                             try (ResultSet rs = stmt.executeQuery()) {
                                 while (rs.next()) {
                                     logger.info(kit == null ? "null" : kit.getDsmKitRequestId());
-                                    if (kit == null) {
-                                        String shipmentId = rs.getString("ups_shipment_id");
-                                        UPSPackage upsPackage;
-                                        if (StringUtils.isNotBlank(shipmentId)) {
-                                            UPSStatus latestStatus = new UPSStatus(rs.getString("activity.ups_status_type"),
-                                                    rs.getString("activity.ups_status_description"),
-                                                    rs.getString("activity.ups_status_code"));
-                                            UPSActivity packageLastActivity = new UPSActivity(
-                                                    rs.getString("activity.ups_location"),
-                                                    latestStatus,
-                                                    rs.getString("activity.ups_activity_date"),
-                                                    rs.getString("activity.ups_activity_time"),
-                                                    rs.getString("activity.ups_activity_id"),
-                                                    rs.getString("activity.ups_package_id"),
-                                                    rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_KIT_REQUEST_ID)
-                                            );
-                                            upsPackage = new UPSPackage(
-                                                    rs.getString("pack.tracking_number"),
-                                                    new UPSActivity[] { packageLastActivity },
-                                                    rs.getString("pack.ups_shipment_id"),
-                                                    rs.getString("pack.ups_package_id"),
-                                                    rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_KIT_REQUEST_ID),
-                                                    null, null);
-                                        }
-                                        else {
-                                            upsPackage = new UPSPackage(
-                                                    null,
-                                                    null,
-                                                    null,
-                                                    null,
-                                                    rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_KIT_REQUEST_ID),
-                                                    null, null);
-                                        }
-                                        kit = new UPSKit(upsPackage,
-                                                rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.KIT_LABEL),
-                                                rs.getBoolean(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.CE_ORDER),
-                                                rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_KIT_REQUEST_ID),
-                                                rs.getString(DBConstants.DDP_KIT_REQUEST_TABLE_ABBR + DBConstants.EXTERNAL_ORDER_NUMBER),
-                                                rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_TRACKING_TO),
-                                                rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_TRACKING_RETURN),
-                                                rs.getString(DBConstants.DDP_KIT_REQUEST_TABLE_ABBR + DBConstants.DDP_INSTANCE_ID),
-                                                rs.getString(DBConstants.DDP_KIT_REQUEST_TABLE_ABBR + DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID)
+                                    String shipmentId = rs.getString("ups_shipment_id");
+                                    UPSPackage upsPackage;
+                                    if (StringUtils.isNotBlank(shipmentId)) {
+                                        UPSStatus latestStatus = new UPSStatus(rs.getString("activity.ups_status_type"),
+                                                rs.getString("activity.ups_status_description"),
+                                                rs.getString("activity.ups_status_code"));
+                                        UPSActivity packageLastActivity = new UPSActivity(
+                                                rs.getString("activity.ups_location"),
+                                                latestStatus,
+                                                rs.getString("activity.ups_activity_date"),
+                                                rs.getString("activity.ups_activity_time"),
+                                                rs.getString("activity.ups_activity_id"),
+                                                rs.getString("activity.ups_package_id"),
+                                                rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_KIT_REQUEST_ID)
                                         );
+                                        upsPackage = new UPSPackage(
+                                                rs.getString("pack.tracking_number"),
+                                                new UPSActivity[] { packageLastActivity },
+                                                rs.getString("pack.ups_shipment_id"),
+                                                rs.getString("pack.ups_package_id"),
+                                                rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_KIT_REQUEST_ID),
+                                                null, null);
                                     }
+                                    else {
+                                        upsPackage = new UPSPackage(
+                                                null,
+                                                null,
+                                                null,
+                                                null,
+                                                rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_KIT_REQUEST_ID),
+                                                null, null);
+                                    }
+                                    kit = new UPSKit(upsPackage,
+                                            rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.KIT_LABEL),
+                                            rs.getBoolean(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.CE_ORDER),
+                                            rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_KIT_REQUEST_ID),
+                                            rs.getString(DBConstants.DDP_KIT_REQUEST_TABLE_ABBR + DBConstants.EXTERNAL_ORDER_NUMBER),
+                                            rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_TRACKING_TO),
+                                            rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_TRACKING_RETURN),
+                                            rs.getString(DBConstants.DDP_KIT_REQUEST_TABLE_ABBR + DBConstants.DDP_INSTANCE_ID),
+                                            rs.getString(DBConstants.DDP_KIT_REQUEST_TABLE_ABBR + DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID)
+                                    );
                                     JSONObject jsonKit = new JSONObject(kit);
                                     subsetOfKits.put(jsonKit);
                                     logger.info("added " + kit.getKitLabel());
+                                    logger.info("size of array " + subsetOfKits.length());
+                                    logger.info("array " + subsetOfKits.toString());
+                                    kit = null;
                                 }
                             }
                             catch (Exception e) {
@@ -148,7 +148,12 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                         catch (Exception e) {
                             logger.error("Trouble creating the statement ", e);
                         }
-                        lastKitId = Integer.parseInt(kit.getDsmKitRequestId());
+                        if (kit != null) {
+                            lastKitId = Integer.parseInt(kit.getDsmKitRequestId());
+                        }
+                        else {
+                            break loop;
+                        }
                         kit = null;
                     }
                 }
