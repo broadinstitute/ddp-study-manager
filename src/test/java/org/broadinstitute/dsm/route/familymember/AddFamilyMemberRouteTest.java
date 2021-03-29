@@ -155,6 +155,16 @@ public class AddFamilyMemberRouteTest {
     }
 
     @Test
+    public void relationshipIdAlreadyExists() {
+        String payload = payloadFactory(participantId, ddpInstanceDto.getInstanceName(), probandData, user.getUserId());
+        AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
+        NewParticipantData participantData = new NewParticipantData(participantDataDao);
+        participantData.setData(addFamilyMemberPayload.getParticipantGuid().get(), ddpInstanceDto.getDdpInstanceId(),
+                ddpInstanceDto.getInstanceName() + AddFamilyMemberRoute.FIELD_TYPE, probandData);
+        Assert.assertTrue(participantData.isRelationshipIdExists());
+    }
+
+    @Test
     public void addFamilyMemberToParticipant() {
         String payload = payloadFactory(participantId, ddpInstanceDto.getInstanceName(), familyMemberData, user.getUserId());
         Result result = new Result(200);
