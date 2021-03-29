@@ -1,6 +1,5 @@
 package org.broadinstitute.dsm.pubsub;
 
-import com.google.api.core.ApiFuture;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectTopicName;
@@ -25,7 +24,6 @@ public class KitTrackerPubSubPublisher {
         TopicName topicName = TopicName.of(projectId, topicId);
         // Create a publisher instance with default settings bound to the topic
         logger.info("Publishing message to topic: " + topicName);
-
 
         ByteString data = ByteString.copyFrom(kits, StandardCharsets.UTF_8);
         PubsubMessage pubsubMessage = PubsubMessage.newBuilder().setData(data).build();
