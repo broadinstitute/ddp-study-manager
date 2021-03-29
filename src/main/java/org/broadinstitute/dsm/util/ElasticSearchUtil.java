@@ -1,5 +1,9 @@
 package org.broadinstitute.dsm.util;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.annotations.SerializedName;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
@@ -13,6 +17,7 @@ import org.broadinstitute.ddp.handlers.util.MedicalInfo;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
+import org.broadinstitute.dsm.model.gbf.Address;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.elasticsearch.action.search.SearchRequest;
@@ -23,6 +28,7 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
+
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -34,6 +40,15 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.*;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ElasticSearchUtil {
 
@@ -71,6 +86,8 @@ public class ElasticSearchUtil {
     public static final String STATUS = "status";
     public static final String PROFILE_CREATED_AT = "profile." + CREATED_AT;
     public static final String WORKFLOWS = "workflows";
+    public static final String FIRST_NAME_FIELD = "firstName";
+    public static final String LAST_NAME_FIELD = "lastName";
 
     public static RestHighLevelClient getClientForElasticsearchCloud(@NonNull String baseUrl, @NonNull String userName, @NonNull String password) throws MalformedURLException {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
@@ -165,6 +182,52 @@ public class ElasticSearchUtil {
             return esData;
         }
         return null;
+    }
+
+    public static Map<String, Address> getParticipantAddresses(RestHighLevelClient client, String indexName, Set<String> participantGuids) {
+        Gson gson = new Gson();
+        Map<String, Address> addressByParticipant = new HashMap<>();
+        int scrollSize = 100;
+        SearchRequest searchRequest = new SearchRequest(indexName);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        SearchResponse response = null;
+        int hitNumber = 0;
+        int pageNumber = 0;
+        long totalHits = 0;
+
+
+        BoolQueryBuilder qb = QueryBuilders.boolQuery();
+        qb.must(QueryBuilders.termsQuery("profile.guid", participantGuids));
+
+        searchSourceBuilder.fetchSource(new String[] {PROFILE, ADDRESS}, null);
+        searchSourceBuilder.query(qb).sort(PROFILE_CREATED_AT, SortOrder.ASC).docValueField(ADDRESS).docValueField(PROFILE);
+        while (pageNumber == 0 || hitNumber < totalHits) {
+            searchSourceBuilder.size(scrollSize);
+            searchSourceBuilder.from(pageNumber * scrollSize);
+            searchRequest.source(searchSourceBuilder);
+
+            try {
+                response = client.search(searchRequest, RequestOptions.DEFAULT);
+                totalHits = response.getHits().getTotalHits();
+                pageNumber++;
+            } catch (IOException e) {
+                throw new RuntimeException("Could not query elastic index " + indexName + " for " + participantGuids.size() + " participants", e);
+            }
+            for (SearchHit hit : response.getHits()) {
+                Map<String, Object> participantRecord = hit.getSourceAsMap();
+                JsonObject participantJson = new JsonParser().parse(new Gson().toJson(participantRecord)).getAsJsonObject();
+                if (participantJson.has(ADDRESS) && participantJson.has(PROFILE)) {
+                    ESAddress address = gson.fromJson(participantJson.get(ADDRESS), ESAddress.class);
+                    ESProfile profile = gson.fromJson(participantJson.get(PROFILE), ESProfile.class);
+                    Address gbfAddress = new Address(address.getRecipient(), address.getStreet1(), address.getStreet1(),
+                            address.getCity(), address.getState(), address.getZip(), address.getCountry(), address.getPhone());
+                    addressByParticipant.put(profile.getParticipantGuid(), gbfAddress);
+                }
+                hitNumber++;
+            }
+
+        }
+        return addressByParticipant;
     }
 
     public static boolean writeWorkflow(@NonNull DDPInstance instance, @NonNull String ddpParticipantId, @NonNull String workflow, @NonNull String status) {
@@ -849,6 +912,90 @@ public class ElasticSearchUtil {
         }
         else {
             finalQuery.should(QueryBuilders.rangeQuery(name).gte(start).lte(end));
+        }
+    }
+
+    private static class ESProfile {
+
+        @SerializedName(FIRST_NAME_FIELD)
+        private String firstName;
+
+        @SerializedName(LAST_NAME_FIELD)
+        private String lastName;
+
+        @SerializedName("guid")
+        private String participantGuid;
+
+        public String getFirstName() {
+            return firstName;
+        }
+
+        public String getLastName() {
+            return lastName;
+        }
+
+        public String getParticipantGuid() {
+            return participantGuid;
+        }
+
+    }
+
+    private static class ESAddress {
+
+        @SerializedName("street1")
+        private String street1;
+
+        @SerializedName("street2")
+        private String street2;
+
+        @SerializedName("city")
+        private String city;
+
+        @SerializedName("state")
+        private String state;
+
+        @SerializedName("zip")
+        private String zip;
+
+        @SerializedName("country")
+        private String country;
+
+        @SerializedName("phone")
+        private String phone;
+
+        @SerializedName("mailToName")
+        private String recipient;
+
+        public String getStreet1() {
+            return street1;
+        }
+
+        public String getStreet2() {
+            return street2;
+        }
+
+        public String getCity() {
+            return city;
+        }
+
+        public String getState() {
+            return state;
+        }
+
+        public String getZip() {
+            return zip;
+        }
+
+        public String getCountry() {
+            return country;
+        }
+
+        public String getPhone() {
+            return phone;
+        }
+
+        public String getRecipient() {
+            return recipient;
         }
     }
 }
