@@ -17,6 +17,7 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.*;
 import org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil;
 import org.broadinstitute.dsm.util.tools.util.DBUtil;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Assert;
 import org.mockserver.integration.ClientAndServer;
 import org.slf4j.Logger;
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import spark.Spark;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import org.broadinstitute.ddp.BasicServer;
@@ -72,6 +74,7 @@ public class TestHelper {
     public static String PROMISE_INSTANCE_ID = null;
     protected static String DDP_BASE_URL;
     protected static String DSM_BASE_URL;
+    protected static RestHighLevelClient esClient;
 
     public static Config cfg;
 
@@ -128,10 +131,13 @@ public class TestHelper {
             } else {
                 logger.info("Skipping DB update...");
             }
-        TransactionWrapper.configureSslProperties(cfg.getString("portal.dbSslKeyStore"),
-                cfg.getString("portal.dbSslKeyStorePwd"),
-                cfg.getString("portal.dbSslTrustStore"),
-                cfg.getString("portal.dbSslTrustStorePwd"));
+
+            if (!skipSsl) {
+                TransactionWrapper.configureSslProperties(cfg.getString("portal.dbSslKeyStore"),
+                        cfg.getString("portal.dbSslKeyStorePwd"),
+                        cfg.getString("portal.dbSslTrustStore"),
+                        cfg.getString("portal.dbSslTrustStorePwd"));
+            }
 
         TransactionWrapper.reset(TestUtil.UNIT_TEST);
             TransactionWrapper.init(maxConnections, dbUrl, cfg, skipSsl);
@@ -296,6 +302,20 @@ public class TestHelper {
 
         userUtil = new UserUtil();
         eventUtil = new EventUtil();
+    }
+
+    public static void setupEsClient() {
+        if (esClient == null) {
+            if (cfg == null) {
+                setupDB();
+            }
+            try {
+                esClient = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"));
+            } catch (MalformedURLException e) {
+                throw new RuntimeException("Could not initialize es client",e);
+            }
+        }
+
     }
 
     //Methods shared by more than 2 classes!!!
