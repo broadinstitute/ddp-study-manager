@@ -56,8 +56,9 @@ public class AddFamilyMemberRoute extends RequestHandler {
             throw new RuntimeException("User id was not equal. User id in token " + userId + " user id in request " + uId);
         }
 
+        ParticipantDataDao participantDataDao = new ParticipantDataDao();
         try {
-            NewParticipantData participantDateObject = new NewParticipantData(new ParticipantDataDao());
+            NewParticipantData participantDateObject = new NewParticipantData(participantDataDao);
             participantDateObject.setData(
                     participantGuid,
                     Integer.parseInt(ddpInstanceId),
@@ -69,7 +70,7 @@ public class AddFamilyMemberRoute extends RequestHandler {
         } catch (Exception e) {
             throw new RuntimeException("Could not create family member " + e);
         }
-        return new Result(200);
+        return NewParticipantData.parseDtoList(participantDataDao.getParticipantDataByParticipantId(participantGuid));
     }
 
 
