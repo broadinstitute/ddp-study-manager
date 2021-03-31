@@ -320,7 +320,7 @@ public class KitUploadRoute extends RequestHandler {
                            List<KitRequest> duplicateKitList, ArrayList<KitRequest> orderKits, String externalOrderNumber, String uploadReason, String carrier) {
         String participantGuid = ParticipantWrapper.getParticipantGuid(ParticipantWrapper.getParticipantFromESByHruid(ddpInstance, kit.getShortId()));
         String participantLegacyAltPid = ParticipantWrapper.getParticipantLegacyAltPid(ParticipantWrapper.getParticipantFromESByLegacyShortId(ddpInstance, kit.getShortId()));
-        if (checkAndSetParticipantIdIfKitExists(ddpInstance, conn, kit, participantGuid, participantLegacyAltPid, kitType.getKitTypeId())) {
+        if (checkAndSetParticipantIdIfKitExists(ddpInstance, conn, kit, participantGuid, participantLegacyAltPid, kitType.getKitTypeId()) && !uploadAnyway) {
             duplicateKitList.add(kit);
         }
         else {
@@ -413,7 +413,7 @@ public class KitUploadRoute extends RequestHandler {
             String shortId = participantDataByFieldName.get(SHORT_ID);
 
             if (!userExistsInRealm(ddpInstanceByRealm, participantDataByFieldName)) {
-                throw new RuntimeException("user with shortId: " + shortId + " and name, does not belong to this study.");
+                throw new RuntimeException("user with shortId: " + shortId + " does not belong to this study.");
             }
 
             KitUploadObject participantKitToUpload;
