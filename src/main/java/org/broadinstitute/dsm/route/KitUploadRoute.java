@@ -413,7 +413,7 @@ public class KitUploadRoute extends RequestHandler {
             String shortId = participantDataByFieldName.get(SHORT_ID);
 
             if (!userExistsInRealm(ddpInstanceByRealm, participantDataByFieldName)) {
-                throw new RuntimeException("user with shortId: " + shortId + " and name, does not belong to this study.");
+                throw new RuntimeException("user with shortId: " + shortId + " does not belong to this study.");
             }
 
             KitUploadObject participantKitToUpload;
