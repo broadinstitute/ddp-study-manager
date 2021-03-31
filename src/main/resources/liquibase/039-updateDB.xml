@@ -65,6 +65,7 @@
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
+            <column name="field_type" value="TAB"/>
             <column name="column_name" value="AT_GROUP_ELIGIBILITY"/>
             <column name="column_display" value="Eligibility"/>
             <column name="display_type" value="TAB"/>
@@ -130,6 +131,7 @@
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
+            <column name="field_type" value="TAB"/>
             <column name="column_name" value="AT_GROUP_MISCELLANEOUS"/>
             <column name="column_display" value="Registration"/>
             <column name="display_type" value="TAB"/>
@@ -169,6 +171,7 @@
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
+            <column name="field_type" value="TAB"/>
             <column name="column_name" value="AT_GROUP_GENOME_STUDY"/>
             <column name="column_display" value="Genome Study"/>
             <column name="display_type" value="TAB"/>
@@ -280,6 +283,7 @@
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
+            <column name="field_type" value="TAB"/>
             <column name="column_name" value="AT_GROUP_ASSENT"/>
             <column name="column_display" value="Platform Assent"/>
             <column name="display_type" value="TAB"/>
@@ -358,6 +362,7 @@
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
+            <column name="field_type" value="TAB"/>
             <column name="column_name" value="AT_GROUP_CONSENT"/>
             <column name="column_display" value="Platform Consent"/>
             <column name="display_type" value="TAB"/>
@@ -486,6 +491,7 @@
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
+            <column name="field_type" value="TAB"/>
             <column name="column_name" value="AT_GROUP_RE-CONSENT"/>
             <column name="column_display" value="Platform Re-consent"/>
             <column name="display_type" value="TAB"/>
@@ -533,6 +539,7 @@
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="TAB_GROUPED"/>
             <column name="column_name" value="RGP_PARTICIPANTS"/>
             <column name="column_display" value="#DATSTAT_FIRSTNAME #DATSTAT_LASTNAME #MEMBER_TYPE"/>
             <column name="display_type" value="TAB"/>
@@ -554,7 +561,7 @@
             <column name="column_name" value="ACCEPTANCE_STATUS"/>
             <column name="column_display" value="Acceptance Status *"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;ACCEPTED&#34;,&#34;name&#34;:&#34;Accepted&#34;},{&#34;value&#34;:&#34;IN_REVIEW&#34;,&#34;name&#34;:&#34;In Review&#34;},{&#34;value&#34;:&#34;MORE_INFO_NEEDED&#34;,&#34;name&#34;:&#34;More Info Needed&#34;},{&#34;value&#34;:&#34;NOT_ACCEPTED&#34;,&#34;name&#34;:&#34;Not Accepted&#34;},{&#34;value&#34;:&#34;WAITLIST&#34;,&#34;name&#34;:&#34;Waitlist&#34;},{&#34;value&#34;:&#34;PRE_REVIEW&#34;,&#34;name&#34;:&#34;Pre-review&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;ACCEPTED&#34;,&#34;name&#34;:&#34;Accepted&#34;},{&#34;value&#34;:&#34;IN_REVIEW&#34;,&#34;name&#34;:&#34;In Review&#34;},{&#34;value&#34;:&#34;MORE_INFO_NEEDED&#34;,&#34;name&#34;:&#34;More Info Needed&#34;},{&#34;value&#34;:&#34;NOT_ACCEPTED&#34;,&#34;name&#34;:&#34;Not Accepted&#34;},{&#34;value&#34;:&#34;WAITLIST&#34;,&#34;name&#34;:&#34;Waitlist&#34;},{&#34;value&#34;:&#34;PRE_REVIEW&#34;,&#34;name&#34;:&#34;Pre-review&#34;,&#34;default&#34;:true}]"/>
             <column name="actions" value="[{&#34;name&#34;:&#34;ACCEPTANCE_STATUS&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
             <column name="order_number" value="1"/>
         </insert>
@@ -565,7 +572,7 @@
             <column name="column_name" value="ACTIVE"/>
             <column name="column_display" value="Active/Inactive/HOLD *"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;ACTIVE&#34;,&#34;name&#34;:&#34;Active&#34;},{&#34;value&#34;:&#34;HOLD&#34;,&#34;name&#34;:&#34;HOLD&#34;},{&#34;value&#34;:&#34;INACTIVE&#34;,&#34;name&#34;:&#34;Inactive&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;ACTIVE&#34;,&#34;name&#34;:&#34;Active&#34;,&#34;default&#34;:true},{&#34;value&#34;:&#34;HOLD&#34;,&#34;name&#34;:&#34;HOLD&#34;},{&#34;value&#34;:&#34;INACTIVE&#34;,&#34;name&#34;:&#34;Inactive&#34;}]"/>
             <column name="order_number" value="2"/>
         </insert>
         <insert tableName="field_settings">
@@ -575,7 +582,7 @@
             <column name="column_name" value="ALIVE_DECEASED"/>
             <column name="column_display" value="Alive/Deceased *"/>
             <column name="display_type" value="RADIO"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;ALIVE&#34;,&#34;name&#34;:&#34;Alive&#34;},{&#34;value&#34;:&#34;DECEASED&#34;,&#34;name&#34;:&#34;Deceased&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;ALIVE&#34;,&#34;name&#34;:&#34;Alive&#34;,&#34;default&#34;:true},{&#34;value&#34;:&#34;DECEASED&#34;,&#34;name&#34;:&#34;Deceased&#34;}]"/>
             <column name="order_number" value="3"/>
         </insert>
         <insert tableName="field_settings">
@@ -595,7 +602,7 @@
             <column name="column_name" value="INACTIVE_REASON"/>
             <column name="column_display" value="Inactive Reason"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;WITHDREW&#34;,&#34;name&#34;:&#34;Withdrew&#34;},{&#34;value&#34;:&#34;DECLINED&#34;,&#34;name&#34;:&#34;Declined to Participate&#34;},{&#34;value&#34;:&#34;ENROLLED_INELIGIBLE&#34;,&#34;name&#34;:&#34;Enrolled-Ineligible&#34;},{&#34;value&#34;:&#34;COMPLETED&#34;,&#34;name&#34;:&#34;Completed&#34;},{&#34;value&#34;:&#34;LOST_TO_FOLLOWUP&#34;,&#34;name&#34;:&#34;Lost to Follow-up&#34;},{&#34;value&#34;:&#34;INELIGIBLE&#34;,&#34;name&#34;:&#34;Ineligible&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A &#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;WITHDREW&#34;,&#34;name&#34;:&#34;Withdrew&#34;},{&#34;value&#34;:&#34;DECLINED&#34;,&#34;name&#34;:&#34;Declined to Participate&#34;},{&#34;value&#34;:&#34;ENROLLED_INELIGIBLE&#34;,&#34;name&#34;:&#34;Enrolled-Ineligible&#34;},{&#34;value&#34;:&#34;COMPLETED&#34;,&#34;name&#34;:&#34;Completed&#34;},{&#34;value&#34;:&#34;LOST_TO_FOLLOWUP&#34;,&#34;name&#34;:&#34;Lost to Follow-up&#34;},{&#34;value&#34;:&#34;INELIGIBLE&#34;,&#34;name&#34;:&#34;Ineligible&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A &#34;,&#34;default&#34;:true}]"/>
             <column name="order_number" value="5"/>
         </insert>
         <insert tableName="field_settings">
@@ -605,7 +612,7 @@
             <column name="column_name" value="SEND_SECURE"/>
             <column name="column_display" value="Send Secure *"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;OPT_IN&#34;,&#34;name&#34;:&#34;Opt-In&#34;},{&#34;value&#34;:&#34;OPT_OUT&#34;,&#34;name&#34;:&#34;Opt-Out&#34;},{&#34;value&#34;:&#34;UNKNOWN&#34;,&#34;name&#34;:&#34;Unknown&#34;},{&#34;value&#34;:&#34;UNDECIDED&#34;,&#34;name&#34;:&#34;Undecided&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;OPT_IN&#34;,&#34;name&#34;:&#34;Opt-In&#34;},{&#34;value&#34;:&#34;OPT_OUT&#34;,&#34;name&#34;:&#34;Opt-Out&#34;},{&#34;value&#34;:&#34;UNKNOWN&#34;,&#34;name&#34;:&#34;Unknown&#34;,&#34;default&#34;:true},{&#34;value&#34;:&#34;UNDECIDED&#34;,&#34;name&#34;:&#34;Undecided&#34;}]"/>
             <column name="order_number" value="6"/>
         </insert>
         <insert tableName="field_settings">
@@ -691,7 +698,7 @@
             <column name="column_name" value="PORTAL_MESSAGE"/>
             <column name="column_display" value="Portal Message *"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;ACCEPT_CONSENTS_RECEIVED&#34;,&#34;name&#34;:&#34;Accept - Consents Received&#34;},{&#34;value&#34;:&#34;AUTOMATED_DEFAULT&#34;,&#34;name&#34;:&#34;Automated Default&#34;},{&#34;value&#34;:&#34;GENERIC_THANK_YOU&#34;,&#34;name&#34;:&#34;Generic Thank You&#34;},{&#34;value&#34;:&#34;NMI_CONSENT_RECEIVED&#34;,&#34;name&#34;:&#34;NMI - Consent Received&#34;},{&#34;value&#34;:&#34;NMI_NOW_ACCEPTED&#34;,&#34;name&#34;:&#34;NMI Now Accepted&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;ACCEPT_CONSENTS_RECEIVED&#34;,&#34;name&#34;:&#34;Accept - Consents Received&#34;},{&#34;value&#34;:&#34;AUTOMATED_DEFAULT&#34;,&#34;name&#34;:&#34;Automated Default&#34;,&#34;default&#34;:true},{&#34;value&#34;:&#34;GENERIC_THANK_YOU&#34;,&#34;name&#34;:&#34;Generic Thank You&#34;},{&#34;value&#34;:&#34;NMI_CONSENT_RECEIVED&#34;,&#34;name&#34;:&#34;NMI - Consent Received&#34;},{&#34;value&#34;:&#34;NMI_NOW_ACCEPTED&#34;,&#34;name&#34;:&#34;NMI Now Accepted&#34;}]"/>
             <column name="order_number" value="15"/>
         </insert>
         <insert tableName="field_settings">
@@ -700,8 +707,8 @@
             <column name="field_type" value="RGP_SUBJECT_STATUS_GROUP"/>
             <column name="column_name" value="PREFERRED_LANGUAGE"/>
             <column name="column_display" value="Preferred Language"/>
-            <column name="display_type" value="ACTIVITY"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;profile.preferredLanguage&#34;}]"/>
+            <column name="display_type" value="OPTIONS"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;ENGLISH&#34;,&#34;name&#34;:&#34;English&#34;,&#34;default&#34;:true},{&#34;value&#34;:&#34;SPANISH&#34;,&#34;name&#34;:&#34;Spanish&#34;},{&#34;value&#34;:&#34;OTHER&#34;,&#34;name&#34;:&#34;Other&#34;}]"/>
             <column name="order_number" value="16"/>
         </insert>
         <insert tableName="field_settings">
@@ -835,7 +842,7 @@
             <column name="column_name" value="MEDICAL_RECORDS_RELEASE_OBTAINED"/>
             <column name="column_display" value="Medical Records Release Obtained"/>
             <column name="display_type" value="RADIO"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;PARTIAL&#34;,&#34;name&#34;:&#34;Partial&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;,&#34;default&#34;:true},{&#34;value&#34;:&#34;PARTIAL&#34;,&#34;name&#34;:&#34;Partial&#34;}]"/>
             <column name="order_number" value="1"/>
         </insert>
         <insert tableName="field_settings">
@@ -893,7 +900,7 @@
             <column name="column_name" value="PHOTO_PERMISSIONS"/>
             <column name="column_display" value="Photo Permissions"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;},{&#34;value&#34;:&#34;INTERNAL_ONLY&#34;,&#34;name&#34;:&#34;Internal only&#34;},{&#34;value&#34;:&#34;EXTERNAL_INTERNAL&#34;,&#34;name&#34;:&#34;External and Internal&#34;},{&#34;value&#34;:&#34;DECLINED&#34;,&#34;name&#34;:&#34;Declined&#34;},{&#34;value&#34;:&#34;OTHER&#34;,&#34;name&#34;:&#34;Other&#34;},{&#34;value&#34;:&#34;REQUESTED&#34;,&#34;name&#34;:&#34;Requested&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;,&#34;default&#34;:true},{&#34;value&#34;:&#34;INTERNAL_ONLY&#34;,&#34;name&#34;:&#34;Internal only&#34;},{&#34;value&#34;:&#34;EXTERNAL_INTERNAL&#34;,&#34;name&#34;:&#34;External and Internal&#34;},{&#34;value&#34;:&#34;DECLINED&#34;,&#34;name&#34;:&#34;Declined&#34;},{&#34;value&#34;:&#34;OTHER&#34;,&#34;name&#34;:&#34;Other&#34;},{&#34;value&#34;:&#34;REQUESTED&#34;,&#34;name&#34;:&#34;Requested&#34;}]"/>
             <column name="order_number" value="7"/>
         </insert>
         <insert tableName="field_settings">
@@ -1008,7 +1015,7 @@
             <column name="column_name" value="RNA_SEQ"/>
             <column name="column_display" value="RNAseqP"/>
             <column name="display_type" value="RADIO"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;,&#34;default&#34;:true}]"/>
             <column name="order_number" value="8"/>
         </insert>
         <insert tableName="field_settings">
@@ -1091,7 +1098,7 @@
             <column name="column_name" value="REPORTABLE_RESULT"/>
             <column name="column_display" value="Reportable result"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;PRIMARY&#34;,&#34;name&#34;:&#34;Yes - Primary&#34;},{&#34;value&#34;:&#34;SECONDARY&#34;,&#34;name&#34;:&#34;Yes - Secondary&#34;},{&#34;value&#34;:&#34;BOTH&#34;,&#34;name&#34;:&#34;Yes - both&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;PRIMARY&#34;,&#34;name&#34;:&#34;Yes - Primary&#34;},{&#34;value&#34;:&#34;SECONDARY&#34;,&#34;name&#34;:&#34;Yes - Secondary&#34;},{&#34;value&#34;:&#34;BOTH&#34;,&#34;name&#34;:&#34;Yes - both&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;,&#34;default&#34;:true}]"/>
             <column name="order_number" value="1"/>
         </insert>
         <insert tableName="field_settings">
@@ -1101,7 +1108,7 @@
             <column name="column_name" value="SOLVED"/>
             <column name="column_display" value="Solved"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;RGP&#34;,&#34;name&#34;:&#34;Yes - RGP&#34;},{&#34;value&#34;:&#34;OUTSIDE&#34;,&#34;name&#34;:&#34;Yes - outside RGP&#34;},{&#34;value&#34;:&#34;UNCERTAIN&#34;,&#34;name&#34;:&#34;Uncertain&#34;},{&#34;value&#34;:&#34;NO_ANALYZE&#34;,&#34;name&#34;:&#34;No - no longer analyzed&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;RGP&#34;,&#34;name&#34;:&#34;Yes - RGP&#34;},{&#34;value&#34;:&#34;OUTSIDE&#34;,&#34;name&#34;:&#34;Yes - outside RGP&#34;},{&#34;value&#34;:&#34;UNCERTAIN&#34;,&#34;name&#34;:&#34;Uncertain&#34;},{&#34;value&#34;:&#34;NO_ANALYZE&#34;,&#34;name&#34;:&#34;No - no longer analyzed&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;,&#34;default&#34;:true}]"/>
             <column name="order_number" value="2"/>
         </insert>
         <insert tableName="field_settings">
@@ -1120,7 +1127,7 @@
             <column name="column_name" value="ROR_LETTER_SENT"/>
             <column name="column_display" value="ROR notification"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;OTHER&#34;,&#34;name&#34;:&#34;Other&#34;},{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;LETTER&#34;,&#34;name&#34;:&#34;Letter&#34;},{&#34;value&#34;:&#34;PHONE&#34;,&#34;name&#34;:&#34;Phone&#34;},{&#34;value&#34;:&#34;EMAIL&#34;,&#34;name&#34;:&#34;Email&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;,&#34;default&#34;:true},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;OTHER&#34;,&#34;name&#34;:&#34;Other&#34;},{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;LETTER&#34;,&#34;name&#34;:&#34;Letter&#34;},{&#34;value&#34;:&#34;PHONE&#34;,&#34;name&#34;:&#34;Phone&#34;},{&#34;value&#34;:&#34;EMAIL&#34;,&#34;name&#34;:&#34;Email&#34;}]"/>
             <column name="order_number" value="4"/>
         </insert>
         <insert tableName="field_settings">
@@ -1139,7 +1146,7 @@
             <column name="column_name" value="PROCEED_CONFIRM"/>
             <column name="column_display" value="Proceeding to confirm"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;UNDECIDED&#34;,&#34;name&#34;:&#34;Undecided&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;UNDECIDED&#34;,&#34;name&#34;:&#34;Undecided&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;,&#34;default&#34;:true}]"/>
             <column name="order_number" value="6"/>
         </insert>
         <insert tableName="field_settings">
@@ -1176,7 +1183,7 @@
             <column name="column_name" value="CONFIRM_LAB"/>
             <column name="column_display" value="Confirm Lab"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;LMM&#34;,&#34;name&#34;:&#34;LMM&#34;},{&#34;value&#34;:&#34;PREVENTION&#34;,&#34;name&#34;:&#34;Prevention&#34;},{&#34;value&#34;:&#34;MGH&#34;,&#34;name&#34;:&#34;MGH&#34;},{&#34;value&#34;:&#34;OUTSIDE_OF_RGP&#34;,&#34;name&#34;:&#34;Outside of RGP&#34;},{&#34;value&#34;:&#34;MULTIPLE&#34;,&#34;name&#34;:&#34;Multiple&#34;},{&#34;value&#34;:&#34;OTHER&#34;,&#34;name&#34;:&#34;Other&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;LMM&#34;,&#34;name&#34;:&#34;LMM&#34;},{&#34;value&#34;:&#34;PREVENTION&#34;,&#34;name&#34;:&#34;Prevention&#34;},{&#34;value&#34;:&#34;MGH&#34;,&#34;name&#34;:&#34;MGH&#34;},{&#34;value&#34;:&#34;OUTSIDE_OF_RGP&#34;,&#34;name&#34;:&#34;Outside of RGP&#34;},{&#34;value&#34;:&#34;MULTIPLE&#34;,&#34;name&#34;:&#34;Multiple&#34;},{&#34;value&#34;:&#34;OTHER&#34;,&#34;name&#34;:&#34;Other&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;,&#34;default&#34;:true}]"/>
             <column name="order_number" value="10"/>
         </insert>
         <insert tableName="field_settings">
@@ -1186,7 +1193,7 @@
             <column name="column_name" value="COLLABORATION"/>
             <column name="column_display" value="Collaboration?"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;SAMPLES&#34;,&#34;name&#34;:&#34;Yes - samples&#34;},{&#34;value&#34;:&#34;CLINICAL&#34;,&#34;name&#34;:&#34;Yes - clinical info/photos&#34;},{&#34;value&#34;:&#34;BOTH&#34;,&#34;name&#34;:&#34;Yes - both&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;SAMPLES&#34;,&#34;name&#34;:&#34;Yes - samples&#34;},{&#34;value&#34;:&#34;CLINICAL&#34;,&#34;name&#34;:&#34;Yes - clinical info/photos&#34;},{&#34;value&#34;:&#34;BOTH&#34;,&#34;name&#34;:&#34;Yes - both&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;,&#34;default&#34;:true}]"/>
             <column name="order_number" value="11"/>
         </insert>
         <insert tableName="field_settings">
@@ -1205,7 +1212,7 @@
             <column name="column_name" value="MTA"/>
             <column name="column_display" value="MTA"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;COMPLETED&#34;,&#34;name&#34;:&#34;Completed&#34;},{&#34;value&#34;:&#34;PROCESS&#34;,&#34;name&#34;:&#34;In process&#34;},{&#34;value&#34;:&#34;NEEDED&#34;,&#34;name&#34;:&#34;Needed&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;COMPLETED&#34;,&#34;name&#34;:&#34;Completed&#34;},{&#34;value&#34;:&#34;PROCESS&#34;,&#34;name&#34;:&#34;In process&#34;},{&#34;value&#34;:&#34;NEEDED&#34;,&#34;name&#34;:&#34;Needed&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;,&#34;default&#34;:true}]"/>
             <column name="order_number" value="13"/>
         </insert>
         <insert tableName="field_settings">
@@ -1224,7 +1231,7 @@
             <column name="column_name" value="PUBLICATION"/>
             <column name="column_display" value="Publication"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;TBD&#34;,&#34;name&#34;:&#34;TBD&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;TBD&#34;,&#34;name&#34;:&#34;TBD&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;,&#34;default&#34;:true}]"/>
             <column name="order_number" value="15"/>
         </insert>
         <insert tableName="field_settings">
@@ -1355,7 +1362,7 @@
             <column name="column_name" value="REDCAP_SURVEY_TAKER"/>
             <column name="column_display" value="RedCap Survey Taker"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;YES&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;NO&#34;,&#34;name&#34;:&#34;No&#34;,&#34;default&#34;:true},{&#34;value&#34;:&#34;NA&#34;,&#34;name&#34;:&#34;N/A&#34;}]"/>
             <column name="actions" value="[{&#34;name&#34;:&#34;REDCAP_SURVEY_TAKER&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
             <column name="order_number" value="13"/>
         </insert>
