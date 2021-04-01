@@ -27,7 +27,9 @@ public class InstanceSettings {
 
     private static final Logger logger = LoggerFactory.getLogger(InstanceSettings.class);
 
-    private static final String SQL_SELECT_INSTANCE_SETTINGS = "SELECT mr_cover_pdf, kit_behavior_change, special_format, hide_ES_fields, has_invitations FROM instance_settings settings, ddp_instance realm " +
+    private static final String SQL_SELECT_INSTANCE_SETTINGS =
+            "SELECT mr_cover_pdf, kit_behavior_change, special_format, hide_ES_fields, study_specific_statuses, has_invitations " +
+            "FROM instance_settings settings, ddp_instance realm " +
             "WHERE realm.ddp_instance_id = settings.ddp_instance_id AND realm.instance_name = ?";
 
     public static final String INSTANCE_SETTING_UPLOAD = "upload";
@@ -41,13 +43,15 @@ public class InstanceSettings {
     private List<Value> kitBehaviorChange;
     private List<Value> specialFormat;
     private List<Value> hideESFields;
+    private List<Value> studySpecificStatuses;
     private boolean hasInvitations;
 
-    public InstanceSettings(List<Value> mrCoverPdf, List<Value> kitBehaviorChange, List<Value> specialFormat, List<Value> hideESFields, boolean hasInvitations) {
+    public InstanceSettings(List<Value> mrCoverPdf, List<Value> kitBehaviorChange, List<Value> specialFormat, List<Value> hideESFields, List<Value> studySpecificStatuses, boolean hasInvitations) {
         this.mrCoverPdf = mrCoverPdf;
         this.kitBehaviorChange = kitBehaviorChange;
         this.specialFormat = specialFormat;
         this.hideESFields = hideESFields;
+        this.studySpecificStatuses = studySpecificStatuses;
         this.hasInvitations = hasInvitations;
     }
 
@@ -62,7 +66,8 @@ public class InstanceSettings {
                         List<Value> kitBehaviorChange = getListValue(rs.getString(DBConstants.KIT_BEHAVIOR_CHANGE));
                         List<Value> specialFormat = getListValue(rs.getString(DBConstants.SPECIAL_FORMAT));
                         List<Value> hideESFields = getListValue(rs.getString(DBConstants.HIDE_ES_FIELDS));
-                        dbVals.resultValue = new InstanceSettings(mrCoverPdfSettings, kitBehaviorChange, specialFormat, hideESFields,
+                        List<Value> studySpecificStatuses = getListValue(rs.getString(DBConstants.STUDY_SPECIFIC_STATUSES));
+                        dbVals.resultValue = new InstanceSettings(mrCoverPdfSettings, kitBehaviorChange, specialFormat, hideESFields, studySpecificStatuses,
                                 rs.getBoolean(DBConstants.HAS_INVITATIONS));
                     }
                 }
