@@ -38,12 +38,10 @@ import org.slf4j.LoggerFactory;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.*;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -239,6 +237,7 @@ public class ElasticSearchUtil {
                     Map<String, Object> workflowMap = new HashMap<>();
                     workflowMap.put("workflow", workflow);
                     workflowMap.put("status", status);
+                    workflowMap.put("date", SystemUtil.getISO8601DateString());
 
                     List<Map<String, Object>> workflowList = new ArrayList<>();
                     workflowList.add(workflowMap);
