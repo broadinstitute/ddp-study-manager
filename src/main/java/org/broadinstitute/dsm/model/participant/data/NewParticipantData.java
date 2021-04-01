@@ -13,8 +13,11 @@ import com.google.gson.reflect.TypeToken;
 import lombok.Data;
 import lombok.NonNull;
 import org.broadinstitute.dsm.db.dao.Dao;
+import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
+import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
 
 @Data
 public class NewParticipantData {
@@ -79,6 +82,12 @@ public class NewParticipantData {
         //after self/proband data has been put into mergedData, to replace self/proband's [FIRSTNAME, LASTNAME, MEMBER_TYPE...] values by new family member's data
         mergedData.putAll(familyMemberData.toMap());
         return mergedData;
+    }
+
+    public void addDefaultOptionsValueToData(@NonNull Map<String, String> columnsWithDefaultOptions) {
+        columnsWithDefaultOptions.forEach((column, option) -> {
+            this.data.putIfAbsent(column, option);
+        });
     }
 
     public void setData(String ddpParticipantId, int ddpInstanceId, String fieldTypeId, Map<String, String> data) {
