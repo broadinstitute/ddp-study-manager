@@ -2,7 +2,6 @@ package org.broadinstitute.dsm;
 
 import org.broadinstitute.ddp.handlers.util.FollowUpSurvey;
 import org.broadinstitute.ddp.handlers.util.SimpleFollowUpSurvey;
-import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.util.DDPRequestUtil;
 import org.junit.AfterClass;
