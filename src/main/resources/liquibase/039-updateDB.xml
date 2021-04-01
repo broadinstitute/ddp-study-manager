@@ -650,7 +650,7 @@
             <column name="column_name" value="AGE"/>
             <column name="column_display" value="Age Today *"/>
             <column name="display_type" value="NUMBER"/>
-            <column name="actions" value="[{&#34;value&#34;:&#34;DATSTAT_DATEOFBIRTH&#34;,&#34;type&#34;:&#34;CALC&#34;}]"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;AGE&#34;,#34;value&#34;:&#34;DATSTAT_DATEOFBIRTH&#34;,&#34;type&#34;:&#34;CALC&#34;}]"/>
             <column name="order_number" value="10"/>
         </insert>
         <insert tableName="field_settings">
@@ -966,7 +966,7 @@
             <column name="column_name" value="DATE_KIT_SENT"/>
             <column name="column_display" value="Date Kit Sent"/>
             <column name="display_type" value="DATE"/>
-            <column name="actions" value="[{&#34;name&#34;:&#34;DATE_KIT_SENT&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
+            <column name="actions" value="[{&#34;value&#34;:&#34;scanDate&#34;,&#34;type&#34;:&#34;SAMPLE&#34;,&#34;type2&#34;:&#34;MAP_TO_KIT&#34;},{&#34;name&#34;:&#34;DATE_KIT_SENT&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
             <column name="order_number" value="3"/>
         </insert>
         <insert tableName="field_settings">
@@ -976,7 +976,7 @@
             <column name="column_name" value="DATE_KIT_RECEIVED"/>
             <column name="column_display" value="Date Kit Received"/>
             <column name="display_type" value="DATE"/>
-            <column name="actions" value="[{&#34;name&#34;:&#34;DATE_KIT_RECEIVED&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
+            <column name="actions" value="[{&#34;value&#34;:&#34;receiveDate&#34;,&#34;type&#34;:&#34;SAMPLE&#34;,&#34;type2&#34;:&#34;MAP_TO_KIT&#34;},{&#34;name&#34;:&#34;DATE_KIT_RECEIVED&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
             <column name="order_number" value="4"/>
         </insert>
         <insert tableName="field_settings">
@@ -987,7 +987,7 @@
             <column name="column_display" value="Kit Type to Request"/>
             <column name="display_type" value="OPTIONS"/>
             <column name="possible_values" value="[{&#34;value&#34;:&#34;BLOOD&#34;,&#34;name&#34;:&#34;Blood&#34;},{&#34;value&#34;:&#34;SALIVA&#34;,&#34;name&#34;:&#34;Saliva&#34;},{&#34;value&#34;:&#34;NONE&#34;,&#34;name&#34;:&#34;None&#34;},{&#34;value&#34;:&#34;NONEDO&#34;,&#34;name&#34;:&#34;None - data only&#34;},{&#34;value&#34;:&#34;NONE_EXT_DNA&#34;,&#34;name&#34;:&#34;None - external DNA&#34;}]"/>
-            <column name="actions" value="[{&#34;name&#34;:&#34;KIT_TYPE_TO_REQUEST&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
+            <column name="actions" value="[{&#34;value&#34;:&#34;kitType&#34;,&#34;type&#34;:&#34;SAMPLE&#34;,&#34;type2&#34;:&#34;MAP_TO_KIT&#34;},{&#34;name&#34;:&#34;KIT_TYPE_TO_REQUEST&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
             <column name="order_number" value="5"/>
         </insert>
         <insert tableName="field_settings">
