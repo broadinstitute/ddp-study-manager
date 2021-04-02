@@ -29,7 +29,7 @@ public class UPSTracker {
         this.accessKey = accessKey;
     }
 
-    public UPSTrackingResponse lookupTrackingInfo(String trackingId) {
+    public UPSTrackingResponse lookupTrackingInfo(String trackingId) throws Exception {
         String transId = NanoIdUtil.getNanoId("1234567890QWERTYUIOPASDFGHJKLZXCVBNM", 32);
         String inquiryNumber = trackingId.trim();
         String transSrc = "Tracking";
@@ -50,14 +50,15 @@ public class UPSTracker {
                 return response;
             }
             catch (Exception e) {
-               error = new RuntimeException("couldn't get response from ups tracking of package " + trackingId, e);
-                logger.warn("Retrying ups round " + i);
+                error = new RuntimeException("couldn't get response from ups tracking of package " + trackingId, e);
+                logger.error(e.getMessage());
+                throw error;
 
-               try {
-                   Thread.sleep(5 * 1000);
-               } catch (InterruptedException interrupted) {
-                   logger.warn("Error while waiting for UPS retry", interrupted);
-               }
+                //               try {
+                //                   Thread.sleep(5 * 1000);
+                //               } catch (InterruptedException interrupted) {
+                //                   logger.warn("Error while waiting for UPS retry", interrupted);
+                //               }
             }
         }
         if (error != null) {
