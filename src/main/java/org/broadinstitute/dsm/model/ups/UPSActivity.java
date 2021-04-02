@@ -1,10 +1,11 @@
 package org.broadinstitute.dsm.model.ups;
 
+import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
+
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-
-import lombok.Data;
 
 @Data
 public class UPSActivity {
@@ -39,7 +40,16 @@ public class UPSActivity {
     }
 
     public String getDateTimeString() {
-        return date + " " + time;
+        if (StringUtils.isBlank(this.getTime()) && StringUtils.isBlank(this.getDate())) {
+            return null;
+        }
+        if (StringUtils.isBlank(this.getTime())) {
+            this.setTime("000000");
+        }
+        else if (StringUtils.isBlank(this.getDate())) {
+            return null;
+        }
+        return this.getDate() + " " + this.getTime();
     }
 
     /**

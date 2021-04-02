@@ -77,7 +77,6 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                         else {
                             insertShipmentAndPackageForNewKit(conn, kit, cfg);// for a new kit we first need to insert the UPSShipment
                         }
-
                     }
             );
             conn.commit();
@@ -156,6 +155,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                         int i = 0;
                         while (rs.next()) {
                             insertedPackageIds[i] = rs.getString(1);
+                            i++;
                         }
                         if (i != 2) {
                             throw new RuntimeException("Didn't insert right amount of packages. Num of Packages = " + i);
@@ -193,10 +193,9 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
     public void getUPSUpdate(Connection conn, UPSKit kit, Config cfg) {
         logger.info("Checking UPS status for kit with external order number " + kit.getExternalOrderNumber());
         updateKitStatus(conn, kit, kit.isReturn(), kit.getDdpInstanceId(), cfg);
-
     }
 
-    public UPSTrackingResponse lookupTrackingInfo(String trackingId) {
+    public UPSTrackingResponse lookupTrackingInfo(String trackingId) throws Exception {
         return new UPSTracker(endpoint, username, password, accessKey).lookupTrackingInfo(trackingId);
     }
 
@@ -208,13 +207,19 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             return;
         }
         logger.info("Checking UPS status for " + trackingId + " for kit w/ external order number " + kit.getExternalOrderNumber());
-        UPSTrackingResponse response = lookupTrackingInfo(trackingId);
-        logger.info("UPS response for " + trackingId + " is " + response);//todo remove after tests
-        if (response != null && response.getErrors() == null) {
-            updateStatus(conn, trackingId, lastActivity, response, isReturn, kit, ddpInstanceId, cfg);
+        try {
+            UPSTrackingResponse response = lookupTrackingInfo(trackingId);
+            logger.info("UPS response for " + trackingId + " is " + response);//todo remove after tests
+            if (response != null && response.getErrors() == null) {
+                updateStatus(conn, trackingId, lastActivity, response, isReturn, kit, ddpInstanceId, cfg);
+            }
+            else {
+                logError(trackingId, response.getErrors());
+            }
         }
-        else {
-            logError(trackingId, response.getErrors());
+        catch (Exception e) {
+            logger.error("Problem getting UPS update for kit " + kit.getUpsPackage().getTrackingNumber());
+            e.printStackTrace();
         }
     }
 
@@ -272,11 +277,11 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "WHERE ups_package_id = ? ";
 
         try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_PACKAGE_DELIVERY)) {
-            stmt.setString(1, responseUpsPackage.getDeliveryDate().getDate());
-            stmt.setString(1, responseUpsPackage.getDeliveryTime().getStartTime());
-            stmt.setString(1, responseUpsPackage.getDeliveryTime().getEndTime());
-            stmt.setString(1, responseUpsPackage.getDeliveryTime().getType());
-            stmt.setString(1, responseUpsPackage.getUpsPackageId());
+            stmt.setString(1, responseUpsPackage.getDeliveryDate()[0].getDate());
+            stmt.setString(2, responseUpsPackage.getDeliveryTime().getStartTime());
+            stmt.setString(3, responseUpsPackage.getDeliveryTime().getEndTime());
+            stmt.setString(4, responseUpsPackage.getDeliveryTime().getType());
+            stmt.setString(5, responseUpsPackage.getUpsPackageId());
             int r = stmt.executeUpdate();
 
             logger.info("Updated " + r + " rows adding delivery for " + responseUpsPackage.getUpsPackageId());
@@ -302,7 +307,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                                     Instant earliestInTransitTime,
                                     String ddpInstanceId,
                                     Config cfg) {
-        final String INSERT_NEW_ACTIVITIES = "INSERT INTO " + STUDY_MANAGER_SCHEMA + ".ups_activity    " +
+        final String INSERT_NEW_ACTIVITIES = "INSERT INTO " + STUDY_MANAGER_SCHEMA + "ups_activity    " +
                 "(    " +
                 "  ups_package_id  ,  " +
                 "  dsm_kit_request_id  ,  " +
@@ -331,8 +336,10 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "          and kit.dsm_kit_request_id = ?";
         int i = 0;
         for (UPSActivity activity : activities) {
-            logger.info(activity.getStatus().getDescription());
-            if (activity.getInstant().isBefore(lastActivity.getInstant())) {
+            logger.info(lastActivity.getDateTimeString());
+            logger.info(activity.getDateTimeString());
+            if (activity.getInstant() != null && lastActivity.getInstant() != null && activity.getInstant().isBefore(lastActivity.getInstant())) {
+                logger.info(activity.getInstant().isBefore(lastActivity.getInstant()) + "");
                 i++;
             }
         }
