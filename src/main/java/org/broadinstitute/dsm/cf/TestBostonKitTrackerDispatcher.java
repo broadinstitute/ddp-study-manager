@@ -64,7 +64,7 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                 "    ups_activity ac ON   lastActivity.ups_package_id = ac.ups_package_id  " +
                 "    AND lastActivity.maxId = ac.ups_activity_id  " +
                 " ))";
-        String SQL_AVOID_DELIVERED = " and (tracking_to_id is not null or tracking_return_id is not null ) and  pack.delivery_date is null" +
+        String SQL_AVOID_DELIVERED = " and (tracking_to_id is not null or tracking_return_id is not null ) and  pack.delivery_date is null and kit.test_result is null " +
                 " order by kit.dsm_kit_request_id ASC LIMIT ?";
         logger.info("Starting the UPS lookup job");
         logger.info(data);
