@@ -20,6 +20,9 @@ import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.gbf.Address;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
@@ -29,9 +32,14 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.index.query.*;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -232,27 +240,52 @@ public class ElasticSearchUtil {
         String index = instance.getParticipantIndexES();
         if (StringUtils.isNotBlank(index)) {
             try {
+                Map<String, Object> workflowMapES = getWorkflows(index, ddpParticipantId);
+                if (workflowMapES != null && !workflowMapES.isEmpty()) {
+                    List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflowMapES.get("workflows");
+                    if (workflowListES != null && !workflowListES.isEmpty()) {
+                        boolean updated = false;
+                        for (Map<String, Object> workflowES : workflowListES) {
+                            if (workflow.equals(workflowES.get("workflow"))) {
+                                //update value in existing workflow
+                                workflowES.put("status", status);
+                                workflowES.put("date", SystemUtil.getISO8601DateString());
+                                updated = true;
+                            }
+                        }
+                        if (!updated) {
+                            //add workflow
+                            Map<String, Object> newWorkflowMap = new HashMap<>();
+                            newWorkflowMap.put("workflow", workflow);
+                            newWorkflowMap.put("status", status);
+                            newWorkflowMap.put("date", SystemUtil.getISO8601DateString());
+                            workflowListES.add(newWorkflowMap);
+                        }
+                    }
+                }
+                else {
+                    //add workflows
+                    Map<String, Object> newWorkflowMap = new HashMap<>();
+                    newWorkflowMap.put("workflow", workflow);
+                    newWorkflowMap.put("status", status);
+                    newWorkflowMap.put("date", SystemUtil.getISO8601DateString());
+                    List<Map<String, Object>> workflowList = new ArrayList<>();
+                    workflowList.add(newWorkflowMap);
+                    workflowMapES = new HashMap<>();
+                    workflowMapES.put("workflows", workflowList);
+                }
+
                 try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
                         TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
-                    Map<String, Object> workflowMap = new HashMap<>();
-                    workflowMap.put("workflow", workflow);
-                    workflowMap.put("status", status);
-                    workflowMap.put("date", SystemUtil.getISO8601DateString());
-
-                    List<Map<String, Object>> workflowList = new ArrayList<>();
-                    workflowList.add(workflowMap);
-
-                    Map<String, Object> jsonMap = new HashMap<>();
-                    jsonMap.put(WORKFLOWS, workflowList);
-
                     UpdateRequest updateRequest = new UpdateRequest()
                             .index(index)
                             .type("_doc")
                             .id(ddpParticipantId)
-                            .doc(jsonMap)
+                            .doc(workflowMapES)
                             .docAsUpsert(true);
 
                     UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+
                     logger.info("Updated workflow information for participant " + ddpParticipantId + " in ES for instance " + instance.getName());
                     return true;
                 }
@@ -262,6 +295,22 @@ public class ElasticSearchUtil {
             }
         }
         return false;
+    }
+
+    private static Map<String, Object> getWorkflows(String index, String ddpParticipantId) throws Exception {
+        try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
+                TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
+            String[] includes = new String[] {"workflows"};
+            String[] excludes = Strings.EMPTY_ARRAY;
+            FetchSourceContext fetchSourceContext = new FetchSourceContext(true, includes, excludes);
+            GetRequest getRequest = new GetRequest()
+                    .index(index)
+                    .type("_doc")
+                    .id(ddpParticipantId)
+                    .fetchSourceContext(fetchSourceContext);
+            GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
+            return getResponse.getSourceAsMap();
+        }
     }
 
     public static DDPParticipant getParticipantAsDDPParticipant(@NonNull Map<String, Map<String, Object>> participantsESData, @NonNull String ddpParticipantId) {

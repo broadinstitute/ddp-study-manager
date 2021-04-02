@@ -14,8 +14,15 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.index.query.*;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.UpdateByQueryAction;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -586,7 +593,7 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void searchPTByGUID() throws Exception {
-        searchProfileValue("participants_structured.rgp.rgp", "profile.guid", "UCULFNVQWATQ0CT7KZG4");
+        searchProfileValue("participants_structured.rgp.rgp", "profile.guid", "T2SA8FUFGCT8QMFDD62W");
     }
 
     @Test
@@ -684,29 +691,70 @@ public class ElasticSearchTest extends TestHelper {
         }
     }
 
-    @Test
-    public void updateWorkflowValue() throws Exception {
+    private Map<String, Object> getObjectByID(String index, String ddpParticipantId, String object) throws Exception {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
-
-            Map<String, Object> workflowMap = new HashMap<>();
-            workflowMap.put("workflow", "ACCEPTANCE_STATUS");
-            workflowMap.put("status", "ACCEPTED");
-
-            List<Map<String, Object>> workflowList = new ArrayList<>();
-            workflowList.add(workflowMap);
-
-            Map<String, Object> jsonMap = new HashMap<>();
-            jsonMap.put("workflows", workflowList);
-
-            UpdateRequest updateRequest = new UpdateRequest()
-                    .index("participants_structured.rgp.rgp")
+            String[] includes = new String[] {object};
+            String[] excludes = Strings.EMPTY_ARRAY;
+            FetchSourceContext fetchSourceContext = new FetchSourceContext(true, includes, excludes);
+            GetRequest getRequest = new GetRequest()
+                    .index(index)
                     .type("_doc")
-                    .id("UCULFNVQWATQ0CT7KZG4")
+                    .id(ddpParticipantId)
+                    .fetchSourceContext(fetchSourceContext);
+            GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
+            return getResponse.getSourceAsMap();
+        }
+    }
+
+    @Test
+    public void updateWorkflowValues() throws Exception {
+        Map<String, Object> workflowMapES = getObjectByID("participants_structured.rgp.rgp", "XLDUNC3BHGWGWERHW781", "workflows");
+        if (workflowMapES != null && !workflowMapES.isEmpty()) {
+            List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflowMapES.get("workflows");
+            if (workflowListES != null && !workflowListES.isEmpty()) {
+                boolean updated = false;
+                for (Map<String, Object> worklist : workflowListES) {
+                    if ("ALIVE_DECEASED".equals(worklist.get("workflow"))) {
+                        //update value in existing workflow
+                        worklist.put("status", "ALIVE");
+                        worklist.put("date", SystemUtil.getISO8601DateString());
+                        updated = true;
+                    }
+                }
+                if (!updated) {
+                    Map<String, Object> newWorkflowMap = new HashMap<>();
+                    newWorkflowMap.put("workflow", "ALIVE_DECEASED");
+                    newWorkflowMap.put("status", "ALIVE");
+                    newWorkflowMap.put("date", SystemUtil.getISO8601DateString());
+                    workflowListES.add(newWorkflowMap);
+                }
+            }
+            else {
+                //add workflow
+                Map<String, Object> newWorkflowMap = new HashMap<>();
+                newWorkflowMap.put("workflow", "ALIVE_DECEASED");
+                newWorkflowMap.put("status", "ALIVE");
+                newWorkflowMap.put("date", SystemUtil.getISO8601DateString());
+                workflowListES.add(newWorkflowMap);
+                workflowMapES = new HashMap<>();
+                workflowMapES.put("workflows", workflowListES);
+            }
+        }
+        updateES("participants_structured.rgp.rgp", "XLDUNC3BHGWGWERHW781", workflowMapES);
+        Map<String, Object> workflowMapES2 = getObjectByID("participants_structured.rgp.rgp", "XLDUNC3BHGWGWERHW781", "workflows");
+
+    }
+
+    private static void updateES(String index, String ddpParticipantId, Map<String, Object> jsonMap) throws Exception{
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
+            UpdateRequest updateRequest = new UpdateRequest()
+                    .index(index)
+                    .type("_doc")
+                    .id(ddpParticipantId)
                     .doc(jsonMap)
                     .docAsUpsert(true);
 
             UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
-            searchProfileValue("participants_structured.rgp.rgp", "profile.guid", "UCULFNVQWATQ0CT7KZG4");
         }
     }
 
