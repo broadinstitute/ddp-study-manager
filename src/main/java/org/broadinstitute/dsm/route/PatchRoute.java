@@ -33,7 +33,7 @@ public class PatchRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PatchRoute.class);
 
-    private static final String ELASTIC_EXPORT = "ELASTIC_EXPORT";
+    private static final String ELASTIC_EXPORT_WORKFLOWS = "ELASTIC_EXPORT.workflows";
     private static final String PARTICIPANT_DATA_ID = "participantDataId";
 
     private NotificationUtil notificationUtil;
@@ -92,7 +92,7 @@ public class PatchRoute extends RequestHandler {
                                 }
                                 if (patch.getActions() != null) {
                                     for (Value action : patch.getActions()) {
-                                        if (ELASTIC_EXPORT.equals(action.getType()) && ElasticSearchUtil.WORKFLOWS.equals(action.getName())) {
+                                        if (ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
                                             writeESWorkflow(patch, nameValue, action);
                                         }
                                     }
@@ -255,7 +255,7 @@ public class PatchRoute extends RequestHandler {
                                 }
                                 if (patch.getActions() != null) {
                                     for (Value action : patch.getActions()) {
-                                        if (ELASTIC_EXPORT.equals(action.getType()) && ElasticSearchUtil.WORKFLOWS.equals(action.getName())) {
+                                        if (ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
                                             writeESWorkflow(patch, nameValue, action);
                                         }
                                     }
@@ -285,8 +285,11 @@ public class PatchRoute extends RequestHandler {
         String status = nameValue.getValue() != null ? String.valueOf(nameValue.getValue()) : null;
         if (StringUtils.isNotBlank(status)) {
             Map<String,String> data = new Gson().fromJson(status, new TypeToken<Map<String, String>>(){}.getType());
-            if (data.containsKey(action.getValue())) {
-                ElasticSearchUtil.writeWorkflow(ddpInstance, patch.getParentId(), action.getValue(), data.get(action.getValue()));
+            if (action.getValue() != null && StringUtils.isNotBlank(action.getValue())) {
+                ElasticSearchUtil.writeWorkflow(ddpInstance, patch.getParentId(), action.getName(), action.getValue());
+            }
+            else if (action.getName() != null && StringUtils.isNotBlank(action.getName()) && data.containsKey(action.getName())) {
+                ElasticSearchUtil.writeWorkflow(ddpInstance, patch.getParentId(), action.getName(), data.get(action.getName()));
             }
         }
     }

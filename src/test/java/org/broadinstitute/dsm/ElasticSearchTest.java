@@ -586,12 +586,20 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void searchPTByGUID() throws Exception {
-        searchProfileValue("participants_structured.rgp.rgp", "profile.guid", "W92X9ACM03OSH4161NCF");
+        searchProfileValue("participants_structured.rgp.rgp", "profile.guid", "UCULFNVQWATQ0CT7KZG4");
     }
 
     @Test
-    public void searchPTByLegacy() throws Exception {
-        searchProfileValue("participants_structured.atcp.atcp", "profile.legacyAltPid", "5db65f9f43f38f2ae0ec3efb1d3325b1356e0a6ffa4b7ef71938f73930269811");
+    public void searchPTByID() throws Exception {
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
+            GetRequest getRequest = new GetRequest()
+                    .index("participants_structured.atcp.atcp")
+                    .type("_doc")
+                    .id("5db65f9f43f38f2ae0ec3efb1d3325b1356e0a6ffa4b7ef71938f73930269811");
+            GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
+            Map<String, Object> map = getResponse.getSourceAsMap();
+            Assert.assertNotEquals(0, map.size());
+        }
     }
 
     public void searchProfileValue(String index, String field, String value) throws Exception {
@@ -602,9 +610,8 @@ public class ElasticSearchTest extends TestHelper {
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
+            searchSourceBuilder.query(QueryBuilders.matchQuery(field, value));
             while (response == null || response.getHits().getHits().length != 0) {
-                searchSourceBuilder.query(QueryBuilders.matchQuery(field, value)); //works!
-
                 searchSourceBuilder.size(scrollSize);
                 searchSourceBuilder.from(i * scrollSize);
                 searchRequest.source(searchSourceBuilder);
@@ -613,8 +620,13 @@ public class ElasticSearchTest extends TestHelper {
                 ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
                 i++;
             }
-                Assert.assertNotEquals(0, esData.size());
+            Assert.assertNotEquals(0, esData.size());
         }
+    }
+
+    @Test
+    public void searchPTByLegacy() throws Exception {
+        searchProfileValue("participants_structured.atcp.atcp", "profile.legacyAltPid", "5db65f9f43f38f2ae0ec3efb1d3325b1356e0a6ffa4b7ef71938f73930269811");
     }
 
     @Test
@@ -703,9 +715,9 @@ public class ElasticSearchTest extends TestHelper {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
 
             DeleteRequest deleteRequest = new DeleteRequest()
-                    .index("participants_structured.rgp.rgp")
+                    .index("participants_structured.atcp.atcp")
                     .type("_doc")
-                    .id("A04IPQGMRUCGH6XMW3D6");
+                    .id("5db65f9f43f38f2ae0ec3efb1d3325b1356e0a6ffa4b7ef71938f73930269811");
             DeleteResponse deleteResponse = client.delete(deleteRequest, RequestOptions.DEFAULT);
         }
     }

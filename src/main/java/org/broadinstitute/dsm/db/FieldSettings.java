@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
@@ -24,7 +25,8 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 @Data
 public class FieldSettings {
     public static final String GET_FIELD_SETTINGS = "SELECT setting.field_settings_id, setting.column_name, " +
-            "setting.column_display, setting.field_type, setting.display_type, setting.possible_values, setting.order_number, actions FROM field_settings setting, ddp_instance realm WHERE " +
+            "setting.column_display, setting.field_type, setting.display_type, setting.possible_values, setting.order_number, actions, readonly " +
+            "FROM field_settings setting, ddp_instance realm WHERE " +
             "realm.ddp_instance_id = setting.ddp_instance_id AND NOT (setting.deleted <=>1) AND realm.instance_name=? ORDER BY order_number asc";
     public static final String UPDATE_FIELD_SETTINGS_TABLE = "UPDATE field_settings SET column_name = ?, " +
             "column_display = ?, deleted = ?, field_type = ?, display_type = ?, possible_values = ?, changed_by = ?, last_changed = ? WHERE field_settings_id = ?";
@@ -42,9 +44,10 @@ public class FieldSettings {
     private final String fieldType; //Value of field_type for the setting
     private final int orderNumber; //Value of order number for the setting
     private final List<Value> actions; //Value of action for the setting
+    private final boolean readonly; //Value of readonly for the setting
 
     public FieldSettings(String fieldSettingId, String columnName, String columnDisplay, String fieldType, String displayType,
-                         List<Value> possibleValues, int orderNumber, List<Value> actions) {
+                         List<Value> possibleValues, int orderNumber, List<Value> actions, boolean readonly) {
         this.fieldSettingId = fieldSettingId;
         this.columnName = columnName;
         this.columnDisplay = columnDisplay;
@@ -53,6 +56,7 @@ public class FieldSettings {
         this.possibleValues = possibleValues;
         this.orderNumber = orderNumber;
         this.actions = actions;
+        this.readonly = readonly;
     }
 
     /**
@@ -74,7 +78,7 @@ public class FieldSettings {
                         FieldSettings setting = new FieldSettings(rs.getString(DBConstants.FIELD_SETTING_ID),
                                 rs.getString(DBConstants.COLUMN_NAME), rs.getString(DBConstants.COLUMN_DISPLAY),
                                 type, rs.getString(DBConstants.DISPLAY_TYPE), possibleValues,
-                                rs.getInt(DBConstants.ORDER_NUMBER), actionValues);
+                                rs.getInt(DBConstants.ORDER_NUMBER), actionValues, rs.getBoolean(DBConstants.READONLY));
                         if (fieldSettingsList.containsKey(type)){
                             // If we have already found settings with this field_type, add this
                             // setting to the list of settings with this field_type
@@ -175,6 +179,7 @@ public class FieldSettings {
                 stmt.setString(7, userId);
                 stmt.setLong(8, System.currentTimeMillis());
                 stmt.setString(9, fieldSetting.getFieldSettingId());
+                stmt.setBoolean(10, fieldSetting.isReadonly());
                 int result = stmt.executeUpdate();
                 if (result == 1) {
                     logger.info("Updated field setting with id " + fieldSettingId);
@@ -208,6 +213,7 @@ public class FieldSettings {
                 stmt.setString(6, realm);
                 stmt.setString(7, userId);
                 stmt.setLong(8, System.currentTimeMillis());
+                stmt.setBoolean(9, fieldSetting.isReadonly());
                 int result = stmt.executeUpdate();
                 if (result == 1){
                     logger.info("Added new setting for " + realm);
@@ -235,4 +241,5 @@ public class FieldSettings {
         }
         return values;
     }
+
 }

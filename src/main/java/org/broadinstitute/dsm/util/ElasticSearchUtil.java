@@ -686,12 +686,16 @@ public class ElasticSearchUtil {
         for (SearchHit hit : response.getHits()) {
             Map<String, Object> sourceMap = hit.getSourceAsMap();
             sourceMap.put("ddp", ddp);
-            String legacyId = (String) ((Map<String, Object>) sourceMap.get(PROFILE)).get(LEGACY_ALT_PID);
-            if (StringUtils.isNotBlank(legacyId)) {
-                esData.put(legacyId, sourceMap);
+            if (sourceMap.containsKey(PROFILE)) {
+                String legacyId = (String) ((Map<String, Object>) sourceMap.get(PROFILE)).get(LEGACY_ALT_PID);
+                if (StringUtils.isNotBlank(legacyId)) {
+                    esData.put(legacyId, sourceMap);
+                } else {
+                    esData.put(hit.getId(), sourceMap);
+                }
             }
             else {
-                esData.put(hit.getId(), sourceMap);
+                logger.warn("Participant {} doesn't have profile information", hit.getId());
             }
         }
     }

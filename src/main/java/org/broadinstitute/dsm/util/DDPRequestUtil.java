@@ -13,7 +13,6 @@ import org.broadinstitute.ddp.handlers.util.*;
 import org.broadinstitute.ddp.util.GoogleBucket;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.exception.SurveyNotCreated;
-import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.ddp.PreferredLanguage;
 import org.broadinstitute.dsm.route.DownloadPDFRoute;

@@ -6,16 +6,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import lombok.Data;
 import lombok.NonNull;
 import org.broadinstitute.dsm.db.dao.Dao;
+import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
+import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
+import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
 
 @Data
 public class NewParticipantData {
+
+    private static final String RELATIONSHIP_ID = "COLLABORATOR_PARTICIPANT_ID";
 
     private long dataId;
     private String ddpParticipantId;
@@ -77,6 +84,12 @@ public class NewParticipantData {
         return mergedData;
     }
 
+    public void addDefaultOptionsValueToData(@NonNull Map<String, String> columnsWithDefaultOptions) {
+        columnsWithDefaultOptions.forEach((column, option) -> {
+            this.data.putIfAbsent(column, option);
+        });
+    }
+
     public void setData(String ddpParticipantId, int ddpInstanceId, String fieldTypeId, Map<String, String> data) {
         this.ddpParticipantId = ddpParticipantId;
         this.ddpInstanceId = ddpInstanceId;
@@ -88,9 +101,32 @@ public class NewParticipantData {
         ParticipantDataDto participantDataDto =
                 new ParticipantDataDto(this.ddpParticipantId, this.ddpInstanceId, this.fieldTypeId, new Gson().toJson(this.data),
                         System.currentTimeMillis(), userEmail);
+        if (isRelationshipIdExists()) {
+            throw new RuntimeException(String.format("Family member with that Relationship ID: %s already exists", getRelationshipId()));
+        }
         int createdDataKey = dataAccess.create(participantDataDto);
         if (createdDataKey < 1) {
             throw new RuntimeException("Could not insert participant data for : " + this.ddpParticipantId);
         }
     }
+
+    public boolean isRelationshipIdExists() {
+        List<String> participantRelationshipIds =
+                parseDtoList(((ParticipantDataDao) dataAccess).getParticipantDataByParticipantId(this.ddpParticipantId)).stream()
+                        .map(pData -> {
+                            Map<String, String> familyMemberData = pData.getData();
+                            boolean hasRelationshipId = familyMemberData.containsKey(RELATIONSHIP_ID);
+                            if (hasRelationshipId) {
+                                return familyMemberData.get(RELATIONSHIP_ID);
+                            }
+                            return "";
+                        })
+                        .collect(Collectors.toList());
+        return participantRelationshipIds.contains(getRelationshipId());
+    }
+
+    String getRelationshipId() {
+        return this.data.getOrDefault(RELATIONSHIP_ID, null);
+    }
+
 }

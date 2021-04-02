@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.route.familymember;
 
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -8,7 +9,9 @@ import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.User;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
+import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.NewParticipantData;
 import org.broadinstitute.dsm.model.participant.data.AddFamilyMemberPayload;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
@@ -56,20 +59,28 @@ public class AddFamilyMemberRoute extends RequestHandler {
             throw new RuntimeException("User id was not equal. User id in token " + userId + " user id in request " + uId);
         }
 
+        ParticipantDataDao participantDataDao = new ParticipantDataDao();
         try {
-            NewParticipantData participantDateObject = new NewParticipantData(new ParticipantDataDao());
-            participantDateObject.setData(
+            NewParticipantData participantDataObject = new NewParticipantData(participantDataDao);
+            participantDataObject.setData(
                     participantGuid,
                     Integer.parseInt(ddpInstanceId),
                     realm.toUpperCase() + FIELD_TYPE,
-                    participantDateObject.mergeParticipantData(addFamilyMemberPayload)
+                    participantDataObject.mergeParticipantData(addFamilyMemberPayload)
                     );
-            participantDateObject.insertParticipantData(User.getUser(uId).getEmail());
+            participantDataObject.addDefaultOptionsValueToData(getDefaultOptions(Integer.parseInt(ddpInstanceId)));
+            participantDataObject.insertParticipantData(User.getUser(uId).getEmail());
             logger.info("Family member for participant " + participantGuid + " successfully created");
         } catch (Exception e) {
             throw new RuntimeException("Could not create family member " + e);
         }
-        return new Result(200);
+        return NewParticipantData.parseDtoList(participantDataDao.getParticipantDataByParticipantId(participantGuid));
+    }
+
+    private Map<String, String> getDefaultOptions(int ddpInstanceId) {
+        FieldSettingsDao fieldSettingsDao = new FieldSettingsDao();
+        FieldSettings fieldSettings = new FieldSettings();
+        return fieldSettings.getColumnsWithDefaultOptions(fieldSettingsDao.getFieldSettingsByOptionAndInstanceId(ddpInstanceId));
     }
 
 

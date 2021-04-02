@@ -243,6 +243,7 @@ public class DBConstants {
     public static final String FIELD_TYPE = "field_type";
     public static final String DISPLAY_TYPE = "display_type";
     public static final String ACTIONS = "actions";
+    public static final String READONLY = "readonly";
 
     //dashboards
     public static final String PARTICIPANT_COUNT = "participantCount";
@@ -282,6 +283,7 @@ public class DBConstants {
     public static final String PARTICIPANT_STATUS_ENDPOINT = "participant_status_endpoint";
     public static final String UPS_TRACKING_ROLE = "ups_tracking";
     public static final String ADD_FAMILY_MEMBER = "add_family_member";
+    public static final String SHOW_GROUP_FIELDS = "show_group_fields";
 
     //user role
     public static final String MAILINGLIST_VIEW = "mailingList_view";

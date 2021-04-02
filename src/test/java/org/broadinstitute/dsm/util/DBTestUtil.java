@@ -939,7 +939,7 @@ public class DBTestUtil {
             deleted = true;
         }
 
-        FieldSettings setting = new FieldSettings(settingId, columnName, columnDisplay, fieldType, displayType, possibleValues, new Integer(orderNumber).intValue(), null);
+        FieldSettings setting = new FieldSettings(settingId, columnName, columnDisplay, fieldType, displayType, possibleValues, new Integer(orderNumber).intValue(), null, false);
         setting.setDeleted(deleted);
         checkSettingMatch(setting, expectedFieldType, expectedColumnDisplay, expectedColumnName, expectedDisplayType,
                 expectedPossibleValues, expectedDeleted, "setting with id " + settingId);
