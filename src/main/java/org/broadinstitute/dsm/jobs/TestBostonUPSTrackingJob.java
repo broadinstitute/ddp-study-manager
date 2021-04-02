@@ -258,7 +258,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                                     isReturn, kit, earliestPackageMovement, ddpInstanceId, cfg);
                         }
                         if (responseUpsPackage.getDeliveryDate() != null) {
-                            updateDeliveryInformation(conn, cfg, responseUpsPackage);
+                            updateDeliveryInformation(conn, responseUpsPackage, kit);
                         }
                     }
                 }
@@ -267,21 +267,35 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         }
     }
 
-    private void updateDeliveryInformation(Connection conn, Config cfg, UPSPackage responseUpsPackage) {
+    private void updateDeliveryInformation(Connection conn, UPSPackage responseUpsPackage, UPSKit upsKit) {
         String SQL_UPDATE_PACKAGE_DELIVERY = "UPDATE " + STUDY_MANAGER_SCHEMA + "ups_package   " +
                 "SET   " +
                 "delivery_date = ?,   " +
                 "delivery_time_start = ?,   " +
-                "delivery_time_end = ?,   " +
                 "delivery_time_type = ?,   " +
                 "WHERE ups_package_id = ? ";
-
+        UPSDeliveryDate[] deliveryDates = responseUpsPackage.getDeliveryDate();
+        UPSDeliveryDate currentDelivery = null;
+        String deliverydate = null;
+        if (deliveryDates != null && deliveryDates.length > 0) {
+            currentDelivery = deliveryDates[0];
+            deliverydate = currentDelivery.getDate();
+        }
+        UPSDeliveryTime upsDeliveryTime = null;
+        String deliveryStartTime = null;
+        String deliveryEndTime = null;
+        String deliveryType = null;
+        if (responseUpsPackage.getDeliveryTime() != null) {
+            deliveryStartTime = responseUpsPackage.getDeliveryTime().getStartTime();
+            deliveryEndTime = responseUpsPackage.getDeliveryTime().getEndTime();
+            deliveryType = responseUpsPackage.getDeliveryTime().getType();
+        }
         try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_PACKAGE_DELIVERY)) {
-            stmt.setString(1, responseUpsPackage.getDeliveryDate()[0].getDate());
-            stmt.setString(2, responseUpsPackage.getDeliveryTime().getStartTime());
-            stmt.setString(3, responseUpsPackage.getDeliveryTime().getEndTime());
-            stmt.setString(4, responseUpsPackage.getDeliveryTime().getType());
-            stmt.setString(5, responseUpsPackage.getUpsPackageId());
+            stmt.setString(1, deliverydate);
+            stmt.setString(2, deliveryStartTime);
+            stmt.setString(3, deliveryEndTime);
+            stmt.setString(4, deliveryType);
+            stmt.setString(5, upsKit.getUpsPackage().getUpsPackageId());
             int r = stmt.executeUpdate();
 
             logger.info("Updated " + r + " rows adding delivery for " + responseUpsPackage.getUpsPackageId());
@@ -334,17 +348,11 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = ? " +
                 "         and realm.ddp_instance_id = ?" +
                 "          and kit.dsm_kit_request_id = ?";
-        int i = 0;
-        for (UPSActivity activity : activities) {
-            logger.info(lastActivity.getDateTimeString());
-            logger.info(activity.getDateTimeString());
-            if (activity.getInstant() != null && lastActivity.getInstant() != null && activity.getInstant().isBefore(lastActivity.getInstant())) {
-                logger.info(activity.getInstant().isBefore(lastActivity.getInstant()) + "");
-                i++;
-            }
-        }
-        for (; i < activities.length; i++) {
+        for (int i = activities.length - 1; i >= 0; i--) {
             UPSActivity currentInsertingActivity = activities[i];
+            if (lastActivity != null && lastActivity.getInstant() != null && (currentInsertingActivity.getInstant().equals(lastActivity.getInstant()) || currentInsertingActivity.getInstant().isBefore(lastActivity.getInstant()))) {
+                break;
+            }
             try (PreparedStatement stmt = conn.prepareStatement(INSERT_NEW_ACTIVITIES)) {
                 stmt.setString(1, kit.getUpsPackage().getUpsPackageId());
                 stmt.setString(2, kit.getDsmKitRequestId());
