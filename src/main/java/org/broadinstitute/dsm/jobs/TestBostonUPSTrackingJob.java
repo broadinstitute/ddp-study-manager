@@ -4,6 +4,7 @@ import com.google.cloud.functions.BackgroundFunction;
 import com.google.cloud.functions.Context;
 import com.google.gson.Gson;
 import com.typesafe.config.Config;
+import jnr.ffi.annotations.In;
 import org.apache.commons.dbcp2.PoolableConnection;
 import org.apache.commons.dbcp2.PoolingDataSource;
 import org.apache.commons.lang3.tuple.Pair;
@@ -204,6 +205,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         UPSActivity lastActivity = kit.getUpsPackage().getActivity() == null ? null : kit.getUpsPackage().getActivity()[0];
         if (lastActivity != null && lastActivity.getStatus().isDelivery()) {
             this.logger.info("Tracking id " + trackingId + " is already delivered, not going to check UPS anymore");
+            updateDeliveryInformation(conn, kit.getUpsPackage(), kit);
             return;
         }
         logger.info("Checking UPS status for " + trackingId + " for kit w/ external order number " + kit.getExternalOrderNumber());
@@ -272,16 +274,16 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "SET   " +
                 "delivery_date = ?,   " +
                 "delivery_time_start = ?,   " +
-                "delivery_time_type = ?,   " +
+                "delivery_time_end = ?,   " +
+                "delivery_time_type = ?   " +
                 "WHERE ups_package_id = ? ";
         UPSDeliveryDate[] deliveryDates = responseUpsPackage.getDeliveryDate();
         UPSDeliveryDate currentDelivery = null;
-        String deliverydate = null;
+        String deliveryDate = null;
         if (deliveryDates != null && deliveryDates.length > 0) {
             currentDelivery = deliveryDates[0];
-            deliverydate = currentDelivery.getDate();
+            deliveryDate = currentDelivery.getDate();
         }
-        UPSDeliveryTime upsDeliveryTime = null;
         String deliveryStartTime = null;
         String deliveryEndTime = null;
         String deliveryType = null;
@@ -291,7 +293,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             deliveryType = responseUpsPackage.getDeliveryTime().getType();
         }
         try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_PACKAGE_DELIVERY)) {
-            stmt.setString(1, deliverydate);
+            stmt.setString(1, deliveryDate);
             stmt.setString(2, deliveryStartTime);
             stmt.setString(3, deliveryEndTime);
             stmt.setString(4, deliveryType);
@@ -300,7 +302,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
 
             logger.info("Updated " + r + " rows adding delivery for " + responseUpsPackage.getUpsPackageId());
             if (r != 1) {
-                logger.error(r + " rows updated in UPSPackege while updating delivery for " + responseUpsPackage.getUpsPackageId());
+                logger.error(r + " rows updated in UPSPackege while updating delivery for " + upsKit.getUpsPackage().getUpsPackageId());
             }
             conn.commit();
         }
@@ -348,6 +350,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = ? " +
                 "         and realm.ddp_instance_id = ?" +
                 "          and kit.dsm_kit_request_id = ?";
+        logger.info("Inserting new activities for kit with package id " + kit.getUpsPackage().getUpsPackageId());
         for (int i = activities.length - 1; i >= 0; i--) {
             UPSActivity currentInsertingActivity = activities[i];
             if (lastActivity != null && lastActivity.getInstant() != null && (currentInsertingActivity.getInstant().equals(lastActivity.getInstant()) || currentInsertingActivity.getInstant().isBefore(lastActivity.getInstant()))) {
