@@ -433,6 +433,7 @@ public class DBConstants {
     public static final String KIT_BEHAVIOR_CHANGE = "kit_behavior_change";
     public static final String SPECIAL_FORMAT = "special_format";
     public static final String HIDE_ES_FIELDS = "hide_ES_fields";
+    public static final String STUDY_SPECIFIC_STATUSES = "study_specific_statuses";
     public static final String HAS_INVITATIONS = "has_invitations";
 
     public static final String KIT_TEST_RESULT = "test_result";
