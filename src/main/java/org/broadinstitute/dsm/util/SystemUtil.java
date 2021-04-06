@@ -10,6 +10,7 @@ import java.io.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -17,7 +18,6 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
 import java.util.Date;
-import java.util.TimeZone;
 
 public class SystemUtil {
 
@@ -28,7 +28,6 @@ public class SystemUtil {
     public static final String US_DATE_FORMAT = "MM/dd/yyyy";
     public static final String PARTIAL_US_DATE_FORMAT = "MM/yyyy";
     public static final String END_DATE_FORMAT = DATE_FORMAT + " HH:mm:ss";
-    public static final String ISO_8601_UTC_DATE_STRING = "yyyy-MM-dd'T'HH:mm:ss.sss'Z'";
 
     public static final long MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
     public static final long MILLIS_PER_HOUR = 1000 * 60 * 60;
@@ -38,10 +37,8 @@ public class SystemUtil {
     public static final String SEPARATOR = "\t";
 
     public static String getISO8601DateString() {
-        TimeZone tz = TimeZone.getTimeZone("UTC");
-        DateFormat df = new SimpleDateFormat(ISO_8601_UTC_DATE_STRING);
-        df.setTimeZone(tz);
-        return df.format(new Date());
+        Instant instant = Instant.now();
+        return instant.toString();
     }
 
     public static final DateTimeFormatter FULL_DATE = new DateTimeFormatterBuilder()
