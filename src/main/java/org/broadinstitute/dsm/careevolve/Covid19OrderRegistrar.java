@@ -216,8 +216,14 @@ public class Covid19OrderRegistrar {
                     try {
                         orderResponse = orderTest(auth, message);
                         orderSucceeded = true;
-                        logger.info("Placed CE order {} {} for {}", orderResponse.getHandle(), orderResponse.getHl7Ack(), patientId);
-                    } catch (IOException e) {
+                        if (orderResponse != null) {
+                            logger.info("Placed CE order {} {} for {}", orderResponse.getHandle(), orderResponse.getHl7Ack(), patientId);
+                        }
+                        else {
+                            logger.error("Theree was an error while placing order for kitLabel " + kitLabel);
+                        }
+                    }
+                    catch (IOException e) {
                         orderExceptions.add(e);
                         logger.warn("Could not order test for " + patientId + ".  Pausing for " + retryWaitMillis + "ms before retry " + numAttempts + "/" + maxRetries, e);
                         try {
@@ -282,11 +288,20 @@ public class Covid19OrderRegistrar {
         String responseString = EntityUtils.toString(httpResponse.getEntity());
 
         if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-            OrderResponse orderResponse = new Gson().fromJson(IOUtils.toString(httpResponse.getEntity().getContent()), OrderResponse.class);
-            return orderResponse;
-        } else {
+            String content = IOUtils.toString(httpResponse.getEntity().getContent());
+            try {
+                OrderResponse orderResponse = new Gson().fromJson(content, OrderResponse.class);
+                return orderResponse;
+            }
+            catch (Exception e) {
+                logger.error("CE response is broken " + content);
+                logger.error(e.getMessage());
+            }
+        }
+        else {
             logger.error("Order {} returned {} with {}", message.getName(), httpResponse.getStatusLine().getStatusCode(), responseString);
             throw new CareEvolveException("CareEvolve returned " + httpResponse.getStatusLine().getStatusCode() + " with " + responseString);
         }
+        return null;
     }
 }
