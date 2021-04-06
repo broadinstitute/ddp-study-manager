@@ -220,7 +220,7 @@ public class Covid19OrderRegistrar {
                             logger.info("Placed CE order {} {} for {}", orderResponse.getHandle(), orderResponse.getHl7Ack(), patientId);
                         }
                         else {
-                            logger.error("Theree was an error while placing order for kitLabel " + kitLabel);
+                            logger.error("There was an error while placing order for kitLabel " + kitLabel);
                         }
                     }
                     catch (IOException e) {
@@ -288,14 +288,19 @@ public class Covid19OrderRegistrar {
         String responseString = EntityUtils.toString(httpResponse.getEntity());
 
         if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-            String content = IOUtils.toString(httpResponse.getEntity().getContent());
-            try {
-                OrderResponse orderResponse = new Gson().fromJson(content, OrderResponse.class);
-                return orderResponse;
+            if (httpResponse.getEntity() != null) {
+                String content = IOUtils.toString(httpResponse.getEntity().getContent());
+                try {
+                    OrderResponse orderResponse = new Gson().fromJson(content, OrderResponse.class);
+                    return orderResponse;
+                }
+                catch (Exception e) {
+                    logger.error("Unexpected CE response " + content);
+                    logger.error(e.getMessage());
+                }
             }
-            catch (Exception e) {
-                logger.error("CE response is broken " + content);
-                logger.error(e.getMessage());
+            else {
+                logger.error("Entity was null in HTTPResponse");
             }
         }
         else {
