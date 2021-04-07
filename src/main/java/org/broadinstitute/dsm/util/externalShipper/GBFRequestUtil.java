@@ -311,13 +311,14 @@ public class GBFRequestUtil implements ExternalShipper {
             ShippingConfirmations shippingConfirmations = objectFromXMLString(ShippingConfirmations.class, gbfResponse.getXML());
             if (shippingConfirmations != null) {
                 List<ShippingConfirmation> confirmationList = shippingConfirmations.getShippingConfirmations();
-                Collections.shuffle(confirmationList);
-                logger.info("Number of confirmations received: " + confirmationList.size());
                 if (confirmationList != null && !confirmationList.isEmpty()) {
+                    Collections.shuffle(confirmationList);
+                    logger.info("Number of confirmations received: " + confirmationList.size());
                     for (ShippingConfirmation confirmation : confirmationList) {
                         try {
                             processingSingleConfirmation(gbfResponse, confirmation);
-                        } catch (Exception e) {
+                        }
+                        catch (Exception e) {
                             logger.error("Could not process confirmation for " + confirmation.getOrderNumber(), e);
                         }
                     }
@@ -325,8 +326,11 @@ public class GBFRequestUtil implements ExternalShipper {
                     logger.info("Finished adding confirmations into db!");
                 }
                 else {
-                    logger.info("No shipping confirmation returned");
+                    logger.info("No ShippingConfirmation Elements");
                 }
+            }
+            else {
+                logger.info("No shipping confirmation returned");
             }
         }
     }
