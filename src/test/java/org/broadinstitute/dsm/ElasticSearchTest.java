@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm;
 
 import org.apache.lucene.search.join.ScoreMode;
+import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -703,41 +704,40 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void updateWorkflowValues() throws Exception {
-        Map<String, Object> workflowMapES = getObjectByID("participants_structured.rgp.rgp", "XLDUNC3BHGWGWERHW781", "workflows");
-        if (workflowMapES != null && !workflowMapES.isEmpty()) {
-            List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflowMapES.get("workflows");
+        String ddpParticipantId = "XLDUNC3BHGWGWERHW781";
+        String workflow = "ALIVE_DECEASED";
+        String status = "ALIVE";
+        DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
+                false, null, false, null, "participants_structured.rgp.rgp", null, null);
+        ElasticSearchUtil.writeWorkflow(ddpInstance, ddpParticipantId, workflow, status);
+        Map<String, Object> workflows = ElasticSearchUtil.getWorkflows(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+
+        if (workflows != null && !workflows.isEmpty()) {
+            List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflows.get("workflows");
             if (workflowListES != null && !workflowListES.isEmpty()) {
-                boolean updated = false;
-                for (Map<String, Object> worklist : workflowListES) {
-                    if ("ALIVE_DECEASED".equals(worklist.get("workflow"))) {
-                        //update value in existing workflow
-                        worklist.put("status", "ALIVE");
-                        worklist.put("date", SystemUtil.getISO8601DateString());
-                        updated = true;
+                for (Map<String, Object> workflowES : workflowListES) {
+                    if (workflow.equals(workflowES.get("workflow"))) {
+                        Assert.assertTrue(status.equals(workflowES.get("status")));
                     }
                 }
-                if (!updated) {
-                    Map<String, Object> newWorkflowMap = new HashMap<>();
-                    newWorkflowMap.put("workflow", "ALIVE_DECEASED");
-                    newWorkflowMap.put("status", "ALIVE");
-                    newWorkflowMap.put("date", SystemUtil.getISO8601DateString());
-                    workflowListES.add(newWorkflowMap);
-                }
-            }
-            else {
-                //add workflow
-                Map<String, Object> newWorkflowMap = new HashMap<>();
-                newWorkflowMap.put("workflow", "ALIVE_DECEASED");
-                newWorkflowMap.put("status", "ALIVE");
-                newWorkflowMap.put("date", SystemUtil.getISO8601DateString());
-                workflowListES.add(newWorkflowMap);
-                workflowMapES = new HashMap<>();
-                workflowMapES.put("workflows", workflowListES);
             }
         }
-        updateES("participants_structured.rgp.rgp", "XLDUNC3BHGWGWERHW781", workflowMapES);
-        Map<String, Object> workflowMapES2 = getObjectByID("participants_structured.rgp.rgp", "XLDUNC3BHGWGWERHW781", "workflows");
 
+        String newStatus = "DECEASED";
+        ElasticSearchUtil.writeWorkflow(ddpInstance, ddpParticipantId, workflow, newStatus);
+        Map<String, Object> updatedWorkflows = ElasticSearchUtil.getWorkflows(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+
+        if (updatedWorkflows != null && !updatedWorkflows.isEmpty()) {
+            List<Map<String, Object>> updatedWorkflowsListES = (List<Map<String, Object>>) updatedWorkflows.get("workflows");
+            if (updatedWorkflowsListES != null && !updatedWorkflowsListES.isEmpty()) {
+                for (Map<String, Object> workflowES : updatedWorkflowsListES) {
+                    if (workflow.equals(workflowES.get("workflow"))) {
+                        Assert.assertTrue(newStatus.equals(workflowES.get("status")));
+                    }
+                }
+            }
+        }
+        Assert.assertEquals(workflows.size(), updatedWorkflows.size());
     }
 
     private static void updateES(String index, String ddpParticipantId, Map<String, Object> jsonMap) throws Exception{

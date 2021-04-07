@@ -246,6 +246,7 @@ public class ElasticSearchUtil {
                                 workflowES.put("status", status);
                                 workflowES.put("date", SystemUtil.getISO8601DateString());
                                 updated = true;
+                                break;
                             }
                         }
                         if (!updated) {
@@ -292,7 +293,7 @@ public class ElasticSearchUtil {
         return false;
     }
 
-    private static Map<String, Object> getWorkflows(String index, String ddpParticipantId) throws Exception {
+    public static Map<String, Object> getWorkflows(String index, String ddpParticipantId) throws Exception {
         try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
                 TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
             String[] includes = new String[] {"workflows"};
