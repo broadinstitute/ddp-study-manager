@@ -328,7 +328,7 @@ public class GBFRequestUtil implements ExternalShipper {
                     logger.info("Finished adding confirmations into db!");
                 }
                 else {
-                    logger.info("Zero confirmations received");
+                    logger.info("No ShippingConfirmation Elements");
                 }
             }
             else {
