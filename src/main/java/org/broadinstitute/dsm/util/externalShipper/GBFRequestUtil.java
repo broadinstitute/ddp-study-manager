@@ -313,25 +313,26 @@ public class GBFRequestUtil implements ExternalShipper {
             ShippingConfirmations shippingConfirmations = objectFromXMLString(ShippingConfirmations.class, gbfResponse.getXML());
             if (shippingConfirmations != null) {
                 List<ShippingConfirmation> confirmationList = shippingConfirmations.getShippingConfirmations();
-                if (confirmationList != null) {
+                if (confirmationList != null && !confirmationList.isEmpty()) {
                     Collections.shuffle(confirmationList);
                     logger.info("Number of confirmations received: " + confirmationList.size());
-                    if (confirmationList != null && !confirmationList.isEmpty()) {
-                        for (ShippingConfirmation confirmation : confirmationList) {
-                            try {
-                                processingSingleConfirmation(gbfResponse, confirmation);
-                            }
-                            catch (Exception e) {
-                                logger.error("Could not process confirmation for " + confirmation.getOrderNumber(), e);
-                            }
+                    for (ShippingConfirmation confirmation : confirmationList) {
+                        try {
+                            processingSingleConfirmation(gbfResponse, confirmation);
                         }
-                        DBUtil.updateBookmark(endDate, DBConstants.GBF_CONFIRMATION); //TODO can be removed because not used anymore
-                        logger.info("Finished adding confirmations into db!");
+                        catch (Exception e) {
+                            logger.error("Could not process confirmation for " + confirmation.getOrderNumber(), e);
+                        }
                     }
-                    else {
-                        logger.info("No shipping confirmation returned");
-                    }
+                    DBUtil.updateBookmark(endDate, DBConstants.GBF_CONFIRMATION); //TODO can be removed because not used anymore
+                    logger.info("Finished adding confirmations into db!");
                 }
+                else {
+                    logger.info("Zero confirmations received");
+                }
+            }
+            else {
+                logger.info("No shipping confirmation returned");
             }
         }
     }
