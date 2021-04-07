@@ -240,7 +240,7 @@ public class Covid19OrderRegistrar {
                     throw new CareEvolveException("Could not order test for " + patientId + " after " + maxRetries + ":\n" + exceptionsText);
                 }
 
-                if (StringUtils.isNotBlank(orderResponse.getError())) {
+                if (orderResponse != null && StringUtils.isNotBlank(orderResponse.getError())) {
                     throw new CareEvolveException("Order for participant " + participantHruid + " with handle  " + orderResponse.getHandle() + " placed with error " + orderResponse.getError());
                 }
                 return orderResponse;
