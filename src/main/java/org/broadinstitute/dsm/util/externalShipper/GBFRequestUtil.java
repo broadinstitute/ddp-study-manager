@@ -37,7 +37,9 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -311,21 +313,24 @@ public class GBFRequestUtil implements ExternalShipper {
             ShippingConfirmations shippingConfirmations = objectFromXMLString(ShippingConfirmations.class, gbfResponse.getXML());
             if (shippingConfirmations != null) {
                 List<ShippingConfirmation> confirmationList = shippingConfirmations.getShippingConfirmations();
-                Collections.shuffle(confirmationList);
-                logger.info("Number of confirmations received: " + confirmationList.size());
-                if (confirmationList != null && !confirmationList.isEmpty()) {
-                    for (ShippingConfirmation confirmation : confirmationList) {
-                        try {
-                            processingSingleConfirmation(gbfResponse, confirmation);
-                        } catch (Exception e) {
-                            logger.error("Could not process confirmation for " + confirmation.getOrderNumber(), e);
+                if (confirmationList != null) {
+                    Collections.shuffle(confirmationList);
+                    logger.info("Number of confirmations received: " + confirmationList.size());
+                    if (confirmationList != null && !confirmationList.isEmpty()) {
+                        for (ShippingConfirmation confirmation : confirmationList) {
+                            try {
+                                processingSingleConfirmation(gbfResponse, confirmation);
+                            }
+                            catch (Exception e) {
+                                logger.error("Could not process confirmation for " + confirmation.getOrderNumber(), e);
+                            }
                         }
+                        DBUtil.updateBookmark(endDate, DBConstants.GBF_CONFIRMATION); //TODO can be removed because not used anymore
+                        logger.info("Finished adding confirmations into db!");
                     }
-                    DBUtil.updateBookmark(endDate, DBConstants.GBF_CONFIRMATION); //TODO can be removed because not used anymore
-                    logger.info("Finished adding confirmations into db!");
-                }
-                else {
-                    logger.info("No shipping confirmation returned");
+                    else {
+                        logger.info("No shipping confirmation returned");
+                    }
                 }
             }
         }
