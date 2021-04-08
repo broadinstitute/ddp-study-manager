@@ -16,7 +16,7 @@ public class UPSPackageTest {
     public void testEarliestPickup() {
         String trackingNumber = "000000000011";
         List<UPSActivity> history = List.of(LABEL_GENERATED, IN_TRANSIT, PICKED_UP, DELIVERED);
-        UPSPackage upsPackage = new UPSPackage(trackingNumber, history.toArray(new UPSActivity[0]), null, null, null, null, null);
+        UPSPackage upsPackage = new UPSPackage(trackingNumber, history.toArray(new UPSActivity[0]), null, null, null, null);
 
         Assert.assertEquals(PICKED_UP.getDateTimeString(), upsPackage.getEarliestPackageMovementEvent().getDateTimeString());
     }
@@ -25,7 +25,7 @@ public class UPSPackageTest {
     public void testEarliestIsNullWhenOnlyLabelGenerated() {
         String trackingNumber = "000000000011";
         List<UPSActivity> history = List.of(LABEL_GENERATED);
-        UPSPackage upsPackage = new UPSPackage(trackingNumber, history.toArray(new UPSActivity[0]), null, null, null, null, null);
+        UPSPackage upsPackage = new UPSPackage(trackingNumber, history.toArray(new UPSActivity[0]), null, null, null, null);
 
         Assert.assertNull(upsPackage.getEarliestPackageMovementEvent());
     }
@@ -34,7 +34,7 @@ public class UPSPackageTest {
     public void testEarliestDelivered() {
         String trackingNumber = "000000000011";
         List<UPSActivity> history = List.of(DELIVERED, LABEL_GENERATED);
-        UPSPackage upsPackage = new UPSPackage(trackingNumber, history.toArray(new UPSActivity[0]), null, null, null, null, null);
+        UPSPackage upsPackage = new UPSPackage(trackingNumber, history.toArray(new UPSActivity[0]), null, null, null, null);
 
         Assert.assertEquals(DELIVERED.getDateTimeString(), upsPackage.getEarliestPackageMovementEvent().getDateTimeString());
     }
@@ -43,7 +43,7 @@ public class UPSPackageTest {
     public void testEarliestInTransit() {
         String trackingNumber = "000000000011";
         List<UPSActivity> history = List.of(LABEL_GENERATED, IN_TRANSIT);
-        UPSPackage upsPackage = new UPSPackage(trackingNumber, history.toArray(new UPSActivity[0]), null, null, null, null, null);
+        UPSPackage upsPackage = new UPSPackage(trackingNumber, history.toArray(new UPSActivity[0]), null, null, null, null);
 
         Assert.assertEquals(IN_TRANSIT.getDateTimeString(), upsPackage.getEarliestPackageMovementEvent().getDateTimeString());
     }

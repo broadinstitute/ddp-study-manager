@@ -100,18 +100,17 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                                         UPSActivity packageLastActivity = new UPSActivity(
                                                 rs.getString("activity.ups_location"),
                                                 latestStatus,
-                                                rs.getString("activity.ups_activity_date"),
-                                                rs.getString("activity.ups_activity_time"),
+                                                "",
+                                                "",
                                                 rs.getString("activity.ups_activity_id"),
                                                 rs.getString("activity.ups_package_id"),
-                                                rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_KIT_REQUEST_ID)
+                                                rs.getString("activity.ups_activity_date_time")
                                         );
                                         upsPackage = new UPSPackage(
                                                 rs.getString("pack.tracking_number"),
                                                 new UPSActivity[] { packageLastActivity },
                                                 rs.getString("pack.ups_shipment_id"),
                                                 rs.getString("pack.ups_package_id"),
-                                                rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_KIT_REQUEST_ID),
                                                 null, null);
                                     }
                                     else {
@@ -120,7 +119,6 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                                                 null,
                                                 null,
                                                 null,
-                                                rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_KIT_REQUEST_ID),
                                                 null, null);
                                     }
                                     kit = new UPSKit(upsPackage,
@@ -174,9 +172,9 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                 "WHERE is_active = 1";
 
         List<DDPInstance> ddpInstances = new ArrayList<>();
-        try (PreparedStatement bspStatement = conn.prepareStatement(SQL_SELECT_INSTANCE_WITH_ROLE)) {
-            bspStatement.setString(1, role);
-            try (ResultSet rs = bspStatement.executeQuery()) {
+        try (PreparedStatement statement = conn.prepareStatement(SQL_SELECT_INSTANCE_WITH_ROLE)) {
+            statement.setString(1, role);
+            try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRoleFormResultSet(rs);
                     ddpInstances.add(ddpInstance);
