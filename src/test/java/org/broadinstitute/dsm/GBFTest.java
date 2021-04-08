@@ -1,23 +1,13 @@
 package org.broadinstitute.dsm;
 
-import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.ADDRESS_FIELD;
-import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.FIRST_NAME_FIELD;
-import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.GUID_FIELD;
-import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.LAST_NAME_FIELD;
-import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.PROFILE_FIELD;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.TransactionWrapper;
-import org.broadinstitute.dsm.careevolve.Covid19OrderRegistrarTest;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.exception.CareEvolveException;
 import org.broadinstitute.dsm.model.KitRequest;
 import org.broadinstitute.dsm.model.KitRequestSettings;
-import org.broadinstitute.dsm.model.ParticipantWrapper;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.gbf.*;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
@@ -38,15 +28,10 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class GBFTest extends TestHelper {
+public class
+GBFTest extends TestHelper {
 
     private String GBF_URL = "https://www.gbfmedical.com/oap/api/";
     private String ORDER_NUMBER = "WEB123ABC4D5";
@@ -287,7 +272,7 @@ public class GBFTest extends TestHelper {
         DDPInstance instance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
           ArrayList<KitRequest> kitsToOrder = new ArrayList<>();
 
-          EasyPostUtil easyPostUtil = new EasyPostUtil(null,"PwI372wBHmVyrdBqa2NoeA");
+          EasyPostUtil easyPostUtil = new EasyPostUtil(null,"");
         Map<String, Map<String, Object>> elasticMap = ElasticSearchUtil.getDDPParticipantsFromES(instance.getName(), instance.getParticipantIndexES());
 
         HashMap<Integer, KitRequestSettings> kitRequestSettings = KitRequestSettings.getKitRequestSettings("9");
