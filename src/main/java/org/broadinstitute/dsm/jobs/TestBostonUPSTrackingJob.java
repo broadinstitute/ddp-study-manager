@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
-import static org.broadinstitute.dsm.statics.ApplicationConfigConstants.DSM_DB_URL;
 
 
 public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessage> {
@@ -98,7 +97,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "  VALUES " +
                 "  (?, ? ,?)," +
                 "  (?, ? ,?) ";
-        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(MAX_CONNECTION, cfg.getString(DSM_DB_URL));
+        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(MAX_CONNECTION, cfg.getString(ApplicationConfigConstants.CF_DSM_DB_URL));
         try (Connection conn = dataSource.getConnection()) {
             try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_SHIPMENT, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, kit.getDsmKitRequestId());
@@ -285,7 +284,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             deliveryEndTime = responseUpsPackage.getDeliveryTime().getEndTime();
             deliveryType = responseUpsPackage.getDeliveryTime().getType();
         }
-        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(MAX_CONNECTION, cfg.getString(DSM_DB_URL));
+        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(MAX_CONNECTION, cfg.getString(ApplicationConfigConstants.CF_DSM_DB_URL));
         try (Connection conn = dataSource.getConnection()) {
             try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_PACKAGE_DELIVERY)) {
                 stmt.setString(1, deliveryDate);
@@ -357,7 +356,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             if (lastActivity != null && lastActivity.getInstant() != null && (currentInsertingActivity.getInstant().equals(lastActivity.getInstant()) || currentInsertingActivity.getInstant().isBefore(lastActivity.getInstant()))) {
                 break;
             }
-            PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(MAX_CONNECTION, cfg.getString(DSM_DB_URL));
+            PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(MAX_CONNECTION, cfg.getString(ApplicationConfigConstants.CF_DSM_DB_URL));
             String activityDateTime = currentInsertingActivity.getSQLDateTimeString();
             logger.info(currentInsertingActivity.getDateTimeString());
             logger.info(currentInsertingActivity.getSQLDateTimeString());

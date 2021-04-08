@@ -14,6 +14,7 @@ import org.broadinstitute.dsm.model.ups.UPSActivity;
 import org.broadinstitute.dsm.model.ups.UPSPackage;
 import org.broadinstitute.dsm.model.ups.UPSStatus;
 import org.broadinstitute.dsm.pubsub.KitTrackerPubSubPublisher;
+import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -45,7 +46,7 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
     @Override
     public void accept(PubsubMessage pubsubMessage, Context context) throws Exception {
         Config cfg = CFUtil.loadConfig();
-        String dbUrl = cfg.getString("dsmDBUrl");
+        String dbUrl = cfg.getString(ApplicationConfigConstants.CF_DSM_DB_URL);
         PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(2, dbUrl);
         String data = new String(Base64.getDecoder().decode(pubsubMessage.getData()));
         final String SQL_SELECT_KITS_WITH_LATEST_ACTIVITY = "SELECT  * " +

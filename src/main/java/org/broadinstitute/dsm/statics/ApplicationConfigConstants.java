@@ -19,6 +19,7 @@ public class ApplicationConfigConstants {
     //db connection information
     public static final String DSM_DB_MAX_CONNECTIONS = "portal.maxConnections";
     public static final String DSM_DB_URL = "portal.dbUrl";
+    public static final String CF_DSM_DB_URL = "dsmDBUrl";
 
     //google buckets
     public static final String GOOGLE_PROJECT_NAME = "portal.googleProjectName";
