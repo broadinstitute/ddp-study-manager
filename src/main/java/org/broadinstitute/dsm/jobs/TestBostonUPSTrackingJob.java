@@ -23,12 +23,12 @@ import org.slf4j.LoggerFactory;
 import spark.utils.StringUtils;
 
 import java.sql.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+
+import static org.broadinstitute.dsm.statics.ApplicationConfigConstants.DSM_DB_URL;
 
 
 public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessage> {
@@ -47,6 +47,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
     String username;
     String password;
     String accessKey;
+    private final int MAX_CONNECTION = 1;
 
     @Override
     public void accept(PubsubMessage message, Context context) throws Exception {
@@ -60,23 +61,22 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         username = cfg.getString("ups.username");
         password = cfg.getString("ups.password");
         accessKey = cfg.getString("ups.accesskey");
-        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(1, dbUrl);
         logger.info("Starting the UPS lookup job");
         String data = new String(Base64.getDecoder().decode(message.data));
         UPSKit[] kitsToLookFor = new Gson().fromJson(data, UPSKit[].class);
 
-            Arrays.stream(kitsToLookFor).forEach(
-                    kit -> {
-                        logger.info("Checking possible actions for kit " + kit.getDsmKitRequestId());
-                        if (StringUtils.isNotBlank(kit.getUpsPackage().getUpsShipmentId())) {
-                            getUPSUpdate(kit, cfg);
-                        }
-                        else {
-                            insertShipmentAndPackageForNewKit(kit, cfg);// for a new kit we first need to insert the UPSShipment
-                        }
+        Arrays.stream(kitsToLookFor).forEach(
+                kit -> {
+                    logger.info("Checking possible actions for kit " + kit.getDsmKitRequestId());
+                    if (StringUtils.isNotBlank(kit.getUpsPackage().getUpsShipmentId())) {
+                        getUPSUpdate(kit, cfg);
                     }
+                    else {
+                        insertShipmentAndPackageForNewKit(kit, cfg);// for a new kit we first need to insert the UPSShipment
+                    }
+                }
 
-            );
+        );
 
 
     }
@@ -98,65 +98,26 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "  VALUES " +
                 "  (?, ? ,?)," +
                 "  (?, ? ,?) ";
-        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(1, )
-        try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_SHIPMENT, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setString(1, kit.getDsmKitRequestId());
-            int result = stmt.executeUpdate();
-            if (result == 1) {
-                try (ResultSet rs = stmt.getGeneratedKeys()) {
-
-                    if (rs.next()) {
-                        insertedShipmentId = rs.getString(1);
-                        logger.info("Added new ups shipment with id " + insertedShipmentId + " for " + kit.getDsmKitRequestId());
-                    }
-                }
-                catch (Exception e) {
-                    logger.error("Error getting id of new shipment ", e);
-                    return;
-                }
-            }
-            else {
-                logger.error("Error adding new ups shipment for kit w/ id " + kit.getDsmKitRequestId() + " it was updating " + result + " rows");
-                return;
-            }
-
-        }
-        catch (Exception ex) {
-            logger.error("Error preparing statement", ex);
-            return;
-        }
-        if (insertedShipmentId != null) {
-            logger.info("Inserting new package information for kit " + kit.getDsmKitRequestId());
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_UPSPackage, Statement.RETURN_GENERATED_KEYS)) {
+        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(MAX_CONNECTION, cfg.getString(DSM_DB_URL));
+        try (Connection conn = dataSource.getConnection()) {
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_SHIPMENT, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, kit.getDsmKitRequestId());
-                stmt.setString(2, insertedShipmentId);
-                stmt.setString(3, kit.getTrackingToId());//first row is the shipping one
-                stmt.setString(4, kit.getDsmKitRequestId());
-                stmt.setString(5, insertedShipmentId);
-                stmt.setString(6, kit.getTrackingReturnId());//second row is the return one
                 int result = stmt.executeUpdate();
-                if (result == 2) {
+                if (result == 1) {
                     try (ResultSet rs = stmt.getGeneratedKeys()) {
-                        int i = 0;
-                        while (rs.next()) {
-                            insertedPackageIds[i] = rs.getString(1);
-                            i++;
+
+                        if (rs.next()) {
+                            insertedShipmentId = rs.getString(1);
+                            logger.info("Added new ups shipment with id " + insertedShipmentId + " for " + kit.getDsmKitRequestId());
                         }
-                        if (i != 2) {
-                            throw new RuntimeException("Didn't insert right amount of packages. Num of Packages = " + i);
-                        }
-                        shippingKitPackageId = insertedPackageIds[0];
-                        returnKitPackageId = insertedPackageIds[1];
-                        logger.info("Added new ups package with id " + shippingKitPackageId + " for " + kit.getDsmKitRequestId());
-                        logger.info("Added new ups package with id " + returnKitPackageId + " for " + kit.getDsmKitRequestId());
                     }
                     catch (Exception e) {
-                        logger.error("Error getting id of new packages  ", e);
+                        logger.error("Error getting id of new shipment ", e);
                         return;
                     }
                 }
                 else {
-                    logger.error("Error adding new ups packages for kit w/ id " + kit.getDsmKitRequestId() + " it was updating " + result + " rows");
+                    logger.error("Error adding new ups shipment for kit w/ id " + kit.getDsmKitRequestId() + " it was updating " + result + " rows");
                     return;
                 }
 
@@ -165,9 +126,57 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 logger.error("Error preparing statement", ex);
                 return;
             }
+
+            if (insertedShipmentId != null) {
+                logger.info("Inserting new package information for kit " + kit.getDsmKitRequestId());
+                try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_UPSPackage, Statement.RETURN_GENERATED_KEYS)) {
+                    stmt.setString(1, kit.getDsmKitRequestId());
+                    stmt.setString(2, insertedShipmentId);
+                    stmt.setString(3, kit.getTrackingToId());//first row is the shipping one
+                    stmt.setString(4, kit.getDsmKitRequestId());
+                    stmt.setString(5, insertedShipmentId);
+                    stmt.setString(6, kit.getTrackingReturnId());//second row is the return one
+                    int result = stmt.executeUpdate();
+                    if (result == 2) {
+                        try (ResultSet rs = stmt.getGeneratedKeys()) {
+                            int i = 0;
+                            while (rs.next()) {
+                                insertedPackageIds[i] = rs.getString(1);
+                                i++;
+                            }
+                            if (i != 2) {
+                                throw new RuntimeException("Didn't insert right amount of packages. Num of Packages = " + i);
+                            }
+                            shippingKitPackageId = insertedPackageIds[0];
+                            returnKitPackageId = insertedPackageIds[1];
+                            logger.info("Added new ups package with id " + shippingKitPackageId + " for " + kit.getDsmKitRequestId());
+                            logger.info("Added new ups package with id " + returnKitPackageId + " for " + kit.getDsmKitRequestId());
+                        }
+                        catch (Exception e) {
+                            logger.error("Error getting id of new packages  ", e);
+                            return;
+                        }
+                    }
+                    else {
+                        logger.error("Error adding new ups packages for kit w/ id " + kit.getDsmKitRequestId() + " it was updating " + result + " rows");
+                        return;
+                    }
+
+
+                }
+                catch (Exception ex) {
+                    logger.error("Error preparing statement", ex);
+                    return;
+                }
+
+            }
+            conn.commit();
         }
-        UPSPackage upsPackageShipping = new UPSPackage(kit.getTrackingToId(), null, insertedShipmentId, shippingKitPackageId, kit.getDsmKitRequestId(), null, null);
-        UPSPackage upsPackageReturn = new UPSPackage(kit.getTrackingReturnId(), null, insertedShipmentId, returnKitPackageId, kit.getDsmKitRequestId(), null, null);
+        catch (SQLException ex) {
+            logger.error("Trouble creating a connection to the database " + ex);
+        }
+        UPSPackage upsPackageShipping = new UPSPackage(kit.getTrackingToId(), null, insertedShipmentId, shippingKitPackageId, null, null);
+        UPSPackage upsPackageReturn = new UPSPackage(kit.getTrackingReturnId(), null, insertedShipmentId, returnKitPackageId, null, null);
         UPSKit kitShipping = new UPSKit(upsPackageShipping, kit.getKitLabel(), kit.getCE_order(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber(), kit.getTrackingToId(), kit.getTrackingReturnId(), kit.getDdpInstanceId(), kit.getHruid());
         UPSKit kitReturn = new UPSKit(upsPackageReturn, kit.getKitLabel(), kit.getCE_order(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber(), kit.getTrackingToId(), kit.getTrackingReturnId(), kit.getDdpInstanceId(), kit.getHruid());
         getUPSUpdate(kitShipping, cfg);
@@ -189,7 +198,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         UPSActivity lastActivity = kit.getUpsPackage().getActivity() == null ? null : kit.getUpsPackage().getActivity()[0];
         if (lastActivity != null && lastActivity.getStatus().isDelivery()) {
             this.logger.info("Tracking id " + trackingId + " is already delivered, not going to check UPS anymore");
-            updateDeliveryInformation(kit.getUpsPackage(), kit);
+            updateDeliveryInformation(kit.getUpsPackage(), kit, cfg);
             return;
         }
         logger.info("Checking UPS status for " + trackingId + " for kit w/ external order number " + kit.getExternalOrderNumber());
@@ -244,7 +253,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                                     isReturn, kit, earliestPackageMovement, ddpInstanceId, cfg);
                         }
                         if (responseUpsPackage.getDeliveryDate() != null) {
-                            updateDeliveryInformation(responseUpsPackage, kit);
+                            updateDeliveryInformation(responseUpsPackage, kit, cfg);
                         }
                     }
                 }
@@ -253,7 +262,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         }
     }
 
-    private void updateDeliveryInformation(UPSPackage responseUpsPackage, UPSKit upsKit) {
+    private void updateDeliveryInformation(UPSPackage responseUpsPackage, UPSKit upsKit, Config cfg) {
         String SQL_UPDATE_PACKAGE_DELIVERY = "UPDATE " + STUDY_MANAGER_SCHEMA + "ups_package   " +
                 "SET   " +
                 "delivery_date = ?,   " +
@@ -276,6 +285,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             deliveryEndTime = responseUpsPackage.getDeliveryTime().getEndTime();
             deliveryType = responseUpsPackage.getDeliveryTime().getType();
         }
+        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(MAX_CONNECTION, cfg.getString(DSM_DB_URL));
         try (Connection conn = dataSource.getConnection()) {
             try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_PACKAGE_DELIVERY)) {
                 stmt.setString(1, deliveryDate);
@@ -294,10 +304,10 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             catch (Exception ex) {
                 logger.error("Error preparing statement", ex);
             }
+            conn.commit();
         }
-        catch (Exception e) {
-
-        }
+        catch (SQLException e) {
+            logger.error("Trouble creating a connection to the DB");
         }
 
     }
@@ -320,10 +330,9 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "  ups_status_type  ,  " +
                 "  ups_status_description  ,  " +
                 "  ups_status_code  ,  " +
-                "  ups_activity_date  ,  " +
-                "  ups_activity_time  )  " +
+                "  ups_activity_date_time) " +
                 "VALUES " +
-                "(?, ?, ?, ?, ?, ?, ?, ?)";
+                "(?, ?, ?, ?, ?, ?, ?)";
         final String SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, request.ddp_kit_request_id, request.upload_reason, " +
                 "        realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
                 "        FROM " + STUDY_MANAGER_SCHEMA + "ddp_kit_request request, " + STUDY_MANAGER_SCHEMA + "ddp_kit kit, " + STUDY_MANAGER_SCHEMA + "event_type eve, " + STUDY_MANAGER_SCHEMA + "ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
@@ -348,75 +357,84 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             if (lastActivity != null && lastActivity.getInstant() != null && (currentInsertingActivity.getInstant().equals(lastActivity.getInstant()) || currentInsertingActivity.getInstant().isBefore(lastActivity.getInstant()))) {
                 break;
             }
-            try (PreparedStatement stmt = conn.prepareStatement(INSERT_NEW_ACTIVITIES)) {
-                stmt.setString(1, kit.getUpsPackage().getUpsPackageId());
-                stmt.setString(2, kit.getDsmKitRequestId());
-                stmt.setString(3, currentInsertingActivity.getLocation().getString());
-                stmt.setString(4, currentInsertingActivity.getStatus().getType());
-                stmt.setString(5, currentInsertingActivity.getStatus().getDescription());
-                stmt.setString(6, currentInsertingActivity.getStatus().getCode());
-                stmt.setString(7, currentInsertingActivity.getDate());
-                stmt.setString(8, currentInsertingActivity.getTime());
-                int r = stmt.executeUpdate();
+            PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(MAX_CONNECTION, cfg.getString(DSM_DB_URL));
+            String activityDateTime = currentInsertingActivity.getSQLDateTimeString();
+            logger.info(currentInsertingActivity.getDateTimeString());
+            logger.info(currentInsertingActivity.getSQLDateTimeString());
+            try (Connection conn = dataSource.getConnection()) {
+                try (PreparedStatement stmt = conn.prepareStatement(INSERT_NEW_ACTIVITIES)) {
+                    stmt.setString(1, kit.getUpsPackage().getUpsPackageId());
+                    stmt.setString(2, kit.getDsmKitRequestId());
+                    stmt.setString(3, currentInsertingActivity.getLocation().getString());
+                    stmt.setString(4, currentInsertingActivity.getStatus().getType());
+                    stmt.setString(5, currentInsertingActivity.getStatus().getDescription());
+                    stmt.setString(6, currentInsertingActivity.getStatus().getCode());
+                    stmt.setString(7, activityDateTime);
+                    int r = stmt.executeUpdate();
 
-                logger.info("Updated " + r + " rows for a new activity");
-                if (r != 1) {
-                    logger.error(r + " is too big for 1 new activity");
-                }
-                String oldType = null;
-                if (lastActivity != null && lastActivity.getStatus() != null) {
-                    oldType = lastActivity.getStatus().getType();
-                }
-                if (!isReturn) {
-                    if (shouldTriggerEventForKitOnItsWayToParticipant(statusType, oldType)) {
-                        KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] { DELIVERED, ddpInstanceId, kit.getDsmKitRequestId(), kit.getExternalOrderNumber() }, 1);
-                        if (kitDDPNotification != null) {
-                            logger.info("Triggering DDP for kit going to participant with external order number: " + kit.getExternalOrderNumber());
-                            EventUtil.triggerDDP(conn, kitDDPNotification);
+                    logger.info("Updated " + r + " rows for a new activity");
+                    if (r != 1) {
+                        logger.error(r + " is too big for 1 new activity");
+                    }
+                    String oldType = null;
+                    if (lastActivity != null && lastActivity.getStatus() != null) {
+                        oldType = lastActivity.getStatus().getType();
+                    }
+                    if (!isReturn) {
+                        if (shouldTriggerEventForKitOnItsWayToParticipant(statusType, oldType)) {
+                            KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] { DELIVERED, ddpInstanceId, kit.getDsmKitRequestId(), kit.getExternalOrderNumber() }, 1);
+                            if (kitDDPNotification != null) {
+                                logger.info("Triggering DDP for kit going to participant with external order number: " + kit.getExternalOrderNumber());
+                                EventUtil.triggerDDP(conn, kitDDPNotification);
+                            }
+                            else {
+                                logger.error("delivered kitDDPNotification was null for " + kit.getExternalOrderNumber());
+                            }
+                        }
+
+                    }
+                    else { // this is a return
+                        if (earliestInTransitTime != null && !kit.getCE_order()) {
+                            // if we have the first date of an inbound event, create an order in CE
+                            // using the earliest date of inbound event
+                            Authentication careEvolveAuth = null;
+                            if (orderRegistrar == null) {
+                                Pair<Covid19OrderRegistrar, Authentication> careEvolveOrderingTools = createCEOrderRegistrar(cfg);
+                                orderRegistrar = careEvolveOrderingTools.getLeft();
+                                careEvolveAuth = careEvolveOrderingTools.getRight();
+
+                            }
+                            orderRegistrar.orderTest(careEvolveAuth, kit.getHruid(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime);
+                            logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
+                            kit.changeCEOrdered(conn, true);
                         }
                         else {
-                            logger.error("delivered kitDDPNotification was null for " + kit.getExternalOrderNumber());
+                            logger.info("No return events for " + kit.getMainKitLabel() + ".  Will not place order yet.");
+                        }
+                        if (shouldTriggerEventForReturnKitDelivery(statusType, oldType)) {
+                            KitUtil.setKitReceived(conn, kit.getMainKitLabel());
+                            logger.info("RECEIVED: " + trackingId);
+                            KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] { RECEIVED, ddpInstanceId, kit.getDsmKitRequestId(), kit.getExternalOrderNumber() }, 1);
+                            if (kitDDPNotification != null) {
+                                logger.info("Triggering DDP for received kit with external order number: " + kit.getExternalOrderNumber());
+                                EventUtil.triggerDDP(conn, kitDDPNotification);
+
+                            }
+                            else {
+                                logger.error("received kitDDPNotification was null for " + kit.getExternalOrderNumber());
+                            }
                         }
                     }
-
+                    conn.commit();
+                    logger.info("Updated status of tracking number " + trackingId + " to " + statusType + " from " + oldType + " for kit w/ external order number " + kit.getExternalOrderNumber());
                 }
-                else { // this is a return
-                    if (earliestInTransitTime != null && !kit.getCE_order()) {
-                        // if we have the first date of an inbound event, create an order in CE
-                        // using the earliest date of inbound event
-                        Authentication careEvolveAuth = null;
-                        if (orderRegistrar == null) {
-                            Pair<Covid19OrderRegistrar, Authentication> careEvolveOrderingTools = createCEOrderRegistrar(cfg);
-                            orderRegistrar = careEvolveOrderingTools.getLeft();
-                            careEvolveAuth = careEvolveOrderingTools.getRight();
-
-                        }
-                        orderRegistrar.orderTest(careEvolveAuth, kit.getHruid(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime);
-                        logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
-                        kit.changeCEOrdered(conn, true);
-                    }
-                    else {
-                        logger.info("No return events for " + kit.getMainKitLabel() + ".  Will not place order yet.");
-                    }
-                    if (shouldTriggerEventForReturnKitDelivery(statusType, oldType)) {
-                        KitUtil.setKitReceived(conn, kit.getMainKitLabel());
-                        logger.info("RECEIVED: " + trackingId);
-                        KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] { RECEIVED, ddpInstanceId, kit.getDsmKitRequestId(), kit.getExternalOrderNumber() }, 1);
-                        if (kitDDPNotification != null) {
-                            logger.info("Triggering DDP for received kit with external order number: " + kit.getExternalOrderNumber());
-                            EventUtil.triggerDDP(conn, kitDDPNotification);
-
-                        }
-                        else {
-                            logger.error("received kitDDPNotification was null for " + kit.getExternalOrderNumber());
-                        }
-                    }
+                catch (Exception ex) {
+                    logger.error("Error preparing statement", ex);
                 }
                 conn.commit();
-                logger.info("Updated status of tracking number " + trackingId + " to " + statusType + " from " + oldType + " for kit w/ external order number " + kit.getExternalOrderNumber());
             }
-            catch (Exception ex) {
-                logger.error("Error preparing statement", ex);
+            catch (SQLException ex) {
+                logger.error("Trouble connecting to DB " + ex);
             }
 
         }

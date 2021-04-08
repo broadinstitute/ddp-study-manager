@@ -4,8 +4,10 @@ import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 @Data
 public class UPSActivity {
@@ -13,30 +15,32 @@ public class UPSActivity {
     UPSStatus status;
     String date;
     String time;
+    String dateTime;
     String activityId;
     String packageId;
-    String dsmKitRequestId;
     String locationString;
 
 
-    public UPSActivity(UPSLocation location, UPSStatus status, String date, String time, String activityId, String packageId, String dsmKitRequestId) {
-        this.location = location;
-        this.status = status;
-        this.date = date;
-        this.time = time;
-        this.activityId = activityId;
-        this.packageId = packageId;
-        this.dsmKitRequestId = dsmKitRequestId;
-    }
-
-    public UPSActivity(String locationString, UPSStatus status, String date, String time, String activityId, String packageId, String dsmKitRequestId) {
+    public UPSActivity(String locationString, UPSStatus status, String date, String time, String activityId,
+                       String packageId, String dateTime) {
         this.locationString = locationString;
         this.status = status;
         this.date = date;
         this.time = time;
         this.activityId = activityId;
         this.packageId = packageId;
-        this.dsmKitRequestId = dsmKitRequestId;
+        this.dateTime = dateTime;
+    }
+
+    public UPSActivity(UPSLocation location, UPSStatus status, String date, String time, String activityId,
+                       String packageId, String dateTime) {
+        this.location = location;
+        this.status = status;
+        this.date = date;
+        this.time = time;
+        this.activityId = activityId;
+        this.packageId = packageId;
+        this.dateTime = dateTime;
     }
 
     public String getDateTimeString() {
@@ -50,6 +54,15 @@ public class UPSActivity {
             return null;
         }
         return this.getDate() + " " + this.getTime();
+    }
+
+    public String getSQLDateTimeString() {
+        Instant activityInstant = LocalDateTime.parse(getDateTimeString(), DateTimeFormatter.ofPattern("YYYYMMdd HHmmss", Locale.US)).atZone(ZoneId.of("US/Eastern")).toInstant();
+        DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                .withZone(ZoneId.systemDefault());
+
+        String activityDateTime = DATE_TIME_FORMATTER.format(activityInstant);
+        return activityDateTime;
     }
 
     /**

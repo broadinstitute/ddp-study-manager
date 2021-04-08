@@ -7,19 +7,17 @@ public class UPSPackage {
     String trackingNumber;
     UPSActivity[] activity;
     String upsShipmentId;
-    String dsmKitRequestId;
     UPSDeliveryDate[] deliveryDate;
     UPSDeliveryTime deliveryTime;
     String upsPackageId;
 
 
-    public UPSPackage(String trackingNumber, UPSActivity[] activity, String upsShipmentId, String upsPackageId, String dsmKitRequestId,
+    public UPSPackage(String trackingNumber, UPSActivity[] activity, String upsShipmentId, String upsPackageId,
                       UPSDeliveryDate[] deliveryDate, UPSDeliveryTime deliveryTime) {
         this.trackingNumber = trackingNumber;
         this.activity = activity;
         this.upsShipmentId = upsShipmentId;
         this.upsPackageId = upsPackageId;
-        this.dsmKitRequestId = dsmKitRequestId;
         this.deliveryDate = deliveryDate;
         this.deliveryTime = deliveryTime;
     }

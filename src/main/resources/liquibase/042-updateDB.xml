@@ -49,11 +49,6 @@
             <column name="ups_package_id" type="INT" autoIncrement="true">
                 <constraints nullable="false" primaryKey="true"></constraints>
             </column>
-            <column name="dsm_kit_request_id" type="INT">
-                <constraints nullable="false" foreignKeyName="dsm_kit_request_id_package_fk"
-                             referencedTableName="ddp_kit"
-                             referencedColumnNames="dsm_kit_request_id"></constraints>
-            </column>
             <column name="ups_shipment_id" type="INT">
                 <constraints nullable="false" foreignKeyName="ups_shipment_id_fk"
                              referencedTableName="ups_shipment"
@@ -77,17 +72,11 @@
                 <constraints nullable="false" foreignKeyName="ups_package_id_fk" referencedTableName="ups_package"
                              referencedColumnNames="ups_package_id"></constraints>
             </column>
-            <column name="dsm_kit_request_id" type="INT">
-                <constraints nullable="false" foreignKeyName="dsm_kit_request_id_activity_fk"
-                             referencedTableName="ddp_kit"
-                             referencedColumnNames="dsm_kit_request_id"></constraints>
-            </column>
             <column name="ups_location" type="TEXT(10000)"></column>
             <column name="ups_status_type" type="VARCHAR(10)"></column>
             <column name="ups_status_description" type="VARCHAR(100)"></column>
             <column name="ups_status_code" type="VARCHAR(10)"></column>
-            <column name="ups_activity_date" type="VARCHAR(10)"></column>
-            <column name="ups_activity_time" type="VARCHAR(16)"></column>
+            <column name="ups_activity_date_time" type="DATETIME"></column>
         </createTable>
     </changeSet>
 
