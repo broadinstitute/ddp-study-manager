@@ -1,16 +1,11 @@
 package org.broadinstitute.dsm.careevolve;
 
-import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.util.*;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -24,6 +19,12 @@ import org.broadinstitute.dsm.model.ParticipantWrapper;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.*;
 
 /**
  * Places orders with CareEvolve for COVID-19 virology
@@ -289,7 +290,14 @@ public class Covid19OrderRegistrar {
 
         if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
             if (httpResponse.getEntity() != null) {
-                String content = IOUtils.toString(httpResponse.getEntity().getContent());
+                BOMInputStream bomInputStream = new BOMInputStream(httpResponse.getEntity().getContent());
+                if (bomInputStream.hasBOM()) {
+                    logger.warn("Response contained BOM");
+                    int bomLength = bomInputStream.hasBOM()? bomInputStream.getBOM().length() : 0;
+                    // Skip BOM, if necessary
+                    bomInputStream.skip(bomLength);
+                }
+                String content = IOUtils.toString(bomInputStream);
                 try {
                     OrderResponse orderResponse = new Gson().fromJson(content, OrderResponse.class);
                     return orderResponse;
