@@ -52,8 +52,8 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                 " FROM  " + STUDY_MANAGER_SCHEMA + "ddp_kit kit  " +
                 " LEFT JOIN     " + STUDY_MANAGER_SCHEMA + "ddp_kit_request req  ON (kit.dsm_kit_request_id = req.dsm_kit_request_id)   " +
                 " left join    " + STUDY_MANAGER_SCHEMA + "ups_shipment shipment on (shipment.dsm_kit_request_id = kit.dsm_kit_request_id) " +
-                " left join  " + STUDY_MANAGER_SCHEMA + "ups_package pack on (pack .dsm_kit_request_id = kit.dsm_kit_request_id and pack.ups_shipment_id = shipment.ups_shipment_id) " +
-                " left join  " + STUDY_MANAGER_SCHEMA + "ups_activity activity on (activity.dsm_kit_request_id = kit.dsm_kit_request_id and pack.ups_package_id = activity.ups_package_id) " +
+                " left join  " + STUDY_MANAGER_SCHEMA + "ups_package pack on ( pack.ups_shipment_id = shipment.ups_shipment_id) " +
+                " left join  " + STUDY_MANAGER_SCHEMA + "ups_activity activity on (pack.ups_package_id = activity.ups_package_id) " +
                 " WHERE req.ddp_instance_id = ? and ( kit_label not like \"%\\\\_1\") and kit.dsm_kit_request_id > ? " +
                 " and (shipment.ups_shipment_id is null or activity.ups_activity_id is null  or  activity.ups_activity_id in  " +
                 " ( SELECT ac.ups_activity_id  " +
@@ -65,7 +65,7 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                 "    AND lastActivity.maxId = ac.ups_activity_id  " +
                 " ))";
         String SQL_AVOID_DELIVERED = " and (tracking_to_id is not null or tracking_return_id is not null ) and  pack.delivery_date is null and kit.test_result is null " +
-                " order by kit.dsm_kit_request_id ASC LIMIT ?";
+                " order by kit.dsm_kit_request_id ASC LIMIT ?";// todo pegah
         logger.info("Starting the UPS lookup job");
         logger.info(data);
         LOOKUP_CHUNK_SIZE = new JsonParser().parse(data).getAsJsonObject().get("size").getAsInt();
