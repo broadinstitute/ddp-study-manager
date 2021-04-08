@@ -10,6 +10,7 @@ import java.io.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -34,6 +35,11 @@ public class SystemUtil {
     private static final String LINEBREAK_UNIVERSAL = "\n";
     private static final String LINEBREAK = "\r";
     public static final String SEPARATOR = "\t";
+
+    public static String getISO8601DateString() {
+        Instant instant = Instant.now();
+        return instant.toString();
+    }
 
     public static final DateTimeFormatter FULL_DATE = new DateTimeFormatterBuilder()
             .appendPattern(DATE_FORMAT)

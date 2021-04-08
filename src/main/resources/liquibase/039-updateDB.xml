@@ -650,7 +650,7 @@
             <column name="column_name" value="AGE"/>
             <column name="column_display" value="Age Today *"/>
             <column name="display_type" value="NUMBER"/>
-            <column name="actions" value="[{&#34;name&#34;:&#34;AGE&#34;,#34;value&#34;:&#34;DATSTAT_DATEOFBIRTH&#34;,&#34;type&#34;:&#34;CALC&#34;}]"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;AGE&#34;,&#34;value&#34;:&#34;DATSTAT_DATEOFBIRTH&#34;,&#34;type&#34;:&#34;CALC&#34;}]"/>
             <column name="order_number" value="10"/>
         </insert>
         <insert tableName="field_settings">
