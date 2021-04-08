@@ -57,10 +57,8 @@ public class UPSActivity {
     }
 
     public String getSQLDateTimeString() {
-        Instant activityInstant = LocalDateTime.parse(getDateTimeString(), DateTimeFormatter.ofPattern("YYYYMMdd HHmmss", Locale.US)).atZone(ZoneId.of("US/Eastern")).toInstant();
-        DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                .withZone(ZoneId.systemDefault());
-
+        Instant activityInstant = LocalDateTime.parse(getDateTimeString(), DateTimeFormatter.ofPattern("yyyyMMdd HHmmss", Locale.US)).atZone(ZoneId.of("US/Eastern")).toInstant();
+        DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
         String activityDateTime = DATE_TIME_FORMATTER.format(activityInstant);
         return activityDateTime;
     }

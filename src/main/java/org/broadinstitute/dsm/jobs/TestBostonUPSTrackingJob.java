@@ -91,12 +91,11 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "  VALUES " +
                 "  (?)";
         final String SQL_INSERT_UPSPackage = "INSERT INTO " + STUDY_MANAGER_SCHEMA + "ups_package" +
-                "  ( dsm_kit_request_id ," +
-                " ups_shipment_id ," +
+                "( ups_shipment_id ," +
                 " tracking_number )" +
                 "  VALUES " +
-                "  (?, ? ,?)," +
-                "  (?, ? ,?) ";
+                "  ( ? ,?)," +
+                "  ( ? ,?) ";
         PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(MAX_CONNECTION, cfg.getString(ApplicationConfigConstants.CF_DSM_DB_URL));
         try (Connection conn = dataSource.getConnection()) {
             try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_SHIPMENT, Statement.RETURN_GENERATED_KEYS)) {
@@ -129,12 +128,10 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             if (insertedShipmentId != null) {
                 logger.info("Inserting new package information for kit " + kit.getDsmKitRequestId());
                 try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_UPSPackage, Statement.RETURN_GENERATED_KEYS)) {
-                    stmt.setString(1, kit.getDsmKitRequestId());
-                    stmt.setString(2, insertedShipmentId);
-                    stmt.setString(3, kit.getTrackingToId());//first row is the shipping one
-                    stmt.setString(4, kit.getDsmKitRequestId());
-                    stmt.setString(5, insertedShipmentId);
-                    stmt.setString(6, kit.getTrackingReturnId());//second row is the return one
+                    stmt.setString(1, insertedShipmentId);
+                    stmt.setString(2, kit.getTrackingToId());//first row is the shipping one
+                    stmt.setString(3, insertedShipmentId);
+                    stmt.setString(4, kit.getTrackingReturnId());//second row is the return one
                     int result = stmt.executeUpdate();
                     if (result == 2) {
                         try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -324,14 +321,13 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         final String INSERT_NEW_ACTIVITIES = "INSERT INTO " + STUDY_MANAGER_SCHEMA + "ups_activity    " +
                 "(    " +
                 "  ups_package_id  ,  " +
-                "  dsm_kit_request_id  ,  " +
                 "  ups_location  ,  " +
                 "  ups_status_type  ,  " +
                 "  ups_status_description  ,  " +
                 "  ups_status_code  ,  " +
                 "  ups_activity_date_time) " +
                 "VALUES " +
-                "(?, ?, ?, ?, ?, ?, ?)";
+                "( ?, ?, ?, ?, ?, ?)";
         final String SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, request.ddp_kit_request_id, request.upload_reason, " +
                 "        realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
                 "        FROM " + STUDY_MANAGER_SCHEMA + "ddp_kit_request request, " + STUDY_MANAGER_SCHEMA + "ddp_kit kit, " + STUDY_MANAGER_SCHEMA + "event_type eve, " + STUDY_MANAGER_SCHEMA + "ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
@@ -363,12 +359,11 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             try (Connection conn = dataSource.getConnection()) {
                 try (PreparedStatement stmt = conn.prepareStatement(INSERT_NEW_ACTIVITIES)) {
                     stmt.setString(1, kit.getUpsPackage().getUpsPackageId());
-                    stmt.setString(2, kit.getDsmKitRequestId());
-                    stmt.setString(3, currentInsertingActivity.getLocation().getString());
-                    stmt.setString(4, currentInsertingActivity.getStatus().getType());
-                    stmt.setString(5, currentInsertingActivity.getStatus().getDescription());
-                    stmt.setString(6, currentInsertingActivity.getStatus().getCode());
-                    stmt.setString(7, activityDateTime);
+                    stmt.setString(2, currentInsertingActivity.getLocation().getString());
+                    stmt.setString(3, currentInsertingActivity.getStatus().getType());
+                    stmt.setString(4, currentInsertingActivity.getStatus().getDescription());
+                    stmt.setString(5, currentInsertingActivity.getStatus().getCode());
+                    stmt.setString(6, activityDateTime);
                     int r = stmt.executeUpdate();
 
                     logger.info("Updated " + r + " rows for a new activity");
