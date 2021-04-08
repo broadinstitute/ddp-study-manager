@@ -1,10 +1,8 @@
 package org.broadinstitute.dsm.db.dto.participant.data;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class ParticipantDataDto {
 
     private int participantDataId;

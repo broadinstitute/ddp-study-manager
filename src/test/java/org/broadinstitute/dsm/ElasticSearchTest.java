@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm;
 
 import org.apache.lucene.search.join.ScoreMode;
+import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -14,8 +15,10 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -586,7 +589,7 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void searchPTByGUID() throws Exception {
-        searchProfileValue("participants_structured.rgp.rgp", "profile.guid", "UCULFNVQWATQ0CT7KZG4");
+        searchProfileValue("participants_structured.rgp.rgp", "profile.guid", "T2SA8FUFGCT8QMFDD62W");
     }
 
     @Test
@@ -684,29 +687,69 @@ public class ElasticSearchTest extends TestHelper {
         }
     }
 
-    @Test
-    public void updateWorkflowValue() throws Exception {
+    private Map<String, Object> getObjectByID(String index, String ddpParticipantId, String object) throws Exception {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
-
-            Map<String, Object> workflowMap = new HashMap<>();
-            workflowMap.put("workflow", "ACCEPTANCE_STATUS");
-            workflowMap.put("status", "ACCEPTED");
-
-            List<Map<String, Object>> workflowList = new ArrayList<>();
-            workflowList.add(workflowMap);
-
-            Map<String, Object> jsonMap = new HashMap<>();
-            jsonMap.put("workflows", workflowList);
-
-            UpdateRequest updateRequest = new UpdateRequest()
-                    .index("participants_structured.rgp.rgp")
+            String[] includes = new String[] {object};
+            String[] excludes = Strings.EMPTY_ARRAY;
+            FetchSourceContext fetchSourceContext = new FetchSourceContext(true, includes, excludes);
+            GetRequest getRequest = new GetRequest()
+                    .index(index)
                     .type("_doc")
-                    .id("UCULFNVQWATQ0CT7KZG4")
+                    .id(ddpParticipantId)
+                    .fetchSourceContext(fetchSourceContext);
+            GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
+            return getResponse.getSourceAsMap();
+        }
+    }
+
+    @Test
+    public void updateWorkflowValues() throws Exception {
+        String ddpParticipantId = "XLDUNC3BHGWGWERHW781";
+        String workflow = "ALIVE_DECEASED";
+        String status = "ALIVE";
+        DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
+                false, null, false, null, "participants_structured.rgp.rgp", null, null);
+        ElasticSearchUtil.writeWorkflow(ddpInstance, ddpParticipantId, workflow, status);
+        Map<String, Object> workflows = ElasticSearchUtil.getWorkflows(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+
+        if (workflows != null && !workflows.isEmpty()) {
+            List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflows.get("workflows");
+            if (workflowListES != null && !workflowListES.isEmpty()) {
+                for (Map<String, Object> workflowES : workflowListES) {
+                    if (workflow.equals(workflowES.get("workflow"))) {
+                        Assert.assertTrue(status.equals(workflowES.get("status")));
+                    }
+                }
+            }
+        }
+
+        String newStatus = "DECEASED";
+        ElasticSearchUtil.writeWorkflow(ddpInstance, ddpParticipantId, workflow, newStatus);
+        Map<String, Object> updatedWorkflows = ElasticSearchUtil.getWorkflows(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+
+        if (updatedWorkflows != null && !updatedWorkflows.isEmpty()) {
+            List<Map<String, Object>> updatedWorkflowsListES = (List<Map<String, Object>>) updatedWorkflows.get("workflows");
+            if (updatedWorkflowsListES != null && !updatedWorkflowsListES.isEmpty()) {
+                for (Map<String, Object> workflowES : updatedWorkflowsListES) {
+                    if (workflow.equals(workflowES.get("workflow"))) {
+                        Assert.assertTrue(newStatus.equals(workflowES.get("status")));
+                    }
+                }
+            }
+        }
+        Assert.assertEquals(workflows.size(), updatedWorkflows.size());
+    }
+
+    private static void updateES(String index, String ddpParticipantId, Map<String, Object> jsonMap) throws Exception{
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
+            UpdateRequest updateRequest = new UpdateRequest()
+                    .index(index)
+                    .type("_doc")
+                    .id(ddpParticipantId)
                     .doc(jsonMap)
                     .docAsUpsert(true);
 
             UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
-            searchProfileValue("participants_structured.rgp.rgp", "profile.guid", "UCULFNVQWATQ0CT7KZG4");
         }
     }
 
