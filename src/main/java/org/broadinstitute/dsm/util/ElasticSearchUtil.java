@@ -140,7 +140,7 @@ public class ElasticSearchUtil {
                 }
             }
             catch (Exception e) {
-                throw new RuntimeException("Couldn't get participants from ES for instance " + realm, e);
+                logger.error("Couldn't get participants from ES for instance " + realm, e);
             }
             logger.info("Got " + esData.size() + " participants from ES for instance " + realm);
         }
