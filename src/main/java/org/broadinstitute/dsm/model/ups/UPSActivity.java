@@ -4,10 +4,8 @@ import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 @Data
 public class UPSActivity {
@@ -57,8 +55,8 @@ public class UPSActivity {
     }
 
     public String getSQLDateTimeString() {
-        Instant activityInstant = LocalDateTime.parse(getDateTimeString(), DateTimeFormatter.ofPattern("yyyyMMdd HHmmss", Locale.US)).atZone(ZoneId.of("US/Eastern")).toInstant();
-        DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
+        Instant activityInstant = this.getInstant();
+        DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("America/New_York"));
         String activityDateTime = DATE_TIME_FORMATTER.format(activityInstant);
         return activityDateTime;
     }
