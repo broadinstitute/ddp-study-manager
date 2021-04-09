@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -290,14 +291,8 @@ public class Covid19OrderRegistrar {
 
         if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
             if (httpResponse.getEntity() != null) {
-                BOMInputStream bomInputStream = new BOMInputStream(httpResponse.getEntity().getContent());
-                if (bomInputStream.hasBOM()) {
-                    logger.warn("Response contained BOM");
-                    int bomLength = bomInputStream.hasBOM()? bomInputStream.getBOM().length() : 0;
-                    // Skip BOM, if necessary
-                    bomInputStream.skip(bomLength);
-                }
-                String content = IOUtils.toString(bomInputStream);
+                InputStream inputStream = new BOMInputStream(httpResponse.getEntity().getContent());
+                String content = IOUtils.toString(inputStream);
                 try {
                     OrderResponse orderResponse = new Gson().fromJson(content, OrderResponse.class);
                     return orderResponse;
