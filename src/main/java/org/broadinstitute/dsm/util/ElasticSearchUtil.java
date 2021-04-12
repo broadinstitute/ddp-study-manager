@@ -203,7 +203,7 @@ public class ElasticSearchUtil {
                 }
             }
             catch (Exception e) {
-                throw new RuntimeException("Couldn't get participants from ES for instance " + realm, e);
+                logger.error("Couldn't get participants from ES for instance " + realm, e);
             }
             logger.info("Got " + esData.size() + " participants from ES for instance " + realm);
         }
@@ -240,7 +240,7 @@ public class ElasticSearchUtil {
                 }
             }
             catch (Exception e) {
-                throw new RuntimeException("Couldn't get participants from ES for instance " + instance.getName(), e);
+                logger.error("Couldn't get participants from ES for instance " + instance.getName(), e);
             }
             logger.info("Got " + esData.size() + " participants from ES for instance " + instance.getName());
             return esData;
@@ -350,7 +350,7 @@ public class ElasticSearchUtil {
                 }
             }
             catch (Exception e) {
-                throw new RuntimeException("Couldn't write workflow information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName(), e);
+                logger.error("Couldn't write workflow information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName(), e);
             }
         }
         return false;
