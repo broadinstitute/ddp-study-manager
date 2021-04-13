@@ -1,11 +1,5 @@
 package org.broadinstitute.dsm.careevolve;
 
-import java.io.File;
-import java.sql.Connection;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.util.Map;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -24,9 +18,13 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.sql.Connection;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.Map;
 
 
 public class Covid19OrderRegistrarTest {
@@ -71,7 +69,7 @@ public class Covid19OrderRegistrarTest {
         DDPInstance ddpInstance = null;
 
         try (Connection conn = dataSource.getConnection()) {
-            ddpInstance = DDPInstance.getDDPInstanceWithRole(conn,"testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
+            ddpInstance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
         }
 
         String participantHruid = "";

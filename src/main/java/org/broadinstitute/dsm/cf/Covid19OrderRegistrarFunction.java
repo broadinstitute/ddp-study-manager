@@ -1,6 +1,21 @@
 package org.broadinstitute.dsm.cf;
 
-import static org.broadinstitute.dsm.statics.ApplicationConfigConstants.DSM_DB_URL;
+import com.google.cloud.functions.BackgroundFunction;
+import com.google.cloud.functions.Context;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.annotations.SerializedName;
+import com.typesafe.config.Config;
+import org.apache.commons.dbcp2.PoolableConnection;
+import org.apache.commons.dbcp2.PoolingDataSource;
+import org.broadinstitute.dsm.careevolve.*;
+import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.DdpKit;
+import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
+import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.elasticsearch.client.RestHighLevelClient;
 
 import java.sql.Connection;
 import java.text.ParseException;
@@ -11,27 +26,7 @@ import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.google.cloud.functions.BackgroundFunction;
-import com.google.cloud.functions.Context;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.annotations.SerializedName;
-import com.google.pubsub.v1.PubsubMessage;
-import com.typesafe.config.Config;
-import org.apache.commons.dbcp2.PoolableConnection;
-import org.apache.commons.dbcp2.PoolingDataSource;
-import org.broadinstitute.dsm.careevolve.Authentication;
-import org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar;
-import org.broadinstitute.dsm.careevolve.OrderResponse;
-import org.broadinstitute.dsm.careevolve.Patient;
-import org.broadinstitute.dsm.careevolve.Provider;
-import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.db.DdpKit;
-import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
-import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.util.ElasticSearchUtil;
-import org.elasticsearch.client.RestHighLevelClient;
+import static org.broadinstitute.dsm.statics.ApplicationConfigConstants.DSM_DB_URL;
 
 public class Covid19OrderRegistrarFunction  implements BackgroundFunction<Covid19OrderRegistrarFunction.OrderPayload> {
 
@@ -57,7 +52,7 @@ public class Covid19OrderRegistrarFunction  implements BackgroundFunction<Covid1
         DDPInstance ddpInstance = null;
 
         try (Connection conn = dataSource.getConnection()) {
-            ddpInstance = DDPInstance.getDDPInstanceWithRole(conn,"testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
+            ddpInstance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
             logger.info("Will use instance " + ddpInstance.getName());
 
             if (DdpKit.hasKitBeenOrderedInCE(conn, orderPayload.getKitLabel())) {
