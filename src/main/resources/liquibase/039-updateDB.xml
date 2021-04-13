@@ -1428,8 +1428,7 @@
             <column name="field_type" value="RGP_SUBJECT_INFO_GROUP"/>
             <column name="column_name" value="DATSTAT_FIRSTNAME"/>
             <column name="column_display" value="First Name *"/>
-            <column name="display_type" value="ACTIVITY_STAFF"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;ENROLLMENT.FILLER_FIRST_NAME&#34;}]"/>
+            <column name="display_type" value="TEXT"/>
             <column name="order_number" value="5"/>
         </insert>
         <insert tableName="field_settings">
