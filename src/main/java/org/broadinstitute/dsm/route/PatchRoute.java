@@ -110,6 +110,7 @@ public class PatchRoute extends RequestHandler {
                         if (dbElement != null) {
                             if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
                                 List<NameValue> nameValues = setWorkflowRelatedFields(patch);
+                                writeMedicalRecordsToES(patch);
                                 //return nameValues with nulls
                                 return new Result(200, new GsonBuilder().serializeNulls().create().toJson(nameValues));
                             }
@@ -278,6 +279,11 @@ public class PatchRoute extends RequestHandler {
             response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
         }
+    }
+
+    private void writeMedicalRecordsToES(@NonNull Patch patch) {
+        DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+        ElasticSearchUtil.writeMedicalRecord(ddpInstance, patch.getId(), patch.getParentId(), "medicalRecords");
     }
 
     private void writeESWorkflow(@NonNull Patch patch, @NonNull NameValue nameValue, @NonNull Value action) {

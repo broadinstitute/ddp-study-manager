@@ -740,6 +740,12 @@ public class ElasticSearchTest extends TestHelper {
         Assert.assertEquals(workflows.size(), updatedWorkflows.size());
     }
 
+    @Test
+    public void getDSMObjects() throws Exception {
+        Map<String, Object> dsmObjects = ElasticSearchUtil.getDSMObjects("participants_structured.cmi.cmi-osteo", "776FSXRTS442LVK1GZ7J", "dsm");
+
+    }
+
     private static void updateES(String index, String ddpParticipantId, Map<String, Object> jsonMap) throws Exception{
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             UpdateRequest updateRequest = new UpdateRequest()

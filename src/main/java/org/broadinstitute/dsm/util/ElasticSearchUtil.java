@@ -293,6 +293,10 @@ public class ElasticSearchUtil {
         return false;
     }
 
+    public static boolean writeMedicalRecord(@NonNull DDPInstance instance, @NonNull String id, @NonNull String ddpParticipantId, @NonNull String objectType) {
+
+    }
+
     public static Map<String, Object> getWorkflows(String index, String ddpParticipantId) throws Exception {
         try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
                 TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
@@ -303,6 +307,26 @@ public class ElasticSearchUtil {
                     .index(index)
                     .type("_doc")
                     .id(ddpParticipantId)
+                    .fetchSourceContext(fetchSourceContext);
+
+            GetResponse getResponse = null;
+            if (client.exists(getRequest, RequestOptions.DEFAULT)) {
+                getResponse = client.get(getRequest, RequestOptions.DEFAULT);
+            }
+            return getResponse != null ? getResponse.getSourceAsMap() : null;
+        }
+    }
+
+    public static Map<String, Object> getDSMObjects(String index, String id, String object) throws Exception {
+        try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
+                TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
+            String[] includes = new String[] {object};
+            String[] excludes = Strings.EMPTY_ARRAY;
+            FetchSourceContext fetchSourceContext = new FetchSourceContext(true, includes, excludes);
+            GetRequest getRequest = new GetRequest()
+                    .index(index)
+                    .type("_doc")
+                    .id(id)
                     .fetchSourceContext(fetchSourceContext);
 
             GetResponse getResponse = null;
