@@ -367,8 +367,12 @@ public class ElasticSearchUtil {
                     .type("_doc")
                     .id(ddpParticipantId)
                     .fetchSourceContext(fetchSourceContext);
-            GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
-            return getResponse.getSourceAsMap();
+
+            GetResponse getResponse = null;
+            if (client.exists(getRequest, RequestOptions.DEFAULT)) {
+                getResponse = client.get(getRequest, RequestOptions.DEFAULT);
+            }
+            return getResponse != null ? getResponse.getSourceAsMap() : null;
         }
     }
 
