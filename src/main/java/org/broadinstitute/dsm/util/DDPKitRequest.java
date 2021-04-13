@@ -2,18 +2,16 @@ package org.broadinstitute.dsm.util;
 
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.LatestKitRequest;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.KitRequest;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitSubKits;
 import org.broadinstitute.dsm.model.KitType;
-import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.ddp.KitDetail;
 import org.broadinstitute.dsm.statics.RoutePath;
-import org.broadinstitute.dsm.util.externalShipper.ExternalShipper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +63,7 @@ public class DDPKitRequest {
                                             //kit requests from study-server
                                             if (StringUtils.isNotBlank(latestKit.getParticipantIndexES())) {
                                                 //without order list, that was only added for promise and currently is not used!
-                                                DDPInstance ddpInstance = DDPInstance.getDDPInstance(latestKit.getInstanceName());
+                                                DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(latestKit.getInstanceName());
                                                 Map<String, Map<String, Object>> participantsESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance, ElasticSearchUtil.BY_GUID + kitDetail.getParticipantId());
                                                 if (participantsESData != null && !participantsESData.isEmpty()) {
                                                     Map<String, Object> participantESData = participantsESData.get(kitDetail.getParticipantId());

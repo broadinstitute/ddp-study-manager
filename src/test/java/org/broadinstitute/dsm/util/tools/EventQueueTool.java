@@ -8,6 +8,7 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ParticipantEvent;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -97,7 +98,7 @@ public class EventQueueTool {
         Collection<KitDDPNotification> kitsNotReceived = getKitsNotReceived(realm, eventName);
 
         long currentTime = System.currentTimeMillis();
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
+        DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(realm);
 
         for (KitDDPNotification kitInfo : kitsNotReceived) {
             if (kitInfo.getEventName().equals(eventName) && kitInfo.getInstanceName().equals(realm)) {

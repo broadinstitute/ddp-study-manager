@@ -4,7 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.KitRequest;
 import org.broadinstitute.dsm.model.gbf.*;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
@@ -187,7 +187,7 @@ public class GBFTest extends TestHelper {
                     "AND external_response is null " +
                     "ORDER BY external_order_date ASC ";
 
-            ArrayList<KitRequest> kitRequests = gbf.getKitRequestsNotDone(Integer.parseInt(DDPInstance.getDDPInstance("testboston").getDdpInstanceId()), query);
+            ArrayList<KitRequest> kitRequests = gbf.getKitRequestsNotDone(Integer.parseInt(DDPInstanceDao.getDDPInstanceByRealm("testboston").getDdpInstanceId()), query);
             HashMap<String, KitRequest> kits = new HashMap<>();
             for (KitRequest kit : kitRequests) {
                 kits.put(kit.getExternalOrderNumber(), kit);

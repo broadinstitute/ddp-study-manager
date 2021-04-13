@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitStatus;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.ParticipantKits;
 import org.broadinstitute.dsm.model.ddp.DDPListOfParticipants;
 import org.broadinstitute.dsm.statics.RequestParameter;
@@ -30,7 +31,7 @@ public class BatchKitsRoute implements Route {
             HttpServletRequest rawRequest = request.raw();
             String content = SystemUtil.getBody(rawRequest);
             String[] ddpParticipantIds = new Gson().fromJson(content, DDPListOfParticipants.class).participantIds;
-            DDPInstance ddpInstance = DDPInstance.getDDPInstance(study);
+            DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(study);
             List<ParticipantKits> results = new ArrayList<>();
             if (ddpInstance != null) {
                 if (ddpParticipantIds != null && ddpParticipantIds.length != 0) {

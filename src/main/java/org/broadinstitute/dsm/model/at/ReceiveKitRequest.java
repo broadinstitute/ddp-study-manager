@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ParticipantData;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.util.NotificationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,7 @@ public class ReceiveKitRequest {
 
             String dataString = new Gson().toJson(data);
             if (updateData(dataString, participantData.getDataId())) {
-                DDPInstance ddpInstance = DDPInstance.getDDPInstance("atcp");
+                DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm("atcp");
                 List<String> recipients = ddpInstance.getNotificationRecipient();
                 if (recipients != null && !recipients.isEmpty()) {
                     for (String recipient : recipients) {

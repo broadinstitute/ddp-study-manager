@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -63,7 +64,7 @@ public class ParticipantEvent {
             logger.error("Couldn't get list of skipped participant events for " + realm, results.resultException);
         }
         else {
-            DDPInstance instance = DDPInstance.getDDPInstance(realm);
+            DDPInstance instance = DDPInstanceDao.getDDPInstanceByRealm(realm);
             for (ParticipantEvent skippedParticipant : skippedParticipantEvents) {
                 String sendRequest = instance.getBaseUrl() + RoutePath.DDP_PARTICIPANTS_PATH + "/" + skippedParticipant.getParticipantId();
                 try {

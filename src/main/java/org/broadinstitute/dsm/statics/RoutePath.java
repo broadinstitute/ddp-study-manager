@@ -104,6 +104,7 @@ public class RoutePath {
     public static final String EDIT_PARTICIPANT = "editParticipant";
     public static final String EDIT_PARTICIPANT_MESSAGE = "editParticipantMessageStatus";
     public static final String ADD_FAMILY_MEMBER = "familyMember";
+    public static final String GET_STATISTICS = "getStatistics";
 
     public static String getRealm(Request request) {
         QueryParamsMap queryParams = request.queryMap();

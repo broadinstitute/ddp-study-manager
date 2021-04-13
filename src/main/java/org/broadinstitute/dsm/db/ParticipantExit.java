@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -82,7 +83,7 @@ public class ParticipantExit {
     }
 
     private static void addParticipantInformation(@NonNull String realm, @NonNull Collection<ParticipantExit> exitedParticipants) {
-        DDPInstance instance = DDPInstance.getDDPInstance(realm);
+        DDPInstance instance = DDPInstanceDao.getDDPInstanceByRealm(realm);
         if (!instance.isHasRole()) {
             if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
                 Map<String, Map<String, Object>> participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(realm, instance.getParticipantIndexES());

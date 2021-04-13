@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="dashboardSettings" author="gmakharat" >
+        <createTable tableName="dashboard_settings">
+            <column autoIncrement="true" name="dashboard_settings_id" type="INT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="ddp_instance_id" type="int">
+                <constraints nullable="false" foreignKeyName="fk_dashboard_settings_ddp_instance" references="ddp_instance(ddp_instance_id)"/>
+            </column>
+            <column name="display_text" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="display_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="possible_values" defaultValue="NULL" type="VARCHAR(1000)"/>
+            <column name="filter_type" type="VARCHAR(100)"/>
+            <column name="statistic_for" type="VARCHAR(100)"/>
+            <column name="order_id" type="INT"/>
+            <column name="deleted" type="TINYINT(1)"/>
+            <column name="last_changed" type="BIGINT"/>
+            <column name="changed_by" type="VARCHAR(45)"/>
+
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

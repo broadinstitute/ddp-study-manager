@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.db.dao.ddp.instance;
 
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -73,6 +74,32 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
             throw new RuntimeException("Couldn't get role of realm " + realm, results.resultException);
         }
         return (boolean) results.resultValue;
+    }
+
+    public static DDPInstance getDDPInstanceByRealm(@NonNull String realm) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(DDPInstance.SQL_SELECT_ALL_ACTIVE_REALMS + QueryExtension.BY_INSTANCE_NAME)) {
+                stmt.setString(1, realm);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = DDPInstance.getDDPInstanceFormResultSet(rs);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting information for " + realm, e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get realm information for " + realm, results.resultException);
+        }
+        return (DDPInstance) results.resultValue;
     }
 
     @Override

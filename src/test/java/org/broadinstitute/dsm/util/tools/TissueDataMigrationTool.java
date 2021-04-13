@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -84,7 +85,7 @@ public class TissueDataMigrationTool {
     public TissueDataMigrationTool(String pathName, String realm) {
         String confFile = "config/test-config.conf";
         setup(confFile);
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
+        DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(realm);
         realmId = ddpInstance.getDdpInstanceId();
         createColumnNameMapAndDateFields();
         createDataLogFile();

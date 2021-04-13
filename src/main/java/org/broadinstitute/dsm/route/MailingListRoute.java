@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.route;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.ddp.Contact;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RequestParameter;
@@ -37,7 +38,7 @@ public class MailingListRoute extends RequestHandler {
     }
 
     public Collection<Contact> getMailingListContacts(String realm) {
-        DDPInstance instance = DDPInstance.getDDPInstance(realm);
+        DDPInstance instance = DDPInstanceDao.getDDPInstanceByRealm(realm);
 
         if (instance == null) {
             throw new RuntimeException("Instance name was not found " + realm);

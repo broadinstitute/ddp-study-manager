@@ -10,6 +10,7 @@ import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.FieldSettings;
 import org.broadinstitute.dsm.db.User;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.util.tools.util.DBUtil;
 
@@ -194,7 +195,7 @@ public class DBTestUtil {
     }
 
     public static void deleteAllFieldSettings(String realm) {
-        DDPInstance instance = DDPInstance.getDDPInstance(realm);
+        DDPInstance instance = DDPInstanceDao.getDDPInstanceByRealm(realm);
         String query = "DELETE FROM field_settings WHERE field_settings_id <> 0 AND field_settings_id IN " +
                 "( SELECT something.field_settings_id FROM (SELECT * from field_settings) as something WHERE " +
                 "something.ddp_instance_id = ?)";

@@ -7,6 +7,7 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.*;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.exception.DuplicateException;
 import org.broadinstitute.dsm.model.AbstractionWrapper;
@@ -246,7 +247,7 @@ public class PatchRoute extends RequestHandler {
                             DBElement dbElement = patchUtil.getColumnNameMap().get(nameValue.getName());
                             if (dbElement != null) {
                                 if (participantDataId == null) {
-                                    DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+                                    DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(patch.getRealm());
                                     participantDataId = ParticipantData.createNewParticipantData(patch.getParentId(), ddpInstance.getDdpInstanceId(), patch.getFieldId(), String.valueOf(nameValue.getValue()), patch.getUser());
                                     map.put(PARTICIPANT_DATA_ID, participantDataId);
                                 }
@@ -281,7 +282,7 @@ public class PatchRoute extends RequestHandler {
     }
 
     private void writeESWorkflow(@NonNull Patch patch, @NonNull NameValue nameValue, @NonNull Value action) {
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+        DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(patch.getRealm());
         String status = nameValue.getValue() != null ? String.valueOf(nameValue.getValue()) : null;
         if (StringUtils.isNotBlank(status)) {
             Map<String,String> data = new Gson().fromJson(status, new TypeToken<Map<String, String>>(){}.getType());

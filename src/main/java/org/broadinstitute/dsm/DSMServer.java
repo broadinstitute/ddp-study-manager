@@ -36,6 +36,7 @@ import org.broadinstitute.dsm.jobs.*;
 import org.broadinstitute.dsm.log.SlackAppender;
 import org.broadinstitute.dsm.pubsub.PubSubResultMessageSubscription;
 import org.broadinstitute.dsm.route.*;
+import org.broadinstitute.dsm.route.dynamicdashboard.StatisticDataRoute;
 import org.broadinstitute.dsm.route.familymember.AddFamilyMemberRoute;
 import org.broadinstitute.dsm.route.participant.GetParticipantDataRoute;
 import org.broadinstitute.dsm.security.JWTConverter;
@@ -530,6 +531,9 @@ public class DSMServer extends BasicServer {
 
         GetParticipantDataRoute getParticipantDataRoute = new GetParticipantDataRoute();
         get(UI_ROOT + RoutePath.GET_PARTICIPANT_DATA, getParticipantDataRoute, new JsonTransformer());
+
+        StatisticDataRoute statisticDataRoute = new StatisticDataRoute();
+        get(UI_ROOT + RoutePath.GET_STATISTICS, statisticDataRoute, new JsonTransformer());
     }
 
     private void setupSharedRoutes(@NonNull KitUtil kitUtil, @NonNull NotificationUtil notificationUtil,

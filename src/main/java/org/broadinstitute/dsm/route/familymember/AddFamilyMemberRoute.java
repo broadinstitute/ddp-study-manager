@@ -6,7 +6,6 @@ import java.util.Optional;
 
 import com.google.gson.Gson;
 import org.broadinstitute.ddp.handlers.util.Result;
-import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.User;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
@@ -44,7 +43,7 @@ public class AddFamilyMemberRoute extends RequestHandler {
             logger.warn("Study : " + realm + " is not setup to add family member");
             return new Result(400, "Study is not setup to add family member");
         }
-        String ddpInstanceId = DDPInstance.getDDPInstance(realm).getDdpInstanceId();
+        String ddpInstanceId = DDPInstanceDao.getDDPInstanceByRealm(realm).getDdpInstanceId();
 
         Optional<FamilyMemberDetails> maybeFamilyMemberData = addFamilyMemberPayload.getData();
         if (maybeFamilyMemberData.isEmpty() || maybeFamilyMemberData.orElseGet(FamilyMemberDetails::new).isFamilyMemberFieldsEmpty()) {

@@ -78,32 +78,6 @@ public class DDPInstance {
         this.usersIndexES = usersIndexES;
     }
 
-    public static DDPInstance getDDPInstance(@NonNull String realm) {
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_ALL_ACTIVE_REALMS + QueryExtension.BY_INSTANCE_NAME)) {
-                stmt.setString(1, realm);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        dbVals.resultValue = getDDPInstanceFormResultSet(rs);
-                    }
-                }
-                catch (SQLException e) {
-                    throw new RuntimeException("Error getting information for " + realm, e);
-                }
-            }
-            catch (SQLException ex) {
-                dbVals.resultException = ex;
-            }
-            return dbVals;
-        });
-
-        if (results.resultException != null) {
-            throw new RuntimeException("Couldn't get realm information for " + realm, results.resultException);
-        }
-        return (DDPInstance) results.resultValue;
-    }
-
     public static DDPInstance getDDPInstanceById(@NonNull Integer ddpInstanceId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -256,7 +230,7 @@ public class DDPInstance {
                 rs.getString(DBConstants.ES_USERS_INDEX));
     }
 
-    private static DDPInstance getDDPInstanceFormResultSet(@NonNull ResultSet rs) throws SQLException {
+    public static DDPInstance getDDPInstanceFormResultSet(@NonNull ResultSet rs) throws SQLException {
         String notificationRecipient = rs.getString(DBConstants.NOTIFICATION_RECIPIENT);
         List<String> recipients = null;
         if (StringUtils.isNotBlank(notificationRecipient)) {

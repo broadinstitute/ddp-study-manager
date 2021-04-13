@@ -13,6 +13,7 @@ import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.db.OncHistoryDetail;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.files.CoverPDFProcessor;
 import org.broadinstitute.dsm.files.PDFProcessor;
 import org.broadinstitute.dsm.files.RequestPDFProcessor;
@@ -142,7 +143,7 @@ public class DownloadPDFRoute extends RequestHandler {
                         ddpParticipantId = queryParams.get(RequestParameter.DDP_PARTICIPANT_ID).value();
                     }
                     if (StringUtils.isNotBlank(ddpParticipantId)) {
-                        DDPInstance instance = DDPInstance.getDDPInstance(realm);
+                        DDPInstance instance = DDPInstanceDao.getDDPInstanceByRealm(realm);
                         Map<String, Map<String, Object>> participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance,
                                 ElasticSearchUtil.BY_GUID + ddpParticipantId);
                         if (participantESData == null && participantESData.isEmpty()) {
@@ -349,7 +350,7 @@ public class DownloadPDFRoute extends RequestHandler {
             }
         }
         else if (StringUtils.isNotBlank(realm)) {
-            DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
+            DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(realm);
             requestPDFfromDDP(ddpInstance, ddpParticipantId, pdfType, response, userId);
         }
     }

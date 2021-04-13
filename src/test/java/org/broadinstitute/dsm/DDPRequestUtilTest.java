@@ -3,6 +3,7 @@ package org.broadinstitute.dsm;
 import org.broadinstitute.ddp.handlers.util.FollowUpSurvey;
 import org.broadinstitute.ddp.handlers.util.SimpleFollowUpSurvey;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.util.DDPRequestUtil;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -42,7 +43,7 @@ public class DDPRequestUtilTest extends TestHelper {
 
         FollowUpSurvey survey = new FollowUpSurvey("SURVEY_PARTICIPANT");
 
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(TEST_DDP);
+        DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(TEST_DDP);
         String sendRequest = ddpInstance.getBaseUrl() + "/ddp/followupsurvey/" + "test-consent";
 
         Integer ddpResponse  = DDPRequestUtil.postRequest(sendRequest, survey, ddpInstance.getName(), ddpInstance.isHasAuth0Token());
@@ -62,7 +63,7 @@ public class DDPRequestUtilTest extends TestHelper {
 
         SimpleFollowUpSurvey survey = new SimpleFollowUpSurvey("SURVEY_PARTICIPANT");
 
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(TEST_DDP);
+        DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(TEST_DDP);
         String sendRequest = ddpInstance.getBaseUrl() + "/ddp/followupsurvey/" + "test-consent";
 
         Integer ddpResponse  = DDPRequestUtil.postRequest(sendRequest, survey, ddpInstance.getName(), ddpInstance.isHasAuth0Token());

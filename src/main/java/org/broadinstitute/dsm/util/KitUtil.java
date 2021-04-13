@@ -13,6 +13,7 @@ import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.KitRequestCreateLabel;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitType;
 import org.broadinstitute.dsm.model.Value;
@@ -128,7 +129,7 @@ public class KitUtil {
             Address toAddress = null;
             try {
                 if (StringUtils.isBlank(kitLabelTriggered.getAddressIdTo())) {
-                    DDPInstance ddpInstance = DDPInstance.getDDPInstance(kitLabelTriggered.getInstanceName());
+                    DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(kitLabelTriggered.getInstanceName());
 
                     Map<String, Map<String, Object>> participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
                             ElasticSearchUtil.BY_GUID + kitLabelTriggered.getDdpParticipantId());

@@ -6,6 +6,7 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.LookupResponse;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -110,7 +111,7 @@ public class LookupRoute extends RequestHandler {
                     if (StringUtils.isBlank(realm)) {
                         throw new RuntimeException("Error getting collaboratorId, realm is missing ");
                     }
-                    DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
+                    DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(realm);
                     String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(ddpInstance.getBaseUrl(), ddpInstance.getDdpInstanceId(), ddpInstance.isMigratedDDP(),
                             ddpInstance.getCollaboratorIdPrefix(), value, shortId, "4"); //4 was length of CMI in Gen2
                     if (StringUtils.isNotBlank(collaboratorParticipantId)) {

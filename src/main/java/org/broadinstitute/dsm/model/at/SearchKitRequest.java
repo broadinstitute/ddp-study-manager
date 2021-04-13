@@ -6,6 +6,7 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.ParticipantData;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
@@ -104,7 +105,7 @@ public class SearchKitRequest {
 
         //add ES information
         if (!kitRequests.isEmpty()) {
-            DDPInstance ddpInstance = DDPInstance.getDDPInstance("atcp");
+            DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm("atcp");
             kitRequests.forEach((ddpParticipantId, kitRequestShipping) -> {
                 Map<String, Map<String, Object>> participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
                         ElasticSearchUtil.BY_GUID + ddpParticipantId);

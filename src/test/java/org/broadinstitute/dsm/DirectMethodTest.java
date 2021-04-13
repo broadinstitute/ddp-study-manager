@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.util.GoogleBucket;
 import org.broadinstitute.dsm.db.*;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.NDIUploadObject;
 import org.broadinstitute.dsm.exception.FileColumnMissing;
 import org.broadinstitute.dsm.model.KitRequestSettings;
@@ -294,7 +295,7 @@ public class DirectMethodTest extends TestHelper {
 
     @Test
     public void ddpInstance() {
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(TEST_DDP);
+        DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(TEST_DDP);
         Assert.assertNotNull(ddpInstance);
     }
 
@@ -321,7 +322,7 @@ public class DirectMethodTest extends TestHelper {
     public void exitParticipant() {
         //add test participant
         DBTestUtil.createTestData(TEST_DDP, "EXIT_PARTICIPANT", "TEST_INSTITUTION");
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(TEST_DDP);
+        DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(TEST_DDP);
 
         //exit the test participant (call write method to enter participant into exit table)
         ParticipantExit.exitParticipant("EXIT_PARTICIPANT", System.currentTimeMillis(), "1", ddpInstance, false);
@@ -632,7 +633,7 @@ public class DirectMethodTest extends TestHelper {
 
     @Test
     public void notificationRecipient() {
-        DDPInstance instance = DDPInstance.getDDPInstance("Prostate");
+        DDPInstance instance = DDPInstanceDao.getDDPInstanceByRealm("Prostate");
         List<String> recipients = instance.getNotificationRecipient();
         Assert.assertEquals(2, recipients.size());
         Assert.assertTrue(recipients.contains("simone+1@broadinstitute.org"));
@@ -739,7 +740,7 @@ public class DirectMethodTest extends TestHelper {
     @Ignore ("ES values are changing a lot because of testing")
     @Test
     public void mbcLegacyPTGUID() {
-        DDPInstance instance = DDPInstance.getDDPInstance("Pepper-MBC");
+        DDPInstance instance = DDPInstanceDao.getDDPInstanceByRealm("Pepper-MBC");
         String filter = " AND profile.guid = R0RR2K62F1D4JT2NUF0D";
         Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filter);
         Assert.assertTrue(!participants.isEmpty());
@@ -748,7 +749,7 @@ public class DirectMethodTest extends TestHelper {
     @Ignore ("ES values are changing a lot because of testing")
     @Test
     public void mbcLegacyPTAltPID() {
-        DDPInstance instance = DDPInstance.getDDPInstance("Pepper-MBC");
+        DDPInstance instance = DDPInstanceDao.getDDPInstanceByRealm("Pepper-MBC");
         String filter = " AND profile.legacyAltPid = 8315_v3";
         Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filter);
         Assert.assertTrue(!participants.isEmpty());
@@ -756,7 +757,7 @@ public class DirectMethodTest extends TestHelper {
 
     @Test
     public void osteoSingleCountry() {
-        DDPInstance instance = DDPInstance.getDDPInstance("Osteo");
+        DDPInstance instance = DDPInstanceDao.getDDPInstanceByRealm("Osteo");
         String filter = " AND ( PREQUAL.SELF_COUNTRY = 'US' )";
         Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filter);
         Assert.assertTrue(!participants.isEmpty());
@@ -764,7 +765,7 @@ public class DirectMethodTest extends TestHelper {
 
     @Test
     public void osteoTwoCountries() {
-        DDPInstance instance = DDPInstance.getDDPInstance("Osteo");
+        DDPInstance instance = DDPInstanceDao.getDDPInstanceByRealm("Osteo");
         String filter = " AND ( PREQUAL.SELF_COUNTRY = 'US' OR PREQUAL.SELF_COUNTRY = 'CA' )";
         Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filter);
         Assert.assertTrue(!participants.isEmpty());

@@ -13,11 +13,10 @@ import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.exception.FileColumnMissing;
 import org.broadinstitute.dsm.exception.FileWrongSeparator;
 import org.broadinstitute.dsm.exception.UploadLineException;
-import org.broadinstitute.dsm.exception.UploadLineException;
-import org.broadinstitute.dsm.exception.FileWrongSeparator;
 import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -127,7 +126,7 @@ public class KitUploadRoute extends RequestHandler {
                     return "Text file was empty or couldn't be parsed to the agreed format";
                 }
 
-                DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
+                DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(realm);
                 InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(realm);
                 final AtomicReference<Value> upload = new AtomicReference<>();
                 String specialMessage = null;
@@ -402,7 +401,7 @@ public class KitUploadRoute extends RequestHandler {
                                               List<KitRequest> kitRequestsToUpload) {
 
         boolean nameInOneColumn = fieldNamesFromHeader.contains(SIGNATURE);
-        DDPInstance ddpInstanceByRealm = DDPInstance.getDDPInstance(realm);
+        DDPInstance ddpInstanceByRealm = DDPInstanceDao.getDDPInstanceByRealm(realm);
 
         int lastNonEmptyRowIndex = getLastNonEmptyRowIndex(rows);
 

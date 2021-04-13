@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ParticipantEvent;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
@@ -39,7 +40,7 @@ public class ParticipantEventRoute extends RequestHandler {
             JsonObject jsonObject = new JsonParser().parse(request.body()).getAsJsonObject();
             realm = jsonObject.getAsJsonObject().get("realm").getAsString();
             if (UserUtil.checkUserAccess(realm, userId, "participant_event")) {
-                DDPInstance instance = DDPInstance.getDDPInstance(realm);
+                DDPInstance instance = DDPInstanceDao.getDDPInstanceByRealm(realm);
 
                 String ddpParticipantId = jsonObject.getAsJsonObject().get("participantId").getAsString();
                 String userIdRequest = jsonObject.getAsJsonObject().get("user").getAsString();

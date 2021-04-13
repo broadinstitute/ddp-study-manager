@@ -208,4 +208,8 @@ public class SystemUtil {
         }
         return mergedJson;
     }
+
+    public static double calculatePercentage(double obtained, double total) {
+        return (obtained * 100) / total;
+    }
 }

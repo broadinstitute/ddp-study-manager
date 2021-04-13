@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ViewFilter;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
@@ -40,7 +41,7 @@ public class ViewFilterRoute extends RequestHandler {
         DDPInstance instance = null;
         if (queryParams.value(RoutePath.REALM) != null) {
             realm = queryParams.get(RoutePath.REALM).value();
-            instance = DDPInstance.getDDPInstance(realm);
+            instance = DDPInstanceDao.getDDPInstanceByRealm(realm);
         }
         else {
             throw new RuntimeException("No realm is sent!");

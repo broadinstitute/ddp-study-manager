@@ -12,6 +12,7 @@ import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.EasypostLabelRate;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitType;
@@ -78,7 +79,7 @@ public class KitExpressRoute extends RequestHandler {
         //add new kit into db
         KitRequestShipping.reactivateKitRequest(kitRequestId);
 
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(kitRequest.getRealm());
+        DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(kitRequest.getRealm());
 
         EasyPostUtil easyPostUtil = new EasyPostUtil(kitRequest.getRealm());
         HashMap<String, KitType> kitTypes = org.broadinstitute.dsm.model.KitType.getKitLookup();
@@ -136,7 +137,7 @@ public class KitExpressRoute extends RequestHandler {
     private EasypostLabelRate getRateForOvernightExpress(@NonNull String kitRequestId) throws EasyPostException {
         KitRequestShipping kitRequest = KitRequestShipping.getKitRequest(kitRequestId);
         if (StringUtils.isNotBlank(kitRequest.getEasypostToId())) {
-            DDPInstance ddpInstance = DDPInstance.getDDPInstance(kitRequest.getRealm());
+            DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(kitRequest.getRealm());
 
             HashMap<String, KitType> kitTypes = org.broadinstitute.dsm.model.KitType.getKitLookup();
             String key = kitRequest.getKitType() + "_" + ddpInstance.getDdpInstanceId();

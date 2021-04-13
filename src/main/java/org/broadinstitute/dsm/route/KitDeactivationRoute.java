@@ -9,6 +9,7 @@ import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RequestParameter;
@@ -68,7 +69,7 @@ public class KitDeactivationRoute extends RequestHandler {
                         KitRequestShipping.reactivateKitRequest(kitRequestId, KitUtil.IGNORE_AUTO_DEACTIVATION);
                     }
                     else {
-                        DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
+                        DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(realm);
                         InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(realm);
                         Value activation = null;
                         if (instanceSettings != null && instanceSettings.getKitBehaviorChange() != null) {

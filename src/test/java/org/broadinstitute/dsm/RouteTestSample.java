@@ -9,6 +9,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.broadinstitute.ddp.util.GoogleBucket;
 import org.broadinstitute.dsm.db.*;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.exception.RateNotAvailableException;
 import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.KitType;
@@ -440,7 +441,7 @@ public class RouteTestSample extends TestHelper {
     @Test
     public void bspCollaboratorSampleIdRGPStyle() {
         DBTestUtil.deleteAllKitData("1_3");
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(TEST_DDP);
+        DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(TEST_DDP);
 
         HashMap<String, KitType> kitTypes = org.broadinstitute.dsm.model.KitType.getKitLookup();
         KitType kitType = kitTypes.get("TEST" + "_" + INSTANCE_ID);

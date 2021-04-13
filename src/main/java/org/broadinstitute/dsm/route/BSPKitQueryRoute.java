@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.bsp.BSPKitQueryResult;
 import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
@@ -67,7 +68,7 @@ public class BSPKitQueryRoute implements Route {
             return new BSPKitStatus(BSPKitStatus.DEACTIVATED);
         }
         if (StringUtils.isNotBlank(bspKitInfo.getDdpParticipantId())) {
-            DDPInstance ddpInstance = DDPInstance.getDDPInstance(bspKitInfo.getInstanceName());
+            DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(bspKitInfo.getInstanceName());
             InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(bspKitInfo.getInstanceName());
             Value received = null;
             if (instanceSettings != null && instanceSettings.getKitBehaviorChange() != null) {
