@@ -25,6 +25,7 @@ import spark.Request;
 import spark.Response;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,13 @@ public class PatchRoute extends RequestHandler {
 
     private static final String ELASTIC_EXPORT_WORKFLOWS = "ELASTIC_EXPORT.workflows";
     private static final String PARTICIPANT_DATA_ID = "participantDataId";
+    public static final String MEDICAL_RECORDS = "medicalRecords";
+    public static final String MEDICAL_RECORDS_ID = "medicalRecordsId";
+    public static final String TISSUE_RECORDS = "tissueRecords";
+    public static final String TISSUE_RECORDS_ID = "tissueRecordsId";
+    public static final List<String> MEDICAL_RECORDS_FIELD_NAMES = Arrays.asList("name", "type", "requested", "received");
+    public static final List<String> TISSUE_RECORDS_FIELD_NAMES =
+            Arrays.asList("typePX", "locationPX", "datePX", "histology", "accessionNumber", "requested", "received", "sent");
 
     private NotificationUtil notificationUtil;
     private PatchUtil patchUtil;
@@ -110,7 +118,7 @@ public class PatchRoute extends RequestHandler {
                         if (dbElement != null) {
                             if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
                                 List<NameValue> nameValues = setWorkflowRelatedFields(patch);
-                                writeMedicalRecordsToES(patch);
+                                writeDSMRecordsToES(patch);
                                 //return nameValues with nulls
                                 return new Result(200, new GsonBuilder().serializeNulls().create().toJson(nameValues));
                             }
@@ -281,9 +289,23 @@ public class PatchRoute extends RequestHandler {
         }
     }
 
-    private void writeMedicalRecordsToES(@NonNull Patch patch) {
+    private void writeDSMRecordsToES(@NonNull Patch patch) {
         DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
-        ElasticSearchUtil.writeMedicalRecord(ddpInstance, patch.getId(), patch.getParentId(), "medicalRecords");
+        NameValue nameValue = patch.getNameValue();
+        String name = nameValue.getName().substring(nameValue.getName().lastIndexOf('.') + 1);
+        String type = nameValue.getName().substring(0, nameValue.getName().indexOf('.'));
+        String value = nameValue.getValue().toString();
+        if ("m".equals(type)) {
+            if (MEDICAL_RECORDS_FIELD_NAMES.contains(name)) {
+                ElasticSearchUtil.writeDsmRecord(ddpInstance, patch.getId(), patch.getParentId(),
+                        MEDICAL_RECORDS, name, value, MEDICAL_RECORDS_ID);
+            }
+        } else if ("oD".equals(type)) {
+            if (TISSUE_RECORDS_FIELD_NAMES.contains(name)) {
+                ElasticSearchUtil.writeDsmRecord(ddpInstance, patch.getId(), patch.getParentId(),
+                        TISSUE_RECORDS, name, value, TISSUE_RECORDS_ID);
+            }
+        }
     }
 
     private void writeESWorkflow(@NonNull Patch patch, @NonNull NameValue nameValue, @NonNull Value action) {

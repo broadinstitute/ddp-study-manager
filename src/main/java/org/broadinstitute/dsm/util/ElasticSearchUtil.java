@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -231,7 +232,7 @@ public class ElasticSearchUtil {
         return addressByParticipant;
     }
 
-    public static boolean writeWorkflow(@NonNull DDPInstance instance, @NonNull String ddpParticipantId, @NonNull String workflow, @NonNull String status) {
+    public static void writeWorkflow(@NonNull DDPInstance instance, @NonNull String ddpParticipantId, @NonNull String workflow, @NonNull String status) {
         String index = instance.getParticipantIndexES();
         if (StringUtils.isNotBlank(index)) {
             try {
@@ -271,30 +272,79 @@ public class ElasticSearchUtil {
                     workflowMapES.put("workflows", workflowList);
                 }
 
-                try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
-                        TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
-                    UpdateRequest updateRequest = new UpdateRequest()
-                            .index(index)
-                            .type("_doc")
-                            .id(ddpParticipantId)
-                            .doc(workflowMapES)
-                            .docAsUpsert(true);
+                updateRequest(instance, ddpParticipantId, index, workflowMapES);
 
-                    UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
-
-                    logger.info("Updated workflow information for participant " + ddpParticipantId + " in ES for instance " + instance.getName());
-                    return true;
-                }
             }
             catch (Exception e) {
                 logger.error("Couldn't write workflow information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName(), e);
             }
         }
-        return false;
     }
 
-    public static boolean writeMedicalRecord(@NonNull DDPInstance instance, @NonNull String id, @NonNull String ddpParticipantId, @NonNull String objectType) {
+    public static void writeDsmRecord(@NonNull DDPInstance instance,
+                                      @NonNull String id,
+                                      @NonNull String ddpParticipantId,
+                                      @NonNull String objectType,
+                                      @NonNull String name,
+                                      @NonNull String value,
+                                      @NonNull String idName) {
+        String index = instance.getParticipantIndexES();
+        try {
+            Map<String, Object> objectsMapES = getObjectsMap(index, ddpParticipantId, "dsm");
+            if (objectsMapES != null && !objectsMapES.isEmpty()) {
+                Object dsmObject = objectsMapES.get("dsm");
+                Map<String, Object> dsmMap = new ObjectMapper().convertValue(dsmObject, Map.class);
+                List<Map<String, Object>> objectList = (List<Map<String, Object>>) dsmMap.get(objectType);
+                if (objectList != null) {
+                    boolean updated = false;
+                    for (Map<String, Object> object : objectList) {
+                        if (id.equals(object.get(idName))) {
+                            object.put(name, value);
+                            updated = true;
+                            break;
+                        }
+                    }
+                    if (!updated) {
+                        createAndAddNewObjectMap(id, name, value, objectList, idName);
+                    }
+                }
+            } else {
+                List<Map<String, Object>> objectList = new ArrayList<>();
+                createAndAddNewObjectMap(id, name, value, objectList, idName);
+                Map<String, Object> mapForDSM = new HashMap<>();
+                objectsMapES = new HashMap<>();
+                mapForDSM.put(objectType, objectList);
+                objectsMapES.put("dsm", mapForDSM);
+            }
 
+            updateRequest(instance, ddpParticipantId, index, objectsMapES);
+
+        } catch (Exception e) {
+            logger.error("Couldn't write " + objectType + " information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName(), e);
+        }
+    }
+
+    public static void updateRequest(@NonNull DDPInstance instance, @NonNull String ddpParticipantId, String index, Map<String, Object> objectsMapES) throws IOException {
+        try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
+                TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
+            UpdateRequest updateRequest = new UpdateRequest()
+                    .index(index)
+                    .type("_doc")
+                    .id(ddpParticipantId)
+                    .doc(objectsMapES)
+                    .docAsUpsert(true);
+
+            UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+
+            logger.info("Updated workflow information for participant " + ddpParticipantId + " in ES for instance " + instance.getName());
+        }
+    }
+
+    public static void createAndAddNewObjectMap(@NonNull String id, @NonNull String name, @NonNull String value, List<Map<String, Object>> objectList, String idName) {
+        Map<String, Object> newObjectMap = new HashMap<>();
+        newObjectMap.put(idName, id);
+        newObjectMap.put(name, value);
+        objectList.add(newObjectMap);
     }
 
     public static Map<String, Object> getWorkflows(String index, String ddpParticipantId) throws Exception {
@@ -317,7 +367,7 @@ public class ElasticSearchUtil {
         }
     }
 
-    public static Map<String, Object> getDSMObjects(String index, String id, String object) throws Exception {
+    public static Map<String, Object> getObjectsMap(String index, String id, String object) throws Exception {
         try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
                 TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
             String[] includes = new String[] {object};
