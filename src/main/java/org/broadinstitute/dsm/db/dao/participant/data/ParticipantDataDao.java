@@ -42,6 +42,9 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
             "data = ?," +
             "last_changed = ?," +
             "changed_by = ?";
+
+    private static final String SQL_UPDATE_DATA_TO_PARTICIPANT_DATA = "UPDATE ddp_participant_data SET data = ? WHERE participant_data_id = ?";
+
     private static final String PARTICIPANT_DATA_ID = "participant_data_id";
     private static final String DDP_PARTICIPANT_ID = "ddp_participant_id";
     private static final String DDP_INSTANCE_ID = "ddp_instance_id";
@@ -74,7 +77,7 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
             return dbVals;
         });
         if (simpleResult.resultException != null) {
-            throw new RuntimeException("Error inserting ddp instance ", simpleResult.resultException);
+            throw new RuntimeException("Error inserting ddp participant data ", simpleResult.resultException);
         }
         return (int) simpleResult.resultValue;
 
@@ -130,6 +133,25 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
                     + id, results.resultException);
         }
         return Optional.ofNullable((ParticipantDataDto) results.resultValue);
+    }
+
+    public int updateParticipantDataColumn(ParticipantDataDto participantDataDto) {
+        SimpleResult result = inTransaction((conn) -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_DATA_TO_PARTICIPANT_DATA)) {
+                stmt.setString(1, participantDataDto.getData());
+                stmt.setInt(2, participantDataDto.getParticipantDataId());
+                execResult.resultValue = stmt.executeUpdate();
+            } catch (SQLException sqle) {
+                execResult.resultException = sqle;
+            }
+            return execResult;
+        });
+        if (result.resultException != null) {
+            throw new RuntimeException(String.format("Could not update data for participant data with id: %s for participant with guid: %s",
+                    participantDataDto.getParticipantDataId(), participantDataDto.getDdpParticipantId()));
+        }
+        return (int) result.resultValue;
     }
 
     public List<ParticipantDataDto> getParticipantDataByParticipantId(String participantId) {

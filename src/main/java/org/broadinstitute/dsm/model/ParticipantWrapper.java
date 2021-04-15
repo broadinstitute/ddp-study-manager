@@ -8,12 +8,22 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
+import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
+import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
+import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
+import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
+import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
+import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
+import org.broadinstitute.dsm.model.participant.data.NewParticipantData;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -93,9 +103,13 @@ public class ParticipantWrapper {
             Map<String, Map<String, Object>> proxyData = getProxyData(instance);
             Map<String, List<ParticipantData>> participantData = ParticipantData.getParticipantData(instance.getName());
 
+            if (DDPInstanceDao.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
+                participantData = setDefaultProbandDataIfNotExists(participantData, participantESData, instance);
+            }
+
             List<String> baseList = new ArrayList<>(participantESData.keySet());
-            List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, proxyData, participantData);
-            return r;
+
+            return addAllData(baseList, participantESData, participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, proxyData, participantData);
         }
         else {
             //no filters, return all participants which came from ES with DSM data added to it
@@ -274,6 +288,116 @@ public class ParticipantWrapper {
         logger.info("Returning list w/ " + participantList.size() + " pts now");
         return participantList;
     }
+
+    public static Map<String, List<ParticipantData>> setDefaultProbandDataIfNotExists(Map<String, List<ParticipantData>> participantData,
+                                                                                    Map<String, Map<String, Object>> participantESData,
+                                                                                    @NonNull DDPInstance instance) {
+        if (participantESData == null) {
+            logger.warn("Could not create proband/self data, participant ES data is null");
+            return participantData;
+        }
+        for (String pId: participantESData.keySet()) {
+            List<ParticipantData> participantDataList = participantData.get(pId);
+            Map<String, Object> profile = (Map<String, Object>) participantESData.get(pId).get(ElasticSearchUtil.PROFILE);
+            if (profile == null) {
+                logger.warn("Could not create proband/self data, participant with id: " + pId + " does not have profile in ES");
+                continue;
+            }
+            if (participantDataList == null) {
+                extractAndInsertProbandFromESData(instance, participantESData.get(pId));
+                continue;
+            }
+            boolean isProbandData = participantDataList.stream()
+                    .anyMatch(pData -> (instance.getName().toUpperCase() + NewParticipantData.FIELD_TYPE).equals(pData.getFieldTypeId())
+                        && FamilyMemberConstants.MEMBER_TYPE_SELF.equals(new Gson().fromJson(pData.getData(), Map.class).get(FamilyMemberConstants.MEMBER_TYPE)));
+            if (!isProbandData) {
+                extractAndInsertProbandFromESData(instance, participantESData.get(pId));
+            } else {
+                Optional<ParticipantData> probandData = participantDataList.stream()
+                        .filter(pData -> FamilyMemberConstants.MEMBER_TYPE_SELF.equals(new Gson().fromJson(pData.getData(), Map.class).get(FamilyMemberConstants.MEMBER_TYPE)))
+                        .findFirst();
+                if (probandData.isPresent()) {
+                    updateProbandDataIfESParticipantUpdated(instance, profile, probandData);
+                }
+            }
+        }
+        return ParticipantData.getParticipantData(instance.getName());
+    }
+
+    private static void updateProbandDataIfESParticipantUpdated(DDPInstance instance, Map<String, Object> profile, Optional<ParticipantData> probandData) {
+        String esFirstName = (String) profile.get(ElasticSearchUtil.FIRST_NAME_FIELD);
+        String esLastName = (String) profile.get(ElasticSearchUtil.LAST_NAME_FIELD);
+        ParticipantData pData = probandData.get();
+        Map<String, String> probandDataJson = new Gson().fromJson(pData.getData(), Map.class);
+        String firstName = probandDataJson.get(FamilyMemberConstants.DATSTAT_FIRSTNAME);
+        String lastName = probandDataJson.get(FamilyMemberConstants.DATSTAT_LASTNAME);
+        boolean isParticipantUpdated = !StringUtils.equals(firstName, esFirstName) || !StringUtils.equals(lastName, esLastName);
+        if (!StringUtils.equals(firstName, esFirstName)) {
+            probandDataJson.put(FamilyMemberConstants.DATSTAT_FIRSTNAME, esFirstName);
+        }
+        if (!StringUtils.equals(lastName, esLastName)) {
+            probandDataJson.put(FamilyMemberConstants.DATSTAT_LASTNAME, esLastName);
+        }
+        if (isParticipantUpdated) {
+            ParticipantDataDto updatedParticipantDataDTO = new ParticipantDataDto(
+                    Integer.parseInt(pData.getDataId()),
+                    (String) profile.get(ElasticSearchUtil.GUID),
+                    Integer.parseInt(instance.getDdpInstanceId()),
+                    pData.getFieldTypeId(),
+                    new Gson().toJson(probandDataJson),
+                    Instant.now().toEpochMilli(),
+                    "SYSTEM"
+            );
+            new ParticipantDataDao().updateParticipantDataColumn(updatedParticipantDataDTO);
+        }
+    }
+
+    private static void extractAndInsertProbandFromESData(DDPInstance instance, Map<String, Object> esData) {
+        Map<String, Object> profile = (Map<String, Object>) esData.get(ElasticSearchUtil.PROFILE);
+        NewParticipantData newParticipantData;
+        Map<String, String> probandDataMap = extractProbandDefaultDataFromParticipantProfile(esData);
+        newParticipantData = new NewParticipantData(new ParticipantDataDao());
+        newParticipantData.setData(
+                (String) profile.get(ElasticSearchUtil.GUID),
+                Integer.parseInt(instance.getDdpInstanceId()),
+                instance.getName().toUpperCase() + NewParticipantData.FIELD_TYPE,
+                probandDataMap
+                );
+        List<FieldSettingsDto> fieldSettingsByOptionAndInstanceId =
+                new FieldSettingsDao().getFieldSettingsByOptionAndInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
+        Map<String, String> columnsWithDefaultOptions =
+                new FieldSettings().getColumnsWithDefaultOptions(fieldSettingsByOptionAndInstanceId);
+        newParticipantData.addDefaultOptionsValueToData(columnsWithDefaultOptions);
+        newParticipantData.insertParticipantData("SYSTEM");
+    }
+
+    private static Map<String, String> extractProbandDefaultDataFromParticipantProfile(@NonNull Map<String, Object> esData) {
+        Map<String, Object> profile = (Map<String, Object>) esData.get(ElasticSearchUtil.PROFILE);
+        List<Map<String, Object>> activities = (List<Map<String, Object>>) esData.get(ElasticSearchUtil.ACTIVITIES);
+        Optional<Map<String, Object>> maybeEnrollmentActivity = activities.stream()
+                .filter(a -> DDPActivityConstants.ACTIVITY_ENROLLMENT.equals(a.get(ElasticSearchUtil.ACTIVITY_CODE)))
+                .findFirst();
+        StringBuilder mobilePhone = new StringBuilder();
+        maybeEnrollmentActivity.ifPresent(a -> {
+            List<Map<String, Object>> questionsAnswers = (List<Map<String, Object>>) a.get(ElasticSearchUtil.QUESTIONS_ANSWER);
+            Optional<Map<String, Object>> maybePhoneQuestionAnswer = questionsAnswers.stream()
+                    .filter(q -> DDPActivityConstants.ENROLLMENT_ACTIVITY_PHONE.equals(q.get(DDPActivityConstants.DDP_ACTIVITY_STABLE_ID)))
+                    .findFirst();
+            maybePhoneQuestionAnswer.ifPresent(ans -> mobilePhone.append(ans.get(DDPActivityConstants.ACTIVITY_QUESTION_ANSWER)));
+        });
+        String firstName = (String) profile.get(ElasticSearchUtil.FIRST_NAME_FIELD);
+        String lastName = (String) profile.get(ElasticSearchUtil.LAST_NAME_FIELD);
+        String familyId = (String) profile.get(ElasticSearchUtil.HRUID);
+        String collaboratorParticipantId = familyId + "_" + FamilyMemberConstants.PROBAND_RELATIONSHIP_ID;
+        String memberType = FamilyMemberConstants.MEMBER_TYPE_SELF;
+        String email = (String) profile.get(ElasticSearchUtil.EMAIL_FIELD);
+        FamilyMemberDetails probandMemberDetails =
+                new FamilyMemberDetails(firstName, lastName, memberType, familyId, collaboratorParticipantId);
+        probandMemberDetails.setMobilePhone(mobilePhone.toString());
+        probandMemberDetails.setEmail(email);
+        return probandMemberDetails.toMap();
+    }
+
 
     private static List<Map<String, Object>> getProxyProfiles(Map<String, Object> participantData, Map<String, Map<String, Object>> proxyDataES) {
         if (participantData != null && !participantData.isEmpty() && proxyDataES != null && !proxyDataES.isEmpty()) {
