@@ -7,6 +7,8 @@ import org.json.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -216,6 +218,8 @@ public class SystemUtil {
     }
 
     public static double calculatePercentage(double obtained, double total) {
-        return (obtained * 100) / total;
+        double percentage = (obtained * 100) / total;
+        BigDecimal twoDecimalPlace = new BigDecimal(percentage).setScale(0, RoundingMode.HALF_UP);
+        return twoDecimalPlace.doubleValue();
     }
 }

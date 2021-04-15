@@ -1,9 +1,7 @@
 package org.broadinstitute.dsm.model.dynamicdashboard.counter;
 
-import org.broadinstitute.dsm.model.dynamicdashboard.StatisticPayload;
+import org.broadinstitute.dsm.model.dynamicdashboard.Statistic;
 
-public interface Counter {
-
-    CounterResult filter(StatisticPayload statisticPayload);
+public abstract class Counter implements Statistic {
 
 }

@@ -8,12 +8,12 @@ import org.broadinstitute.dsm.db.dao.dashboardsettings.DashboardSettingsDao;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dto.dashboardsettings.DashboardSettingsDto;
 import org.broadinstitute.dsm.model.dynamicdashboard.DisplayType;
+import org.broadinstitute.dsm.model.dynamicdashboard.FilterType;
+import org.broadinstitute.dsm.model.dynamicdashboard.Statistic;
+import org.broadinstitute.dsm.model.dynamicdashboard.StatisticsCreator;
 import org.broadinstitute.dsm.model.dynamicdashboard.StatisticFor;
 import org.broadinstitute.dsm.model.dynamicdashboard.StatisticPayload;
 import org.broadinstitute.dsm.model.dynamicdashboard.StatisticResult;
-import org.broadinstitute.dsm.model.dynamicdashboard.counter.Counter;
-import org.broadinstitute.dsm.model.dynamicdashboard.counter.CounterResult;
-import org.broadinstitute.dsm.model.dynamicdashboard.counter.participant.ParticipantCounter;
 import org.broadinstitute.dsm.security.RequestHandler;
 import spark.QueryParamsMap;
 import spark.Request;
@@ -35,16 +35,18 @@ public class StatisticDataRoute extends RequestHandler {
         for (DashboardSettingsDto dashboardSetting: dashboardSettingsByInstanceId) {
             DisplayType displayType = DisplayType.valueOf(dashboardSetting.getDisplayType());
             StatisticFor statisticFor = StatisticFor.valueOf(dashboardSetting.getStatisticFor());
-            String filterType = dashboardSetting.getFilterType();
+            FilterType filterType = FilterType.valueOf(dashboardSetting.getFilterType());
             statisticPayloads.add(
                     new StatisticPayload(displayType, statisticFor, filterType)
             );
         }
         List<StatisticResult> result = new ArrayList<>();
-        Counter counter = new ParticipantCounter();
+        Statistic statistic;
         for (StatisticPayload statisticPayload: statisticPayloads) {
+            StatisticsCreator statisticFactory = new StatisticsCreator();
+            statistic = statisticFactory.makeStatistic(statisticPayload);
             result.add(
-                    counter.filter(statisticPayload)
+                    statistic.filter(statisticPayload)
             );
         }
         return result;

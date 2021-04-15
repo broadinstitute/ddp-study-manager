@@ -1,10 +1,11 @@
 package org.broadinstitute.dsm.model.dynamicdashboard.counter.participant;
 
 import com.google.gson.Gson;
+import org.broadinstitute.dsm.model.dynamicdashboard.Statistic;
 import org.broadinstitute.dsm.model.dynamicdashboard.StatisticPayload;
+import org.broadinstitute.dsm.model.dynamicdashboard.StatisticResult;
+import org.broadinstitute.dsm.model.dynamicdashboard.StatisticsCreator;
 import org.broadinstitute.dsm.model.dynamicdashboard.counter.CounterResult;
-import org.broadinstitute.dsm.model.dynamicdashboard.counter.participant.ParticipantCounter;
-import org.broadinstitute.dsm.model.dynamicdashboard.counter.participant.ParticipantCounterFilterType;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -23,9 +24,9 @@ public class ParticipantCounterTest {
     public void testTotalEnrolledFilter() {
         String payload = "{displayType:\"COUNTER\", statisticFor: \"PARTICIPANT\", filterType: \"ENROLLED\"}";
         StatisticPayload statisticPayload = gson.fromJson(payload, StatisticPayload.class);
-        ParticipantCounter participantCounter = new ParticipantCounter();
-        CounterResult counterResult = participantCounter.filter(statisticPayload);
-        Assert.assertEquals(participantCounter.filterEnrolled(), counterResult.getTotalItems());
+        ParticipantCounter statistic = (ParticipantCounter) new StatisticsCreator().makeStatistic(statisticPayload);
+        CounterResult result = (CounterResult) statistic.filter(statisticPayload);
+        Assert.assertEquals(statistic.filterEnrolled(), result.getTotalItems());
     }
 //    @Test
 //    public void testEnrolledPercentage() {
