@@ -145,13 +145,6 @@ public class Patch {
         return true;
     }
 
-    public static Boolean patchUniqueField(@NonNull String id, @NonNull String user, @NonNull NameValue nameValue, @NonNull DBElement dbElement){
-        if(!isValueUnique(dbElement)){
-            return false;
-        }
-        return patch(id, user, nameValue, dbElement);
-    }
-
     public static Boolean isValueUnique(@NonNull DBElement dbElement){
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -177,5 +170,4 @@ public class Patch {
         });
         return (Boolean) results.resultValue;
     }
-
 }

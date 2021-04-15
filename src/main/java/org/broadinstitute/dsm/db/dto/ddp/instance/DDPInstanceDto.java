@@ -1,7 +1,5 @@
 package org.broadinstitute.dsm.db.dto.ddp.instance;
 
-import java.sql.Types;
-
 import lombok.Data;
 import lombok.NonNull;
 
