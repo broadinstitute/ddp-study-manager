@@ -273,6 +273,7 @@ public class ElasticSearchUtil {
                 }
 
                 updateRequest(instance, ddpParticipantId, index, workflowMapES);
+                logger.info("Updated workflow information for participant " + ddpParticipantId + " in ES for instance " + instance.getName());
 
             }
             catch (Exception e) {
@@ -318,6 +319,7 @@ public class ElasticSearchUtil {
             }
 
             updateRequest(instance, ddpParticipantId, index, objectsMapES);
+            logger.info("Updated " + objectType + " information for participant " + ddpParticipantId + " in ES for instance " + instance.getName());
 
         } catch (Exception e) {
             logger.error("Couldn't write " + objectType + " information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName(), e);
@@ -335,8 +337,6 @@ public class ElasticSearchUtil {
                     .docAsUpsert(true);
 
             UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
-
-            logger.info("Updated workflow information for participant " + ddpParticipantId + " in ES for instance " + instance.getName());
         }
     }
 
