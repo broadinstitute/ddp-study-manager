@@ -278,6 +278,7 @@ public class DBConstants {
     public static final String PARTICIPANT_STATUS_ENDPOINT = "participant_status_endpoint";
     public static final String ADD_FAMILY_MEMBER = "add_family_member";
     public static final String SHOW_GROUP_FIELDS = "show_group_fields";
+    public static final String GBF_SHIPPED_DSS_DELIVERED = "GBF_SHIPPED_DSS_DELIVERED";
 
     //user role
     public static final String MAILINGLIST_VIEW = "mailingList_view";

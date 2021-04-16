@@ -8,6 +8,7 @@ import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.DdpKit;
+import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.ups.*;
 import org.broadinstitute.dsm.shipping.UPSTracker;
@@ -44,7 +45,7 @@ public class TestBostonUPSTrackingJob implements Job {
     private static final String SQL_UPDATE_UPS_RETURN_STATUS = "UPDATE ddp_kit SET ups_return_status = ?, ups_return_date = ? " +
             "WHERE dsm_kit_id <> 0 and tracking_return_id= ? and dsm_kit_request_id in ( SELECT dsm_kit_request_id FROM ddp_kit_request where external_order_number = ? )";
 
-    private static final String SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, request.ddp_kit_request_id, request.upload_reason, " +
+    public static final String SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, request.ddp_kit_request_id, request.upload_reason, " +
             "        realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
             "        from ddp_kit_request request, ddp_kit kit, event_type eve, ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
             "        and not exists " +
@@ -60,10 +61,10 @@ public class TestBostonUPSTrackingJob implements Job {
             "         and realm.ddp_instance_id = ?" +
             "          and kit.dsm_kit_request_id = ?";
 
-    static String DELIVERED = "DELIVERED";
+    public static String DELIVERED = "DELIVERED";
     static String RECEIVED = "RECEIVED";
 
-        private static String SELECT_BY_EXTERNAL_ORDER_NUMBER = "and request.external_order_number = ?";
+    public static String SELECT_BY_EXTERNAL_ORDER_NUMBER = "and request.external_order_number = ?";
     private static Covid19OrderRegistrar orderRegistrar;
 
     @Override
@@ -75,11 +76,12 @@ public class TestBostonUPSTrackingJob implements Job {
         for (DDPInstance ddpInstance : ddpInstanceList) {
             if (ddpInstance != null && ddpInstance.isHasRole()) {
                 logger.info("tracking ups ids for " + ddpInstance.getName());
+                boolean gbfShippedTriggerDSSDelivered = InstanceSettings.getInstanceSettings(ddpInstance.getName()).isGbfShippedTriggerDSSDelivered();
                 List<DdpKit> ddpKits = getKitsInTransit(ddpInstance);
                 for (DdpKit kit : ddpKits) {
                     if (StringUtils.isNotBlank(kit.getTrackingToId()) && !kit.isDelivered()) {
                         try {
-                            updateKitStatus(kit, false, ddpInstance);
+                            updateKitStatus(kit, false, ddpInstance, gbfShippedTriggerDSSDelivered);
                         } catch (Exception e) {
                             logger.error("Could not update outbound status for " + kit.getExternalOrderNumber() + " " + e.toString(), e);
                         }
@@ -87,7 +89,7 @@ public class TestBostonUPSTrackingJob implements Job {
 
                     if (StringUtils.isNotBlank(kit.getTrackingReturnId()) && !kit.isReturned()) {
                         try {
-                            updateKitStatus(kit, true, ddpInstance);
+                            updateKitStatus(kit, true, ddpInstance, gbfShippedTriggerDSSDelivered);
                         } catch (Exception e) {
                             logger.error("Could not update return status for " + kit.getExternalOrderNumber() + " " + e.toString(), e);
                         }
@@ -140,7 +142,7 @@ public class TestBostonUPSTrackingJob implements Job {
         return new UPSTracker(DSMServer.UPS_ENDPOINT, DSMServer.UPS_USERNAME, DSMServer.UPS_PASSWORD, DSMServer.UPS_ACCESSKEY).lookupTrackingInfo(trackingId);
     }
 
-    public static void updateKitStatus(DdpKit kit, boolean isReturn, DDPInstance ddpInstance) {
+    public static void updateKitStatus(DdpKit kit, boolean isReturn, DDPInstance ddpInstance, boolean gbfShippedTriggerDSSDelivered) {
         String trackingId;
         if (!isReturn) {
             trackingId = kit.getTrackingToId();
@@ -163,7 +165,7 @@ public class TestBostonUPSTrackingJob implements Job {
             type = type.substring(0, type.indexOf(' '));
         }
         if (response != null && response.getErrors() == null) {
-            updateStatus(trackingId, type, response, isReturn, kit, ddpInstance);
+            updateStatus(trackingId, type, response, isReturn, kit, ddpInstance, gbfShippedTriggerDSSDelivered);
         }
         else {
             logError(trackingId, response.getErrors());
@@ -178,7 +180,8 @@ public class TestBostonUPSTrackingJob implements Job {
         logger.error(errorString);
     }
 
-    private static void updateStatus(String trackingId, String oldType, UPSTrackingResponse response, boolean isReturn, DdpKit kit, DDPInstance ddpInstance) {
+    private static void updateStatus(String trackingId, String oldType, UPSTrackingResponse response, boolean isReturn, DdpKit kit,
+                                     DDPInstance ddpInstance, boolean gbfShippedTriggerDSSDelivered) {
         if (response.getTrackResponse() != null) {
             UPSShipment[] shipment = response.getTrackResponse().getShipment();
 
@@ -199,7 +202,7 @@ public class TestBostonUPSTrackingJob implements Job {
                             TransactionWrapper.inTransaction(conn -> {
                                 updateTrackingInfo(conn, statusType, oldType, statusDescription, trackingId, date, isReturn, kit,
                                         earliestPackageMovementEvent != null ? earliestPackageMovementEvent.getInstant() : null,
-                                        ddpInstance);
+                                        ddpInstance, gbfShippedTriggerDSSDelivered);
                                 return null;
                             });
                         }
@@ -218,7 +221,7 @@ public class TestBostonUPSTrackingJob implements Job {
                                            boolean isReturn,
                                            DdpKit kit,
                                            Instant earliestInTransitTime,
-                                           DDPInstance ddpInstance) {
+                                           DDPInstance ddpInstance, boolean gbfShippedTriggerDSSDelivered) {
         String query = SQL_UPDATE_UPS_TRACKING_STATUS;
         if (isReturn) {
             query = SQL_UPDATE_UPS_RETURN_STATUS;
@@ -235,7 +238,7 @@ public class TestBostonUPSTrackingJob implements Job {
             }
 
             if (!isReturn) {
-                if (shouldTriggerEventForKitOnItsWayToParticipant(statusType, oldType)) {
+                if (shouldTriggerEventForKitOnItsWayToParticipant(statusType, oldType, gbfShippedTriggerDSSDelivered)) {
                     KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn,SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] {  DELIVERED, ddpInstance.getDdpInstanceId(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber() }, 1);//todo change this to the number of subkits but for now 2 for test boston works
                     if (kitDDPNotification != null) {
                         logger.info("Triggering DDP for kit going to participant with external order number: " + kit.getExternalOrderNumber());
@@ -283,7 +286,10 @@ public class TestBostonUPSTrackingJob implements Job {
      * Determines whether or not a trigger should be sent to
      * study-server to respond to kit being sent to participant
      */
-    private static boolean shouldTriggerEventForKitOnItsWayToParticipant(String currentStatus, String previousStatus) {
+    private static boolean shouldTriggerEventForKitOnItsWayToParticipant(String currentStatus, String previousStatus, boolean gbfShippedTriggerDSSDelivered) {
+        if (gbfShippedTriggerDSSDelivered) {
+            return false;
+        }
         List<String> triggerStates = Arrays.asList(UPSStatus.DELIVERED_TYPE, UPSStatus.IN_TRANSIT_TYPE);
         return triggerStates.contains(currentStatus) && !triggerStates.contains(previousStatus);
     }
