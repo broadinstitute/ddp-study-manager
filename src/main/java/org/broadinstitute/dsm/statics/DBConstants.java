@@ -446,5 +446,26 @@ public class DBConstants {
     public static final String MESSAGE_RECEIVED_STATUS = "Received";
     public static final String MESSAGE_SENT_BACK_STATUS = "Sent back";
 
-    //DDPKit
+    //ups_shipment table
+    public static final String UPS_SHIPMENT_ID = "ups_shipment_id";
+
+    //ups_package table
+    public static final String UPS_PACKAGE_TABLE_ABBR = "pack.";
+    public static final String UPS_PACKAGE_ID = "ups_package_id";
+    public static final String UPS_TRACKING_NUMBER = "tracking_number";
+
+
+    //ups_activity table
+    public static final String UPS_ACTIVITY_TABLE_ABBR = "acivity.";
+    public static final String UPS_ACTIVITY_DATE_TIME = "ups_activity_date_time";
+    public static final String UPS_STATUS_TYPE = "ups_status_type";
+    public static final String UPS_STATUS_DESCRIPTION = "ups_status_description";
+    public static final String UPS_STATUS_CODE = "ups_status_code";
+    public static final String UPS_LOCATION = "ups_location";
+    public static final String UPS_ACTIVITY_ID = "ups_activity_id";
+
+
+
+
+
 }

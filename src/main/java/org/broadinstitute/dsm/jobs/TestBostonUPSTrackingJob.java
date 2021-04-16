@@ -344,9 +344,6 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "         and realm.ddp_instance_id = ?" +
                 "          and kit.dsm_kit_request_id = ?";
         logger.info("Inserting new activities for kit with package id " + kit.getUpsPackage().getUpsPackageId());
-        //        DateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
-        //        String strDate = dateFormat.format(currentInsertingActivity.getDate());
-        //        System.out.println("Converted String: " + strDate);
         for (int i = activities.length - 1; i >= 0; i--) {
             UPSActivity currentInsertingActivity = activities[i];
             if (lastActivity != null && lastActivity.getInstant() != null && (currentInsertingActivity.getInstant().equals(lastActivity.getInstant()) || currentInsertingActivity.getInstant().isBefore(lastActivity.getInstant()))) {

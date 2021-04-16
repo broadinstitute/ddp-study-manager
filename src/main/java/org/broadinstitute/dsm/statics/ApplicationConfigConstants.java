@@ -130,4 +130,8 @@ public class ApplicationConfigConstants {
     public static final String CARE_EVOLVE_PROVIDER_NPI = "careEvolve.provider.NPI";
     public static final String CARE_EVOLVE_MAX_RETRIES = "careEvolve.maxRetries";
     public static final String CARE_EVOLVE_RETRY_WAIT_SECONDS = "careEvolve.retryWaitSeconds";
+
+    //pubsub for cf
+    public static final String PUBSUB_PROJECT_ID = "pubsub.projectId";
+    public static final String PUBSUB_TOPIC_ID = "pubsub.topicId";
 }

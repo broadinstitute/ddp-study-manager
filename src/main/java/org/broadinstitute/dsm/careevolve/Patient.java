@@ -1,23 +1,7 @@
 package org.broadinstitute.dsm.careevolve;
 
-import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.ACTIVITIES_FIELD;
-import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.ADDRESS_FIELD;
-import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.ANSWER_FIELD;
-import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.FIRST_NAME_FIELD;
-import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.GUID_FIELD;
-import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.LAST_NAME_FIELD;
-import static org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar.PROFILE_FIELD;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.Map;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.exception.CareEvolveException;
 
 public class Patient {
 

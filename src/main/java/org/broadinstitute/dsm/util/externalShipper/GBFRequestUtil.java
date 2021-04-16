@@ -37,7 +37,9 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -160,9 +162,9 @@ public class GBFRequestUtil implements ExternalShipper {
 
                 //                logger.info("orderXML: " + orderXml);
                 boolean test = DSMServer.isTest(getExternalShipperName());//true for dev in `not-secret.conf`
-                JSONObject payload = new JSONObject().put("orderXml", orderXml).put("test", false);
-                String sendRequest ="https://www.gbfmedical.com/oap/api/" + ORDER_ENDPOINT;
-                String apiKey = "";
+                JSONObject payload = new JSONObject().put("orderXml", orderXml).put("test", test);
+                String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + ORDER_ENDPOINT;
+                String apiKey = DSMServer.getApiKey(getExternalShipperName());
                 Response gbfResponse = null;
                 int totalAttempts = 2 + additionalAttempts;
                 Exception ex = null;
@@ -189,7 +191,6 @@ public class GBFRequestUtil implements ExternalShipper {
                 }
                 if (gbfResponse != null && gbfResponse.isSuccess()) {
                     logger.info("Ordered kits");
-                    //todo pegah change status to "ORDERED" and change null checks to ORDERED -> for when UPS checks needed
                 }
                 else {
                     throw new ExternalShipperException("Unable to order kits after retry.", ex);

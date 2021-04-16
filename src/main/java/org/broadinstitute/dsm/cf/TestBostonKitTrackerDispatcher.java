@@ -66,14 +66,14 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                 "    AND lastActivity.maxId = ac.ups_activity_id  " +
                 " ))";
         String SQL_AVOID_DELIVERED = " and (tracking_to_id is not null or tracking_return_id is not null ) and  pack.delivery_date is null and kit.test_result is null " +
+                " and (kit.ups_tracking_status is null or kit.ups_tracking_status not like \"%Delivered%\")  and (kit.ups_return_status is null or kit.ups_return_status not like \"%Delivered%\") " +
                 " order by kit.dsm_kit_request_id ASC LIMIT ?";// todo pegah
         logger.info("Starting the UPS lookup job");
-        logger.info(data);
         LOOKUP_CHUNK_SIZE = new JsonParser().parse(data).getAsJsonObject().get("size").getAsInt();
         logger.info("The chunk size for each cloud function is " + LOOKUP_CHUNK_SIZE);
         JSONArray subsetOfKits = new JSONArray();
-        String project = cfg.getString("pubsub.projectId");
-        String topicId = cfg.getString("pubsub.topicId");
+        String project = cfg.getString(ApplicationConfigConstants.PUBSUB_PROJECT_ID);
+        String topicId = cfg.getString(ApplicationConfigConstants.PUBSUB_TOPIC_ID);
         try (Connection conn = dataSource.getConnection()) {
             List<DDPInstance> ddpInstanceList = getDDPInstanceListWithRole(conn, DBConstants.UPS_TRACKING_ROLE);
             for (DDPInstance ddpInstance : ddpInstanceList) {
@@ -92,26 +92,26 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                             try (ResultSet rs = stmt.executeQuery()) {
                                 while (rs.next()) {
                                     logger.info(kit == null ? "null" : kit.getDsmKitRequestId());
-                                    String shipmentId = rs.getString("ups_shipment_id");
+                                    String shipmentId = rs.getString(DBConstants.UPS_SHIPMENT_ID);
                                     UPSPackage upsPackage;
                                     if (StringUtils.isNotBlank(shipmentId)) {
-                                        UPSStatus latestStatus = new UPSStatus(rs.getString("activity.ups_status_type"),
-                                                rs.getString("activity.ups_status_description"),
-                                                rs.getString("activity.ups_status_code"));
+                                        UPSStatus latestStatus = new UPSStatus(rs.getString(DBConstants.UPS_ACTIVITY_TABLE_ABBR + DBConstants.UPS_STATUS_TYPE),
+                                                rs.getString(DBConstants.UPS_ACTIVITY_TABLE_ABBR + DBConstants.UPS_STATUS_DESCRIPTION),
+                                                rs.getString(DBConstants.UPS_ACTIVITY_TABLE_ABBR + DBConstants.UPS_STATUS_CODE));
                                         UPSActivity packageLastActivity = new UPSActivity(
-                                                rs.getString("activity.ups_location"),
+                                                rs.getString(DBConstants.UPS_ACTIVITY_TABLE_ABBR + DBConstants.UPS_LOCATION),
                                                 latestStatus,
                                                 "",
                                                 "",
-                                                rs.getString("activity.ups_activity_id"),
-                                                rs.getString("activity.ups_package_id"),
-                                                rs.getString("activity.ups_activity_date_time")
+                                                rs.getString(DBConstants.UPS_ACTIVITY_TABLE_ABBR + DBConstants.UPS_ACTIVITY_ID),
+                                                rs.getString(DBConstants.UPS_ACTIVITY_TABLE_ABBR + DBConstants.UPS_PACKAGE_ID),
+                                                rs.getString(DBConstants.UPS_ACTIVITY_TABLE_ABBR + DBConstants.UPS_ACTIVITY_DATE_TIME)
                                         );
                                         upsPackage = new UPSPackage(
-                                                rs.getString("pack.tracking_number"),
+                                                rs.getString(DBConstants.UPS_PACKAGE_TABLE_ABBR + DBConstants.UPS_TRACKING_NUMBER),
                                                 new UPSActivity[] { packageLastActivity },
-                                                rs.getString("pack.ups_shipment_id"),
-                                                rs.getString("pack.ups_package_id"),
+                                                rs.getString(DBConstants.UPS_PACKAGE_TABLE_ABBR + DBConstants.UPS_SHIPMENT_ID),
+                                                rs.getString(DBConstants.UPS_PACKAGE_TABLE_ABBR + DBConstants.UPS_PACKAGE_ID),
                                                 null, null);
                                     }
                                     else {
@@ -134,14 +134,12 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                                     );
                                     JSONObject jsonKit = new JSONObject(kit);
                                     subsetOfKits.put(jsonKit);
-                                    logger.info("added " + kit.getKitLabel());
-                                    logger.info("size of array " + subsetOfKits.length());
-                                    logger.info("array " + subsetOfKits.toString());
+                                    logger.info("added " + kit.getKitLabel() + " size of array " + subsetOfKits.length());
                                     kit = null;
                                 }
                             }
                             catch (Exception e) {
-                                logger.error("Trouble executing select query ", e);
+                                logger.error("Trouble executing select query", e);
                             }
                         }
                         catch (Exception e) {
