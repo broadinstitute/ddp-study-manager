@@ -1,13 +1,13 @@
 package org.broadinstitute.dsm.shipping;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.broadinstitute.dsm.model.ups.UPSTrackingResponse;
 import org.broadinstitute.dsm.util.DDPRequestUtil;
 import org.broadinstitute.dsm.util.NanoIdUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class UPSTracker {
 
@@ -52,13 +52,12 @@ public class UPSTracker {
             catch (Exception e) {
                 error = new RuntimeException("couldn't get response from ups tracking of package " + trackingId, e);
                 logger.error(e.getMessage());
-                throw error;
-
-                //               try {
-                //                   Thread.sleep(5 * 1000);
-                //               } catch (InterruptedException interrupted) {
-                //                   logger.warn("Error while waiting for UPS retry", interrupted);
-                //               }
+                try {
+                    Thread.sleep(5 * 1000);
+                }
+                catch (InterruptedException interrupted) {
+                    logger.warn("Error while waiting for UPS retry", interrupted);
+                }
             }
         }
         if (error != null) {

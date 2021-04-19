@@ -1,9 +1,8 @@
-package org.broadinstitute.dsm.model;
+package org.broadinstitute.dsm.model.ups;
 
 import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.model.ups.UPSPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,9 +38,13 @@ public class UPSKit {
     }
 
     public boolean isReturn() {
-        return upsPackage.getTrackingNumber().equals(trackingReturnId);
+        if (this.upsPackage != null && this.upsPackage.getTrackingNumber() != null && trackingReturnId != null) {
+            return upsPackage.getTrackingNumber().equals(trackingReturnId);
+        }
+        else {
+            throw new RuntimeException("Couldn't say if the package was return, either upsPackage or tracking number was null  for  " + getDsmKitRequestId());
+        }
     }
-    //    public boolean isDelivered(){}
 
     public String getMainKitLabel() {
         if (StringUtils.isNotBlank(kitLabel) && kitLabel.contains("_1") && kitLabel.indexOf("_1") == kitLabel.length() - 2) {

@@ -32,6 +32,13 @@ public class ParticipantEvent {
 
     private String shortId;
 
+    private static String GET_PARTICIPANT_EVENT = "select event " +
+            "        from " +
+            "        ddp_participant_event ev " +
+            "        where " +
+            "        ev.ddp_instance_id = ? " +
+            "        and ev.ddp_participant_id = ?";
+
     public ParticipantEvent(String participantId, String eventType, String user, long date) {
         this.participantId = participantId;
         this.eventType = eventType;
@@ -114,7 +121,7 @@ public class ParticipantEvent {
         ArrayList<String> skippedEvents = new ArrayList();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_PARTICIPANT_EVENT))) {
+            try (PreparedStatement stmt = conn.prepareStatement(GET_PARTICIPANT_EVENT)) {
                 stmt.setString(1, instanceId);
                 stmt.setString(2, ddpParticipantId);
                 try (ResultSet rs = stmt.executeQuery()) {
@@ -137,7 +144,7 @@ public class ParticipantEvent {
 
     public static Collection<String> getParticipantEvent(Connection conn, @NonNull String ddpParticipantId, @NonNull String instanceId) {
         ArrayList<String> skippedEvents = new ArrayList();
-        try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_PARTICIPANT_EVENT))) {
+        try (PreparedStatement stmt = conn.prepareStatement(GET_PARTICIPANT_EVENT)) {
             stmt.setString(1, instanceId);
             stmt.setString(2, ddpParticipantId);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -147,7 +154,7 @@ public class ParticipantEvent {
             }
         }
         catch (Exception ex) {
-            logger.error("Couldn't exited participants for " + instanceId, ex);
+            logger.error("Couldn't get exited participants for " + instanceId, ex);
         }
 
         return skippedEvents;

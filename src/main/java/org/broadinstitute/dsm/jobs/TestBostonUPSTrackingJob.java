@@ -12,7 +12,6 @@ import org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar;
 import org.broadinstitute.dsm.careevolve.Provider;
 import org.broadinstitute.dsm.cf.CFUtil;
 import org.broadinstitute.dsm.model.KitDDPNotification;
-import org.broadinstitute.dsm.model.UPSKit;
 import org.broadinstitute.dsm.model.ups.*;
 import org.broadinstitute.dsm.shipping.UPSTracker;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
@@ -27,7 +26,6 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
-
 
 
 public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessage> {
@@ -47,11 +45,12 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
     String password;
     String accessKey;
     private final int MAX_CONNECTION = 1;
+    UPSTracker upsTracker = null;
 
     @Override
     public void accept(PubsubMessage message, Context context) throws Exception {
         if (message.data == null) {
-            logger.info("No message provided");
+            logger.error("No pubsub message provided");
             return;
         }
         Config cfg = CFUtil.loadConfig();
@@ -60,6 +59,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         username = cfg.getString("ups.username");
         password = cfg.getString("ups.password");
         accessKey = cfg.getString("ups.accesskey");
+        upsTracker = new UPSTracker(endpoint, username, password, accessKey);
         logger.info("Starting the UPS lookup job");
         String data = new String(Base64.getDecoder().decode(message.data));
         UPSKit[] kitsToLookFor = new Gson().fromJson(data, UPSKit[].class);
@@ -145,11 +145,11 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                             }
                             shippingKitPackageId = insertedPackageIds[0];
                             returnKitPackageId = insertedPackageIds[1];
-                            logger.info("Added new ups package with id " + shippingKitPackageId + " for " + kit.getDsmKitRequestId());
-                            logger.info("Added new ups package with id " + returnKitPackageId + " for " + kit.getDsmKitRequestId());
+                            logger.info("Added new outbound ups package with id " + shippingKitPackageId + " for " + kit.getDsmKitRequestId()
+                                    + " and added new inbound ups package with id " + returnKitPackageId + " for " + kit.getDsmKitRequestId());
                         }
                         catch (Exception e) {
-                            logger.error("Error getting id of new packages  ", e);
+                            logger.error("Error getting id of new inserted packages  for kit " + kit.getDsmKitRequestId(), e);
                             return;
                         }
                     }
@@ -186,31 +186,41 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
     }
 
     public UPSTrackingResponse lookupTrackingInfo(String trackingId) throws Exception {
-        return new UPSTracker(endpoint, username, password, accessKey).lookupTrackingInfo(trackingId);
+        if (upsTracker != null) {
+            return upsTracker.lookupTrackingInfo(trackingId);
+        }
+        else {
+            throw new RuntimeException("UPSTracker should not be null!");
+        }
     }
 
     public void updateKitStatus(UPSKit kit, boolean isReturn, String ddpInstanceId, Config cfg) {
-        String trackingId = kit.getUpsPackage().getTrackingNumber();
-        UPSActivity lastActivity = kit.getUpsPackage().getActivity() == null ? null : kit.getUpsPackage().getActivity()[0];
-        if (lastActivity != null && lastActivity.getStatus().isDelivery()) {
-            this.logger.info("Tracking id " + trackingId + " is already delivered, not going to check UPS anymore");
-            updateDeliveryInformation(kit.getUpsPackage(), kit, cfg);
-            return;
-        }
-        logger.info("Checking UPS status for " + trackingId + " for kit w/ external order number " + kit.getExternalOrderNumber());
-        try {
-            UPSTrackingResponse response = lookupTrackingInfo(trackingId);
-            logger.info("UPS response for " + trackingId + " is " + response);//todo remove after tests
-            if (response != null && response.getErrors() == null) {
-                updateStatus(trackingId, lastActivity, response, isReturn, kit, ddpInstanceId, cfg);
+        if (kit.getUpsPackage() != null) {
+            String trackingId = kit.getUpsPackage().getTrackingNumber();
+            UPSActivity lastActivity = kit.getUpsPackage().getActivity() == null ? null : kit.getUpsPackage().getActivity()[0];
+            if (lastActivity != null && lastActivity.getStatus().isDelivery()) {
+                this.logger.info("Tracking id " + trackingId + " is already delivered, not going to check UPS anymore");
+                updateDeliveryInformation(kit.getUpsPackage(), kit, cfg);
+                return;
             }
-            else {
-                logError(trackingId, response.getErrors());
+            logger.info("Checking UPS status for " + trackingId + " for kit w/ external order number " + kit.getExternalOrderNumber());
+            try {
+                UPSTrackingResponse response = lookupTrackingInfo(trackingId);
+                logger.info("UPS response for " + trackingId + " is " + response);//todo remove after tests
+                if (response != null && response.getErrors() == null) {
+                    updateStatus(trackingId, lastActivity, response, isReturn, kit, ddpInstanceId, cfg);
+                }
+                else {
+                    logError(trackingId, response.getErrors());
+                }
+            }
+            catch (Exception e) {
+                logger.error("Problem getting UPS update for kit " + kit.getUpsPackage().getTrackingNumber());
+                e.printStackTrace();
             }
         }
-        catch (Exception e) {
-            logger.error("Problem getting UPS update for kit " + kit.getUpsPackage().getTrackingNumber());
-            e.printStackTrace();
+        else {
+            logger.error("Kit's UPSPackage was null for dsmKitRequestId: " + kit.getDsmKitRequestId());
         }
     }
 
@@ -351,8 +361,8 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             }
             PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(MAX_CONNECTION, cfg.getString(ApplicationConfigConstants.CF_DSM_DB_URL));
             String activityDateTime = currentInsertingActivity.getSQLDateTimeString();
-            logger.info(currentInsertingActivity.getDateTimeString());
-            logger.info(currentInsertingActivity.getSQLDateTimeString());
+            logger.info(currentInsertingActivity.getDateTimeString());//todo pegah remove after test
+            logger.info(currentInsertingActivity.getSQLDateTimeString());//todo pegah remove after test
             try (Connection conn = dataSource.getConnection()) {
                 try (PreparedStatement stmt = conn.prepareStatement(INSERT_NEW_ACTIVITIES)) {
                     stmt.setString(1, kit.getUpsPackage().getUpsPackageId());
