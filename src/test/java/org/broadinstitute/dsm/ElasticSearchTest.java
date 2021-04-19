@@ -1,7 +1,9 @@
 package org.broadinstitute.dsm;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.route.PatchRoute;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -738,6 +740,39 @@ public class ElasticSearchTest extends TestHelper {
             }
         }
         Assert.assertEquals(workflows.size(), updatedWorkflows.size());
+    }
+
+    @Test
+    public void updateDSMObjects() throws Exception {
+        String id = "5729";
+        String ddpParticipantId = "776FSXRTS442LVK1GZ7J";
+        String objectType = PatchRoute.MEDICAL_RECORDS;
+        String name = PatchRoute.MEDICAL_RECORDS_FIELD_NAMES.get(0);
+        String value = "TestValue1";
+        String idName = PatchRoute.MEDICAL_RECORDS_ID;
+        DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
+                false, null, false, null, "participants_structured.cmi.osteo", null, null);
+
+        Map<String, Object> objectsMapESBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "dsm");
+
+        ElasticSearchUtil.writeDsmRecord(ddpInstance, id, ddpParticipantId, objectType, name, value, idName);
+
+        Map<String, Object> objectsMapESAfter = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "dsm");
+
+        if (objectsMapESAfter != null && !objectsMapESAfter.isEmpty()) {
+            Object dsmObject = objectsMapESAfter.get("dsm");
+            Map<String, Object> dsmMap = new ObjectMapper().convertValue(dsmObject, Map.class);
+            List<Map<String, Object>> objectList = (List<Map<String, Object>>) dsmMap.get(objectType);
+            if (objectList != null && !objectList.isEmpty()) {
+                for (Map<String, Object> object : objectList) {
+                    if (id.equals(object.get(idName))) {
+                        Assert.assertEquals(value, object.get("name"));
+                    }
+                }
+            }
+        }
+
+        ElasticSearchUtil.updateRequest(ddpInstance, ddpParticipantId, ddpInstance.getParticipantIndexES(), objectsMapESBefore);
     }
 
     private static void updateES(String index, String ddpParticipantId, Map<String, Object> jsonMap) throws Exception{
