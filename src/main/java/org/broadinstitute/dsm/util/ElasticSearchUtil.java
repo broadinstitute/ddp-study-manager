@@ -272,8 +272,7 @@ public class ElasticSearchUtil {
                     workflowMapES.put("workflows", workflowList);
                 }
 
-                updateRequest(instance, ddpParticipantId, index, workflowMapES);
-                logger.info("Updated workflow information for participant " + ddpParticipantId + " in ES for instance " + instance.getName());
+                updateRequest(ddpParticipantId, index, workflowMapES);
 
             }
             catch (Exception e) {
@@ -291,42 +290,75 @@ public class ElasticSearchUtil {
                                       @NonNull String idName) {
         String index = instance.getParticipantIndexES();
         try {
-            Map<String, Object> objectsMapES = getObjectsMap(index, ddpParticipantId, "dsm");
-            if (objectsMapES != null && !objectsMapES.isEmpty()) {
-                Object dsmObject = objectsMapES.get("dsm");
-                Map<String, Object> dsmMap = new ObjectMapper().convertValue(dsmObject, Map.class);
-                List<Map<String, Object>> objectList = (List<Map<String, Object>>) dsmMap.get(objectType);
-                if (objectList != null) {
-                    boolean updated = false;
-                    for (Map<String, Object> object : objectList) {
-                        if (id.equals(object.get(idName))) {
-                            object.put(name, value);
-                            updated = true;
-                            break;
-                        }
-                    }
-                    if (!updated) {
-                        createAndAddNewObjectMap(id, name, value, objectList, idName);
-                    }
+            if (StringUtils.isNotBlank(index)) {
+                Map<String, Object> objectsMapES = getObjectsMap(index, ddpParticipantId, "dsm");
+                if (objectsMapES != null && !objectsMapES.isEmpty()) {
+                    Object dsmObject = objectsMapES.get("dsm");
+                    Map<String, Object> dsmMap = new ObjectMapper().convertValue(dsmObject, Map.class);
+                    updateOrCreateMap(id, objectType, name, value, idName, dsmMap);
+                } else {
+                    List<Map<String, Object>> objectList = new ArrayList<>();
+                    createAndAddNewObjectMap(id, name, value, objectList, idName);
+                    Map<String, Object> mapForDSM = new HashMap<>();
+                    objectsMapES = new HashMap<>();
+                    mapForDSM.put(objectType, objectList);
+                    objectsMapES.put("dsm", mapForDSM);
                 }
-            } else {
-                List<Map<String, Object>> objectList = new ArrayList<>();
-                createAndAddNewObjectMap(id, name, value, objectList, idName);
-                Map<String, Object> mapForDSM = new HashMap<>();
-                objectsMapES = new HashMap<>();
-                mapForDSM.put(objectType, objectList);
-                objectsMapES.put("dsm", mapForDSM);
+
+                updateRequest(ddpParticipantId, index, objectsMapES);
+                logger.info("Updated " + objectType + " information for participant " + ddpParticipantId + " in ES for instance " + instance.getName());
             }
-
-            updateRequest(instance, ddpParticipantId, index, objectsMapES);
-            logger.info("Updated " + objectType + " information for participant " + ddpParticipantId + " in ES for instance " + instance.getName());
-
         } catch (Exception e) {
             logger.error("Couldn't write " + objectType + " information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName(), e);
         }
     }
 
-    public static void updateRequest(@NonNull DDPInstance instance, @NonNull String ddpParticipantId, String index, Map<String, Object> objectsMapES) throws IOException {
+    public static void writeSample(@NonNull DDPInstance instance,
+                                   @NonNull String id,
+                                   @NonNull String ddpParticipantId,
+                                   @NonNull String objectType,
+                                   @NonNull String name,
+                                   @NonNull String value,
+                                   @NonNull String idName) {
+        String index = instance.getParticipantIndexES();
+        try {
+            if (StringUtils.isNotBlank(index)) {
+                Map<String, Object> objectsMapES = getObjectsMap(index, ddpParticipantId, objectType);
+                if (objectsMapES != null && !objectsMapES.isEmpty()) {
+                    updateOrCreateMap(id, objectType, name, value, idName, objectsMapES);
+                } else {
+                    List<Map<String, Object>> objectList = new ArrayList<>();
+                    createAndAddNewObjectMap(id, name, value, objectList, idName);
+                    objectsMapES = new HashMap<>();
+                    objectsMapES.put(objectType, objectList);
+                }
+
+                updateRequest(ddpParticipantId, index, objectsMapES);
+                logger.info("Updated " + objectType + " information for participant " + ddpParticipantId + " in ES for instance " + instance.getName());
+            }
+        } catch (Exception e) {
+            logger.error("Couldn't write " + objectType + " information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName(), e);
+        }
+    }
+
+    public static void updateOrCreateMap(@NonNull String id, @NonNull String objectType, @NonNull String name, @NonNull String value, @NonNull String idName, Map<String, Object> objectsMapES) {
+        List<Map<String, Object>> objectList = (List<Map<String, Object>>) objectsMapES.get(objectType);
+        if (objectList != null) {
+            boolean updated = false;
+            for (Map<String, Object> object : objectList) {
+                if (id.equals(object.get(idName))) {
+                    object.put(name, value);
+                    updated = true;
+                    break;
+                }
+            }
+            if (!updated) {
+                createAndAddNewObjectMap(id, name, value, objectList, idName);
+            }
+        }
+    }
+
+    public static void updateRequest(@NonNull String ddpParticipantId, String index, Map<String, Object> objectsMapES) throws IOException {
         try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
                 TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
             UpdateRequest updateRequest = new UpdateRequest()
@@ -337,6 +369,7 @@ public class ElasticSearchUtil {
                     .docAsUpsert(true);
 
             UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+
         }
     }
 

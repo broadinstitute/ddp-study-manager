@@ -82,6 +82,7 @@ public class ApplicationConfigConstants {
     public static final String GET_ALLOWED_REALMS_FOR_USER_ROLE_STARTS_LIKE = "portal.selectAllowedRealmsStartsLike";
     public static final String GET_ROLES_LIKE = "portal.getRoles";
     public static final String UPDATE_KIT_REQUEST = "portal.updateKitRequest";
+    public static final String GET_DDP_KIT_REQUEST_ID = "portal.getDDPKitRequestId";
     public static final String INSERT_KIT_TRACKING = "portal.insertKitTrackingRequest";
     public static final String UPDATE_KIT_ERROR = "portal.updateKitRequestError";
     public static final String GET_DDP_PARTICIPANT_ID = "portal.getDDPParticipantId";

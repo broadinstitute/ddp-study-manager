@@ -17,7 +17,6 @@ import org.broadinstitute.dsm.model.ddp.KitDetail;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
-import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.*;
 import org.eclipse.jetty.util.StringUtil;
 import org.slf4j.Logger;
@@ -127,7 +126,7 @@ public class KitRequestShipping extends KitRequest {
     private final String trackingUrlReturn;
     private final String collaboratorParticipantId;
 
-    @ColumnName (DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID)
+    @ColumnName (DBConstants.BSP_COLLABORATOR_SAMPLE_ID)
     private final String bspCollaboratorSampleId;
     private final String easypostAddressId;
     private final String realm;
@@ -257,7 +256,7 @@ public class KitRequestShipping extends KitRequest {
         KitRequestShipping kitRequestShipping = new KitRequestShipping(
                 rs.getString(DBConstants.DDP_PARTICIPANT_ID),
                 rs.getString(DBConstants.COLLABORATOR_PARTICIPANT_ID),
-                rs.getString(DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID),
+                rs.getString(DBConstants.BSP_COLLABORATOR_SAMPLE_ID),
                 rs.getString(DBConstants.DSM_LABEL),
                 rs.getString(DBConstants.INSTANCE_NAME),
                 rs.getString(DBConstants.KIT_TYPE_NAME),
