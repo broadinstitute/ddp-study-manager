@@ -3,7 +3,7 @@ package org.broadinstitute.dsm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.route.PatchRoute;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -746,12 +746,12 @@ public class ElasticSearchTest extends TestHelper {
     public void updateDSMObjects() throws Exception {
         String id = "5729";
         String ddpParticipantId = "776FSXRTS442LVK1GZ7J";
-        String objectType = PatchRoute.MEDICAL_RECORDS;
-        String name = PatchRoute.MEDICAL_RECORDS_FIELD_NAMES.get(0);
+        String objectType = ESObjectConstants.MEDICAL_RECORDS;
+        String name = ESObjectConstants.MEDICAL_RECORDS_FIELD_NAMES.get(0);
         String value = "TestValue1";
-        String idName = PatchRoute.MEDICAL_RECORDS_ID;
+        String idName = ESObjectConstants.MEDICAL_RECORDS_ID;
         DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
-                false, null, false, null, "participants_structured.cmi.osteo", null, null);
+                false, null, false, null, "participants_structured.cmi.cmi-osteo", null, null);
 
         Map<String, Object> objectsMapESBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "dsm");
 
@@ -772,7 +772,38 @@ public class ElasticSearchTest extends TestHelper {
             }
         }
 
-        ElasticSearchUtil.updateRequest(ddpInstance, ddpParticipantId, ddpInstance.getParticipantIndexES(), objectsMapESBefore);
+        ElasticSearchUtil.updateRequest(ddpParticipantId, ddpInstance.getParticipantIndexES(), objectsMapESBefore);
+    }
+
+    @Test
+    public void updateSamples() throws Exception {
+        String id = "5729";
+        String ddpParticipantId = "776FSXRTS442LVK1GZ7J";
+        String objectType = ESObjectConstants.SAMPLES;
+        String name = ESObjectConstants.SENT;
+        String value = SystemUtil.getISO8601DateString();
+        String idName = ESObjectConstants.KIT_REQUEST_ID;
+        DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
+                false, null, false, null, "participants_structured.cmi.cmi-osteo", null, null);
+
+        Map<String, Object> objectsMapESBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, objectType);
+
+        ElasticSearchUtil.writeSample(ddpInstance, id, ddpParticipantId, objectType, name, value, idName);
+
+        Map<String, Object> objectsMapESAfter = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, objectType);
+
+        if (objectsMapESAfter != null && !objectsMapESAfter.isEmpty()) {
+            List<Map<String, Object>> objectList = (List<Map<String, Object>>) objectsMapESAfter.get(objectType);
+            if (objectList != null && !objectList.isEmpty()) {
+                for (Map<String, Object> object : objectList) {
+                    if (id.equals(object.get(idName))) {
+                        Assert.assertEquals(value, object.get("sent"));
+                    }
+                }
+            }
+        }
+
+        ElasticSearchUtil.updateRequest(ddpParticipantId, ddpInstance.getParticipantIndexES(), objectsMapESBefore);
     }
 
     private static void updateES(String index, String ddpParticipantId, Map<String, Object> jsonMap) throws Exception{
