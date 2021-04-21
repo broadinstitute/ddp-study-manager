@@ -456,7 +456,7 @@ public class DBConstants {
 
 
     //ups_activity table
-    public static final String UPS_ACTIVITY_TABLE_ABBR = "acivity.";
+    public static final String UPS_ACTIVITY_TABLE_ABBR = "activity.";
     public static final String UPS_ACTIVITY_DATE_TIME = "ups_activity_date_time";
     public static final String UPS_STATUS_TYPE = "ups_status_type";
     public static final String UPS_STATUS_DESCRIPTION = "ups_status_description";
