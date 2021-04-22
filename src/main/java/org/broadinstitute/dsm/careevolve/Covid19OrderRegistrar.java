@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.careevolve;
 
 import com.google.gson.*;
+import com.typesafe.config.Config;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
@@ -11,6 +12,7 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.util.EntityUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.exception.CareEvolveException;
+import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -18,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.sql.Connection;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -114,21 +117,24 @@ public class Covid19OrderRegistrar {
 
     /**
      * Places an order in CareEvolve
-     *
-     * @param auth             the API credentials
+     *  @param auth             the API credentials
      * @param participantHruid hruid for the participant
      * @param kitLabel         The label on the swab.  Corresponds to ORC-2 and GP sample_id
      * @param kitId            an identifier that will show up in Birch to help
-     *                         associate the result back to the proper kit
+*                         associate the result back to the proper kit
      * @param kitPickupTime    the time at which the kit was picked
-     *                         up from the participant
+     * @param cfg
      */
     public OrderResponse orderTest(Authentication auth, String participantHruid, String kitLabel,
-                                   String kitId, Instant kitPickupTime, Connection conn) throws CareEvolveException {
+                                   String kitId, Instant kitPickupTime, Connection conn, Config cfg) throws CareEvolveException {
         if (kitPickupTime == null) {
             throw new CareEvolveException("Cannot place order for " + kitLabel + " without a pickup time");
         }
-
+        try {
+            esClient = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString(ApplicationConfigConstants.ES_URL), cfg.getString(ApplicationConfigConstants.ES_USERNAME), cfg.getString(ApplicationConfigConstants.ES_PASSWORD));
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Could not initialize es client",e);
+        }
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS, conn);
         Map<String, Map<String, Object>> esData = ElasticSearchUtil.getSingleParticipantFromES(ddpInstance.getName(), ddpInstance.getParticipantIndexES(), esClient, participantHruid);
 

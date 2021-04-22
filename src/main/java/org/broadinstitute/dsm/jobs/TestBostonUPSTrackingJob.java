@@ -431,7 +431,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                                 careEvolveAuth = careEvolveOrderingTools.getRight();
 
                             }
-                            orderRegistrar.orderTest(careEvolveAuth, kit.getHruid(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime, conn);
+                            orderRegistrar.orderTest(careEvolveAuth, kit.getHruid(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime, conn, cfg);
                             logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
                             kit.changeCEOrdered(conn, true);
                         }
