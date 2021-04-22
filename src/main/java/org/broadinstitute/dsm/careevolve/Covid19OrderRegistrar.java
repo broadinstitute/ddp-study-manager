@@ -131,7 +131,7 @@ public class Covid19OrderRegistrar {
             throw new CareEvolveException("Cannot place order for " + kitLabel + " without a pickup time");
         }
         try {
-            esClient = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString(ApplicationConfigConstants.ES_URL), cfg.getString(ApplicationConfigConstants.ES_USERNAME), cfg.getString(ApplicationConfigConstants.ES_PASSWORD));
+            esClient = ElasticSearchUtil.getClientForElasticsearchCloudCF(cfg.getString(ApplicationConfigConstants.ES_URL), cfg.getString(ApplicationConfigConstants.ES_USERNAME), cfg.getString(ApplicationConfigConstants.ES_PASSWORD), cfg.getString(ApplicationConfigConstants.ES_PROXY));
         } catch (MalformedURLException e) {
             throw new RuntimeException("Could not initialize es client",e);
         }

@@ -130,7 +130,7 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                                             rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_TRACKING_TO),
                                             rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_TRACKING_RETURN),
                                             rs.getString(DBConstants.DDP_KIT_REQUEST_TABLE_ABBR + DBConstants.DDP_INSTANCE_ID),
-                                            rs.getString(DBConstants.DDP_KIT_REQUEST_TABLE_ABBR + DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID)
+                                            rs.getString(DBConstants.DDP_KIT_REQUEST_TABLE_ABBR + DBConstants.COLLABORATOR_PARTICIPANT_ID)
                                     );
                                     JSONObject jsonKit = new JSONObject(kit);
                                     subsetOfKits.put(jsonKit);

@@ -31,7 +31,6 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
-
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.SearchHit;
@@ -41,16 +40,11 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.*;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public class ElasticSearchUtil {
 
@@ -100,6 +94,17 @@ public class ElasticSearchUtil {
         URL url = new URL(baseUrl);
         String proxy = TransactionWrapper.hasConfigPath(ApplicationConfigConstants.ES_PROXY)
                 ? TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PROXY) : null;
+        return getClientForElasticsearchCloud(baseUrl, userName, password, proxy);
+    }
+
+    public static RestHighLevelClient getClientForElasticsearchCloudCF(@NonNull String baseUrl,
+                                                                     @NonNull String userName,
+                                                                     @NonNull String password,
+                                                                     String proxy) throws MalformedURLException {
+        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(userName, password));
+
+        URL url = new URL(baseUrl);
         return getClientForElasticsearchCloud(baseUrl, userName, password, proxy);
     }
 
