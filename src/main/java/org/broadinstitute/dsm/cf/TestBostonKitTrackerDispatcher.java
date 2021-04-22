@@ -65,9 +65,10 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                 "    ups_activity ac ON   lastActivity.ups_package_id = ac.ups_package_id  " +
                 "    AND lastActivity.maxId = ac.ups_activity_id  " +
                 " ))";
-        String SQL_AVOID_DELIVERED = " and (tracking_to_id is not null or tracking_return_id is not null ) and  pack.delivery_date is null and kit.test_result is null " +
+        String SQL_AVOID_DELIVERED = " and (tracking_to_id is not null or tracking_return_id is not null ) and kit.test_result is null " +
+                " and (ups_status_description not like \"%Delivered%\") "+
                 " and (kit.ups_tracking_status is null or kit.ups_tracking_status not like \"%Delivered%\")  and (kit.ups_return_status is null or kit.ups_return_status not like \"%Delivered%\") " +
-                " order by kit.dsm_kit_request_id ASC LIMIT ?";// todo pegah
+                " order by kit.dsm_kit_request_id ASC LIMIT ?";
         logger.info("Starting the UPS lookup job");
         LOOKUP_CHUNK_SIZE = new JsonParser().parse(data).getAsJsonObject().get("size").getAsInt();
         logger.info("The chunk size for each cloud function is " + LOOKUP_CHUNK_SIZE);
@@ -91,7 +92,6 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                             stmt.setFetchSize(LOOKUP_CHUNK_SIZE);
                             try (ResultSet rs = stmt.executeQuery()) {
                                 while (rs.next()) {
-                                    logger.info(kit == null ? "null" : kit.getDsmKitRequestId());
                                     String shipmentId = rs.getString(DBConstants.UPS_SHIPMENT_ID);
                                     UPSPackage upsPackage;
                                     if (StringUtils.isNotBlank(shipmentId)) {
@@ -134,19 +134,23 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                                     );
                                     JSONObject jsonKit = new JSONObject(kit);
                                     subsetOfKits.put(jsonKit);
-                                    logger.info("added " + kit.getKitLabel() + " size of array " + subsetOfKits.length());
-                                    kit = null;
+                                    logger.info("added label " + kit.getKitLabel() + " with tracking number " + kit.getUpsPackage().getTrackingNumber() + " size of array " + subsetOfKits.length());
                                 }
                             }
                             catch (Exception e) {
                                 logger.error("Trouble executing select query", e);
                             }
+
                         }
                         catch (Exception e) {
                             logger.error("Trouble creating the statement ", e);
                         }
+                        logger.info("kit is " + (kit == null ? "null" : kit.getDsmKitRequestId()));
                         if (kit != null) {
+                            logger.info("lastKitId in this batch is " + kit.getDsmKitRequestId());
                             lastKitId = Integer.parseInt(kit.getDsmKitRequestId());
+                            kitTrackerPubSubPublisher.publishMessage(project, topicId, subsetOfKits.toString());
+                            subsetOfKits = new JSONArray();
                         }
                         else {
                             break loop;

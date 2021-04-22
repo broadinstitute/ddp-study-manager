@@ -44,6 +44,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
     String username;
     String password;
     String accessKey;
+    Connection conn = null;
     private final int MAX_CONNECTION = 1;
     UPSTracker upsTracker = null;
 
@@ -63,15 +64,15 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         logger.info("Starting the UPS lookup job");
         String data = new String(Base64.getDecoder().decode(message.data));
         UPSKit[] kitsToLookFor = new Gson().fromJson(data, UPSKit[].class);
-
+        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(MAX_CONNECTION, cfg.getString(ApplicationConfigConstants.CF_DSM_DB_URL));
         Arrays.stream(kitsToLookFor).forEach(
                 kit -> {
                     logger.info("Checking possible actions for kit " + kit.getDsmKitRequestId());
-                    if (StringUtils.isNotBlank(kit.getUpsPackage().getUpsShipmentId())) {
-                        getUPSUpdate(kit, cfg);
+                    if (StringUtils.isNotBlank( kit.getUpsPackage().getUpsShipmentId())) {
+                        getUPSUpdate(dataSource,kit, cfg);
                     }
                     else {
-                        insertShipmentAndPackageForNewKit(kit, cfg);// for a new kit we first need to insert the UPSShipment
+                        insertShipmentAndPackageForNewKit(dataSource, kit, cfg);// for a new kit we first need to insert the UPSShipment
                     }
                 }
 
@@ -80,7 +81,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
 
     }
 
-    private void insertShipmentAndPackageForNewKit(UPSKit kit, Config cfg) {
+    private void insertShipmentAndPackageForNewKit(PoolingDataSource<PoolableConnection> dataSource, UPSKit kit, Config cfg) {
         String insertedShipmentId = null;
         String[] insertedPackageIds = new String[2];
         String shippingKitPackageId = null;
@@ -96,8 +97,10 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "  VALUES " +
                 "  ( ? ,?)," +
                 "  ( ? ,?) ";
-        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(MAX_CONNECTION, cfg.getString(ApplicationConfigConstants.CF_DSM_DB_URL));
-        try (Connection conn = dataSource.getConnection()) {
+
+        Connection conn = null;
+        try {
+            conn = dataSource.getConnection();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_SHIPMENT, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, kit.getDsmKitRequestId());
                 int result = stmt.executeUpdate();
@@ -171,18 +174,28 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         catch (SQLException ex) {
             logger.error("Trouble creating a connection to the database " + ex);
         }
+        finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                }
+                catch (Throwable ex) {
+                    logger.error("Could not close JDBC Connection ", ex);
+                }
+            }
+        }
         UPSPackage upsPackageShipping = new UPSPackage(kit.getTrackingToId(), null, insertedShipmentId, shippingKitPackageId, null, null);
         UPSPackage upsPackageReturn = new UPSPackage(kit.getTrackingReturnId(), null, insertedShipmentId, returnKitPackageId, null, null);
         UPSKit kitShipping = new UPSKit(upsPackageShipping, kit.getKitLabel(), kit.getCE_order(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber(), kit.getTrackingToId(), kit.getTrackingReturnId(), kit.getDdpInstanceId(), kit.getHruid());
         UPSKit kitReturn = new UPSKit(upsPackageReturn, kit.getKitLabel(), kit.getCE_order(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber(), kit.getTrackingToId(), kit.getTrackingReturnId(), kit.getDdpInstanceId(), kit.getHruid());
-        getUPSUpdate(kitShipping, cfg);
-        getUPSUpdate(kitReturn, cfg);
+        getUPSUpdate(dataSource, kitShipping, cfg);
+        getUPSUpdate(dataSource, kitReturn, cfg);
     }
 
 
-    public void getUPSUpdate(UPSKit kit, Config cfg) {
+    public void getUPSUpdate(PoolingDataSource<PoolableConnection> dataSource, UPSKit kit, Config cfg) {
         logger.info("Checking UPS status for kit with external order number " + kit.getExternalOrderNumber());
-        updateKitStatus(kit, kit.isReturn(), kit.getDdpInstanceId(), cfg);
+        updateKitStatus(dataSource, kit, kit.isReturn(), kit.getDdpInstanceId(), cfg);
     }
 
     public UPSTrackingResponse lookupTrackingInfo(String trackingId) throws Exception {
@@ -194,13 +207,13 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         }
     }
 
-    public void updateKitStatus(UPSKit kit, boolean isReturn, String ddpInstanceId, Config cfg) {
+    public void updateKitStatus(PoolingDataSource<PoolableConnection> dataSource, UPSKit kit, boolean isReturn, String ddpInstanceId, Config cfg) {
         if (kit.getUpsPackage() != null) {
             String trackingId = kit.getUpsPackage().getTrackingNumber();
             UPSActivity lastActivity = kit.getUpsPackage().getActivity() == null ? null : kit.getUpsPackage().getActivity()[0];
             if (lastActivity != null && lastActivity.getStatus().isDelivery()) {
                 this.logger.info("Tracking id " + trackingId + " is already delivered, not going to check UPS anymore");
-                updateDeliveryInformation(kit.getUpsPackage(), kit, cfg);
+                updateDeliveryInformation(dataSource, kit.getUpsPackage(), kit, cfg);
                 return;
             }
             logger.info("Checking UPS status for " + trackingId + " for kit w/ external order number " + kit.getExternalOrderNumber());
@@ -208,7 +221,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 UPSTrackingResponse response = lookupTrackingInfo(trackingId);
                 logger.info("UPS response for " + trackingId + " is " + response);//todo remove after tests
                 if (response != null && response.getErrors() == null) {
-                    updateStatus(trackingId, lastActivity, response, isReturn, kit, ddpInstanceId, cfg);
+                    updateStatus(dataSource, trackingId, lastActivity, response, isReturn, kit, ddpInstanceId, cfg);
                 }
                 else {
                     logError(trackingId, response.getErrors());
@@ -233,7 +246,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
     }
 
 
-    private void updateStatus(String trackingId, UPSActivity lastActivity, UPSTrackingResponse
+    private void updateStatus(PoolingDataSource<PoolableConnection> dataSource, String trackingId, UPSActivity lastActivity, UPSTrackingResponse
             response, boolean isReturn, UPSKit kit, String ddpInstanceId, Config cfg) {
         if (response.getTrackResponse() != null) {
             UPSShipment[] shipment = response.getTrackResponse().getShipment();
@@ -255,11 +268,11 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                             statusType = status.getType();
                         }
                         if (lastActivity == null || (!lastActivity.equals(recentActivity))) {
-                            updateTrackingInfo(activities, statusType, lastActivity, trackingId,
+                            updateTrackingInfo(dataSource, activities, statusType, lastActivity, trackingId,
                                     isReturn, kit, earliestPackageMovement, ddpInstanceId, cfg);
                         }
                         if (responseUpsPackage.getDeliveryDate() != null) {
-                            updateDeliveryInformation(responseUpsPackage, kit, cfg);
+                            updateDeliveryInformation(dataSource, responseUpsPackage, kit, cfg);
                         }
                     }
                 }
@@ -268,7 +281,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         }
     }
 
-    private void updateDeliveryInformation(UPSPackage responseUpsPackage, UPSKit upsKit, Config cfg) {
+    private void updateDeliveryInformation(PoolingDataSource<PoolableConnection> dataSource, UPSPackage responseUpsPackage, UPSKit upsKit, Config cfg) {
         String SQL_UPDATE_PACKAGE_DELIVERY = "UPDATE " + STUDY_MANAGER_SCHEMA + "ups_package   " +
                 "SET   " +
                 "delivery_date = ?,   " +
@@ -291,8 +304,9 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             deliveryEndTime = responseUpsPackage.getDeliveryTime().getEndTime();
             deliveryType = responseUpsPackage.getDeliveryTime().getType();
         }
-        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(MAX_CONNECTION, cfg.getString(ApplicationConfigConstants.CF_DSM_DB_URL));
-        try (Connection conn = dataSource.getConnection()) {
+        Connection conn = null;
+        try {
+            conn = dataSource.getConnection();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_PACKAGE_DELIVERY)) {
                 stmt.setString(1, deliveryDate);
                 stmt.setString(2, deliveryStartTime);
@@ -301,7 +315,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 stmt.setString(5, upsKit.getUpsPackage().getUpsPackageId());
                 int r = stmt.executeUpdate();
 
-                logger.info("Updated " + r + " rows adding delivery for " + responseUpsPackage.getUpsPackageId());
+                logger.info("Updated " + r + " rows adding delivery for trtacking number " + responseUpsPackage.getTrackingNumber() + " for ups_package_id " + responseUpsPackage.getUpsPackageId());
                 if (r != 1) {
                     logger.error(r + " rows updated in UPSPackege while updating delivery for " + upsKit.getUpsPackage().getUpsPackageId());
                 }
@@ -315,11 +329,22 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         catch (SQLException e) {
             logger.error("Trouble creating a connection to the DB");
         }
+        finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                }
+                catch (Throwable ex) {
+                    logger.error("Could not close JDBC Connection ", ex);
+                }
+            }
+        }
 
     }
 
 
-    private void updateTrackingInfo(UPSActivity[] activities,
+    private void updateTrackingInfo(PoolingDataSource<PoolableConnection> dataSource,
+                                    UPSActivity[] activities,
                                     String statusType,
                                     UPSActivity lastActivity,
                                     String trackingId,
@@ -359,11 +384,12 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             if (lastActivity != null && lastActivity.getInstant() != null && (currentInsertingActivity.getInstant().equals(lastActivity.getInstant()) || currentInsertingActivity.getInstant().isBefore(lastActivity.getInstant()))) {
                 break;
             }
-            PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(MAX_CONNECTION, cfg.getString(ApplicationConfigConstants.CF_DSM_DB_URL));
             String activityDateTime = currentInsertingActivity.getSQLDateTimeString();
             logger.info(currentInsertingActivity.getDateTimeString());//todo pegah remove after test
             logger.info(currentInsertingActivity.getSQLDateTimeString());//todo pegah remove after test
-            try (Connection conn = dataSource.getConnection()) {
+            Connection conn = null;
+            try {
+                conn = dataSource.getConnection();
                 try (PreparedStatement stmt = conn.prepareStatement(INSERT_NEW_ACTIVITIES)) {
                     stmt.setString(1, kit.getUpsPackage().getUpsPackageId());
                     stmt.setString(2, currentInsertingActivity.getLocation().getString());
@@ -405,7 +431,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                                 careEvolveAuth = careEvolveOrderingTools.getRight();
 
                             }
-                            orderRegistrar.orderTest(careEvolveAuth, kit.getHruid(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime);
+                            orderRegistrar.orderTest(careEvolveAuth, kit.getHruid(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime, conn);
                             logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
                             kit.changeCEOrdered(conn, true);
                         }
@@ -436,6 +462,16 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             }
             catch (SQLException ex) {
                 logger.error("Trouble connecting to DB " + ex);
+            }
+            finally {
+                if (conn != null) {
+                    try {
+                        conn.close();
+                    }
+                    catch (Throwable ex) {
+                        logger.error("Could not close JDBC Connection ", ex);
+                    }
+                }
             }
 
         }

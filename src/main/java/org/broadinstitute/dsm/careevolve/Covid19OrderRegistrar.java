@@ -1,16 +1,6 @@
 package org.broadinstitute.dsm.careevolve;
 
-import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.util.*;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
@@ -21,12 +11,21 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.util.EntityUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.exception.CareEvolveException;
-import org.broadinstitute.dsm.model.ParticipantWrapper;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Places orders with CareEvolve for COVID-19 virology
@@ -125,12 +124,12 @@ public class Covid19OrderRegistrar {
      *                         up from the participant
      */
     public OrderResponse orderTest(Authentication auth, String participantHruid, String kitLabel,
-                                   String kitId, Instant kitPickupTime) throws CareEvolveException {
+                                   String kitId, Instant kitPickupTime, Connection conn) throws CareEvolveException {
         if (kitPickupTime == null) {
             throw new CareEvolveException("Cannot place order for " + kitLabel + " without a pickup time");
         }
 
-        DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
+        DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS, conn);
         Map<String, Map<String, Object>> esData = ElasticSearchUtil.getSingleParticipantFromES(ddpInstance.getName(), ddpInstance.getParticipantIndexES(), esClient, participantHruid);
 
         if (esData.size() == 1) {

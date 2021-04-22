@@ -11,6 +11,7 @@ import org.broadinstitute.dsm.statics.QueryExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -198,6 +199,29 @@ public class DDPInstance {
             throw new RuntimeException("Couldn't get list of ddps ", results.resultException);
         }
         return (DDPInstance) results.resultValue;
+    }
+
+    public static DDPInstance getDDPInstanceWithRole(@NonNull String realm, @NonNull String role, Connection conn) {
+        DDPInstance result = null;
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_INSTANCE_WITH_ROLE + QueryExtension.BY_INSTANCE_NAME)) {
+                stmt.setString(1, role);
+                stmt.setString(2, realm);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        result = getDDPInstanceWithRoleFormResultSet(rs);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting list of ddps ", e);
+                }
+
+            }
+            catch (SQLException ex) {
+                throw new RuntimeException("Couldn't get list of ddps ", ex);
+            }
+
+
+        return (DDPInstance) result;
     }
 
     public static String getDDPGroupId(@NonNull String realm) {
