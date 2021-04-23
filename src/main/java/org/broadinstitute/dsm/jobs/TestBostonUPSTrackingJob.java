@@ -11,6 +11,7 @@ import org.broadinstitute.dsm.careevolve.Authentication;
 import org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar;
 import org.broadinstitute.dsm.careevolve.Provider;
 import org.broadinstitute.dsm.cf.CFUtil;
+import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.ups.*;
 import org.broadinstitute.dsm.shipping.UPSTracker;
@@ -68,8 +69,8 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         Arrays.stream(kitsToLookFor).forEach(
                 kit -> {
                     logger.info("Checking possible actions for kit " + kit.getDsmKitRequestId());
-                    if (StringUtils.isNotBlank( kit.getUpsPackage().getUpsShipmentId())) {
-                        getUPSUpdate(dataSource,kit, cfg);
+                    if (StringUtils.isNotBlank(kit.getUpsPackage().getUpsShipmentId())) {
+                        getUPSUpdate(dataSource, kit, cfg);
                     }
                     else {
                         insertShipmentAndPackageForNewKit(dataSource, kit, cfg);// for a new kit we first need to insert the UPSShipment
@@ -186,8 +187,9 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         }
         UPSPackage upsPackageShipping = new UPSPackage(kit.getTrackingToId(), null, insertedShipmentId, shippingKitPackageId, null, null);
         UPSPackage upsPackageReturn = new UPSPackage(kit.getTrackingReturnId(), null, insertedShipmentId, returnKitPackageId, null, null);
-        UPSKit kitShipping = new UPSKit(upsPackageShipping, kit.getKitLabel(), kit.getCE_order(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber(), kit.getTrackingToId(), kit.getTrackingReturnId(), kit.getDdpInstanceId(), kit.getHruid());
-        UPSKit kitReturn = new UPSKit(upsPackageReturn, kit.getKitLabel(), kit.getCE_order(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber(), kit.getTrackingToId(), kit.getTrackingReturnId(), kit.getDdpInstanceId(), kit.getHruid());
+        boolean gbfShippedTriggerDSSDelivered = InstanceSettings.getInstanceSettings(Integer.parseInt(kit.getDdpInstanceId()), conn).isGbfShippedTriggerDSSDelivered();
+        UPSKit kitShipping = new UPSKit(upsPackageShipping, kit.getKitLabel(), kit.getCE_order(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber(), kit.getTrackingToId(), kit.getTrackingReturnId(), kit.getDdpInstanceId(), kit.getHruid(), gbfShippedTriggerDSSDelivered);
+        UPSKit kitReturn = new UPSKit(upsPackageReturn, kit.getKitLabel(), kit.getCE_order(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber(), kit.getTrackingToId(), kit.getTrackingReturnId(), kit.getDdpInstanceId(), kit.getHruid(), gbfShippedTriggerDSSDelivered);
         getUPSUpdate(dataSource, kitShipping, cfg);
         getUPSUpdate(dataSource, kitReturn, cfg);
     }
@@ -408,7 +410,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                         oldType = lastActivity.getStatus().getType();
                     }
                     if (!isReturn) {
-                        if (shouldTriggerEventForKitOnItsWayToParticipant(statusType, oldType)) {
+                        if (shouldTriggerEventForKitOnItsWayToParticipant(statusType, oldType, kit.isGbfShippedTriggerDSSDelivered())) {
                             KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] { DELIVERED, ddpInstanceId, kit.getDsmKitRequestId(), kit.getExternalOrderNumber() }, 1);
                             if (kitDDPNotification != null) {
                                 logger.info("Triggering DDP for kit going to participant with external order number: " + kit.getExternalOrderNumber());
@@ -482,7 +484,10 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
      * Determines whether or not a trigger should be sent to
      * study-server to respond to kit being sent to participant
      */
-    private boolean shouldTriggerEventForKitOnItsWayToParticipant(String currentStatus, String previousStatus) {
+    private boolean shouldTriggerEventForKitOnItsWayToParticipant(String currentStatus, String previousStatus, boolean gbfShippedTriggerDSSDelivered) {
+        if (gbfShippedTriggerDSSDelivered) {
+            return false;
+        }
         List<String> triggerStates = Arrays.asList(UPSStatus.DELIVERED_TYPE, UPSStatus.IN_TRANSIT_TYPE);
         return triggerStates.contains(currentStatus) && !triggerStates.contains(previousStatus);
     }

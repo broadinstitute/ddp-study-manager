@@ -8,6 +8,7 @@ import lombok.NonNull;
 import org.apache.commons.dbcp2.PoolableConnection;
 import org.apache.commons.dbcp2.PoolingDataSource;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.jobs.PubsubMessage;
 import org.broadinstitute.dsm.model.ups.UPSActivity;
 import org.broadinstitute.dsm.model.ups.UPSKit;
@@ -82,6 +83,7 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                     int lastKitId = 0;
                     UPSKit kit = null;
                     logger.info("tracking ups ids for " + ddpInstance.getName());
+                    boolean gbfShippedTriggerDSSDelivered = InstanceSettings.getInstanceSettings(ddpInstance.getName(), conn).isGbfShippedTriggerDSSDelivered();
                     loop:
                     while (true) {
                         try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KITS_WITH_LATEST_ACTIVITY + SQL_AVOID_DELIVERED)) {
@@ -130,7 +132,8 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                                             rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_TRACKING_TO),
                                             rs.getString(DBConstants.DDP_KIT_TABLE_ABBR + DBConstants.DSM_TRACKING_RETURN),
                                             rs.getString(DBConstants.DDP_KIT_REQUEST_TABLE_ABBR + DBConstants.DDP_INSTANCE_ID),
-                                            rs.getString(DBConstants.DDP_KIT_REQUEST_TABLE_ABBR + DBConstants.COLLABORATOR_PARTICIPANT_ID)
+                                            rs.getString(DBConstants.DDP_KIT_REQUEST_TABLE_ABBR + DBConstants.COLLABORATOR_PARTICIPANT_ID),
+                                            gbfShippedTriggerDSSDelivered
                                     );
                                     JSONObject jsonKit = new JSONObject(kit);
                                     subsetOfKits.put(jsonKit);

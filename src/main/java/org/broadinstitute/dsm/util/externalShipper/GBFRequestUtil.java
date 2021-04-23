@@ -12,7 +12,6 @@ import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.exception.ExternalShipperException;
-import org.broadinstitute.dsm.jobs.TestBostonUPSTrackingJob;
 import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.gbf.*;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -70,6 +69,24 @@ public class GBFRequestUtil implements ExternalShipper {
             "                                WHERE ex.ddp_participant_exit_id is null AND request.ddp_instance_id = ? AND (external_order_status not like '%CANCELLED%' or external_order_status is null) AND external_order_number IS NOT NULL " +
             "                                order by request.dsm_kit_request_id desc ";
 
+    private String SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label,   request.dsm_kit_request_id, request.ddp_kit_request_id, request.upload_reason, " +
+            "        realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
+            "        FROM ddp_kit_request request, ddp_kit kit, event_type eve, ddp_instance realm where request.dsm_kit_request_id = kit.dsm_kit_request_id and request.ddp_instance_id = realm.ddp_instance_id" +
+            "        and not exists " +
+            "                    (select 1 FROM EVENT_QUEUE q" +
+            "                    where q.DDP_INSTANCE_ID = realm.ddp_instance_id" +
+            "                    and " +
+            "                    q.EVENT_TYPE = eve.event_name" +
+            "                    and " +
+            "                    q.DSM_KIT_REQUEST_ID = request.dsm_kit_request_id " +
+            "                    and q.event_triggered = true" +
+            "                    )" +
+            "        and (eve.ddp_instance_id = request.ddp_instance_id and eve.kit_type_id = request.kit_type_id) and eve.event_type = ? " +
+            "         and realm.ddp_instance_id = ?" +
+            "          and kit.dsm_kit_request_id = ?";
+
+    private String SELECT_BY_EXTERNAL_ORDER_NUMBER = "and request.external_order_number = ?";
+    String DELIVERED = "DELIVERED";
 
     private static final String SQL_SELECT_KIT_REQUEST_BY_EXTERNAL_ORDER_NUMBER = "SELECT dsm_kit_request_id FROM ddp_kit_request req WHERE external_order_number = ?";
     private static final String SQL_SELECT_SENT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER = "select  eve.*,   request.ddp_participant_id,   request.ddp_label, request.upload_reason, request.ddp_kit_request_id, request.dsm_kit_request_id, realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp, kit.receive_date, kit.scan_date" +
@@ -236,7 +253,7 @@ public class GBFRequestUtil implements ExternalShipper {
                         if (kitDDPNotification != null) {
                             logger.info("Triggering DDP for shipped kit with external order number: " + kit.getExternalOrderNumber());
                             if (gbfShippedTriggerDSSDelivered) {
-                                KitDDPNotification kitDeliveredNotification = KitDDPNotification.getKitDDPNotification(conn, TestBostonUPSTrackingJob.SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + TestBostonUPSTrackingJob.SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] {  TestBostonUPSTrackingJob.DELIVERED, String.valueOf(instanceId), kit.getDsmKitRequestId(), kit.getExternalOrderNumber() }, 1);//todo change this to the number of subkits but for now 2 for test boston works
+                                KitDDPNotification kitDeliveredNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] { DELIVERED, String.valueOf(instanceId), kit.getDsmKitRequestId(), kit.getExternalOrderNumber() }, 1);
                                 if (kitDeliveredNotification != null) {
                                     logger.info("Triggering DDP for kit 'DELIVERED' with external order number: " + kit.getExternalOrderNumber());
                                     EventUtil.triggerDDP(conn, kitDeliveredNotification);

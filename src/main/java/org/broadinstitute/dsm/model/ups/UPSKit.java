@@ -21,11 +21,12 @@ public class UPSKit {
     String trackingReturnId;
     String ddpInstanceId;
     String hruid;
+    boolean gbfShippedTriggerDSSDelivered;
 
     private static final Logger logger = LoggerFactory.getLogger(UPSKit.class.getName());
 
     public UPSKit(@NonNull UPSPackage upsPackage, String kitLabel, Boolean CE_order, String dsmKitRequestId, String externalOrderNumber,
-                  String trackingToId, String trackingReturnId, String ddpInstanceId, String hruid) {
+                  String trackingToId, String trackingReturnId, String ddpInstanceId, String hruid, boolean gbfShippedTriggerDSSDelivered) {
         this.upsPackage = upsPackage;
         this.kitLabel = kitLabel;
         this.CE_order = CE_order;
@@ -35,6 +36,10 @@ public class UPSKit {
         this.trackingReturnId = trackingReturnId;
         this.ddpInstanceId = ddpInstanceId;
         this.hruid = hruid;
+        if (StringUtils.isNotBlank(hruid) && hruid.contains("_")) {
+            this.hruid = hruid.substring(hruid.indexOf("_") + 1);
+        }
+        this.gbfShippedTriggerDSSDelivered = gbfShippedTriggerDSSDelivered;
     }
 
     public boolean isReturn() {
