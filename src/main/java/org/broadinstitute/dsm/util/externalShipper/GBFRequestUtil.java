@@ -10,7 +10,9 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.util.Utility;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.exception.ExternalShipperException;
+import org.broadinstitute.dsm.jobs.TestBostonUPSTrackingJob;
 import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.gbf.*;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -202,7 +204,7 @@ public class GBFRequestUtil implements ExternalShipper {
     //  Status is as it sounds, a real-time status of the order progression through the GBF internal process
     // 'RECEIVED', 'PROCESSING', 'SHIPPED', 'DISTRIBUTION', 'FORMS PRINTED', 'CANCELLED', 'NOT FOUND', 'SHIPPED (SIMULATED)'
     // return the actual tube barcode for all tubes but only after the kit is shipped (around 7:00pm)
-    public void orderStatus(Connection conn, KitRequest kit) throws Exception {
+    public void orderStatus(Connection conn, KitRequest kit, int instanceId, boolean gbfShippedTriggerDSSDelivered) throws Exception {
         logger.info("checking status of " + kit.getExternalOrderNumber() + " for participant " + kit.getParticipantId());
         List<String> orderNumbers = new ArrayList<>();
         orderNumbers.addAll(Arrays.asList(new String[] { kit.getExternalOrderNumber() }));
@@ -233,8 +235,17 @@ public class GBFRequestUtil implements ExternalShipper {
                             !kit.getExternalOrderStatus().contains(SHIPPED))) {
                         if (kitDDPNotification != null) {
                             logger.info("Triggering DDP for shipped kit with external order number: " + kit.getExternalOrderNumber());
+                            if (gbfShippedTriggerDSSDelivered) {
+                                KitDDPNotification kitDeliveredNotification = KitDDPNotification.getKitDDPNotification(conn, TestBostonUPSTrackingJob.SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + TestBostonUPSTrackingJob.SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] {  TestBostonUPSTrackingJob.DELIVERED, String.valueOf(instanceId), kit.getDsmKitRequestId(), kit.getExternalOrderNumber() }, 1);//todo change this to the number of subkits but for now 2 for test boston works
+                                if (kitDeliveredNotification != null) {
+                                    logger.info("Triggering DDP for kit 'DELIVERED' with external order number: " + kit.getExternalOrderNumber());
+                                    EventUtil.triggerDDP(conn, kitDeliveredNotification);
+                                }
+                                else {
+                                    logger.error("delivered kitDDPNotification was null for " + kit.getExternalOrderNumber());
+                                }
+                            }
                             EventUtil.triggerDDP(conn, kitDDPNotification);
-
                         }
                         else {
                             logger.error("kitDDPNotification was null for " + kit.getExternalOrderNumber());
@@ -350,6 +361,7 @@ public class GBFRequestUtil implements ExternalShipper {
      * details from GBF
      */
     private void updateOrderStatusForPendingKitRequests(int instanceId, String query) {
+        boolean gbfShippedTriggerDSSDelivered = InstanceSettings.getInstanceSettings(instanceId).isGbfShippedTriggerDSSDelivered();
         final AtomicInteger numOrdersProcessed = new AtomicInteger();
         final Set<String> queriedOrderIds = new HashSet<>();
         SimpleResult results = inTransaction((conn) -> {
@@ -369,7 +381,7 @@ public class GBFRequestUtil implements ExternalShipper {
                                 // keep track of which request ids we've already asked about, since this
                                 // result set may show subkits with the same external order id
                                 if (!queriedOrderIds.contains(kitRequest.getExternalOrderNumber())) {
-                                    orderStatus(conn, kitRequest);
+                                    orderStatus(conn, kitRequest, instanceId, gbfShippedTriggerDSSDelivered);
                                     numOrdersProcessed.incrementAndGet();
                                     queriedOrderIds.add(kitRequest.getExternalOrderNumber());
                                 }
