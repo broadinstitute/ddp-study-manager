@@ -14,7 +14,6 @@ import org.broadinstitute.dsm.db.dto.medical.records.ESMedicalRecordsDto;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.pubsub.ElasticExportSubscription.ExportPayload;
-import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 
@@ -33,7 +32,11 @@ public class ExportToES {
         int instanceId = ddpInstanceDao.getDDPInstanceIdByGuid(payload.getStudy());
         exportWorkflows(instanceId);
         exportMedicalRecords(instanceId);
+        //exportTissueRecords(instanceId);
 //        exportSamples(instanceId);
+    }
+
+    private static void exportTissueRecords(int instanceId) {
     }
 
     public static void exportWorkflows(int instanceId) {
