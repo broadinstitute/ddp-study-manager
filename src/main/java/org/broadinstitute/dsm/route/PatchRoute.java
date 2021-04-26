@@ -118,7 +118,7 @@ public class PatchRoute extends RequestHandler {
                         if (dbElement != null) {
                             if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
                                 List<NameValue> nameValues = setWorkflowRelatedFields(patch);
-                                writeDSMRecordsToES(patch);
+//                                writeDSMRecordsToES(patch);
                                 //return nameValues with nulls
                                 return new Result(200, new GsonBuilder().serializeNulls().create().toJson(nameValues));
                             }
