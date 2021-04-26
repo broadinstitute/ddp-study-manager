@@ -272,7 +272,7 @@ public class ElasticSearchUtil {
                     workflowMapES.put("workflows", workflowList);
                 }
 
-                updateRequest(ddpParticipantId, index, workflowMapES);
+//                updateRequest(ddpParticipantId, index, workflowMapES);
 
             }
             catch (Exception e) {
@@ -282,12 +282,10 @@ public class ElasticSearchUtil {
     }
 
     public static void writeDsmRecord(@NonNull DDPInstance instance,
-                                      @NonNull String id,
+                                      @NonNull Integer id,
                                       @NonNull String ddpParticipantId,
                                       @NonNull String objectType,
-                                      @NonNull String name,
-                                      @NonNull String value,
-                                      @NonNull String idName) {
+                                      @NonNull String idName, @NonNull Map<String, Object> nameValues) {
         String index = instance.getParticipantIndexES();
         try {
             if (StringUtils.isNotBlank(index)) {
@@ -295,10 +293,10 @@ public class ElasticSearchUtil {
                 if (objectsMapES != null && !objectsMapES.isEmpty()) {
                     Object dsmObject = objectsMapES.get("dsm");
                     Map<String, Object> dsmMap = new ObjectMapper().convertValue(dsmObject, Map.class);
-                    updateOrCreateMap(id, objectType, name, value, idName, dsmMap);
+                    updateOrCreateMap(id, objectType, nameValues, idName, dsmMap);
                 } else {
                     List<Map<String, Object>> objectList = new ArrayList<>();
-                    createAndAddNewObjectMap(id, name, value, objectList, idName);
+                    createAndAddNewObjectMap(id, objectList, idName, nameValues);
                     Map<String, Object> mapForDSM = new HashMap<>();
                     objectsMapES = new HashMap<>();
                     mapForDSM.put(objectType, objectList);
@@ -317,18 +315,16 @@ public class ElasticSearchUtil {
                                    @NonNull String id,
                                    @NonNull String ddpParticipantId,
                                    @NonNull String objectType,
-                                   @NonNull String name,
-                                   @NonNull String value,
-                                   @NonNull String idName) {
+                                   @NonNull Map<String, Object> nameValues, @NonNull String idName) {
         String index = instance.getParticipantIndexES();
         try {
             if (StringUtils.isNotBlank(index)) {
                 Map<String, Object> objectsMapES = getObjectsMap(index, ddpParticipantId, objectType);
                 if (objectsMapES != null && !objectsMapES.isEmpty()) {
-                    updateOrCreateMap(id, objectType, name, value, idName, objectsMapES);
+                    updateOrCreateMap(id, objectType, nameValues, idName, objectsMapES);
                 } else {
                     List<Map<String, Object>> objectList = new ArrayList<>();
-                    createAndAddNewObjectMap(id, name, value, objectList, idName);
+                    createAndAddNewObjectMap(id, objectList, idName, nameValues);
                     objectsMapES = new HashMap<>();
                     objectsMapES.put(objectType, objectList);
                 }
@@ -341,19 +337,21 @@ public class ElasticSearchUtil {
         }
     }
 
-    public static void updateOrCreateMap(@NonNull String id, @NonNull String objectType, @NonNull String name, @NonNull String value, @NonNull String idName, Map<String, Object> objectsMapES) {
+    public static void updateOrCreateMap(@NonNull Object id, @NonNull String objectType, @NonNull Map<String, Object> nameValues, @NonNull String idName, Map<String, Object> objectsMapES) {
         List<Map<String, Object>> objectList = (List<Map<String, Object>>) objectsMapES.get(objectType);
         if (objectList != null) {
             boolean updated = false;
             for (Map<String, Object> object : objectList) {
-                if (id.equals(object.get(idName))) {
-                    object.put(name, value);
+                if (id == object.get(idName)) {
+                    for (Map.Entry<String, Object> entry: nameValues.entrySet()) {
+                        object.put(entry.getKey(), entry.getValue());
+                    }
                     updated = true;
                     break;
                 }
             }
             if (!updated) {
-                createAndAddNewObjectMap(id, name, value, objectList, idName);
+                createAndAddNewObjectMap(id, objectList, idName, nameValues);
             }
         }
     }
@@ -373,10 +371,12 @@ public class ElasticSearchUtil {
         }
     }
 
-    public static void createAndAddNewObjectMap(@NonNull String id, @NonNull String name, @NonNull String value, List<Map<String, Object>> objectList, String idName) {
+    public static void createAndAddNewObjectMap(@NonNull Object id, List<Map<String, Object>> objectList, String idName, @NonNull Map<String, Object> nameValues) {
         Map<String, Object> newObjectMap = new HashMap<>();
         newObjectMap.put(idName, id);
-        newObjectMap.put(name, value);
+        for (Map.Entry<String, Object> entry: nameValues.entrySet()) {
+            newObjectMap.put(entry.getKey(), entry.getValue());
+        }
         objectList.add(newObjectMap);
     }
 

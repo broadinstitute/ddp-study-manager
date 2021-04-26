@@ -35,6 +35,7 @@ public class DBConstants {
     //ddp instance
     public static final String DDP_INSTANCE_ID = "ddp_instance_id";
     public static final String INSTANCE_NAME = "instance_name";
+    public static final String STUDY_GUID = "study_guid";
     public static final String BASE_URL = "base_url";
     public static final String NOTIFICATION_RECIPIENT = "notification_recipients";
     public static final String MIGRATED_DDP = "migrated_ddp";

@@ -744,7 +744,7 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void updateDSMObjects() throws Exception {
-        String id = "5729";
+        Integer id = 5729;
         String ddpParticipantId = "776FSXRTS442LVK1GZ7J";
         String objectType = ESObjectConstants.MEDICAL_RECORDS;
         String name = ESObjectConstants.MEDICAL_RECORDS_FIELD_NAMES.get(0);
@@ -755,7 +755,10 @@ public class ElasticSearchTest extends TestHelper {
 
         Map<String, Object> objectsMapESBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "dsm");
 
-        ElasticSearchUtil.writeDsmRecord(ddpInstance, id, ddpParticipantId, objectType, name, value, idName);
+        Map<String, Object> nameValues = new HashMap<>();
+        nameValues.put(name, value);
+
+        ElasticSearchUtil.writeDsmRecord(ddpInstance, id, ddpParticipantId, objectType, idName, nameValues);
 
         Map<String, Object> objectsMapESAfter = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "dsm");
 
@@ -788,7 +791,10 @@ public class ElasticSearchTest extends TestHelper {
 
         Map<String, Object> objectsMapESBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, objectType);
 
-        ElasticSearchUtil.writeSample(ddpInstance, id, ddpParticipantId, objectType, name, value, idName);
+        Map<String, Object> nameValues = new HashMap<>();
+        nameValues.put(name, value);
+
+        ElasticSearchUtil.writeSample(ddpInstance, id, ddpParticipantId, objectType, nameValues, idName);
 
         Map<String, Object> objectsMapESAfter = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, objectType);
 

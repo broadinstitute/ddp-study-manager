@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.db.dao.ddp.instance;
 
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -46,6 +47,11 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
             "FROM ddp_instance realm, ddp_instance_role inRol, instance_role role WHERE realm.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id AND role.name = ? " +
             "AND realm.ddp_instance_id = main.ddp_instance_id) AS 'has_role', mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients FROM ddp_instance main " +
             "WHERE is_active = 1";
+
+    public static final String SQL_GET_INSTANCE_ID_BY_GUID = "SELECT ddp_instance_id " +
+            "FROM ddp_instance " +
+            "WHERE " +
+            "study_guid = ? ";
 
     public static boolean getRole(@NonNull String realm, @NonNull String role) {
         SimpleResult results = inTransaction((conn) -> {
@@ -138,5 +144,31 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
     @Override
     public Optional<DDPInstanceDto> get(long id) {
         return Optional.empty();
+    }
+
+    public int getDDPInstanceIdByGuid(@NonNull String studyGuid) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_INSTANCE_ID_BY_GUID)) {
+                stmt.setString(1, studyGuid);
+                try (ResultSet instanceIdRs = stmt.executeQuery()) {
+                    if (instanceIdRs.next()) {
+                        dbVals.resultValue = instanceIdRs.getInt(DBConstants.DDP_INSTANCE_ID);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting information for " + studyGuid, e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get realm information for " + studyGuid, results.resultException);
+        }
+        return (int) results.resultValue;
     }
 }

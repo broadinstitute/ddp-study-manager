@@ -285,15 +285,17 @@ public class PatchRoute extends RequestHandler {
         String name = nameValue.getName().substring(nameValue.getName().lastIndexOf('.') + 1);
         String type = nameValue.getName().substring(0, nameValue.getName().indexOf('.'));
         String value = nameValue.getValue().toString();
+        Map<String, Object> nameValueMap = new HashMap<>();
+        nameValueMap.put(name, value);
         if ("m".equals(type)) {
             if (ESObjectConstants.MEDICAL_RECORDS_FIELD_NAMES.contains(name)) {
-                ElasticSearchUtil.writeDsmRecord(ddpInstance, patch.getId(), patch.getParentId(),
-                        ESObjectConstants.MEDICAL_RECORDS, name, value, ESObjectConstants.MEDICAL_RECORDS_ID);
+                ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getParentId(),
+                        ESObjectConstants.MEDICAL_RECORDS, ESObjectConstants.MEDICAL_RECORDS_ID, nameValueMap);
             }
         } else if ("oD".equals(type)) {
             if (ESObjectConstants.TISSUE_RECORDS_FIELD_NAMES.contains(name)) {
-                ElasticSearchUtil.writeDsmRecord(ddpInstance, patch.getId(), patch.getParentId(),
-                        ESObjectConstants.TISSUE_RECORDS, name, value, ESObjectConstants.TISSUE_RECORDS_ID);
+                ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getParentId(),
+                        ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, nameValueMap);
             }
         }
     }

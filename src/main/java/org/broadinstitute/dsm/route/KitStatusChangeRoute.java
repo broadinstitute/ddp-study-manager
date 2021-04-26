@@ -33,7 +33,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -131,13 +133,14 @@ public class KitStatusChangeRoute extends RequestHandler {
     private void writeSampleToES(KitRequestDto kitRequest) {
         int ddpInstanceId = kitRequest.getDdpInstanceId();
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(ddpInstanceId);
+        Map<String, Object> nameValuesMap = new HashMap<>();
+        nameValuesMap.put(ESObjectConstants.SENT, SystemUtil.getISO8601DateString());
         ElasticSearchUtil.writeSample(
                 ddpInstance,
                 kitRequest.getDdpKitRequestId(),
                 kitRequest.getDdpParticipantId(),
                 ESObjectConstants.SAMPLES,
-                ESObjectConstants.SENT,
-                SystemUtil.getISO8601DateString(),
+                nameValuesMap,
                 ESObjectConstants.KIT_REQUEST_ID
         );
     }
