@@ -375,7 +375,9 @@ public class ElasticSearchUtil {
         Map<String, Object> newObjectMap = new HashMap<>();
         newObjectMap.put(idName, id);
         for (Map.Entry<String, Object> entry: nameValues.entrySet()) {
-            newObjectMap.put(entry.getKey(), entry.getValue());
+            if (entry.getKey() != idName) {
+                newObjectMap.put(entry.getKey(), entry.getValue());
+            }
         }
         objectList.add(newObjectMap);
     }
