@@ -1,6 +1,11 @@
 package org.broadinstitute.dsm.pubsub;
 
+import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutureCallback;
+import com.google.api.core.ApiFutures;
+import com.google.api.gax.rpc.ApiException;
 import com.google.cloud.pubsub.v1.Publisher;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
@@ -10,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 
 public class KitTrackerPubSubPublisher {
@@ -33,21 +38,40 @@ public class KitTrackerPubSubPublisher {
                 ProjectTopicName.of(projectId, topicId)).build();
 
 
-        String responseMessage;
         try {
-//            ApiFuture<String> future = publisher.publish(pubsubMessage);
-            String messageId = publisher.publish(pubsubMessage).get();
-            responseMessage = "Pubsub message published. MessageId: " + messageId;
-        }
-        catch (InterruptedException | ExecutionException e) {
-            logger.error("Error publishing Pub/Sub message: " + e.getMessage(), e);
-            responseMessage = "Error publishing Pub/Sub message; see logs for more info. ";
-        }
-        finally {
-            publisher.shutdown();
-        }
+            ApiFuture<String> futureKitTracker = publisher.publish(pubsubMessage);
+//            String messageId = publisher.publish(pubsubMessage).get();
+            ApiFutures.addCallback(
+                    futureKitTracker,
+                    new ApiFutureCallback<String>() {
 
-        logger.info(responseMessage + kits);
+                        @Override
+                        public void onFailure(Throwable throwable) {
+                            if (throwable instanceof ApiException) {
+                                ApiException apiException = ((ApiException) throwable);
+                                // details on the API exception
+                                logger.info(String.valueOf(apiException.getStatusCode().getCode()));
+                                logger.info(String.valueOf(apiException.isRetryable()));
+                            }
+                            logger.info("Error publishing Pub/Sub message: ");
+                        }
+
+                        @Override
+                        public void onSuccess(String messageId) {
+                            // Once published, returns server-assigned message ids (unique within the topic)
+                            logger.info("Pubsub message published. MessageId: " + messageId);
+                            logger.info("Pubsub Message : " + kits);
+                        }
+                    },
+                    MoreExecutors.directExecutor()
+            );
+        } finally {
+            if (publisher != null) {
+                // When finished with the publisher, shutdown to free up resources.
+                publisher.shutdown();
+                publisher.awaitTermination(1, TimeUnit.MINUTES);
+            }
+        }
 
     }
 

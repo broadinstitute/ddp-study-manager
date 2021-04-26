@@ -87,6 +87,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         String[] insertedPackageIds = new String[2];
         String shippingKitPackageId = null;
         String returnKitPackageId = null;
+        boolean gbfShippedTriggerDSSDelivered = false;
         logger.info("Inserting new kit information for kit " + kit.getDsmKitRequestId());
         final String SQL_INSERT_SHIPMENT = "INSERT INTO " + STUDY_MANAGER_SCHEMA + "ups_shipment" +
                 "  ( dsm_kit_request_id )" +
@@ -170,6 +171,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 }
 
             }
+            gbfShippedTriggerDSSDelivered = InstanceSettings.getInstanceSettings(Integer.parseInt(kit.getDdpInstanceId()), conn).isGbfShippedTriggerDSSDelivered();
             conn.commit();
         }
         catch (SQLException ex) {
@@ -187,7 +189,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         }
         UPSPackage upsPackageShipping = new UPSPackage(kit.getTrackingToId(), null, insertedShipmentId, shippingKitPackageId, null, null);
         UPSPackage upsPackageReturn = new UPSPackage(kit.getTrackingReturnId(), null, insertedShipmentId, returnKitPackageId, null, null);
-        boolean gbfShippedTriggerDSSDelivered = InstanceSettings.getInstanceSettings(Integer.parseInt(kit.getDdpInstanceId()), conn).isGbfShippedTriggerDSSDelivered();
+
         UPSKit kitShipping = new UPSKit(upsPackageShipping, kit.getKitLabel(), kit.getCE_order(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber(), kit.getTrackingToId(), kit.getTrackingReturnId(), kit.getDdpInstanceId(), kit.getHruid(), gbfShippedTriggerDSSDelivered);
         UPSKit kitReturn = new UPSKit(upsPackageReturn, kit.getKitLabel(), kit.getCE_order(), kit.getDsmKitRequestId(), kit.getExternalOrderNumber(), kit.getTrackingToId(), kit.getTrackingReturnId(), kit.getDdpInstanceId(), kit.getHruid(), gbfShippedTriggerDSSDelivered);
         getUPSUpdate(dataSource, kitShipping, cfg);
@@ -213,6 +215,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         if (kit.getUpsPackage() != null) {
             String trackingId = kit.getUpsPackage().getTrackingNumber();
             UPSActivity lastActivity = kit.getUpsPackage().getActivity() == null ? null : kit.getUpsPackage().getActivity()[0];
+            logger.info("Last Activity for package "+kit.getUpsPackage().getUpsPackageId()+" is "+ lastActivity.getStatus().getDescription() +" "+ lastActivity.getDateTime());
             if (lastActivity != null && lastActivity.getStatus().isDelivery()) {
                 this.logger.info("Tracking id " + trackingId + " is already delivered, not going to check UPS anymore");
                 updateDeliveryInformation(dataSource, kit.getUpsPackage(), kit, cfg);
@@ -381,14 +384,25 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "         and realm.ddp_instance_id = ?" +
                 "          and kit.dsm_kit_request_id = ?";
         logger.info("Inserting new activities for kit with package id " + kit.getUpsPackage().getUpsPackageId());
+        logger.info("Last Activiity "+lastActivity.getStatus().getDescription());
+
+
+        logger.info(lastActivity.getDateTime());
         for (int i = activities.length - 1; i >= 0; i--) {
             UPSActivity currentInsertingActivity = activities[i];
-            if (lastActivity != null && lastActivity.getInstant() != null && (currentInsertingActivity.getInstant().equals(lastActivity.getInstant()) || currentInsertingActivity.getInstant().isBefore(lastActivity.getInstant()))) {
-                break;
+            logger.info("current activity "+currentInsertingActivity.toString());
+            logger.info("Last Activity "+ lastActivity.toString());
+            logger.info("Last Activity time"+ lastActivity.getInstant());
+            if (lastActivity != null) {
+                logger.info(currentInsertingActivity.getDateTimeString() + " should be before or equal to " + lastActivity.getInstant());
+                if (lastActivity.getInstant() != null && (currentInsertingActivity.getInstant().equals(lastActivity.getInstant())
+                        || currentInsertingActivity.getInstant().isBefore(lastActivity.getInstant()))) {
+                    logger.info((currentInsertingActivity.getInstant().equals(lastActivity.getInstant())
+                            || currentInsertingActivity.getInstant().isBefore(lastActivity.getInstant())) + "");
+                    break;
+                }
             }
             String activityDateTime = currentInsertingActivity.getSQLDateTimeString();
-            logger.info(currentInsertingActivity.getDateTimeString());//todo pegah remove after test
-            logger.info(currentInsertingActivity.getSQLDateTimeString());//todo pegah remove after test
             Connection conn = null;
             try {
                 conn = dataSource.getConnection();
@@ -433,7 +447,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                                 careEvolveAuth = careEvolveOrderingTools.getRight();
 
                             }
-                            orderRegistrar.orderTest(careEvolveAuth, kit.getHruid(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime, conn, cfg);
+//                            orderRegistrar.orderTest(careEvolveAuth, kit.getHruid(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime, conn, cfg);
                             logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
                             kit.changeCEOrdered(conn, true);
                         }

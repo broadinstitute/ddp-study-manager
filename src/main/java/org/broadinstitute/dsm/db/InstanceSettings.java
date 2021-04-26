@@ -147,7 +147,7 @@ public class InstanceSettings {
         return (InstanceSettings) results.resultValue;
     }
 
-    public static InstanceSettings getInstanceSettings(@NonNull int realmId, Connection conn) {
+    public static InstanceSettings getInstanceSettings(@NonNull int realmId,@NonNull Connection conn) {
         InstanceSettings result = null;
         try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_INSTANCE_SETTINGS_BY_ID)) {
             stmt.setInt(1, realmId);
