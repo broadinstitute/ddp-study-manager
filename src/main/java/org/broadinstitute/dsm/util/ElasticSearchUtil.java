@@ -272,7 +272,7 @@ public class ElasticSearchUtil {
                     workflowMapES.put("workflows", workflowList);
                 }
 
-//                updateRequest(ddpParticipantId, index, workflowMapES);
+                updateRequest(ddpParticipantId, index, workflowMapES);
 
             }
             catch (Exception e) {
