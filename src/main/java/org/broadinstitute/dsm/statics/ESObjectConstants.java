@@ -12,7 +12,7 @@ public class ESObjectConstants {
 
     //medical records
     public static final String MEDICAL_RECORDS = "medicalRecords";
-    public static final String MEDICAL_RECORDS_ID = "medicalRecordsId";
+    public static final String MEDICAL_RECORDS_ID = "medicalRecordId";
     public static final List<String> MEDICAL_RECORDS_FIELD_NAMES = Arrays.asList("name", "type", "requested", "received");
 
     //tissue records
