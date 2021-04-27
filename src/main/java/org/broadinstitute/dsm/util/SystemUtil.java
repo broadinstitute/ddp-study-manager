@@ -131,11 +131,16 @@ public class SystemUtil {
             }
             catch (DateTimeParseException e1) {
                 if (dateString.length() != 4) {
-                    throw new ParseException("String " + dateString + " is not a year", 0);
+                    throw new ParseException("String was not a year", 0);
                 }
-                dateTimeFormatter = ONLY_YEAR;
-                startDate = LocalDateTime.parse(dateString, dateTimeFormatter);
-                return startDate.toInstant(ZoneOffset.UTC).toEpochMilli();
+                try {
+                    dateTimeFormatter = ONLY_YEAR;
+                    startDate = LocalDateTime.parse(dateString, dateTimeFormatter);
+                    return startDate.toInstant(ZoneOffset.UTC).toEpochMilli();
+                }
+                catch (DateTimeParseException e2) {
+                    throw new ParseException("String was not a year", 0);
+                }
             }
         }
     }
