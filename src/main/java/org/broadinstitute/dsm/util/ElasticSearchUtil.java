@@ -21,6 +21,7 @@ import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.gbf.Address;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -344,7 +345,9 @@ public class ElasticSearchUtil {
             for (Map<String, Object> object : objectList) {
                 if (id == object.get(idName)) {
                     for (Map.Entry<String, Object> entry: nameValues.entrySet()) {
-                        object.put(entry.getKey(), entry.getValue());
+                        if (entry.getKey() != idName && entry.getKey() != ESObjectConstants.DDP_PARTICIPANT_ID) {
+                            object.put(entry.getKey(), entry.getValue());
+                        }
                     }
                     updated = true;
                     break;
@@ -375,7 +378,7 @@ public class ElasticSearchUtil {
         Map<String, Object> newObjectMap = new HashMap<>();
         newObjectMap.put(idName, id);
         for (Map.Entry<String, Object> entry: nameValues.entrySet()) {
-            if (entry.getKey() != idName) {
+            if (entry.getKey() != idName && entry.getKey() != ESObjectConstants.DDP_PARTICIPANT_ID) {
                 newObjectMap.put(entry.getKey(), entry.getValue());
             }
         }
