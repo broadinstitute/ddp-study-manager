@@ -25,4 +25,7 @@ public class ESObjectConstants {
     public static final String SAMPLES = "samples";
     public static final String SENT = "sent";
     public static final String KIT_REQUEST_ID = "kitRequestId";
+
+    //common
+    public static final String DDP_PARTICIPANT_ID = "ddpParticipantId";
 }
