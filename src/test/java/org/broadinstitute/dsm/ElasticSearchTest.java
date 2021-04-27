@@ -712,7 +712,7 @@ public class ElasticSearchTest extends TestHelper {
         DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
                 false, null, false, null, "participants_structured.rgp.rgp", null, null);
         ElasticSearchUtil.writeWorkflow(ddpInstance, ddpParticipantId, workflow, status);
-        Map<String, Object> workflows = ElasticSearchUtil.getWorkflows(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+        Map<String, Object> workflows = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
 
         if (workflows != null && !workflows.isEmpty()) {
             List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflows.get("workflows");
@@ -727,7 +727,7 @@ public class ElasticSearchTest extends TestHelper {
 
         String newStatus = "DECEASED";
         ElasticSearchUtil.writeWorkflow(ddpInstance, ddpParticipantId, workflow, newStatus);
-        Map<String, Object> updatedWorkflows = ElasticSearchUtil.getWorkflows(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+        Map<String, Object> updatedWorkflows = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
 
         if (updatedWorkflows != null && !updatedWorkflows.isEmpty()) {
             List<Map<String, Object>> updatedWorkflowsListES = (List<Map<String, Object>>) updatedWorkflows.get("workflows");
@@ -745,18 +745,26 @@ public class ElasticSearchTest extends TestHelper {
     @Test
     public void updateDSMObjects() throws Exception {
         Integer id = 5729;
-        String ddpParticipantId = "776FSXRTS442LVK1GZ7J";
-        String objectType = ESObjectConstants.MEDICAL_RECORDS;
+        String ddpParticipantId = "XLDUNC3BHGWGWERHW781";
+        String objectType = ESObjectConstants.TISSUE_RECORDS;
         String name = ESObjectConstants.MEDICAL_RECORDS_FIELD_NAMES.get(0);
         String value = "TestValue1";
-        String idName = ESObjectConstants.MEDICAL_RECORDS_ID;
+        String idName = ESObjectConstants.TISSUE_RECORDS_ID;
         DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
-                false, null, false, null, "participants_structured.cmi.cmi-osteo", null, null);
+                false, null, false, null, "participants_structured.rgp.rgp", null, null);
 
         Map<String, Object> objectsMapESBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "dsm");
 
         Map<String, Object> nameValues = new HashMap<>();
-        nameValues.put(name, value);
+        nameValues.put("typePx", "testType");
+        nameValues.put("locationPx", "testLocation");
+        nameValues.put("datePx", "2020-2-29");
+        nameValues.put("histology", "testType");
+        nameValues.put("accessionNumber", "423423233232");
+        nameValues.put("requested", "2020-2-29");
+        nameValues.put("received", "testType");
+        nameValues.put("sent", "2020-2-29");
+
 
         ElasticSearchUtil.writeDsmRecord(ddpInstance, id, ddpParticipantId, objectType, idName, nameValues);
 
@@ -781,18 +789,25 @@ public class ElasticSearchTest extends TestHelper {
     @Test
     public void updateSamples() throws Exception {
         String id = "5729";
-        String ddpParticipantId = "776FSXRTS442LVK1GZ7J";
+        String ddpParticipantId = "XLDUNC3BHGWGWERHW781";
         String objectType = ESObjectConstants.SAMPLES;
         String name = ESObjectConstants.SENT;
         String value = SystemUtil.getISO8601DateString();
         String idName = ESObjectConstants.KIT_REQUEST_ID;
         DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
-                false, null, false, null, "participants_structured.cmi.cmi-osteo", null, null);
+                false, null, false, null, "participants_structured.rgp.rgp", null, null);
 
         Map<String, Object> objectsMapESBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, objectType);
 
         Map<String, Object> nameValues = new HashMap<>();
         nameValues.put(name, value);
+        nameValues.put("kitType", "testType");
+        nameValues.put("trackingOut", "testtrackingOut");
+        nameValues.put("trackingIn", "testtrackingIn");
+        nameValues.put("carrier", "testCarrier");
+        nameValues.put("sent", "2020-2-29");
+        nameValues.put("delivered", "2020-2-29");
+        nameValues.put("received", "2020-2-29");
 
         ElasticSearchUtil.writeSample(ddpInstance, id, ddpParticipantId, objectType, nameValues, idName);
 

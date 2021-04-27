@@ -237,7 +237,7 @@ public class ElasticSearchUtil {
         String index = instance.getParticipantIndexES();
         if (StringUtils.isNotBlank(index)) {
             try {
-                Map<String, Object> workflowMapES = getWorkflows(index, ddpParticipantId);
+                Map<String, Object> workflowMapES = getObjectsMap(index, ddpParticipantId, "workflows");
                 if (workflowMapES != null && !workflowMapES.isEmpty()) {
                     List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflowMapES.get("workflows");
                     if (workflowListES != null && !workflowListES.isEmpty()) {
@@ -356,6 +356,10 @@ public class ElasticSearchUtil {
             if (!updated) {
                 createAndAddNewObjectMap(id, objectList, idName, nameValues);
             }
+        } else {
+            objectList = new ArrayList<>();
+            createAndAddNewObjectMap(id, objectList, idName, nameValues);
+            objectsMapES.put(objectType, objectList);
         }
     }
 
@@ -383,26 +387,6 @@ public class ElasticSearchUtil {
             }
         }
         objectList.add(newObjectMap);
-    }
-
-    public static Map<String, Object> getWorkflows(String index, String ddpParticipantId) throws Exception {
-        try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
-                TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
-            String[] includes = new String[] {"workflows"};
-            String[] excludes = Strings.EMPTY_ARRAY;
-            FetchSourceContext fetchSourceContext = new FetchSourceContext(true, includes, excludes);
-            GetRequest getRequest = new GetRequest()
-                    .index(index)
-                    .type("_doc")
-                    .id(ddpParticipantId)
-                    .fetchSourceContext(fetchSourceContext);
-
-            GetResponse getResponse = null;
-            if (client.exists(getRequest, RequestOptions.DEFAULT)) {
-                getResponse = client.get(getRequest, RequestOptions.DEFAULT);
-            }
-            return getResponse != null ? getResponse.getSourceAsMap() : null;
-        }
     }
 
     public static Map<String, Object> getObjectsMap(String index, String id, String object) throws Exception {

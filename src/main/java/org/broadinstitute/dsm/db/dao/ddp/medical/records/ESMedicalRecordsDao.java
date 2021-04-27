@@ -3,7 +3,6 @@ package org.broadinstitute.dsm.db.dao.ddp.medical.records;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dto.medical.records.ESMedicalRecordsDto;
-import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
 import org.broadinstitute.dsm.statics.DBConstants;
 
 import java.sql.PreparedStatement;
@@ -17,7 +16,7 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 public class ESMedicalRecordsDao implements Dao<ESMedicalRecordsDto> {
 
-    public static final String SQL_SELECT_ES_MEDICAL_RECORD_BY_INSTANCE_ID =
+    public static final String SQL_SELECT_ES_MEDICAL_RECORD =
         "SELECT " +
         "dp.ddp_participant_id, " +
         "mr.medical_record_id, " +
@@ -53,7 +52,7 @@ public class ESMedicalRecordsDao implements Dao<ESMedicalRecordsDto> {
         List<ESMedicalRecordsDto> medicalRecordsDtoListES = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult execResult = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_ES_MEDICAL_RECORD_BY_INSTANCE_ID + BY_INSTANCE_ID)) {
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_ES_MEDICAL_RECORD + BY_INSTANCE_ID)) {
                 stmt.setInt(1, instanceId);
                 try(ResultSet ESmrRs = stmt.executeQuery()) {
                     while (ESmrRs.next()) {

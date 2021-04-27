@@ -7,11 +7,13 @@ import com.google.gson.JsonObject;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.medical.records.ESMedicalRecordsDao;
+import org.broadinstitute.dsm.db.dao.ddp.tissue.ESTissueRecordsDao;
 import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.db.dto.medical.records.ESMedicalRecordsDto;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.tissue.ESTissueRecordsDto;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.pubsub.ElasticExportSubscription.ExportPayload;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -27,6 +29,8 @@ public class ExportToES {
     private static final ParticipantDataDao participantDataDao = new ParticipantDataDao();
     private static final DDPInstanceDao ddpInstanceDao = new DDPInstanceDao();
     private static final ESMedicalRecordsDao esMedicalRecordsDao = new ESMedicalRecordsDao();
+    private static final ESTissueRecordsDao esTissueRecordsDao = new ESTissueRecordsDao();
+    private static final ObjectMapper oMapper = new ObjectMapper();
 
     public static void exportObjectsToES(ExportPayload payload) {
         int instanceId = ddpInstanceDao.getDDPInstanceIdByGuid(payload.getStudy());
@@ -34,10 +38,6 @@ public class ExportToES {
         exportMedicalRecords(instanceId);
         exportTissueRecords(instanceId);
 //        exportSamples(instanceId);
-    }
-
-    private static void exportTissueRecords(int instanceId) {
-
     }
 
     public static void exportWorkflows(int instanceId) {
@@ -52,12 +52,16 @@ public class ExportToES {
     public static void exportMedicalRecords(int instanceId) {
         List<ESMedicalRecordsDto> esMedicalRecords = esMedicalRecordsDao.getESMedicalRecordsByInstanceId(instanceId);
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
-        ObjectMapper oMapper = new ObjectMapper();
         for (ESMedicalRecordsDto medicalRecord : esMedicalRecords) {
             Map<String, Object> map = oMapper.convertValue(medicalRecord, Map.class);
             ElasticSearchUtil.writeDsmRecord(ddpInstance, medicalRecord.getMedicalRecordId(), medicalRecord.getDdpParticipantId(),
                     ESObjectConstants.MEDICAL_RECORDS, ESObjectConstants.MEDICAL_RECORDS_ID, map);
         }
+    }
+
+    private static void exportTissueRecords(int instanceId) {
+        List<ESTissueRecordsDto> esTissueRecordsByInstanceId = esTissueRecordsDao.getESTissueRecordsByInstanceId(instanceId);
+        DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
     }
 
     public static void checkWorkflowNamesAndExport(List<String> workFlowColumnNames, List<ParticipantDataDto> allParticipantData, int instanceId) {
