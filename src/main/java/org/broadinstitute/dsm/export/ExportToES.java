@@ -60,8 +60,13 @@ public class ExportToES {
     }
 
     private static void exportTissueRecords(int instanceId) {
-        List<ESTissueRecordsDto> esTissueRecordsByInstanceId = esTissueRecordsDao.getESTissueRecordsByInstanceId(instanceId);
+        List<ESTissueRecordsDto> esTissueRecords = esTissueRecordsDao.getESTissueRecordsByInstanceId(instanceId);
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
+        for (ESTissueRecordsDto tissueRecord : esTissueRecords) {
+            Map<String, Object> map = oMapper.convertValue(tissueRecord, Map.class);
+            ElasticSearchUtil.writeDsmRecord(ddpInstance, tissueRecord.getTissueRecordId(), tissueRecord.getDdpParticipantId(),
+                    ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, map);
+        }
     }
 
     public static void checkWorkflowNamesAndExport(List<String> workFlowColumnNames, List<ParticipantDataDto> allParticipantData, int instanceId) {
