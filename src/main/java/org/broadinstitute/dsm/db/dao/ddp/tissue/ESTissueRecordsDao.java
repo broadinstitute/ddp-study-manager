@@ -2,8 +2,7 @@ package org.broadinstitute.dsm.db.dao.ddp.tissue;
 
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.dao.Dao;
-import org.broadinstitute.dsm.db.dto.medical.records.ESMedicalRecordsDto;
-import org.broadinstitute.dsm.db.dto.tissue.ESTissueRecordsDto;
+import org.broadinstitute.dsm.db.dto.ddp.tissue.ESTissueRecordsDto;
 import org.broadinstitute.dsm.statics.DBConstants;
 
 import java.sql.PreparedStatement;

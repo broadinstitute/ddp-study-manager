@@ -13,7 +13,7 @@ import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.db.dto.medical.records.ESMedicalRecordsDto;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
-import org.broadinstitute.dsm.db.dto.tissue.ESTissueRecordsDto;
+import org.broadinstitute.dsm.db.dto.ddp.tissue.ESTissueRecordsDto;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.pubsub.ElasticExportSubscription.ExportPayload;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -37,7 +37,7 @@ public class ExportToES {
         exportWorkflows(instanceId);
         exportMedicalRecords(instanceId);
         exportTissueRecords(instanceId);
-//        exportSamples(instanceId);
+        exportSamples(instanceId);
     }
 
     public static void exportWorkflows(int instanceId) {

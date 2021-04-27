@@ -2,7 +2,9 @@ package org.broadinstitute.dsm.db.dao.ddp.kitrequest;
 
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.dao.Dao;
+import org.broadinstitute.dsm.db.dto.ddp.kitrequest.ESSamplesDto;
 import org.broadinstitute.dsm.db.dto.ddp.kitrequest.KitRequestDto;
+import org.broadinstitute.dsm.db.dto.ddp.tissue.ESTissueRecordsDto;
 import org.broadinstitute.dsm.statics.DBConstants;
 
 import java.sql.PreparedStatement;
@@ -68,5 +70,41 @@ public class KitRequestDao implements Dao<KitRequestDto> {
             return dbVals;
         });
         return kitRequestDtoList.get(0);
+    }
+
+    public List<ESSamplesDto> getESSamplesByInstanceId(int instanceId) {
+        List<ESTissueRecordsDto> tissueRecordsDtoListES = new ArrayList<>();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_ES_TISSUE_RECORD + BY_INSTANCE_ID)) {
+                stmt.setInt(1, instanceId);
+                try(ResultSet ESmrRs = stmt.executeQuery()) {
+                    while (ESmrRs.next()) {
+                        tissueRecordsDtoListES.add(
+                                new ESTissueRecordsDto(
+                                        ESmrRs.getString(DBConstants.DDP_PARTICIPANT_ID),
+                                        ESmrRs.getInt(DBConstants.TISSUE_ID),
+                                        ESmrRs.getString(DBConstants.TYPE_PX),
+                                        ESmrRs.getString(DBConstants.LOCATION_PX),
+                                        ESmrRs.getString(DBConstants.DATE_PX),
+                                        ESmrRs.getString(DBConstants.HISTOLOGY),
+                                        ESmrRs.getString(DBConstants.ACCESSION_NUMBER),
+                                        ESmrRs.getString(DBConstants.FAX_SENT),
+                                        ESmrRs.getString(DBConstants.TISSUE_RECEIVED),
+                                        ESmrRs.getString(DBConstants.SENT_GP)
+                                )
+                        );
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                execResult.resultException = ex;
+            }
+            return execResult;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting medical records by instanceId " + instanceId, results.resultException);
+        }
+        return tissueRecordsDtoListES;
     }
 }

@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.db.dto.tissue;
+package org.broadinstitute.dsm.db.dto.ddp.tissue;
 
 import lombok.Data;
 
