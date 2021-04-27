@@ -215,7 +215,6 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         if (kit.getUpsPackage() != null) {
             String trackingId = kit.getUpsPackage().getTrackingNumber();
             UPSActivity lastActivity = kit.getUpsPackage().getActivity() == null ? null : kit.getUpsPackage().getActivity()[0];
-            logger.info("Last Activity for package "+kit.getUpsPackage().getUpsPackageId()+" is "+ lastActivity.getStatus().getDescription() +" "+ lastActivity.getDateTime());
             if (lastActivity != null && lastActivity.getStatus().isDelivery()) {
                 this.logger.info("Tracking id " + trackingId + " is already delivered, not going to check UPS anymore");
                 updateDeliveryInformation(dataSource, kit.getUpsPackage(), kit, cfg);
