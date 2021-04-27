@@ -1,16 +1,11 @@
 package org.broadinstitute.dsm.careevolve;
 
-import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.util.*;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -24,6 +19,13 @@ import org.broadinstitute.dsm.model.ParticipantWrapper;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.*;
 
 /**
  * Places orders with CareEvolve for COVID-19 virology
@@ -216,8 +218,14 @@ public class Covid19OrderRegistrar {
                     try {
                         orderResponse = orderTest(auth, message);
                         orderSucceeded = true;
-                        logger.info("Placed CE order {} {} for {}", orderResponse.getHandle(), orderResponse.getHl7Ack(), patientId);
-                    } catch (IOException e) {
+                        if (orderResponse != null) {
+                            logger.info("Placed CE order {} {} for {}", orderResponse.getHandle(), orderResponse.getHl7Ack(), patientId);
+                        }
+                        else {
+                            logger.error("There was an error while placing order for kitLabel " + kitLabel);
+                        }
+                    }
+                    catch (IOException e) {
                         orderExceptions.add(e);
                         logger.warn("Could not order test for " + patientId + ".  Pausing for " + retryWaitMillis + "ms before retry " + numAttempts + "/" + maxRetries, e);
                         try {
@@ -234,7 +242,7 @@ public class Covid19OrderRegistrar {
                     throw new CareEvolveException("Could not order test for " + patientId + " after " + maxRetries + ":\n" + exceptionsText);
                 }
 
-                if (StringUtils.isNotBlank(orderResponse.getError())) {
+                if (orderResponse != null && StringUtils.isNotBlank(orderResponse.getError())) {
                     throw new CareEvolveException("Order for participant " + participantHruid + " with handle  " + orderResponse.getHandle() + " placed with error " + orderResponse.getError());
                 }
                 return orderResponse;
@@ -282,11 +290,26 @@ public class Covid19OrderRegistrar {
         String responseString = EntityUtils.toString(httpResponse.getEntity());
 
         if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-            OrderResponse orderResponse = new Gson().fromJson(IOUtils.toString(httpResponse.getEntity().getContent()), OrderResponse.class);
-            return orderResponse;
-        } else {
+            if (httpResponse.getEntity() != null) {
+                InputStream inputStream = new BOMInputStream(httpResponse.getEntity().getContent());
+                String content = IOUtils.toString(inputStream);
+                try {
+                    OrderResponse orderResponse = new Gson().fromJson(content, OrderResponse.class);
+                    return orderResponse;
+                }
+                catch (Exception e) {
+                    logger.error("Unexpected CE response " + content);
+                    logger.error(e.getMessage());
+                }
+            }
+            else {
+                logger.error("Entity was null in HTTPResponse");
+            }
+        }
+        else {
             logger.error("Order {} returned {} with {}", message.getName(), httpResponse.getStatusLine().getStatusCode(), responseString);
             throw new CareEvolveException("CareEvolve returned " + httpResponse.getStatusLine().getStatusCode() + " with " + responseString);
         }
+        return null;
     }
 }
