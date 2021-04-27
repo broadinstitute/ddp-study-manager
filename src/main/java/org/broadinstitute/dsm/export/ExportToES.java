@@ -32,11 +32,12 @@ public class ExportToES {
         int instanceId = ddpInstanceDao.getDDPInstanceIdByGuid(payload.getStudy());
         exportWorkflows(instanceId);
         exportMedicalRecords(instanceId);
-        //exportTissueRecords(instanceId);
+        exportTissueRecords(instanceId);
 //        exportSamples(instanceId);
     }
 
     private static void exportTissueRecords(int instanceId) {
+
     }
 
     public static void exportWorkflows(int instanceId) {
