@@ -18,7 +18,7 @@ public class ESTissueRecordsDao implements Dao<ESTissueRecordsDto> {
 
     public static final String SQL_SELECT_ES_TISSUE_RECORD =
             "SELECT "+
-            "dp.participant_id, "+
+            "dp.ddp_participant_id, "+
             "dt.tissue_id, "+
             "onc.type_px, "+
             "onc.location_px, "+
@@ -63,20 +63,20 @@ public class ESTissueRecordsDao implements Dao<ESTissueRecordsDto> {
             SimpleResult execResult = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_ES_TISSUE_RECORD + BY_INSTANCE_ID)) {
                 stmt.setInt(1, instanceId);
-                try(ResultSet ESmrRs = stmt.executeQuery()) {
-                    while (ESmrRs.next()) {
+                try(ResultSet EStrRs = stmt.executeQuery()) {
+                    while (EStrRs.next()) {
                         tissueRecordsDtoListES.add(
                                 new ESTissueRecordsDto(
-                                        ESmrRs.getString(DBConstants.DDP_PARTICIPANT_ID),
-                                        ESmrRs.getInt(DBConstants.TISSUE_ID),
-                                        ESmrRs.getString(DBConstants.TYPE_PX),
-                                        ESmrRs.getString(DBConstants.LOCATION_PX),
-                                        ESmrRs.getString(DBConstants.DATE_PX),
-                                        ESmrRs.getString(DBConstants.HISTOLOGY),
-                                        ESmrRs.getString(DBConstants.ACCESSION_NUMBER),
-                                        ESmrRs.getString(DBConstants.FAX_SENT),
-                                        ESmrRs.getString(DBConstants.TISSUE_RECEIVED),
-                                        ESmrRs.getString(DBConstants.SENT_GP)
+                                        EStrRs.getString(DBConstants.DDP_PARTICIPANT_ID),
+                                        EStrRs.getInt(DBConstants.TISSUE_ID),
+                                        EStrRs.getString(DBConstants.TYPE_PX),
+                                        EStrRs.getString(DBConstants.LOCATION_PX),
+                                        EStrRs.getString(DBConstants.DATE_PX),
+                                        EStrRs.getString(DBConstants.HISTOLOGY),
+                                        EStrRs.getString(DBConstants.ACCESSION_NUMBER),
+                                        EStrRs.getString(DBConstants.FAX_SENT),
+                                        EStrRs.getString(DBConstants.TISSUE_RECEIVED),
+                                        EStrRs.getString(DBConstants.SENT_GP)
                                 )
                         );
                     }
