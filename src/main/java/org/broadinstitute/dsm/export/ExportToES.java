@@ -6,10 +6,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dao.ddp.kitrequest.KitRequestDao;
 import org.broadinstitute.dsm.db.dao.ddp.medical.records.ESMedicalRecordsDao;
 import org.broadinstitute.dsm.db.dao.ddp.tissue.ESTissueRecordsDao;
 import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dto.ddp.kitrequest.ESSamplesDto;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.db.dto.medical.records.ESMedicalRecordsDto;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
@@ -30,6 +32,7 @@ public class ExportToES {
     private static final DDPInstanceDao ddpInstanceDao = new DDPInstanceDao();
     private static final ESMedicalRecordsDao esMedicalRecordsDao = new ESMedicalRecordsDao();
     private static final ESTissueRecordsDao esTissueRecordsDao = new ESTissueRecordsDao();
+    private static final KitRequestDao kitRequestDao = new KitRequestDao();
     private static final ObjectMapper oMapper = new ObjectMapper();
 
     public static void exportObjectsToES(ExportPayload payload) {
@@ -47,6 +50,17 @@ public class ExportToES {
     }
 
     public static void exportSamples(int instanceId) {
+        List<ESSamplesDto> esSamples = kitRequestDao.getESSamplesByInstanceId(instanceId);
+        DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
+        if (ddpInstance != null) {
+            for (ESSamplesDto sample: esSamples) {
+                Map<String, Object> map = oMapper.convertValue(sample, Map.class);
+                if (sample.getKitRequestId() != null && sample.getDdpParticipantId() != null) {
+                    ElasticSearchUtil.writeSample(ddpInstance, sample.getKitRequestId(), sample.getDdpParticipantId(),
+                            ESObjectConstants.SAMPLES, ESObjectConstants.KIT_REQUEST_ID, map);
+                }
+            }
+        }
     }
 
     public static void exportMedicalRecords(int instanceId) {

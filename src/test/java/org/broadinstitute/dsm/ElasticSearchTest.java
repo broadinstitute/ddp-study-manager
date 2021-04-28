@@ -809,7 +809,7 @@ public class ElasticSearchTest extends TestHelper {
         nameValues.put("delivered", "2020-2-29");
         nameValues.put("received", "2020-2-29");
 
-        ElasticSearchUtil.writeSample(ddpInstance, id, ddpParticipantId, objectType, nameValues, idName);
+        ElasticSearchUtil.writeSample(ddpInstance, id, ddpParticipantId, objectType, idName, nameValues);
 
         Map<String, Object> objectsMapESAfter = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, objectType);
 

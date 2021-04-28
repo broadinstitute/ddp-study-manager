@@ -140,8 +140,7 @@ public class KitStatusChangeRoute extends RequestHandler {
                 kitRequest.getDdpKitRequestId(),
                 kitRequest.getDdpParticipantId(),
                 ESObjectConstants.SAMPLES,
-                nameValuesMap,
-                ESObjectConstants.KIT_REQUEST_ID
+                ESObjectConstants.KIT_REQUEST_ID, nameValuesMap
         );
     }
 

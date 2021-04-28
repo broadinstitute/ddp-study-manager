@@ -42,9 +42,7 @@ public class KitRequestDao implements Dao<KitRequestDto> {
             "ddp_kit_request_settings krs ON (kr.ddp_instance_id = krs.ddp_instance_id "+
                     "AND kr.kit_type_id = krs.kit_type_id) "+
             "LEFT JOIN "+
-            "carrier_service cs ON (krs.carrier_service_to_id = cs.carrier_service_id) "+
-            "WHERE "+
-            "kr.ddp_instance_id = ?";
+            "carrier_service cs ON (krs.carrier_service_to_id = cs.carrier_service_id)";
 
     public static final String BY_INSTANCE_ID = " WHERE dp.ddp_instance_id = ?";
     @Override
@@ -118,9 +116,9 @@ public class KitRequestDao implements Dao<KitRequestDto> {
                                         ESSampleRs.getString(DBConstants.DSM_TRACKING_TO),
                                         ESSampleRs.getString(DBConstants.DSM_TRACKING_RETURN),
                                         ESSampleRs.getString(DBConstants.CARRIER),
-                                        SystemUtil.getDateFormatted(ESSampleRs.getInt(DBConstants.DSM_SCAN_DATE)),
-                                        SystemUtil.getDateFormatted(ESSampleRs.getInt(DBConstants.EASYPOST_SHIPMENT_DATE)),
-                                        SystemUtil.getDateFormatted(ESSampleRs.getInt(DBConstants.DSM_RECEIVE_DATE))
+                                        SystemUtil.getDateFormatted(ESSampleRs.getLong(DBConstants.DSM_SCAN_DATE)),
+                                        SystemUtil.getDateFormatted(ESSampleRs.getLong(DBConstants.EASYPOST_SHIPMENT_DATE)),
+                                        SystemUtil.getDateFormatted(ESSampleRs.getLong(DBConstants.DSM_RECEIVE_DATE))
                                 )
                         );
                     }
