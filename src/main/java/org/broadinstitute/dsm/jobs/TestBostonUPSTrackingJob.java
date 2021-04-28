@@ -319,7 +319,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 stmt.setString(5, upsKit.getUpsPackage().getUpsPackageId());
                 int r = stmt.executeUpdate();
 
-                logger.info("Updated " + r + " rows adding delivery for trtacking number " + responseUpsPackage.getTrackingNumber() + " for ups_package_id " + responseUpsPackage.getUpsPackageId());
+                logger.info("Updated " + r + " rows adding delivery for tracking number " + responseUpsPackage.getTrackingNumber() + " for ups_package_id " + responseUpsPackage.getUpsPackageId());
                 if (r != 1) {
                     logger.error(r + " rows updated in UPSPackege while updating delivery for " + upsKit.getUpsPackage().getUpsPackageId());
                 }
@@ -383,21 +383,11 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "         and realm.ddp_instance_id = ?" +
                 "          and kit.dsm_kit_request_id = ?";
         logger.info("Inserting new activities for kit with package id " + kit.getUpsPackage().getUpsPackageId());
-        logger.info("Last Activiity "+lastActivity.getStatus().getDescription());
-
-
-        logger.info(lastActivity.getDateTime());
         for (int i = activities.length - 1; i >= 0; i--) {
             UPSActivity currentInsertingActivity = activities[i];
-            logger.info("current activity "+currentInsertingActivity.toString());
-            logger.info("Last Activity "+ lastActivity.toString());
-            logger.info("Last Activity time"+ lastActivity.getInstant());
             if (lastActivity != null) {
-                logger.info(currentInsertingActivity.getDateTimeString() + " should be before or equal to " + lastActivity.getInstant());
                 if (lastActivity.getInstant() != null && (currentInsertingActivity.getInstant().equals(lastActivity.getInstant())
                         || currentInsertingActivity.getInstant().isBefore(lastActivity.getInstant()))) {
-                    logger.info((currentInsertingActivity.getInstant().equals(lastActivity.getInstant())
-                            || currentInsertingActivity.getInstant().isBefore(lastActivity.getInstant())) + "");
                     break;
                 }
             }
@@ -446,7 +436,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                                 careEvolveAuth = careEvolveOrderingTools.getRight();
 
                             }
-//                            orderRegistrar.orderTest(careEvolveAuth, kit.getHruid(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime, conn, cfg);
+                            orderRegistrar.orderTest(careEvolveAuth, kit.getHruid(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime, conn, cfg);
                             logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
                             kit.changeCEOrdered(conn, true);
                         }
