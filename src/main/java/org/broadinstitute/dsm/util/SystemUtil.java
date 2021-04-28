@@ -6,7 +6,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -131,11 +134,16 @@ public class SystemUtil {
             }
             catch (DateTimeParseException e1) {
                 if (dateString.length() != 4) {
-                    throw new ParseException("String " + dateString + " is not a year", 0);
+                    throw new ParseException("String was not a year", 0);
                 }
-                dateTimeFormatter = ONLY_YEAR;
-                startDate = LocalDateTime.parse(dateString, dateTimeFormatter);
-                return startDate.toInstant(ZoneOffset.UTC).toEpochMilli();
+                try {
+                    dateTimeFormatter = ONLY_YEAR;
+                    startDate = LocalDateTime.parse(dateString, dateTimeFormatter);
+                    return startDate.toInstant(ZoneOffset.UTC).toEpochMilli();
+                }
+                catch (DateTimeParseException e2) {
+                    throw new ParseException("String was not a year", 0);
+                }
             }
         }
     }
