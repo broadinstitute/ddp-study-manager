@@ -127,6 +127,9 @@ public class DBConstants {
     public static final String EASYPOST_SHIPMENT_DATE = "easypost_shipment_date";
     public static final String CARE_EVOLVE = "CE_order";
 
+    //carrier service
+    public static final String CARRIER = "carrier";
+
     //medical record
     public static final String PARTICIPANT_ID = "participant_id";
     public static final String EMAIL = "email";

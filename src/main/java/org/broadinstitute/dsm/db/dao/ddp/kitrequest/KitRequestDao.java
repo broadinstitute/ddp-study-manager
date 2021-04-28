@@ -6,6 +6,7 @@ import org.broadinstitute.dsm.db.dto.ddp.kitrequest.ESSamplesDto;
 import org.broadinstitute.dsm.db.dto.ddp.kitrequest.KitRequestDto;
 import org.broadinstitute.dsm.db.dto.ddp.tissue.ESTissueRecordsDto;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.SystemUtil;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -17,6 +18,35 @@ import java.util.Optional;
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 public class KitRequestDao implements Dao<KitRequestDto> {
+
+    public static final String SQL_SELECT_ES_SAMPLE =
+            "SELECT "+
+            "dp.ddp_participant_id, "+
+            "kr.ddp_kit_request_id, "+
+            "kt.kit_type_name, "+
+            "dk.tracking_to_id, "+
+            "dk.tracking_return_id, "+
+            "cs.carrier, "+
+            "dk.scan_date, "+
+            "dk.easypost_shipment_date, "+
+            "dk.receive_date "+
+                    "FROM "+
+            "ddp_participant dp "+
+            "LEFT JOIN "+
+            "ddp_kit_request kr ON dp.ddp_participant_id = kr.ddp_participant_id "+
+            "LEFT JOIN "+
+            "ddp_kit dk ON dk.dsm_kit_request_id = kr.dsm_kit_request_id "+
+            "LEFT JOIN "+
+            "kit_type kt ON kr.kit_type_id = kt.kit_type_id "+
+            "LEFT JOIN "+
+            "ddp_kit_request_settings krs ON (kr.ddp_instance_id = krs.ddp_instance_id "+
+                    "AND kr.kit_type_id = krs.kit_type_id) "+
+            "LEFT JOIN "+
+            "carrier_service cs ON (krs.carrier_service_to_id = cs.carrier_service_id) "+
+            "WHERE "+
+            "kr.ddp_instance_id = ?";
+
+    public static final String BY_INSTANCE_ID = " WHERE dp.ddp_instance_id = ?";
     @Override
     public int create(KitRequestDto kitRequestDto) {
         return 0;
@@ -73,25 +103,24 @@ public class KitRequestDao implements Dao<KitRequestDto> {
     }
 
     public List<ESSamplesDto> getESSamplesByInstanceId(int instanceId) {
-        List<ESTissueRecordsDto> tissueRecordsDtoListES = new ArrayList<>();
+        List<ESSamplesDto> samplesDtosListES = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult execResult = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_ES_TISSUE_RECORD + BY_INSTANCE_ID)) {
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_ES_SAMPLE + BY_INSTANCE_ID)) {
                 stmt.setInt(1, instanceId);
-                try(ResultSet ESmrRs = stmt.executeQuery()) {
-                    while (ESmrRs.next()) {
-                        tissueRecordsDtoListES.add(
-                                new ESTissueRecordsDto(
-                                        ESmrRs.getString(DBConstants.DDP_PARTICIPANT_ID),
-                                        ESmrRs.getInt(DBConstants.TISSUE_ID),
-                                        ESmrRs.getString(DBConstants.TYPE_PX),
-                                        ESmrRs.getString(DBConstants.LOCATION_PX),
-                                        ESmrRs.getString(DBConstants.DATE_PX),
-                                        ESmrRs.getString(DBConstants.HISTOLOGY),
-                                        ESmrRs.getString(DBConstants.ACCESSION_NUMBER),
-                                        ESmrRs.getString(DBConstants.FAX_SENT),
-                                        ESmrRs.getString(DBConstants.TISSUE_RECEIVED),
-                                        ESmrRs.getString(DBConstants.SENT_GP)
+                try(ResultSet ESSampleRs = stmt.executeQuery()) {
+                    while (ESSampleRs.next()) {
+                        samplesDtosListES.add(
+                                new ESSamplesDto(
+                                        ESSampleRs.getString(DBConstants.DDP_PARTICIPANT_ID),
+                                        ESSampleRs.getString(DBConstants.DDP_KIT_REQUEST_ID),
+                                        ESSampleRs.getString(DBConstants.KIT_TYPE_NAME),
+                                        ESSampleRs.getString(DBConstants.DSM_TRACKING_TO),
+                                        ESSampleRs.getString(DBConstants.DSM_TRACKING_RETURN),
+                                        ESSampleRs.getString(DBConstants.CARRIER),
+                                        SystemUtil.getDateFormatted(ESSampleRs.getInt(DBConstants.DSM_SCAN_DATE)),
+                                        SystemUtil.getDateFormatted(ESSampleRs.getInt(DBConstants.EASYPOST_SHIPMENT_DATE)),
+                                        SystemUtil.getDateFormatted(ESSampleRs.getInt(DBConstants.DSM_RECEIVE_DATE))
                                 )
                         );
                     }
@@ -103,8 +132,8 @@ public class KitRequestDao implements Dao<KitRequestDto> {
             return execResult;
         });
         if (results.resultException != null) {
-            throw new RuntimeException("Error getting medical records by instanceId " + instanceId, results.resultException);
+            throw new RuntimeException("Error getting samples by instanceId " + instanceId, results.resultException);
         }
-        return tissueRecordsDtoListES;
+        return samplesDtosListES;
     }
 }
