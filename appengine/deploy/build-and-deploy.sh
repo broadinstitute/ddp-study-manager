@@ -19,12 +19,12 @@ echo "=> reading configs from cloud secret manager"
 gcloud --project=${PROJECT_ID} secrets versions access latest --secret="${CONFIG_SECRETS}" > vault.conf
 
 echo "=> running build"
-mvn -DskipTests clean install package -f ../../pom.xml
+mvn -Pbackend -DskipTests clean install package -f ../../pom.xml
 
 # bundling dependencies
 rm -fr lib
 mkdir -p lib
-mvn -f ../../pom.xml dependency:copy-dependencies -DoutputDirectory=./appengine/deploy/lib
+mvn -Papis -f ../../pom.xml dependency:copy-dependencies -DoutputDirectory=./appengine/deploy/lib
 cp ../../target/DSMServer.jar .
 cp ../../src/main/resources/log4j.xml .
 

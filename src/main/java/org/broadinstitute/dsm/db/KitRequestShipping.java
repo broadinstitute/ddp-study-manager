@@ -10,15 +10,17 @@ import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.TableName;
-import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.KitType;
+import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.ddp.KitDetail;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
-import org.broadinstitute.dsm.statics.RoutePath;
-import org.broadinstitute.dsm.util.*;
+import org.broadinstitute.dsm.util.DBUtil;
+import org.broadinstitute.dsm.util.EasyPostUtil;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.broadinstitute.dsm.util.KitUtil;
 import org.eclipse.jetty.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +63,29 @@ public class KitRequestShipping extends KitRequest {
             "AND kit.dsm_kit_id = groupedKit.kit_id LEFT JOIN ddp_kit_tracking tracking ON (kit.kit_label = tracking.kit_label))as wtf) AS kit ON kit.dsm_kit_request_id = request.dsm_kit_request_id " +
             "LEFT JOIN ddp_participant_exit ex ON (ex.ddp_instance_id = request.ddp_instance_id AND ex.ddp_participant_id = request.ddp_participant_id) " +
             "LEFT JOIN ddp_kit_request_settings dkc ON (request.ddp_instance_id = dkc.ddp_instance_id AND request.kit_type_id = dkc.kit_type_id) WHERE ex.ddp_participant_exit_id is null";
+    public static final String SQL_SELECT_KIT_WITH_QUERY_EXTENSION_FOR_UPS_TABLE = "SELECT kt.kit_type_name, realm.instance_name, request.bsp_collaborator_participant_id, request.bsp_collaborator_sample_id, request.ddp_participant_id, request.ddp_label, request.dsm_kit_request_id, " +
+            "request.kit_type_id, request.external_order_status, request.external_order_number, request.external_order_date, request.external_response, request.upload_reason, kt.no_return, request.created_by, " +
+            "kit.dsm_kit_request_id, kit.dsm_kit_id, kit.kit_complete, kit.label_url_to, kit.label_url_return, kit.tracking_to_id, " +
+            "kit.tracking_return_id, kit.easypost_tracking_to_url, kit.easypost_tracking_return_url, kit.easypost_to_id, kit.easypost_shipment_status, kit.scan_date, kit.label_date, kit.error, kit.message, " +
+            "kit.receive_date, kit.deactivated_date, kit.easypost_address_id_to, kit.deactivation_reason, (select t.tracking_id from ddp_kit_tracking t where t.kit_label = kit.kit_label) as tracking_id, kit.kit_label, kit.express, kit.test_result, kit.needs_approval, kit.authorization, kit.denial_reason, " +
+            "kit.authorized_by, kit.ups_tracking_status, kit.ups_return_status, kit.CE_order, " +
+            "activity.ups_status_description "+
+            "FROM ddp_kit_request request " +
+            "LEFT JOIN ddp_kit kit on (kit.dsm_kit_request_id = request.dsm_kit_request_id) " +
+            "LEFT JOIN ddp_instance realm on (realm.ddp_instance_id = request.ddp_instance_id) " +
+            "LEFT JOIN kit_type kt on (request.kit_type_id = kt.kit_type_id) "+
+            " left join  ups_shipment shipment on (shipment.dsm_kit_request_id = kit.dsm_kit_request_id) " +
+            " left join ups_package pack on ( pack.ups_shipment_id = shipment.ups_shipment_id) " +
+            " left join   ups_activity activity on (pack.ups_package_id = activity.ups_package_id) " +
+            " where (shipment.ups_shipment_id is null or activity.ups_activity_id is null  or  activity.ups_activity_id in  " +
+            " ( SELECT ac.ups_activity_id  " +
+            " FROM ups_package pac INNER JOIN  " +
+            "    ( SELECT  ups_package_id, MAX(ups_activity_id) maxId  " +
+            "    FROM ups_activity  " +
+            "    GROUP BY ups_package_id  ) lastActivity ON pac.ups_package_id = lastActivity.ups_package_id INNER JOIN  " +
+            "    ups_activity ac ON lastActivity.ups_package_id = ac.ups_package_id  " +
+            "    AND lastActivity.maxId = ac.ups_activity_id  " +
+            " ))";
     public static final String KIT_AFTER_BOOKMARK_ORDER_BY_ID = " and kit.dsm_kit_request_id > ? ORDER BY request.dsm_kit_request_id";
     public static final String SQL_SELECT_KIT_REQUEST_BY_PARTICIPANT_ID = "SELECT * FROM ddp_kit_request req LEFT JOIN ddp_kit kit ON (req.dsm_kit_request_id = kit.dsm_kit_request_id) " +
             "LEFT JOIN ddp_instance realm ON (realm.ddp_instance_id = req.ddp_instance_id) LEFT JOIN kit_type ty ON (req.kit_type_id = ty.kit_type_id) WHERE req.ddp_participant_id = ? " +
@@ -170,10 +195,10 @@ public class KitRequestShipping extends KitRequest {
     private String receiveDateString;
 
     @ColumnName (DBConstants.UPS_TRACKING_STATUS)
-    private final String upsTrackingStatus;
+    private String upsTrackingStatus;
 
     @ColumnName (DBConstants.UPS_RETURN_STATUS)
-    private final String upsReturnStatus;
+    private String upsReturnStatus;
 
     @ColumnName (DBConstants.CARE_EVOLVE)
     private boolean careEvolve;
@@ -293,6 +318,17 @@ public class KitRequestShipping extends KitRequest {
                 rs.getString(DBConstants.UPLOAD_REASON),
                 null, null, null
         );
+        if (DBUtil.columnExists(rs, DBConstants.UPS_STATUS_DESCRIPTION) && StringUtils.isNotBlank(rs.getString(DBConstants.UPS_STATUS_DESCRIPTION))) {
+            String upsPackageTrackingNumber = rs.getString(DBConstants.UPS_PACKAGE_TABLE_ABBR + DBConstants.UPS_TRACKING_NUMBER);
+            if (StringUtils.isNotBlank(upsPackageTrackingNumber) && upsPackageTrackingNumber.equals(kitRequestShipping.getTrackingNumberTo())) {
+                kitRequestShipping.setUpsTrackingStatus(rs.getString(DBConstants.UPS_STATUS_DESCRIPTION));
+
+            }
+            else if (StringUtils.isNotBlank(upsPackageTrackingNumber) && upsPackageTrackingNumber.equals(kitRequestShipping.getTrackingNumberReturn())) {
+                kitRequestShipping.setUpsReturnStatus(rs.getString(DBConstants.UPS_STATUS_DESCRIPTION));
+            }
+
+        }
         return kitRequestShipping;
     }
 
@@ -309,7 +345,15 @@ public class KitRequestShipping extends KitRequest {
             if (StringUtils.isNotBlank(addition)) {
                 addition = addition.replaceAll("k\\.", "");
             }
-            try (PreparedStatement stmt = conn.prepareStatement(DBUtil.getFinalQuery(SQL_SELECT_KIT_REQUEST_NEW.concat(QueryExtension.WHERE_REALM_INSTANCE_ID), addition))) {
+
+            String query = SQL_SELECT_KIT_REQUEST_NEW;
+            if (DDPInstance.getDDPInstanceWithRole(instance.getName(), DBConstants.UPS_TRACKING_ROLE).isHasRole()) {
+                query = SQL_SELECT_KIT_WITH_QUERY_EXTENSION_FOR_UPS_TABLE;
+                query = DBUtil.getFinalQuery(query.concat(QueryExtension.AND_REALM_INSTANCE_ID), addition);
+            }else{
+                query = DBUtil.getFinalQuery(query.concat(QueryExtension.WHERE_REALM_INSTANCE_ID), addition);
+            }
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, instance.getDdpInstanceId());
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
@@ -664,7 +708,7 @@ public class KitRequestShipping extends KitRequest {
     public static void addKitRequests(@NonNull String instanceId, @NonNull KitDetail kitDetail, @NonNull int kitTypeId,
                                       @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, String externalOrderNumber, String uploadReason) {
         addKitRequests(instanceId, kitDetail.getKitType(), kitDetail.getParticipantId(), kitDetail.getKitRequestId(), kitTypeId, kitRequestSettings,
-                collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber,  uploadReason);
+                collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber, uploadReason);
     }
 
     //adding kit request to db (called by hourly job to add kits into DSM)

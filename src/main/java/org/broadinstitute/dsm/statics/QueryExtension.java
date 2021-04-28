@@ -43,6 +43,7 @@ public class QueryExtension {
 
     public static final String WHERE_INSTANCE_ID = " where ddp_instance_id = ?";
     public static final String WHERE_REALM_INSTANCE_ID = " where realm.ddp_instance_id = ?";
+    public static final String AND_REALM_INSTANCE_ID = " and realm.ddp_instance_id = ?";
 
 
 }
