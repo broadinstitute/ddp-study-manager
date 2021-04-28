@@ -52,20 +52,28 @@ public class ExportToES {
     public static void exportMedicalRecords(int instanceId) {
         List<ESMedicalRecordsDto> esMedicalRecords = esMedicalRecordsDao.getESMedicalRecordsByInstanceId(instanceId);
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
-        for (ESMedicalRecordsDto medicalRecord : esMedicalRecords) {
-            Map<String, Object> map = oMapper.convertValue(medicalRecord, Map.class);
-            ElasticSearchUtil.writeDsmRecord(ddpInstance, medicalRecord.getMedicalRecordId(), medicalRecord.getDdpParticipantId(),
-                    ESObjectConstants.MEDICAL_RECORDS, ESObjectConstants.MEDICAL_RECORDS_ID, map);
+        if (ddpInstance != null) {
+            for (ESMedicalRecordsDto medicalRecord : esMedicalRecords) {
+                Map<String, Object> map = oMapper.convertValue(medicalRecord, Map.class);
+                if (medicalRecord.getMedicalRecordId() != null && medicalRecord.getDdpParticipantId() != null) {
+                    ElasticSearchUtil.writeDsmRecord(ddpInstance, medicalRecord.getMedicalRecordId(), medicalRecord.getDdpParticipantId(),
+                            ESObjectConstants.MEDICAL_RECORDS, ESObjectConstants.MEDICAL_RECORDS_ID, map);
+                }
+            }
         }
     }
 
     private static void exportTissueRecords(int instanceId) {
         List<ESTissueRecordsDto> esTissueRecords = esTissueRecordsDao.getESTissueRecordsByInstanceId(instanceId);
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
-        for (ESTissueRecordsDto tissueRecord : esTissueRecords) {
-            Map<String, Object> map = oMapper.convertValue(tissueRecord, Map.class);
-            ElasticSearchUtil.writeDsmRecord(ddpInstance, tissueRecord.getTissueRecordId(), tissueRecord.getDdpParticipantId(),
-                    ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, map);
+        if (ddpInstance != null) {
+            for (ESTissueRecordsDto tissueRecord : esTissueRecords) {
+                Map<String, Object> map = oMapper.convertValue(tissueRecord, Map.class);
+                if (tissueRecord.getTissueRecordId() != null && tissueRecord.getDdpParticipantId() != null) {
+                    ElasticSearchUtil.writeDsmRecord(ddpInstance, tissueRecord.getTissueRecordId(), tissueRecord.getDdpParticipantId(),
+                            ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, map);
+                }
+            }
         }
     }
 

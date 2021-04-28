@@ -286,7 +286,7 @@ public class ElasticSearchUtil {
                                       @NonNull Integer id,
                                       @NonNull String ddpParticipantId,
                                       @NonNull String objectType,
-                                      @NonNull String idName, @NonNull Map<String, Object> nameValues) {
+                                      @NonNull String idName, Map<String, Object> nameValues) {
         String index = instance.getParticipantIndexES();
         try {
             if (StringUtils.isNotBlank(index)) {
@@ -316,7 +316,7 @@ public class ElasticSearchUtil {
                                    @NonNull String id,
                                    @NonNull String ddpParticipantId,
                                    @NonNull String objectType,
-                                   @NonNull Map<String, Object> nameValues, @NonNull String idName) {
+                                   @NonNull Map<String, Object> nameValues, String idName) {
         String index = instance.getParticipantIndexES();
         try {
             if (StringUtils.isNotBlank(index)) {
