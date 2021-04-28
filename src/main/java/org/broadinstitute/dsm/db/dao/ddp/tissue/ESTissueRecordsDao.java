@@ -89,7 +89,7 @@ public class ESTissueRecordsDao implements Dao<ESTissueRecordsDto> {
             return execResult;
         });
         if (results.resultException != null) {
-            throw new RuntimeException("Error getting medical records by instanceId " + instanceId, results.resultException);
+            throw new RuntimeException("Error getting samples by instanceId " + instanceId, results.resultException);
         }
         return tissueRecordsDtoListES;
     }
