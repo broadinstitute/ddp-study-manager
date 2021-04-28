@@ -8,7 +8,7 @@
     <changeSet id="readonlyColumn" author="ikhaladz" >
         <addColumn tableName="field_settings">
             <column name="readonly" type="boolean"
-                    afterColumn="actions" defaultValueBoolean="false" />
+                     defaultValueBoolean="false" />
         </addColumn>
     </changeSet>
 
