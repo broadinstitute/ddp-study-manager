@@ -37,8 +37,8 @@ public class InstanceSettings {
                     "WHERE realm.ddp_instance_id = settings.ddp_instance_id AND realm.instance_name = ?";
     private static final String SQL_SELECT_INSTANCE_SETTINGS_BY_ID =
             "SELECT mr_cover_pdf, kit_behavior_change, special_format, hide_ES_fields, study_specific_statuses, has_invitations, GBF_SHIPPED_DSS_DELIVERED " +
-                    "FROM instance_settings settings " +
-                    "WHERE settings.ddp_instance_id = ?";
+            "FROM instance_settings settings " +
+            "WHERE settings.ddp_instance_id = ?";
 
     public static final String INSTANCE_SETTING_UPLOAD = "upload";
     public static final String INSTANCE_SETTING_UPLOADED = "uploaded"; //"Kits without Labels" page
