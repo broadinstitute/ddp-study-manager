@@ -411,7 +411,7 @@ public class ElasticSearchUtil {
         if (objectList != null) {
             boolean updated = false;
             for (Map<String, Object> object : objectList) {
-                if (id == object.get(idName)) {
+                if (id.toString().equals(object.get(idName).toString())) {
                     for (Map.Entry<String, Object> entry: nameValues.entrySet()) {
                         if (entry.getKey() != idName && entry.getKey() != ESObjectConstants.DDP_PARTICIPANT_ID) {
                             object.put(entry.getKey(), entry.getValue());
