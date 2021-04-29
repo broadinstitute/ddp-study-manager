@@ -17,7 +17,7 @@ public class ESObjectConstants {
 
     //tissue records
     public static final String TISSUE_RECORDS = "tissueRecords";
-    public static final String TISSUE_RECORDS_ID = "tissueRecordsId";
+    public static final String TISSUE_RECORDS_ID = "tissueRecordId";
     public static final List<String> TISSUE_RECORDS_FIELD_NAMES =
             Arrays.asList("typePX", "locationPX", "datePX", "histology", "accessionNumber", "requested", "received", "sent");
 

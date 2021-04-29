@@ -102,7 +102,7 @@ public class KitStatusChangeRoute extends RequestHandler {
                     if (checkKitLabel(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_FOUND_IF_KIT_LABEL_ALREADY_EXISTS_IN_TRACKING_TABLE), addValue)) {
                         updateKit(changeType, kit, addValue, currentTime, scanErrorList, userId);
                         KitRequestDao kitRequestDao = new KitRequestDao();
-                        KitRequestDto kitRequestByLabel = kitRequestDao.getKitRequestByLabel(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_DDP_KIT_REQUEST_ID), kit);
+                        KitRequestDto kitRequestByLabel = kitRequestDao.getKitRequestByLabel(kit);
                         if (kitRequestByLabel != null) {
                             writeSampleSentToES(kitRequestByLabel);
                         }

@@ -52,6 +52,28 @@ public class KitRequestDao implements Dao<KitRequestDto> {
 
     public static final String BY_BSP_COLLABORATOR_PARTICIPANT_ID = " WHERE bsp_collaborator_participant_id = ?";
 
+    public static final String SQL_GET_KIT_REQUEST =
+        "SELECT " +
+        "ddp_kit_request_id,  " +
+        "ddp_instance_id, " +
+        "ddp_kit_request_id, " +
+        "kit_type_id, bsp_collaborator_participant_id, " +
+        "bsp_collaborator_sample_id, " +
+        "ddp_participant_id, " +
+        "ddp_label, " +
+        "created_by, " +
+        "created_date, " +
+        "external_order_number, " +
+        "external_order_date, " +
+        "external_order_status, " +
+        "external_response, " +
+        "upload_reason, " +
+        "order_transmitted_at" +
+        "FROM " +
+        "ddp_kit_request";
+
+    public static final String BY_DDP_LABEL = " where ddp_label = ?";
+
     @Override
     public int create(KitRequestDto kitRequestDto) {
         return 0;
@@ -67,11 +89,11 @@ public class KitRequestDao implements Dao<KitRequestDto> {
         return Optional.empty();
     }
 
-    public KitRequestDto getKitRequestByLabel(String query, String kitLabel) {
+    public KitRequestDto getKitRequestByLabel(String kitLabel) {
         List<KitRequestDto> kitRequestDtoList = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult(0);
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_KIT_REQUEST)) {
                 stmt.setString(1, kitLabel);
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
