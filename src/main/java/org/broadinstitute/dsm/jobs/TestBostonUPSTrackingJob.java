@@ -32,7 +32,6 @@ import java.util.List;
 public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessage> {
 
     private String STUDY_MANAGER_SCHEMA = System.getenv("STUDY_MANAGER_SCHEMA") + ".";
-    private String STUDY_SERVER_SCHEMA = System.getenv("STUDY_SERVER_SCHEMA") + ".";
 
     private final Logger logger = LoggerFactory.getLogger(TestBostonUPSTrackingJob.class);
 
