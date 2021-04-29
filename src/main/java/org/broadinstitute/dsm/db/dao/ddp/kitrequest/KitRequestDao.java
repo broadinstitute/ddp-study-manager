@@ -45,6 +45,15 @@ public class KitRequestDao implements Dao<KitRequestDto> {
             "carrier_service cs ON (krs.carrier_service_to_id = cs.carrier_service_id)";
 
     public static final String BY_INSTANCE_ID = " WHERE dp.ddp_instance_id = ?";
+
+    public static final String SQL_GET_KIT_REQUEST_ID =
+            "SELECT " +
+            "ddp_kit_request_id " +
+                    "FROM " +
+            "ddp_kit_request";
+
+    public static final String BY_BSP_COLLABORATOR_PARTICIPANT_ID = " WHERE bsp_collaborator_participant_id = ?";
+
     @Override
     public int create(KitRequestDto kitRequestDto) {
         return 0;
@@ -133,5 +142,32 @@ public class KitRequestDao implements Dao<KitRequestDto> {
             throw new RuntimeException("Error getting samples by instanceId " + instanceId, results.resultException);
         }
         return samplesDtosListES;
+    }
+
+    public String getKitRequestIdByBSPParticipantId(String bspParticipantId) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_KIT_REQUEST_ID + BY_BSP_COLLABORATOR_PARTICIPANT_ID)) {
+                stmt.setString(1, bspParticipantId);
+                try (ResultSet idByBSPrs = stmt.executeQuery()) {
+                    if (idByBSPrs.next()) {
+                        dbVals.resultValue = idByBSPrs.getInt(DBConstants.DDP_INSTANCE_ID);
+                    }
+                }
+
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting information for " + bspParticipantId, e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get kit request id for " + bspParticipantId, results.resultException);
+        }
+        return (String) results.resultValue;
     }
 }

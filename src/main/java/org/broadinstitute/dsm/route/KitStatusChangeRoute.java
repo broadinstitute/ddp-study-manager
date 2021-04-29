@@ -104,7 +104,7 @@ public class KitStatusChangeRoute extends RequestHandler {
                         KitRequestDao kitRequestDao = new KitRequestDao();
                         KitRequestDto kitRequestByLabel = kitRequestDao.getKitRequestByLabel(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_DDP_KIT_REQUEST_ID), kit);
                         if (kitRequestByLabel != null) {
-                            writeSampleToES(kitRequestByLabel);
+                            writeSampleSentToES(kitRequestByLabel);
                         }
                     }
                     else {
@@ -130,18 +130,20 @@ public class KitStatusChangeRoute extends RequestHandler {
         }
     }
 
-    private void writeSampleToES(KitRequestDto kitRequest) {
+    private static void writeSampleSentToES(KitRequestDto kitRequest) {
         int ddpInstanceId = kitRequest.getDdpInstanceId();
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(ddpInstanceId);
         Map<String, Object> nameValuesMap = new HashMap<>();
         nameValuesMap.put(ESObjectConstants.SENT, SystemUtil.getISO8601DateString());
-        ElasticSearchUtil.writeSample(
-                ddpInstance,
-                kitRequest.getDdpKitRequestId(),
-                kitRequest.getDdpParticipantId(),
-                ESObjectConstants.SAMPLES,
-                ESObjectConstants.KIT_REQUEST_ID, nameValuesMap
-        );
+        if (ddpInstance != null && kitRequest.getDdpKitRequestId() != null && kitRequest.getDdpParticipantId() != null) {
+            ElasticSearchUtil.writeSample(
+                    ddpInstance,
+                    kitRequest.getDdpKitRequestId(),
+                    kitRequest.getDdpParticipantId(),
+                    ESObjectConstants.SAMPLES,
+                    ESObjectConstants.KIT_REQUEST_ID, nameValuesMap
+            );
+        }
     }
 
     private void updateKit(@NonNull String changeType, @NonNull String kit, String addValue, @NonNull long currentTime, @NonNull List<ScanError> scanErrorList, @NonNull String userId) {
