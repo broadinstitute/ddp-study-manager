@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.careevolve;
 
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 import org.apache.commons.lang3.StringUtils;
 
@@ -28,5 +29,13 @@ public class Address {
         this.city = city;
         this.state = state;
         this.zipCode = zipCode;
+    }
+
+    public static Address fromElasticAddress(JsonObject esAddress) {
+        return new Address(esAddress.get("street1").getAsString(),
+                esAddress.get("street2").getAsString(),
+                esAddress.get("city").getAsString(),
+                esAddress.get("state").getAsString(),
+                esAddress.get("zip").getAsString());
     }
 }

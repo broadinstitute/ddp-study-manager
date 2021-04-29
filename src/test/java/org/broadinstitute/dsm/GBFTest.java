@@ -4,12 +4,17 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.model.KitRequest;
+import org.broadinstitute.dsm.model.KitRequestSettings;
+import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.gbf.*;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.DBUtil;
+import org.broadinstitute.dsm.util.EasyPostUtil;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.broadinstitute.dsm.util.externalShipper.ExternalShipper;
 import org.broadinstitute.dsm.util.externalShipper.GBFRequestUtil;
@@ -21,12 +26,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.*;
 
-public class GBFTest extends TestHelper {
+public class
+GBFTest extends TestHelper {
 
     private String GBF_URL = "https://www.gbfmedical.com/oap/api/";
     private String ORDER_NUMBER = "WEB123ABC4D5";
@@ -112,6 +117,30 @@ public class GBFTest extends TestHelper {
         else {
             Assert.fail("No apiKey found");
         }
+    }
+    @Test
+    @Ignore
+    public void reorderKits() throws Exception {
+        String query = "Select *, from_unixtime(req.created_date/1000) as created_time " +
+                "FROM prod_dsm_db.ddp_kit_request req \n" +
+                "left join ddp_kit kit on \n" +
+                "(req.dsm_kit_request_id = kit.dsm_kit_request_id)\n" +
+                "LEFT JOIN (SELECT subK.kit_type_id, subK.external_name from ddp_kit_request_settings dkc   LEFT JOIN sub_kits_settings subK ON (subK.ddp_kit_request_settings_id = dkc.ddp_kit_request_settings_id)) as subkits ON (subkits.kit_type_id = req.kit_type_id)   " +
+                "where \n" +
+                "req.ddp_instance_id = ? \n" +
+                "and (external_order_status is null or external_order_status = 'NOT FOUND')\n" +
+                "and external_order_number is not null\n" +
+                "and req.kit_type_id = 7\n" +
+                "and from_unixtime(created_date/1000) like \"2021-02-27%\"\n" +
+                "order by created_time DESC\n";
+        GBFRequestUtil gbf =  new GBFRequestUtil();
+        DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(9);
+        ArrayList<KitRequest> kitRequests =gbf.getKitRequestsNotDone(9, query);
+        HashMap<Integer, KitRequestSettings> krs = KitRequestSettings.getKitRequestSettings("9");
+        gbf.orderKitRequests(kitRequests, new EasyPostUtil(ddpInstance.getName()), krs.values().iterator().next(), null);
+
+
+
     }
 
     @Test
@@ -224,5 +253,61 @@ public class GBFTest extends TestHelper {
         else {
             Assert.fail("No apiKey found");
         }
+    }
+
+    @Test
+    public void orderGBFKit() throws Exception {
+        String externalOrderNumber = "T93CNUCZ8QHBSNRI1DJA";
+
+        String orderLookup = "select \n" +
+                "distinct req.ddp_participant_id\n" +
+                "FROM prod_dsm_db.ddp_kit_request req\n" +
+                "left join ddp_kit kit on\n" +
+                "(req.dsm_kit_request_id = kit.dsm_kit_request_id)\n" +
+                "where\n" +
+                "req.ddp_instance_id = 9\n" +
+                "and\n" +
+                "req.external_order_number = ?";
+
+        DDPInstance instance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
+          ArrayList<KitRequest> kitsToOrder = new ArrayList<>();
+
+          EasyPostUtil easyPostUtil = new EasyPostUtil(null,"");
+        Map<String, Map<String, Object>> elasticMap = ElasticSearchUtil.getDDPParticipantsFromES(instance.getName(), instance.getParticipantIndexES());
+
+        HashMap<Integer, KitRequestSettings> kitRequestSettings = KitRequestSettings.getKitRequestSettings("9");
+
+        GBFRequestUtil shipper = new GBFRequestUtil();
+
+        TransactionWrapper.inTransaction(conn -> {
+            try {
+                try (PreparedStatement stmt = conn.prepareStatement(orderLookup)) {
+                    stmt.setString(1, externalOrderNumber);
+
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) {
+                            String ddpParticipantId = rs.getString("ddp_participant_id");
+                            DDPParticipant participant = ElasticSearchUtil.getParticipantAsDDPParticipant(elasticMap, ddpParticipantId);
+
+                            kitsToOrder.add(new KitRequest(ddpParticipantId, participant.getShortId(), participant, externalOrderNumber));
+
+                            for (KitRequestSettings kitRequestSetting : kitRequestSettings.values()) {
+                                if ("gbf".equalsIgnoreCase(kitRequestSetting.getExternalShipper())) {
+                                    kitRequestSetting.setCarrierTo("3rd Day Air Residential");
+                                    kitRequestSetting.setServiceTo(kitRequestSetting.getCarrierTo());
+                                    shipper.orderKitRequests(kitsToOrder, easyPostUtil, kitRequestSetting, null);
+                                }
+                            }
+
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Could not order kit " + externalOrderNumber, e);
+            }
+
+            return null;
+        });
+
     }
 }
