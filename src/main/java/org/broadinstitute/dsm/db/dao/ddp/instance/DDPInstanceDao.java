@@ -2,20 +2,18 @@ package org.broadinstitute.dsm.db.dao.ddp.instance;
 
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
-
-import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 import java.util.Optional;
+
+import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
+
 
 public class DDPInstanceDao implements Dao<DDPInstanceDto> {
 
