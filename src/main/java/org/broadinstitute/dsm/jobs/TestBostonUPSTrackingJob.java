@@ -32,7 +32,6 @@ import java.util.List;
 public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessage> {
 
     private String STUDY_MANAGER_SCHEMA = System.getenv("STUDY_MANAGER_SCHEMA") + ".";
-    private String STUDY_SERVER_SCHEMA = System.getenv("STUDY_SERVER_SCHEMA") + ".";
 
     private final Logger logger = LoggerFactory.getLogger(TestBostonUPSTrackingJob.class);
 
@@ -116,6 +115,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                     }
                     catch (Exception e) {
                         logger.error("Error getting id of new shipment ", e);
+                        logger.error(e.getMessage());
                         return;
                     }
                 }
@@ -127,6 +127,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             }
             catch (Exception ex) {
                 logger.error("Error preparing statement", ex);
+                logger.error(ex.getMessage());
                 return;
             }
 
@@ -167,6 +168,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 }
                 catch (Exception ex) {
                     logger.error("Error preparing statement", ex);
+                    logger.error(ex.getMessage());
                     return;
                 }
 
@@ -176,6 +178,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         }
         catch (SQLException ex) {
             logger.error("Trouble creating a connection to the database " + ex);
+            logger.error(ex.getMessage());
         }
         finally {
             if (conn != null) {
@@ -184,6 +187,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 }
                 catch (Throwable ex) {
                     logger.error("Could not close JDBC Connection ", ex);
+                    logger.error(ex.getMessage());
                 }
             }
         }
@@ -327,11 +331,13 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             }
             catch (Exception ex) {
                 logger.error("Error preparing statement", ex);
+                logger.error(ex.getMessage());
             }
             conn.commit();
         }
         catch (SQLException e) {
             logger.error("Trouble creating a connection to the DB");
+            logger.error(e.getMessage());
         }
         finally {
             if (conn != null) {
@@ -340,6 +346,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 }
                 catch (Throwable ex) {
                     logger.error("Could not close JDBC Connection ", ex);
+                    logger.error(ex.getMessage());
                 }
             }
         }
@@ -462,11 +469,13 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 }
                 catch (Exception ex) {
                     logger.error("Error preparing statement", ex);
+                    logger.error(ex.getMessage());
                 }
                 conn.commit();
             }
             catch (SQLException ex) {
                 logger.error("Trouble connecting to DB " + ex);
+                logger.error(ex.getMessage());
             }
             finally {
                 if (conn != null) {
