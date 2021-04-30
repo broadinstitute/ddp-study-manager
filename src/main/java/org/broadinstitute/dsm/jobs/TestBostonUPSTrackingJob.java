@@ -40,6 +40,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
 
     private String SELECT_BY_EXTERNAL_ORDER_NUMBER = "and request.external_order_number = ?";
     private Covid19OrderRegistrar orderRegistrar;
+    private Authentication careEvolveAuth = null;
     String endpoint;
     String username;
     String password;
@@ -390,6 +391,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "         and realm.ddp_instance_id = ?" +
                 "          and kit.dsm_kit_request_id = ?";
         logger.info("Inserting new activities for kit with package id " + kit.getUpsPackage().getUpsPackageId());
+
         for (int i = activities.length - 1; i >= 0; i--) {
             UPSActivity currentInsertingActivity = activities[i];
             if (lastActivity != null) {
@@ -436,8 +438,8 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                         if (earliestInTransitTime != null && !kit.getCE_order()) {
                             // if we have the first date of an inbound event, create an order in CE
                             // using the earliest date of inbound event
-                            Authentication careEvolveAuth = null;
-                            if (orderRegistrar == null) {
+
+                            if (orderRegistrar == null || careEvolveAuth == null) {
                                 Pair<Covid19OrderRegistrar, Authentication> careEvolveOrderingTools = createCEOrderRegistrar(cfg);
                                 orderRegistrar = careEvolveOrderingTools.getLeft();
                                 careEvolveAuth = careEvolveOrderingTools.getRight();
@@ -445,6 +447,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                             }
                             orderRegistrar.orderTest(careEvolveAuth, kit.getHruid(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime, conn, cfg);
                             logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
+                            logger.info("Placed CE order for kit with label " + kit.getMainKitLabel());
                             kit.changeCEOrdered(conn, true);
                         }
                         else {
