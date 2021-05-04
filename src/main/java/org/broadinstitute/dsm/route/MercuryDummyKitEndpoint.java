@@ -1,33 +1,32 @@
 package org.broadinstitute.dsm.route;
 
-import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
-import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
+import org.broadinstitute.dsm.util.DBUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 public class MercuryDummyKitEndpoint implements Route {
     private static final String DUMMY_KIT_TYPE_NAME = "DUMMY_KIT_TYPE";
     private static final String DUMMY_REALM_NAME = "DUMMY_KIT_REALM";
+    private static final String USER_ID = "74";
     private static final Logger logger = LoggerFactory.getLogger(MercuryDummyKitEndpoint.class);
-    private static final String SELECT_KIT_TYPE = "Select `value` from bookmark where instance= ?";
-    private static final String INSERT_DUMMY_KIT = "INSERT INTO ddp_kit (dsm_kit_request_id, kit_label) VALUES (?,?)";
-    private static String ddpParticipantId = "I211Q8BK5ZJHNG43DJVQ";
-    private static String participantCollaboratorId= "OSProject_P8EQ67";
-    private static String collaboratorSampleId = "OSProject_P8EQ67_SALIVA";
+    private static final String SQL_UPDATE_DUMMY_KIT = "UPDATE ddp_kit SET kit_label = ? where dsm_kit_request_id = ?";
+    private static final String SQL_SELECT_RANDOM_PT = "SELECT ddp_participant_id FROM ddp_kit_request where ddp_instance_id = ?  ORDER BY RAND() LIMIT 1";
 
     @Override
     public Object handle(Request request, Response response) throws Exception {
@@ -37,96 +36,89 @@ public class MercuryDummyKitEndpoint implements Route {
             response.status(400);// return bad request
             return new Result(400, "Please include a kit label as a path parameter");
         }
-        DDPInstance mockDdpInstance = DDPInstance.getDDPInstance(DUMMY_REALM_NAME);
-        String mercuryKitRequestId = "MERCURY_" + KitRequestShipping.createRandom(20);
-        int kitTypeId;
+        int ddpInstanceId = (int) DBUtil.getBookmark(DUMMY_REALM_NAME);
+        DDPInstance mockDdpInstance = DDPInstance.getDDPInstance(String.valueOf(ddpInstanceId));
+        if (mockDdpInstance != null) {
+            String mercuryKitRequestId = "MERCURY_" + KitRequestShipping.createRandom(20);
+            int kitTypeId = (int) DBUtil.getBookmark(DUMMY_KIT_TYPE_NAME);
+            logger.info("Found kit type for Mercury Dummy Endpoint " + kitTypeId);
+
+            String ddpParticipantId = getRandomParticipantIdForStudy(mockDdpInstance.getDdpInstanceId());
+            String participantCollaboratorId = KitRequestShipping.getCollaboratorParticipantId(mockDdpInstance.getBaseUrl(), mockDdpInstance.getDdpInstanceId(), mockDdpInstance.isMigratedDDP(),
+                    mockDdpInstance.getCollaboratorIdPrefix(), ddpParticipantId, "", null);
+            String collaboratorSampleId = getCollaboratorSampleId(kitTypeId, participantCollaboratorId);
+            if (ddpParticipantId != null) {
+                //if instance not null
+                String dsmKitRequestId = KitRequestShipping.writeRequest(mockDdpInstance.getDdpInstanceId(), mercuryKitRequestId, kitTypeId,
+                        ddpParticipantId, participantCollaboratorId, collaboratorSampleId,
+                        USER_ID, "", "", "", false, "");
+                updateKitLabel(kitLabel, dsmKitRequestId);
+            }
+            return new Result(200);
+        }
+        return new Result(500);
+    }
+
+    private void updateKitLabel(String kitLabel, String dsmKitRequestId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement insertKitRequest = conn.prepareStatement(SELECT_KIT_TYPE)) {
-                insertKitRequest.setString(1, mockDdpInstance.getDdpInstanceId());
-                try (ResultSet rs = insertKitRequest.executeQuery()) {
-                    if (rs.next()) {
-                        dbVals.resultValue = rs.getInt("value");
-                    }
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_DUMMY_KIT)) {
+                stmt.setString(1, kitLabel);
+                stmt.setString(2, dsmKitRequestId);
+                int result = stmt.executeUpdate();
+                if (result == 1) {
+                    logger.info("Updated dummy kit, set KitLabel " + kitLabel + " for kit with dsmKitRequestId " + dsmKitRequestId);
                 }
-                catch (Exception e) {
-                    throw new RuntimeException("Error getting id of new kit request ", e);
+                else {
+                    throw new RuntimeException("Error updating kit  label for " + dsmKitRequestId + " updated " + result + " rows");
                 }
             }
-            catch (SQLException ex) {
-                dbVals.resultException = ex;
+            catch (SQLException e) {
+                dbVals.resultException = e;
             }
             return dbVals;
         });
-
         if (results.resultException != null) {
-            throw new RuntimeException("Error getting the kit type from bookmark table ", results.resultException);
+            throw new RuntimeException("Error updating kit  label for " + dsmKitRequestId, results.resultException);
         }
-        kitTypeId = (int) results.resultValue;
-        logger.info("Found kit type for Mercury Dummy Endpoint " + kitTypeId);
-        
-        //if instance not null
-        writeRequest(mockDdpInstance.getDdpInstanceId(), mercuryKitRequestId, kitTypeId,
-                ddpParticipantId, participantCollaboratorId, collaboratorSampleId,
-                "SYSTEM", kitLabel);
-
-        return new Result(200);
     }
 
-    static String writeRequest(@NonNull String instanceId, @NonNull String ddpKitRequestId, @NonNull int kitTypeId,
-                               @NonNull String ddpParticipantId, String collaboratorPatientId, String collaboratorSampleId,
-                               @NonNull String createdBy, String kitLabel) {
+    private String getRandomParticipantIdForStudy(String ddpInstanceId) {
         SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult(0);
-            try (PreparedStatement insertKitRequest = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.INSERT_KIT_REQUEST), Statement.RETURN_GENERATED_KEYS)) {
-                insertKitRequest.setString(1, instanceId);
-                insertKitRequest.setString(2, ddpKitRequestId);
-                insertKitRequest.setInt(3, kitTypeId);
-                insertKitRequest.setString(4, ddpParticipantId);
-                insertKitRequest.setObject(5, collaboratorPatientId);
-                insertKitRequest.setObject(6, collaboratorSampleId);
-                insertKitRequest.setNull(7, Types.VARCHAR); //ddp_label or shipping_id
-                insertKitRequest.setString(8, createdBy);
-                insertKitRequest.setLong(9, System.currentTimeMillis());
-                insertKitRequest.setNull(10, Types.VARCHAR); //external_order_number
-                insertKitRequest.setNull(11, Types.VARCHAR); //upload reason
-                insertKitRequest.executeUpdate();
-                try (ResultSet rs = insertKitRequest.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        dbVals.resultValue = rs.getString(1);
-                    }
-                }
-                catch (Exception e) {
-                    throw new RuntimeException("Error getting id of new kit request ", e);
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_RANDOM_PT)) {
+                stmt.setString(1, ddpInstanceId);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    dbVals.resultValue = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
                 }
             }
-            catch (SQLException ex) {
-                dbVals.resultException = ex;
-            }
-            if (dbVals.resultException == null && dbVals.resultValue != null) {
-                writeNewKit(conn, (String) dbVals.resultValue, kitLabel);
+            catch (SQLException e) {
+                dbVals.resultException = e;
             }
             return dbVals;
         });
-
         if (results.resultException != null) {
-            throw new RuntimeException("Error adding kit request  w/ ddpKitRequestId " + ddpKitRequestId, results.resultException);
+            throw new RuntimeException("Problem getting a random participant id for instance id " + ddpInstanceId, results.resultException);
         }
-
-        logger.info("Added kitRequest w/ ddpKitRequestId " + ddpKitRequestId);
-        return (String) results.resultValue;
+        if (results.resultValue != null) {
+            return (String) results.resultValue;
+        }
+        return null;
     }
 
-    private static SimpleResult writeNewKit(Connection conn, String kitRequestId, String kiLabel) {
-        SimpleResult dbVals = new SimpleResult();
-        try (PreparedStatement insertKit = conn.prepareStatement(INSERT_DUMMY_KIT)) {
-            insertKit.setString(1, kitRequestId);
-            insertKit.setString(2, kiLabel);
-            insertKit.executeUpdate();
+    private String getCollaboratorSampleId(int kitTypeId, String participantCollaboratorId) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            String collaboratorSampleId = KitRequestShipping.generateBspSampleID(conn, participantCollaboratorId, DUMMY_KIT_TYPE_NAME, kitTypeId);
+            dbVals.resultValue = collaboratorSampleId;
+            return dbVals;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting Collaborator Sample Id for  " + participantCollaboratorId, results.resultException);
         }
-        catch (SQLException e) {
-            dbVals.resultException = e;
+        else {
+            return (String) results.resultValue;
         }
-        return dbVals;
     }
 }
