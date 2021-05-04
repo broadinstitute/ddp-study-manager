@@ -7,6 +7,7 @@ import com.typesafe.config.Config;
 import org.apache.commons.dbcp2.PoolableConnection;
 import org.apache.commons.dbcp2.PoolingDataSource;
 import org.apache.commons.lang3.tuple.Pair;
+import org.broadinstitute.ddp.security.Auth0Util;
 import org.broadinstitute.dsm.careevolve.Authentication;
 import org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar;
 import org.broadinstitute.dsm.careevolve.Provider;
@@ -48,6 +49,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
     Connection conn = null;
     private final int MAX_CONNECTION = 1;
     UPSTracker upsTracker = null;
+    private static Auth0Util auth0Util;
 
     @Override
     public void accept(PubsubMessage message, Context context) throws Exception {
@@ -63,6 +65,15 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         accessKey = cfg.getString("ups.accesskey");
         upsTracker = new UPSTracker(endpoint, username, password, accessKey);
         logger.info("Starting the UPS lookup job");
+        auth0Util = new Auth0Util(cfg.getString(ApplicationConfigConstants.AUTH0_ACCOUNT),
+                cfg.getStringList(ApplicationConfigConstants.AUTH0_CONNECTIONS),
+                cfg.getBoolean(ApplicationConfigConstants.AUTH0_IS_BASE_64_ENCODED),
+                cfg.getString(ApplicationConfigConstants.AUTH0_CLIENT_KEY),
+                cfg.getString(ApplicationConfigConstants.AUTH0_SECRET),
+                cfg.getString(ApplicationConfigConstants.AUTH0_MGT_KEY),
+                cfg.getString(ApplicationConfigConstants.AUTH0_MGT_SECRET),
+                cfg.getString(ApplicationConfigConstants.AUTH0_MGT_API_URL),
+                false, cfg.getString(ApplicationConfigConstants.AUTH0_AUDIENCE));
         String data = new String(Base64.getDecoder().decode(message.data));
         UPSKit[] kitsToLookFor = new Gson().fromJson(data, UPSKit[].class);
         PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(MAX_CONNECTION, cfg.getString(ApplicationConfigConstants.CF_DSM_DB_URL));
@@ -391,19 +402,21 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                 "         and realm.ddp_instance_id = ?" +
                 "          and kit.dsm_kit_request_id = ?";
         logger.info("Inserting new activities for kit with package id " + kit.getUpsPackage().getUpsPackageId());
-
-        for (int i = activities.length - 1; i >= 0; i--) {
-            UPSActivity currentInsertingActivity = activities[i];
-            if (lastActivity != null) {
-                if (lastActivity.getInstant() != null && (currentInsertingActivity.getInstant().equals(lastActivity.getInstant())
-                        || currentInsertingActivity.getInstant().isBefore(lastActivity.getInstant()))) {
-                    continue;
+        Connection conn = null;
+        try {
+            conn = dataSource.getConnection();
+            for (int i = activities.length - 1; i >= 0; i--) {
+                UPSActivity currentInsertingActivity = activities[i];
+                if (lastActivity != null) {
+                    if (lastActivity.getInstant() != null && (currentInsertingActivity.getInstant().equals(lastActivity.getInstant())
+                            || currentInsertingActivity.getInstant().isBefore(lastActivity.getInstant()))) {
+                        continue;
+                    }
                 }
-            }
-            String activityDateTime = currentInsertingActivity.getSQLDateTimeString();
-            Connection conn = null;
-            try {
-                conn = dataSource.getConnection();
+                String activityDateTime = currentInsertingActivity.getSQLDateTimeString();
+
+
+
                 try (PreparedStatement stmt = conn.prepareStatement(INSERT_NEW_ACTIVITIES)) {
                     stmt.setString(1, kit.getUpsPackage().getUpsPackageId());
                     stmt.setString(2, currentInsertingActivity.getLocation().getString());
@@ -414,85 +427,85 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                     int r = stmt.executeUpdate();
 
                     logger.info("Updated " + r + " rows for a new activity");
-                    logger.info("Inserted new activity "+currentInsertingActivity.getStatus().getDescription()+" for "+kit.getUpsPackage().getUpsPackageId());
+                    logger.info("Inserted new activity " + currentInsertingActivity.getStatus().getDescription() + " for package id " + kit.getUpsPackage().getUpsPackageId());
                     if (r != 1) {
                         logger.error(r + " is too big for 1 new activity");
                     }
-                    String oldType = null;
-                    if (lastActivity != null && lastActivity.getStatus() != null) {
-                        oldType = lastActivity.getStatus().getType();
-                    }
-                    if (!isReturn) {
-                        if (shouldTriggerEventForKitOnItsWayToParticipant(statusType, oldType, kit.isGbfShippedTriggerDSSDelivered())) {
-                            KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] { DELIVERED, ddpInstanceId, kit.getDsmKitRequestId(), kit.getExternalOrderNumber() }, 1);
-                            if (kitDDPNotification != null) {
-                                logger.info("Triggering DDP for kit going to participant with external order number: " + kit.getExternalOrderNumber());
-                                EventUtil.triggerDDP(conn, kitDDPNotification);
-                            }
-                            else {
-                                logger.error("delivered kitDDPNotification was null for " + kit.getExternalOrderNumber());
-                            }
-                        }
-
-                    }
-                    else { // this is a return
-                        if (earliestInTransitTime != null && !kit.getCE_order()) {
-                            // if we have the first date of an inbound event, create an order in CE
-                            // using the earliest date of inbound event
-
-                            if (orderRegistrar == null || careEvolveAuth == null) {
-                                Pair<Covid19OrderRegistrar, Authentication> careEvolveOrderingTools = createCEOrderRegistrar(cfg);
-                                orderRegistrar = careEvolveOrderingTools.getLeft();
-                                careEvolveAuth = careEvolveOrderingTools.getRight();
-
-                            }
-                            orderRegistrar.orderTest(careEvolveAuth, kit.getHruid(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime, conn, cfg);
-                            logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
-                            logger.info("Placed CE order for kit with label " + kit.getMainKitLabel());
-                            kit.changeCEOrdered(conn, true);
-                        }
-                        else {
-                            logger.info("No return events for " + kit.getMainKitLabel() + ".  Will not place order yet.");
-                        }
-                        if (shouldTriggerEventForReturnKitDelivery(statusType, oldType)) {
-                            KitUtil.setKitReceived(conn, kit.getMainKitLabel());
-                            logger.info("RECEIVED: " + trackingId);
-                            KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] { RECEIVED, ddpInstanceId, kit.getDsmKitRequestId(), kit.getExternalOrderNumber() }, 1);
-                            if (kitDDPNotification != null) {
-                                logger.info("Triggering DDP for received kit with external order number: " + kit.getExternalOrderNumber());
-                                EventUtil.triggerDDP(conn, kitDDPNotification);
-
-                            }
-                            else {
-                                logger.error("received kitDDPNotification was null for " + kit.getExternalOrderNumber());
-                            }
-                        }
-                    }
-                    conn.commit();
-                    logger.info("Updated status of tracking number " + trackingId + " to " + statusType + " from " + oldType + " for kit w/ external order number " + kit.getExternalOrderNumber());
                 }
                 catch (Exception ex) {
-                    logger.error("Error preparing statement", ex);
-                    logger.error(ex.getMessage());
-                }
-                conn.commit();
-            }
-            catch (SQLException ex) {
-                logger.error("Trouble connecting to DB " + ex);
-                logger.error(ex.getMessage());
-            }
-            finally {
-                if (conn != null) {
-                    try {
-                        conn.close();
-                    }
-                    catch (Throwable ex) {
-                        logger.error("Could not close JDBC Connection ", ex);
-                    }
+                    throw new RuntimeException("Error preparing statement for inserting a new activity  for package id " + kit.getUpsPackage().getUpsPackageId(), ex);
                 }
             }
+            String oldType = null;
+            if (lastActivity != null && lastActivity.getStatus() != null) {
+                oldType = lastActivity.getStatus().getType();
+            }
+            if (!isReturn) {
+                if (shouldTriggerEventForKitOnItsWayToParticipant(statusType, oldType, kit.isGbfShippedTriggerDSSDelivered())) {
+                    KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] { DELIVERED, ddpInstanceId, kit.getDsmKitRequestId(), kit.getExternalOrderNumber() }, 1);
+                    if (kitDDPNotification != null) {
+                        logger.info("Triggering DDP for kit going to participant with external order number: " + kit.getExternalOrderNumber());
+                        EventUtil.triggerDDP(conn, kitDDPNotification, auth0Util);
+                    }
+                    else {
+                        logger.error("delivered kitDDPNotification was null for " + kit.getExternalOrderNumber());
+                    }
+                }
+
+            }
+            else { // this is a return
+                if (earliestInTransitTime != null && !kit.getCE_order()) {
+                    // if we have the first date of an inbound event, create an order in CE
+                    // using the earliest date of inbound event
+
+                    if (orderRegistrar == null || careEvolveAuth == null) {
+                        Pair<Covid19OrderRegistrar, Authentication> careEvolveOrderingTools = createCEOrderRegistrar(cfg);
+                        orderRegistrar = careEvolveOrderingTools.getLeft();
+                        careEvolveAuth = careEvolveOrderingTools.getRight();
+
+                    }
+                    orderRegistrar.orderTest(careEvolveAuth, kit.getHruid(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime, conn, cfg);
+                    logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
+                    logger.info("Placed CE order for kit with label " + kit.getMainKitLabel() + " for time " + earliestInTransitTime);
+                    kit.changeCEOrdered(conn, true);
+                }
+                else {
+                    logger.info("No return events for " + kit.getMainKitLabel() + ".  Will not place order yet.");
+                }
+                if (shouldTriggerEventForReturnKitDelivery(statusType, oldType)) {
+                    KitUtil.setKitReceived(conn, kit.getMainKitLabel());
+                    logger.info("RECEIVED: " + trackingId);
+                    KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] { RECEIVED, ddpInstanceId, kit.getDsmKitRequestId(), kit.getExternalOrderNumber() }, 1);
+                    if (kitDDPNotification != null) {
+                        logger.info("Triggering DDP for received kit with external order number: " + kit.getExternalOrderNumber());
+                        EventUtil.triggerDDP(conn, kitDDPNotification, auth0Util);
+
+                    }
+                    else {
+                        logger.error("received kitDDPNotification was null for " + kit.getExternalOrderNumber());
+                    }
+                }
+            }
+            conn.commit();
+            logger.info("Updated status of tracking number " + trackingId + " to " + statusType + " from " + oldType + " for kit w/ external order number " + kit.getExternalOrderNumber());
+
 
         }
+        catch (SQLException ex) {
+            logger.error("Trouble connecting to DB " + ex);
+            logger.error(ex.getMessage());
+        }
+        finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                }
+                catch (Throwable ex) {
+                    logger.error("Could not close JDBC Connection ", ex);
+                }
+            }
+        }
+
 
     }
 

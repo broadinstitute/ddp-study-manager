@@ -1,7 +1,7 @@
 package org.broadinstitute.dsm.util;
 
 import com.google.api.client.http.HttpStatusCodes;
-import com.google.gson.*;
+import com.google.gson.Gson;
 import lombok.NonNull;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -10,6 +10,7 @@ import org.apache.http.client.fluent.Executor;
 import org.apache.http.util.EntityUtils;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.handlers.util.*;
+import org.broadinstitute.ddp.security.Auth0Util;
 import org.broadinstitute.ddp.util.GoogleBucket;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.exception.SurveyNotCreated;
@@ -340,5 +341,19 @@ public class DDPRequestUtil {
             return Arrays.asList(list.clone());
         }
         return null;
+    }
+    // make a post request
+    public static Integer postRequest(String sendRequest, Object objectToPost, String name, boolean auth0Token, Auth0Util auth0Util) throws IOException, RuntimeException {
+        logger.info("Requesting data from " + name + " w/ " + sendRequest);
+        org.apache.http.client.fluent.Request request = SecurityUtil.createPostRequestWithHeader(sendRequest, name, auth0Token, objectToPost, auth0Util);
+
+        int responseCode;
+        if (blindTrustEverythingExecutor != null) {
+            responseCode = blindTrustEverythingExecutor.execute(request).handleResponse(res -> getResponseCode(res, sendRequest));
+        }
+        else {
+            responseCode = request.execute().handleResponse(res -> getResponseCode(res, sendRequest));
+        }
+        return responseCode;
     }
 }
