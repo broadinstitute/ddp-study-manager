@@ -414,6 +414,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                     int r = stmt.executeUpdate();
 
                     logger.info("Updated " + r + " rows for a new activity");
+                    logger.info("Inserted new activity "+currentInsertingActivity.getStatus().getDescription()+" for "+kit.getUpsPackage().getUpsPackageId());
                     if (r != 1) {
                         logger.error(r + " is too big for 1 new activity");
                     }
