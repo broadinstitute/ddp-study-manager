@@ -397,7 +397,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
             if (lastActivity != null) {
                 if (lastActivity.getInstant() != null && (currentInsertingActivity.getInstant().equals(lastActivity.getInstant())
                         || currentInsertingActivity.getInstant().isBefore(lastActivity.getInstant()))) {
-                    break;
+                    continue;
                 }
             }
             String activityDateTime = currentInsertingActivity.getSQLDateTimeString();
