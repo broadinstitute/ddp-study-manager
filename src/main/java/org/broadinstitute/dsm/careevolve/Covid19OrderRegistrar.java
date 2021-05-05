@@ -91,7 +91,7 @@ public class Covid19OrderRegistrar {
             try {
                 orderResponse = orderTest(auth, message);
                 orderSucceeded = true;
-                logger.info("Placed CE order {} {} for {}", orderResponse.getHandle(), orderResponse.getHl7Ack(), participant);
+                logger.info("Placed CE order {} {} for Participant {}", orderResponse.getHandle(), orderResponse.getHl7Ack(), participant.getPatientId());
             } catch (IOException e) {
                 orderExceptions.add(e);
                 logger.warn("Could not order test for " + patientId + ".  Pausing for " + retryWaitMillis + "ms before retry " + numAttempts + "/" + maxRetries, e);
