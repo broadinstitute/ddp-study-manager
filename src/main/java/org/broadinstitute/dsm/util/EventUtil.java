@@ -89,7 +89,7 @@ public class EventUtil {
     }
 
     public static void triggerDDP(Connection conn,@NonNull KitDDPNotification kitDDPNotification) {
-        Collection<String> events = ParticipantEvent.getParticipantEvent(kitDDPNotification.getParticipantId(), kitDDPNotification.getDdpInstanceId());
+        Collection<String> events = ParticipantEvent.getParticipantEvent(conn, kitDDPNotification.getParticipantId(), kitDDPNotification.getDdpInstanceId());
         if (!events.contains(kitDDPNotification.getEventName())) {
             EventUtil.triggerDDP(conn, kitDDPNotification.getEventName(), kitDDPNotification);
         }

@@ -19,6 +19,7 @@ public class ApplicationConfigConstants {
     //db connection information
     public static final String DSM_DB_MAX_CONNECTIONS = "portal.maxConnections";
     public static final String DSM_DB_URL = "portal.dbUrl";
+    public static final String CF_DSM_DB_URL = "dsmDBUrl";
 
     //google buckets
     public static final String GOOGLE_PROJECT_NAME = "portal.googleProjectName";
@@ -129,4 +130,8 @@ public class ApplicationConfigConstants {
     public static final String CARE_EVOLVE_PROVIDER_NPI = "careEvolve.provider.NPI";
     public static final String CARE_EVOLVE_MAX_RETRIES = "careEvolve.maxRetries";
     public static final String CARE_EVOLVE_RETRY_WAIT_SECONDS = "careEvolve.retryWaitSeconds";
+
+    //pubsub for cf
+    public static final String PUBSUB_PROJECT_ID = "pubsub.projectId";
+    public static final String PUBSUB_TOPIC_ID = "pubsub.topicId";
 }

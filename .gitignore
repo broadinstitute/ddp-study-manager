@@ -55,6 +55,7 @@ config/test-gcloud-creds.json
 config/staging-gcloud-creds.json
 config/prod-gcloud-creds.json
 config/ellkay.conf
+appengine/deploy/vault.conf
 liquibase.properties
 
 src/test/resources/output

@@ -31,7 +31,6 @@ import org.broadinstitute.ddp.security.CookieUtil;
 import org.broadinstitute.ddp.util.BasicTriggerListener;
 import org.broadinstitute.ddp.util.JsonTransformer;
 import org.broadinstitute.ddp.util.Utility;
-import org.broadinstitute.dsm.careevolve.Authentication;
 import org.broadinstitute.dsm.careevolve.Provider;
 import org.broadinstitute.dsm.jetty.JettyConfig;
 import org.broadinstitute.dsm.jobs.*;
@@ -102,17 +101,6 @@ public class DSMServer extends BasicServer {
     public static final String UPS_PATH_TO_ACCESSKEY = "ups.accesskey";
     public static final String UPS_PATH_TO_ENDPOINT = "ups.url";
 
-    public static String UPS_USERNAME;
-    public static String UPS_PASSWORD;
-    public static String UPS_ENDPOINT;
-    public static String UPS_ACCESSKEY;
-    public static String careEvolveSubscriberKey;
-    public static String careEvolveServiceKey;
-    public static String careEvolveOrderEndpoint;
-    public static int careEvolveMaxRetries;
-    public static int careEvolveRetyWaitSeconds;
-    public static String careEvolveAccount;
-    public static Authentication careEvolveAuth;
     public static Provider provider;
     public static final String GCP_PATH_TO_PUBSUB_PROJECT_ID = "pubsub.projectId";
     public static final String GCP_PATH_TO_PUBSUB_SUB = "pubsub.subscription";
@@ -219,6 +207,9 @@ public class DSMServer extends BasicServer {
 
         get(API_ROOT + RoutePath.BSP_KIT_QUERY_PATH, new BSPKitQueryRoute(notificationUtil), new JsonTransformer());
         get(API_ROOT + RoutePath.BSP_KIT_REGISTERED, new BSPKitRegisteredRoute(), new JsonTransformer());
+        if(!cfg.getBoolean("ui.production")){
+            get(API_ROOT + RoutePath.DUMMY_ENDPOINT, new MercuryDummyKitEndpoint(), new JsonTransformer());
+        }
 
         String appRoute = cfg.hasPath("portal.appRoute") ? cfg.getString("portal.appRoute") : null;
 
@@ -607,38 +598,6 @@ public class DSMServer extends BasicServer {
 
                 createScheduleJob(scheduler, null, null, EasypostShipmentStatusJob.class, "CHECK_STATUS_SHIPMENT",
                         cfg.getString(ApplicationConfigConstants.QUARTZ_CRON_STATUS_SHIPMENT), new EasypostShipmentStatusTriggerListener(), cfg);
-
-                //pegah todo
-
-                UPS_ACCESSKEY = cfg.getString(UPS_PATH_TO_ACCESSKEY);
-                UPS_USERNAME = cfg.getString(UPS_PATH_TO_USERNAME);
-                UPS_PASSWORD = cfg.getString(UPS_PATH_TO_PASSWORD);
-                UPS_ENDPOINT = cfg.getString(UPS_PATH_TO_ENDPOINT);
-
-                careEvolveSubscriberKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SUBSCRIBER_KEY);
-                careEvolveServiceKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SERVICE_KEY);
-                careEvolveAuth = new Authentication(careEvolveSubscriberKey, careEvolveServiceKey);
-                careEvolveAccount = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_ACCOUNT);
-                careEvolveSubscriberKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SUBSCRIBER_KEY);
-                careEvolveServiceKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SERVICE_KEY);
-                careEvolveOrderEndpoint = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_ORDER_ENDPOINT);
-                if (cfg.hasPath(ApplicationConfigConstants.CARE_EVOLVE_MAX_RETRIES)) {
-                    careEvolveMaxRetries = cfg.getInt(ApplicationConfigConstants.CARE_EVOLVE_MAX_RETRIES);
-                } else {
-                    careEvolveMaxRetries = 5;
-                }
-                if (cfg.hasPath(ApplicationConfigConstants.CARE_EVOLVE_RETRY_WAIT_SECONDS)) {
-                    careEvolveRetyWaitSeconds = cfg.getInt(ApplicationConfigConstants.CARE_EVOLVE_RETRY_WAIT_SECONDS);
-                } else {
-                    careEvolveRetyWaitSeconds = 10;
-                }
-                logger.info("Will retry CareEvolve at most {} times after {} seconds", careEvolveMaxRetries, careEvolveRetyWaitSeconds);
-                provider = new Provider(cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_FIRSTNAME),
-                        cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_LAST_NAME),
-                        cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_NPI));
-
-                createScheduleJob(scheduler, null, null, TestBostonUPSTrackingJob.class, "UPS_TRACKING_JOB",
-                        cfg.getString(ApplicationConfigConstants.QUARTZ_UPS_LOOKUP_JOB), new UPSTriggerListener(), cfg);
 
 
                 logger.info("Setup Job Scheduler...");

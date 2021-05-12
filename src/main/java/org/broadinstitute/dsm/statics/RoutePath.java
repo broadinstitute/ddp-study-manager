@@ -31,6 +31,7 @@ public class RoutePath {
     //BSP - routes
     public static final String BSP_KIT_QUERY_PATH = "/Kits/:label";
     public static final String BSP_KIT_REGISTERED = "/KitsRegistered";
+    public static final String DUMMY_ENDPOINT = "/createDummy/:label";
 
     //Drug list endpoint route
     public static final String DRUG_LIST_REQUEST = "/drugs"; // display names only (for survey display)

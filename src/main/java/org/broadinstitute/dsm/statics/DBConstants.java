@@ -42,6 +42,9 @@ public class DBConstants {
     public static final String ES_PARTICIPANT_INDEX = "es_participant_index";
     public static final String ES_ACTIVITY_DEFINITION_INDEX = "es_activity_definition_index";
     public static final String ES_USERS_INDEX = "es_users_index";
+    public static final String CARRIER_USERNAME = "carrier_username";
+    public static final String CARRIER_PASSWORD= "carrier_password";
+    public static final String CARRIER_ACCESSKEY = "carrier_accesskey";
 
     //kit request
     public static final String DSM_KIT_ID = "dsm_kit_id";
@@ -55,6 +58,7 @@ public class DBConstants {
     public static final String UPS_RETURN_STATUS = "ups_return_status";
     public static final String UPS_TRACKING_DATE = "ups_tracking_date";
     public static final String UPS_RETURN_DATE = "ups_return_date";
+    public static final String DDP_KIT_REQUEST_TABLE_ABBR = "req.";
 
 
 
@@ -122,6 +126,7 @@ public class DBConstants {
     public static final String EASYPOST_SHIPMENT_STATUS = "easypost_shipment_status";
     public static final String EASYPOST_SHIPMENT_DATE = "easypost_shipment_date";
     public static final String CARE_EVOLVE = "CE_order";
+    public static final String DDP_KIT_TABLE_ABBR = "kit.";
 
     //medical record
     public static final String PARTICIPANT_ID = "participant_id";
@@ -276,8 +281,10 @@ public class DBConstants {
     public static final String PDF_DOWNLOAD_CONSENT = "pdf_download_consent";
     public static final String PDF_DOWNLOAD_RELEASE = "pdf_download_release";
     public static final String PARTICIPANT_STATUS_ENDPOINT = "participant_status_endpoint";
+    public static final String UPS_TRACKING_ROLE = "ups_tracking";
     public static final String ADD_FAMILY_MEMBER = "add_family_member";
     public static final String SHOW_GROUP_FIELDS = "show_group_fields";
+    public static final String GBF_SHIPPED_DSS_DELIVERED = "GBF_SHIPPED_DSS_DELIVERED";
 
     //user role
     public static final String MAILINGLIST_VIEW = "mailingList_view";
@@ -440,5 +447,26 @@ public class DBConstants {
     public static final String MESSAGE_RECEIVED_STATUS = "Received";
     public static final String MESSAGE_SENT_BACK_STATUS = "Sent back";
 
-    //DDPKit
+    //ups_shipment table
+    public static final String UPS_SHIPMENT_ID = "ups_shipment_id";
+
+    //ups_package table
+    public static final String UPS_PACKAGE_TABLE_ABBR = "pack.";
+    public static final String UPS_PACKAGE_ID = "ups_package_id";
+    public static final String UPS_TRACKING_NUMBER = "tracking_number";
+
+
+    //ups_activity table
+    public static final String UPS_ACTIVITY_TABLE_ABBR = "activity.";
+    public static final String UPS_ACTIVITY_DATE_TIME = "ups_activity_date_time";
+    public static final String UPS_STATUS_TYPE = "ups_status_type";
+    public static final String UPS_STATUS_DESCRIPTION = "ups_status_description";
+    public static final String UPS_STATUS_CODE = "ups_status_code";
+    public static final String UPS_LOCATION = "ups_location";
+    public static final String UPS_ACTIVITY_ID = "ups_activity_id";
+
+
+
+
+
 }
