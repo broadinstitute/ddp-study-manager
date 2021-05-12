@@ -13,12 +13,10 @@ public class ParticipantCounter extends Counter {
         CounterResult counterResult = new CounterResult();
         switch (statisticPayload.getFilterType()) {
             case REGISTERED:
-                counterResult = new CounterResult(this.filterEnrolled(),
-                        SystemUtil.calculatePercentage(this.filterRegistered(), 100), "Participants Registered", statisticPayload.getDisplayType().toString());
+                counterResult = new CounterResult();
                 break;
             case ENROLLED:
-                counterResult = new CounterResult(this.filterEnrolled(),
-                        SystemUtil.calculatePercentage(this.filterEnrolled(), 253), "Participants Enrolled", statisticPayload.getDisplayType().toString());
+                counterResult = new CounterResult();
                 break;
         }
         return counterResult;

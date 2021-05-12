@@ -287,7 +287,7 @@ public class PatchRoute extends RequestHandler {
     }
 
     private void writeDSMRecordsToES(@NonNull Patch patch) {
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+        DDPInstance ddpInstance = DDPInstanceDao.getDDPInstanceByRealm(patch.getRealm());
         NameValue nameValue = patch.getNameValue();
         String name = nameValue.getName().substring(nameValue.getName().lastIndexOf('.') + 1);
         String type = nameValue.getName().substring(0, nameValue.getName().indexOf('.'));

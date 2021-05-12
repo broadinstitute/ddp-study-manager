@@ -5,6 +5,7 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.util.DBUtil;
@@ -37,7 +38,7 @@ public class MercuryDummyKitEndpoint implements Route {
             return new Result(400, "Please include a kit label as a path parameter");
         }
         int ddpInstanceId = (int) DBUtil.getBookmark(DUMMY_REALM_NAME);
-        DDPInstance mockDdpInstance = DDPInstance.getDDPInstance(String.valueOf(ddpInstanceId));
+        DDPInstance mockDdpInstance = DDPInstanceDao.getDDPInstanceByRealm(String.valueOf(ddpInstanceId));
         if (mockDdpInstance != null) {
             String mercuryKitRequestId = "MERCURY_" + KitRequestShipping.createRandom(20);
             int kitTypeId = (int) DBUtil.getBookmark(DUMMY_KIT_TYPE_NAME);
