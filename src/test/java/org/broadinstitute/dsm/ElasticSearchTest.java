@@ -61,6 +61,35 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
+    public void participantsInRange() throws Exception {
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
+            int from = 0;
+            int to = 25;
+            int scrollSize = to - from;
+            Map<String, Map<String, Object>> esData = new HashMap<>();
+            SearchRequest searchRequest = new SearchRequest("participants_structured.rgp.rgp");
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            SearchResponse response = null;
+            searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+            searchSourceBuilder.size(scrollSize);
+            searchSourceBuilder.from(from);
+            searchRequest.source(searchSourceBuilder);
+
+            response = client.search(searchRequest, RequestOptions.DEFAULT);
+            ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+            Assert.assertEquals(scrollSize, esData.size());
+        }
+    }
+
+    @Test
+    public void countParticipants() throws Exception {
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
+            long amountOfParticipants = ElasticSearchUtil.getAmountOfParticipants("rgp", "participants_structured.rgp.rgp");
+            Assert.assertTrue(amountOfParticipants != -1);
+        }
+    }
+
+    @Test
     public void activityDefinitionSearchRequest() throws Exception {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;

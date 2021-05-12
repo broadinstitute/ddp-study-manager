@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.dynamicdashboard;
 
 import org.broadinstitute.dsm.model.dynamicdashboard.counter.participant.ParticipantCounter;
+import org.broadinstitute.dsm.model.dynamicdashboard.graph.heatmap.HeatmapGraph;
 
 public class StatisticsCreator implements StatisticFactory {
 
@@ -20,6 +21,13 @@ public class StatisticsCreator implements StatisticFactory {
                 }
                 break;
             case GRAPH_BAR:
+                break;
+            case GRAPH_HEATMAP:
+                switch (statisticPayload.getStatisticFor()) {
+                    case KIT:
+                        statistic = new HeatmapGraph();
+                    break;
+                }
                 break;
             default:
                 break;

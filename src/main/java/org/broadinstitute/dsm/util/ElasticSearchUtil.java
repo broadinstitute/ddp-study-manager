@@ -31,6 +31,8 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 
+import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.SearchHit;
@@ -145,6 +147,58 @@ public class ElasticSearchUtil {
             logger.info("Got " + esData.size() + " participants from ES for instance " + realm);
         }
         return esData;
+    }
+
+    public static Map<String, Map<String, Object>> getDDPParticipantsFromESWithRange(@NonNull String realm, @NonNull String index,
+                                                                                     @NonNull int from, @NonNull int to) {
+        Map<String, Map<String, Object>> esData = new HashMap<>();
+        if (StringUtils.isNotBlank(index)) {
+            logger.info("Collecting ES data");
+            try {
+                try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
+                        TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
+                    int scrollSize = to - from;
+                    SearchRequest searchRequest = new SearchRequest(index);
+                    SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+                    SearchResponse response = null;
+                    searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(PROFILE_CREATED_AT, SortOrder.ASC);
+                    searchSourceBuilder.size(scrollSize);
+                    searchSourceBuilder.from(from);
+                    searchRequest.source(searchSourceBuilder);
+                    response = client.search(searchRequest, RequestOptions.DEFAULT);
+                    addingParticipantStructuredHits(response, esData, realm);
+                }
+            }
+            catch (Exception e) {
+                logger.error("Couldn't get participants from ES for instance " + realm, e);
+            }
+            logger.info("Got " + esData.size() + " participants from ES for instance " + realm);
+        }
+        return esData;
+    }
+
+    public static long getAmountOfParticipants(@NonNull String realm, @NonNull String index) {
+        long amountOfParticipants = -1;
+        if (StringUtils.isNotBlank(index)) {
+            logger.info("Collecting ES data");
+            try {
+                try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
+                        TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
+                    CountRequest countRequest = new CountRequest(index);
+                    SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+                    CountResponse response = null;
+                    searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+                    countRequest.source(searchSourceBuilder);
+                    response = client.count(countRequest, RequestOptions.DEFAULT);
+                    amountOfParticipants = response.getCount();
+                }
+            }
+            catch (Exception e) {
+                logger.error("Couldn't get amount of participants from ES for instance " + realm, e);
+            }
+            logger.info("Instance " + realm + " has " + amountOfParticipants + " in ES");
+        }
+        return amountOfParticipants;
     }
 
     public static Map<String, Map<String, Object>> getFilteredDDPParticipantsFromES(@NonNull DDPInstance instance, @NonNull String filter) {

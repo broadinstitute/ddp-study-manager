@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.route.dynamicdashboard;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gson.Gson;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.dashboardsettings.DashboardSettingsDao;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
@@ -26,6 +27,8 @@ public class StatisticDataRoute extends RequestHandler {
     protected Object processRequest(Request request, Response response, String userId) throws Exception {
         QueryParamsMap queryParamsMap = request.queryMap();
         String realm = queryParamsMap.get("realm").value();
+        int from = Integer.parseInt(queryParamsMap.get("from").value());
+        int to = Integer.parseInt(queryParamsMap.get("to").value());
         DDPInstance ddpInstanceByRealm = DDPInstanceDao.getDDPInstanceByRealm(realm);
         DashboardSettingsDao dashboardSettingsDao = new DashboardSettingsDao();
         List<DashboardSettingsDto> dashboardSettingsByInstanceId =
@@ -36,9 +39,12 @@ public class StatisticDataRoute extends RequestHandler {
             DisplayType displayType = DisplayType.valueOf(dashboardSetting.getDisplayType());
             StatisticFor statisticFor = StatisticFor.valueOf(dashboardSetting.getStatisticFor());
             FilterType filterType = FilterType.valueOf(dashboardSetting.getFilterType());
-            statisticPayloads.add(
-                    new StatisticPayload(displayType, statisticFor, filterType)
-            );
+            List possibleValues = new Gson().fromJson(dashboardSetting.getPossibleValues(), List.class);
+            StatisticPayload statisticPayload = new StatisticPayload(displayType, dashboardSetting.getDisplayText(), statisticFor, filterType, possibleValues);
+            statisticPayload.setRealm(realm);
+            statisticPayload.setFrom(from);
+            statisticPayload.setTo(to);
+            statisticPayloads.add(statisticPayload);
         }
         List<StatisticResult> result = new ArrayList<>();
         Statistic statistic;

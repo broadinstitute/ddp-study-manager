@@ -202,4 +202,12 @@ public class Participant {
         logger.info("Got " + participants.size() + " participants in DSM DB for " + realm);
         return participants;
     }
+
+    public static String getParticipantGuidByHruid(Map<String, Map<String, Object>> participantEsData, String hruid) {
+        return participantEsData.values().stream()
+            .filter(d -> hruid.equals(((Map)d.get("profile")).get("hruid")))
+            .findAny()
+            .map(v -> (String)((Map)v.get("profile")).get("guid"))
+            .orElse("");
+    }
 }
