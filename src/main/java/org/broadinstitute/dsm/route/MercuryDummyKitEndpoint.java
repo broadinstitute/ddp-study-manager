@@ -5,7 +5,6 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
-import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.util.DBUtil;
@@ -35,11 +34,15 @@ public class MercuryDummyKitEndpoint implements Route {
         String kitLabel = request.params(RequestParameter.LABEL);
         if (StringUtils.isBlank(kitLabel)) {
             response.status(400);// return bad request
+            logger.error("Bad request from Mercury! Should include a kitlabel");
             return new Result(400, "Please include a kit label as a path parameter");
         }
+        logger.info("Found kitlabel " + kitLabel + " in Mercury request");
         int ddpInstanceId = (int) DBUtil.getBookmark(DUMMY_REALM_NAME);
-        DDPInstance mockDdpInstance = DDPInstanceDao.getDDPInstanceByRealm(String.valueOf(ddpInstanceId));
+        logger.info("Found ddp instance id for mock test " + ddpInstanceId);
+        DDPInstance mockDdpInstance = DDPInstance.getDDPInstanceById(ddpInstanceId);
         if (mockDdpInstance != null) {
+            logger.info("Found mockDdpInstance " + mockDdpInstance.getName());
             String mercuryKitRequestId = "MERCURY_" + KitRequestShipping.createRandom(20);
             int kitTypeId = (int) DBUtil.getBookmark(DUMMY_KIT_TYPE_NAME);
             logger.info("Found kit type for Mercury Dummy Endpoint " + kitTypeId);
@@ -55,8 +58,10 @@ public class MercuryDummyKitEndpoint implements Route {
                         USER_ID, "", "", "", false, "");
                 updateKitLabel(kitLabel, dsmKitRequestId);
             }
+            logger.info("Returning 200 to Mercury");
             return new Result(200);
         }
+        logger.error("Returning 500 to Mercury");
         return new Result(500);
     }
 
