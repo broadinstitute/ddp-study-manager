@@ -69,6 +69,7 @@ public class UPSKit {
             }
             logger.info("Updated CE_Order value for kit with dsm kit request id " + this.getDsmKitRequestId()
                     + " to " + orderStatus);
+            conn.commit();
         }
         catch (Exception e) {
             throw new RuntimeException("Could not update ce_ordered status for " + this.getDsmKitRequestId(), e);
