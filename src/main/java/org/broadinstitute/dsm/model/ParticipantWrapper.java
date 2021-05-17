@@ -103,6 +103,7 @@ public class ParticipantWrapper {
             Map<String, Map<String, Object>> proxyData = getProxyData(instance);
             Map<String, List<ParticipantData>> participantData = ParticipantData.getParticipantData(instance.getName());
 
+            //needed for RGP family member
             if (DDPInstanceDao.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
                 participantData = setDefaultProbandDataIfNotExists(participantData, participantESData, instance);
             }
@@ -321,6 +322,7 @@ public class ParticipantWrapper {
                 }
             }
         }
+        logger.info("Proband created automatically for " + participantESData.size() + " number of participants");
         return ParticipantData.getParticipantData(instance.getName());
     }
 
@@ -354,9 +356,8 @@ public class ParticipantWrapper {
 
     private static void extractAndInsertProbandFromESData(DDPInstance instance, Map<String, Object> esData) {
         Map<String, Object> profile = (Map<String, Object>) esData.get(ElasticSearchUtil.PROFILE);
-        NewParticipantData newParticipantData;
+        NewParticipantData newParticipantData = new NewParticipantData(new ParticipantDataDao());
         Map<String, String> probandDataMap = extractProbandDefaultDataFromParticipantProfile(esData);
-        newParticipantData = new NewParticipantData(new ParticipantDataDao());
         newParticipantData.setData(
                 (String) profile.get(ElasticSearchUtil.GUID),
                 Integer.parseInt(instance.getDdpInstanceId()),
