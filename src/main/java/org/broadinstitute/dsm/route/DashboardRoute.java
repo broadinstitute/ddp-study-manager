@@ -50,7 +50,7 @@ public class DashboardRoute extends RequestHandler {
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         try {
             if (UserUtil.checkUserAccess(null, userId, "kit_shipping") || UserUtil.checkUserAccess(null, userId, "kit_shipping_view")
-                    || UserUtil.checkUserAccess(null, userId, "mr_view")) {
+                    || UserUtil.checkUserAccess(null, userId, "mr_view")|| UserUtil.checkUserAccess(null, userId, "pt_list_view")) {
                 String userIdRequest = UserUtil.getUserId(request);
                 if (!userId.equals(userIdRequest)) {
                     throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
