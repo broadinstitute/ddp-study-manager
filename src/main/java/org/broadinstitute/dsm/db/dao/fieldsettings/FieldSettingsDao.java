@@ -30,6 +30,22 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
             "changed_by" +
             " FROM field_settings WHERE ddp_instance_id = ? and display_type = 'OPTIONS'";
 
+    private static final String GET_FIELD_SETTINGS_BY_INSTANCE_ID = "SELECT " +
+            "field_settings_id," +
+            "ddp_instance_id," +
+            "field_type," +
+            "column_name," +
+            "column_display," +
+            "display_type," +
+            "possible_values," +
+            "actions," +
+            "readonly," +
+            "order_number," +
+            "deleted," +
+            "last_changed," +
+            "changed_by" +
+            " FROM field_settings WHERE ddp_instance_id = ?";
+
     private static final String FIELD_SETTINGS_ID = "field_settings_id";
     private static final String DDP_INSTANCE_ID = "ddp_instance_id";
     private static final String FIELD_TYPE = "field_type";
@@ -38,6 +54,7 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
     private static final String DISPLAY_TYPE = "display_type";
     private static final String POSSIBLE_VALUES = "possible_values";
     private static final String ACTIONS = "actions";
+    private static final String READONLY = "readonly";
     private static final String ORDER_NUMBER = "order_number";
     private static final String DELETED = "deleted";
     private static final String LAST_CHANGED = "last_changed";
@@ -76,6 +93,7 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
                                         rs.getString(DISPLAY_TYPE),
                                         rs.getString(POSSIBLE_VALUES),
                                         rs.getString(ACTIONS),
+                                        rs.getBoolean(READONLY),
                                         rs.getInt(ORDER_NUMBER),
                                         rs.getBoolean(DELETED),
                                         rs.getLong(LAST_CHANGED),
@@ -97,4 +115,42 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
         return fieldSettingsByOptions;
     }
 
+    public List<FieldSettingsDto>  getFieldSettingsByInstanceId(int instanceId) {
+        List<FieldSettingsDto> fieldSettingsByOptions = new ArrayList<>();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(GET_FIELD_SETTINGS_BY_INSTANCE_ID)) {
+                stmt.setInt(1, instanceId);
+                try(ResultSet fieldSettingsByInstanceIdRs = stmt.executeQuery()) {
+                    while (fieldSettingsByInstanceIdRs.next()) {
+                        fieldSettingsByOptions.add(
+                                new FieldSettingsDto(
+                                        fieldSettingsByInstanceIdRs.getInt(FIELD_SETTINGS_ID),
+                                        fieldSettingsByInstanceIdRs.getInt(DDP_INSTANCE_ID),
+                                        fieldSettingsByInstanceIdRs.getString(FIELD_TYPE),
+                                        fieldSettingsByInstanceIdRs.getString(COLUMN_NAME),
+                                        fieldSettingsByInstanceIdRs.getString(COLUMN_DISPLAY),
+                                        fieldSettingsByInstanceIdRs.getString(DISPLAY_TYPE),
+                                        fieldSettingsByInstanceIdRs.getString(POSSIBLE_VALUES),
+                                        fieldSettingsByInstanceIdRs.getString(ACTIONS),
+                                        fieldSettingsByInstanceIdRs.getBoolean(READONLY),
+                                        fieldSettingsByInstanceIdRs.getInt(ORDER_NUMBER),
+                                        fieldSettingsByInstanceIdRs.getBoolean(DELETED),
+                                        fieldSettingsByInstanceIdRs.getLong(LAST_CHANGED),
+                                        fieldSettingsByInstanceIdRs.getString(CHANGED_BY)
+                                )
+                        );
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                execResult.resultException = ex;
+            }
+            return execResult;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting fieldSettings ", results.resultException);
+        }
+        return fieldSettingsByOptions;
+    }
 }

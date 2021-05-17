@@ -19,6 +19,7 @@ public class ApplicationConfigConstants {
     //db connection information
     public static final String DSM_DB_MAX_CONNECTIONS = "portal.maxConnections";
     public static final String DSM_DB_URL = "portal.dbUrl";
+    public static final String CF_DSM_DB_URL = "dsmDBUrl";
 
     //google buckets
     public static final String GOOGLE_PROJECT_NAME = "portal.googleProjectName";
@@ -82,6 +83,7 @@ public class ApplicationConfigConstants {
     public static final String GET_ALLOWED_REALMS_FOR_USER_ROLE_STARTS_LIKE = "portal.selectAllowedRealmsStartsLike";
     public static final String GET_ROLES_LIKE = "portal.getRoles";
     public static final String UPDATE_KIT_REQUEST = "portal.updateKitRequest";
+    public static final String GET_DDP_KIT_REQUEST_ID = "portal.getDDPKitRequestId";
     public static final String INSERT_KIT_TRACKING = "portal.insertKitTrackingRequest";
     public static final String UPDATE_KIT_ERROR = "portal.updateKitRequestError";
     public static final String GET_DDP_PARTICIPANT_ID = "portal.getDDPParticipantId";
@@ -129,4 +131,8 @@ public class ApplicationConfigConstants {
     public static final String CARE_EVOLVE_PROVIDER_NPI = "careEvolve.provider.NPI";
     public static final String CARE_EVOLVE_MAX_RETRIES = "careEvolve.maxRetries";
     public static final String CARE_EVOLVE_RETRY_WAIT_SECONDS = "careEvolve.retryWaitSeconds";
+
+    //pubsub for cf
+    public static final String PUBSUB_PROJECT_ID = "pubsub.projectId";
+    public static final String PUBSUB_TOPIC_ID = "pubsub.topicId";
 }

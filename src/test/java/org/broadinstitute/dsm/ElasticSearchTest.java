@@ -3,7 +3,7 @@ package org.broadinstitute.dsm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.route.PatchRoute;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -712,7 +712,7 @@ public class ElasticSearchTest extends TestHelper {
         DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
                 false, null, false, null, "participants_structured.rgp.rgp", null, null);
         ElasticSearchUtil.writeWorkflow(ddpInstance, ddpParticipantId, workflow, status);
-        Map<String, Object> workflows = ElasticSearchUtil.getWorkflows(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+        Map<String, Object> workflows = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
 
         if (workflows != null && !workflows.isEmpty()) {
             List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflows.get("workflows");
@@ -727,7 +727,7 @@ public class ElasticSearchTest extends TestHelper {
 
         String newStatus = "DECEASED";
         ElasticSearchUtil.writeWorkflow(ddpInstance, ddpParticipantId, workflow, newStatus);
-        Map<String, Object> updatedWorkflows = ElasticSearchUtil.getWorkflows(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+        Map<String, Object> updatedWorkflows = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
 
         if (updatedWorkflows != null && !updatedWorkflows.isEmpty()) {
             List<Map<String, Object>> updatedWorkflowsListES = (List<Map<String, Object>>) updatedWorkflows.get("workflows");
@@ -744,18 +744,23 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void updateDSMObjects() throws Exception {
-        String id = "5729";
-        String ddpParticipantId = "776FSXRTS442LVK1GZ7J";
-        String objectType = PatchRoute.MEDICAL_RECORDS;
-        String name = PatchRoute.MEDICAL_RECORDS_FIELD_NAMES.get(0);
-        String value = "TestValue1";
-        String idName = PatchRoute.MEDICAL_RECORDS_ID;
+        Integer id = 5729;
+        String ddpParticipantId = "XLDUNC3BHGWGWERHW781";
+        String objectType = ESObjectConstants.MEDICAL_RECORDS;
+        String idName = ESObjectConstants.MEDICAL_RECORDS_ID;
         DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
-                false, null, false, null, "participants_structured.cmi.osteo", null, null);
+                false, null, false, null, "participants_structured.rgp.rgp", null, null);
 
         Map<String, Object> objectsMapESBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "dsm");
 
-        ElasticSearchUtil.writeDsmRecord(ddpInstance, id, ddpParticipantId, objectType, name, value, idName);
+        Map<String, Object> nameValues = new HashMap<>();
+        nameValues.put("name", "testName");
+        nameValues.put("type", "testType");
+        nameValues.put("requested", "2020-02-29");
+        nameValues.put("received", "2020-02-29");
+
+
+        ElasticSearchUtil.writeDsmRecord(ddpInstance, id, ddpParticipantId, objectType, idName, nameValues);
 
         Map<String, Object> objectsMapESAfter = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "dsm");
 
@@ -766,13 +771,116 @@ public class ElasticSearchTest extends TestHelper {
             if (objectList != null && !objectList.isEmpty()) {
                 for (Map<String, Object> object : objectList) {
                     if (id.equals(object.get(idName))) {
-                        Assert.assertEquals(value, object.get("name"));
+                        Assert.assertEquals(5729, object.get(idName));
+                        Assert.assertEquals("testName", object.get("name"));
+                        Assert.assertEquals("testType", object.get("type"));
+                        Assert.assertEquals("2020-02-29", object.get("requested"));
+                        Assert.assertEquals("2020-02-29", object.get("received"));
                     }
                 }
             }
         }
 
-        ElasticSearchUtil.updateRequest(ddpInstance, ddpParticipantId, ddpInstance.getParticipantIndexES(), objectsMapESBefore);
+        ElasticSearchUtil.updateRequest(ddpParticipantId, ddpInstance.getParticipantIndexES(), objectsMapESBefore);
+    }
+
+    @Test
+    public void updateDSMObjectsTissue() throws Exception {
+        Integer id = 5730;
+        String ddpParticipantId = "XLDUNC3BHGWGWERHW781";
+        String objectType = ESObjectConstants.TISSUE_RECORDS;
+        String idName = ESObjectConstants.TISSUE_RECORDS_ID;
+        DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
+                false, null, false, null, "participants_structured.rgp.rgp", null, null);
+
+        Map<String, Object> objectsMapESBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "dsm");
+
+        Map<String, Object> nameValues = new HashMap<>();
+        nameValues.put("typePx", "testType");
+        nameValues.put("locationPx", "testLocation");
+        nameValues.put("datePx", "2020-02-29");
+        nameValues.put("histology", "testType");
+        nameValues.put("accessionNumber", "423423233232");
+        nameValues.put("requested", "2020-02-29");
+        nameValues.put("received", "2020-02-29");
+        nameValues.put("sent", "2020-02-29");
+
+        ElasticSearchUtil.writeDsmRecord(ddpInstance, id, ddpParticipantId, objectType, idName, nameValues);
+
+        Map<String, Object> objectsMapESAfter = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "dsm");
+
+        if (objectsMapESAfter != null && !objectsMapESAfter.isEmpty()) {
+            Object dsmObject = objectsMapESAfter.get("dsm");
+            Map<String, Object> dsmMap = new ObjectMapper().convertValue(dsmObject, Map.class);
+            List<Map<String, Object>> objectList = (List<Map<String, Object>>) dsmMap.get(objectType);
+            if (objectList != null && !objectList.isEmpty()) {
+                for (Map<String, Object> object : objectList) {
+                    if (id.equals(object.get(idName))) {
+                        Assert.assertEquals(5730, object.get(idName));
+                        Assert.assertEquals("testType", object.get("typePx"));
+                        Assert.assertEquals("testLocation", object.get("locationPx"));
+                        Assert.assertEquals("2020-02-29", object.get("datePx"));
+                        Assert.assertEquals("testType", object.get("histology"));
+                        Assert.assertEquals("423423233232", object.get("accessionNumber"));
+                        Assert.assertEquals("2020-02-29", object.get("requested"));
+                        Assert.assertEquals("2020-02-29", object.get("received"));
+                        Assert.assertEquals("2020-02-29", object.get("sent"));
+                    }
+                }
+            }
+        }
+
+        ElasticSearchUtil.updateRequest(ddpParticipantId, ddpInstance.getParticipantIndexES(), objectsMapESBefore);
+    }
+
+    @Test
+    public void updateSamples() throws Exception {
+        String id = "5729";
+        String ddpParticipantId = "XLDUNC3BHGWGWERHW781";
+        String objectType = ESObjectConstants.SAMPLES;
+        String idName = ESObjectConstants.KIT_REQUEST_ID;
+        DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
+                false, null, false, null, "participants_structured.rgp.rgp", null, null);
+
+        Map<String, Object> objectsMapESBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, objectType);
+
+        Map<String, Object> nameValues = new HashMap<>();
+        nameValues.put("kitType", "testType");
+        nameValues.put("kitLabel", "testLabel");
+        nameValues.put("bspCollaboratorSampleId", "testCollaboratorSampleId");
+        nameValues.put("bspCollaboratorParticipantId", "testCollaboratorParticipantId");
+        nameValues.put("trackingOut", "testtrackingOut");
+        nameValues.put("trackingIn", "testtrackingIn");
+        nameValues.put("carrier", "testCarrier");
+        nameValues.put("sent", "2020-02-29");
+        nameValues.put("delivered", "2020-02-29");
+        nameValues.put("received", "2020-02-29");
+
+        ElasticSearchUtil.writeSample(ddpInstance, id, ddpParticipantId, objectType, idName, nameValues);
+
+        Map<String, Object> objectsMapESAfter = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, objectType);
+
+        if (objectsMapESAfter != null && !objectsMapESAfter.isEmpty()) {
+            List<Map<String, Object>> objectList = (List<Map<String, Object>>) objectsMapESAfter.get(objectType);
+            if (objectList != null && !objectList.isEmpty()) {
+                for (Map<String, Object> object : objectList) {
+                    if (id.equals(object.get(idName))) {
+                        Assert.assertEquals("testType", object.get("kitType"));
+                        Assert.assertEquals("testLabel", object.get("kitLabel"));
+                        Assert.assertEquals("testCollaboratorSampleId", object.get("bspCollaboratorSampleId"));
+                        Assert.assertEquals("testCollaboratorParticipantId", object.get("bspCollaboratorParticipantId"));
+                        Assert.assertEquals("testtrackingOut", object.get("trackingOut"));
+                        Assert.assertEquals("testtrackingIn", object.get("trackingIn"));
+                        Assert.assertEquals("testCarrier", object.get("carrier"));
+                        Assert.assertEquals("2020-02-29", object.get("sent"));
+                        Assert.assertEquals("2020-02-29", object.get("delivered"));
+                        Assert.assertEquals("2020-02-29", object.get("received"));
+                    }
+                }
+            }
+        }
+
+        ElasticSearchUtil.updateRequest(ddpParticipantId, ddpInstance.getParticipantIndexES(), objectsMapESBefore);
     }
 
     private static void updateES(String index, String ddpParticipantId, Map<String, Object> jsonMap) throws Exception{

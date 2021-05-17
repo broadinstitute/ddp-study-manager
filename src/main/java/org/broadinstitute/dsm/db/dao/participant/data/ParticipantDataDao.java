@@ -25,6 +25,16 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
             "last_changed," +
             "changed_by" +
             " FROM ddp_participant_data WHERE ddp_participant_id = ?";
+    private static final String SQL_ALL_PARTICIPANT_DATA = "SELECT " +
+            "participant_data_id," +
+            "ddp_participant_id," +
+            "ddp_instance_id," +
+            "field_type_id," +
+            "data," +
+            "last_changed," +
+            "changed_by" +
+            " FROM ddp_participant_data ";
+    private static final String BY_INSTANCE_ID = "WHERE ddp_instance_id = ?";
     private static final String SQL_DELETE_DDP_PARTICIPANT_DATA = "DELETE FROM ddp_participant_data WHERE participant_data_id = ?";
     private static final String SQL_PARTICIPANT_DATA_BY_ID = "SELECT " +
             "participant_data_id," +
@@ -162,6 +172,71 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
         if (results.resultException != null) {
             throw new RuntimeException("Error getting participant data with "
                     + participantId, results.resultException);
+        }
+        return participantDataDtoList;
+    }
+
+    public List<ParticipantDataDto> getAllParticipantData() {
+        List<ParticipantDataDto> participantDataDtoList = new ArrayList<>();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_ALL_PARTICIPANT_DATA)) {
+                try(ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        participantDataDtoList.add(
+                                new ParticipantDataDto(
+                                        rs.getInt(PARTICIPANT_DATA_ID),
+                                        rs.getString(DDP_PARTICIPANT_ID),
+                                        rs.getInt(DDP_INSTANCE_ID),
+                                        rs.getString(FIELD_TYPE_ID),
+                                        rs.getString(DATA),
+                                        rs.getLong(LAST_CHANGED),
+                                        rs.getString(CHANGED_BY)
+                                )
+                        );
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                execResult.resultException = ex;
+            }
+            return execResult;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting participant data ", results.resultException);
+        }
+        return participantDataDtoList;
+    }
+
+    public List<ParticipantDataDto> getParticipantDataByInstanceid(int instanceId) {
+        List<ParticipantDataDto> participantDataDtoList = new ArrayList<>();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_ALL_PARTICIPANT_DATA + BY_INSTANCE_ID)) {
+                stmt.setInt(1, instanceId);
+                try(ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        participantDataDtoList.add(
+                                new ParticipantDataDto(
+                                        rs.getInt(PARTICIPANT_DATA_ID),
+                                        rs.getString(DDP_PARTICIPANT_ID),
+                                        rs.getInt(DDP_INSTANCE_ID),
+                                        rs.getString(FIELD_TYPE_ID),
+                                        rs.getString(DATA),
+                                        rs.getLong(LAST_CHANGED),
+                                        rs.getString(CHANGED_BY)
+                                )
+                        );
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                execResult.resultException = ex;
+            }
+            return execResult;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting participant data ", results.resultException);
         }
         return participantDataDtoList;
     }
