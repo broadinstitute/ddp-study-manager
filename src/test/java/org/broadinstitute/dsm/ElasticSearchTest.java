@@ -846,6 +846,9 @@ public class ElasticSearchTest extends TestHelper {
 
         Map<String, Object> nameValues = new HashMap<>();
         nameValues.put("kitType", "testType");
+        nameValues.put("kitLabel", "testLabel");
+        nameValues.put("bspCollaboratorSampleId", "testCollaboratorSampleId");
+        nameValues.put("bspCollaboratorParticipantId", "testCollaboratorParticipantId");
         nameValues.put("trackingOut", "testtrackingOut");
         nameValues.put("trackingIn", "testtrackingIn");
         nameValues.put("carrier", "testCarrier");
@@ -863,6 +866,9 @@ public class ElasticSearchTest extends TestHelper {
                 for (Map<String, Object> object : objectList) {
                     if (id.equals(object.get(idName))) {
                         Assert.assertEquals("testType", object.get("kitType"));
+                        Assert.assertEquals("testLabel", object.get("kitLabel"));
+                        Assert.assertEquals("testCollaboratorSampleId", object.get("bspCollaboratorSampleId"));
+                        Assert.assertEquals("testCollaboratorParticipantId", object.get("bspCollaboratorParticipantId"));
                         Assert.assertEquals("testtrackingOut", object.get("trackingOut"));
                         Assert.assertEquals("testtrackingIn", object.get("trackingIn"));
                         Assert.assertEquals("testCarrier", object.get("carrier"));

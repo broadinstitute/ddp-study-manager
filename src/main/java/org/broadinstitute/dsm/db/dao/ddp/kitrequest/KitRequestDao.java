@@ -18,28 +18,31 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 public class KitRequestDao implements Dao<KitRequestDto> {
 
     public static final String SQL_SELECT_ES_SAMPLE =
-            "SELECT "+
-            "dp.ddp_participant_id, "+
-            "kr.ddp_kit_request_id, "+
-            "kt.kit_type_name, "+
-            "dk.tracking_to_id, "+
-            "dk.tracking_return_id, "+
-            "cs.carrier, "+
-            "dk.scan_date, "+
-            "dk.easypost_shipment_date, "+
-            "dk.receive_date "+
-                    "FROM "+
-            "ddp_participant dp "+
-            "LEFT JOIN "+
-            "ddp_kit_request kr ON dp.ddp_participant_id = kr.ddp_participant_id "+
-            "LEFT JOIN "+
-            "ddp_kit dk ON dk.dsm_kit_request_id = kr.dsm_kit_request_id "+
-            "LEFT JOIN "+
-            "kit_type kt ON kr.kit_type_id = kt.kit_type_id "+
-            "LEFT JOIN "+
-            "ddp_kit_request_settings krs ON (kr.ddp_instance_id = krs.ddp_instance_id "+
-                    "AND kr.kit_type_id = krs.kit_type_id) "+
-            "LEFT JOIN "+
+            "SELECT " +
+            "dp.ddp_participant_id, " +
+            "kr.ddp_kit_request_id, " +
+            "kt.kit_type_name, " +
+            "dk.kit_label, " +
+            "kr.bsp_collaborator_sample_id, " +
+            "kr.bsp_collaborator_participant_id " +
+            "dk.tracking_to_id, " +
+            "dk.tracking_return_id, " +
+            "cs.carrier, " +
+            "dk.scan_date, " +
+            "dk.easypost_shipment_date, " +
+            "dk.receive_date " +
+                    "FROM " +
+            "ddp_participant dp " +
+            "LEFT JOIN " +
+            "ddp_kit_request kr ON dp.ddp_participant_id = kr.ddp_participant_id " +
+            "LEFT JOIN " +
+            "ddp_kit dk ON dk.dsm_kit_request_id = kr.dsm_kit_request_id " +
+            "LEFT JOIN " +
+            "kit_type kt ON kr.kit_type_id = kt.kit_type_id " +
+            "LEFT JOIN " +
+            "ddp_kit_request_settings krs ON (kr.ddp_instance_id = krs.ddp_instance_id " +
+                    "AND kr.kit_type_id = krs.kit_type_id) " +
+            "LEFT JOIN " +
             "carrier_service cs ON (krs.carrier_service_to_id = cs.carrier_service_id)";
 
     public static final String BY_INSTANCE_ID = " WHERE dp.ddp_instance_id = ?";
@@ -57,7 +60,8 @@ public class KitRequestDao implements Dao<KitRequestDto> {
         "ddp_kit_request_id,  " +
         "ddp_instance_id, " +
         "ddp_kit_request_id, " +
-        "kit_type_id, bsp_collaborator_participant_id, " +
+        "kit_type_id," +
+        "bsp_collaborator_participant_id, " +
         "bsp_collaborator_sample_id, " +
         "ddp_participant_id, " +
         "ddp_label, " +
@@ -93,7 +97,7 @@ public class KitRequestDao implements Dao<KitRequestDto> {
         List<KitRequestDto> kitRequestDtoList = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult(0);
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_KIT_REQUEST)) {
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_KIT_REQUEST + BY_DDP_LABEL)) {
                 stmt.setString(1, kitLabel);
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
@@ -142,6 +146,9 @@ public class KitRequestDao implements Dao<KitRequestDto> {
                                         ESSampleRs.getString(DBConstants.DDP_PARTICIPANT_ID),
                                         ESSampleRs.getString(DBConstants.DDP_KIT_REQUEST_ID),
                                         ESSampleRs.getString(DBConstants.KIT_TYPE_NAME),
+                                        ESSampleRs.getString(DBConstants.KIT_LABEL),
+                                        ESSampleRs.getString(DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID),
+                                        ESSampleRs.getString(DBConstants.COLLABORATOR_PARTICIPANT_ID),
                                         ESSampleRs.getString(DBConstants.DSM_TRACKING_TO),
                                         ESSampleRs.getString(DBConstants.DSM_TRACKING_RETURN),
                                         ESSampleRs.getString(DBConstants.CARRIER),
