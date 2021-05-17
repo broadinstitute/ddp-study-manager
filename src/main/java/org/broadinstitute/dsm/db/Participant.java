@@ -8,6 +8,7 @@ import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.DBUtil;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -203,11 +204,11 @@ public class Participant {
         return participants;
     }
 
-    public static String getParticipantGuidByHruid(Map<String, Map<String, Object>> participantEsData, String hruid) {
+    public static String getParticipantGuidByHruidFromParticipantESData(Map<String, Map<String, Object>> participantEsData, String hruid) {
         return participantEsData.values().stream()
-            .filter(d -> hruid.equals(((Map)d.get("profile")).get("hruid")))
+            .filter(d -> hruid.equals(((Map)d.get(ElasticSearchUtil.PROFILE)).get(ElasticSearchUtil.HRUID)))
             .findAny()
-            .map(v -> (String)((Map)v.get("profile")).get("guid"))
+            .map(v -> (String)((Map)v.get(ElasticSearchUtil.PROFILE)).get(ElasticSearchUtil.GUID))
             .orElse("");
     }
 }

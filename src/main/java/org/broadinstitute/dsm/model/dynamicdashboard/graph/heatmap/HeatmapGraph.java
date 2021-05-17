@@ -7,7 +7,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,10 +31,10 @@ import org.broadinstitute.dsm.db.dto.ups.UPShipmentDto;
 import org.broadinstitute.dsm.model.dynamicdashboard.StatisticPayload;
 import org.broadinstitute.dsm.model.dynamicdashboard.StatisticResult;
 import org.broadinstitute.dsm.model.dynamicdashboard.graph.Graph;
-import org.broadinstitute.dsm.model.dynamicdashboard.graph.GraphResult;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 
 public class HeatmapGraph extends Graph {
+
     @Override
     public StatisticResult filter(StatisticPayload statisticPayload) {
         HeatmapGraphData heatmapResult = new HeatmapGraphData();
@@ -56,19 +55,19 @@ public class HeatmapGraph extends Graph {
                         statisticPayload.getFrom(), statisticPayload.getTo());
         Map<String, String> participantsGuidsWithShortIds = new HashMap<>();
         ddpParticipantsFromES.forEach((k,v) -> {
-            String shortId = (String)((Map) v.get("profile")).get("hruid");
+            String shortId = (String)((Map) v.get(ElasticSearchUtil.PROFILE)).get(ElasticSearchUtil.HRUID);
             participantsGuidsWithShortIds.put(k, shortId);
         });
         Map<String, List<DDPKitRequestDto>> participantsWithKits = getParticipantsWithKitsCreatedBySystem(participantsGuidsWithShortIds);
         Map<String, Map<String, List<Object>>> participantsWithKitsSeparatedByMonth = new HashMap<>();
         participantsWithKits.forEach((pId, kits) -> {
             Map<String, List<Object>> defaultMap = Map.of(
-                    "1ST", new ArrayList<>(),
-                    "2ND", new ArrayList<>(),
-                    "3RD", new ArrayList<>(),
-                    "4TH", new ArrayList<>(),
-                    "5TH", new ArrayList<>(),
-                    "6TH", new ArrayList<>());
+                "1ST", new ArrayList<>(),
+                "2ND", new ArrayList<>(),
+                "3RD", new ArrayList<>(),
+                "4TH", new ArrayList<>(),
+                "5TH", new ArrayList<>(),
+                "6TH", new ArrayList<>());
             participantsWithKitsSeparatedByMonth.computeIfAbsent(pId, k -> defaultMap);
             kits.forEach(kit -> {
                 Map<String, Object> participantEsData = ddpParticipantsFromES.get(kit.getDdpParticipantId());
@@ -82,7 +81,7 @@ public class HeatmapGraph extends Graph {
         });
         List<HeatmapGraphData.HeatMapRow> heatmapGraphRows = participantsWithKitsSeparatedByMonth.keySet().stream()
                 .map(shortId -> new HeatmapGraphData.HeatMapRow(shortId, shortId, Participant
-                        .getParticipantGuidByHruid(ddpParticipantsFromES, shortId)))
+                        .getParticipantGuidByHruidFromParticipantESData(ddpParticipantsFromES, shortId)))
                 .collect(Collectors.toList());
 
         List<HeatmapGraphData.HeatMapDataSet> heatMapDataSet = new ArrayList<>();
@@ -91,7 +90,7 @@ public class HeatmapGraph extends Graph {
 
         List<Map<String, Object>> columns = getColumns(statisticPayload);
         Map<String, Object> colorRange = getColorRange(statisticPayload);
-        return new HeatmapGraphData(heatmapGraphRows, columns, colorRange, heatMapDataSet, statisticPayload.getDisplayType(), "Kit Statuses");
+        return new HeatmapGraphData(heatmapGraphRows, columns, colorRange, heatMapDataSet, statisticPayload.getDisplayType(), statisticPayload.getDisplayText());
     }
 
     private List<Map<String, Object>> getColumns(StatisticPayload statisticPayload) {
@@ -153,20 +152,24 @@ public class HeatmapGraph extends Graph {
                         .filter(ddpKitRequestDto -> "SYSTEM".equals(ddpKitRequestDto.getCreatedBy()))
                         .collect(Collectors.toList()))
         );
-        return  participantsWithKits;
+        return participantsWithKits;
     }
 
     private String getColorRange(List<Object> kits) {
-        String result = "Not Ordered";
-        if (kits.size() == 0) return result;
+        String colorRange = "Not Ordered";
+        if (kits.size() == 0) return colorRange;
         AtomicBoolean isReturned = new AtomicBoolean(false);
         AtomicBoolean isInTransitIncoming = new AtomicBoolean(false);
         AtomicBoolean isNotReturned = new AtomicBoolean(false);
         AtomicBoolean isIntransitOutgoing = new AtomicBoolean(false);
         AtomicBoolean isNotDelivered = new AtomicBoolean(false);
+        DDPKitDao ddpKitDao = new DDPKitDao();
+        UPShipmentDao upShipmentDao = new UPShipmentDao();
+        UPSPackageDao upsPackageDao = new UPSPackageDao();
+        UPSActivityDao upsActivityDao = new UPSActivityDao();
         kits.forEach(kit -> {
             Optional<DDPKitDto> maybeDdpKitByDsmKitRequestId =
-                    new DDPKitDao().getDDPKitByDsmKitRequestId((int) ((DDPKitRequestDto) kit).getDsmKitRequestId());
+                    ddpKitDao.getDDPKitByDsmKitRequestId((int) ((DDPKitRequestDto) kit).getDsmKitRequestId());
             maybeDdpKitByDsmKitRequestId.ifPresent(ddpKitDto -> {
                 DateTimeFormatter dtf = new DateTimeFormatterBuilder().appendPattern("yyyyMMdd HHmmss").toFormatter();
                 if (StringUtils.isNotBlank(ddpKitDto.getUpsReturnStatus())) {
@@ -174,28 +177,28 @@ public class HeatmapGraph extends Graph {
                     if (ddpKitDto.getUpsReturnStatus().startsWith("D")) {
                         isReturned.set(true);
                     } else if (ddpKitDto.getUpsReturnStatus().startsWith("M") || ddpKitDto.getUpsReturnStatus().startsWith("I")) {
-                        long elapsedDays = Duration.between(LocalDateTime.now(), upsReturnDate.plus(1, ChronoUnit.DAYS)).abs().toDays();
+                        long elapsedDays = Duration.between(upsReturnDate, LocalDateTime.now()).abs().toDays();
                         if (elapsedDays > 7) isNotReturned.set(true);
                         else isInTransitIncoming.set(true);
                     }
                 } else if (StringUtils.isBlank(ddpKitDto.getUpsReturnStatus())) {
-                    Optional<UPShipmentDto> upshipmentByDsmKitRequestId =
-                            new UPShipmentDao().getUpshipmentByDsmKitRequestId(ddpKitDto.getDsmKitRequestId());
-                    upshipmentByDsmKitRequestId.ifPresent(upShipmentDto -> {
+                    Optional<UPShipmentDto> maybeUpshipmentByDsmKitRequestId =
+                            upShipmentDao.getUpshipmentByDsmKitRequestId(ddpKitDto.getDsmKitRequestId());
+                    maybeUpshipmentByDsmKitRequestId.ifPresent(upShipmentDto -> {
                         List<UPSPackageDto> upsPackageByShipmentId =
-                                new UPSPackageDao().getUpsPackageByShipmentId(upShipmentDto.getUpsShipmentId());
+                                upsPackageDao.getUpsPackageByShipmentId(upShipmentDto.getUpsShipmentId());
                         Optional<UPSPackageDto> maybeUpsPackageIncoming = upsPackageByShipmentId.stream()
                                 .filter(upsPackageDto -> ddpKitDto.getTrackingReturnId().equals(upsPackageDto.getTrackingNumber()))
                                 .findFirst();
                         maybeUpsPackageIncoming.ifPresent(upsPackageDto -> {
-                            Optional<UPSActivityDto> latestUpsActivityByPackageId =
-                                    new UPSActivityDao().getLatestUpsActivityByPackageId(upsPackageDto.getUpsPackageId());
-                            latestUpsActivityByPackageId.ifPresent(upsActivityDto -> {
+                            Optional<UPSActivityDto> maybeLatestUpsActivityByPackageId =
+                                    upsActivityDao.getLatestUpsActivityByPackageId(upsPackageDto.getUpsPackageId());
+                            maybeLatestUpsActivityByPackageId.ifPresent(upsActivityDto -> {
                                 if ("D".equals(upsActivityDto.getUpsStatusType())) {
                                     isReturned.set(true);
                                 } else if ("I".equals(upsActivityDto.getUpsStatusType()) || "M".equals(upsActivityDto.getUpsStatusType())) {
-                                    long elapsedDays = Duration.between(LocalDateTime.now(),
-                                            upsActivityDto.getUpsActivityDateTime().plus(1, ChronoUnit.DAYS)).abs().toDays();
+                                    long elapsedDays = Duration.between(upsActivityDto.getUpsActivityDateTime(),
+                                            LocalDateTime.now()).abs().toDays();
                                     if (elapsedDays > 7) isNotReturned.set(true);
                                     else isInTransitIncoming.set(true);
                                 }
@@ -207,25 +210,25 @@ public class HeatmapGraph extends Graph {
                     if (StringUtils.isNotBlank(ddpKitDto.getUpsTrackingStatus())
                         && (ddpKitDto.getUpsTrackingStatus().startsWith("M") || ddpKitDto.getUpsTrackingStatus().startsWith("I"))) {
                         LocalDateTime upsTrackingDate = LocalDateTime.parse(ddpKitDto.getUpsTrackingDate(), dtf);
-                        long elapsedDays = Duration.between(LocalDateTime.now(), upsTrackingDate).abs().toDays();
+                        long elapsedDays = Duration.between(upsTrackingDate, LocalDateTime.now()).abs().toDays();
                         if (elapsedDays > 7) isNotDelivered.set(true);
                         else isIntransitOutgoing.set(true);
                     } else {
-                        Optional<UPShipmentDto> upshipmentByDsmKitRequestId =
-                                new UPShipmentDao().getUpshipmentByDsmKitRequestId(ddpKitDto.getDsmKitRequestId());
-                        upshipmentByDsmKitRequestId.ifPresent(upShipmentDto -> {
+                        Optional<UPShipmentDto> maybeUpshipmentByDsmKitRequestId =
+                                upShipmentDao.getUpshipmentByDsmKitRequestId(ddpKitDto.getDsmKitRequestId());
+                        maybeUpshipmentByDsmKitRequestId.ifPresent(upShipmentDto -> {
                             List<UPSPackageDto> upsPackageByShipmentId =
-                                    new UPSPackageDao().getUpsPackageByShipmentId(upShipmentDto.getUpsShipmentId());
+                                    upsPackageDao.getUpsPackageByShipmentId(upShipmentDto.getUpsShipmentId());
                             Optional<UPSPackageDto> maybeUpsPackageIncoming = upsPackageByShipmentId.stream()
                                     .filter(upsPackageDto -> ddpKitDto.getTrackingToId().equals(upsPackageDto.getTrackingNumber()))
                                     .findFirst();
                             maybeUpsPackageIncoming.ifPresent(upsPackageDto -> {
-                                Optional<UPSActivityDto> latestUpsActivityByPackageId =
-                                        new UPSActivityDao().getLatestUpsActivityByPackageId(upsPackageDto.getUpsPackageId());
-                                latestUpsActivityByPackageId.ifPresent(upsActivityDto -> {
+                                Optional<UPSActivityDto> maybeLatestUpsActivityByPackageId =
+                                        upsActivityDao.getLatestUpsActivityByPackageId(upsPackageDto.getUpsPackageId());
+                                maybeLatestUpsActivityByPackageId.ifPresent(upsActivityDto -> {
                                     if ("I".equals(upsActivityDto.getUpsStatusType()) || "M".equals(upsActivityDto.getUpsStatusType())) {
-                                        long elapsedDays = Duration.between(LocalDateTime.now(),
-                                                upsActivityDto.getUpsActivityDateTime().plus(1, ChronoUnit.DAYS)).abs().toDays();
+                                        long elapsedDays = Duration.between(upsActivityDto.getUpsActivityDateTime(),
+                                                LocalDateTime.now()).abs().toDays();
                                         if (elapsedDays > 7) isNotDelivered.set(true);
                                         else isIntransitOutgoing.set(true);
                                     }
@@ -236,11 +239,11 @@ public class HeatmapGraph extends Graph {
                 }
             });
         });
-        if (isReturned.get()) result = "Returned";
-        else if (isInTransitIncoming.get()) result = "In transit (incoming)";
-        else if (isNotReturned.get()) result = "Not Returned";
-        else if (isNotDelivered.get()) result = "Not Delivered";
-        else if (isIntransitOutgoing.get()) result = "In transit (outgoing)";
-        return result;
+        if (isReturned.get()) colorRange = "Returned";
+        else if (isInTransitIncoming.get()) colorRange = "In transit (incoming)";
+        else if (isNotReturned.get()) colorRange = "Not Returned";
+        else if (isNotDelivered.get()) colorRange = "Not Delivered";
+        else if (isIntransitOutgoing.get()) colorRange = "In transit (outgoing)";
+        return colorRange;
     }
 }

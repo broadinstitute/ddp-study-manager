@@ -27,6 +27,9 @@ public class StatisticDataRoute extends RequestHandler {
     protected Object processRequest(Request request, Response response, String userId) throws Exception {
         QueryParamsMap queryParamsMap = request.queryMap();
         String realm = queryParamsMap.get("realm").value();
+        if (realm == null) {
+            throw new RuntimeException("Realm is not provided");
+        }
         int from = Integer.parseInt(queryParamsMap.get("from").value());
         int to = Integer.parseInt(queryParamsMap.get("to").value());
         DDPInstance ddpInstanceByRealm = DDPInstanceDao.getDDPInstanceByRealm(realm);
@@ -36,14 +39,12 @@ public class StatisticDataRoute extends RequestHandler {
 
         List<StatisticPayload> statisticPayloads = new ArrayList<>();
         for (DashboardSettingsDto dashboardSetting: dashboardSettingsByInstanceId) {
-            DisplayType displayType = DisplayType.valueOf(dashboardSetting.getDisplayType());
-            StatisticFor statisticFor = StatisticFor.valueOf(dashboardSetting.getStatisticFor());
-            FilterType filterType = FilterType.valueOf(dashboardSetting.getFilterType());
-            List possibleValues = new Gson().fromJson(dashboardSetting.getPossibleValues(), List.class);
-            StatisticPayload statisticPayload = new StatisticPayload(displayType, dashboardSetting.getDisplayText(), statisticFor, filterType, possibleValues);
-            statisticPayload.setRealm(realm);
-            statisticPayload.setFrom(from);
-            statisticPayload.setTo(to);
+            StatisticPayload.Builder statisticPayloadBuilder = extractStatisticPayloadFromDashboardSetting(dashboardSetting);
+            StatisticPayload statisticPayload = statisticPayloadBuilder
+                    .withFrom(from)
+                    .withTo(to)
+                    .withRealm(realm)
+                    .build();
             statisticPayloads.add(statisticPayload);
         }
         List<StatisticResult> result = new ArrayList<>();
@@ -56,5 +57,16 @@ public class StatisticDataRoute extends RequestHandler {
             );
         }
         return result;
+    }
+
+    private StatisticPayload.Builder extractStatisticPayloadFromDashboardSetting(DashboardSettingsDto dashboardSetting) {
+        DisplayType displayType = DisplayType.valueOf(dashboardSetting.getDisplayType());
+        StatisticFor statisticFor = StatisticFor.valueOf(dashboardSetting.getStatisticFor());
+        FilterType filterType = FilterType.valueOf(dashboardSetting.getFilterType());
+        List possibleValues = new Gson().fromJson(dashboardSetting.getPossibleValues(), List.class);
+        String displayText = dashboardSetting.getDisplayText();
+        return new StatisticPayload.Builder(displayType, statisticFor, filterType)
+                .withDisplayText(displayText)
+                .withPossibleValues(possibleValues);
     }
 }
