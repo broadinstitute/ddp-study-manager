@@ -232,13 +232,13 @@ public class ParticipantWrapper {
 
     public static String getParticipantGuid(Optional<ParticipantWrapper> maybeParticipant) {
         return maybeParticipant
-                .map(p -> ((Map<String, String>)p.getData().get("profile")).get(ElasticSearchUtil.GUID))
+                .map(p -> ((Map<String, String>)p.getData().get(ElasticSearchUtil.PROFILE)).get(ElasticSearchUtil.GUID))
                 .orElse("");
     }
 
     public static String getParticipantLegacyAltPid(Optional<ParticipantWrapper> maybeParticipant) {
         return maybeParticipant
-                .map(p -> ((Map<String, String>)p.getData().get("profile")).get(ElasticSearchUtil.LEGACY_ALT_PID))
+                .map(p -> ((Map<String, String>)p.getData().get(ElasticSearchUtil.PROFILE)).get(ElasticSearchUtil.LEGACY_ALT_PID))
                 .orElse("");
     }
 
@@ -297,8 +297,9 @@ public class ParticipantWrapper {
             logger.warn("Could not create proband/self data, participant ES data is null");
             return participantData;
         }
-        for (String pId: participantESData.keySet()) {
-            List<ParticipantData> participantDataList = participantData.get(pId);
+        for (Map.Entry<String, Map<String, Object>> entry: participantESData.entrySet()) {
+            String pId = entry.getKey();
+            List<ParticipantData> participantDataList = getParticipantDataList(participantData, entry);
             Map<String, Object> profile = (Map<String, Object>) participantESData.get(pId).get(ElasticSearchUtil.PROFILE);
             if (profile == null) {
                 logger.warn("Could not create proband/self data, participant with id: " + pId + " does not have profile in ES");
@@ -322,8 +323,18 @@ public class ParticipantWrapper {
                 }
             }
         }
-        logger.info("Proband created automatically for " + participantESData.size() + " number of participants");
         return ParticipantData.getParticipantData(instance.getName());
+    }
+
+    private static List<ParticipantData> getParticipantDataList(Map<String, List<ParticipantData>> participantData,
+                                                                Map.Entry<String, Map<String, Object>> entry) {
+        List<ParticipantData> participantDataList = participantData.get(entry.getKey());
+        if (participantDataList == null) {
+            Map<String, String> profile = (Map) entry.getValue().get(ElasticSearchUtil.PROFILE);
+            String guid = profile.get(ElasticSearchUtil.GUID);
+            participantDataList = participantData.get(guid);
+        }
+        return participantDataList;
     }
 
     private static void updateProbandDataIfESParticipantUpdated(DDPInstance instance, Map<String, Object> profile, Optional<ParticipantData> probandData) {
@@ -351,6 +362,8 @@ public class ParticipantWrapper {
                     "SYSTEM"
             );
             new ParticipantDataDao().updateParticipantDataColumn(updatedParticipantDataDTO);
+            String guid = (String) profile.get(ElasticSearchUtil.GUID);
+            logger.info("Proband data for participant with guid: " + guid + " has automatically updated");
         }
     }
 
@@ -370,6 +383,8 @@ public class ParticipantWrapper {
                 new FieldSettings().getColumnsWithDefaultOptions(fieldSettingsByOptionAndInstanceId);
         newParticipantData.addDefaultOptionsValueToData(columnsWithDefaultOptions);
         newParticipantData.insertParticipantData("SYSTEM");
+        String guid = (String) ((Map<String, Object>) esData.get(ElasticSearchUtil.PROFILE)).get(ElasticSearchUtil.GUID);
+        logger.info("Automatic proband data for participant with guid: " + guid + " has been created");
     }
 
     private static Map<String, String> extractProbandDefaultDataFromParticipantProfile(@NonNull Map<String, Object> esData) {
