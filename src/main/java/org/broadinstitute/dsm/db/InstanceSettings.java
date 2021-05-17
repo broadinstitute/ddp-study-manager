@@ -11,6 +11,7 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,7 +19,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -28,9 +31,14 @@ public class InstanceSettings {
     private static final Logger logger = LoggerFactory.getLogger(InstanceSettings.class);
 
     private static final String SQL_SELECT_INSTANCE_SETTINGS =
-            "SELECT mr_cover_pdf, kit_behavior_change, special_format, hide_ES_fields, study_specific_statuses, has_invitations " +
-            "FROM instance_settings settings, ddp_instance realm " +
-            "WHERE realm.ddp_instance_id = settings.ddp_instance_id AND realm.instance_name = ?";
+            "SELECT mr_cover_pdf, kit_behavior_change, special_format, hide_ES_fields, study_specific_statuses, has_invitations, " +
+                    "GBF_SHIPPED_DSS_DELIVERED " +
+                    "FROM instance_settings settings, ddp_instance realm " +
+                    "WHERE realm.ddp_instance_id = settings.ddp_instance_id AND realm.instance_name = ?";
+    private static final String SQL_SELECT_INSTANCE_SETTINGS_BY_ID =
+            "SELECT mr_cover_pdf, kit_behavior_change, special_format, hide_ES_fields, study_specific_statuses, has_invitations, GBF_SHIPPED_DSS_DELIVERED " +
+            "FROM instance_settings settings " +
+            "WHERE settings.ddp_instance_id = ?";
 
     public static final String INSTANCE_SETTING_UPLOAD = "upload";
     public static final String INSTANCE_SETTING_UPLOADED = "uploaded"; //"Kits without Labels" page
@@ -45,14 +53,17 @@ public class InstanceSettings {
     private List<Value> hideESFields;
     private List<Value> studySpecificStatuses;
     private boolean hasInvitations;
+    private boolean gbfShippedTriggerDSSDelivered;
 
-    public InstanceSettings(List<Value> mrCoverPdf, List<Value> kitBehaviorChange, List<Value> specialFormat, List<Value> hideESFields, List<Value> studySpecificStatuses, boolean hasInvitations) {
+    public InstanceSettings(List<Value> mrCoverPdf, List<Value> kitBehaviorChange, List<Value> specialFormat, List<Value> hideESFields, List<Value> studySpecificStatuses,
+                            boolean hasInvitations, boolean gbfShippedTriggerDSSDelivered) {
         this.mrCoverPdf = mrCoverPdf;
         this.kitBehaviorChange = kitBehaviorChange;
         this.specialFormat = specialFormat;
         this.hideESFields = hideESFields;
         this.studySpecificStatuses = studySpecificStatuses;
         this.hasInvitations = hasInvitations;
+        this.gbfShippedTriggerDSSDelivered = gbfShippedTriggerDSSDelivered;
     }
 
     public static InstanceSettings getInstanceSettings(@NonNull String realm) {
@@ -68,7 +79,7 @@ public class InstanceSettings {
                         List<Value> hideESFields = getListValue(rs.getString(DBConstants.HIDE_ES_FIELDS));
                         List<Value> studySpecificStatuses = getListValue(rs.getString(DBConstants.STUDY_SPECIFIC_STATUSES));
                         dbVals.resultValue = new InstanceSettings(mrCoverPdfSettings, kitBehaviorChange, specialFormat, hideESFields, studySpecificStatuses,
-                                rs.getBoolean(DBConstants.HAS_INVITATIONS));
+                                rs.getBoolean(DBConstants.HAS_INVITATIONS), rs.getBoolean(DBConstants.GBF_SHIPPED_DSS_DELIVERED));
                     }
                 }
             }
@@ -84,6 +95,79 @@ public class InstanceSettings {
         return (InstanceSettings) results.resultValue;
     }
 
+    public static InstanceSettings getInstanceSettings(@NonNull String realm, Connection conn) {
+        InstanceSettings result = null;
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_INSTANCE_SETTINGS)) {
+            stmt.setString(1, realm);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    List<Value> mrCoverPdfSettings = getListValue(rs.getString(DBConstants.MR_COVER_PDF));
+                    List<Value> kitBehaviorChange = getListValue(rs.getString(DBConstants.KIT_BEHAVIOR_CHANGE));
+                    List<Value> specialFormat = getListValue(rs.getString(DBConstants.SPECIAL_FORMAT));
+                    List<Value> hideESFields = getListValue(rs.getString(DBConstants.HIDE_ES_FIELDS));
+                    List<Value> studySpecificStatuses = getListValue(rs.getString(DBConstants.STUDY_SPECIFIC_STATUSES));
+                    result = new InstanceSettings(mrCoverPdfSettings, kitBehaviorChange, specialFormat, hideESFields, studySpecificStatuses,
+                            rs.getBoolean(DBConstants.HAS_INVITATIONS), rs.getBoolean(DBConstants.GBF_SHIPPED_DSS_DELIVERED));
+                }
+            }
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException("Error getting list of realms ", ex);
+        }
+        return result;
+    }
+
+
+    public static InstanceSettings getInstanceSettings(@NonNull int realmId) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_INSTANCE_SETTINGS_BY_ID)) {
+                stmt.setInt(1, realmId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        List<Value> mrCoverPdfSettings = getListValue(rs.getString(DBConstants.MR_COVER_PDF));
+                        List<Value> kitBehaviorChange = getListValue(rs.getString(DBConstants.KIT_BEHAVIOR_CHANGE));
+                        List<Value> specialFormat = getListValue(rs.getString(DBConstants.SPECIAL_FORMAT));
+                        List<Value> hideESFields = getListValue(rs.getString(DBConstants.HIDE_ES_FIELDS));
+                        List<Value> studySpecificStatuses = getListValue(rs.getString(DBConstants.STUDY_SPECIFIC_STATUSES));
+                        dbVals.resultValue = new InstanceSettings(mrCoverPdfSettings, kitBehaviorChange, specialFormat, hideESFields, studySpecificStatuses,
+                                rs.getBoolean(DBConstants.HAS_INVITATIONS), rs.getBoolean(DBConstants.GBF_SHIPPED_DSS_DELIVERED));
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting list of realms ", results.resultException);
+        }
+        return (InstanceSettings) results.resultValue;
+    }
+
+    public static InstanceSettings getInstanceSettings(@NonNull int realmId,@NonNull Connection conn) {
+        InstanceSettings result = null;
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_INSTANCE_SETTINGS_BY_ID)) {
+            stmt.setInt(1, realmId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    List<Value> mrCoverPdfSettings = getListValue(rs.getString(DBConstants.MR_COVER_PDF));
+                    List<Value> kitBehaviorChange = getListValue(rs.getString(DBConstants.KIT_BEHAVIOR_CHANGE));
+                    List<Value> specialFormat = getListValue(rs.getString(DBConstants.SPECIAL_FORMAT));
+                    List<Value> hideESFields = getListValue(rs.getString(DBConstants.HIDE_ES_FIELDS));
+                    List<Value> studySpecificStatuses = getListValue(rs.getString(DBConstants.STUDY_SPECIFIC_STATUSES));
+                    result = new InstanceSettings(mrCoverPdfSettings, kitBehaviorChange, specialFormat, hideESFields, studySpecificStatuses,
+                            rs.getBoolean(DBConstants.HAS_INVITATIONS), rs.getBoolean(DBConstants.GBF_SHIPPED_DSS_DELIVERED));
+                }
+            }
+        }
+        catch (SQLException ex) {
+            throw new RuntimeException("Error getting list of realms ", ex);
+        }
+        return result;
+    }
 
     public static boolean shouldKitBehaveDifferently(@NonNull Map<String, Object> participant, @NonNull Value behavior) {
         boolean specialKit = false;
@@ -160,7 +244,7 @@ public class InstanceSettings {
         return specialKit;
     }
 
-    private static List<Value> getListValue (String dbValue) {
+    private static List<Value> getListValue(String dbValue) {
         List<Value> list = null;
         if (StringUtils.isNotBlank(dbValue)) {
             list = Arrays.asList(new Gson().fromJson(dbValue, Value[].class));

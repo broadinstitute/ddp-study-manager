@@ -61,6 +61,10 @@ To download this dependency, generate a github token and add it to your `~/.m2/s
 
 ````
 
+DSM uses a single `pom.xml` but two different profile values for building the backend APIs
+for GAE and background jobs for Cloud Functions.  When building the APIs, use `-Papis`.  To 
+build cloud functions, use `Pcloud-function`
+
 # Secrets
 DSM uses GCP's [secret manager (SM)](https://cloud.google.com/secret-manager) to store credentials.
 
@@ -100,6 +104,10 @@ on your local machine, then you can set `-Dserver.static_content_source=/foo/bar
 [localhost](http://localhost:4567).
 
 # Building and deploying
+DSM has two components: the backend APIS and Cloud Functions, which are essentially background tasks.
+
+### Building and deploying backend APIS
+
 To deploy to a specific project, just run the `build-and-deploy` script, which takes two args: the name of a project and the name
 of the GCP secret to read from said project.  To deploy to dev:
 
@@ -108,5 +116,16 @@ cd appengine/deploy
 ./build-and-deploy.sh broad-ddp-dev study-manager-config
 ```
 
+### Building and deploying cloud functions
+ ```
+ ./build-and-deploy-cloud-functions.sh project gcp-secret study-manager-schema study-server-schema
+ ```
+
+
 # Viewing Logs
-One way to view logs is via the [GCP console](https://console.cloud.google.com/logs/viewer).  Drill into `GAE Application -> study-manager-backend -> version`.
+One way to view logs is via the [GCP console](https://console.cloud.google.com/logs/viewer).  \
+
+
+For backend API logs, drill into `GAE Application -> study-manager-backend -> version`.
+
+For could functions, use the `resource.type="cloud_function"` resource.
