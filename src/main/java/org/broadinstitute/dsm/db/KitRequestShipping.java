@@ -17,7 +17,9 @@ import org.broadinstitute.dsm.model.ddp.KitDetail;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
+import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.DBUtil;
+import org.broadinstitute.dsm.util.DDPRequestUtil;
 import org.broadinstitute.dsm.util.EasyPostUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.KitUtil;
@@ -523,10 +525,10 @@ public class KitRequestShipping extends KitRequest {
                     || TRIGGERED.equals(target) || OVERVIEW.equals(target) || WAITING.equals(target)) {
 
                 DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.NEEDS_NAME_LABELS);
-                if (StringUtils.isBlank(ddpInstance.getParticipantIndexES())) {
-                    throw new RuntimeException("No participant index setup in ddp_instance table for " + ddpInstance.getName());
+                Map<String, Map<String, Object>> participantsESData = null;
+                if (StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
+                    participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(ddpInstance.getName(), ddpInstance.getParticipantIndexES());
                 }
-                Map<String, Map<String, Object>> participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(ddpInstance.getName(), ddpInstance.getParticipantIndexES());;
 
                 for (String key : kitRequests.keySet()) {
                     List<KitRequestShipping> kitRequest = kitRequests.get(key);
@@ -557,6 +559,25 @@ public class KitRequestShipping extends KitRequest {
                                         else {
                                             kit.setMessage(PARTICIPANT_NOT_FOUND_MESSAGE + kit.getRealm());
                                             kit.setError(true);
+                                        }
+                                    }
+                                    else if (ddpInstance.getBaseUrl() != null) {
+                                        String sendRequest = ddpInstance.getBaseUrl() + RoutePath.DDP_PARTICIPANTS_PATH + "/" + key;
+                                        try {
+                                            if (ddpParticipant == null && !checkedParticipant) {
+                                                ddpParticipant = DDPRequestUtil.getResponseObject(DDPParticipant.class, sendRequest, kit.getRealm(), ddpInstance.isHasAuth0Token());
+                                                checkedParticipant = true;
+                                            }
+                                            if (ddpParticipant != null) {
+                                                kit.setParticipant(ddpParticipant);
+                                            }
+                                            else {
+                                                kit.setMessage(PARTICIPANT_NOT_FOUND_MESSAGE + kit.getRealm());
+                                                kit.setError(true);
+                                            }
+                                        }
+                                        catch (Exception ioe) {
+                                            logger.error("Couldn't get participants from " + sendRequest, ioe);
                                         }
                                     }
                                     else {
