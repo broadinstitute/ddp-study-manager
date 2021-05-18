@@ -7,9 +7,11 @@ import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.*;
+import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
@@ -297,6 +299,8 @@ public class ParticipantWrapper {
             logger.warn("Could not create proband/self data, participant ES data is null");
             return participantData;
         }
+        BookmarkDao bookmarkDao = new BookmarkDao();
+        ParticipantDataDao participantDataDao = new ParticipantDataDao();
         for (Map.Entry<String, Map<String, Object>> entry: participantESData.entrySet()) {
             String pId = entry.getKey();
             List<ParticipantData> participantDataList = getParticipantDataList(participantData, entry);
@@ -306,14 +310,14 @@ public class ParticipantWrapper {
                 continue;
             }
             if (participantDataList == null) {
-                extractAndInsertProbandFromESData(instance, entry.getValue());
+                extractAndInsertProbandFromESData(instance, entry.getValue(), participantDataDao, bookmarkDao);
                 continue;
             }
             boolean isProbandData = participantDataList.stream()
                     .anyMatch(pData -> (instance.getName().toUpperCase() + NewParticipantData.FIELD_TYPE).equals(pData.getFieldTypeId())
                         && FamilyMemberConstants.MEMBER_TYPE_SELF.equals(new Gson().fromJson(pData.getData(), Map.class).get(FamilyMemberConstants.MEMBER_TYPE)));
             if (!isProbandData) {
-                extractAndInsertProbandFromESData(instance, entry.getValue());
+                extractAndInsertProbandFromESData(instance, entry.getValue(), participantDataDao, bookmarkDao);
             } else {
                 Optional<ParticipantData> probandData = participantDataList.stream()
                         .filter(pData -> FamilyMemberConstants.MEMBER_TYPE_SELF.equals(new Gson().fromJson(pData.getData(), Map.class).get(FamilyMemberConstants.MEMBER_TYPE)))
@@ -375,10 +379,13 @@ public class ParticipantWrapper {
         }
     }
 
-    private static void extractAndInsertProbandFromESData(DDPInstance instance, Map<String, Object> esData) {
+    private static void extractAndInsertProbandFromESData(DDPInstance instance, Map<String, Object> esData,
+                                                          ParticipantDataDao participantDataDao,
+                                                          BookmarkDao bookmarkDao) {
         Map<String, Object> profile = (Map<String, Object>) esData.get(ElasticSearchUtil.PROFILE);
-        NewParticipantData newParticipantData = new NewParticipantData(new ParticipantDataDao());
-        Map<String, String> probandDataMap = extractProbandDefaultDataFromParticipantProfile(esData);
+        NewParticipantData newParticipantData = new NewParticipantData(participantDataDao);
+        Optional<BookmarkDto> maybeBookmark = bookmarkDao.getBookmarkByInstance("rgp_family_id");
+        Map<String, String> probandDataMap = extractProbandDefaultDataFromParticipantProfile(esData, maybeBookmark);
         newParticipantData.setData(
                 getLegacyAltPidElseGuid(profile),
                 Integer.parseInt(instance.getDdpInstanceId()),
@@ -391,10 +398,15 @@ public class ParticipantWrapper {
                 new FieldSettings().getColumnsWithDefaultOptions(fieldSettingsByOptionAndInstanceId);
         newParticipantData.addDefaultOptionsValueToData(columnsWithDefaultOptions);
         newParticipantData.insertParticipantData("SYSTEM");
+        maybeBookmark.ifPresent(bookmarkDto -> {
+            bookmarkDto.setValue(bookmarkDto.getValue() + 1);
+            bookmarkDao.updateBookmark(bookmarkDto);
+        });
         logger.info("Automatic proband data for participant with id: " + getLegacyAltPidElseGuid(profile) + " has been created");
     }
 
-    private static Map<String, String> extractProbandDefaultDataFromParticipantProfile(@NonNull Map<String, Object> esData) {
+    private static Map<String, String> extractProbandDefaultDataFromParticipantProfile(@NonNull Map<String, Object> esData,
+                                                                                       Optional<BookmarkDto> maybeBookmark) {
         Map<String, Object> profile = (Map<String, Object>) esData.get(ElasticSearchUtil.PROFILE);
         List<Map<String, Object>> activities = (List<Map<String, Object>>) esData.get(ElasticSearchUtil.ACTIVITIES);
         Optional<Map<String, Object>> maybeEnrollmentActivity = activities.stream()
@@ -410,7 +422,9 @@ public class ParticipantWrapper {
         });
         String firstName = (String) profile.get(ElasticSearchUtil.FIRST_NAME_FIELD);
         String lastName = (String) profile.get(ElasticSearchUtil.LAST_NAME_FIELD);
-        String familyId = (String) profile.get(ElasticSearchUtil.HRUID);
+        String familyId = maybeBookmark
+                .map(bookmarkDto -> String.valueOf(bookmarkDto.getValue()))
+                .orElse((String) profile.get(ElasticSearchUtil.HRUID));
         String collaboratorParticipantId = familyId + "_" + FamilyMemberConstants.PROBAND_RELATIONSHIP_ID;
         String memberType = FamilyMemberConstants.MEMBER_TYPE_SELF;
         String email = (String) profile.get(ElasticSearchUtil.EMAIL_FIELD);
