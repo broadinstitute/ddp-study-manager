@@ -51,7 +51,8 @@ public class ElasticSearchUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(DDPRequestUtil.class);
 
-    private static final String ACTIVITIES = "activities";
+    public static final String ACTIVITIES = "activities";
+    public static final String QUESTIONS_ANSWER = "questionsAnswers";
     private static final String ACTIVITIES_QUESTIONS_ANSWER = "activities.questionsAnswers";
     private static final String ACTIVITIES_QUESTIONS_ANSWER_ANSWER = "activities.questionsAnswers.answer";
     private static final String ACTIVITIES_QUESTIONS_ANSWER_GROUPED_OPTIONS = "activities.questionsAnswers.groupedOptions";
@@ -63,7 +64,7 @@ public class ElasticSearchUtil {
     public static final String DATA = "data";
     public static final String PROXIES = "proxies";
     public static final String DSM = "dsm";
-    private static final String ACTIVITY_CODE = "activityCode";
+    public static final String ACTIVITY_CODE = "activityCode";
     public static final String ADDRESS = "address";
     public static final String INVITATIONS = "invitations";
     public static final String PDFS = "pdfs";
@@ -85,6 +86,7 @@ public class ElasticSearchUtil {
     public static final String WORKFLOWS = "workflows";
     public static final String FIRST_NAME_FIELD = "firstName";
     public static final String LAST_NAME_FIELD = "lastName";
+    public static final String EMAIL_FIELD = "email";
 
     public static RestHighLevelClient getClientForElasticsearchCloud(@NonNull String baseUrl,
                                                                      @NonNull String userName,

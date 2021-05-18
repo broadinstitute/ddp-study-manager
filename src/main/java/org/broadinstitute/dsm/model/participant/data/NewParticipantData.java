@@ -13,16 +13,13 @@ import com.google.gson.reflect.TypeToken;
 import lombok.Data;
 import lombok.NonNull;
 import org.broadinstitute.dsm.db.dao.Dao;
-import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
-import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
-import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
 
 @Data
 public class NewParticipantData {
 
-    private static final String RELATIONSHIP_ID = "COLLABORATOR_PARTICIPANT_ID";
+    public static final String FIELD_TYPE = "_PARTICIPANTS";
 
     private long dataId;
     private String ddpParticipantId;
@@ -115,9 +112,9 @@ public class NewParticipantData {
                 parseDtoList(((ParticipantDataDao) dataAccess).getParticipantDataByParticipantId(this.ddpParticipantId)).stream()
                         .map(pData -> {
                             Map<String, String> familyMemberData = pData.getData();
-                            boolean hasRelationshipId = familyMemberData.containsKey(RELATIONSHIP_ID);
+                            boolean hasRelationshipId = familyMemberData.containsKey(FamilyMemberConstants.RELATIONSHIP_ID);
                             if (hasRelationshipId) {
-                                return familyMemberData.get(RELATIONSHIP_ID);
+                                return familyMemberData.get(FamilyMemberConstants.RELATIONSHIP_ID);
                             }
                             return "";
                         })
@@ -126,7 +123,7 @@ public class NewParticipantData {
     }
 
     String getRelationshipId() {
-        return this.data.getOrDefault(RELATIONSHIP_ID, null);
+        return this.data.getOrDefault(FamilyMemberConstants.RELATIONSHIP_ID, null);
     }
 
 }
