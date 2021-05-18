@@ -300,20 +300,20 @@ public class ParticipantWrapper {
         for (Map.Entry<String, Map<String, Object>> entry: participantESData.entrySet()) {
             String pId = entry.getKey();
             List<ParticipantData> participantDataList = getParticipantDataList(participantData, entry);
-            Map<String, Object> profile = (Map<String, Object>) participantESData.get(pId).get(ElasticSearchUtil.PROFILE);
+            Map<String, Object> profile = (Map<String, Object>) entry.getValue().get(ElasticSearchUtil.PROFILE);
             if (profile == null) {
                 logger.warn("Could not create proband/self data, participant with id: " + pId + " does not have profile in ES");
                 continue;
             }
             if (participantDataList == null) {
-                extractAndInsertProbandFromESData(instance, participantESData.get(pId));
+                extractAndInsertProbandFromESData(instance, entry.getValue());
                 continue;
             }
             boolean isProbandData = participantDataList.stream()
                     .anyMatch(pData -> (instance.getName().toUpperCase() + NewParticipantData.FIELD_TYPE).equals(pData.getFieldTypeId())
                         && FamilyMemberConstants.MEMBER_TYPE_SELF.equals(new Gson().fromJson(pData.getData(), Map.class).get(FamilyMemberConstants.MEMBER_TYPE)));
             if (!isProbandData) {
-                extractAndInsertProbandFromESData(instance, participantESData.get(pId));
+                extractAndInsertProbandFromESData(instance, entry.getValue());
             } else {
                 Optional<ParticipantData> probandData = participantDataList.stream()
                         .filter(pData -> FamilyMemberConstants.MEMBER_TYPE_SELF.equals(new Gson().fromJson(pData.getData(), Map.class).get(FamilyMemberConstants.MEMBER_TYPE)))
@@ -337,24 +337,32 @@ public class ParticipantWrapper {
         return participantDataList;
     }
 
+    private static String getLegacyAltPidElseGuid(Map<String, Object> profile) {
+        String participantId = (String) profile.get(ElasticSearchUtil.LEGACY_ALT_PID);
+        if (StringUtils.isBlank(participantId)) {
+            participantId = (String) profile.get(ElasticSearchUtil.GUID);
+        }
+        return participantId;
+    }
+
     private static void updateProbandDataIfESParticipantUpdated(DDPInstance instance, Map<String, Object> profile, Optional<ParticipantData> probandData) {
         String esFirstName = (String) profile.get(ElasticSearchUtil.FIRST_NAME_FIELD);
         String esLastName = (String) profile.get(ElasticSearchUtil.LAST_NAME_FIELD);
         ParticipantData pData = probandData.get();
         Map<String, String> probandDataJson = new Gson().fromJson(pData.getData(), Map.class);
-        String firstName = probandDataJson.get(FamilyMemberConstants.DATSTAT_FIRSTNAME);
-        String lastName = probandDataJson.get(FamilyMemberConstants.DATSTAT_LASTNAME);
+        String firstName = probandDataJson.get(FamilyMemberConstants.FIRSTNAME);
+        String lastName = probandDataJson.get(FamilyMemberConstants.LASTNAME);
         boolean isParticipantUpdated = !StringUtils.equals(firstName, esFirstName) || !StringUtils.equals(lastName, esLastName);
         if (!StringUtils.equals(firstName, esFirstName)) {
-            probandDataJson.put(FamilyMemberConstants.DATSTAT_FIRSTNAME, esFirstName);
+            probandDataJson.put(FamilyMemberConstants.FIRSTNAME, esFirstName);
         }
         if (!StringUtils.equals(lastName, esLastName)) {
-            probandDataJson.put(FamilyMemberConstants.DATSTAT_LASTNAME, esLastName);
+            probandDataJson.put(FamilyMemberConstants.LASTNAME, esLastName);
         }
         if (isParticipantUpdated) {
             ParticipantDataDto updatedParticipantDataDTO = new ParticipantDataDto(
                     Integer.parseInt(pData.getDataId()),
-                    (String) profile.get(ElasticSearchUtil.GUID),
+                    getLegacyAltPidElseGuid(profile),
                     Integer.parseInt(instance.getDdpInstanceId()),
                     pData.getFieldTypeId(),
                     new Gson().toJson(probandDataJson),
@@ -372,7 +380,7 @@ public class ParticipantWrapper {
         NewParticipantData newParticipantData = new NewParticipantData(new ParticipantDataDao());
         Map<String, String> probandDataMap = extractProbandDefaultDataFromParticipantProfile(esData);
         newParticipantData.setData(
-                (String) profile.get(ElasticSearchUtil.GUID),
+                getLegacyAltPidElseGuid(profile),
                 Integer.parseInt(instance.getDdpInstanceId()),
                 instance.getName().toUpperCase() + NewParticipantData.FIELD_TYPE,
                 probandDataMap
@@ -383,8 +391,7 @@ public class ParticipantWrapper {
                 new FieldSettings().getColumnsWithDefaultOptions(fieldSettingsByOptionAndInstanceId);
         newParticipantData.addDefaultOptionsValueToData(columnsWithDefaultOptions);
         newParticipantData.insertParticipantData("SYSTEM");
-        String guid = (String) ((Map<String, Object>) esData.get(ElasticSearchUtil.PROFILE)).get(ElasticSearchUtil.GUID);
-        logger.info("Automatic proband data for participant with guid: " + guid + " has been created");
+        logger.info("Automatic proband data for participant with id: " + getLegacyAltPidElseGuid(profile) + " has been created");
     }
 
     private static Map<String, String> extractProbandDefaultDataFromParticipantProfile(@NonNull Map<String, Object> esData) {

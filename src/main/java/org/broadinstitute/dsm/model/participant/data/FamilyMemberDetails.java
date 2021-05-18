@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
-import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.utils.StringUtils;
@@ -20,10 +19,10 @@ public class FamilyMemberDetails {
 
     private static final Logger logger = LoggerFactory.getLogger(FamilyMemberDetails.class);
 
-    @SerializedName(value = FamilyMemberConstants.DATSTAT_FIRSTNAME, alternate = "firstName")
+    @SerializedName(value = FamilyMemberConstants.FIRSTNAME, alternate = "firstName")
     private String firstName;
 
-    @SerializedName(value = FamilyMemberConstants.DATSTAT_LASTNAME, alternate = "lastName")
+    @SerializedName(value = FamilyMemberConstants.LASTNAME, alternate = "lastName")
     private String lastName;
 
     @SerializedName(value = FamilyMemberConstants.MEMBER_TYPE, alternate = "memberType")
@@ -35,10 +34,10 @@ public class FamilyMemberDetails {
     @SerializedName(value = FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID, alternate = "collaboratorParticipantId")
     private String collaboratorParticipantId;
 
-    @SerializedName(value = FamilyMemberConstants.DATSTAT_MOBILEPHONE, alternate = "mobilePhone")
+    @SerializedName(value = FamilyMemberConstants.PHONE, alternate = "mobilePhone")
     private String mobilePhone;
 
-    @SerializedName(value = FamilyMemberConstants.DATSTAT_EMAIL, alternate = "email")
+    @SerializedName(value = FamilyMemberConstants.EMAIL, alternate = "email")
     private String email;
 
 
