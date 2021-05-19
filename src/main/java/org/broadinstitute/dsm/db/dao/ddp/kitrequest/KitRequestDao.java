@@ -24,7 +24,7 @@ public class KitRequestDao implements Dao<KitRequestDto> {
             "kt.kit_type_name, " +
             "dk.kit_label, " +
             "kr.bsp_collaborator_sample_id, " +
-            "kr.bsp_collaborator_participant_id " +
+            "kr.bsp_collaborator_participant_id, " +
             "dk.tracking_to_id, " +
             "dk.tracking_return_id, " +
             "cs.carrier, " +
