@@ -12,6 +12,7 @@ import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
+import org.broadinstitute.dsm.model.at.DefaultValues;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
 import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
@@ -106,6 +107,11 @@ public class ParticipantWrapper {
             //needed for RGP family member
             if (DDPInstanceDao.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
                 participantData = setDefaultProbandDataIfNotExists(participantData, participantESData, instance);
+            }
+
+            //if study is AT
+            if ("atcp".equals(instance.getName())) {
+                participantData = DefaultValues.addDefaultValues(participantData, participantESData, instance);
             }
 
             List<String> baseList = new ArrayList<>(participantESData.keySet());
@@ -208,6 +214,17 @@ public class ParticipantWrapper {
             if (participantData == null) {
                 participantData = ParticipantData.getParticipantData(instance.getName());
             }
+
+            //needed for RGP family member
+            if (DDPInstanceDao.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
+                participantData = setDefaultProbandDataIfNotExists(participantData, participantESData, instance);
+            }
+
+            //if study is AT
+            if ("atcp".equals(instance.getName())) {
+                participantData = DefaultValues.addDefaultValues(participantData, participantESData, instance);
+            }
+
             baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
 
             //bring together all the information
