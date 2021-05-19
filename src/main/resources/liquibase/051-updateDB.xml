@@ -595,10 +595,20 @@
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
             <column name="field_type" value="RGP_PARTICIPANT_INFO_GROUP"/>
+            <column name="column_name" value="PRONOUNS"/>
+            <column name="column_display" value="Pronouns"/>
+            <column name="display_type" value="OPTIONS"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;SHE&#34;,&#34;name&#34;:&#34;she/her&#34;},{&#34;value&#34;:&#34;HE&#34;,&#34;name&#34;:&#34;he/him&#34;},{&#34;value&#34;:&#34;THEY&#34;,&#34;name&#34;:&#34;they/them&#34;},{&#34;value&#34;:&#34;OTHER&#34;,&#34;name&#34;:&#34;Other&#34;},{&#34;value&#34;:&#34;UNKNOWN&#34;,&#34;name&#34;:&#34;unknown&#34;,&#34;default&#34;:true}]"/>
+            <column name="order_number" value="11"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_PARTICIPANT_INFO_GROUP"/>
             <column name="column_name" value="DATSTAT_DATEOFBIRTH"/>
             <column name="column_display" value="DOB"/>
             <column name="display_type" value="DATE"/>
-            <column name="order_number" value="11"/>
+            <column name="order_number" value="12"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -608,7 +618,7 @@
             <column name="column_display" value="Age Today"/>
             <column name="display_type" value="NUMBER"/>
             <column name="actions" value="[{&#34;name&#34;:&#34;AGE&#34;,&#34;value&#34;:&#34;DATSTAT_DATEOFBIRTH&#34;,&#34;type&#34;:&#34;CALC&#34;}]"/>
-            <column name="order_number" value="12"/>
+            <column name="order_number" value="13"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -618,7 +628,7 @@
             <column name="column_display" value="Alive/Deceased"/>
             <column name="display_type" value="RADIO"/>
             <column name="possible_values" value="[{&#34;value&#34;:&#34;ALIVE&#34;,&#34;name&#34;:&#34;Alive&#34;,&#34;default&#34;:true},{&#34;value&#34;:&#34;DECEASED&#34;,&#34;name&#34;:&#34;Deceased&#34;}]"/>
-            <column name="order_number" value="13"/>
+            <column name="order_number" value="14"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -628,7 +638,7 @@
             <column name="column_display" value="Relationship to Proband"/>
             <column name="display_type" value="OPTIONS"/>
             <column name="possible_values" value="[{&#34;value&#34;:&#34;SELF&#34;,&#34;name&#34;:&#34;Self&#34;},{&#34;value&#34;:&#34;SISTER&#34;,&#34;name&#34;:&#34;Sister&#34;},{&#34;value&#34;:&#34;BROTHER&#34;,&#34;name&#34;:&#34;Brother&#34;},{&#34;value&#34;:&#34;MOTHER&#34;,&#34;name&#34;:&#34;Mother&#34;},{&#34;value&#34;:&#34;FATHER&#34;,&#34;name&#34;:&#34;Father&#34;},{&#34;value&#34;:&#34;PATERNAL_GRANDMOTHER&#34;,&#34;name&#34;:&#34;Paternal Grandmother&#34;},{&#34;value&#34;:&#34;PATERNAL_GRANDFATHER&#34;,&#34;name&#34;:&#34;Paternal Grandfather&#34;},{&#34;value&#34;:&#34;MATERNAL_GRANDMOTHER&#34;,&#34;name&#34;:&#34;Maternal Grandmother&#34;},{&#34;value&#34;:&#34;MATERNAL_GRANDFATHER&#34;,&#34;name&#34;:&#34;Maternal Grandfather&#34;},{&#34;value&#34;:&#34;DAUGHTER&#34;,&#34;name&#34;:&#34;Daughter&#34;},{&#34;value&#34;:&#34;SON&#34;,&#34;name&#34;:&#34;Son&#34;},{&#34;value&#34;:&#34;OTHER&#34;,&#34;name&#34;:&#34;Other&#34;},{&#34;value&#34;:&#34;HALF_SIBLING_MATERNAL&#34;,&#34;name&#34;:&#34;Half Sibling Maternal&#34;},{&#34;value&#34;:&#34;HALF_SIBLING_PATERNAL&#34;,&#34;name&#34;:&#34;Half Sibling Paternal&#34;},{&#34;value&#34;:&#34;MATERNAL_AUNT&#34;,&#34;name&#34;:&#34;Maternal Aunt&#34;},{&#34;value&#34;:&#34;MATERNAL_FIRST_COUSIN&#34;,&#34;name&#34;:&#34;Maternal First Cousin&#34;},{&#34;value&#34;:&#34;MATERNAL_UNCLE&#34;,&#34;name&#34;:&#34;Maternal Uncle&#34;},{&#34;value&#34;:&#34;PATERNAL_AUNT&#34;,&#34;name&#34;:&#34;Paternal Aunt&#34;},{&#34;value&#34;:&#34;PATERNAL_FIRST_COUSIN&#34;,&#34;name&#34;:&#34;Paternal First Cousin&#34;},{&#34;value&#34;:&#34;PATERNAL_UNCLE&#34;,&#34;name&#34;:&#34;Paternal Uncle&#34;}]"/>
-            <column name="order_number" value="14"/>
+            <column name="order_number" value="15"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -638,7 +648,7 @@
             <column name="column_display" value="Affected Status"/>
             <column name="display_type" value="OPTIONS"/>
             <column name="possible_values" value="[{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Affected&#34;},{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;Unaffected&#34;},{&#34;value&#34;:&#34;3&#34;,&#34;name&#34;:&#34;Uncertain&#34;}]"/>
-            <column name="order_number" value="15"/>
+            <column name="order_number" value="16"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -647,7 +657,7 @@
             <column name="column_name" value="RACE"/>
             <column name="column_display" value="Race"/>
             <column name="display_type" value="TEXT"/>
-            <column name="order_number" value="16"/>
+            <column name="order_number" value="17"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -657,7 +667,7 @@
             <column name="column_display" value="Ethnicity"/>
             <column name="display_type" value="OPTIONS"/>
             <column name="possible_values" value="[{&#34;value&#34;:&#34;HISPANIC&#34;,&#34;name&#34;:&#34;Hispanic&#34;},{&#34;value&#34;:&#34;NOT_HISPANIC&#34;,&#34;name&#34;:&#34;Not Hispanic&#34;},{&#34;value&#34;:&#34;UNKNOWN&#34;,&#34;name&#34;:&#34;Unknown or Not Reported&#34;}]"/>
-            <column name="order_number" value="17"/>
+            <column name="order_number" value="18"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -666,7 +676,7 @@
             <column name="column_name" value="MIXED_RACE_NOTES"/>
             <column name="column_display" value="Mixed Race Notes"/>
             <column name="display_type" value="TEXTAREA"/>
-            <column name="order_number" value="18"/>
+            <column name="order_number" value="19"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -721,8 +731,19 @@
             <column name="column_name" value="PORTAL_MESSAGE"/>
             <column name="column_display" value="Portal Message"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&#34;value&#34;:&#34;ACCEPT_CONSENTS_RECEIVED&#34;,&#34;name&#34;:&#34;Accept - Consents Received&#34;},{&#34;value&#34;:&#34;AUTOMATED_DEFAULT&#34;,&#34;name&#34;:&#34;Automated Default&#34;,&#34;default&#34;:true},{&#34;value&#34;:&#34;GENERIC_THANK_YOU&#34;,&#34;name&#34;:&#34;Generic Thank You&#34;},{&#34;value&#34;:&#34;NMI_CONSENT_RECEIVED&#34;,&#34;name&#34;:&#34;NMI - Consent Received&#34;},{&#34;value&#34;:&#34;NMI_NOW_ACCEPTED&#34;,&#34;name&#34;:&#34;NMI Now Accepted&#34;}]"/>
+            <column name="possible_values" value="[{&#34;value&#34;:&#34;ACCEPT_CONSENTS_RECEIVED&#34;,&#34;name&#34;:&#34;Accept - Consents Received&#34;},{&#34;value&#34;:&#34;AUTOMATED_DEFAULT&#34;,&#34;name&#34;:&#34;Automated Default&#34;,&#34;default&#34;:true},{&#34;value&#34;:&#34;GENERIC_THANK_YOU&#34;,&#34;name&#34;:&#34;Generic Thank You&#34;},{&#34;value&#34;:&#34;NMI_CONSENT_RECEIVED&#34;,&#34;name&#34;:&#34;NMI - Consent Received&#34;},{&#34;value&#34;:&#34;NMI_NOW_ACCEPTED&#34;,&#34;name&#34;:&#34;NMI Now Accepted&#34;},{&#34;value&#34;:&#34;WITHDRAW&#34;,&#34;name&#34;:&#34;Withdraw&#34;},{&#34;value&#34;:&#34;FAMILY_STEPS_COMPLETE&#34;,&#34;name&#34;:&#34;Family member steps complete&#34;},{&#34;value&#34;:&#34;PROBAND_STEPS_COMPLETE&#34;,&#34;name&#34;:&#34;Proband steps complete&#34;},{&#34;value&#34;:&#34;PROBAND_NEG&#34;,&#34;name&#34;:&#34;Proband neg for now&#34;}]"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;PORTAL_MESSAGE&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
             <column name="order_number" value="5"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_CONTACT_INFO_GROUP"/>
+            <column name="column_name" value="PORTAL_MESSAGE_DATE"/>
+            <column name="column_display" value="Portal Message Date"/>
+            <column name="display_type" value="DATE"/>
+            <column name="actions" value="[{&#34;name&#34;:&#34;PORTAL_MESSAGE_DATE&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
+            <column name="order_number" value="6"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -731,7 +752,7 @@
             <column name="column_name" value="DATSTAT_PHYSICALADDRESS"/>
             <column name="column_display" value="Street 1"/>
             <column name="display_type" value="TEXT"/>
-            <column name="order_number" value="6"/>
+            <column name="order_number" value="7"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -740,7 +761,7 @@
             <column name="column_name" value="DATSTAT_MAILINGADDRESS"/>
             <column name="column_display" value="Street 2"/>
             <column name="display_type" value="TEXT"/>
-            <column name="order_number" value="7"/>
+            <column name="order_number" value="8"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -749,7 +770,7 @@
             <column name="column_name" value="DATSTAT_PHYSICALCITY"/>
             <column name="column_display" value="City"/>
             <column name="display_type" value="TEXT"/>
-            <column name="order_number" value="8"/>
+            <column name="order_number" value="9"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -758,7 +779,7 @@
             <column name="column_name" value="DATSTAT_PHYSICALSTATE"/>
             <column name="column_display" value="State"/>
             <column name="display_type" value="TEXT"/>
-            <column name="order_number" value="9"/>
+            <column name="order_number" value="10"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -767,7 +788,7 @@
             <column name="column_name" value="DATSTAT_PHYSICALZIP"/>
             <column name="column_display" value="Zip"/>
             <column name="display_type" value="TEXT"/>
-            <column name="order_number" value="10"/>
+            <column name="order_number" value="11"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -776,7 +797,7 @@
             <column name="column_name" value="DATSTAT_PHYSICALCOUNTRY"/>
             <column name="column_display" value="Country"/>
             <column name="display_type" value="TEXT"/>
-            <column name="order_number" value="11"/>
+            <column name="order_number" value="12"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
