@@ -35,6 +35,7 @@ import org.broadinstitute.dsm.careevolve.Provider;
 import org.broadinstitute.dsm.jetty.JettyConfig;
 import org.broadinstitute.dsm.jobs.*;
 import org.broadinstitute.dsm.log.SlackAppender;
+import org.broadinstitute.dsm.pubsub.ElasticExportSubscription;
 import org.broadinstitute.dsm.pubsub.PubSubResultMessageSubscription;
 import org.broadinstitute.dsm.route.*;
 import org.broadinstitute.dsm.route.dynamicdashboard.StatisticDataRoute;
@@ -106,6 +107,7 @@ public class DSMServer extends BasicServer {
     public static final String GCP_PATH_TO_PUBSUB_SUB = "pubsub.subscription";
     public static final String GCP_PATH_TO_DSS_TO_DSM_SUB = "pubsub.dss_to_dsm_subscription";
     public static final String GCP_PATH_TO_DSM_TO_DSS_TOPIC = "pubsub.dsm_to_dss_topic";
+    public static final String GCP_PATH_TO_ELASTIC_EXPORT_SUB = "pubsub.elastic_export_subscription";
 
     private static Map<String, JsonElement> ddpConfigurationLookup = new HashMap<>();
     private static final String VAULT_DOT_CONF = "vault.conf";
@@ -323,6 +325,7 @@ public class DSMServer extends BasicServer {
         String projectId = cfg.getString(GCP_PATH_TO_PUBSUB_PROJECT_ID);
         String subscriptionId = cfg.getString(GCP_PATH_TO_PUBSUB_SUB);
         String dsmToDssSubscriptionId = cfg.getString(GCP_PATH_TO_DSS_TO_DSM_SUB);
+        String elasticExportSubscriptionId = cfg.getString(GCP_PATH_TO_ELASTIC_EXPORT_SUB);
 
         logger.info("Setting up pubsub for {}/{}", projectId, subscriptionId);
 
@@ -370,6 +373,12 @@ public class DSMServer extends BasicServer {
 
         try {
             PubSubResultMessageSubscription.dssToDsmSubscriber(projectId, dsmToDssSubscriptionId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            ElasticExportSubscription.subscribeElasticExport(projectId, elasticExportSubscriptionId);
         } catch (Exception e) {
             e.printStackTrace();
         }

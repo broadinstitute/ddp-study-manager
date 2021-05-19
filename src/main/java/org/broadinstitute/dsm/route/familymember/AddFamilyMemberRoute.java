@@ -25,8 +25,6 @@ public class AddFamilyMemberRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(AddFamilyMemberRoute.class);
 
-    static final String FIELD_TYPE = "_PARTICIPANTS";
-
     @Override
     protected Object processRequest(Request request, Response response, String userId) throws Exception {
         Gson gson = new Gson();
@@ -64,7 +62,7 @@ public class AddFamilyMemberRoute extends RequestHandler {
             participantDataObject.setData(
                     participantGuid,
                     Integer.parseInt(ddpInstanceId),
-                    realm.toUpperCase() + FIELD_TYPE,
+                    realm.toUpperCase() + NewParticipantData.FIELD_TYPE,
                     participantDataObject.mergeParticipantData(addFamilyMemberPayload)
                     );
             participantDataObject.addDefaultOptionsValueToData(getDefaultOptions(Integer.parseInt(ddpInstanceId)));
