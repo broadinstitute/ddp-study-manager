@@ -9,30 +9,36 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.gson.annotations.SerializedName;
-import lombok.Getter;
+import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.utils.StringUtils;
 
-@Getter
+@Data
 public class FamilyMemberDetails {
 
     private static final Logger logger = LoggerFactory.getLogger(FamilyMemberDetails.class);
 
-    @SerializedName(value = "DATSTAT_FIRSTNAME", alternate = "firstName")
+    @SerializedName(value = FamilyMemberConstants.FIRSTNAME, alternate = "firstName")
     private String firstName;
 
-    @SerializedName(value = "DATSTAT_LASTNAME", alternate = "lastName")
+    @SerializedName(value = FamilyMemberConstants.LASTNAME, alternate = "lastName")
     private String lastName;
 
-    @SerializedName(value = "MEMBER_TYPE", alternate = "memberType")
+    @SerializedName(value = FamilyMemberConstants.MEMBER_TYPE, alternate = "memberType")
     private String memberType;
 
-    @SerializedName(value = "FAMILY_ID", alternate = "familyId")
+    @SerializedName(value = FamilyMemberConstants.FAMILY_ID, alternate = "familyId")
     private String familyId;
 
-    @SerializedName(value = "COLLABORATOR_PARTICIPANT_ID", alternate = "collaboratorParticipantId")
+    @SerializedName(value = FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID, alternate = "collaboratorParticipantId")
     private String collaboratorParticipantId;
+
+    @SerializedName(value = FamilyMemberConstants.PHONE, alternate = "mobilePhone")
+    private String mobilePhone;
+
+    @SerializedName(value = FamilyMemberConstants.EMAIL, alternate = "email")
+    private String email;
 
 
     public FamilyMemberDetails() {}
@@ -66,3 +72,4 @@ public class FamilyMemberDetails {
                     || StringUtils.isBlank(this.familyId) || StringUtils.isBlank(this.collaboratorParticipantId);
     }
 }
+

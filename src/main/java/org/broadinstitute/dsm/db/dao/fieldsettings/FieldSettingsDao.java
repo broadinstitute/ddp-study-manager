@@ -24,6 +24,7 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
             "display_type," +
             "possible_values," +
             "actions," +
+            "readonly," +
             "order_number," +
             "deleted," +
             "last_changed," +
