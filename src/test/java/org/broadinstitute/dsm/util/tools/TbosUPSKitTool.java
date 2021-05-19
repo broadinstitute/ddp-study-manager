@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.model.Kit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,8 +25,8 @@ import java.util.Scanner;
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 public class TbosUPSKitTool {
-    private static final Logger logger = LoggerFactory.getLogger(TbosUPSKitTool.class);
-    private static final String SQL_SELECT_KIT_BY_KIT_LABEL = "Select kit.dsm_kit_request_id, req.*, activity.*,  pack.tracking_number " +
+    public static final Logger logger = LoggerFactory.getLogger(TbosUPSKitTool.class);
+    public static final String SQL_SELECT_KIT_BY_KIT_LABEL = "Select kit.dsm_kit_request_id, kit.kit_label, kit.test_result, req.upload_reason, req.ddp_participant_id, req.bsp_collaborator_participant_id, req.created_date, kit.tracking_to_id, kit.tracking_return_id, activity.*,pack.ups_shipment_id, pack.tracking_number " +
             "FROM           ddp_kit kit      " +
             "          LEFT JOIN              ddp_kit_request req  ON (kit.dsm_kit_request_id = req.dsm_kit_request_id)       " +
             "          left join             ups_shipment shipment on (shipment.dsm_kit_request_id = kit.dsm_kit_request_id)     " +
@@ -42,13 +43,13 @@ public class TbosUPSKitTool {
             "             AND lastActivity.maxId = ac.ups_activity_id      " +
             "          ))  " +
             "       and kit_label=?  ";
-    private static final String SQL_SELECT_OUTBOUND = "and pack.tracking_number = kit.tracking_to_id ";
-    private static final String SQL_SELECT_INBOUND = "and pack.tracking_number = kit.tracking_return_id ";
+    public static final String SQL_SELECT_OUTBOUND = "and (pack.tracking_number is null or pack.tracking_number = kit.tracking_to_id) ";
+    public static final String SQL_SELECT_INBOUND = "and (pack.tracking_number is null or pack.tracking_number = kit.tracking_return_id) ";
     private static final String SQL_INSERT_SHIPMENT = "INSERT INTO ups_shipment ( dsm_kit_request_id ) VALUES (?) ";
     private static final String SQL_INSERT_PACKAGE = "INSERT INTO ups_package ( ups_shipment_id , tracking_number ) VALUES (?, ?) ";
     private static final String SQL_INSERT_ACTIVITY = "INSERT INTO ups_activity ( ups_package_id, ups_status_description, ups_activity_date_time) VALUES (?, ?, ?)";
 
-    private static Map readFile(String fileName) {
+    public static Map readFile(String fileName) {
         Map<String, ArrayList<Kit>> participants = new HashMap();
         String[] headers = new String[0]; //first row
         File csv = new File(fileName);
@@ -59,7 +60,7 @@ public class TbosUPSKitTool {
             Kit kit = null;
             String shortId = null;
             while (scanner.hasNextLine()) {
-                if (kit != null && StringUtils.isNotBlank(shortId)) {// last kit of the participant in the last line
+                if (kit != null &&!kit.isEmpty() && StringUtils.isNotBlank(shortId)) {// last kit of the participant in the line before
                     if (!participants.containsKey(shortId)) {
                         participants.put(shortId, new ArrayList<Kit>());
                     }
@@ -69,18 +70,19 @@ public class TbosUPSKitTool {
                     kit = null;
                 }
                 String participantLine = scanner.nextLine();
-                String[] participantInfo = participantLine.split(",");
+                String[] participantInfo = participantLine.split(",", -1);
                 String guid = participantInfo[0]; //read first cell
                 shortId = participantInfo[1]; //read second cell
+                participants.put(shortId, new ArrayList<Kit>());
                 int i = 2;
-                for (String header : headers) {
+                for (; i < headers.length; ) {
+                    String header = headers[i];
                     String value = participantInfo[i];
                     if (StringUtils.isBlank(value) || "-".equals(value)) {
-                        i++;
-                        continue;
+                        value = null;
                     }
                     if ("kit label".equals(header)) {
-                        if (kit != null) {
+                        if (kit != null && StringUtils.isNotBlank(kit.getKitLabel())) {
                             if (!participants.containsKey(shortId)) {
                                 participants.put(shortId, new ArrayList<Kit>());
                             }
@@ -89,15 +91,27 @@ public class TbosUPSKitTool {
                             participants.put(shortId, list);
                             kit = null;
                         }
+                        else if (kit!= null && StringUtils.isBlank(kit.getKitLabel())){
+                            kit = null;
+                        }
                     }
                     if (kit == null) {
                         kit = new Kit();
-                        kit.shortId = shortId;
-                        kit.guid = guid;
+                        kit.setShortId(shortId);
+                        kit.setGuid(guid);
                     }
-                    kit.setValue(header, value);
+                    kit.setValueByHeader(header, value);
                     i++;
                 }
+            }
+            if (kit != null && StringUtils.isNotBlank(shortId)) {// last kit of the participant in the last line
+                if (!participants.containsKey(shortId)) {
+                    participants.put(shortId, new ArrayList<Kit>());
+                }
+                ArrayList<Kit> list = participants.get(shortId);
+                list.add(kit);
+                participants.put(shortId, list);
+                kit = null;
             }
 
         }
@@ -113,51 +127,49 @@ public class TbosUPSKitTool {
         for (String participantShortId : shortIds) {
             ArrayList<Kit> kits = participants.get(participantShortId);
             for (Kit kit : kits) {
-                Kit outboundKit = getDDBKitBasedOnKitLabel(SQL_SELECT_KIT_BY_KIT_LABEL + SQL_SELECT_OUTBOUND, kit.kitLabel, ddpInstance.getDdpInstanceId());
-                //todo check if matches the kit in details
-                if (kit.guid != outboundKit.guid || kit.shortId != outboundKit.shortId) {
-                    throw new RuntimeException("2 kits don't match for outbound for kitLabel " + kit.kitLabel + " file kit is for participant (" + kit.shortId + "," + kit.guid + ") and DB kit is for participant (" + outboundKit.shortId + "," + outboundKit.guid + ")");
+                Kit outboundKit = getDDBKitBasedOnKitLabel(SQL_SELECT_KIT_BY_KIT_LABEL + SQL_SELECT_OUTBOUND, kit.getKitLabel(), ddpInstance.getDdpInstanceId());
+                if (kit.getGuid() != outboundKit.getGuid() || kit.getShortId() != outboundKit.getShortId()) {
+                    throw new RuntimeException("2 kits don't match for outbound for kitLabel " + kit.getKitLabel() + " file kit is for participant (" + kit.getShortId() + "," + kit.getGuid() + ") and DB kit is for participant (" + outboundKit.getShortId() + "," + outboundKit.getGuid() + ")");
                 }
-                kit.dsmKitRequestId = outboundKit.dsmKitRequestId;
-                kit.trackingToId = outboundKit.trackingToId;
-                kit.shipmentId = outboundKit.shipmentId;
-                kit.packageId = outboundKit.packageId;
-                if (StringUtils.isBlank(outboundKit.lastActivityDesc)) {
-                    insertValuesForKit(kit, false);
+                kit.setDsmKitRequestId(outboundKit.getDsmKitRequestId());
+                kit.setTrackingToId(outboundKit.getTrackingToId());
+                kit.setShipmentId(outboundKit.getShipmentId());
+                kit.setPackageId(outboundKit.getPackageId());
+                if (StringUtils.isBlank(outboundKit.getLastActivityDesc())) {
+                    insertKitInDB(kit, false);
                 }
-                kit.packageId = null;
-                Kit inboundKit = getDDBKitBasedOnKitLabel(SQL_SELECT_KIT_BY_KIT_LABEL + SQL_SELECT_INBOUND, kit.kitLabel, ddpInstance.getDdpInstanceId());
-                //todo check if matches the kit in details
-                if (kit.guid != inboundKit.guid || kit.shortId != inboundKit.shortId) {
-                    throw new RuntimeException("2 kits don't match for inbound for kitLabel " + kit.kitLabel + " file kit is for participant (" + kit.shortId + "," + kit.guid + ") and DB kit is for participant (" + inboundKit.shortId + "," + inboundKit.guid + ")");
+                kit.setPackageId(null);
+                Kit inboundKit = getDDBKitBasedOnKitLabel(SQL_SELECT_KIT_BY_KIT_LABEL + SQL_SELECT_INBOUND, kit.getKitLabel(), ddpInstance.getDdpInstanceId());
+                if (kit.getGuid() != inboundKit.getGuid() || kit.getShortId() != inboundKit.getShortId()) {
+                    throw new RuntimeException("2 kits don't match for inbound for kitLabel " + kit.getKitLabel() + " file kit is for participant (" + kit.getShortId() + "," + kit.getGuid() + ") and DB kit is for participant (" + inboundKit.getShortId() + "," + inboundKit.getGuid() + ")");
                 }
-                kit.dsmKitRequestId = inboundKit.dsmKitRequestId;
-                kit.trackingReturnId = inboundKit.trackingReturnId;
-                kit.shipmentId = inboundKit.shipmentId;
-                kit.packageId = inboundKit.packageId;
-                if (StringUtils.isBlank(inboundKit.lastActivityDesc)) {
-                    insertValuesForKit(kit, true);
+                kit.setDsmKitRequestId(inboundKit.getDsmKitRequestId());
+                kit.setTrackingToId(inboundKit.getTrackingToId());
+                kit.setShipmentId(inboundKit.getShipmentId());
+                kit.setPackageId(inboundKit.getPackageId());
+                if (StringUtils.isBlank(inboundKit.getLastActivityDesc())) {
+                    insertKitInDB(kit, true);
                 }
             }
         }
     }
 
-    private static void insertValuesForKit(Kit kit, boolean isReturn) {
-        logger.info("Inserting new kit information for kit " + kit.dsmKitRequestId);
-        if (!isReturn && StringUtils.isBlank(kit.shipmentId)) {
-            kit.shipmentId = insertShipmentForKit(kit.dsmKitRequestId) + "";
+    private static void insertKitInDB(Kit kit, boolean isReturn) {
+        logger.info("Inserting new kit information for kit " + kit.getDsmKitRequestId());
+        if (!isReturn && StringUtils.isBlank(kit.getShipmentId())) {
+            kit.setShipmentId(insertShipmentForKit(kit.getDsmKitRequestId()) + "");
         }
-        if (StringUtils.isBlank(kit.packageId)) {
-            String trackingNumber = isReturn ? kit.trackingReturnId : kit.trackingToId;
-            kit.packageId = insertPackageForKit(kit, trackingNumber) + "";
+        if (StringUtils.isBlank(kit.getPackageId())) {
+            String trackingNumber = isReturn ? kit.getTrackingReturnId() : kit.getTrackingToId();
+            kit.setPackageId(insertPackageForKit(kit, trackingNumber) + "");
         }
         if (!isReturn) {
-            insertActivityForPackage(kit.packageId, "shipped", kit.shippedAt);
-            insertActivityForPackage(kit.packageId, "Delivered AT", kit.deliveredAt);
+            insertActivityForPackage(kit.getPackageId(), "shipped", kit.getShippedAt());
+            insertActivityForPackage(kit.getPackageId(), "Delivered AT", kit.getDeliveredAt());
         }
         else {
-            insertActivityForPackage(kit.packageId, "Picked up", kit.pickedUpAt);
-            insertActivityForPackage(kit.packageId, "Delivered AT", kit.receivedAt);
+            insertActivityForPackage(kit.getPackageId(), "Picked up", kit.getPickedUpAt());
+            insertActivityForPackage(kit.getPackageId(), "Delivered AT", kit.getReceivedAt());
         }
 
     }
@@ -214,11 +226,11 @@ public class TbosUPSKitTool {
     }
 
     private static int insertPackageForKit(Kit kit, String trackingNumber) {
-        logger.info("Inserting new package information for kit " + kit.dsmKitRequestId);
+        logger.info("Inserting new package information for kit " + kit.getDsmKitRequestId());
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement insertStmt = conn.prepareStatement(SQL_INSERT_PACKAGE, Statement.RETURN_GENERATED_KEYS)) {
-                insertStmt.setString(1, kit.shipmentId);
+                insertStmt.setString(1, kit.getShipmentId());
                 insertStmt.setString(2, trackingNumber);
                 insertStmt.executeUpdate();
                 try (ResultSet rs = insertStmt.getGeneratedKeys()) {
@@ -227,11 +239,11 @@ public class TbosUPSKitTool {
                     }
                 }
                 catch (Exception e) {
-                    throw new RuntimeException("Error getting the id of inserted package for shipment " + kit.shipmentId, e);
+                    throw new RuntimeException("Error getting the id of inserted package for shipment " + kit.getShipmentId(), e);
                 }
             }
             catch (SQLException ex) {
-                logger.error("Error inserting package for shipment " + kit.shipmentId);
+                logger.error("Error inserting package for shipment " + kit.getShipmentId());
                 dbVals.resultException = ex;
             }
             return dbVals;
@@ -244,13 +256,12 @@ public class TbosUPSKitTool {
         return (int) results.resultValue;
     }
 
-    public static void main(String[] args) {
-        Map<String, ArrayList<Kit>> participants = readFile("");
+    //    public static void main(String[] args) {
+    //        Map<String, ArrayList<Kit>> participants = readFile("");
+    //
+    //    }
 
-    }
-
-    private static Kit getDDBKitBasedOnKitLabel(String query, String kitLabel, String ddpInstanceId) {
-
+    public static Kit getDDBKitBasedOnKitLabel(String query, String kitLabel, String ddpInstanceId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -259,24 +270,24 @@ public class TbosUPSKitTool {
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         Kit kit = new Kit(
-                                DBConstants.KIT_LABEL,
-                                DBConstants.UPLOAD_REASON,
-                                DBConstants.KIT_TEST_RESULT,
-                                DBConstants.CREATED_DATE,
+                                rs.getString("kit."+DBConstants.KIT_LABEL),
+                                rs.getString(DBConstants.UPLOAD_REASON),
+                                rs.getString(DBConstants.KIT_TEST_RESULT),
+                                rs.getString(DBConstants.CREATED_DATE),
                                 "",
                                 "",
                                 "",
                                 "",
                                 "",
-                                DBConstants.DSM_KIT_REQUEST_ID,
-                                DBConstants.DSM_TRACKING_TO,
-                                DBConstants.TRACKING_RETURN_ID,
-                                DBConstants.UPS_ACTIVITY_DATE_TIME,
-                                DBConstants.UPS_STATUS_DESCRIPTION,
-                                DBConstants.UPS_SHIPMENT_ID,
-                                DBConstants.UPS_PACKAGE_ID,
-                                DBConstants.COLLABORATOR_PARTICIPANT_ID,
-                                DBConstants.PARTICIPANT_ID
+                                rs.getString(DBConstants.DSM_KIT_REQUEST_ID),
+                                rs.getString(DBConstants.DSM_TRACKING_TO),
+                                rs.getString(DBConstants.TRACKING_RETURN_ID),
+                                rs.getString(DBConstants.UPS_ACTIVITY_DATE_TIME),
+                                rs.getString(DBConstants.UPS_STATUS_DESCRIPTION),
+                                rs.getString(DBConstants.UPS_SHIPMENT_ID),
+                                rs.getString(DBConstants.UPS_PACKAGE_ID),
+                                rs.getString(DBConstants.COLLABORATOR_PARTICIPANT_ID),
+                                rs.getString(DBConstants.DDP_PARTICIPANT_ID)
                         );
                         dbVals.resultValue = kit;
                     }
@@ -296,121 +307,15 @@ public class TbosUPSKitTool {
 
         }
         Kit kit = (Kit) results.resultValue;
-        logger.info("Found Kit with KitLabel " + kitLabel + " with dsm_kit_request_id " + kit.dsmKitRequestId);
+        logger.info("Found Kit with KitLabel " + kitLabel + " with dsm_kit_request_id " + kit.getDsmKitRequestId());
         return kit;
-
     }
 
     public static String getSQLDateTimeString(String dateTime) {
-        Instant activityInstant = DateTimeFormatter.ofPattern("yyyy-MM-ddTHH:mm:ss.fffV").withZone(ZoneId.of("UTC")).parse(dateTime, Instant::from);
+        dateTime = dateTime.replace("T", " ").replace("Z", "");
+        Instant activityInstant = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC")).parse(dateTime, Instant::from);
         DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("America/New_York"));
         String activityDateTime = DATE_TIME_FORMATTER.format(activityInstant);
         return activityDateTime;
-    }
-}
-
-class Kit {
-    private String kitLabelHeader = "kit label";
-    private String reasonHeader = "";
-    private String resultHeader = "";
-    private String requestedAtHeader = "";
-    private String shippedAtHeader = "";
-    private String deliveredAtHeader = "";
-    private String pickedUpAtHeader = "";
-    private String receivedAtHeader = "";
-    private String resultedAtHeader = "";
-
-    String kitLabel;
-    String reason;
-    String result;
-    String requestedAt;
-    String shippedAt;
-    String deliveredAt;
-    String pickedUpAt;
-    String receivedAt;
-    String resultedAt;
-    String dsmKitRequestId;
-    String trackingToId;
-    String trackingReturnId;
-    String lastActivityDateTime;
-    String lastActivityDesc;
-    String shipmentId;
-    String packageId;
-    String shortId;
-    String guid;
-
-    public Kit() {
-    }
-
-    public Kit(String kitLabel,
-               String reason,
-               String result,
-               String requestedAt,
-               String shippedAt,
-               String deliveredAt,
-               String pickedUpAt,
-               String receivedAt,
-               String resultedAt,
-               String dsmKitRequestId,
-               String trackingToId,
-               String trackingReturnId,
-               String lastActivityDateTime,
-               String lastActivityDesc,
-               String shipmentId,
-               String packageId,
-               String shortId,
-               String guid) {
-        this.kitLabel = kitLabel;
-        this.reason = reason;
-        this.result = result;
-        this.requestedAt = requestedAt;
-        this.shippedAt = shippedAt;
-        this.deliveredAt = deliveredAt;
-        this.pickedUpAt = pickedUpAt;
-        this.receivedAt = receivedAt;
-        this.resultedAt = resultedAt;
-        this.dsmKitRequestId = dsmKitRequestId;
-        this.trackingToId = trackingToId;
-        this.trackingReturnId = trackingReturnId;
-        this.lastActivityDateTime = lastActivityDateTime;
-        this.lastActivityDesc = lastActivityDesc;
-        this.shipmentId = shipmentId;
-        this.packageId = packageId;
-        this.shortId = shortId;
-        this.guid = guid;
-    }
-
-    public void setValue(String header, String value) {
-        switch (header) {
-            case "kit label":
-                this.kitLabel = value;
-                break;
-            case "reason":
-                this.reason = value;
-                break;
-            case "result":
-                this.result = value;
-                break;
-            case "requested at":
-                this.requestedAt = value;
-                break;
-            case "shipped at":
-                this.shippedAt = value;
-                break;
-            case "delivered at":
-                this.deliveredAt = value;
-                break;
-            case "picked up at":
-                this.pickedUpAt = value;
-                break;
-            case "received at":
-                this.receivedAt = value;
-                break;
-            case "resulted at":
-                this.resultedAt = value;
-                break;
-            default:
-                throw new IllegalStateException("Unexpected header, value: " + header + "," + value);
-        }
     }
 }
