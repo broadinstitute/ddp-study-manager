@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.kitrequest.KitRequestDao;
@@ -20,6 +21,8 @@ import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.pubsub.ElasticExportSubscription.ExportPayload;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +30,7 @@ import java.util.Map;
 
 public class ExportToES {
 
+    private static final Logger logger = LoggerFactory.getLogger(ExportToES.class);
     private static final Gson gson = new Gson();
     private static final ParticipantDataDao participantDataDao = new ParticipantDataDao();
     private static final DDPInstanceDao ddpInstanceDao = new DDPInstanceDao();
@@ -37,10 +41,18 @@ public class ExportToES {
 
     public static void exportObjectsToES(ExportPayload payload) {
         int instanceId = ddpInstanceDao.getDDPInstanceIdByGuid(payload.getStudy());
+        logger.info("Started exporting workflows for instance with id " + instanceId);
         exportWorkflows(instanceId);
+        logger.info("Finished exporting workflows for instance with id " + instanceId);
+        logger.info("Started exporting medical records for instance with id " + instanceId);
         exportMedicalRecords(instanceId);
+        logger.info("Finished exporting medical records for instance with id " + instanceId);
+        logger.info("Started exporting tissue records for instance with id " + instanceId);
         exportTissueRecords(instanceId);
+        logger.info("Finished exporting tissue records for instance with id " + instanceId);
+        logger.info("Started exporting samples for instance with id " + instanceId);
         exportSamples(instanceId);
+        logger.info("Finished exporting samples for instance with id " + instanceId);
     }
 
     public static void exportWorkflows(int instanceId) {
@@ -92,9 +104,9 @@ public class ExportToES {
     }
 
     public static void checkWorkflowNamesAndExport(List<String> workFlowColumnNames, List<ParticipantDataDto> allParticipantData, int instanceId) {
+        DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
         for (ParticipantDataDto participantData: allParticipantData) {
             String data = participantData.getData();
-            DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
             if (data != null) {
                 JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
                 for (Map.Entry<String, JsonElement> entry: dataJsonObject.entrySet()) {
