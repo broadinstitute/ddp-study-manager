@@ -52,5 +52,5 @@
     <include file="liquibase/048-updateDB.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/049-updateDB.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/050-updateDB.xml" relativeToChangelogFile="true"/>
-    <include file="liquibase/dashboard-settings.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/DDP-5819-dashboard-settings.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

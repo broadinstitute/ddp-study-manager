@@ -2,9 +2,11 @@ package org.broadinstitute.dsm.db.dto.ddp.kit;
 
 import java.time.LocalDateTime;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class DDPKitRequestDto {
 
     private long dsmKitRequestId;

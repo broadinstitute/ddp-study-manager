@@ -27,6 +27,7 @@ public class HeatmapGraphData extends GraphResult {
         this.data = data;
     }
 
+    @Data
     public static class HeatMapRow {
         private String id;
         private String label;
@@ -39,6 +40,7 @@ public class HeatmapGraphData extends GraphResult {
         }
     }
 
+    @Data
     public static class HeatMapDataSet {
         private String rowId;
         private String columnId;
