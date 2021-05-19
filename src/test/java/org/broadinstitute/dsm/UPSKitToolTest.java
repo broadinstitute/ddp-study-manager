@@ -73,7 +73,20 @@ public class UPSKitToolTest {
         Assert.assertEquals(kit.getKitLabel(), "TBOS-test");
         Assert.assertNull(kit.getReason());
         Assert.assertNull(kit.getResult());
+        ptKits = participants.get("TestBoston_PBPD68");
+        Assert.assertEquals(ptKits.size(), 2);
+        kit = ptKits.get(0);
+        Assert.assertEquals(kit.getKitLabel(), "TBOS-test4");
+        Assert.assertEquals(kit.getRequestedAt(), "2020-09-19T01:57:49Z");
+        Assert.assertNull(kit.getReason());
+        Assert.assertNull(kit.getResult());
+        kit = ptKits.get(1);
+        Assert.assertEquals(kit.getKitLabel(), "TBOS-test6");
+        Assert.assertEquals(kit.getRequestedAt(), "2020-09-22T10:57:49Z");
+        Assert.assertNull(kit.getReason());
+        Assert.assertNull(kit.getResult());
     }
+
 
     @Test
     public void testGetDDPKitBasedOnKitLabel(){

@@ -60,7 +60,7 @@ public class TbosUPSKitTool {
             Kit kit = null;
             String shortId = null;
             while (scanner.hasNextLine()) {
-                if (kit != null &&!kit.isEmpty() && StringUtils.isNotBlank(shortId)) {// last kit of the participant in the line before
+                if (kit != null && !kit.isEmpty() && StringUtils.isNotBlank(shortId)) {// last kit of the participant in the line before
                     if (!participants.containsKey(shortId)) {
                         participants.put(shortId, new ArrayList<Kit>());
                     }
@@ -82,7 +82,7 @@ public class TbosUPSKitTool {
                         value = null;
                     }
                     if ("kit label".equals(header)) {
-                        if (kit != null && StringUtils.isNotBlank(kit.getKitLabel())) {
+                        if (kit != null && !kit.isEmpty() && StringUtils.isNotBlank(kit.getKitLabel())) {
                             if (!participants.containsKey(shortId)) {
                                 participants.put(shortId, new ArrayList<Kit>());
                             }
@@ -91,7 +91,7 @@ public class TbosUPSKitTool {
                             participants.put(shortId, list);
                             kit = null;
                         }
-                        else if (kit!= null && StringUtils.isBlank(kit.getKitLabel())){
+                        else if (kit != null && StringUtils.isBlank(kit.getKitLabel())) {
                             kit = null;
                         }
                     }
@@ -104,7 +104,7 @@ public class TbosUPSKitTool {
                     i++;
                 }
             }
-            if (kit != null && StringUtils.isNotBlank(shortId)) {// last kit of the participant in the last line
+            if (kit != null && !kit.isEmpty() && StringUtils.isNotBlank(shortId)) {// last kit of the participant in the last line
                 if (!participants.containsKey(shortId)) {
                     participants.put(shortId, new ArrayList<Kit>());
                 }
@@ -270,7 +270,7 @@ public class TbosUPSKitTool {
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         Kit kit = new Kit(
-                                rs.getString("kit."+DBConstants.KIT_LABEL),
+                                rs.getString("kit." + DBConstants.KIT_LABEL),
                                 rs.getString(DBConstants.UPLOAD_REASON),
                                 rs.getString(DBConstants.KIT_TEST_RESULT),
                                 rs.getString(DBConstants.CREATED_DATE),

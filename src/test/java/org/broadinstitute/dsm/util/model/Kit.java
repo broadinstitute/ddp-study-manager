@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.util.model;
 
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 @Data
 public class Kit {
@@ -100,6 +101,17 @@ public class Kit {
     }
 
     public boolean isEmpty() {
+        if (StringUtils.isBlank(kitLabel) &&
+                StringUtils.isBlank(reason) &&
+                StringUtils.isBlank(result) &&
+                StringUtils.isBlank(requestedAt) &&
+                StringUtils.isBlank(shippedAt) &&
+                StringUtils.isBlank(deliveredAt) &&
+                StringUtils.isBlank(pickedUpAt) &&
+                StringUtils.isBlank(receivedAt) &&
+                StringUtils.isBlank(resultedAt)){
+            return true;
+        }
         return false;
     }
 }
