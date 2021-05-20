@@ -5,17 +5,20 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
+import org.broadinstitute.dsm.db.dao.ddp.kitrequest.KitRequestDao;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.bsp.BSPKitQueryResult;
 import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
 import org.broadinstitute.dsm.model.bsp.BSPKitStatus;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.EventUtil;
 import org.broadinstitute.dsm.util.KitUtil;
 import org.broadinstitute.dsm.util.NotificationUtil;
+import org.broadinstitute.dsm.util.SystemUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -83,6 +86,7 @@ public class BSPKitQueryRoute implements Route {
             if (received != null && StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
                 Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
                     ElasticSearchUtil.BY_GUID + bspKitInfo.getDdpParticipantId());
+                writeSampleReceivedToES(ddpInstance, bspKitInfo);
                 Map<String, Object> participant = participants.get(bspKitInfo.getDdpParticipantId());
                 if (participant != null) {
                     boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(participant, received);
@@ -131,6 +135,15 @@ public class BSPKitQueryRoute implements Route {
         else {
             throw new RuntimeException("No participant id for " + kitLabel + " from " + bspKitInfo.getInstanceName());
         }
+
+    }
+
+    private void writeSampleReceivedToES(DDPInstance ddpInstance, BSPKitQueryResult bspKitInfo) {
+        String kitRequestId = new KitRequestDao().getKitRequestIdByBSPParticipantId(bspKitInfo.getBspParticipantId());
+        Map<String, Object> nameValuesMap = new HashMap<>();
+        nameValuesMap.put(ESObjectConstants.RECEIVED, SystemUtil.getISO8601DateString());
+        ElasticSearchUtil.writeSample(ddpInstance, kitRequestId, bspKitInfo.getDdpParticipantId(), ESObjectConstants.SAMPLES,
+                ESObjectConstants.KIT_REQUEST_ID, nameValuesMap);
     }
 
     private void triggerDDP(Connection conn, @NonNull BSPKitQueryResult bspKitInfo, boolean firstTimeReceived, String kitLabel) {

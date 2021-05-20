@@ -14,6 +14,7 @@ public class FieldSettingsDto {
     private String displayType;
     private String possibleValues;
     private String actions;
+    private boolean readonly;
     private int orderNumber;
     private boolean deleted;
     private long lastChanged;
@@ -21,7 +22,7 @@ public class FieldSettingsDto {
 
     public FieldSettingsDto() {}
     public FieldSettingsDto(int fieldSettingsId, int ddpInstanceId, String fieldType, String columnName, String columnDisplay,
-                            String displayType, String possibleValues, String actions, int orderNumber, boolean deleted, long lastChanged,
+                            String displayType, String possibleValues, String actions, boolean readonly, int orderNumber, boolean deleted, long lastChanged,
                             String changedBy) {
         this.fieldSettingsId = fieldSettingsId;
         this.ddpInstanceId = ddpInstanceId;
@@ -31,6 +32,7 @@ public class FieldSettingsDto {
         this.displayType = displayType;
         this.possibleValues = possibleValues;
         this.actions = actions;
+        this.readonly = readonly;
         this.orderNumber = orderNumber;
         this.deleted = deleted;
         this.lastChanged = lastChanged;
