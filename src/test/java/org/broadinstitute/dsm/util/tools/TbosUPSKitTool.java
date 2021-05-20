@@ -1,10 +1,12 @@
 package org.broadinstitute.dsm.util.tools;
 
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.model.Kit;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,53 +130,104 @@ public class TbosUPSKitTool {
             ArrayList<Kit> kits = participants.get(participantShortId);
             for (Kit kit : kits) {
                 Kit outboundKit = getDDBKitBasedOnKitLabel(SQL_SELECT_KIT_BY_KIT_LABEL + SQL_SELECT_OUTBOUND, kit.getKitLabel(), ddpInstance.getDdpInstanceId());
-                if (kit.getGuid() != outboundKit.getGuid() || kit.getShortId() != outboundKit.getShortId()) {
-                    throw new RuntimeException("2 kits don't match for outbound for kitLabel " + kit.getKitLabel() + " file kit is for participant (" + kit.getShortId() + "," + kit.getGuid() + ") and DB kit is for participant (" + outboundKit.getShortId() + "," + outboundKit.getGuid() + ")");
+                if (outboundKit == null) {
+                    logger.error("Outbound Kit found for " + kit.getKitLabel() + " is null!");
                 }
-                kit.setDsmKitRequestId(outboundKit.getDsmKitRequestId());
-                kit.setTrackingToId(outboundKit.getTrackingToId());
-                kit.setShipmentId(outboundKit.getShipmentId());
-                kit.setPackageId(outboundKit.getPackageId());
-                if (StringUtils.isBlank(outboundKit.getLastActivityDesc())) {
-                    insertKitInDB(kit, false);
+                else {
+                    if (kit.getGuid() != outboundKit.getGuid() || kit.getShortId() != outboundKit.getShortId()) {
+                        throw new RuntimeException("2 kits don't match for outbound for kitLabel " + kit.getKitLabel() + " file kit is for participant (" + kit.getShortId() + "," + kit.getGuid() + ") and DB kit is for participant (" + outboundKit.getShortId() + "," + outboundKit.getGuid() + ")");
+                    }
+                    decideWhatToInsertForKit(kit, outboundKit, false);
                 }
                 kit.setPackageId(null);
                 Kit inboundKit = getDDBKitBasedOnKitLabel(SQL_SELECT_KIT_BY_KIT_LABEL + SQL_SELECT_INBOUND, kit.getKitLabel(), ddpInstance.getDdpInstanceId());
-                if (kit.getGuid() != inboundKit.getGuid() || kit.getShortId() != inboundKit.getShortId()) {
-                    throw new RuntimeException("2 kits don't match for inbound for kitLabel " + kit.getKitLabel() + " file kit is for participant (" + kit.getShortId() + "," + kit.getGuid() + ") and DB kit is for participant (" + inboundKit.getShortId() + "," + inboundKit.getGuid() + ")");
+                if (inboundKit == null) {
+                    logger.error("Inbound Kit found for " + kit.getKitLabel() + " is null!");
                 }
-                kit.setDsmKitRequestId(inboundKit.getDsmKitRequestId());
-                kit.setTrackingToId(inboundKit.getTrackingToId());
-                kit.setShipmentId(inboundKit.getShipmentId());
-                kit.setPackageId(inboundKit.getPackageId());
-                if (StringUtils.isBlank(inboundKit.getLastActivityDesc())) {
-                    insertKitInDB(kit, true);
+                else {
+                    if (kit.getGuid() != inboundKit.getGuid() || kit.getShortId() != inboundKit.getShortId()) {
+                        throw new RuntimeException("2 kits don't match for inbound for kitLabel " + kit.getKitLabel() + " file kit is for participant (" + kit.getShortId() + "," + kit.getGuid() + ") and DB kit is for participant (" + inboundKit.getShortId() + "," + inboundKit.getGuid() + ")");
+                    }
+                    decideWhatToInsertForKit(kit, inboundKit, true);
                 }
             }
         }
     }
 
-    private static void insertKitInDB(Kit kit, boolean isReturn) {
-        logger.info("Inserting new kit information for kit " + kit.getDsmKitRequestId());
-        if (!isReturn && StringUtils.isBlank(kit.getShipmentId())) {
-            kit.setShipmentId(insertShipmentForKit(kit.getDsmKitRequestId()) + "");
-        }
-        if (StringUtils.isBlank(kit.getPackageId())) {
-            String trackingNumber = isReturn ? kit.getTrackingReturnId() : kit.getTrackingToId();
-            kit.setPackageId(insertPackageForKit(kit, trackingNumber) + "");
-        }
-        if (!isReturn) {
-            insertActivityForPackage(kit.getPackageId(), "shipped", kit.getShippedAt());
-            insertActivityForPackage(kit.getPackageId(), "Delivered AT", kit.getDeliveredAt());
+    public static void decideWhatToInsertForKit(Kit fileKit, Kit dbKit, boolean isRetrun) {
+        fileKit.setDsmKitRequestId(dbKit.getDsmKitRequestId());
+        fileKit.setTrackingToId(dbKit.getTrackingToId());
+        fileKit.setTrackingReturnId(dbKit.getTrackingReturnId());
+        fileKit.setShipmentId(dbKit.getShipmentId());
+        fileKit.setPackageId(dbKit.getPackageId());
+        if (StringUtils.isBlank(dbKit.getLastActivityDesc())) {
+            logger.info("Inserting Shipment, Package and all activities for kit " + fileKit.getKitLabel());
+            insertKitInDB(fileKit, true);
         }
         else {
-            insertActivityForPackage(kit.getPackageId(), "Picked up", kit.getPickedUpAt());
-            insertActivityForPackage(kit.getPackageId(), "Delivered AT", kit.getReceivedAt());
+            if (StringUtils.isBlank(fileKit.getPackageId()) || StringUtils.isBlank(fileKit.getShipmentId())) {
+                throw new RuntimeException("No package Id or Shipment Id was found for a kit with activity in DB! Kit label is " + fileKit.getKitLabel());
+            }
+            if (StringUtils.isNotBlank(dbKit.getLastActivityDateTime())) {
+                String firstActivityTime = isRetrun ? fileKit.getPickedUpAt() : fileKit.getShippedAt();
+                if (StringUtils.isNotBlank(firstActivityTime)) {
+                    if (shouldInsertBasedOnTimeForKit(dbKit, firstActivityTime)) {//last activity in DB is before the shipped at
+                        insertActivityForPackage(fileKit.getPackageId(), "Picked up", firstActivityTime);
+                    }
+                    else {
+                        String lastActivityTime = isRetrun ? fileKit.getDeliveredAt() : fileKit.getReceivedAt();
+                        if (StringUtils.isNotBlank(lastActivityTime)) {
+                            if (shouldInsertBasedOnTimeForKit(dbKit, lastActivityTime)) {//last activity in DB is before the shipped at
+                                insertActivityForPackage(fileKit.getPackageId(), "Delivered", lastActivityTime);
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                throw new RuntimeException("No package Id or Shipment Id was set for a kit with activity in DB! Kit label is " + fileKit.getKitLabel());
+            }
         }
 
     }
 
-    private static void insertActivityForPackage(String packageId, String status, String timeStamp) {
+    private static boolean shouldInsertBasedOnTimeForKit(@NonNull Kit dbKit, String utcDateTimeString) {
+        Instant activityInDBInstant = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC")).parse(dbKit.getLastActivityDateTime(), Instant::from);
+        String fileDateTime = utcDateTimeString.replace("T", " ").replace("Z", "");
+        Instant fileInstant = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC")).parse(fileDateTime, Instant::from);
+        boolean isBefore = activityInDBInstant.isBefore(fileInstant);
+        return isBefore;
+    }
+
+    public static void insertKitInDB(Kit kit, boolean isReturn) {
+        logger.info("Inserting new " + (isReturn ? "inbound" : "outbound") + " kit information for kit " + kit.getDsmKitRequestId());
+        if (!isReturn && StringUtils.isBlank(kit.getShipmentId())) {
+            kit.setShipmentId(insertShipmentForKit(kit.getDsmKitRequestId()));
+        }
+        if (StringUtils.isBlank(kit.getPackageId())) {
+            String trackingNumber = isReturn ? kit.getTrackingReturnId() : kit.getTrackingToId();
+            kit.setPackageId(insertPackageForKit(kit, trackingNumber));
+        }
+        if (!isReturn) {
+            if (StringUtils.isNotBlank(kit.getShippedAt())) {
+                insertActivityForPackage(kit.getPackageId(), "Picked up", kit.getShippedAt());
+            }
+            if (StringUtils.isNotBlank(kit.getDeliveredAt())) {
+                insertActivityForPackage(kit.getPackageId(), "Delivered", kit.getDeliveredAt());
+            }
+        }
+        else {
+            if (StringUtils.isNotBlank(kit.getPickedUpAt())) {
+                insertActivityForPackage(kit.getPackageId(), "Picked up", kit.getPickedUpAt());
+            }
+            if (StringUtils.isNotBlank(kit.getReceivedAt())) {
+                insertActivityForPackage(kit.getPackageId(), "Delivered", kit.getReceivedAt());
+            }
+        }
+
+    }
+
+    public static void insertActivityForPackage(String packageId, String status, String timeStamp) {
         String sqlDateTime = getSQLDateTimeString(timeStamp);// we need EST time in DB
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -196,7 +249,7 @@ public class TbosUPSKitTool {
         }
     }
 
-    private static int insertShipmentForKit(String dsmKitRequestId) {
+    public static String insertShipmentForKit(String dsmKitRequestId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement insertStmt = conn.prepareStatement(SQL_INSERT_SHIPMENT, Statement.RETURN_GENERATED_KEYS)) {
@@ -204,7 +257,7 @@ public class TbosUPSKitTool {
                 insertStmt.executeUpdate();
                 try (ResultSet rs = insertStmt.getGeneratedKeys()) {
                     if (rs.next()) {
-                        dbVals.resultValue = rs.getInt(1);
+                        dbVals.resultValue = rs.getString(1);
                     }
                 }
                 catch (Exception e) {
@@ -222,10 +275,10 @@ public class TbosUPSKitTool {
             throw new RuntimeException("Error getting list of realms ", results.resultException);
         }
 
-        return (int) results.resultValue;
+        return (String) results.resultValue;
     }
 
-    private static int insertPackageForKit(Kit kit, String trackingNumber) {
+    public static String insertPackageForKit(Kit kit, String trackingNumber) {
         logger.info("Inserting new package information for kit " + kit.getDsmKitRequestId());
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -235,7 +288,7 @@ public class TbosUPSKitTool {
                 insertStmt.executeUpdate();
                 try (ResultSet rs = insertStmt.getGeneratedKeys()) {
                     if (rs.next()) {
-                        dbVals.resultValue = rs.getInt(1);
+                        dbVals.resultValue = rs.getString(1);
                     }
                 }
                 catch (Exception e) {
@@ -253,13 +306,8 @@ public class TbosUPSKitTool {
             throw new RuntimeException("Error getting list of realms ", results.resultException);
         }
 
-        return (int) results.resultValue;
+        return (String) results.resultValue;
     }
-
-    //    public static void main(String[] args) {
-    //        Map<String, ArrayList<Kit>> participants = readFile("");
-    //
-    //    }
 
     public static Kit getDDBKitBasedOnKitLabel(String query, String kitLabel, String ddpInstanceId) {
         SimpleResult results = inTransaction((conn) -> {
@@ -307,6 +355,9 @@ public class TbosUPSKitTool {
 
         }
         Kit kit = (Kit) results.resultValue;
+        if (kit == null) {
+            logger.error("Kit found for " + kitLabel + " is null!");
+        }
         logger.info("Found Kit with KitLabel " + kitLabel + " with dsm_kit_request_id " + kit.getDsmKitRequestId());
         return kit;
     }
@@ -318,4 +369,11 @@ public class TbosUPSKitTool {
         String activityDateTime = DATE_TIME_FORMATTER.format(activityInstant);
         return activityDateTime;
     }
+
+    @Test
+    public static void InsertFile() {
+        Map<String, ArrayList<Kit>> participants = readFile("");
+        insertFileInfo(participants);
+    }
+
 }

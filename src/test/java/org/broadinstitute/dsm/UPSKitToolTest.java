@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm;
 
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.util.DBTestUtil;
 import org.broadinstitute.dsm.util.model.Kit;
 import org.broadinstitute.dsm.util.tools.TbosUPSKitTool;
 import org.junit.Assert;
@@ -116,8 +117,35 @@ public class UPSKitToolTest {
         Assert.assertEquals("2309", outboundKit.getDsmKitRequestId());
     }
 
-//    @Test
-//    public void
+    @Test
+    public void testInsertShipmentAndPackage(){
+        Map<String, ArrayList<Kit>> participants = TbosUPSKitTool.readFile("src/test/resources/TbosUPSKitToolMultiPtKits.csv");
+        Assert.assertNotNull(participants);
+        Assert.assertEquals(participants.size(), 2);
+        Assert.assertTrue(participants.keySet().contains("TestBoston_PMVYGB"));
+        Assert.assertTrue(participants.keySet().contains("TestBoston_PBPD68"));
+        Assert.assertEquals(participants.get("TestBoston_PMVYGB").size(), 1);
+        Assert.assertEquals(participants.get("TestBoston_PBPD68").size(), 2);
+        ArrayList<Kit> ptKits = participants.get("TestBoston_PMVYGB");
+        Assert.assertEquals(ptKits.size(), 1);
+        Kit kit = ptKits.get(0);
+        DDPInstance ddpInstance = DDPInstance.getDDPInstance("testboston");
+        Kit outboundKit = TbosUPSKitTool.getDDBKitBasedOnKitLabel(TbosUPSKitTool.SQL_SELECT_KIT_BY_KIT_LABEL +TbosUPSKitTool.SQL_SELECT_OUTBOUND, "TBOS-test", ddpInstance.getDdpInstanceId());
+        Assert.assertNotNull(outboundKit);
+        kit.setDsmKitRequestId(outboundKit.getDsmKitRequestId());
+        kit.setTrackingToId(outboundKit.getTrackingToId());
+        kit.setShipmentId(outboundKit.getShipmentId());
+        kit.setPackageId(outboundKit.getPackageId());
+        String shipmentId = TbosUPSKitTool.insertShipmentForKit(kit.getDsmKitRequestId());
+        kit.setShipmentId(shipmentId);
+        Assert.assertNotNull(shipmentId);
+        String packageId = TbosUPSKitTool.insertPackageForKit(kit, outboundKit.getTrackingToId());
+        Assert.assertNotNull(packageId);
+        DBTestUtil.deleteFromQuery(packageId, "delete from ups_package where ups_package_id = ?");
+        DBTestUtil.deleteFromQuery(shipmentId, "delete from ups_shipment where ups_shipment_id = ?");
+    }
+
+
 
 
 
