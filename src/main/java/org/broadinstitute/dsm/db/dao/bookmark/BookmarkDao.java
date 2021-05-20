@@ -10,8 +10,6 @@ import java.util.Optional;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
-import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
-import org.broadinstitute.dsm.statics.DBConstants;
 
 public class BookmarkDao implements Dao<BookmarkDto> {
 

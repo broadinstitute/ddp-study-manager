@@ -45,7 +45,7 @@ public class AutomaticProbandDataCreator {
                 new FieldSettings().getColumnsWithDefaultOptions(fieldSettingsByOptionAndInstanceId);
         for (Map.Entry<String, Map<String, Object>> entry: participantESData.entrySet()) {
             String pId = entry.getKey();
-            List<ParticipantData> participantDataList = getParticipantDataList(participantData, entry);
+            List<ParticipantData> participantDataList = participantData.get(entry.getKey());
             Map<String, Object> profile = (Map<String, Object>) entry.getValue().get(ElasticSearchUtil.PROFILE);
             if (profile == null) {
                 logger.warn("Could not create proband/self data, participant with id: " + pId + " does not have profile in ES");
@@ -70,17 +70,6 @@ public class AutomaticProbandDataCreator {
             }
         }
         return ParticipantData.getParticipantData(instance.getName());
-    }
-
-    private static List<ParticipantData> getParticipantDataList(Map<String, List<ParticipantData>> participantData,
-                                                                Map.Entry<String, Map<String, Object>> entry) {
-        List<ParticipantData> participantDataList = participantData.get(entry.getKey());
-        if (participantDataList == null) {
-            Map<String, String> profile = (Map) entry.getValue().get(ElasticSearchUtil.PROFILE);
-            String guid = profile.get(ElasticSearchUtil.GUID);
-            participantDataList = participantData.get(guid);
-        }
-        return participantDataList;
     }
 
     private static void extractAndInsertProbandFromESData(DDPInstance instance, Map.Entry<String, Map<String, Object>> esData,
@@ -138,8 +127,9 @@ public class AutomaticProbandDataCreator {
 
     private static void updateProbandDataIfESParticipantUpdated(DDPInstance instance, Map.Entry<String, Map<String, Object>> esData, Optional<ParticipantData> probandData) {
         String participantId = esData.getKey();
-        String esFirstName = (String) esData.getValue().get(ElasticSearchUtil.FIRST_NAME_FIELD);
-        String esLastName = (String) esData.getValue().get(ElasticSearchUtil.LAST_NAME_FIELD);
+        Map<String, String> profile = (Map<String, String>) esData.getValue().get(ElasticSearchUtil.PROFILE);
+        String esFirstName = profile.get(ElasticSearchUtil.FIRST_NAME_FIELD);
+        String esLastName = profile.get(ElasticSearchUtil.LAST_NAME_FIELD);
         ParticipantData pData = probandData.get();
         Map<String, String> probandDataJson = new Gson().fromJson(pData.getData(), Map.class);
         String firstName = probandDataJson.get(FamilyMemberConstants.FIRSTNAME);
