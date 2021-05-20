@@ -141,7 +141,7 @@ public class TbosUPSKitTool {
         int counter = 0;
         for (; counter < shortIds.length; counter++) {
             String participantShortId = shortIds[counter];
-            logger.info("starting on partcipant " + counter + "/" + shortIds.length);
+            logger.info("starting on partcipant " + (counter + 1) + "/" + shortIds.length);
             ArrayList<Kit> kits = participants.get(participantShortId);
             logger.info("Found " + kits.size() + " kits for the particpant in this file ");
             String insertedShipmentId = null;
@@ -172,7 +172,7 @@ public class TbosUPSKitTool {
                     }
                     decideWhatToInsertForKit(kit, inboundKit, true);
                 }
-                logger.info("Finished kit " + kitCounter + " / " + kits.size() + " for participant " + participantShortId);
+                logger.info("Finished kit " + (kitCounter + 1) + " / " + kits.size() + " for participant " + participantShortId);
             }
         }
     }
