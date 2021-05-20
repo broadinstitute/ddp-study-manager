@@ -23,11 +23,12 @@ public class DefaultValues {
     private static final String PREFIX = "DDP_ATCP_";
 
     public static Map<String, List<ParticipantData>> addDefaultValues(Map<String, List<ParticipantData>> participantData,
-                                        Map<String, Map<String, Object>> participantESData, @NonNull DDPInstance instance) {
+                                        Map<String, Map<String, Object>> participantESData, @NonNull DDPInstance instance, String queryAddition) {
         if (participantESData == null) {
             logger.warn("Could not update default values, participant ES data is null");
             return participantData;
         }
+        boolean addedNewParticipantData = false;
         for (String ddpParticipantId : participantESData.keySet()) {
             List<ParticipantData> participantDataList = participantData.get(ddpParticipantId);
             //only needed for new signups - migrated pts already have the values needed
@@ -44,7 +45,17 @@ public class DefaultValues {
                             FIELD_TYPE_ID, dataMap);
                     newParticipantData.insertParticipantData("SYSTEM");
                     logger.info(GENOME_STUDY_CPT_ID + " was created for participant with id: " + ddpParticipantId + " at " + FIELD_TYPE_ID);
+                    addedNewParticipantData = true;
                 }
+            }
+        }
+        if (addedNewParticipantData) {
+            //participant data was added, getting new list of data
+            if (StringUtils.isNotBlank(queryAddition)) {
+                participantData = ParticipantData.getParticipantData(instance.getName(), queryAddition);
+            }
+            else {
+                participantData = ParticipantData.getParticipantData(instance.getName());
             }
         }
         return participantData;

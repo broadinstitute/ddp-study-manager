@@ -103,7 +103,6 @@ public class ParticipantWrapper {
             Map<String, List<AbstractionGroup>> abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName());
             Map<String, Map<String, Object>> proxyData = getProxyData(instance);
             Map<String, List<ParticipantData>> participantData = ParticipantData.getParticipantData(instance.getName());
-
             //needed for RGP family member
             if (DDPInstanceDao.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
                 participantData = setDefaultProbandDataIfNotExists(participantData, participantESData, instance);
@@ -111,7 +110,7 @@ public class ParticipantWrapper {
 
             //if study is AT
             if ("atcp".equals(instance.getName())) {
-                participantData = DefaultValues.addDefaultValues(participantData, participantESData, instance);
+                participantData = DefaultValues.addDefaultValues(participantData, participantESData, instance, null);
             }
 
             List<String> baseList = new ArrayList<>(participantESData.keySet());
@@ -148,6 +147,20 @@ public class ParticipantWrapper {
                     else if (DBConstants.DDP_KIT_REQUEST_ALIAS.equals(source)) {
                         kitRequests = KitRequestShipping.getKitRequests(instance, filters.get(source));
                         baseList = getCommonEntries(baseList, new ArrayList<>(kitRequests.keySet()));
+                    }
+                    else if (DBConstants.DDP_PARTICIPANT_DATA_ALIAS.equals(source)) {
+                        participantData = ParticipantData.getParticipantData(instance.getName(), filters.get(source));
+                        baseList = getCommonEntries(baseList, new ArrayList<>(participantData.keySet()));
+
+                        //needed for RGP family member
+                        if (DDPInstanceDao.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
+                            participantData = setDefaultProbandDataIfNotExists(participantData, participantESData, instance);
+                        }
+
+                        //if study is AT
+                        if ("atcp".equals(instance.getName())) {
+                            participantData = DefaultValues.addDefaultValues(participantData, participantESData, instance, filters.get(source));
+                        }
                     }
                     else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
                         abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName(), filters.get(source));
@@ -202,6 +215,19 @@ public class ParticipantWrapper {
                     kitRequests = KitRequestShipping.getKitRequests(instance, ORDER_AND_LIMIT);
                 }
             }
+            if (participantData == null) {
+                participantData = ParticipantData.getParticipantData(instance.getName());
+
+                //needed for RGP family member
+                if (DDPInstanceDao.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
+                    participantData = setDefaultProbandDataIfNotExists(participantData, participantESData, instance);
+                }
+
+                //if study is AT
+                if ("atcp".equals(instance.getName())) {
+                    participantData = DefaultValues.addDefaultValues(participantData, participantESData, instance, null);
+                }
+            }
             if (abstractionActivities == null) {
                 abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName());
             }
@@ -211,18 +237,11 @@ public class ParticipantWrapper {
             if (proxyData == null) {
                 proxyData = getProxyData(instance);
             }
-            if (participantData == null) {
-                participantData = ParticipantData.getParticipantData(instance.getName());
-            }
+
 
             //needed for RGP family member
             if (DDPInstanceDao.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
                 participantData = setDefaultProbandDataIfNotExists(participantData, participantESData, instance);
-            }
-
-            //if study is AT
-            if ("atcp".equals(instance.getName())) {
-                participantData = DefaultValues.addDefaultValues(participantData, participantESData, instance);
             }
 
             baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
