@@ -24,6 +24,9 @@ public class BookmarkDao implements Dao<BookmarkDto> {
     private static final String SQL_UPDATE_BOOKMARK = "UPDATE " +
             "bookmark SET value = ?, instance = ? WHERE bookmark_id = ?";
 
+    private static final String SQL_UPDATE_BOOKMARK_VALUE_BY_BOOKMARK_ID = "UPDATE " +
+            "bookmark SET value = ? WHERE bookmark_id = ?";
+
     @Override
     public int create(BookmarkDto bookmarkDto) {
         return 0;
@@ -85,4 +88,24 @@ public class BookmarkDao implements Dao<BookmarkDto> {
         }
         return (int) result.resultValue;
     }
+
+    public int updateBookmarkValueByBookmarkId(int bookmarkId, long value) {
+        SimpleResult result = inTransaction((conn) -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_BOOKMARK_VALUE_BY_BOOKMARK_ID)) {
+                stmt.setLong(1, value);
+                stmt.setInt(2, bookmarkId);
+                execResult.resultValue = stmt.executeUpdate();
+            } catch (SQLException sqle) {
+                execResult.resultException = sqle;
+            }
+            return execResult;
+        });
+        if (result.resultException != null) {
+            throw new RuntimeException("Could not update bookmark value with id: " + bookmarkId);
+        }
+        return (int) result.resultValue;
+    }
+
+
 }
