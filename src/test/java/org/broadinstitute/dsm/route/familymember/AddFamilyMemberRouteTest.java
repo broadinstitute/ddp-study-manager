@@ -88,7 +88,7 @@ public class AddFamilyMemberRouteTest {
 
     private static void createProbandTestParticipantData() {
         ParticipantDataDto probandParticipantDataDto =
-                new ParticipantDataDto(participantId, ddpInstanceDto.getDdpInstanceId(), AddFamilyMemberRoute.FIELD_TYPE,
+                new ParticipantDataDto(participantId, ddpInstanceDto.getDdpInstanceId(), NewParticipantData.FIELD_TYPE,
                         gson.toJson(probandData), System.currentTimeMillis(), user.getEmail());
         ddpExistingProbandParticipantDataId = participantDataDao.create(probandParticipantDataDto);
     }
@@ -160,7 +160,7 @@ public class AddFamilyMemberRouteTest {
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
         NewParticipantData participantData = new NewParticipantData(participantDataDao);
         participantData.setData(addFamilyMemberPayload.getParticipantGuid().get(), ddpInstanceDto.getDdpInstanceId(),
-                ddpInstanceDto.getInstanceName() + AddFamilyMemberRoute.FIELD_TYPE, probandData);
+                ddpInstanceDto.getInstanceName() + NewParticipantData.FIELD_TYPE, probandData);
         Assert.assertTrue(participantData.isRelationshipIdExists());
     }
 
@@ -173,7 +173,7 @@ public class AddFamilyMemberRouteTest {
             ParticipantDataDto participantDataDto = new ParticipantDataDto(
                     addFamilyMemberPayload.getParticipantGuid().get(),
                     ddpInstanceDto.getDdpInstanceId(),
-                    ddpInstanceDto.getInstanceName() + AddFamilyMemberRoute.FIELD_TYPE,
+                    ddpInstanceDto.getInstanceName() + NewParticipantData.FIELD_TYPE,
                     gson.toJson(addFamilyMemberPayload.getData().get()),
                     System.currentTimeMillis(),
                     user.getEmail()
@@ -197,7 +197,7 @@ public class AddFamilyMemberRouteTest {
             ParticipantDataDto participantDataDto = new ParticipantDataDto(
                     addFamilyMemberPayload.getParticipantGuid().get(),
                     ddpInstanceDto.getDdpInstanceId(),
-                    ddpInstanceDto.getInstanceName() + AddFamilyMemberRoute.FIELD_TYPE,
+                    ddpInstanceDto.getInstanceName() + NewParticipantData.FIELD_TYPE,
                     gson.toJson(copiedProbandToFamilyMember),
                     System.currentTimeMillis(),
                     user.getEmail()

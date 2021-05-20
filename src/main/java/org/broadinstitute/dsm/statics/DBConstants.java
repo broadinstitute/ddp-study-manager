@@ -35,6 +35,7 @@ public class DBConstants {
     //ddp instance
     public static final String DDP_INSTANCE_ID = "ddp_instance_id";
     public static final String INSTANCE_NAME = "instance_name";
+    public static final String STUDY_GUID = "study_guid";
     public static final String BASE_URL = "base_url";
     public static final String NOTIFICATION_RECIPIENT = "notification_recipients";
     public static final String MIGRATED_DDP = "migrated_ddp";
@@ -123,10 +124,15 @@ public class DBConstants {
     public static final String NO_RETURN = "no_return";
     public static final String EXTERNAL_ORDER_STATUS = "external_order_status";
     public static final String EXTERNAL_ORDER_DATE = "external_order_date";
+    public static final String EXTERNAL_RESPONSE = "external_response";
+    public static final String ORDER_TRANSMITTED_AT = "order_transmitted_at";
     public static final String EASYPOST_SHIPMENT_STATUS = "easypost_shipment_status";
     public static final String EASYPOST_SHIPMENT_DATE = "easypost_shipment_date";
     public static final String CARE_EVOLVE = "CE_order";
     public static final String DDP_KIT_TABLE_ABBR = "kit.";
+
+    //carrier service
+    public static final String CARRIER = "carrier";
 
     //medical record
     public static final String PARTICIPANT_ID = "participant_id";
