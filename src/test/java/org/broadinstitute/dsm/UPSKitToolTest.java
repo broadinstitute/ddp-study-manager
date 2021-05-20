@@ -6,23 +6,25 @@ import org.broadinstitute.dsm.util.model.Kit;
 import org.broadinstitute.dsm.util.tools.TbosUPSKitTool;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Map;
 
 import static org.broadinstitute.dsm.TestHelper.setupDB;
+import static org.broadinstitute.dsm.util.tools.TbosUPSKitTool.readFile;
 
 public class UPSKitToolTest {
     @Test
-    public void testDateConversion(){
+    public void testDateConversion() {
         String dateTimeStringInUTC = "2020-12-16T14:46:51Z";
         String dateTimeStringInEST = TbosUPSKitTool.getSQLDateTimeString(dateTimeStringInUTC);
         Assert.assertEquals(dateTimeStringInEST, "2020-12-16 09:46:51");
     }
 
     @Test
-    public void testKitSetValue(){
+    public void testKitSetValue() {
         Kit kit = new Kit();
         kit.setValueByHeader("kit label", "aaa");
         Assert.assertEquals(kit.getKitLabel(), "aaa");
@@ -43,10 +45,11 @@ public class UPSKitToolTest {
         kit.setValueByHeader("resulted at", "2019-08-15T12:54:14.159Z");
         Assert.assertEquals(kit.getResultedAt(), "2019-08-15T12:54:14.159Z");
     }
+
     @Test
-    public void testReadFile(){
-//        String fileContent = TestUtil.readFile("NdiTestFile.txt");
-        Map<String, ArrayList<Kit>> participants = TbosUPSKitTool.readFile("src/test/resources/TbosUPSKitToolTestFile.csv");
+    public void testReadFile() {
+        //        String fileContent = TestUtil.readFile("NdiTestFile.txt");
+        Map<String, ArrayList<Kit>> participants = readFile("src/test/resources/TbosUPSKitToolTestFile.csv");
         Assert.assertNotNull(participants);
         Assert.assertEquals(participants.size(), 1);
         Assert.assertTrue(participants.keySet().contains("TestBoston_PMVYGB"));
@@ -60,8 +63,8 @@ public class UPSKitToolTest {
     }
 
     @Test
-    public void testReadFileMultiPt(){
-        Map<String, ArrayList<Kit>> participants = TbosUPSKitTool.readFile("src/test/resources/TbosUPSKitToolMultiPtKits.csv");
+    public void testReadFileMultiPt() {
+        Map<String, ArrayList<Kit>> participants = readFile("src/test/resources/TbosUPSKitToolMultiPtKits.csv");
         Assert.assertNotNull(participants);
         Assert.assertEquals(participants.size(), 2);
         Assert.assertTrue(participants.keySet().contains("TestBoston_PMVYGB"));
@@ -90,11 +93,11 @@ public class UPSKitToolTest {
 
 
     @Test
-    public void testGetDDPKitBasedOnKitLabel(){
+    public void testGetDDPKitBasedOnKitLabel() {
         DDPInstance ddpInstance = DDPInstance.getDDPInstance("testboston");
-        Kit outboundKit = TbosUPSKitTool.getDDBKitBasedOnKitLabel(TbosUPSKitTool.SQL_SELECT_KIT_BY_KIT_LABEL +TbosUPSKitTool.SQL_SELECT_OUTBOUND, "TBOS-test", ddpInstance.getDdpInstanceId());
+        Kit outboundKit = TbosUPSKitTool.getDDBKitBasedOnKitLabel(TbosUPSKitTool.SQL_SELECT_KIT_BY_KIT_LABEL + TbosUPSKitTool.SQL_SELECT_OUTBOUND, "TBOS-test", ddpInstance.getDdpInstanceId());
         Assert.assertNotNull(outboundKit);
-        Map<String, ArrayList<Kit>> participants = TbosUPSKitTool.readFile("src/test/resources/TbosUPSKitToolTestFile.csv");
+        Map<String, ArrayList<Kit>> participants = readFile("src/test/resources/TbosUPSKitToolTestFile.csv");
         Assert.assertNotNull(participants);
         Assert.assertEquals(participants.size(), 1);
         Assert.assertTrue(participants.keySet().contains("TestBoston_PMVYGB"));
@@ -106,7 +109,7 @@ public class UPSKitToolTest {
         Assert.assertEquals("1Z9YA775YW21328147", outboundKit.getTrackingToId());
         Assert.assertEquals("2309", outboundKit.getDsmKitRequestId());
 
-        Kit inboundKit = TbosUPSKitTool.getDDBKitBasedOnKitLabel(TbosUPSKitTool.SQL_SELECT_KIT_BY_KIT_LABEL +TbosUPSKitTool.SQL_SELECT_INBOUND, "TBOS-test", ddpInstance.getDdpInstanceId());
+        Kit inboundKit = TbosUPSKitTool.getDDBKitBasedOnKitLabel(TbosUPSKitTool.SQL_SELECT_KIT_BY_KIT_LABEL + TbosUPSKitTool.SQL_SELECT_INBOUND, "TBOS-test", ddpInstance.getDdpInstanceId());
         Assert.assertNotNull(inboundKit);
         Assert.assertTrue(participants.keySet().contains("TestBoston_PMVYGB"));
         Assert.assertEquals(participants.get("TestBoston_PMVYGB").size(), 1);
@@ -118,8 +121,8 @@ public class UPSKitToolTest {
     }
 
     @Test
-    public void testInsertShipmentAndPackage(){
-        Map<String, ArrayList<Kit>> participants = TbosUPSKitTool.readFile("src/test/resources/TbosUPSKitToolMultiPtKits.csv");
+    public void testInsertShipment() {
+        Map<String, ArrayList<Kit>> participants = readFile("src/test/resources/TbosUPSKitToolMultiPtKits.csv");
         Assert.assertNotNull(participants);
         Assert.assertEquals(participants.size(), 2);
         Assert.assertTrue(participants.keySet().contains("TestBoston_PMVYGB"));
@@ -130,36 +133,56 @@ public class UPSKitToolTest {
         Assert.assertEquals(ptKits.size(), 1);
         Kit kit = ptKits.get(0);
         DDPInstance ddpInstance = DDPInstance.getDDPInstance("testboston");
-        Kit outboundKit = TbosUPSKitTool.getDDBKitBasedOnKitLabel(TbosUPSKitTool.SQL_SELECT_KIT_BY_KIT_LABEL +TbosUPSKitTool.SQL_SELECT_OUTBOUND, "TBOS-test", ddpInstance.getDdpInstanceId());
+        Kit outboundKit = TbosUPSKitTool.getDDBKitBasedOnKitLabel(TbosUPSKitTool.SQL_SELECT_KIT_BY_KIT_LABEL + TbosUPSKitTool.SQL_SELECT_OUTBOUND, "TBOS-test", ddpInstance.getDdpInstanceId());
         Assert.assertNotNull(outboundKit);
         kit.setDsmKitRequestId(outboundKit.getDsmKitRequestId());
         kit.setTrackingToId(outboundKit.getTrackingToId());
+        kit.setTrackingReturnId(outboundKit.getTrackingReturnId());
         kit.setShipmentId(outboundKit.getShipmentId());
         kit.setPackageId(outboundKit.getPackageId());
         String shipmentId = TbosUPSKitTool.insertShipmentForKit(kit.getDsmKitRequestId());
         kit.setShipmentId(shipmentId);
         Assert.assertNotNull(shipmentId);
-        String packageId = TbosUPSKitTool.insertPackageForKit(kit, outboundKit.getTrackingToId());
-        Assert.assertNotNull(packageId);
-        DBTestUtil.deleteFromQuery(packageId, "delete from ups_package where ups_package_id = ?");
+        TbosUPSKitTool.insertPackagesForKit(kit);
+        String outboundPackage = TbosUPSKitTool.getPackageIdForKit(kit, false);
+        String inboundPackage = TbosUPSKitTool.getPackageIdForKit(kit, true);
+        Assert.assertNotNull(outboundPackage);
+        Assert.assertNotNull(inboundPackage);
+        Assert.assertNotEquals(inboundPackage, outboundPackage);
+        DBTestUtil.deleteFromQuery(shipmentId, "delete from ups_package where ups_shipment_id = ?");
         DBTestUtil.deleteFromQuery(shipmentId, "delete from ups_shipment where ups_shipment_id = ?");
     }
 
-
-
-
-
+    @Test
+    public void testTheBeforeFunction() {
+        Map<String, ArrayList<Kit>> participants = readFile("src/test/resources/TbosUPSKitToolMultiPtKits.csv");
+        Assert.assertNotNull(participants);
+        Assert.assertEquals(participants.size(), 2);
+        Assert.assertTrue(participants.keySet().contains("TestBoston_PBPD68"));
+        Assert.assertEquals(participants.get("TestBoston_PBPD68").size(), 2);
+        ArrayList<Kit> ptKits = participants.get("TestBoston_PBPD68");
+        Assert.assertEquals(ptKits.size(), 2);
+        Kit kit = ptKits.get(1);
+        DDPInstance ddpInstance = DDPInstance.getDDPInstance("testboston");
+        Kit dbKit = TbosUPSKitTool.getDDBKitBasedOnKitLabel(TbosUPSKitTool.SQL_SELECT_KIT_BY_KIT_LABEL + TbosUPSKitTool.SQL_SELECT_OUTBOUND, kit.getKitLabel(), ddpInstance.getDdpInstanceId());
+        Assert.assertEquals( "2021-04-22 14:22:00", dbKit.getLastActivityDateTime());
+        Assert.assertEquals( "2021-04-19T21:38:31Z", kit.getShippedAt());
+        boolean b = TbosUPSKitTool.shouldInsertBasedOnTimeForKit(dbKit, kit.getShippedAt());
+        Assert.assertFalse(b);
+    }
 
 
     @BeforeClass
     public static void first() {
         setupDB();
     }
-//
-//    @AfterClass
-//    public static void stopServer() {
-//        cleanupDB();
-//    }
+
+    @Ignore
+    @Test
+    public void InsertFile() {
+        Map<String, ArrayList<Kit>> participants = TbosUPSKitTool.readFile("src/test/resources/TbosUPSKitToolTestFile.csv");
+        TbosUPSKitTool.insertFileInfo(participants);
+    }
 
 
 }
