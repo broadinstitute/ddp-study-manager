@@ -186,6 +186,37 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
+    public void filterParticipantsByErollmentDateRange() throws Exception {
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
+            int scrollSize = 1000;
+            Map<String, Map<String, Object>> esData = new HashMap<>();
+            SearchRequest searchRequest = new SearchRequest("participants_structured.rgp.rgp");
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            SearchResponse response = null;
+            int i = 0;
+            while (response == null || response.getHits().getHits().length != 0) {
+
+                BoolQueryBuilder activityCompletedAt = new BoolQueryBuilder();
+                ExistsQueryBuilder existsQuery = new ExistsQueryBuilder("activities.completedAt");
+                activityCompletedAt.must(existsQuery);
+                activityCompletedAt.must(QueryBuilders.matchQuery("activities.activityCode", "ENROLLMENT"));
+                activityCompletedAt.filter(QueryBuilders.rangeQuery("activities.completedAt").from("1621087252000"));
+                NestedQueryBuilder queryActivityAnswer = QueryBuilders.nestedQuery("activities", activityCompletedAt, ScoreMode.Avg);
+
+                searchSourceBuilder.query(queryActivityAnswer);
+                searchSourceBuilder.size(scrollSize);
+                searchSourceBuilder.from(i * scrollSize);
+                searchRequest.source(searchSourceBuilder);
+
+                response = client.search(searchRequest, RequestOptions.DEFAULT);
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                i++;
+            }
+            Assert.assertNotEquals(0, esData.size());
+        }
+    }
+
+    @Test
     public void searchPTByActivityDte() throws Exception {
         activityAnswer("participants_structured.cmi.cmi-brain", "CONSENT", "CONSENT_BLOOD", "true");
     }

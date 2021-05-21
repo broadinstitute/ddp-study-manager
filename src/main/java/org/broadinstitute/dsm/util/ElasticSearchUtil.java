@@ -233,6 +233,7 @@ public class ElasticSearchUtil {
                     int scrollSize = to - from;
                     SearchRequest searchRequest = new SearchRequest(index);
                     SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+                    QueryBuilders.rangeQuery("enrolled").from("2021-05-13").to("2021-05-29");
                     SearchResponse response = null;
                     searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(PROFILE_CREATED_AT, SortOrder.ASC);
                     searchSourceBuilder.size(scrollSize);

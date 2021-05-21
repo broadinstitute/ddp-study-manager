@@ -32,31 +32,36 @@ public class StatisticDataRoute extends RequestHandler {
         }
         int from = Integer.parseInt(queryParamsMap.get("from").value());
         int to = Integer.parseInt(queryParamsMap.get("to").value());
-        DDPInstance ddpInstanceByRealm = DDPInstanceDao.getDDPInstanceByRealm(realm);
-        DashboardSettingsDao dashboardSettingsDao = new DashboardSettingsDao();
-        List<DashboardSettingsDto> dashboardSettingsByInstanceId =
-                dashboardSettingsDao.getDashboardSettingsByInstanceId(Integer.parseInt(ddpInstanceByRealm.getDdpInstanceId()));
-
-        List<StatisticPayload> statisticPayloads = new ArrayList<>();
-        for (DashboardSettingsDto dashboardSetting: dashboardSettingsByInstanceId) {
-            StatisticPayload.Builder statisticPayloadBuilder = extractStatisticPayloadFromDashboardSetting(dashboardSetting);
-            StatisticPayload statisticPayload = statisticPayloadBuilder
-                    .withFrom(from)
-                    .withTo(to)
-                    .withRealm(realm)
-                    .build();
-            statisticPayloads.add(statisticPayload);
+        try {
+            DisplayType displayType = DisplayType.valueOf(queryParamsMap.get("displayType").value());
+            System.out.println(displayType);
+        } catch (IllegalArgumentException iae) {
+            DDPInstance ddpInstanceByRealm = DDPInstanceDao.getDDPInstanceByRealm(realm);
+            DashboardSettingsDao dashboardSettingsDao = new DashboardSettingsDao();
+            List<DashboardSettingsDto> dashboardSettingsByInstanceId =
+                    dashboardSettingsDao.getDashboardSettingsByInstanceId(Integer.parseInt(ddpInstanceByRealm.getDdpInstanceId()));
+            List<StatisticPayload> statisticPayloads = new ArrayList<>();
+            for (DashboardSettingsDto dashboardSetting: dashboardSettingsByInstanceId) {
+                StatisticPayload.Builder statisticPayloadBuilder = extractStatisticPayloadFromDashboardSetting(dashboardSetting);
+                StatisticPayload statisticPayload = statisticPayloadBuilder
+                        .withFrom(from)
+                        .withTo(to)
+                        .withRealm(realm)
+                        .build();
+                statisticPayloads.add(statisticPayload);
+            }
+            List<StatisticResult> result = new ArrayList<>();
+            Statistic statistic;
+            StatisticsCreator statisticFactory = new StatisticsCreator();
+            for (StatisticPayload statisticPayload: statisticPayloads) {
+                statistic = statisticFactory.makeStatistic(statisticPayload);
+                result.add(
+                        statistic.filter(statisticPayload)
+                );
+            }
+           return result;
         }
-        List<StatisticResult> result = new ArrayList<>();
-        Statistic statistic;
-        StatisticsCreator statisticFactory = new StatisticsCreator();
-        for (StatisticPayload statisticPayload: statisticPayloads) {
-            statistic = statisticFactory.makeStatistic(statisticPayload);
-            result.add(
-                    statistic.filter(statisticPayload)
-            );
-        }
-        return result;
+        return null;
     }
 
     private StatisticPayload.Builder extractStatisticPayloadFromDashboardSetting(DashboardSettingsDto dashboardSetting) {
