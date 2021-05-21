@@ -29,8 +29,11 @@ public class AutomaticProbandDataCreator {
 
 
     private static final Logger logger = LoggerFactory.getLogger(AutomaticProbandDataCreator.class);
+    public static final String RGP_FAMILY_ID = "rgp_family_id";
 
-    public static Map<String, List<ParticipantData>> setDefaultProbandDataIfNotExists(Map<String, List<ParticipantData>> participantData,
+    private boolean isParticipantDataUpdated = false;
+
+    public Map<String, List<ParticipantData>> setDefaultProbandDataIfNotExists(Map<String, List<ParticipantData>> participantData,
                                                                                       Map<String, Map<String, Object>> participantESData,
                                                                                       @NonNull DDPInstance instance) {
         if (participantESData == null) {
@@ -69,16 +72,19 @@ public class AutomaticProbandDataCreator {
                 }
             }
         }
-        return ParticipantData.getParticipantData(instance.getName());
+        if (isParticipantDataUpdated) {
+            return ParticipantData.getParticipantData(instance.getName());
+        }
+        return participantData;
     }
 
-    private static void extractAndInsertProbandFromESData(DDPInstance instance, Map.Entry<String, Map<String, Object>> esData,
+    private void extractAndInsertProbandFromESData(DDPInstance instance, Map.Entry<String, Map<String, Object>> esData,
                                                           ParticipantDataDao participantDataDao,
                                                           BookmarkDao bookmarkDao,
                                                           Map<String, String> columnsWithDefaultOptions) {
         String participantId = esData.getKey();
         NewParticipantData newParticipantData = new NewParticipantData(participantDataDao);
-        Optional<BookmarkDto> maybeBookmark = bookmarkDao.getBookmarkByInstance("rgp_family_id");
+        Optional<BookmarkDto> maybeBookmark = bookmarkDao.getBookmarkByInstance(RGP_FAMILY_ID);
         Map<String, String> probandDataMap = extractProbandDefaultDataFromParticipantProfile(esData.getValue(), maybeBookmark);
         newParticipantData.setData(
                 participantId,
@@ -92,10 +98,11 @@ public class AutomaticProbandDataCreator {
             bookmarkDto.setValue(bookmarkDto.getValue() + 1);
             bookmarkDao.updateBookmarkValueByBookmarkId(bookmarkDto.getBookmarkId(), bookmarkDto.getValue());
         });
+        isParticipantDataUpdated = true;
         logger.info("Automatic proband data for participant with id: " + participantId + " has been created");
     }
 
-    private static Map<String, String> extractProbandDefaultDataFromParticipantProfile(@NonNull Map<String, Object> esData,
+    private Map<String, String> extractProbandDefaultDataFromParticipantProfile(@NonNull Map<String, Object> esData,
                                                                                        Optional<BookmarkDto> maybeBookmark) {
         Map<String, Object> profile = (Map<String, Object>) esData.get(ElasticSearchUtil.PROFILE);
         List<Map<String, Object>> activities = (List<Map<String, Object>>) esData.get(ElasticSearchUtil.ACTIVITIES);
@@ -125,7 +132,7 @@ public class AutomaticProbandDataCreator {
         return probandMemberDetails.toMap();
     }
 
-    private static void updateProbandDataIfESParticipantUpdated(DDPInstance instance, Map.Entry<String, Map<String, Object>> esData, Optional<ParticipantData> probandData) {
+    private void updateProbandDataIfESParticipantUpdated(DDPInstance instance, Map.Entry<String, Map<String, Object>> esData, Optional<ParticipantData> probandData) {
         String participantId = esData.getKey();
         Map<String, String> profile = (Map<String, String>) esData.getValue().get(ElasticSearchUtil.PROFILE);
         String esFirstName = profile.get(ElasticSearchUtil.FIRST_NAME_FIELD);
@@ -152,6 +159,7 @@ public class AutomaticProbandDataCreator {
                     "SYSTEM"
             );
             new ParticipantDataDao().updateParticipantDataColumn(updatedParticipantDataDTO);
+            isParticipantDataUpdated = true;
             logger.info("Proband data for participant with id: " + participantId + " has automatically updated");
         }
     }

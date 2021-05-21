@@ -96,7 +96,7 @@ public class ParticipantWrapper {
 
             //needed for RGP family member
             if (DDPInstanceDao.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
-                participantData = AutomaticProbandDataCreator.setDefaultProbandDataIfNotExists(participantData, participantESData, instance);
+                participantData = new AutomaticProbandDataCreator().setDefaultProbandDataIfNotExists(participantData, participantESData, instance);
             }
 
             List<String> baseList = new ArrayList<>(participantESData.keySet());
@@ -202,7 +202,7 @@ public class ParticipantWrapper {
 
             //needed for RGP family member
             if (DDPInstanceDao.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
-                participantData = AutomaticProbandDataCreator.setDefaultProbandDataIfNotExists(participantData, participantESData, instance);
+                participantData = new AutomaticProbandDataCreator().setDefaultProbandDataIfNotExists(participantData, participantESData, instance);
             }
 
             baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
