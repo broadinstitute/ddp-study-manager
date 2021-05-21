@@ -15,16 +15,55 @@ public class HeatmapGraphData extends GraphResult {
     private Map<String, Object> colorRange;
     private List<HeatMapDataSet> data;
 
-    public HeatmapGraphData() {}
+    private HeatmapGraphData(Builder builder) {
+        this.displayText = builder.displayText;
+        this.displayType = builder.displayType;
+        this.dashboardSettingId = builder.dashboardSettingId;
+        this.rows = builder.rows;
+        this.columns = builder.columns;
+        this.colorRange = builder.colorRange;
+        this.data = builder.data;
+    }
 
-    public HeatmapGraphData(List<HeatMapRow> rows, List<Map<String, Object>> columns,
-                            Map<String, Object> colorRange, List<HeatMapDataSet> data,
-                            DisplayType displayType, String displayText) {
-        super(displayText, displayType);
-        this.rows = rows;
-        this.columns = columns;
-        this.colorRange = colorRange;
-        this.data = data;
+    public static class Builder {
+
+        private List<HeatMapRow> rows;
+        private List<Map<String, Object>> columns;
+        private Map<String, Object> colorRange;
+        private List<HeatMapDataSet> data;
+
+        //optional fields
+        private String displayText;
+        private DisplayType displayType;
+        private int dashboardSettingId;
+
+        public Builder(List<HeatMapRow> rows, List<Map<String, Object>> columns,
+                       Map<String, Object> colorRange, List<HeatMapDataSet> data) {
+            this.rows = rows;
+            this.columns = columns;
+            this.colorRange = colorRange;
+            this.data = data;
+        }
+
+        public Builder withDisplayText(String displayText) {
+            this.displayText = displayText;
+            return this;
+        }
+
+        public Builder withDisplayType(DisplayType displayType) {
+            this.displayType = displayType;
+            return this;
+        }
+
+        public Builder withDashboardSettingId(int dashboardSettingId) {
+            this.dashboardSettingId = dashboardSettingId;
+            return this;
+        }
+
+        public HeatmapGraphData build() {
+            return new HeatmapGraphData(this);
+        }
+
     }
 
     @Data

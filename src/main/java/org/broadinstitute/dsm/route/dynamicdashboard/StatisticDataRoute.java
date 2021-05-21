@@ -33,7 +33,7 @@ public class StatisticDataRoute extends RequestHandler {
         int from = Integer.parseInt(queryParamsMap.get("from").value());
         int to = Integer.parseInt(queryParamsMap.get("to").value());
         try {
-            DisplayType displayType = DisplayType.valueOf(queryParamsMap.get("displayType").value());
+            DisplayType displayType = DisplayType.valueOf("");
             System.out.println(displayType);
         } catch (IllegalArgumentException iae) {
             DDPInstance ddpInstanceByRealm = DDPInstanceDao.getDDPInstanceByRealm(realm);
@@ -72,6 +72,7 @@ public class StatisticDataRoute extends RequestHandler {
         String displayText = dashboardSetting.getDisplayText();
         return new StatisticPayload.Builder(displayType, statisticFor, filterType)
                 .withDisplayText(displayText)
-                .withPossibleValues(possibleValues);
+                .withPossibleValues(possibleValues)
+                .withDashboardSettingId(dashboardSetting.getDashboardSettingsId());
     }
 }

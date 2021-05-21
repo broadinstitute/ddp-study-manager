@@ -59,7 +59,11 @@ public class KitStatusesHeatMap extends HeatmapGraph {
 
         List<Map<String, Object>> columns = getColumns();
         Map<String, Object> colorRange = getColorRange();
-        return new HeatmapGraphData(heatmapGraphRows, columns, colorRange, heatMapDataSet, getStatisticPayload().getDisplayType(), getStatisticPayload().getDisplayText());
+        return new HeatmapGraphData.Builder(heatmapGraphRows, columns, colorRange, heatMapDataSet)
+                .withDisplayType(getStatisticPayload().getDisplayType())
+                .withDisplayText(getStatisticPayload().getDisplayText())
+                .withDashboardSettingId(getStatisticPayload().getDashboardSettingId())
+                .build();
     }
 
     List<HeatmapGraphData.HeatMapDataSet> getHeatmapDataset(Map<String, Map<String, List<Object>>> participantsWithKitsSeparatedByMonth) {

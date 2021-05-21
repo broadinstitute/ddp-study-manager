@@ -19,7 +19,7 @@ public class HeatmapGraph extends Graph {
 
     @Override
     public StatisticResult filter(StatisticPayload statisticPayload) {
-        HeatmapGraphData heatmapResult = new HeatmapGraphData();
+        HeatmapGraphData heatmapResult = null;
         switch (statisticPayload.getFilterType()) {
             case KIT_STATUSES:
                 heatmapResult = new KitStatusesHeatMap(statisticPayload).samplesByStatuses();

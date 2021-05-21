@@ -9,6 +9,7 @@ import lombok.Data;
 @Data
 public class StatisticPayload {
 
+    private int dashboardSettingId;
     private DisplayType displayType;
     private String displayText;
     private StatisticFor statisticFor;
@@ -19,6 +20,7 @@ public class StatisticPayload {
     private int to;
 
     private StatisticPayload(Builder builder) {
+        this.dashboardSettingId = builder.dashboardSettingId;
         this.displayType = builder.displayType;
         this.displayText = builder.displayText;
         this.statisticFor = builder.statisticFor;
@@ -36,6 +38,7 @@ public class StatisticPayload {
         private FilterType filterType;
 
         //Optional parameters
+        private int dashboardSettingId;
         private String displayText = "";
         private List<Map<String, Object>> possibleValues = new ArrayList<>();
         private String realm = "";
@@ -46,6 +49,11 @@ public class StatisticPayload {
             this.displayType = displayType;
             this.statisticFor = statisticFor;
             this.filterType = filterType;
+        }
+
+        public Builder withDashboardSettingId(int dashboardSettingId) {
+            this.dashboardSettingId = dashboardSettingId;
+            return this;
         }
 
         public Builder withDisplayText(String displayText) {
