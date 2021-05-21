@@ -72,10 +72,7 @@ public class AutomaticProbandDataCreator {
                 }
             }
         }
-        if (isParticipantDataUpdated) {
-            return ParticipantData.getParticipantData(instance.getName());
-        }
-        return participantData;
+        return isParticipantDataUpdated ? ParticipantData.getParticipantData(instance.getName()) : participantData;
     }
 
     private void extractAndInsertProbandFromESData(DDPInstance instance, Map.Entry<String, Map<String, Object>> esData,
