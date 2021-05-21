@@ -230,10 +230,11 @@ public class MedicalRecordUtil {
         return null;
     }
 
-    public static void writeParticipantIntoDB(@NonNull Connection conn, @NonNull String participantId, @NonNull String instanceId,
+    public static String writeParticipantIntoDB(@NonNull Connection conn, @NonNull String participantId, @NonNull String instanceId,
                                               @NonNull long lastVersion, @NonNull String lastUpdated, @NonNull String userId) {
         //new participant
-        try (PreparedStatement insertParticipant = conn.prepareStatement(SQL_INSERT_PARTICIPANT)) {
+        SimpleResult dbVals = new SimpleResult();
+        try (PreparedStatement insertParticipant = conn.prepareStatement(SQL_INSERT_PARTICIPANT, Statement.RETURN_GENERATED_KEYS )) {
             insertParticipant.setString(1, participantId);
             insertParticipant.setLong(2, lastVersion);
             insertParticipant.setString(3, lastUpdated);
@@ -245,7 +246,17 @@ public class MedicalRecordUtil {
             if (result != 1) {
                 throw new RuntimeException("Error updating row");
             }
+            else {
+                try (ResultSet rs = insertParticipant.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = rs.getString(1);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException("Error getting id of new institution ", e);
+                }
+            }
             logger.info("Added new participant w/ id " + participantId);
+            return (String) dbVals.resultValue;
         }
         catch (SQLException e) {
             throw new RuntimeException("Error inserting new participant ", e);

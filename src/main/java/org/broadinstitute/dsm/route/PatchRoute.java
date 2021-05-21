@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.structure.DBElement;
@@ -25,10 +26,13 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 public class PatchRoute extends RequestHandler {
 
@@ -262,6 +266,27 @@ public class PatchRoute extends RequestHandler {
                             }
                         }
                         return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
+                    }
+                    else if (Patch.DDP_PARTICIPANT_ID.equals(patch.getParent())) {
+                        //new additional value for pt which is not in ddp_participant and ddp_participant_record table yet
+                        DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+                        String participantId = inTransaction(conn -> {
+                            String newParticipantId = MedicalRecordUtil.writeParticipantIntoDB(conn, patch.getParentId(), ddpInstance.getDdpInstanceId(), 0, "", patch.getUser());
+                            MedicalRecordUtil.writeNewRecordIntoDb(conn, DDPMedicalRecordDataRequest.SQL_INSERT_PARTICIPANT_RECORD, patch.getParentId(), ddpInstance.getDdpInstanceId());
+                            return newParticipantId;
+                        });
+                        if (StringUtils.isNotBlank(participantId)) {
+                            DBElement dbElement = patchUtil.getColumnNameMap().get(patch.getNameValue().getName());
+                            if (dbElement != null) {
+                                Patch.patch(participantId, patch.getUser(), patch.getNameValue(), dbElement);
+                            }
+                            else {
+                                throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
+                            }
+                            Map<String, String> map = new HashMap<>();
+                            map.put("participantId", participantId);
+                            return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
+                        }
                     }
                 }
                 throw new RuntimeException("Id and parentId was null");
