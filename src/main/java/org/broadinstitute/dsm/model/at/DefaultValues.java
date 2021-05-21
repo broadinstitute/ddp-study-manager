@@ -29,15 +29,16 @@ public class DefaultValues {
             return participantData;
         }
         boolean addedNewParticipantData = false;
-        for (String ddpParticipantId : participantESData.keySet()) {
+        ParticipantDataDao participantDataDao = new ParticipantDataDao();
+        for (Map.Entry<String, Map<String, Object>> entry: participantESData.entrySet()) {
+            String ddpParticipantId = entry.getKey();
             List<ParticipantData> participantDataList = participantData.get(ddpParticipantId);
             //only needed for new signups - migrated pts already have the values needed
             if (participantDataList == null) {
-                Map<String, Object> esParticipantData = participantESData.get(ddpParticipantId);
+                Map<String, Object> esParticipantData = entry.getValue();
                 Map<String, Object> profile = (Map<String, Object>) esParticipantData.get(ElasticSearchUtil.PROFILE);
                 String hruid = (String) profile.get(ElasticSearchUtil.HRUID);
                 if (StringUtils.isNotBlank(hruid)) {
-                    ParticipantDataDao participantDataDao = new ParticipantDataDao();
                     NewParticipantData newParticipantData = new NewParticipantData(participantDataDao);
                     Map<String, String> dataMap = new HashMap<>();
                     dataMap.put(GENOME_STUDY_CPT_ID, PREFIX.concat(hruid));
