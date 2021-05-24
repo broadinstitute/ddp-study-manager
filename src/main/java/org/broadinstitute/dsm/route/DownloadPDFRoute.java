@@ -1,11 +1,14 @@
 package org.broadinstitute.dsm.route;
 
+import com.google.gson.Gson;
 import lombok.NonNull;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
+import org.broadinstitute.ddp.exception.FileProcessingException;
 import org.broadinstitute.ddp.handlers.util.MedicalInfo;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.ddp.util.GoogleBucket;
@@ -18,6 +21,7 @@ import org.broadinstitute.dsm.files.PDFProcessor;
 import org.broadinstitute.dsm.files.RequestPDFProcessor;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
+import org.broadinstitute.dsm.model.ddp.PDF;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.*;
 import org.broadinstitute.dsm.util.*;
@@ -29,9 +33,7 @@ import spark.Request;
 import spark.Response;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -44,100 +46,69 @@ public class DownloadPDFRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(DownloadPDFRoute.class);
 
-    private static final String SQL_SELECT_REALM_FOR_PARTICIPANT = "SELECT inst.instance_name, inst.base_url, inst.ddp_instance_id, inst.mr_attention_flag_d, " +
-            "inst.tissue_attention_flag_d, inst.es_participant_index, inst.es_activity_definition_index, inst.es_users_index, inst.auth0_token, " +
-            "inst.notification_recipients, inst.migrated_ddp, inst.billing_reference," +
-            " part.ddp_participant_id " +
-            "FROM ddp_participant part, ddp_instance inst WHERE inst.ddp_instance_id = part.ddp_instance_id " +
-            "AND part.ddp_participant_id = ?";
-
-    public static final String CONSENT_PDF = "/consentpdf";
-    public static final String RELEASE_PDF = "/releasepdf";
-    public static final String COVER_PDF = "/cover";
-    public static final String REQUEST_PDF = "/requestpdf";
     public static final String PDF = "/pdf";
+    public static final String BUNDLE = "/bundle";
 
+    private static final String COVER = "cover";
+    private static final String CONSENT = "consent";
+    private static final String RELEASE = "release";
+    private static final String TISSUE = "tissue";
+    private static final String IRB = "irb";
     private static final String JSON_START_DATE = "startDate";
     private static final String JSON_END_DATE = "endDate";
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         logger.info(request.url());
-        if (request.url().contains(RoutePath.DOWNLOAD_PDF)) {
-            String realm = null;
-            QueryParamsMap queryParams = request.queryMap();
-            if (queryParams.value(RoutePath.REALM) != null) {
-                realm = queryParams.get(RoutePath.REALM).value();
-            }
+        QueryParamsMap queryParams = request.queryMap();
+        String realm = null;
+        if (queryParams.value(RoutePath.REALM) != null) {
+            realm = queryParams.get(RoutePath.REALM).value();
+        }
+        if (StringUtils.isNotBlank(realm)) {
             if (UserUtil.checkUserAccess(realm, userId, "pdf_download")) {
-                String requestBody = request.body();
-                if (StringUtils.isNotBlank(requestBody)) {
-                    JSONObject jsonObject = new JSONObject(requestBody);
-                    String ddpParticipantId = (String) jsonObject.get(RequestParameter.DDP_PARTICIPANT_ID);
-                    String userIdR = (String) jsonObject.get(RequestParameter.USER_ID);
-                    String configName = null;
-                    if (jsonObject.has(RequestParameter.CONFIG_NAME)) {
-                        configName = (String) jsonObject.get(RequestParameter.CONFIG_NAME);
-                    }
-                    Integer userIdRequest = Integer.parseInt(userIdR);
-                    if (!userId.equals(userIdR)) {
-                        throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdR);
-                    }
-                    String medicalRecord = null;
-                    List<String> oncHistoryIDs = null;
-                    if (StringUtils.isNotBlank(ddpParticipantId)) {
-                        logger.info(request.url());
-                        String pdfType = null;
-                        if (request.url().endsWith(CONSENT_PDF)) {
-                            pdfType = CONSENT_PDF;
+                if (request.url().contains(RoutePath.DOWNLOAD_PDF)) {
+                    String requestBody = request.body();
+                    if (StringUtils.isNotBlank(requestBody)) {
+                        JSONObject jsonObject = new JSONObject(requestBody);
+                        String userIdR = (String) jsonObject.get(RequestParameter.USER_ID);
+                        Integer userIdRequest = Integer.parseInt(userIdR);
+                        if (!userId.equals(userIdR)) {
+                            throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdR);
                         }
-                        else if (request.url().endsWith(RELEASE_PDF)) {
-                            pdfType = RELEASE_PDF;
-                        }
-                        else if (request.url().contains(COVER_PDF)) {
-                            pdfType = COVER_PDF;
-                            medicalRecord = request.params(RequestParameter.MEDICALRECORDID);
-                        }
-                        else if (request.url().contains(REQUEST_PDF)) {
-                            pdfType = REQUEST_PDF;
-                            if (queryParams.value("requestId") != null) {
-                                oncHistoryIDs = Arrays.asList(queryParams.get("requestId").values());
+
+                        String ddpParticipantId = (String) jsonObject.get(RequestParameter.DDP_PARTICIPANT_ID);
+                        if (StringUtils.isNotBlank(ddpParticipantId)) {
+                            String configName = null;
+                            if (jsonObject.has(RequestParameter.CONFIG_NAME)) {
+                                configName = (String) jsonObject.get(RequestParameter.CONFIG_NAME);
                             }
-                        }
-                        else if (request.url().endsWith(PDF) && StringUtils.isNotBlank(configName)) {
-                            pdfType = configName;
-                        }
-                        if (StringUtils.isNotBlank(pdfType)) {
-                            getPDFs(response, ddpParticipantId, pdfType, medicalRecord, oncHistoryIDs, realm, requestBody, userIdRequest);
+                            String medicalRecord = null;
+                            if (jsonObject.has("medicalRecordId")) {
+                                medicalRecord = (String) jsonObject.get("medicalRecordId");
+                            }
+                            List<String> oncHistoryIDs = null;
+                            if (jsonObject.has("requestId")) {
+                                oncHistoryIDs = Arrays.asList(new Gson().fromJson((String) jsonObject.get("requestId"), String[].class));
+                            }
+                            List<PDF> pdfs = null;
+                            if (jsonObject.has("pdfs")) {
+                                pdfs = Arrays.asList(new Gson().fromJson((String) jsonObject.get("pdfs"), PDF[].class));
+                            }
+                            getPDFs(response, ddpParticipantId, configName, medicalRecord, oncHistoryIDs, pdfs, realm, requestBody, userIdRequest);
                             return new Result(200);
                         }
                         else {
                             response.status(500);
-                            throw new RuntimeException("Error missing pdf type");
+                            throw new RuntimeException("Error missing ddpParticipantId");
                         }
                     }
                     else {
                         response.status(500);
-                        throw new RuntimeException("Error missing participantId");
+                        throw new RuntimeException("Error missing requestBody");
                     }
                 }
                 else {
-                    response.status(500);
-                    throw new RuntimeException("Error missing participantId");
-                }
-            }
-            else {
-                return new Result(500, UserErrorMessages.NO_RIGHTS);
-            }
-        }
-        else {
-            QueryParamsMap queryParams = request.queryMap();
-            String realm = null;
-            if (queryParams.value(RoutePath.REALM) != null) {
-                realm = queryParams.get(RoutePath.REALM).value();
-            }
-            if (UserUtil.checkUserAccess(realm, userId, "pdf_download")) {
-                if (StringUtils.isNotBlank(realm)) {
                     String ddpParticipantId = null;
                     if (queryParams.value(RequestParameter.DDP_PARTICIPANT_ID) != null) {
                         ddpParticipantId = queryParams.get(RequestParameter.DDP_PARTICIPANT_ID).value();
@@ -146,17 +117,18 @@ public class DownloadPDFRoute extends RequestHandler {
                         DDPInstance instance = DDPInstance.getDDPInstance(realm);
                         Map<String, Map<String, Object>> participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance,
                                 ElasticSearchUtil.BY_GUID + ddpParticipantId);
-                        if (participantESData == null && participantESData.isEmpty()) {
-                            participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId);
+                        //filter ES with GUID
+                        if (participantESData != null && !participantESData.isEmpty()) {
+                            return returnPDFS(participantESData, ddpParticipantId);
                         }
-                        return returnPDFS(participantESData, ddpParticipantId);
-                    }
-                    else {
-                        return getPDFs(realm);
+                        else {
+                            //pt was not found with GUID check for legacyAltPid
+                            participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId);
+                            return returnPDFS(participantESData, ddpParticipantId);
+                        }
                     }
                 }
-            }
-            else {
+            } else {
                 return new Result(500, UserErrorMessages.NO_RIGHTS);
             }
         }
@@ -197,235 +169,226 @@ public class DownloadPDFRoute extends RequestHandler {
         return null;
     }
 
+    public byte[] getPDFBundle(@NonNull String ddpParticipantId, String medicalRecordId,
+                             List<String> oncHistoryIDs, List<PDF> pdfs, @NonNull String realm, String requestBody) {
+        DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
+        if (ddpInstance != null && StringUtils.isNotBlank(ddpParticipantId)) {
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            try {
+                PDFMergerUtility pdfMerger = new PDFMergerUtility();
+                pdfMerger.setDestinationStream(output);
+                pdfs.sort(Comparator.comparing(org.broadinstitute.dsm.model.ddp.PDF::getOrder));
+
+                //make cover pdf first
+                if (pdfs != null && pdfs.size() > 0) {
+                    pdfs.forEach( pdf -> {
+                        if (pdf.getOrder() > 0) {
+                            if (pdf.getConfigName().equals("cover")) {
+                                pdfMerger.addSource(new ByteArrayInputStream(mrRequestPDF(ddpInstance, ddpParticipantId, medicalRecordId, requestBody)));
+                            }
+                            else if (pdf.getConfigName().equals("request")) {
+                                pdfMerger.addSource(new ByteArrayInputStream(tissueRequestPDF(ddpInstance, ddpParticipantId, oncHistoryIDs)));
+                            }
+                            else if (pdf.getConfigName().equals("irb")) {
+                                pdfMerger.addSource(new ByteArrayInputStream(getIRBLetter(ddpInstance)));
+                            }
+                            else {
+                                pdfMerger.addSource(new ByteArrayInputStream(requestPDF(ddpInstance, ddpParticipantId, pdf.getConfigName())));
+                            }
+                        }
+                    });
+                }
+                pdfMerger.mergeDocuments();
+                //todo get page count and add them to the cover/request pdf
+            }
+            catch (IOException e) {
+                throw new FileProcessingException("Unable to merge documents ", e);
+            }
+            return output.toByteArray();
+        }
+        return null;
+    }
+
+    private byte[] mrRequestPDF(@NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId, @NonNull String medicalRecordId,
+                                    @NonNull String requestBody) {
+        JSONObject jsonObject = new JSONObject(requestBody);
+        Set keySet = jsonObject.keySet();
+        String startDate = null;
+        String endDate = null;
+        if (keySet.contains(JSON_START_DATE)) {
+            startDate = (String) jsonObject.get(JSON_START_DATE);
+            if (!"0/0".equals(startDate) && !startDate.contains("/") && startDate.contains("-")) {
+                startDate = SystemUtil.changeDateFormat(SystemUtil.DATE_FORMAT, SystemUtil.US_DATE_FORMAT, startDate);
+            }
+            else if (StringUtils.isNotBlank(startDate) && startDate.startsWith("0/") && !startDate.equals("0/0")) {
+                startDate = "01/" + startDate.split("/")[1];
+            }
+        }
+        if (keySet.contains(JSON_END_DATE)) {
+            endDate = (String) jsonObject.get(JSON_END_DATE);
+            endDate = SystemUtil.changeDateFormat(SystemUtil.DATE_FORMAT, SystemUtil.US_DATE_FORMAT, endDate);
+        }
+        if (StringUtils.isBlank(medicalRecordId)) {
+            throw new RuntimeException("MedicalRecordID is missing. Can't create cover pdf");
+        }
+        //get information from db
+        MedicalRecord medicalRecord = MedicalRecord.getMedicalRecord(ddpInstance.getName(), ddpParticipantId, medicalRecordId);
+
+        PDFProcessor processor = new CoverPDFProcessor(ddpInstance.getName());
+        Map<String, Object> valueMap = new HashMap<>();
+        //values same no matter from where participant/institution data comes from
+        valueMap.put(CoverPDFProcessor.FIELD_CONFIRMED_INSTITUTION_NAME, medicalRecord.getName());
+        valueMap.put(CoverPDFProcessor.FIELD_CONFIRMED_INSTITUTION_NAME_2, medicalRecord.getName() + ",");
+        valueMap.put(CoverPDFProcessor.FIELD_CONFIRMED_FAX, medicalRecord.getFax());
+        String today = new SimpleDateFormat("MM/dd/yyyy").format(new Date());
+        valueMap.put(CoverPDFProcessor.FIELD_DATE, today);
+        valueMap.put(CoverPDFProcessor.FIELD_DATE_2, StringUtils.isNotBlank(endDate) ? endDate : today); //end date
+
+        //adding checkboxes configured under instance_settings
+        InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(ddpInstance.getName());
+        if (instanceSettings != null && instanceSettings.getMrCoverPdf() != null && !instanceSettings.getMrCoverPdf().isEmpty()) {
+            for (Value mrCoverSetting : instanceSettings.getMrCoverPdf()) {
+                if (keySet.contains(mrCoverSetting.getValue())) {
+                    valueMap.put(mrCoverSetting.getValue(), BooleanUtils.toBoolean((Boolean) jsonObject.get(mrCoverSetting.getValue())));
+                }
+            }
+        }
+        addDDPParticipantDataToValueMap(ddpInstance, ddpParticipantId, valueMap, true);
+
+        valueMap.put(CoverPDFProcessor.START_DATE_2, StringUtils.isNotBlank(startDate) ? startDate : valueMap.get(CoverPDFProcessor.FIELD_DATE_OF_DIAGNOSIS)); //start date
+        InputStream stream = null;
+        try {
+            stream = processor.generateStream(valueMap);
+            stream.mark(0);
+            return IOUtils.toByteArray(stream);
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Couldn't get pdf for participant " + ddpParticipantId + " of ddpInstance " + ddpInstance.getName(), e);
+        }
+        finally {
+            try {
+                if (stream != null) {
+                    stream.close();
+                }
+            }
+            catch (IOException e) {
+                throw new RuntimeException("Error closing stream", e);
+            }
+        }
+    }
+
+    private byte[] tissueRequestPDF(@NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId, @NonNull List<String> oncHistoryIDs) {
+        logger.info("Generating request pdf for onc history ids {}", StringUtils.join(oncHistoryIDs, ","));
+        RequestPDFProcessor processor = new RequestPDFProcessor(ddpInstance.getName());
+        Map<String, Object> valueMap = new HashMap<>();
+        String today = new SimpleDateFormat("MM/dd/yyyy").format(new Date());
+        valueMap.put(RequestPDFProcessor.FIELD_DATE, today);
+        valueMap.put(RequestPDFProcessor.FIELD_DATE_2, "(" + today + ")");
+        addDDPParticipantDataToValueMap(ddpInstance, ddpParticipantId, valueMap, false);
+
+        InputStream stream = null;
+        try {
+            int counter = 0;
+            if (oncHistoryIDs != null) {
+                for (int i = 0; i < oncHistoryIDs.size(); i++) {
+                    OncHistoryDetail oncHistoryDetail = OncHistoryDetail.getOncHistoryDetail(oncHistoryIDs.get(i), ddpInstance.getName());
+                    // facility information is the same in all of the requests so only need to be set ones!
+                    if (i == 0) {
+                        valueMap.put(RequestPDFProcessor.FIELD_CONFIRMED_INSTITUTION_NAME, oncHistoryDetail.getFacility());
+                        valueMap.put(RequestPDFProcessor.FIELD_CONFIRMED_PHONE, oncHistoryDetail.getFPhone());
+                        valueMap.put(RequestPDFProcessor.FIELD_CONFIRMED_FAX, oncHistoryDetail.getFFax());
+                    }
+                    valueMap.put(RequestPDFProcessor.FIELD_DATE_PX + i, oncHistoryDetail.getDatePX());
+                    valueMap.put(RequestPDFProcessor.FIELD_TYPE_LOCATION + i, oncHistoryDetail.getTypePX());
+                    valueMap.put(RequestPDFProcessor.FIELD_ACCESSION_NUMBER + i, oncHistoryDetail.getAccessionNumber());
+                    counter = i;
+                }
+            }
+            valueMap.put(RequestPDFProcessor.BLOCK_COUNTER, counter + 1);
+
+            stream = processor.generateStream(valueMap);
+            stream.mark(0);
+            return IOUtils.toByteArray(stream);
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Couldn't get pdf for participant " + ddpParticipantId + " of ddpInstance " + ddpInstance.getName(), e);
+        }
+        finally {
+            try {
+                if (stream != null) {
+                    stream.close();
+                }
+            }
+            catch (IOException e) {
+                throw new RuntimeException("Error closing stream", e);
+            }
+        }
+    }
+
+    private byte[] getIRBLetter(@NonNull DDPInstance ddpInstance) {
+        String groupId = DDPInstance.getDDPGroupId(ddpInstance.getName());
+        return PDFProcessor.getTemplateFromGoogleBucket(groupId + "_IRB_Letter.pdf");
+    }
+
     /**
      * get pdf
      * for the given participant and pdfType
      *
      * @throws Exception
      */
-    public void getPDFs(@NonNull Response response, @NonNull String ddpParticipantId, @NonNull String pdfType,
-                        String medicalRecordId, List<String> oncHistoryIDs, String realm, String requestBody, Integer userId) {
-        InstanceWithDDPParticipantId instanceWithDDPParticipantId = getInstanceWithDDPParticipantId(ddpParticipantId);
+    public void getPDFs(@NonNull Response response, @NonNull String ddpParticipantId, String pdfType, String medicalRecordId,
+                        List<String> oncHistoryIDs, List<PDF> pdfs, String realm, String requestBody, Integer userId) {
+        DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
+        if (ddpInstance != null && StringUtils.isNotBlank(ddpParticipantId)) {
+            byte[] pdfBytes = null;
+            String fileName = "";
+            if (COVER.equals(pdfType)) {
+                pdfBytes = mrRequestPDF(ddpInstance, ddpParticipantId, medicalRecordId, requestBody);
+            }
+            else if (TISSUE.equals(pdfType)) {
+                pdfBytes = tissueRequestPDF(ddpInstance, ddpParticipantId, oncHistoryIDs);
+            }
+            else if (IRB.equals(pdfType)) {
+                pdfBytes = getIRBLetter(ddpInstance);
+            }
+            else if (pdfType != null){
+                pdfBytes = requestPDF(ddpInstance, ddpParticipantId, pdfType);
+            }
+            else if (pdfType == null) {
+                pdfBytes = getPDFBundle(ddpParticipantId, medicalRecordId, oncHistoryIDs, pdfs, realm, requestBody);
+            }
+            if (pdfBytes != null) {
+                try {
+                    savePDFinBucket(ddpInstance.getName(), ddpParticipantId, new ByteArrayInputStream(pdfBytes), fileName, userId);
 
-        if (instanceWithDDPParticipantId != null) {
-            DDPInstance ddpInstance = instanceWithDDPParticipantId.getDdpInstance();
-
-            if (ddpInstance != null && StringUtils.isNotBlank(ddpParticipantId)) {
-                if (COVER_PDF.equals(pdfType)) {
-                    logger.info("Generating cover pdf for onc history {}", StringUtils.join(oncHistoryIDs, ","));
-                    JSONObject jsonObject = new JSONObject(requestBody);
-                    Set keySet = jsonObject.keySet();
-                    String startDate = null;
-                    String endDate = null;
-                    if (keySet.contains(JSON_START_DATE)) {
-                        startDate = (String) jsonObject.get(JSON_START_DATE);
-                        if (!"0/0".equals(startDate) && !startDate.contains("/") && startDate.contains("-")) {
-                            startDate = SystemUtil.changeDateFormat(SystemUtil.DATE_FORMAT, SystemUtil.US_DATE_FORMAT, startDate);
-                        }
-                        else if (StringUtils.isNotBlank(startDate) && startDate.startsWith("0/") && !startDate.equals("0/0")) {
-                            startDate = "01/" + startDate.split("/")[1];
-                        }
-                    }
-                    if (keySet.contains(JSON_END_DATE)) {
-                        endDate = (String) jsonObject.get(JSON_END_DATE);
-                        endDate = SystemUtil.changeDateFormat(SystemUtil.DATE_FORMAT, SystemUtil.US_DATE_FORMAT, endDate);
-                    }
-                    if (StringUtils.isBlank(medicalRecordId)) {
-                        throw new RuntimeException("MedicalRecordID is missing. Can't create cover pdf");
-                    }
-                    //get information from db
-                    MedicalRecord medicalRecord = MedicalRecord.getMedicalRecord(realm, ddpParticipantId, medicalRecordId);
-
-                    PDFProcessor processor = new CoverPDFProcessor(ddpInstance.getName());
-                    Map<String, Object> valueMap = new HashMap<>();
-                    //values same no matter from where participant/institution data comes from
-                    valueMap.put(CoverPDFProcessor.FIELD_CONFIRMED_INSTITUTION_NAME, medicalRecord.getName());
-                    valueMap.put(CoverPDFProcessor.FIELD_CONFIRMED_INSTITUTION_NAME_2, medicalRecord.getName() + ",");
-                    valueMap.put(CoverPDFProcessor.FIELD_CONFIRMED_FAX, medicalRecord.getFax());
-                    String today = new SimpleDateFormat("MM/dd/yyyy").format(new Date());
-                    valueMap.put(CoverPDFProcessor.FIELD_DATE, today);
-                    valueMap.put(CoverPDFProcessor.FIELD_DATE_2, StringUtils.isNotBlank(endDate) ? endDate : today); //end date
-
-                    //adding checkboxes configured under instance_settings
-                    InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(realm);
-                    if (instanceSettings != null && instanceSettings.getMrCoverPdf() != null && !instanceSettings.getMrCoverPdf().isEmpty()) {
-                        for (Value mrCoverSetting : instanceSettings.getMrCoverPdf()) {
-                            if (keySet.contains(mrCoverSetting.getValue())) {
-                                valueMap.put(mrCoverSetting.getValue(), BooleanUtils.toBoolean((Boolean) jsonObject.get(mrCoverSetting.getValue())));
-                            }
-                        }
-                    }
-
-                    //get information from ddp
-                    addDDPParticipantDataToValueMap(ddpInstance, ddpParticipantId, valueMap, true);
-
-                    valueMap.put(CoverPDFProcessor.START_DATE_2, StringUtils.isNotBlank(startDate) ? startDate : valueMap.get(CoverPDFProcessor.FIELD_DATE_OF_DIAGNOSIS)); //start date
-                    InputStream stream = null;
-                    try {
-                        stream = processor.generateStream(valueMap);
-                        stream.mark(0);
-                        savePDFinBucket(realm, ddpParticipantId, stream, "cover", userId);
-                        stream.reset();
-
-                        HttpServletResponse rawResponse = response.raw();
-                        rawResponse.getOutputStream().write(IOUtils.toByteArray(stream));
-                        rawResponse.setStatus(200);
-                        rawResponse.getOutputStream().flush();
-                        rawResponse.getOutputStream().close();
-                    }
-                    catch (IOException e) {
-                        throw new RuntimeException("Couldn't get pdf for participant " + ddpParticipantId + " of ddpInstance " + ddpInstance.getName(), e);
-                    }
-                    finally {
-                        try {
-                            if (stream != null) {
-                                stream.close();
-                            }
-                        }
-                        catch (IOException e) {
-                            throw new RuntimeException("Error closing stream", e);
-                        }
-                    }
+                    HttpServletResponse rawResponse = response.raw();
+                    rawResponse.getOutputStream().write(pdfBytes);
+                    rawResponse.setStatus(200);
+                    rawResponse.getOutputStream().flush();
+                    rawResponse.getOutputStream().close();
                 }
-                else if (REQUEST_PDF.equals(pdfType)) {
-                    logger.info("Generating request pdf for onc history ids {}", StringUtils.join(oncHistoryIDs, ","));
-                    RequestPDFProcessor processor = new RequestPDFProcessor(ddpInstance.getName());
-                    Map<String, Object> valueMap = new HashMap<>();
-                    String today = new SimpleDateFormat("MM/dd/yyyy").format(new Date());
-                    valueMap.put(RequestPDFProcessor.FIELD_DATE, today);
-                    valueMap.put(RequestPDFProcessor.FIELD_DATE_2, "(" + today + ")");
-                    //get information from ddp
-                    addDDPParticipantDataToValueMap(ddpInstance, ddpParticipantId, valueMap, false);
-                    InputStream stream = null;
-                    try {
-                        int counter = 0;
-                        if (oncHistoryIDs != null) {
-                            for (int i = 0; i < oncHistoryIDs.size(); i++) {
-                                OncHistoryDetail oncHistoryDetail = OncHistoryDetail.getOncHistoryDetail(oncHistoryIDs.get(i), realm);
-                                // facility information is the same in all of the requests so only need to be set ones!
-                                if (i == 0) {
-                                    valueMap.put(RequestPDFProcessor.FIELD_CONFIRMED_INSTITUTION_NAME, oncHistoryDetail.getFacility());
-                                    valueMap.put(RequestPDFProcessor.FIELD_CONFIRMED_PHONE, oncHistoryDetail.getFPhone());
-                                    valueMap.put(RequestPDFProcessor.FIELD_CONFIRMED_FAX, oncHistoryDetail.getFFax());
-                                }
-                                valueMap.put(RequestPDFProcessor.FIELD_DATE_PX + i, oncHistoryDetail.getDatePX());
-                                valueMap.put(RequestPDFProcessor.FIELD_TYPE_LOCATION + i, oncHistoryDetail.getTypePX());
-                                valueMap.put(RequestPDFProcessor.FIELD_ACCESSION_NUMBER + i, oncHistoryDetail.getAccessionNumber());
-                                counter = i;
-                            }
-                        }
-                        valueMap.put(RequestPDFProcessor.BLOCK_COUNTER, counter + 1);
-
-                        stream = processor.generateStream(valueMap);
-                        stream.mark(0);
-                        savePDFinBucket(realm, ddpParticipantId, stream, "tissue", userId);
-                        stream.reset();
-
-                        HttpServletResponse rawResponse = response.raw();
-                        rawResponse.getOutputStream().write(IOUtils.toByteArray(stream));
-                        rawResponse.setStatus(200);
-                        rawResponse.getOutputStream().flush();
-                        rawResponse.getOutputStream().close();
-                    }
-                    catch (IOException e) {
-                        throw new RuntimeException("Couldn't get pdf for participant " + ddpParticipantId + " of ddpInstance " + ddpInstance.getName(), e);
-                    }
-                    finally {
-                        try {
-                            if (stream != null) {
-                                stream.close();
-                            }
-                        }
-                        catch (IOException e) {
-                            throw new RuntimeException("Error closing stream", e);
-                        }
-                    }
-                }
-                else {
-                    requestPDFfromDDP(ddpInstance, ddpParticipantId, pdfType, response, userId);
+                catch (IOException e) {
+                    throw new RuntimeException("Couldn't make pdf for participant " + ddpParticipantId + " of ddpInstance " + ddpInstance.getName(), e);
                 }
             }
             else {
-                throw new RuntimeException("DDPInstance of participant " + ddpParticipantId + " not found");
+                throw new RuntimeException("byte[] was null");
             }
         }
-        else if (StringUtils.isNotBlank(realm)) {
-            DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
-            requestPDFfromDDP(ddpInstance, ddpParticipantId, pdfType, response, userId);
+        else {
+            throw new RuntimeException("DDPInstance of participant " + ddpParticipantId + " not found");
         }
     }
 
-    private void requestPDFfromDDP(@NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId, @NonNull String pdfType,
-                                   @NonNull Response response, Integer userId) {
-        String dsmRequest = ddpInstance.getBaseUrl() + RoutePath.DDP_PARTICIPANTS_PATH + "/" + ddpParticipantId + pdfType;
-        if (!CONSENT_PDF.equals(pdfType) && !RELEASE_PDF.equals(pdfType)) {
-            dsmRequest = ddpInstance.getBaseUrl() + RoutePath.DDP_PARTICIPANTS_PATH + "/" + ddpParticipantId + "/pdfs/" + pdfType;
-        }
+    private byte[] requestPDF(@NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId, @NonNull String pdfType) {
+        String dsmRequest = ddpInstance.getBaseUrl() + RoutePath.DDP_PARTICIPANTS_PATH + "/" + ddpParticipantId + "/pdfs/" + pdfType;
         logger.info("Requesting pdf for participant  " + dsmRequest);
         try {
-            byte[] bytes = DDPRequestUtil.getPDFByteArray(dsmRequest, ddpInstance.getName(), ddpInstance.isHasAuth0Token());
-            if (bytes != null) {
-                HttpServletResponse rawResponse = response.raw();
-                String fileName = "consent";
-                if (RELEASE_PDF.equals(pdfType)) {
-                    fileName = "release";
-                }
-                savePDFinBucket(ddpInstance.getName(), ddpParticipantId, new ByteArrayInputStream(bytes), fileName, userId);
-
-                rawResponse.getOutputStream().write(bytes);
-                rawResponse.setStatus(200);
-                rawResponse.getOutputStream().flush();
-                rawResponse.getOutputStream().close();
-            }
-            else {
-                throw new RuntimeException("Got null back for " + ddpParticipantId + " of ddpInstance " + ddpInstance.getName());
-            }
+            return DDPRequestUtil.getPDFByteArray(dsmRequest, ddpInstance.getName(), ddpInstance.isHasAuth0Token());
         }
         catch (IOException e) {
             throw new RuntimeException("Couldn't get pdf for participant " + ddpParticipantId + " of ddpInstance " + ddpInstance.getName(), e);
         }
-    }
-
-    private InstanceWithDDPParticipantId getInstanceWithDDPParticipantId(@NonNull String ddpParticipantId) {
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_REALM_FOR_PARTICIPANT)) {
-                stmt.setString(1, ddpParticipantId);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        String notificationRecipient = rs.getString(DBConstants.NOTIFICATION_RECIPIENT);
-                        List<String> recipients = null;
-                        if (StringUtils.isNotBlank(notificationRecipient)) {
-                            notificationRecipient = notificationRecipient.replaceAll("\\s", "");
-                            recipients = Arrays.asList(notificationRecipient.split(","));
-                        }
-                        dbVals.resultValue = new InstanceWithDDPParticipantId(rs.getString(DBConstants.DDP_PARTICIPANT_ID),
-                                new DDPInstance(rs.getString(DBConstants.DDP_INSTANCE_ID),
-                                        rs.getString(DBConstants.INSTANCE_NAME),
-                                        rs.getString(DBConstants.BASE_URL), null,
-                                        false,
-                                        rs.getInt(DBConstants.DAYS_MR_ATTENTION_NEEDED),
-                                        rs.getInt(DBConstants.DAYS_TISSUE_ATTENTION_NEEDED),
-                                        rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN),
-                                        recipients, rs.getBoolean(DBConstants.MIGRATED_DDP),
-                                        rs.getString(DBConstants.BILLING_REFERENCE),
-                                        rs.getString(DBConstants.ES_PARTICIPANT_INDEX),
-                                        rs.getString(DBConstants.ES_ACTIVITY_DEFINITION_INDEX),
-                                        rs.getString(DBConstants.ES_USERS_INDEX)));
-                    }
-                }
-            }
-            catch (SQLException ex) {
-                dbVals.resultException = ex;
-            }
-            return dbVals;
-        });
-
-        if (results.resultException != null) {
-            throw new RuntimeException("Error getting instance data for participant " + ddpParticipantId, results.resultException);
-        }
-
-        return (InstanceWithDDPParticipantId) results.resultValue;
     }
 
     private MedicalInfo getMedicalInfo(@NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId) {
@@ -446,7 +409,6 @@ public class DownloadPDFRoute extends RequestHandler {
 
     private void addDDPParticipantDataToValueMap(@NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId,
                                                  @NonNull Map<String, Object> valueMap, boolean addDateOfDiagnosis) {
-
         DDPParticipant ddpParticipant = null;
         MedicalInfo medicalInfo = null;
         String dob = null;
@@ -469,24 +431,6 @@ public class DownloadPDFRoute extends RequestHandler {
             else {
                 valueMap.put(CoverPDFProcessor.FIELD_DATE_OF_DIAGNOSIS, medicalInfo.getDateOfDiagnosis());
             }
-        }
-    }
-
-    public class InstanceWithDDPParticipantId {
-        private String ddpParticipantId;
-        private DDPInstance ddpInstance;
-
-        public InstanceWithDDPParticipantId(String ddpParticipantId, DDPInstance ddpInstance) {
-            this.ddpParticipantId = ddpParticipantId;
-            this.ddpInstance = ddpInstance;
-        }
-
-        public DDPInstance getDdpInstance() {
-            return ddpInstance;
-        }
-
-        public String getDdpParticipantId() {
-            return ddpParticipantId;
         }
     }
 
@@ -525,11 +469,17 @@ public class DownloadPDFRoute extends RequestHandler {
         if (StringUtils.isNotBlank(gcpName)) {
             String bucketName = gcpName + "_dsm_" + realm.toLowerCase();
             try {
-                if (GoogleBucket.bucketExists(null, gcpName, bucketName)) {
+                String credentials = null;
+                if (TransactionWrapper.hasConfigPath(ApplicationConfigConstants.GOOGLE_CREDENTIALS)) {
+                    String tmp = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_CREDENTIALS);
+                    if (StringUtils.isNotBlank(tmp) && new File(tmp).exists()) {
+                        credentials = tmp;
+                    }
+                }
+                if (GoogleBucket.bucketExists(credentials, gcpName, bucketName)) {
                     long time = System.currentTimeMillis();
-                    GoogleBucket.uploadFile(null, gcpName,
-                            bucketName, ddpParticipantId + "/readonly/" + ddpParticipantId + "_" + fileType + "_" + userId + "_download_" + time + ".pdf",
-                            stream);
+                    GoogleBucket.uploadFile(credentials, gcpName, bucketName,
+                            ddpParticipantId + "/readonly/" + ddpParticipantId + "_" + fileType + "_" + userId + "_download_" + time + ".pdf", stream);
                 }
             }
             catch (Exception e) {
