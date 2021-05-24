@@ -204,7 +204,7 @@ public class ElasticSearchUtil {
     public static Map<String, Map<String, Object>> getDDPParticipantsFromES(@NonNull String realm, @NonNull String index) {
         Map<String, Map<String, Object>> esData = new HashMap<>();
         if (StringUtils.isNotBlank(index)) {
-            logger.info("Collecting ES data");
+            logger.info("Collecting ES data from index: " +  index);
             try {
                 try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
                         TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
@@ -214,7 +214,7 @@ public class ElasticSearchUtil {
             catch (Exception e) {
                 logger.error("Couldn't get participants from ES for instance " + realm, e);
             }
-            logger.info("Got " + esData.size() + " participants from ES for instance " + realm);
+            logger.info("Finished collecting ES data");
         }
         return esData;
     }
