@@ -204,11 +204,6 @@ public class ParticipantWrapper {
             if (participantData == null) {
                 participantData = ParticipantData.getParticipantData(instance.getName());
 
-                //needed for RGP family member
-                if (DDPInstanceDao.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
-                    participantData = new AutomaticProbandDataCreator().setDefaultProbandDataIfNotExists(participantData, participantESData, instance);
-                }
-
                 //if study is AT
                 if ("atcp".equals(instance.getName())) {
                     participantData = DefaultValues.addDefaultValues(participantData, participantESData, instance, null);
@@ -222,6 +217,11 @@ public class ParticipantWrapper {
             }
             if (proxyData == null) {
                 proxyData = getProxyData(instance);
+            }
+
+            //needed for RGP family member
+            if (DDPInstanceDao.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
+                participantData = new AutomaticProbandDataCreator().setDefaultProbandDataIfNotExists(participantData, participantESData, instance);
             }
 
             baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
