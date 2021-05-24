@@ -22,8 +22,8 @@
                 <column name="column_name" value="ELIGIBILITY"/>
                 <column name="column_display" value="Eligibility"/>
                 <column name="display_type" value="RADIO"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;2&#34;,&#34;name&#34;:&#34;Pending&#34;},{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Eligible&#34;},{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;Not Eligible&#34;}]"/>
-                <column name="actions" value="[{&#34;name&#34;:&#34;ELIGIBILITY&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;2&quot;,&quot;name&quot;:&quot;Pending&quot;},{&quot;value&quot;:&quot;1&quot;,&quot;name&quot;:&quot;Eligible&quot;},{&quot;value&quot;:&quot;0&quot;,&quot;name&quot;:&quot;Not Eligible&quot;}]"/>
+                <column name="actions" value="[{&quot;name&quot;:&quot;ELIGIBILITY&quot;,&quot;type&quot;:&quot;ELASTIC_EXPORT.workflows&quot;}]"/>
                 <column name="order_number" value="1"/>
             </insert>
             <insert tableName="field_settings">
@@ -33,7 +33,7 @@
                 <column name="column_name" value="PARTICIPANT_DECEASED"/>
                 <column name="column_display" value="Check here if this participant is deceased"/>
                 <column name="display_type" value="RADIO"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;1&quot;,&quot;name&quot;:&quot;Yes&quot;},{&quot;value&quot;:&quot;0&quot;,&quot;name&quot;:&quot;No&quot;}]"/>
                 <column name="order_number" value="2"/>
             </insert>
             <insert tableName="field_settings">
@@ -88,7 +88,7 @@
                 <column name="column_name" value="REGISTRATION_TYPE"/>
                 <column name="column_display" value="Type of participant registration"/>
                 <column name="display_type" value="RADIO"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;2&#34;,&#34;name&#34;:&#34;Dependent&#34;},{&#34;value&#34;:&#34;3&#34;,&#34;name&#34;:&#34;Portal User&#34;},{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Self&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;2&quot;,&quot;name&quot;:&quot;Dependent&quot;},{&quot;value&quot;:&quot;3&quot;,&quot;name&quot;:&quot;Portal User&quot;},{&quot;value&quot;:&quot;1&quot;,&quot;name&quot;:&quot;Self&quot;}]"/>
                 <column name="order_number" value="1"/>
             </insert>
             <insert tableName="field_settings">
@@ -98,8 +98,8 @@
                 <column name="column_name" value="REGISTRATION_STATUS"/>
                 <column name="column_display" value="Status of participant registration"/>
                 <column name="display_type" value="RADIO"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;Not Registered&#34;},{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Registered&#34;},{&#34;value&#34;:&#34;3&#34;,&#34;name&#34;:&#34;Consented&#34;},{&#34;value&#34;:&#34;2&#34;,&#34;name&#34;:&#34;Consented, Needs Assent&#34;},{&#34;value&#34;:&#34;4&#34;,&#34;name&#34;:&#34;Submitted Physician Info&#34;},{&#34;value&#34;:&#34;5&#34;,&#34;name&#34;:&#34;Submitted Medical History&#34;},{&#34;value&#34;:&#34;6&#34;,&#34;name&#34;:&#34;Submitted Genome Study Shipping Info&#34;},{&#34;value&#34;:&#34;7&#34;,&#34;name&#34;:&#34;Submitted Enrollment/Pending Confirmation&#34;},{&#34;value&#34;:&#34;8&#34;,&#34;name&#34;:&#34;Enrolled&#34;},{&#34;value&#34;:&#34;9&#34;,&#34;name&#34;:&#34;Not Eligible&#34;},{&#34;value&#34;:&#34;10&#34;,&#34;name&#34;:&#34;Duplicate&#34;}]"/>
-                <column name="actions" value="[{&#34;name&#34;:&#34;REGISTRATION_STATUS&#34;,&#34;type&#34;:&#34;ELASTIC_EXPORT.workflows&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;0&quot;,&quot;name&quot;:&quot;Not Registered&quot;},{&quot;value&quot;:&quot;1&quot;,&quot;name&quot;:&quot;Registered&quot;},{&quot;value&quot;:&quot;3&quot;,&quot;name&quot;:&quot;Consented&quot;},{&quot;value&quot;:&quot;2&quot;,&quot;name&quot;:&quot;Consented, Needs Assent&quot;},{&quot;value&quot;:&quot;4&quot;,&quot;name&quot;:&quot;Submitted Physician Info&quot;},{&quot;value&quot;:&quot;5&quot;,&quot;name&quot;:&quot;Submitted Medical History&quot;},{&quot;value&quot;:&quot;6&quot;,&quot;name&quot;:&quot;Submitted Genome Study Shipping Info&quot;},{&quot;value&quot;:&quot;7&quot;,&quot;name&quot;:&quot;Submitted Enrollment/Pending Confirmation&quot;},{&quot;value&quot;:&quot;8&quot;,&quot;name&quot;:&quot;Enrolled&quot;},{&quot;value&quot;:&quot;9&quot;,&quot;name&quot;:&quot;Not Eligible&quot;},{&quot;value&quot;:&quot;10&quot;,&quot;name&quot;:&quot;Duplicate&quot;}]"/>
+                <column name="actions" value="[{&quot;name&quot;:&quot;REGISTRATION_STATUS&quot;,&quot;type&quot;:&quot;ELASTIC_EXPORT.workflows&quot;}]"/>
                 <column name="order_number" value="2"/>
             </insert>
             <insert tableName="field_settings">
@@ -109,7 +109,7 @@
                 <column name="column_name" value="HAS_UPDATED_MEDICAL_HISTORY"/>
                 <column name="column_display" value="Has updated medical history?"/>
                 <column name="display_type" value="RADIO"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;1&quot;,&quot;name&quot;:&quot;Yes&quot;},{&quot;value&quot;:&quot;0&quot;,&quot;name&quot;:&quot;No&quot;}]"/>
                 <column name="order_number" value="3"/>
             </insert>
             <insert tableName="field_settings">
@@ -138,7 +138,7 @@
                 <column name="column_name" value="GENOME_STUDY_HAS_SIBLING"/>
                 <column name="column_display" value="Does participant have a sibling in the study?"/>
                 <column name="display_type" value="RADIO"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Yes&#34;},{&#34;value&#34;:&#34;0&#34;,&#34;name&#34;:&#34;No&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;1&quot;,&quot;name&quot;:&quot;Yes&quot;},{&quot;value&quot;:&quot;0&quot;,&quot;name&quot;:&quot;No&quot;}]"/>
                 <column name="order_number" value="2"/>
             </insert>
             <insert tableName="field_settings">
@@ -148,7 +148,7 @@
                 <column name="column_name" value="GENOME_STUDY_STATUS"/>
                 <column name="column_display" value="Status of genome study sample kit"/>
                 <column name="display_type" value="RADIO"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;1&#34;,&#34;name&#34;:&#34;Consented, sample kit not shipped&#34;},{&#34;value&#34;:&#34;2&#34;,&#34;name&#34;:&#34;Sample kit sent to participant&#34;},{&#34;value&#34;:&#34;3&#34;,&#34;name&#34;:&#34;Sample kit received from participant&#34;},{&#34;value&#34;:&#34;4&#34;,&#34;name&#34;:&#34;Sample sequenced, pending release&#34;},{&#34;value&#34;:&#34;5&#34;,&#34;name&#34;:&#34;Completed, de-identified data available&#34;},{&#34;value&#34;:&#34;6&#34;,&#34;name&#34;:&#34;Repeat sample collection pending&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;1&quot;,&quot;name&quot;:&quot;Consented, sample kit not shipped&quot;},{&quot;value&quot;:&quot;2&quot;,&quot;name&quot;:&quot;Sample kit sent to participant&quot;},{&quot;value&quot;:&quot;3&quot;,&quot;name&quot;:&quot;Sample kit received from participant&quot;},{&quot;value&quot;:&quot;4&quot;,&quot;name&quot;:&quot;Sample sequenced, pending release&quot;},{&quot;value&quot;:&quot;5&quot;,&quot;name&quot;:&quot;Completed, de-identified data available&quot;},{&quot;value&quot;:&quot;6&quot;,&quot;name&quot;:&quot;Repeat sample collection pending&quot;}]"/>
                 <column name="order_number" value="3"/>
             </insert>
             <insert tableName="field_settings">
@@ -176,7 +176,7 @@
                 <column name="column_name" value="GENOME_STUDY_DATE_SHIPPED"/>
                 <column name="column_display" value="Genome study sample kit shipped on"/>
                 <column name="display_type" value="DATE"/>
-                <column name="actions" value="[{&#34;name&#34;:&#34;GENOME_STUDY_STATUS&#34;,&#34;value&#34;:&#34;2&#34;}]"/>
+                <column name="actions" value="[{&quot;name&quot;:&quot;GENOME_STUDY_STATUS&quot;,&quot;value&quot;:&quot;2&quot;}]"/>
                 <column name="order_number" value="6"/>
             </insert>
             <insert tableName="field_settings">
@@ -240,7 +240,7 @@
                 <column name="column_name" value="PLATFORM_ASSENT_GENSEQ_STUDY"/>
                 <column name="column_display" value="You can do tests on the genes in my spit."/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;ASSENT.ASSENT_CAN_DO_TESTS&#34;,&#34;type&#34;:&#34;RADIO&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;ASSENT.ASSENT_CAN_DO_TESTS&quot;,&quot;type&quot;:&quot;RADIO&quot;}]"/>
                 <column name="order_number" value="1"/>
             </insert>
             <insert tableName="field_settings">
@@ -250,7 +250,7 @@
                 <column name="column_name" value="PLATFORM_ASSENT_RECONTACT_PARTICIPANT_FOLLOWUP"/>
                 <column name="column_display" value="You can contact me later with more questions or information about future research. I do not have to answer these questions or take part in future research."/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;ASSENT.CAN_CONTACT_LATER&#34;,&#34;type&#34;:&#34;RADIO&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;ASSENT.CAN_CONTACT_LATER&quot;,&quot;type&quot;:&quot;RADIO&quot;}]"/>
                 <column name="order_number" value="2"/>
             </insert>
             <insert tableName="field_settings">
@@ -260,7 +260,7 @@
                 <column name="column_name" value="PLATFORM_ASSENT_RECONTACT_RESEARCH_RESULTS"/>
                 <column name="column_display" value="Later, it might be possible to get the results of the tests on my genes. Please let me know if this becomes possible."/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;ASSENT.GET_THE_RESULT&#34;,&#34;type&#34;:&#34;RADIO&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;ASSENT.GET_THE_RESULT&quot;,&quot;type&quot;:&quot;RADIO&quot;}]"/>
                 <column name="order_number" value="3"/>
             </insert>
             <insert tableName="field_settings">
@@ -270,7 +270,7 @@
                 <column name="column_name" value="PLATFORM_ASSENT_MEDICAL_RECORD_RETRIEVAL"/>
                 <column name="column_display" value="You may ask my doctor or hospital to share information about my health."/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;ASSENT.MAY_ASK_MY_DOCTOR&#34;,&#34;type&#34;:&#34;RADIO&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;ASSENT.MAY_ASK_MY_DOCTOR&quot;,&quot;type&quot;:&quot;RADIO&quot;}]"/>
                 <column name="order_number" value="4"/>
             </insert>
             <insert tableName="field_settings">
@@ -280,7 +280,7 @@
                 <column name="column_name" value="PLATFORM_ASSENT_RECONTACT_PHYSICIAN_DIAGNOSIS_RESULTS"/>
                 <column name="column_display" value="If the researchers learn something about my health issues by testing my genes, please tell my doctor about this."/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;ASSENT.RESEARCHERS_LEARN_SOMETHING&#34;,&#34;type&#34;:&#34;RADIO&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;ASSENT.RESEARCHERS_LEARN_SOMETHING&quot;,&quot;type&quot;:&quot;RADIO&quot;}]"/>
                 <column name="order_number" value="5"/>
             </insert>
             <insert tableName="field_settings">
@@ -290,7 +290,7 @@
                 <column name="column_name" value="PLATFORM_ASSENT_DOB"/>
                 <column name="column_display" value="Platform assent date of birth"/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;ASSENT.ASSENT_DOB&#34;,&#34;type&#34;:&#34;DATE&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;ASSENT.ASSENT_DOB&quot;,&quot;type&quot;:&quot;DATE&quot;}]"/>
                 <column name="order_number" value="6"/>
             </insert>
             <insert tableName="field_settings">
@@ -300,7 +300,7 @@
                 <column name="column_name" value="PLATFORM_ASSENT_SIGNED_ON"/>
                 <column name="column_display" value="Date of assent signature"/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;ASSENT.completedAt&#34;,&#34;type&#34;:&#34;DATE&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;ASSENT.completedAt&quot;,&quot;type&quot;:&quot;DATE&quot;}]"/>
                 <column name="order_number" value="7"/>
             </insert>
             <insert tableName="field_settings">
@@ -319,7 +319,7 @@
                 <column name="column_name" value="PLATFORM_CONSENT"/>
                 <column name="column_display" value="Overall platform consent"/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT.completedAt&#34;,&#34;type&#34;:&#34;DATE&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;CONSENT.completedAt&quot;,&quot;type&quot;:&quot;DATE&quot;}]"/>
                 <column name="order_number" value="1"/>
             </insert>
             <insert tableName="field_settings">
@@ -329,7 +329,7 @@
                 <column name="column_name" value="PLATFORM_CONSENT_GENSEQ_STUDY"/>
                 <column name="column_display" value="You may perform (or collaborate with others to perform) DNA sequencing on the saliva sample that I will send you and store the sample until genomic sequencing was successfully completed."/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT.PERFORM_DNA&#34;,&#34;type&#34;:&#34;RADIO&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;CONSENT.PERFORM_DNA&quot;,&quot;type&quot;:&quot;RADIO&quot;}]"/>
                 <column name="order_number" value="2"/>
             </insert>
             <insert tableName="field_settings">
@@ -339,7 +339,7 @@
                 <column name="column_name" value="PLATFORM_CONSENT_MEDICAL_RECORD_RETRIEVAL"/>
                 <column name="column_display" value="You may request my medical records from my physicians and hospitals."/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT.MEDICAL_RECORDS&#34;,&#34;type&#34;:&#34;RADIO&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;CONSENT.MEDICAL_RECORDS&quot;,&quot;type&quot;:&quot;RADIO&quot;}]"/>
                 <column name="order_number" value="3"/>
             </insert>
             <insert tableName="field_settings">
@@ -349,7 +349,7 @@
                 <column name="column_name" value="PLATFORM_CONSENT_RECONTACT_RESEARCH_RESULTS"/>
                 <column name="column_display" value="You may re-contact me in the event that it becomes possible to return genetic results to my physician or me."/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT.RE_CONTACT_RETURN_RESULTS&#34;,&#34;type&#34;:&#34;RADIO&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;CONSENT.RE_CONTACT_RETURN_RESULTS&quot;,&quot;type&quot;:&quot;RADIO&quot;}]"/>
                 <column name="order_number" value="4"/>
             </insert>
             <insert tableName="field_settings">
@@ -359,7 +359,7 @@
                 <column name="column_name" value="PLATFORM_CONSENT_RECONTACT_PHYSICIAN_DIAGNOSIS_RESULTS"/>
                 <column name="column_display" value="I allow the A-T Children’s Project to contact my physician if a researcher reports genetic analysis results that may impact my diagnosis of A-T."/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT.CONTACT_MY_PHYSICIAN&#34;,&#34;type&#34;:&#34;RADIO&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;CONSENT.CONTACT_MY_PHYSICIAN&quot;,&quot;type&quot;:&quot;RADIO&quot;}]"/>
                 <column name="order_number" value="5"/>
             </insert>
             <insert tableName="field_settings">
@@ -369,7 +369,7 @@
                 <column name="column_name" value="PLATFORM_CONSENT_RECONTACT_PARTICIPANT_FOLLOWUP"/>
                 <column name="column_display" value="I agree to be re-contacted with follow-up research questionnaires and invitations to participate in additional studies. I may choose to ignore these questionnaires/invitations."/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT.RE_CONTACT_FOLLOW_UP&#34;,&#34;type&#34;:&#34;RADIO&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;CONSENT.RE_CONTACT_FOLLOW_UP&quot;,&quot;type&quot;:&quot;RADIO&quot;}]"/>
                 <column name="order_number" value="6"/>
             </insert>
             <insert tableName="field_settings">
@@ -379,7 +379,7 @@
                 <column name="column_name" value="PLATFORM_CONSENT_PARTICIPANT"/>
                 <column name="column_display" value="I am a legal guardian of:"/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT.CONSENT_PARENT_SIGNATURE&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;CONSENT.CONSENT_PARENT_SIGNATURE&quot;}]"/>
                 <column name="order_number" value="7"/>
             </insert>
             <insert tableName="field_settings">
@@ -389,7 +389,7 @@
                 <column name="column_name" value="PLATFORM_CONSENT_RELATIONSHIP"/>
                 <column name="column_display" value="My relationship to the participant is:"/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT.CONSENT_RELATIONSHIP&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;CONSENT.CONSENT_RELATIONSHIP&quot;}]"/>
                 <column name="order_number" value="8"/>
             </insert>
             <insert tableName="field_settings">
@@ -399,7 +399,7 @@
                 <column name="column_name" value="PLATFORM_CONSENT_DOB"/>
                 <column name="column_display" value="Platform consent date of birth"/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT.CONSENT_GUARDIAN_DOB&#34;,&#34;type&#34;:&#34;DATE&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;CONSENT.CONSENT_GUARDIAN_DOB&quot;,&quot;type&quot;:&quot;DATE&quot;}]"/>
                 <column name="order_number" value="9"/>
             </insert>
             <insert tableName="field_settings">
@@ -409,7 +409,7 @@
                 <column name="column_name" value="PLATFORM_CONSENT_SIGNED_ON"/>
                 <column name="column_display" value="Date of consent signature"/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT.completedAt&#34;,&#34;type&#34;:&#34;DATE&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;CONSENT.completedAt&quot;,&quot;type&quot;:&quot;DATE&quot;}]"/>
                 <column name="order_number" value="10"/>
             </insert>
             <insert tableName="field_settings">
@@ -419,7 +419,7 @@
                 <column name="column_name" value="PLATFORM_CONSENT_REASON_LAST_CHANGE"/>
                 <column name="column_display" value="Reason for latest change in consent"/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT_EDIT.CONSENT_MAKE_CHANGES_DESCRIPTION&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;CONSENT_EDIT.CONSENT_MAKE_CHANGES_DESCRIPTION&quot;}]"/>
                 <column name="order_number" value="11"/>
             </insert>
             <insert tableName="field_settings">
@@ -429,7 +429,7 @@
                 <column name="column_name" value="PLATFORM_CONSENT_CONTACT_PHONE"/>
                 <column name="column_display" value="Best phone number to contact"/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
-                <column name="possible_values" value="[{&#34;value&#34;:&#34;CONSENT_EDIT.CONSENT_MAKE_CHANGES_PHONE&#34;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;CONSENT_EDIT.CONSENT_MAKE_CHANGES_PHONE&quot;}]"/>
                 <column name="order_number" value="12"/>
             </insert>
             <insert tableName="field_settings">
