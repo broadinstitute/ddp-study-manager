@@ -34,3 +34,24 @@ gcloud --project=${PROJECT_ID} secrets versions access latest --secret="study-ma
 
 echo "=> deploying to appengine"
 gcloud --project=${PROJECT_ID} app deploy -q --stop-previous-version --promote StudyManager.yaml
+
+echo "Deleting older versions"
+CONFIG_FILE="StudyManager.yaml"
+SERVICE=$(grep -Eo -m1 "^service:\s*.*" "${CONFIG_FILE}" | awk '{print $2}')
+            echo "The service name is *${SERVICE}*"
+VERSIONS=$(gcloud app versions list --service  "${SERVICE}" --project ${PROJECT_ID} --sort-by '~version' --format 'value(version.id)')
+echo $VERSIONS
+echo "Will keep the latest 3 versions"
+COUNT=0
+for VERSION in $VERSIONS
+do
+    ((COUNT++))
+    if [ $COUNT -gt 3 ]
+    then
+      echo "Going to delete version $VERSION of the ${SERVICE} service."
+      gcloud app versions delete --quiet $VERSION --service ${SERVICE} -q
+    else
+      echo "Going to keep version $VERSION of the ${SERVICE} service."
+    fi
+done
+
