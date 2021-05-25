@@ -400,7 +400,7 @@ public class ElasticSearchUtil {
                     objectsMapES.put(objectType, objectList);
                 }
 
-                updateRequest(ddpParticipantId, index, objectsMapES);
+                //updateRequest(ddpParticipantId, index, objectsMapES);
                 logger.info("Updated " + objectType + " information for participant " + ddpParticipantId + " in ES for instance " + instance.getName());
             }
         } catch (Exception e) {
