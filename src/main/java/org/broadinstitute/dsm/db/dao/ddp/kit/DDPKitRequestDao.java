@@ -6,8 +6,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.dao.Dao;
@@ -40,6 +44,18 @@ public class DDPKitRequestDao implements Dao<DDPKitRequestDto> {
             "external_order_date, " +
             "order_transmitted_at " +
             "FROM ddp_kit_request WHERE ddp_participant_id = ?";
+
+    private static String SQL_DDP_KIT_REQUESTS_CREATED_BY_SYSTEM_BY_PARTICIPANT_IDS =  "SELECT " +
+            "dsm_kit_request_id, " +
+            "ddp_instance_id, " +
+            "ddp_kit_request_id, " +
+            "ddp_participant_id," +
+            "created_by," +
+            "created_date, " +
+            "external_order_status, " +
+            "external_order_date, " +
+            "order_transmitted_at " +
+            "FROM ddp_kit_request WHERE ddp_participant_id IN (?) AND created_by = 'SYSTEM'";
 
 
     private static final String DSM_KIT_REQUEST_ID = "dsm_kit_request_id";
@@ -156,5 +172,42 @@ public class DDPKitRequestDao implements Dao<DDPKitRequestDto> {
                     + participantId, results.resultException);
         }
         return ddpKitRequestDtos;
+    }
+
+    public Map<String, List<DDPKitRequestDto>> getKitRequestsCreatedBySystemByParticipantIds(Set<String> participantIds) {
+        Map<String, List<DDPKitRequestDto>> ddpKitRequestDtosMap = new HashMap<>();
+        String inClause = participantIds.stream().collect(Collectors.joining("', '", "'", "'"));
+        SQL_DDP_KIT_REQUESTS_CREATED_BY_SYSTEM_BY_PARTICIPANT_IDS = SQL_DDP_KIT_REQUESTS_CREATED_BY_SYSTEM_BY_PARTICIPANT_IDS
+                .replace("?", inClause);
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_DDP_KIT_REQUESTS_CREATED_BY_SYSTEM_BY_PARTICIPANT_IDS)) {
+                try(ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        DDPKitRequestDto ddpKitRequestDto = new DDPKitRequestDto(
+                                rs.getInt(DSM_KIT_REQUEST_ID),
+                                rs.getInt(DDP_INSTANCE_ID),
+                                rs.getString(DDP_KIT_REQUEST_ID),
+                                rs.getString(DDP_PARTICIPANT_ID),
+                                rs.getString(CREATED_BY),
+                                rs.getLong(CREATED_DATE),
+                                rs.getString(EXTERNAL_ORDER_STATUS),
+                                rs.getLong(EXTERNAL_ORDER_DATE),
+                                rs.getTimestamp(ORDER_TRANSMITTED_AT) != null ? rs.getTimestamp(ORDER_TRANSMITTED_AT).toLocalDateTime() :
+                                        null
+                        );
+                        ddpKitRequestDtosMap.computeIfAbsent(rs.getString(DDP_PARTICIPANT_ID), v -> new ArrayList<>()).add(ddpKitRequestDto);
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                execResult.resultException = ex;
+            }
+            return execResult;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting kit requests with for participant ids", results.resultException);
+        }
+        return ddpKitRequestDtosMap;
     }
 }

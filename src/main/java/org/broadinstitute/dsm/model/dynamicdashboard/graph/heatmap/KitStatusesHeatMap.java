@@ -7,12 +7,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -77,13 +75,13 @@ public class KitStatusesHeatMap extends HeatmapGraph {
     List<HeatmapGraphData.HeatMapRow> getHeatmapRows(Map<String, Map<String, Object>> ddpParticipantsFromES,
                                                          Map<String, Map<String, List<Object>>> participantsWithKitsSeparatedByMonth) {
         return participantsWithKitsSeparatedByMonth.keySet().stream()
-                .map(shortId -> {
+                .map(hruid -> {
                     String participantGuid =
-                            Participant.getParticipantGuidByHruidFromParticipantESData(ddpParticipantsFromES, shortId);
+                            Participant.getParticipantGuidByHruidFromParticipantESData(ddpParticipantsFromES, hruid);
                     Map<String, String> profile = (Map<String, String>) ddpParticipantsFromES.get(participantGuid).get(ElasticSearchUtil.PROFILE);
                     String firstName = profile.get(ElasticSearchUtil.FIRST_NAME_FIELD);
                     String lastName = profile.get(ElasticSearchUtil.LAST_NAME_FIELD);
-                    return new HeatmapGraphData.HeatMapRow(shortId, shortId, participantGuid, firstName, lastName);
+                    return new HeatmapGraphData.HeatMapRow(hruid, hruid, participantGuid, firstName, lastName);
                 })
                 .collect(Collectors.toList());
     }
@@ -97,15 +95,28 @@ public class KitStatusesHeatMap extends HeatmapGraph {
         return participantsGuidsWithShortIds;
     }
 
+//    private Map<String, List<DDPKitRequestDto>> getParticipantsWithKitsCreatedBySystem(Map<String, String> ddpParticipantsFromES) {
+//        Map<String, List<DDPKitRequestDto>> participantsWithKits = new LinkedHashMap<>();
+//        DDPKitRequestDao ddpKitRequestDao = new DDPKitRequestDao();
+//        ddpParticipantsFromES.forEach((pId, shortId) -> participantsWithKits.put(shortId,
+//                ddpKitRequestDao.getKitRequestsByParticipantId(pId).stream()
+//                        .filter(ddpKitRequestDto -> "SYSTEM".equals(ddpKitRequestDto.getCreatedBy()))
+//                        .collect(Collectors.toList()))
+//        );
+//        return participantsWithKits;
+//    }
+
     private Map<String, List<DDPKitRequestDto>> getParticipantsWithKitsCreatedBySystem(Map<String, String> ddpParticipantsFromES) {
-        Map<String, List<DDPKitRequestDto>> participantsWithKits = new LinkedHashMap<>();
         DDPKitRequestDao ddpKitRequestDao = new DDPKitRequestDao();
-        ddpParticipantsFromES.forEach((pId, shortId) -> participantsWithKits.put(shortId,
-                ddpKitRequestDao.getKitRequestsByParticipantId(pId).stream()
-                        .filter(ddpKitRequestDto -> "SYSTEM".equals(ddpKitRequestDto.getCreatedBy()))
-                        .collect(Collectors.toList()))
-        );
-        return participantsWithKits;
+        Map<String, List<DDPKitRequestDto>> hruidWithKits = new LinkedHashMap<>();
+        Map<String, List<DDPKitRequestDto>> kitRequestsCreatedBySystemByParticipantIds =
+                ddpKitRequestDao.getKitRequestsCreatedBySystemByParticipantIds(ddpParticipantsFromES.keySet());
+        ddpParticipantsFromES.forEach((pId, shortId) -> {
+            List<DDPKitRequestDto> ddpKitRequestDtos = kitRequestsCreatedBySystemByParticipantIds.containsKey(pId)
+                    ? kitRequestsCreatedBySystemByParticipantIds.get(pId) : new ArrayList<>();
+            hruidWithKits.put(shortId, ddpKitRequestDtos);
+        });
+        return hruidWithKits;
     }
 
     Map<String, Map<String, List<Object>>> getParticipantsWithKitsSeparatedByMonth(Map<String, Map<String, Object>> ddpParticipantsFromES,
