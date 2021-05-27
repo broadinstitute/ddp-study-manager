@@ -56,20 +56,6 @@ public class AutomaticProbandDataCreator {
             }
             if (participantDataList == null) {
                 extractAndInsertProbandFromESData(instance, entry, participantDataDao, bookmarkDao, columnsWithDefaultOptions);
-                continue;
-            }
-            boolean isProbandData = participantDataList.stream()
-                    .anyMatch(pData -> (instance.getName().toUpperCase() + NewParticipantData.FIELD_TYPE).equals(pData.getFieldTypeId())
-                        && FamilyMemberConstants.MEMBER_TYPE_SELF.equals(new Gson().fromJson(pData.getData(), Map.class).get(FamilyMemberConstants.MEMBER_TYPE)));
-            if (!isProbandData) {
-                extractAndInsertProbandFromESData(instance, entry, participantDataDao, bookmarkDao, columnsWithDefaultOptions);
-            } else {
-                Optional<ParticipantData> probandData = participantDataList.stream()
-                        .filter(pData -> FamilyMemberConstants.MEMBER_TYPE_SELF.equals(new Gson().fromJson(pData.getData(), Map.class).get(FamilyMemberConstants.MEMBER_TYPE)))
-                        .findFirst();
-                if (probandData.isPresent()) {
-                    updateProbandDataIfESParticipantUpdated(instance, entry, probandData);
-                }
             }
         }
         return isParticipantDataUpdated ? ParticipantData.getParticipantData(instance.getName()) : participantData;
@@ -127,37 +113,5 @@ public class AutomaticProbandDataCreator {
         probandMemberDetails.setMobilePhone(mobilePhone.toString());
         probandMemberDetails.setEmail(email);
         return probandMemberDetails.toMap();
-    }
-
-    private void updateProbandDataIfESParticipantUpdated(DDPInstance instance, Map.Entry<String, Map<String, Object>> esData, Optional<ParticipantData> probandData) {
-        String participantId = esData.getKey();
-        Map<String, String> profile = (Map<String, String>) esData.getValue().get(ElasticSearchUtil.PROFILE);
-        String esFirstName = profile.get(ElasticSearchUtil.FIRST_NAME_FIELD);
-        String esLastName = profile.get(ElasticSearchUtil.LAST_NAME_FIELD);
-        ParticipantData pData = probandData.get();
-        Map<String, String> probandDataJson = new Gson().fromJson(pData.getData(), Map.class);
-        String firstName = probandDataJson.get(FamilyMemberConstants.FIRSTNAME);
-        String lastName = probandDataJson.get(FamilyMemberConstants.LASTNAME);
-        boolean isParticipantUpdated = !StringUtils.equals(firstName, esFirstName) || !StringUtils.equals(lastName, esLastName);
-        if (!StringUtils.equals(firstName, esFirstName)) {
-            probandDataJson.put(FamilyMemberConstants.FIRSTNAME, esFirstName);
-        }
-        if (!StringUtils.equals(lastName, esLastName)) {
-            probandDataJson.put(FamilyMemberConstants.LASTNAME, esLastName);
-        }
-        if (isParticipantUpdated) {
-            ParticipantDataDto updatedParticipantDataDTO = new ParticipantDataDto(
-                    Integer.parseInt(pData.getDataId()),
-                    participantId,
-                    Integer.parseInt(instance.getDdpInstanceId()),
-                    pData.getFieldTypeId(),
-                    new Gson().toJson(probandDataJson),
-                    Instant.now().toEpochMilli(),
-                    "SYSTEM"
-            );
-            new ParticipantDataDao().updateParticipantDataColumn(updatedParticipantDataDTO);
-            isParticipantDataUpdated = true;
-            logger.info("Proband data for participant with id: " + participantId + " has automatically updated");
-        }
     }
 }
