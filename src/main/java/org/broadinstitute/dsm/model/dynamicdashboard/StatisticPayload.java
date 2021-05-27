@@ -18,6 +18,7 @@ public class StatisticPayload {
     private String realm;
     private int from;
     private int to;
+    private String sortOrder;
 
     private StatisticPayload(Builder builder) {
         this.dashboardSettingId = builder.dashboardSettingId;
@@ -29,6 +30,7 @@ public class StatisticPayload {
         this.realm = builder.realm;
         this.from = builder.from;
         this.to = builder.to;
+        this.sortOrder = builder.sortOrder;
     }
 
     public static class Builder {
@@ -44,6 +46,7 @@ public class StatisticPayload {
         private String realm = "";
         private int from;
         private int to;
+        private String sortOrder = "ASC";
 
         public Builder(DisplayType displayType, StatisticFor statisticFor, FilterType filterType) {
             this.displayType = displayType;
@@ -78,6 +81,11 @@ public class StatisticPayload {
 
         public Builder withTo(int to) {
             this.to = to;
+            return this;
+        }
+
+        public Builder withSortOrder(String sortOrder) {
+            this.sortOrder = sortOrder;
             return this;
         }
 

@@ -11,6 +11,7 @@ import org.broadinstitute.dsm.db.dto.dashboardsettings.DashboardSettingsDto;
 import org.broadinstitute.dsm.model.dynamicdashboard.DisplayType;
 import org.broadinstitute.dsm.model.dynamicdashboard.FilterType;
 import org.broadinstitute.dsm.model.dynamicdashboard.Statistic;
+import org.broadinstitute.dsm.model.dynamicdashboard.StatisticFactory;
 import org.broadinstitute.dsm.model.dynamicdashboard.StatisticsCreator;
 import org.broadinstitute.dsm.model.dynamicdashboard.StatisticFor;
 import org.broadinstitute.dsm.model.dynamicdashboard.StatisticPayload;
@@ -32,6 +33,7 @@ public class StatisticDataRoute extends RequestHandler {
         }
         int from = Integer.parseInt(queryParamsMap.get("from").value());
         int to = Integer.parseInt(queryParamsMap.get("to").value());
+        String sortOrder = queryParamsMap.hasKey("sortOrder") ? queryParamsMap.get("sortOrder").value() : "ASC";
         try {
             DisplayType displayType = DisplayType.valueOf("");
             System.out.println(displayType);
@@ -47,6 +49,7 @@ public class StatisticDataRoute extends RequestHandler {
                         .withFrom(from)
                         .withTo(to)
                         .withRealm(realm)
+                        .withSortOrder(sortOrder)
                         .build();
                 statisticPayloads.add(statisticPayload);
             }

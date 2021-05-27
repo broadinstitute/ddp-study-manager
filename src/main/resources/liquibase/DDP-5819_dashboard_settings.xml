@@ -5,7 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <changeSet id="dashboardSettings" author="gmakharat" >
+    <changeSet id="dashboardSettings" author="gmakhara" >
         <createTable tableName="dashboard_settings">
             <column autoIncrement="true" name="dashboard_settings_id" type="INT">
                 <constraints primaryKey="true"/>

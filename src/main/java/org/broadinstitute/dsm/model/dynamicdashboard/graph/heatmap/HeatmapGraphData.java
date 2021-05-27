@@ -71,11 +71,15 @@ public class HeatmapGraphData extends GraphResult {
         private String id;
         private String label;
         private String guid;
+        private String firstName;
+        private String lastName;
 
-        public HeatMapRow(String id, String label, String guid) {
+        public HeatMapRow(String id, String label, String guid, String firstName, String lastName) {
             this.id = id;
             this.label = label;
             this.guid = guid;
+            this.firstName = firstName;
+            this.lastName = lastName;
         }
     }
 

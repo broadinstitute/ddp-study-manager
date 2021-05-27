@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,7 +45,7 @@ public class KitStatusesHeatMap extends HeatmapGraph {
 
         Map<String, Map<String, Object>> ddpParticipantsFromES =
                 ElasticSearchUtil.getDDPParticipantsFromESWithRange(ddpInstanceByRealm.getName(), ddpInstanceByRealm.getParticipantIndexES(),
-                        getStatisticPayload().getFrom(), getStatisticPayload().getTo());
+                        getStatisticPayload().getFrom(), getStatisticPayload().getTo(), getStatisticPayload().getSortOrder());
 
         Map<String, String> participantsGuidsWithShortIds = getParticipantsGuidsWithShortIds(ddpParticipantsFromES);
 
@@ -76,13 +77,19 @@ public class KitStatusesHeatMap extends HeatmapGraph {
     List<HeatmapGraphData.HeatMapRow> getHeatmapRows(Map<String, Map<String, Object>> ddpParticipantsFromES,
                                                          Map<String, Map<String, List<Object>>> participantsWithKitsSeparatedByMonth) {
         return participantsWithKitsSeparatedByMonth.keySet().stream()
-                .map(shortId -> new HeatmapGraphData.HeatMapRow(shortId, shortId, Participant
-                        .getParticipantGuidByHruidFromParticipantESData(ddpParticipantsFromES, shortId)))
+                .map(shortId -> {
+                    String participantGuid =
+                            Participant.getParticipantGuidByHruidFromParticipantESData(ddpParticipantsFromES, shortId);
+                    Map<String, String> profile = (Map<String, String>) ddpParticipantsFromES.get(participantGuid).get(ElasticSearchUtil.PROFILE);
+                    String firstName = profile.get(ElasticSearchUtil.FIRST_NAME_FIELD);
+                    String lastName = profile.get(ElasticSearchUtil.LAST_NAME_FIELD);
+                    return new HeatmapGraphData.HeatMapRow(shortId, shortId, participantGuid, firstName, lastName);
+                })
                 .collect(Collectors.toList());
     }
 
     Map<String, String> getParticipantsGuidsWithShortIds(Map<String, Map<String, Object>> ddpParticipantsFromES) {
-        Map<String, String> participantsGuidsWithShortIds = new HashMap<>();
+        Map<String, String> participantsGuidsWithShortIds = new LinkedHashMap<>();
         ddpParticipantsFromES.forEach((k, v) -> {
             String shortId = (String)((Map) v.get(ElasticSearchUtil.PROFILE)).get(ElasticSearchUtil.HRUID);
             participantsGuidsWithShortIds.put(k, shortId);
@@ -91,7 +98,7 @@ public class KitStatusesHeatMap extends HeatmapGraph {
     }
 
     private Map<String, List<DDPKitRequestDto>> getParticipantsWithKitsCreatedBySystem(Map<String, String> ddpParticipantsFromES) {
-        Map<String, List<DDPKitRequestDto>> participantsWithKits = new HashMap<>();
+        Map<String, List<DDPKitRequestDto>> participantsWithKits = new LinkedHashMap<>();
         DDPKitRequestDao ddpKitRequestDao = new DDPKitRequestDao();
         ddpParticipantsFromES.forEach((pId, shortId) -> participantsWithKits.put(shortId,
                 ddpKitRequestDao.getKitRequestsByParticipantId(pId).stream()
@@ -103,7 +110,7 @@ public class KitStatusesHeatMap extends HeatmapGraph {
 
     Map<String, Map<String, List<Object>>> getParticipantsWithKitsSeparatedByMonth(Map<String, Map<String, Object>> ddpParticipantsFromES,
                                                                                            Map<String, List<DDPKitRequestDto>> participantsWithKits) {
-        Map<String, Map<String, List<Object>>> participantsWithKitsSeparatedByMonth = new HashMap<>();
+        Map<String, Map<String, List<Object>>> participantsWithKitsSeparatedByMonth = new LinkedHashMap<>();
         participantsWithKits.forEach((pId, kits) -> {
             Map<String, List<Object>> defaultMap = Map.of(
                     "1ST", new ArrayList<>(),

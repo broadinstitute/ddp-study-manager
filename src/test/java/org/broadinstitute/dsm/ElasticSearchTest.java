@@ -66,10 +66,10 @@ public class ElasticSearchTest extends TestHelper {
     public void participantsInRange() throws Exception {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int from = 0;
-            int to = 25;
+            int to = 200;
             int scrollSize = to - from;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.rgp.rgp");
+            SearchRequest searchRequest = new SearchRequest("participants_structured.testboston.testboston");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             searchSourceBuilder.query(QueryBuilders.matchAllQuery());

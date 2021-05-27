@@ -40,6 +40,10 @@ import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.NestedSortBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -223,8 +227,9 @@ public class ElasticSearchUtil {
     }
 
     public static Map<String, Map<String, Object>> getDDPParticipantsFromESWithRange(@NonNull String realm, @NonNull String index,
-                                                                                     @NonNull int from, @NonNull int to) {
-        Map<String, Map<String, Object>> esData = new HashMap<>();
+                                                                                     @NonNull int from, @NonNull int to,
+                                                                                     String sortOrder) {
+        Map<String, Map<String, Object>> esData = new LinkedHashMap<>();
         if (StringUtils.isNotBlank(index)) {
             logger.info("Collecting ES data");
             try {
@@ -233,9 +238,15 @@ public class ElasticSearchUtil {
                     int scrollSize = to - from;
                     SearchRequest searchRequest = new SearchRequest(index);
                     SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-                    QueryBuilders.rangeQuery("enrolled").from("2021-05-13").to("2021-05-29");
                     SearchResponse response = null;
-                    searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(PROFILE_CREATED_AT, SortOrder.ASC);
+
+                    FieldSortBuilder sortedByCompletedAt =
+                            new FieldSortBuilder("activities.completedAt")
+                                    .setNestedSort(new NestedSortBuilder("activities"))
+                                    .order(SortOrder.valueOf(sortOrder));
+
+                    searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(sortedByCompletedAt);
+
                     searchSourceBuilder.size(scrollSize);
                     searchSourceBuilder.from(from);
                     searchRequest.source(searchSourceBuilder);
