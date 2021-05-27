@@ -114,7 +114,7 @@
             <column name="column_name" value="DATSTAT_GENDER"/>
             <column name="column_display" value="Sex"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&quot;value&quot;:&quot;Female&quot;},{&quot;value&quot;:&quot;Intersex&quot;},{&quot;value&quot;:&quot;Male&quot;},{&quot;value&quot;:&quot;Unknown&quot;}]"/>
+            <column name="possible_values" value="[{&quot;value&quot;:&quot;F&quot;,&quot;name&quot;:&quot;Female&quot;},{&quot;value&quot;:&quot;UN&quot;,&quot;name&quot;:&quot;Intersex&quot;},{&quot;value&quot;:&quot;M&quot;,&quot;name&quot;:&quot;Male&quot;},{&quot;value&quot;:&quot;U&quot;,&quot;name&quot;:&quot;Unknown&quot;}]"/>
             <column name="order_number" value="10"/>
         </insert>
         <insert tableName="field_settings">
@@ -182,7 +182,8 @@
             <column name="field_type" value="RGP_PARTICIPANT_INFO_GROUP"/>
             <column name="column_name" value="RACE"/>
             <column name="column_display" value="Race"/>
-            <column name="display_type" value="TEXT"/>
+            <column name="display_type" value="OPTIONS"/>
+            <column name="possible_values" value="[{&quot;value&quot;:&quot;AMERICAN_INDIAN_ALASKA_NATIVE&quot;,&quot;name&quot;:&quot;American Indian or Alaska Native&quot;},{&quot;value&quot;:&quot;ASIAN&quot;,&quot;name&quot;:&quot;Asian&quot;},{&quot;value&quot;:&quot;AFRICAN_AMERICAN&quot;,&quot;name&quot;:&quot;Black or African American&quot;},{&quot;value&quot;:&quot;MORE_THAN_ONE&quot;,&quot;name&quot;:&quot;More Than One Race&quot;},{&quot;value&quot;:&quot;NATIVE_HAWAIIAN_OTHER_PI&quot;,&quot;name&quot;:&quot;Native Hawaiian or Other Pacific Islander&quot;},{&quot;value&quot;:&quot;UNKNOWN&quot;,&quot;name&quot;:&quot;Unknown or Not Reported&quot;},{&quot;value&quot;:&quot;WHITE&quot;,&quot;name&quot;:&quot;White&quot;}]"/>
             <column name="order_number" value="17"/>
         </insert>
         <insert tableName="field_settings">
@@ -620,7 +621,7 @@
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
             <column name="field_type" value="RGP_TISSUE_GROUP"/>
-            <column name="column_name" value="POTENTIAL_TISSUE_SAMPLE_AVAILABLE"/>
+            <column name="column_name" value="POTENTIAL_TISSUE_SAMPLE_AVAILABLE_NEW"/>
             <column name="column_display" value="Potential tissue sample available"/>
             <column name="display_type" value="OPTIONS"/>
             <column name="possible_values" value="[{&quot;value&quot;:&quot;YES&quot;,&quot;name&quot;:&quot;Yes&quot;},{&quot;value&quot;:&quot;NO&quot;,&quot;name&quot;:&quot;No&quot;},{&quot;value&quot;:&quot;MAYBE&quot;,&quot;name&quot;:&quot;Maybe&quot;},{&quot;value&quot;:&quot;UNKNOWN&quot;,&quot;name&quot;:&quot;Unknown&quot;}]"/>

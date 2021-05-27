@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -44,7 +45,7 @@ public class ElasticSearchTest extends TestHelper {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.rgp.rgp");
+            SearchRequest searchRequest = new SearchRequest("participants_structured.testboston.testboston");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
@@ -635,19 +636,19 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
-    @Ignore
     public void createTestParticipantsInES() throws Exception {
         boolean addToDSMDB = false;
 
+        String index = "participants_structured.testboston.testboston";
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             //getting a participant ES doc
-            GetRequest getRequest = new GetRequest("participants_structured.cmi.angio", "_doc", "98JBYLZI33O0IFUMH9CS");
+            GetRequest getRequest = new GetRequest(index, "_doc", "EG5AIEQZOJGX2HYDTQZZ");
             GetResponse response = client.get(getRequest, RequestOptions.DEFAULT);
             Assert.assertNotNull(response);
 
-            for (int i = 0; i < 100; i++) {
-                String guid = "TEST000000000000000" + i;
-                String hruid = "PT000" + i;
+            for (int i = 2000; i < 4000; i++) {
+                String guid = "TEST00000000000" + StringUtils.leftPad(String.valueOf(i), 5, "0");
+                String hruid = "P" + StringUtils.leftPad(String.valueOf(i), 5, "0");
                 //changing values to be able to create new participant
                 Map<String, Object> source = response.getSource();
                 Assert.assertNotNull(source);
@@ -657,27 +658,34 @@ public class ElasticSearchTest extends TestHelper {
                 ((Map<String, Object>) profile).put("firstName", "Unit " + i);
                 ((Map<String, Object>) profile).put("lastName", "Test " + i);
                 ((Map<String, Object>) profile).put("guid", guid);
-                Object medicalProviders = source.get("medicalProviders");
-                List<Map<String, Object>> medicalProvidersList = ((List<Map<String, Object>>) medicalProviders);
-                int counter = 0;
-                for (Map<String, Object> medicalProviderMap : medicalProvidersList) {
-                    medicalProviderMap.put("guid", "MP0" + counter + hruid);
+//                Object medicalProviders = source.get("medicalProviders");
+//                List<Map<String, Object>> medicalProvidersList = ((List<Map<String, Object>>) medicalProviders);
+//                int counter = 0;
+//                for (Map<String, Object> medicalProviderMap : medicalProvidersList) {
+//                    medicalProviderMap.put("guid", "MP0" + counter + hruid);
+//
+//                    //add participant and institution into DSM DB
+//                    if (addToDSMDB) { //only use if you want your dsm db to have the participants as well
+//                        TestHelper.addTestParticipant("Angio", guid, hruid, "MP0" + counter + hruid, "20191022", true);
+//                    }
+//                    counter++;
+//                }
+//                Assert.assertNotNull(medicalProviders);
 
-                    //add participant and institution into DSM DB
-                    if (addToDSMDB) { //only use if you want your dsm db to have the participants as well
-                        TestHelper.addTestParticipant("Angio", guid, hruid, "MP0" + counter + hruid, "20191022", true);
-                    }
-                    counter++;
-                }
-                Assert.assertNotNull(medicalProviders);
+//                if (addToDSMDB) {
+//                    DBTestUtil.insertLatestKitRequest(cfg.getString("portal.insertKitRequest"), cfg.getString("portal.insertKit"),
+//                            "_" + hruid, 6, "6");
+//                    DBTestUtil.insertLatestKitRequest(cfg.getString("portal.insertKitRequest"), cfg.getString("portal.insertKit"),
+//                            "_" + hruid, 7, "6");
+//                }
 
                 //adding new participant into ES
-                IndexRequest indexRequest = new IndexRequest("participants_structured.cmi.angio", "_doc", guid).source(source);
-                UpdateRequest updateRequest = new UpdateRequest("participants_structured.cmi.angio", "_doc", guid).doc(source).upsert(indexRequest);
+                IndexRequest indexRequest = new IndexRequest(index, "_doc", guid).source(source);
+                UpdateRequest updateRequest = new UpdateRequest(index, "_doc", guid).doc(source).upsert(indexRequest);
                 client.update(updateRequest, RequestOptions.DEFAULT);
 
                 //getting a participant ES doc
-                GetRequest getRequestAfter = new GetRequest("participants_structured.cmi.angio", "_doc", guid);
+                GetRequest getRequestAfter = new GetRequest(index, "_doc", guid);
                 GetResponse responseAfter = client.get(getRequestAfter, RequestOptions.DEFAULT);
                 Assert.assertNotNull(responseAfter);
 
