@@ -41,9 +41,11 @@ public class KitStatusesHeatMap extends HeatmapGraph {
     public HeatmapGraphData samplesByStatuses() {
         DDPInstance ddpInstanceByRealm = DDPInstanceDao.getDDPInstanceByRealm(getStatisticPayload().getRealm());
 
+//        Map<String, Map<String, Object>> ddpParticipantsFromES =
+//                ElasticSearchUtil.getDDPParticipantsFromESWithRange(ddpInstanceByRealm.getName(), ddpInstanceByRealm.getParticipantIndexES(),
+//                        getStatisticPayload().getFrom(), getStatisticPayload().getTo(), getStatisticPayload().getSortOrder());
         Map<String, Map<String, Object>> ddpParticipantsFromES =
-                ElasticSearchUtil.getDDPParticipantsFromESWithRange(ddpInstanceByRealm.getName(), ddpInstanceByRealm.getParticipantIndexES(),
-                        getStatisticPayload().getFrom(), getStatisticPayload().getTo(), getStatisticPayload().getSortOrder());
+                ElasticSearchUtil.getDDPParticipantsFromES(ddpInstanceByRealm.getName(), ddpInstanceByRealm.getParticipantIndexES());
 
         Map<String, String> participantsGuidsWithShortIds = getParticipantsGuidsWithShortIds(ddpParticipantsFromES);
 
