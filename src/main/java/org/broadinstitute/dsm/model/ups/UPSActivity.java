@@ -1,14 +1,24 @@
 package org.broadinstitute.dsm.model.ups;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.db.dto.ups.UPSActivityDto;
+import org.broadinstitute.dsm.db.dto.ups.UPShipmentDto;
 
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Data
 public class UPSActivity {
+
+    private static final String ADDRESS = "address";
+
     UPSLocation location;
     UPSStatus status;
     String date;
@@ -18,6 +28,7 @@ public class UPSActivity {
     String packageId;
     String locationString;
 
+    public UPSActivity() {}
 
     public UPSActivity(String locationString, UPSStatus status, String date, String time, String activityId,
                        String packageId, String dateTime) {
@@ -92,4 +103,30 @@ public class UPSActivity {
     public boolean isPickup() {
         return status.isPickup();
     }
+
+    public List<UPSActivity> processActivities(List<UPSActivityDto> upsActivityDtos) {
+        List<UPSActivity> upsActivities = new ArrayList<>();
+        upsActivityDtos.forEach(upsActivityDto -> {
+            UPSLocation upsLocation = convertJsonToUpsLocation(upsActivityDto.getUpsLocation());
+            UPSStatus upsStatus = new UPSStatus(upsActivityDto.getUpsStatusType(), upsActivityDto.getUpsStatusDescription(),
+                    upsActivityDto.getUpsStatusCode());
+            String date = upsActivityDto.getUpsActivityDateTime().toLocalDate().toString();
+            String time = upsActivityDto.getUpsActivityDateTime().toLocalTime().toString();
+            String dateTime = upsActivityDto.getUpsActivityDateTime().toString();
+            UPSActivity upsActivity = new UPSActivity(upsLocation, upsStatus, date, time, String.valueOf(upsActivityDto.getUpsActvityId()),
+                    String.valueOf(upsActivityDto.getUpsPackageId()), dateTime);
+            upsActivities.add(upsActivity);
+        });
+        return upsActivities;
+    }
+
+    UPSLocation convertJsonToUpsLocation(String upsLocation) {
+        if (StringUtils.isBlank(upsLocation)) return new UPSLocation();
+        Gson gson = new Gson();
+        Map<String, Map<String, String>> locationMap = gson.fromJson(upsLocation, Map.class);
+        String upsAddressJson = gson.toJson(locationMap.get(ADDRESS));
+        UPSAddress upsAddress = gson.fromJson(upsAddressJson, UPSAddress.class);
+        return new UPSLocation(upsAddress);
+    }
+
 }

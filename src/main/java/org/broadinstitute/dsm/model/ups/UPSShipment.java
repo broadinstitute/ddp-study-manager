@@ -18,6 +18,7 @@ public class UPSShipment {
     }
 }
 
+@Data
 class UPSAddress{
     String city;
     String stateProvince;

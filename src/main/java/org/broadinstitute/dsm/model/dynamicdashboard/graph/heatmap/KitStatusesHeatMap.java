@@ -29,8 +29,12 @@ import org.broadinstitute.dsm.db.dto.ups.UPSPackageDto;
 import org.broadinstitute.dsm.db.dto.ups.UPShipmentDto;
 import org.broadinstitute.dsm.model.dynamicdashboard.StatisticPayload;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KitStatusesHeatMap extends HeatmapGraph {
+
+    private static final Logger logger = LoggerFactory.getLogger(KitStatusesHeatMap.class);
 
     static DateTimeFormatter dtf = new DateTimeFormatterBuilder().appendPattern("yyyyMMdd HHmmss").toFormatter();
 
@@ -41,11 +45,11 @@ public class KitStatusesHeatMap extends HeatmapGraph {
     public HeatmapGraphData samplesByStatuses() {
         DDPInstance ddpInstanceByRealm = DDPInstanceDao.getDDPInstanceByRealm(getStatisticPayload().getRealm());
 
-//        Map<String, Map<String, Object>> ddpParticipantsFromES =
-//                ElasticSearchUtil.getDDPParticipantsFromESWithRange(ddpInstanceByRealm.getName(), ddpInstanceByRealm.getParticipantIndexES(),
-//                        getStatisticPayload().getFrom(), getStatisticPayload().getTo(), getStatisticPayload().getSortOrder());
         Map<String, Map<String, Object>> ddpParticipantsFromES =
-                ElasticSearchUtil.getDDPParticipantsFromES(ddpInstanceByRealm.getName(), ddpInstanceByRealm.getParticipantIndexES());
+                ElasticSearchUtil.getDDPParticipantsFromESWithRange(ddpInstanceByRealm.getName(), ddpInstanceByRealm.getParticipantIndexES(),
+                        getStatisticPayload().getFrom(), getStatisticPayload().getTo(), getStatisticPayload().getSortOrder());
+//        Map<String, Map<String, Object>> ddpParticipantsFromES =
+//                ElasticSearchUtil.getDDPParticipantsFromES(ddpInstanceByRealm.getName(), ddpInstanceByRealm.getParticipantIndexES());
 
         Map<String, String> participantsGuidsWithShortIds = getParticipantsGuidsWithShortIds(ddpParticipantsFromES);
 
@@ -68,9 +72,19 @@ public class KitStatusesHeatMap extends HeatmapGraph {
     }
 
     List<HeatmapGraphData.HeatMapDataSet> getHeatmapDataset(Map<String, Map<String, List<Object>>> participantsWithKitsSeparatedByMonth) {
+        logger.info("Processing heatmap dataset...");
         List<HeatmapGraphData.HeatMapDataSet> heatMapDataSet = new ArrayList<>();
         participantsWithKitsSeparatedByMonth.forEach(
-                (pId, value) -> value.forEach((k, v) -> heatMapDataSet.add(new HeatmapGraphData.HeatMapDataSet(pId, k, getColorRange(v)))));
+                (pId, value) -> value.forEach((k, v) ->
+                        heatMapDataSet.add(new HeatmapGraphData.HeatMapDataSet(
+                                pId,
+                                k,
+                                getColorRange(v),
+                                v.isEmpty() ? "" : String.valueOf(((DDPKitRequestDto)v.get(v.size()-1)).getDsmKitRequestId()))
+                        )
+                )
+        );
+        logger.info("Returning processed heatmap dataset");
         return heatMapDataSet;
     }
 
@@ -97,18 +111,8 @@ public class KitStatusesHeatMap extends HeatmapGraph {
         return participantsGuidsWithShortIds;
     }
 
-//    private Map<String, List<DDPKitRequestDto>> getParticipantsWithKitsCreatedBySystem(Map<String, String> ddpParticipantsFromES) {
-//        Map<String, List<DDPKitRequestDto>> participantsWithKits = new LinkedHashMap<>();
-//        DDPKitRequestDao ddpKitRequestDao = new DDPKitRequestDao();
-//        ddpParticipantsFromES.forEach((pId, shortId) -> participantsWithKits.put(shortId,
-//                ddpKitRequestDao.getKitRequestsByParticipantId(pId).stream()
-//                        .filter(ddpKitRequestDto -> "SYSTEM".equals(ddpKitRequestDto.getCreatedBy()))
-//                        .collect(Collectors.toList()))
-//        );
-//        return participantsWithKits;
-//    }
-
     private Map<String, List<DDPKitRequestDto>> getParticipantsWithKitsCreatedBySystem(Map<String, String> ddpParticipantsFromES) {
+        logger.info("Fetching kits created by system and processing...");
         DDPKitRequestDao ddpKitRequestDao = new DDPKitRequestDao();
         Map<String, List<DDPKitRequestDto>> hruidWithKits = new LinkedHashMap<>();
         Map<String, List<DDPKitRequestDto>> kitRequestsCreatedBySystemByParticipantIds =
@@ -118,11 +122,13 @@ public class KitStatusesHeatMap extends HeatmapGraph {
                     ? kitRequestsCreatedBySystemByParticipantIds.get(pId) : new ArrayList<>();
             hruidWithKits.put(shortId, ddpKitRequestDtos);
         });
+        logger.info("returning fetched and processed kits");
         return hruidWithKits;
     }
 
     Map<String, Map<String, List<Object>>> getParticipantsWithKitsSeparatedByMonth(Map<String, Map<String, Object>> ddpParticipantsFromES,
                                                                                            Map<String, List<DDPKitRequestDto>> participantsWithKits) {
+        logger.info("sorting kits by month...");
         Map<String, Map<String, List<Object>>> participantsWithKitsSeparatedByMonth = new LinkedHashMap<>();
         participantsWithKits.forEach((pId, kits) -> {
             Map<String, List<Object>> defaultMap = Map.of(
@@ -143,6 +149,7 @@ public class KitStatusesHeatMap extends HeatmapGraph {
                 });
             });
         });
+        logger.info("returning kits sorted by month");
         return participantsWithKitsSeparatedByMonth;
     }
 

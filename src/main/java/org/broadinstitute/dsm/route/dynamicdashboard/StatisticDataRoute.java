@@ -56,6 +56,7 @@ public class StatisticDataRoute extends RequestHandler {
             List<StatisticResult> result = new ArrayList<>();
             Statistic statistic;
             StatisticsCreator statisticFactory = new StatisticsCreator();
+
             for (StatisticPayload statisticPayload: statisticPayloads) {
                 statistic = statisticFactory.makeStatistic(statisticPayload);
                 result.add(

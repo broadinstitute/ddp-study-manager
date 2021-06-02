@@ -42,6 +42,7 @@ import org.broadinstitute.dsm.route.dynamicdashboard.StatisticDataRoute;
 import org.broadinstitute.dsm.route.familymember.AddFamilyMemberRoute;
 import org.broadinstitute.dsm.route.participant.NumberOfParticipantsRoute;
 import org.broadinstitute.dsm.route.participant.GetParticipantDataRoute;
+import org.broadinstitute.dsm.route.upstracking.UpsTrackingRoute;
 import org.broadinstitute.dsm.security.JWTConverter;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
@@ -537,6 +538,10 @@ public class DSMServer extends BasicServer {
 
         NumberOfParticipantsRoute numberOfParticipantsRoute = new NumberOfParticipantsRoute();
         get(UI_ROOT + RoutePath.GET_NUMBER_OF_PARTICIPANTS, numberOfParticipantsRoute, new JsonTransformer());
+
+        UpsTrackingRoute upsTrackingRoute = new UpsTrackingRoute();
+        get(UI_ROOT + RoutePath.UPS_TRACKING_HISTORY, upsTrackingRoute, new JsonTransformer());
+
     }
 
     private void setupSharedRoutes(@NonNull KitUtil kitUtil, @NonNull NotificationUtil notificationUtil,

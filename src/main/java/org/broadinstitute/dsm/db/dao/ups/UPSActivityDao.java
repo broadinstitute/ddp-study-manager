@@ -78,7 +78,7 @@ public class UPSActivityDao implements Dao<UPSActivityDto> {
                                         rs.getString(UPS_STATUS_TYPE),
                                         rs.getString(UPS_STATUS_DESCRIPTION),
                                         rs.getString(UPS_STATUS_CODE),
-                                        rs.getTimestamp(UPS_ACTIVITY_DATE_TIME)
+                                        rs.getTimestamp(UPS_ACTIVITY_DATE_TIME).toLocalDateTime()
                                 )
                         );
                     }

@@ -88,11 +88,13 @@ public class HeatmapGraphData extends GraphResult {
         private String rowId;
         private String columnId;
         private String colorRangeLabel;
+        private String tlLabel;
 
-        public HeatMapDataSet(String rowId, String columnId, String colorRangeLabel) {
+        public HeatMapDataSet(String rowId, String columnId, String colorRangeLabel, String tlLabel) {
             this.rowId = rowId;
             this.columnId = columnId;
             this.colorRangeLabel = colorRangeLabel;
+            this.tlLabel = tlLabel;
         }
     }
 

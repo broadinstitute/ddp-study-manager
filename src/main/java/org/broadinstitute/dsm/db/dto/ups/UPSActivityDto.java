@@ -4,9 +4,11 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Date;
 
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class UPSActivityDto {
 
     private int upsActvityId;
@@ -18,14 +20,14 @@ public class UPSActivityDto {
     private LocalDateTime upsActivityDateTime;
 
     public UPSActivityDto(int upsActvityId, int upsPackageId, String upsLocation, String upsStatusType, String upsStatusDescription,
-                          String upsStatusCode, Timestamp upsActivityDateTime) {
+                          String upsStatusCode, LocalDateTime upsActivityDateTime) {
         this.upsActvityId = upsActvityId;
         this.upsPackageId = upsPackageId;
         this.upsLocation = upsLocation;
         this.upsStatusType = upsStatusType;
         this.upsStatusDescription = upsStatusDescription;
         this.upsStatusCode = upsStatusCode;
-        this.upsActivityDateTime = upsActivityDateTime.toLocalDateTime();
+        this.upsActivityDateTime = upsActivityDateTime;
     }
 
     public UPSActivityDto() {
