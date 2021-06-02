@@ -415,7 +415,7 @@ public class ElasticSearchUtil {
             for (Map<String, Object> object : objectList) {
                 if (id.toString().equals(object.get(idName).toString())) {
                     for (Map.Entry<String, Object> entry: nameValues.entrySet()) {
-                        if (entry.getKey() != idName && entry.getKey() != ESObjectConstants.DDP_PARTICIPANT_ID) {
+                        if (!entry.getKey().equals(idName) && !entry.getKey().equals(ESObjectConstants.DDP_PARTICIPANT_ID)) {
                             object.put(entry.getKey(), entry.getValue());
                         }
                     }
@@ -452,7 +452,7 @@ public class ElasticSearchUtil {
         Map<String, Object> newObjectMap = new HashMap<>();
         newObjectMap.put(idName, id);
         for (Map.Entry<String, Object> entry: nameValues.entrySet()) {
-            if (entry.getKey() != idName && entry.getKey() != ESObjectConstants.DDP_PARTICIPANT_ID) {
+            if (!entry.getKey().equals(idName) && !entry.getKey().equals(ESObjectConstants.DDP_PARTICIPANT_ID)) {
                 newObjectMap.put(entry.getKey(), entry.getValue());
             }
         }
