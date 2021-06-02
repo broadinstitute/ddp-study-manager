@@ -21,6 +21,7 @@ import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
 import org.broadinstitute.dsm.model.participant.data.NewParticipantData;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,8 +68,8 @@ public class AutomaticProbandDataCreator {
                                                           Map<String, String> columnsWithDefaultOptions) {
         String participantId = esData.getKey();
         NewParticipantData newParticipantData = new NewParticipantData(participantDataDao);
-        Optional<BookmarkDto> maybeBookmark = bookmarkDao.getBookmarkByInstance(RGP_FAMILY_ID);
-        Map<String, String> probandDataMap = extractProbandDefaultDataFromParticipantProfile(esData.getValue(), maybeBookmark);
+        Optional<BookmarkDto> maybeFamilyIdOfBookmark = bookmarkDao.getBookmarkByInstance(RGP_FAMILY_ID);
+        Map<String, String> probandDataMap = extractProbandDefaultDataFromParticipantProfile(esData.getValue(), maybeFamilyIdOfBookmark);
         newParticipantData.setData(
                 participantId,
                 Integer.parseInt(instance.getDdpInstanceId()),
@@ -77,9 +78,10 @@ public class AutomaticProbandDataCreator {
                 );
         newParticipantData.addDefaultOptionsValueToData(columnsWithDefaultOptions);
         newParticipantData.insertParticipantData("SYSTEM");
-        maybeBookmark.ifPresent(bookmarkDto -> {
-            bookmarkDto.setValue(bookmarkDto.getValue() + 1);
-            bookmarkDao.updateBookmarkValueByBookmarkId(bookmarkDto.getBookmarkId(), bookmarkDto.getValue());
+        maybeFamilyIdOfBookmark.ifPresent(familyIdBookmarkDto -> {
+            insertFamilyIdToDsmES(instance.getParticipantIndexES(), participantId, familyIdBookmarkDto.getValue());
+            familyIdBookmarkDto.setValue(familyIdBookmarkDto.getValue() + 1);
+            bookmarkDao.updateBookmarkValueByBookmarkId(familyIdBookmarkDto.getBookmarkId(), familyIdBookmarkDto.getValue());
         });
         isParticipantDataUpdated = true;
         logger.info("Automatic proband data for participant with id: " + participantId + " has been created");
@@ -113,5 +115,16 @@ public class AutomaticProbandDataCreator {
         probandMemberDetails.setMobilePhone(mobilePhone.toString());
         probandMemberDetails.setEmail(email);
         return probandMemberDetails.toMap();
+    }
+
+    void insertFamilyIdToDsmES(@NonNull String esIndex, @NonNull String participantId, @NonNull long familyId) {
+        try {
+            Map<String, Object> esObjectMap = ElasticSearchUtil.getObjectsMap(esIndex, participantId, ESObjectConstants.DSM);
+            Map<String, Object> esDsmObjectMap = (Map<String, Object>) esObjectMap.get(ESObjectConstants.DSM);
+            esDsmObjectMap.put(ESObjectConstants.FAMILY_ID, familyId);
+            ElasticSearchUtil.updateRequest(participantId, esIndex, esObjectMap);
+        } catch (Exception e) {
+            logger.error("Could not insert family id for participant: " + participantId, e);
+        }
     }
 }
