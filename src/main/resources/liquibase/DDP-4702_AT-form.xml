@@ -5,6 +5,14 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
+        <changeSet author="simone" id="changeType-field_settings">
+            <modifyDataType columnName="readonly" newDataType="TINYINT(1)" tableName="field_settings"/>
+        </changeSet>
+
+        <changeSet author="simone" id="changeType-ddp_participant_data">
+            <modifyDataType columnName="data" newDataType="TEXT" tableName="ddp_participant_data"/>
+        </changeSet>
+
         <changeSet author="simone" id="atForm">
             <insert tableName="field_settings">
                 <column name="ddp_instance_id"
