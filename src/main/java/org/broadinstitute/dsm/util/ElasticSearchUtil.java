@@ -245,7 +245,12 @@ public class ElasticSearchUtil {
                                     .setNestedSort(new NestedSortBuilder("activities"))
                                     .order(SortOrder.valueOf(sortOrder));
 
-                    searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(sortedByCompletedAt);
+                    FieldSortBuilder sortedByCreatedAt =
+                            new FieldSortBuilder("activities.createdAt")
+                                    .setNestedSort(new NestedSortBuilder("activities"))
+                                    .order(SortOrder.valueOf(sortOrder));
+
+                    searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(sortedByCompletedAt).sort(sortedByCreatedAt);
 
                     searchSourceBuilder.size(scrollSize);
                     searchSourceBuilder.from(from);
