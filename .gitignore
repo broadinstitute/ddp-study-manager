@@ -28,6 +28,7 @@ target
 npm-debug.log
 testem.log
 /typings
+checkstyle.xml
 
 # e2e
 /e2e

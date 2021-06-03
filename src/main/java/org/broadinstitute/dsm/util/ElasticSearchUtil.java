@@ -211,7 +211,7 @@ public class ElasticSearchUtil {
     public static Map<String, Map<String, Object>> getDDPParticipantsFromES(@NonNull String realm, @NonNull String index) {
         Map<String, Map<String, Object>> esData = new HashMap<>();
         if (StringUtils.isNotBlank(index)) {
-            logger.info("Collecting ES data");
+            logger.info("Collecting ES data from index: " +  index);
             try {
                 try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
                         TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
@@ -221,7 +221,7 @@ public class ElasticSearchUtil {
             catch (Exception e) {
                 logger.error("Couldn't get participants from ES for instance " + realm, e);
             }
-            logger.info("Got " + esData.size() + " participants from ES for instance " + realm);
+            logger.info("Finished collecting ES data");
         }
         return esData;
     }
@@ -487,7 +487,7 @@ public class ElasticSearchUtil {
             for (Map<String, Object> object : objectList) {
                 if (id.toString().equals(object.get(idName).toString())) {
                     for (Map.Entry<String, Object> entry: nameValues.entrySet()) {
-                        if (entry.getKey() != idName && entry.getKey() != ESObjectConstants.DDP_PARTICIPANT_ID) {
+                        if (!entry.getKey().equals(idName) && !entry.getKey().equals(ESObjectConstants.DDP_PARTICIPANT_ID)) {
                             object.put(entry.getKey(), entry.getValue());
                         }
                     }
@@ -524,7 +524,7 @@ public class ElasticSearchUtil {
         Map<String, Object> newObjectMap = new HashMap<>();
         newObjectMap.put(idName, id);
         for (Map.Entry<String, Object> entry: nameValues.entrySet()) {
-            if (entry.getKey() != idName && entry.getKey() != ESObjectConstants.DDP_PARTICIPANT_ID) {
+            if (!entry.getKey().equals(idName) && !entry.getKey().equals(ESObjectConstants.DDP_PARTICIPANT_ID)) {
                 newObjectMap.put(entry.getKey(), entry.getValue());
             }
         }
