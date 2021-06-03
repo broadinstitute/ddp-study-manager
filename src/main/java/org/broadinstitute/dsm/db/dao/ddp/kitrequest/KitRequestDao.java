@@ -19,7 +19,7 @@ public class KitRequestDao implements Dao<KitRequestDto> {
 
     public static final String SQL_SELECT_ES_SAMPLE =
             "SELECT " +
-            "dp.ddp_participant_id, " +
+            "kr.ddp_participant_id, " +
             "kr.ddp_kit_request_id, " +
             "kt.kit_type_name, " +
             "dk.kit_label, " +
@@ -32,9 +32,7 @@ public class KitRequestDao implements Dao<KitRequestDto> {
             "dk.easypost_shipment_date, " +
             "dk.receive_date " +
                     "FROM " +
-            "ddp_participant dp " +
-            "LEFT JOIN " +
-            "ddp_kit_request kr ON dp.ddp_participant_id = kr.ddp_participant_id " +
+            "ddp_kit_request kr "+
             "LEFT JOIN " +
             "ddp_kit dk ON dk.dsm_kit_request_id = kr.dsm_kit_request_id " +
             "LEFT JOIN " +
@@ -45,7 +43,7 @@ public class KitRequestDao implements Dao<KitRequestDto> {
             "LEFT JOIN " +
             "carrier_service cs ON (krs.carrier_service_to_id = cs.carrier_service_id)";
 
-    public static final String BY_INSTANCE_ID = " WHERE dp.ddp_instance_id = ?";
+    public static final String BY_INSTANCE_ID = " WHERE kr.ddp_instance_id = ?";
 
     public static final String SQL_GET_KIT_REQUEST_ID =
             "SELECT " +
@@ -152,9 +150,9 @@ public class KitRequestDao implements Dao<KitRequestDto> {
                                         ESSampleRs.getString(DBConstants.DSM_TRACKING_TO),
                                         ESSampleRs.getString(DBConstants.DSM_TRACKING_RETURN),
                                         ESSampleRs.getString(DBConstants.CARRIER),
-                                        SystemUtil.getDateFormatted(ESSampleRs.getLong(DBConstants.DSM_SCAN_DATE)),
-                                        SystemUtil.getDateFormatted(ESSampleRs.getLong(DBConstants.EASYPOST_SHIPMENT_DATE)),
-                                        SystemUtil.getDateFormatted(ESSampleRs.getLong(DBConstants.DSM_RECEIVE_DATE))
+                                        SystemUtil.getNullOrDateFormatted(ESSampleRs.getLong(DBConstants.DSM_SCAN_DATE)),
+                                        SystemUtil.getNullOrDateFormatted(ESSampleRs.getLong(DBConstants.EASYPOST_SHIPMENT_DATE)),
+                                        SystemUtil.getNullOrDateFormatted(ESSampleRs.getLong(DBConstants.DSM_RECEIVE_DATE))
                                 )
                         );
                     }

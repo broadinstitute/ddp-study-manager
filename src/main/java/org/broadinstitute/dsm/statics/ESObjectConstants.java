@@ -29,4 +29,8 @@ public class ESObjectConstants {
 
     //common
     public static final String DDP_PARTICIPANT_ID = "ddpParticipantId";
+
+    //dsm
+    public static final String DSM = "dsm";
+    public static final String FAMILY_ID = "familyId"; //needed for RGP so far
 }
