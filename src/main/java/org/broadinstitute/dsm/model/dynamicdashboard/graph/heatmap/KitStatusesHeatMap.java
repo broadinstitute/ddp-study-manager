@@ -252,22 +252,26 @@ public class KitStatusesHeatMap extends HeatmapGraph {
     }
 
     String getKitStatus(String status, boolean isOutGoing, Object date) {
-        String colorRange = "Not Ordered";
+        String colorRange;
         LocalDateTime upsTrackingDate = date instanceof String ? LocalDateTime.parse((String) date, dtf) : (LocalDateTime) date;
         if (isOutGoing) {
-            if (status.startsWith("M") || status.startsWith("I")) {
+            if (StringUtils.isNotBlank(status) && (status.startsWith("M") || status.startsWith("I"))) {
                 long elapsedDays = Duration.between(upsTrackingDate, LocalDateTime.now()).abs().toDays();
                 if (elapsedDays > 7) colorRange = "Not Delivered";
                 else colorRange = "In transit (outgoing)";
+            } else {
+                colorRange = "Not Delivered";
             }
         } else {
-            if (status.startsWith("D")) {
+            if (StringUtils.isNotBlank(status) && status.startsWith("D")) {
                 colorRange = "Returned";
-            } else if (status.startsWith("M") || status.startsWith("I")) {
+            } else if (StringUtils.isNotBlank(status) && (status.startsWith("M") || status.startsWith("I"))) {
                 long elapsedDays = Duration.between(upsTrackingDate,
                         LocalDateTime.now()).abs().toDays();
                 if (elapsedDays > 7) colorRange = "Not Returned";
                 else colorRange = "In transit (incoming)";
+            } else {
+                colorRange = "Not Returned";
             }
         }
         return colorRange;
