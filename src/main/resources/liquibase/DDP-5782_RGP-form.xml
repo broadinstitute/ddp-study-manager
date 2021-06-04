@@ -373,6 +373,7 @@
             <column name="column_display" value="Inactive Reason"/>
             <column name="display_type" value="OPTIONS"/>
             <column name="possible_values" value="[{&quot;value&quot;:&quot;WITHDREW&quot;,&quot;name&quot;:&quot;Withdrew&quot;},{&quot;value&quot;:&quot;DECLINED&quot;,&quot;name&quot;:&quot;Declined to Participate&quot;},{&quot;value&quot;:&quot;ENROLLED_INELIGIBLE&quot;,&quot;name&quot;:&quot;Enrolled-Ineligible&quot;},{&quot;value&quot;:&quot;COMPLETED&quot;,&quot;name&quot;:&quot;Completed&quot;},{&quot;value&quot;:&quot;LOST_TO_FOLLOWUP&quot;,&quot;name&quot;:&quot;Lost to Follow-up&quot;},{&quot;value&quot;:&quot;INELIGIBLE&quot;,&quot;name&quot;:&quot;Ineligible&quot;},{&quot;value&quot;:&quot;NA&quot;,&quot;name&quot;:&quot;N/A &quot;,&quot;default&quot;:true}]"/>
+            <column name="actions" value="[{&quot;name&quot;:&quot;INACTIVE_REASON&quot;,&quot;type&quot;:&quot;ELASTIC_EXPORT.workflows&quot;}]"/>
             <column name="order_number" value="4"/>
         </insert>
         <insert tableName="field_settings">
@@ -392,6 +393,7 @@
             <column name="column_name" value="DATE_CONSENTED"/>
             <column name="column_display" value="Date of Consent Call"/>
             <column name="display_type" value="DATE"/>
+            <column name="actions" value="[{&quot;name&quot;:&quot;DATE_CONSENTED&quot;,&quot;type&quot;:&quot;ELASTIC_EXPORT.workflows&quot;}]"/>
             <column name="order_number" value="6"/>
         </insert>
         <insert tableName="field_settings">
