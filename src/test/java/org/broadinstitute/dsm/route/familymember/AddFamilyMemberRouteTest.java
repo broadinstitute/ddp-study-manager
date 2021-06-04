@@ -52,9 +52,9 @@ public class AddFamilyMemberRouteTest {
         setupDB();
         gson = new Gson();
 
-        DBTestUtil.createTestDdpInstance(ddpInstanceDto, ddpInstanceDao, "AddFamilyMemberInstance");
+        ddpInstanceDto =  DBTestUtil.createTestDdpInstance(ddpInstanceDto, ddpInstanceDao, "AddFamilyMemberInstance");
 
-        DBTestUtil.createTestDsmUser("AddFamilyMemberUser", "addfamilymember@family.com", userDao, user);
+        user = DBTestUtil.createTestDsmUser("AddFamilyMemberUser", "addfamilymember@family.com", userDao, user);
 
         familyMemberData.putAll(new FamilyMemberDetails("Family", "Member", "Sister", "PE3LHB", "PE3LHB_1_2").toMap());
 

@@ -1034,15 +1034,17 @@ public class DBTestUtil {
         }
     }
 
-    public static void createTestDdpInstance(DDPInstanceDto ddpInstanceDto, DDPInstanceDao ddpInstanceDao, String ddpInstanceName) {
+    public static DDPInstanceDto createTestDdpInstance(DDPInstanceDto ddpInstanceDto, DDPInstanceDao ddpInstanceDao, String ddpInstanceName) {
         ddpInstanceDto = DDPInstanceDto.of(true, true, true);
         ddpInstanceDto.setInstanceName(ddpInstanceName);
         int testCreatedInstanceId = ddpInstanceDao.create(ddpInstanceDto);
         ddpInstanceDto.setDdpInstanceId(testCreatedInstanceId);
+        return ddpInstanceDto;
     }
 
-    public static void createTestDsmUser(String name, String email, UserDao userDao, User user) {
+    public static User createTestDsmUser(String name, String email, UserDao userDao, User user) {
         user = new User(null, name, email);
         user.setId(String.valueOf(userDao.create(user)));
+        return user;
     }
 }
