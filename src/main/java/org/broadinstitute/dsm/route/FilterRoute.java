@@ -1,11 +1,14 @@
 package org.broadinstitute.dsm.route;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ViewFilter;
+import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.ParticipantWrapper;
@@ -32,9 +35,12 @@ import java.util.*;
 public class FilterRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(FilterRoute.class);
+    private static final Gson gson = new Gson();
+    private static final ParticipantDataDao participantDataDao = new ParticipantDataDao();
 
     public static final String PARENT_PARTICIPANT_LIST = "participantList";
     public static final String TISSUE_LIST_PARENT = "tissueList";
+    public static final String PARTICIPANT_DATA = "participantData";
 
     private PatchUtil patchUtil;
 
@@ -238,22 +244,30 @@ public class FilterRoute extends RequestHandler {
 
     public static List<?> filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap, @NonNull DDPInstance instance) {
         Map<String, String> queryConditions = new HashMap<>();
+        List<ParticipantDataDto> allParticipantData = participantDataDao
+                .getParticipantDataByInstanceid(Integer.parseInt(instance.getDdpInstanceId()));
         if (filters != null && columnNameMap != null && !columnNameMap.isEmpty()) {
             for (Filter filter : filters) {
                 if (filter != null) {
-                    String tmp = StringUtils.isNotBlank(filter.getParentName()) ? filter.getParentName() : filter.getParticipantColumn().getTableAlias();
+                    String tmp = null;
+                    if (filter.getParticipantColumn() != null) {
+                        tmp = StringUtils.isNotBlank(filter.getParentName()) ? filter.getParentName() : filter.getParticipantColumn().getTableAlias();
+                    }
                     String tmpName = null;
                     DBElement dbElement = null;
                     if (filter.getFilter1() != null && StringUtils.isNotBlank(filter.getFilter1().getName())) {
                         tmpName = filter.getFilter1().getName();
-                    }
-                    else if (filter.getFilter2() != null && StringUtils.isNotBlank(filter.getFilter2().getName())) {
+                    } else if (filter.getFilter2() != null && StringUtils.isNotBlank(filter.getFilter2().getName())) {
                         tmpName = filter.getFilter2().getName();
                     }
-                    if (StringUtils.isNotBlank(tmpName)) {
-                        dbElement = columnNameMap.get(tmp + "." + tmpName);
+                    if (filter.getParticipantColumn() != null && PARTICIPANT_DATA.equals(filter.getParticipantColumn().tableAlias)) {
+                        addParticipantDataFilters(queryConditions, filter, tmpName, allParticipantData);
+                    } else {
+                        if (StringUtils.isNotBlank(tmpName)) {
+                            dbElement = columnNameMap.get(tmp + "." + tmpName);
+                        }
+                        ViewFilter.addQueryCondition(queryConditions, dbElement, filter);
                     }
-                    ViewFilter.addQueryCondition(queryConditions, dbElement, filter);
                 }
             }
         }
@@ -286,6 +300,55 @@ public class FilterRoute extends RequestHandler {
         }
     }
 
+    public static void addParticipantDataFilters(Map<String, String> queryConditions,
+                                                 Filter filter, String tmpName, List<ParticipantDataDto> allParticipantData) {
+        StringBuilder newCondition = new StringBuilder();
+        newCondition.append(ElasticSearchUtil.BY_LEGACY_ALTPID_STARTING);
+        boolean participantAdded = false;
+        boolean first = true;
+        for (ParticipantDataDto participantData: allParticipantData) {
+            String data = participantData.getData();
+            if (data != null) {
+                JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
+                if (filter.getSelectedOptions() != null) {
+                    for (String option: filter.getSelectedOptions()) {
+                        if (dataJsonObject.get(tmpName) != null && dataJsonObject.get(tmpName).getAsString()
+                                .equals(option)) {
+                            addParticipantDataCondition(newCondition, first, participantData);
+                            participantAdded = true;
+                            break;
+                        }
+                    }
+                } else {
+                    if (filter.getFilter1() != null && filter.getFilter1().getValue() != null) {
+                        if (dataJsonObject.get(tmpName) != null && dataJsonObject.get(tmpName).getAsString()
+                                .equals(filter.getFilter1().getValue())) {
+                            addParticipantDataCondition(newCondition, first, participantData);
+                            participantAdded = true;
+                            first = false;
+                        }
+                    }
+                }
+            }
+        }
+        if (participantAdded) {
+            newCondition.append(ElasticSearchUtil.CLOSING_PARENTHESIS);
+            String esCondition = queryConditions.get(ElasticSearchUtil.ES);
+            esCondition += newCondition.toString();
+            queryConditions.put(ElasticSearchUtil.ES, esCondition);
+        }
+    }
+
+    public static void addParticipantDataCondition(StringBuilder newCondition, boolean first, ParticipantDataDto participantData) {
+        if (first) {
+            newCondition.append(participantData.getDdpParticipantId())
+                    .append(ElasticSearchUtil.BY_GUIDS).append(participantData.getDdpParticipantId());
+        } else {
+            newCondition.append(ElasticSearchUtil.BY_LEGACY_ALTPIDS).append(participantData.getDdpParticipantId())
+            .append(ElasticSearchUtil.BY_GUIDS).append(participantData.getDdpParticipantId());
+        }
+    }
+
     public static List<?> filterTissueList(Filter[] filters, Map<String, DBElement> columnNameMap, String filterName,
                                            @NonNull DDPInstance instance, String filterQuery) {
         Map<String, String> queryConditions = new HashMap<>();
@@ -293,7 +356,7 @@ public class FilterRoute extends RequestHandler {
         if (filters != null && !columnNameMap.isEmpty()) {
             for (Filter filter : filters) {
                 if (filter != null) {
-                    DBElement dbElement = columnNameMap.get(filter.participantColumn.tableAlias + "." + filter.getFilter1().getName());
+                    DBElement dbElement = columnNameMap.get(filter.getParticipantColumn().tableAlias + "." + filter.getFilter1().getName());
                     ViewFilter.addQueryCondition(queryConditions, dbElement, filter);
                 }
             }

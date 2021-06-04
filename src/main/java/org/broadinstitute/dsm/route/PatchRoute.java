@@ -91,7 +91,7 @@ public class PatchRoute extends RequestHandler {
                                 if (patch.getActions() != null) {
                                     for (Value action : patch.getActions()) {
                                         if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
-                                            writeESWorkflow(patch, nameValue, action);
+//                                            writeESWorkflow(patch, nameValue, action);
                                         }
                                     }
                                 }
@@ -255,7 +255,7 @@ public class PatchRoute extends RequestHandler {
                                 if (patch.getActions() != null) {
                                     for (Value action : patch.getActions()) {
                                         if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
-                                            writeESWorkflow(patch, nameValue, action);
+//                                            writeESWorkflow(patch, nameValue, action);
                                         }
                                     }
                                 }

@@ -75,6 +75,9 @@ public class ElasticSearchUtil {
     public static final String BY_HRUID = " AND profile.hruid = ";
     public static final String BY_GUIDS = " OR profile.guid = ";
     public static final String BY_LEGACY_ALTPID = " AND profile.legacyAltPid = ";
+    public static final String BY_LEGACY_ALTPID_STARTING = " AND (profile.legacyAltPid = ";
+    public static final String ES = "ES";
+    public static final String CLOSING_PARENTHESIS = ")";
     public static final String BY_LEGACY_ALTPIDS = " OR profile.legacyAltPid = ";
     public static final String BY_LEGACY_SHORTID = " AND profile.legacyShortId = ";
     public static final String END_OF_DAY = " 23:59:59";
