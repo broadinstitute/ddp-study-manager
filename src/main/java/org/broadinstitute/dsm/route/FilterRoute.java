@@ -316,6 +316,7 @@ public class FilterRoute extends RequestHandler {
                                 .equals(option)) {
                             addParticipantDataCondition(newCondition, first, participantData);
                             participantAdded = true;
+                            first = false;
                             break;
                         }
                     }
