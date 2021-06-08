@@ -46,7 +46,7 @@ public class ElasticSearchTest extends TestHelper {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.testboston.testboston");
+            SearchRequest searchRequest = new SearchRequest("participants_structured.atcp.atcp");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
@@ -647,7 +647,7 @@ public class ElasticSearchTest extends TestHelper {
 //            GetResponse response = client.get(getRequest, RequestOptions.DEFAULT);
 //            Assert.assertNotNull(response);
 //4000
-            for (int i = 10; i < 300; i++) {
+            for (int i = 789; i < 900; i++) {
                 String guid = "TEST00000000000" + StringUtils.leftPad(String.valueOf(i), 5, "0");
                 String hruid = "P" + StringUtils.leftPad(String.valueOf(i), 5, "0");
                 //changing values to be able to create new participant
