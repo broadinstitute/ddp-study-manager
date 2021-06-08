@@ -353,6 +353,7 @@
             <column name="column_name" value="ACCEPTANCE_STATUS_DATE"/>
             <column name="column_display" value="Acceptance Status Date"/>
             <column name="display_type" value="DATE"/>
+            <column name="actions" value="[{&quot;name&quot;:&quot;ACCEPTANCE_STATUS_DATE&quot;,&quot;type&quot;:&quot;ELASTIC_EXPORT.workflows&quot;}]"/>
             <column name="order_number" value="2"/>
         </insert>
         <insert tableName="field_settings">
