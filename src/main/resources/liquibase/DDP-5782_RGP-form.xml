@@ -461,10 +461,20 @@
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
             <column name="field_type" value="RGP_MEDICAL_RECORDS_GROUP"/>
+            <column name="column_name" value="MEDICAL_RECORDS_LAST_RECEIVED"/>
+            <column name="column_display" value="Medical records last received"/>
+            <column name="display_type" value="DATE"/>
+            <column name="actions" value="[{&quot;name&quot;:&quot;MEDICAL_RECORDS_LAST_RECEIVED&quot;,&quot;type&quot;:&quot;ELASTIC_EXPORT.workflows&quot;}]"/>
+            <column name="order_number" value="2"/>
+        </insert>
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='rgp')"></column>
+            <column name="field_type" value="RGP_MEDICAL_RECORDS_GROUP"/>
             <column name="column_name" value="MEDICAL_RECORDS_NOTES"/>
             <column name="column_display" value="Medical Records Notes"/>
             <column name="display_type" value="TEXTAREA"/>
-            <column name="order_number" value="2"/>
+            <column name="order_number" value="3"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -474,7 +484,7 @@
             <column name="column_display" value="Medical Records Release Obtained"/>
             <column name="display_type" value="RADIO"/>
             <column name="possible_values" value="[{&quot;value&quot;:&quot;YES&quot;,&quot;name&quot;:&quot;Yes&quot;},{&quot;value&quot;:&quot;NO&quot;,&quot;name&quot;:&quot;No&quot;,&quot;default&quot;:true},{&quot;value&quot;:&quot;PARTIAL&quot;,&quot;name&quot;:&quot;Partial&quot;}]"/>
-            <column name="order_number" value="3"/>
+            <column name="order_number" value="4"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -483,7 +493,7 @@
             <column name="column_name" value="RECORDS_LAST_REQUESTED"/>
             <column name="column_display" value="Records Last Requested"/>
             <column name="display_type" value="DATE"/>
-            <column name="order_number" value="4"/>
+            <column name="order_number" value="5"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -492,7 +502,7 @@
             <column name="column_name" value="FAMILY_PROVIDED_URL"/>
             <column name="column_display" value="Family Provided URL (if any)"/>
             <column name="display_type" value="TEXT"/>
-            <column name="order_number" value="5"/>
+            <column name="order_number" value="6"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -501,7 +511,7 @@
             <column name="column_name" value="REFERRING_CLINICIAN"/>
             <column name="column_display" value="Referring Clinician"/>
             <column name="display_type" value="TEXT"/>
-            <column name="order_number" value="6"/>
+            <column name="order_number" value="7"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -511,7 +521,7 @@
             <column name="column_display" value="Consent to speak with clinician"/>
             <column name="display_type" value="OPTIONS"/>
             <column name="possible_values" value="[{&quot;value&quot;:&quot;YES&quot;,&quot;name&quot;:&quot;Yes&quot;},{&quot;value&quot;:&quot;NO&quot;,&quot;name&quot;:&quot;No&quot;},{&quot;value&quot;:&quot;UNKNOWN&quot;,&quot;name&quot;:&quot;Unknown&quot;,&quot;default&quot;:true}]"/>
-            <column name="order_number" value="7"/>
+            <column name="order_number" value="8"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
@@ -521,7 +531,7 @@
             <column name="column_display" value="Cohort"/>
             <column name="display_type" value="OPTIONS"/>
             <column name="possible_values" value="[{&quot;value&quot;:&quot;RARE&quot;,&quot;name&quot;:&quot;Rare&quot;},{&quot;value&quot;:&quot;LGMD&quot;,&quot;name&quot;:&quot;LGMD&quot;},{&quot;value&quot;:&quot;CRANIOFACIAL&quot;,&quot;name&quot;:&quot;Craniofacial&quot;},{&quot;value&quot;:&quot;KIDNEY&quot;,&quot;name&quot;:&quot;Kidney&quot;},{&quot;value&quot;:&quot;VIJAY&quot;,&quot;name&quot;:&quot;Vijay&quot;},{&quot;value&quot;:&quot;DIABETES&quot;,&quot;name&quot;:&quot;Diabetes&quot;},{&quot;value&quot;:&quot;EARLY_SEVERE_SEIZURES&quot;,&quot;name&quot;:&quot;Early/Severe Seizures&quot;},{&quot;value&quot;:&quot;NEUROMUSCULAR&quot;,&quot;name&quot;:&quot;Neuromuscular&quot;},{&quot;value&quot;:&quot;BONNEMANN&quot;,&quot;name&quot;:&quot;Bonnemann&quot;},{&quot;value&quot;:&quot;CREATINE_DEFICIENCIES&quot;,&quot;name&quot;:&quot;Creatine Deficiencies&quot;},{&quot;value&quot;:&quot;CONGENITAL_HYPERINSULINISM&quot;,&quot;name&quot;:&quot;Congenital hyperinsulinism&quot;},{&quot;value&quot;:&quot;CONGENITAL_MUSCULAR_DYSTROPHY&quot;,&quot;name&quot;:&quot;Congenital muscular dystrophy&quot;},{&quot;value&quot;:&quot;HEREDITARY_HEMORRHAGIC_TELANGEICTASIA&quot;,&quot;name&quot;:&quot;Hereditary hemorrhagic telangeictasia&quot;},{&quot;value&quot;:&quot;HERMANSKY_PUDLAK&quot;,&quot;name&quot;:&quot;Hermansky-Pudlak&quot;},{&quot;value&quot;:&quot;LENNOX_GASTAUT&quot;,&quot;name&quot;:&quot;Lennox-Gastaut&quot;},{&quot;value&quot;:&quot;RAO_OTHER&quot;,&quot;name&quot;:&quot;RAO Other&quot;}]"/>
-            <column name="order_number" value="8"/>
+            <column name="order_number" value="9"/>
         </insert>
         <insert tableName="field_settings">
             <column name="ddp_instance_id"
