@@ -76,6 +76,13 @@ public class SystemUtil {
         return sdf.format(date);
     }
 
+    public static String getNullOrDateFormatted(long inputDate) {
+        if (inputDate == 0) {
+            return null;
+        }
+        return getDateFormatted(inputDate);
+    }
+
     public static long getLongFromDateString(String dateString) {
         if (StringUtils.isNotBlank(dateString)) {
             return getLong(dateString, FULL_DATE);
