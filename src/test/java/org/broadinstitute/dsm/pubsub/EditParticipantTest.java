@@ -1,8 +1,9 @@
-package org.broadinstitute.dsm;
+package org.broadinstitute.dsm.pubsub;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.typesafe.config.Config;
+import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.EditParticipantMessage;
 import org.broadinstitute.dsm.db.User;
