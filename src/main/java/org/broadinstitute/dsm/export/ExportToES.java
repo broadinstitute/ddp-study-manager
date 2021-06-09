@@ -37,24 +37,31 @@ public class ExportToES {
     private static final ESTissueRecordsDao esTissueRecordsDao = new ESTissueRecordsDao();
     private static final KitRequestDao kitRequestDao = new KitRequestDao();
     private static final ObjectMapper oMapper = new ObjectMapper();
+    public static final String MEMBER_TYPE = "MEMBER_TYPE";
+    public static final String SELF = "SELF";
+    public static final String FAMILY_ID = "FAMILY_ID";
 
     public static void exportObjectsToES(ExportPayload payload) {
         int instanceId = ddpInstanceDao.getDDPInstanceIdByGuid(payload.getStudy());
+
         logger.info("Started exporting workflows for instance with id " + instanceId);
-        exportWorkflows(instanceId);
-        logger.info("Finished exporting workflows for instance with id " + instanceId);
+        exportWorkflowsAndFamilyIds(instanceId);
+        logger.info("Finished exporting workflows and family Id-s for instance with id " + instanceId);
+
         logger.info("Started exporting medical records for instance with id " + instanceId);
         exportMedicalRecords(instanceId);
         logger.info("Finished exporting medical records for instance with id " + instanceId);
+
         logger.info("Started exporting tissue records for instance with id " + instanceId);
         exportTissueRecords(instanceId);
         logger.info("Finished exporting tissue records for instance with id " + instanceId);
+
         logger.info("Started exporting samples for instance with id " + instanceId);
         exportSamples(instanceId);
         logger.info("Finished exporting samples for instance with id " + instanceId);
     }
 
-    public static void exportWorkflows(int instanceId) {
+    public static void exportWorkflowsAndFamilyIds(int instanceId) {
         List<String> workFlowColumnNames = findWorkFlowColumnNames(instanceId);
         List<ParticipantDataDto> allParticipantData = participantDataDao.getParticipantDataByInstanceid(instanceId);
         checkWorkflowNamesAndExport(workFlowColumnNames, allParticipantData, instanceId);
@@ -110,8 +117,14 @@ public class ExportToES {
                 JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
                 for (Map.Entry<String, JsonElement> entry: dataJsonObject.entrySet()) {
                     if (workFlowColumnNames.contains(entry.getKey())) {
-                        ElasticSearchUtil.writeWorkflow(ddpInstance, participantData.getDdpParticipantId(), entry.getKey(), entry.getValue().getAsString());
+                        ElasticSearchUtil.writeWorkflow(ddpInstance, participantData.getDdpParticipantId(),
+                                entry.getKey(), entry.getValue().getAsString());
                     }
+                }
+                if (dataJsonObject.has(MEMBER_TYPE) && dataJsonObject.get(MEMBER_TYPE).getAsString().equals(SELF)
+                    && dataJsonObject.has(FAMILY_ID)) {
+                    ElasticSearchUtil.writeDsmRecord(ddpInstance, null,
+                            participantData.getDdpParticipantId(), ESObjectConstants.FAMILY_ID, dataJsonObject.get(FAMILY_ID).getAsString(), null);
                 }
             }
         }

@@ -353,16 +353,26 @@ public class ElasticSearchUtil {
     }
 
     public static void writeDsmRecord(@NonNull DDPInstance instance,
-                                      @NonNull Integer id,
+                                      Integer id,
                                       @NonNull String ddpParticipantId,
                                       @NonNull String objectType,
-                                      @NonNull String idName, Map<String, Object> nameValues) {
+                                      @NonNull String idName,
+                                      Map<String, Object> nameValues) {
         String index = instance.getParticipantIndexES();
         try {
             if (StringUtils.isNotBlank(index)) {
-                Map<String, Object> objectsMapES = getObjectsMap(index, ddpParticipantId, "dsm");
-                if (objectsMapES != null && !objectsMapES.isEmpty()) {
-                    Object dsmObject = objectsMapES.get("dsm");
+                Map<String, Object> objectsMapES = getObjectsMap(index, ddpParticipantId, ESObjectConstants.DSM);
+                if (ESObjectConstants.FAMILY_ID.equals(objectType)) {
+                    if (objectsMapES != null && !objectsMapES.isEmpty()) {
+                        Map<String, Object> esDsmObjectMap = (Map<String, Object>) objectsMapES.get(ESObjectConstants.DSM);
+                        esDsmObjectMap.put(objectType, idName);
+                    } else {
+                        Map<String, Object> mapForDSM = new HashMap<>();
+                        mapForDSM.put(objectType, idName);
+                        objectsMapES.put(ESObjectConstants.DSM, mapForDSM);
+                    }
+                } else if (objectsMapES != null && !objectsMapES.isEmpty()) {
+                    Object dsmObject = objectsMapES.get(ESObjectConstants.DSM);
                     Map<String, Object> dsmMap = new ObjectMapper().convertValue(dsmObject, Map.class);
                     updateOrCreateMap(id, objectType, nameValues, idName, dsmMap);
                 } else {
@@ -371,7 +381,7 @@ public class ElasticSearchUtil {
                     Map<String, Object> mapForDSM = new HashMap<>();
                     objectsMapES = new HashMap<>();
                     mapForDSM.put(objectType, objectList);
-                    objectsMapES.put("dsm", mapForDSM);
+                    objectsMapES.put(ESObjectConstants.DSM, mapForDSM);
                 }
 
                 updateRequest(ddpParticipantId, index, objectsMapES);
