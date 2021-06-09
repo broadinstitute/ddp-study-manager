@@ -244,8 +244,7 @@ public class FilterRoute extends RequestHandler {
 
     public static List<?> filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap, @NonNull DDPInstance instance) {
         Map<String, String> queryConditions = new HashMap<>();
-        List<ParticipantDataDto> allParticipantData = participantDataDao
-                .getParticipantDataByInstanceid(Integer.parseInt(instance.getDdpInstanceId()));
+        List<ParticipantDataDto> allParticipantData = null;
         if (filters != null && columnNameMap != null && !columnNameMap.isEmpty()) {
             for (Filter filter : filters) {
                 if (filter != null) {
@@ -261,6 +260,10 @@ public class FilterRoute extends RequestHandler {
                         tmpName = filter.getFilter2().getName();
                     }
                     if (filter.getParticipantColumn() != null && PARTICIPANT_DATA.equals(filter.getParticipantColumn().tableAlias)) {
+                        if (allParticipantData == null) {
+                            allParticipantData = participantDataDao
+                                    .getParticipantDataByInstanceid(Integer.parseInt(instance.getDdpInstanceId()));
+                        }
                         addParticipantDataFilters(queryConditions, filter, tmpName, allParticipantData);
                     } else {
                         if (StringUtils.isNotBlank(tmpName)) {
