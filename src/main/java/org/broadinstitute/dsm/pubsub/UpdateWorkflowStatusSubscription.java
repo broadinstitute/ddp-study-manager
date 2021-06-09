@@ -31,6 +31,7 @@ public class UpdateWorkflowStatusSubscription {
     public static final String MEMBER_TYPE = "MEMBER_TYPE";
     public static final String SELF = "SELF";
     public static final String DSS = "DSS";
+    public static final String RGP = "RGP";
 
     public static void subscribeUpdateWorkflow(String projectId, String subscriptionId) {
         // Instantiate an asynchronous message receiver.
@@ -52,7 +53,7 @@ public class UpdateWorkflowStatusSubscription {
                     List<ParticipantDataDto> participantDatas = participantDataDao.getParticipantDataByParticipantId(ddpParticipantId);
 
                     participantDatas.forEach(participantDataDto -> {
-                        updateProbandStatusInDB(workflow, status, participantDataDto);
+                        updateProbandStatusInDB(workflow, status, participantDataDto, studyGuid);
                     });
 
                     ElasticSearchUtil.writeWorkflow(instance, ddpParticipantId, workflow, status);
@@ -74,11 +75,11 @@ public class UpdateWorkflowStatusSubscription {
         }
     }
 
-    public static void updateProbandStatusInDB(String workflow, String status, ParticipantDataDto participantDataDto) {
+    public static void updateProbandStatusInDB(String workflow, String status, ParticipantDataDto participantDataDto, String studyGuid) {
         String oldData = participantDataDto.getData();
         if (oldData != null) {
             JsonObject dataJsonObject = gson.fromJson(oldData, JsonObject.class);
-            if (isProband(dataJsonObject)) {
+            if (!RGP.equals(studyGuid) || isProband(dataJsonObject)) {
                 dataJsonObject.addProperty(workflow, status);
                 participantDataDao.updateParticipantDataColumn(
                         new ParticipantDataDto(participantDataDto.getParticipantDataId(),

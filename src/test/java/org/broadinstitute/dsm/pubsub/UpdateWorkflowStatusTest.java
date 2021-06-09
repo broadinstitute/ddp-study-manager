@@ -61,7 +61,7 @@ public class UpdateWorkflowStatusTest {
     public void testUpdateProbandStatusInDB() {
         String workflow = "REGISTRATION_STATUS";
         String status = "ENROLLED";
-        UpdateWorkflowStatusSubscription.updateProbandStatusInDB(workflow, status, participantDataDto);
+        UpdateWorkflowStatusSubscription.updateProbandStatusInDB(workflow, status, participantDataDto, UpdateWorkflowStatusSubscription.RGP);
         String data = participantDataDao.get(participantDataId).orElseThrow().getData();
         JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
         Assert.assertEquals(status, dataJsonObject.get(workflow).getAsString());

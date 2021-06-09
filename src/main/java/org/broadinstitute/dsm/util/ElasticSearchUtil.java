@@ -443,7 +443,7 @@ public class ElasticSearchUtil {
                     .doc(objectsMapES)
                     .docAsUpsert(true);
 
-//            UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+            UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
 
         }
     }
