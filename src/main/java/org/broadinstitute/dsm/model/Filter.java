@@ -57,16 +57,34 @@ public class Filter {
     public static String COMPOSITE = "COMPOSITE";//ES type
     public static String JSON_ARRAY = "JSONARRAY";//Sample result
 
-    public boolean range = false;
-    public boolean exactMatch = false;
-    public boolean empty = false;
-    public boolean notEmpty = false;
+    private boolean range = false;
+    private boolean exactMatch = false;
+    private boolean empty = false;
+    private boolean notEmpty = false;
     public String type;
-    public String parentName;
-    public NameValue filter1;
-    public NameValue filter2;
-    public String[] selectedOptions;
-    public ParticipantColumn participantColumn;
+    private String parentName;
+    private NameValue filter1;
+    private NameValue filter2;
+    private String[] selectedOptions;
+    private ParticipantColumn participantColumn;
+
+    public Filter() {
+    }
+
+    public Filter(boolean range, boolean exactMatch, boolean empty, boolean notEmpty,
+                  String type, String parentName, NameValue filter1, NameValue filter2,
+                  String[] selectedOptions, ParticipantColumn participantColumn) {
+        this.setRange(range);
+        this.setExactMatch(exactMatch);
+        this.setEmpty(empty);
+        this.setNotEmpty(notEmpty);
+        this.setType(type);
+        this.setParentName(parentName);
+        this.setFilter1(filter1);
+        this.setFilter2(filter2);
+        this.setSelectedOptions(selectedOptions);
+        this.setParticipantColumn(participantColumn);
+    }
 
     public static String getQueryStringForFiltering(@NonNull Filter filter, DBElement dbElement) {
         String finalQuery = "";
@@ -294,5 +312,45 @@ public class Filter {
             return replaceQuotes(tmp);
         }
         return text;
+    }
+
+    public void setRange(boolean range) {
+        this.range = range;
+    }
+
+    public void setExactMatch(boolean exactMatch) {
+        this.exactMatch = exactMatch;
+    }
+
+    public void setEmpty(boolean empty) {
+        this.empty = empty;
+    }
+
+    public void setNotEmpty(boolean notEmpty) {
+        this.notEmpty = notEmpty;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public void setParentName(String parentName) {
+        this.parentName = parentName;
+    }
+
+    public void setFilter1(NameValue filter1) {
+        this.filter1 = filter1;
+    }
+
+    public void setFilter2(NameValue filter2) {
+        this.filter2 = filter2;
+    }
+
+    public void setSelectedOptions(String[] selectedOptions) {
+        this.selectedOptions = selectedOptions;
+    }
+
+    public void setParticipantColumn(ParticipantColumn participantColumn) {
+        this.participantColumn = participantColumn;
     }
 }
