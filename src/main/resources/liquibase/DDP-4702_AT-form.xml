@@ -96,6 +96,7 @@
                 <column name="column_name" value="REGISTRATION_TYPE"/>
                 <column name="column_display" value="Type of participant registration"/>
                 <column name="display_type" value="ACTIVITY_STAFF"/>
+<!--               TODO might need to get changed depending on pubsub/migration status string-->
                 <column name="possible_values" value="[{&quot;value&quot;:&quot;PREQUAL.PREQUAL_SELF_DESCRIBE&quot;,&quot;type&quot;:&quot;RADIO&quot;}]"/>
 <!--                <column name="possible_values" value="[{&quot;value&quot;:&quot;2&quot;,&quot;name&quot;:&quot;Dependent&quot;},{&quot;value&quot;:&quot;3&quot;,&quot;name&quot;:&quot;Portal User&quot;},{&quot;value&quot;:&quot;1&quot;,&quot;name&quot;:&quot;Self&quot;}]"/>-->
                 <column name="order_number" value="1"/>
