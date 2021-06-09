@@ -37,6 +37,7 @@ public class DefaultValues {
             if (participantDataList == null) {
                 Map<String, Object> esParticipantData = entry.getValue();
                 Map<String, Object> profile = (Map<String, Object>) esParticipantData.get(ElasticSearchUtil.PROFILE);
+//                TODO only for `registration_type` = `self` && `dependent`
                 String hruid = (String) profile.get(ElasticSearchUtil.HRUID);
                 if (StringUtils.isNotBlank(hruid)) {
                     NewParticipantData newParticipantData = new NewParticipantData(participantDataDao);
