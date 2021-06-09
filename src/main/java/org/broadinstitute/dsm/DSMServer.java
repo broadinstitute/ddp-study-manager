@@ -37,7 +37,7 @@ import org.broadinstitute.dsm.jobs.*;
 import org.broadinstitute.dsm.log.SlackAppender;
 import org.broadinstitute.dsm.pubsub.ElasticExportSubscription;
 import org.broadinstitute.dsm.pubsub.PubSubResultMessageSubscription;
-import org.broadinstitute.dsm.pubsub.UpdateWorkflowStatusSubscription;
+import org.broadinstitute.dsm.pubsub.DSStoDSMtasksSubscription;
 import org.broadinstitute.dsm.route.*;
 import org.broadinstitute.dsm.route.familymember.AddFamilyMemberRoute;
 import org.broadinstitute.dsm.route.participant.GetParticipantDataRoute;
@@ -107,7 +107,7 @@ public class DSMServer extends BasicServer {
     public static final String GCP_PATH_TO_DSS_TO_DSM_SUB = "pubsub.dss_to_dsm_subscription";
     public static final String GCP_PATH_TO_DSM_TO_DSS_TOPIC = "pubsub.dsm_to_dss_topic";
     public static final String GCP_PATH_TO_ELASTIC_EXPORT_SUB = "pubsub.elastic_export_subscription";
-    public static final String GCP_PATH_TO_UPDATE_WORKFLOW_SUB = "pubsub.update_workflow_subscription";
+    public static final String GCP_PATH_TO_DSS_TO_DSM_GENERAL_SUB = "pubsub.dss-to-dsm-general-subscription";
 
     private static Map<String, JsonElement> ddpConfigurationLookup = new HashMap<>();
     private static final String VAULT_DOT_CONF = "vault.conf";
@@ -326,7 +326,7 @@ public class DSMServer extends BasicServer {
         String subscriptionId = cfg.getString(GCP_PATH_TO_PUBSUB_SUB);
         String dsmToDssSubscriptionId = cfg.getString(GCP_PATH_TO_DSS_TO_DSM_SUB);
         String elasticExportSubscriptionId = cfg.getString(GCP_PATH_TO_ELASTIC_EXPORT_SUB);
-        String updateWorkflowSubscriptionId = cfg.getString(GCP_PATH_TO_UPDATE_WORKFLOW_SUB);
+        String generalDSStoDSMsubscriptionId = cfg.getString(GCP_PATH_TO_DSS_TO_DSM_GENERAL_SUB);
 
         logger.info("Setting up pubsub for {}/{}", projectId, subscriptionId);
 
@@ -385,7 +385,7 @@ public class DSMServer extends BasicServer {
         }
 
         try {
-            UpdateWorkflowStatusSubscription.subscribeUpdateWorkflow(projectId, updateWorkflowSubscriptionId);
+            DSStoDSMtasksSubscription.subscribeGeneralDSStoDSMtask(projectId, generalDSStoDSMsubscriptionId);
         } catch (Exception e) {
             e.printStackTrace();
         }

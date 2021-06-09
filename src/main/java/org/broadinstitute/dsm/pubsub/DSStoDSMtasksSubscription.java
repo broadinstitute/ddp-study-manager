@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class UpdateWorkflowStatusSubscription {
+public class DSStoDSMtasksSubscription {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticExportSubscription.class);
     private static final Gson gson = new Gson();
@@ -32,31 +32,28 @@ public class UpdateWorkflowStatusSubscription {
     public static final String SELF = "SELF";
     public static final String DSS = "DSS";
     public static final String RGP = "RGP";
+    public static final String TASK_TYPE = "taskType";
+    public static final String UPDATE_CUSTOM_WORKFLOW = "UPDATE_CUSTOM_WORKFLOW";
 
-    public static void subscribeUpdateWorkflow(String projectId, String subscriptionId) {
+    public static void subscribeGeneralDSStoDSMtask(String projectId, String subscriptionId) {
         // Instantiate an asynchronous message receiver.
         MessageReceiver receiver =
                 (PubsubMessage message, AckReplyConsumer consumer) -> {
                     // Handle incoming message, then ack the received message.
                     logger.info("Got message with Id: " + message.getMessageId());
                     consumer.ack();
-                    String data = message.getData() != null ? message.getData().toStringUtf8() : null;
-                    WorkflowPayload payload = gson.fromJson(data, UpdateWorkflowStatusSubscription.WorkflowPayload.class);
-                    String workflow = payload.getWorkflow();
-                    String status = payload.getStatus();
-
                     Map<String, String> attributesMap = message.getAttributesMap();
-                    String studyGuid = attributesMap.get(STUDY_GUID);
-                    String ddpParticipantId = attributesMap.get(PARTICIPANT_GUID);
-                    DDPInstance instance = DDPInstance.getDDPInstanceByGuid(studyGuid);
+                    String taskType = attributesMap.get(TASK_TYPE);
+                    String data = message.getData() != null ? message.getData().toStringUtf8() : null;
 
-                    List<ParticipantDataDto> participantDatas = participantDataDao.getParticipantDataByParticipantId(ddpParticipantId);
+                    switch (taskType) {
+                        case UPDATE_CUSTOM_WORKFLOW:
+                            updateCustomWorkflow(attributesMap, data);
+                            break;
+                        default:
+                            logger.warn("Wrong task type for a message from pubsub");
+                    }
 
-                    participantDatas.forEach(participantDataDto -> {
-                        updateProbandStatusInDB(workflow, status, participantDataDto, studyGuid);
-                    });
-
-                    ElasticSearchUtil.writeWorkflow(instance, ddpParticipantId, workflow, status);
                 };
 
         Subscriber subscriber = null;
@@ -69,10 +66,28 @@ public class UpdateWorkflowStatusSubscription {
                 .build();
         try {
             subscriber.startAsync().awaitRunning(1L, TimeUnit.MINUTES);
-            logger.info("Started pubsub subscription receiver for updating workflow statuses");
+            logger.info("Started pubsub subscription receiver for DSS to DSM tasks general subscription");
         } catch (TimeoutException e) {
-            throw new RuntimeException("Timed out while starting pubsub subscription for updating workflow statuses", e);
+            throw new RuntimeException("Timed out while starting pubsub subscription DSS to DSM general tasks", e);
         }
+    }
+
+    public static void updateCustomWorkflow(Map<String, String> attributesMap, String data) {
+        WorkflowPayload workflowPayload = gson.fromJson(data, WorkflowPayload.class);
+        String workflow = workflowPayload.getWorkflow();
+        String status = workflowPayload.getStatus();
+
+        String studyGuid = attributesMap.get(STUDY_GUID);
+        String ddpParticipantId = attributesMap.get(PARTICIPANT_GUID);
+        DDPInstance instance = DDPInstance.getDDPInstanceByGuid(studyGuid);
+
+        List<ParticipantDataDto> participantDatas = participantDataDao.getParticipantDataByParticipantId(ddpParticipantId);
+
+        participantDatas.forEach(participantDataDto -> {
+            updateProbandStatusInDB(workflow, status, participantDataDto, studyGuid);
+        });
+
+        ElasticSearchUtil.writeWorkflow(instance, ddpParticipantId, workflow, status);
     }
 
     public static void updateProbandStatusInDB(String workflow, String status, ParticipantDataDto participantDataDto, String studyGuid) {
