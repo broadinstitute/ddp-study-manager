@@ -10,6 +10,9 @@ import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.FieldSettings;
 import org.broadinstitute.dsm.db.User;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dao.user.UserDao;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.util.tools.util.DBUtil;
 
@@ -1029,5 +1032,19 @@ public class DBTestUtil {
             throw new RuntimeException("Error deleting message with user id: "
                     + userId, results.resultException);
         }
+    }
+
+    public static DDPInstanceDto createTestDdpInstance(DDPInstanceDto ddpInstanceDto, DDPInstanceDao ddpInstanceDao, String ddpInstanceName) {
+        ddpInstanceDto = DDPInstanceDto.of(true, true, true);
+        ddpInstanceDto.setInstanceName(ddpInstanceName);
+        int testCreatedInstanceId = ddpInstanceDao.create(ddpInstanceDto);
+        ddpInstanceDto.setDdpInstanceId(testCreatedInstanceId);
+        return ddpInstanceDto;
+    }
+
+    public static User createTestDsmUser(String name, String email, UserDao userDao, User user) {
+        user = new User(null, name, email);
+        user.setId(String.valueOf(userDao.create(user)));
+        return user;
     }
 }
