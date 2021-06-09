@@ -898,80 +898,80 @@ public class ViewFilter {
                     throw new RuntimeException("Bad columnName! " + columnName);
                 }
                 if (Filter.JSON_ARRAY.equals(type)) {
-                    filter.type = type;
-                    filter.filter1 = new NameValue(columnName, value);
-                    filter.filter2 = new NameValue(path, null);
-                    filter.participantColumn = new ParticipantColumn(path, tableName);
+                    filter.setType(type);
+                    filter.setFilter1(new NameValue(columnName, value));
+                    filter.setFilter2(new NameValue(path, null));
+                    filter.setParticipantColumn(new ParticipantColumn(path, tableName));
                 }
                 else {
                     if (range) {
-                        filter.range = true;
+                        filter.setRange(true);
                     }
                     if (StringUtils.isNotBlank(value)) {
                         if (f1) {
-                            filter.filter1 = new NameValue(columnName, value);
+                            filter.setFilter1(new NameValue(columnName, value));
                         }
                         else {
-                            filter.filter2 = new NameValue(columnName, value);
+                            filter.setFilter2(new NameValue(columnName, value));
                         }
                     }
-                    filter.notEmpty = notEmpty;
-                    filter.empty = empty;
+                    filter.setNotEmpty(notEmpty);
+                    filter.setEmpty(empty);
                     filters.put(columnName, filter);
                 }
             }
             else {
                 Filter filter = new Filter();
-                filter.exactMatch = exact;
-                filter.range = range;
-                filter.notEmpty = notEmpty;
-                filter.empty = empty;
-                filter.participantColumn = new ParticipantColumn(columnName, tableName);
+                filter.setExactMatch(exact);
+                filter.setRange(range);
+                filter.setNotEmpty(notEmpty);
+                filter.setEmpty(empty);
+                filter.setParticipantColumn(new ParticipantColumn(columnName, tableName));
                 if (StringUtils.isNotBlank(type) && type.equals(Filter.JSON_ARRAY) && StringUtils.isNotBlank(path)) {
-                    filter.participantColumn = new ParticipantColumn(path, tableName);
+                    filter.setParticipantColumn(new ParticipantColumn(path, tableName));
                 }
                 String[] b = new String[selectedOptions.size()];
-                filter.selectedOptions = selectedOptions.toArray(b);
-                filter.type = type == null ? Filter.TEXT : type;
+                filter.setSelectedOptions(selectedOptions.toArray(b));
+                filter.setType(type == null ? Filter.TEXT : type);
                 if (isValidDate(value, false)) {
                     type = Filter.DATE;
                 }
                 if (Filter.JSON_ARRAY.equals(filter.type)) {
-                    filter.filter1 = new NameValue(columnName, value);
-                    filter.filter2 = new NameValue(path, null);
+                    filter.setFilter1(new NameValue(columnName, value));
+                    filter.setFilter2(new NameValue(path, null));
                 }
                 if (Filter.ADDITIONAL_VALUES.equals(filter.type)) {
-                    filter.participantColumn = new ParticipantColumn(path, tableName);
+                    filter.setParticipantColumn(new ParticipantColumn(path, tableName));
                 }
                 else if (Filter.TEXT.equals(filter.type)) {
-                    filter.filter1 = new NameValue(columnName, value);
+                    filter.setFilter1(new NameValue(columnName, value));
                 }
                 else if (!Filter.CHECKBOX.equals(filter.type)) {
                     if (f1) {// first in range
-                        filter.filter1 = new NameValue(columnName, value);
+                        filter.setFilter1(new NameValue(columnName, value));
                     }
                     if (path != null && !f2) {//additional field
-                        filter.filter2 = new NameValue(path, "");
+                        filter.setFilter2(new NameValue(path, ""));
                     }
                     if (f2) {// maximum set in a range filter
-                        if (filter.filter1 == null) {
-                            filter.filter1 = new NameValue(columnName, null);
+                        if (filter.getFilter1() == null) {
+                            filter.setFilter1(new NameValue(columnName, null));
                         }
-                        filter.filter2 = new NameValue(columnName, value);
+                        filter.setFilter2(new NameValue(columnName, value));
                     }
                     else if (StringUtils.isBlank(value)) {// no values
-                        filter.filter1 = new NameValue(columnName, null);
-                        filter.filter2 = new NameValue(columnName, null);
+                        filter.setFilter1(new NameValue(columnName, null));
+                        filter.setFilter2(new NameValue(columnName, null));
                     }
                 }
                 else {
                     if (filter1 != null && !f2) {
                         filter1.setName(columnName);// to change from dbName to column name
-                        filter.filter1 = filter1;
+                        filter.setFilter1(filter1);
                     }
                     else if (filter2 != null || f2) {
                         filter2.setName(columnName);// to change from dbName to column name
-                        filter.filter2 = filter2;
+                        filter.setFilter2(filter2);
                     }
                 }
                 filters.put(columnName, filter);

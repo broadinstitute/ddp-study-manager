@@ -18,6 +18,7 @@ import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
 import org.broadinstitute.dsm.model.participant.data.AddFamilyMemberPayload;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
 import org.broadinstitute.dsm.model.participant.data.NewParticipantData;
+import org.broadinstitute.dsm.util.DBTestUtil;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -51,9 +52,9 @@ public class AddFamilyMemberRouteTest {
         setupDB();
         gson = new Gson();
 
-        createTestDdpInstance();
+        ddpInstanceDto =  DBTestUtil.createTestDdpInstance(ddpInstanceDto, ddpInstanceDao, "AddFamilyMemberInstance");
 
-        createTestDsmUser();
+        user = DBTestUtil.createTestDsmUser("AddFamilyMemberUser", "addfamilymember@family.com", userDao, user);
 
         familyMemberData.putAll(new FamilyMemberDetails("Family", "Member", "Sister", "PE3LHB", "PE3LHB_1_2").toMap());
 
@@ -61,18 +62,6 @@ public class AddFamilyMemberRouteTest {
 
         createProbandTestParticipantData();
 
-    }
-
-    private static void createTestDdpInstance() {
-        ddpInstanceDto = DDPInstanceDto.of(true, true, true);
-        ddpInstanceDto.setInstanceName("AddFamilyMemberInstance");
-        int testCreatedInstanceId = ddpInstanceDao.create(ddpInstanceDto);
-        ddpInstanceDto.setDdpInstanceId(testCreatedInstanceId);
-    }
-
-    private static void createTestDsmUser() {
-        user = new User(null, "AddFamilyMemberUser", "addfamilymember@family.com");
-        user.setId(String.valueOf(userDao.create(user)));
     }
 
     private static void createProbandTestData() {

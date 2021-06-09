@@ -120,6 +120,32 @@ public class DDPInstance {
         return (DDPInstance) results.resultValue;
     }
 
+    public static DDPInstance getDDPInstanceByGuid(@NonNull String studyGuid) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_ALL_ACTIVE_REALMS + QueryExtension.BY_STUDY_GUID)) {
+                stmt.setString(1, studyGuid);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = getDDPInstanceFormResultSet(rs);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting information for realm with study guid " + studyGuid, e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get realm information for realm with study guid " + studyGuid, results.resultException);
+        }
+        return (DDPInstance) results.resultValue;
+    }
+
     public static DDPInstance getDDPInstanceById(@NonNull Integer ddpInstanceId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();

@@ -794,6 +794,7 @@ public class ElasticSearchTest extends TestHelper {
         String idName = ESObjectConstants.MEDICAL_RECORDS_ID;
         DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
                 false, null, false, null, "participants_structured.rgp.rgp", null, null);
+        String familyId = "1234";
 
         Map<String, Object> objectsMapESBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "dsm");
 
@@ -805,6 +806,7 @@ public class ElasticSearchTest extends TestHelper {
 
 
         ElasticSearchUtil.writeDsmRecord(ddpInstance, id, ddpParticipantId, objectType, idName, nameValues);
+        ElasticSearchUtil.writeDsmRecord(ddpInstance, null, ddpParticipantId, ESObjectConstants.FAMILY_ID, familyId, null);
 
         Map<String, Object> objectsMapESAfter = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "dsm");
 
@@ -823,6 +825,8 @@ public class ElasticSearchTest extends TestHelper {
                     }
                 }
             }
+            String familyIdFromES = dsmMap.get(ESObjectConstants.FAMILY_ID).toString();
+            Assert.assertEquals(familyId, familyIdFromES);
         }
 
         ElasticSearchUtil.updateRequest(ddpParticipantId, ddpInstance.getParticipantIndexES(), objectsMapESBefore);
