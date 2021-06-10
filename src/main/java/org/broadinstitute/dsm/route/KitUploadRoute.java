@@ -429,8 +429,15 @@ public class KitUploadRoute extends RequestHandler {
             String shortId = participantDataByFieldName.get(SHORT_ID);
 
             if (ddpInstanceByRealm.isHasRole()) { //only check if participant shortId exists if ddp has kit request endpoints (not RGP!)
-                if (!userExistsInRealm(ddpInstanceByRealm, participantDataByFieldName)) {
-                    throw new RuntimeException("user with shortId: " + shortId + " does not belong to this study.");
+                String message = null;
+                try {
+                    message = userExistsInRealm(ddpInstanceByRealm, participantDataByFieldName);
+                }
+                catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                if (StringUtils.isNotBlank(message)) {
+                    throw new RuntimeException("user with shortId: " + shortId + " had a problem: " + message);
                 }
             }
 
@@ -479,11 +486,11 @@ public class KitUploadRoute extends RequestHandler {
         return lastNonEmptyRowIndex;
     }
 
-    private boolean userExistsInRealm(DDPInstance ddpInstanceByRealm,
-                                      Map<String, String> participantDataByFieldName) {
-        String participantIdFromDoc = participantDataByFieldName.get(SHORT_ID);
-        String participantFirstNameFromDoc = participantDataByFieldName.get(FIRST_NAME);
-        String participantLastNameFromDoc = participantDataByFieldName.get(LAST_NAME);
+    private String userExistsInRealm(DDPInstance ddpInstanceByRealm,
+                                     Map<String, String> participantDataByFieldName) throws Exception{
+        String participantIdFromDoc = participantDataByFieldName.get(SHORT_ID).trim();
+        String participantFirstNameFromDoc = participantDataByFieldName.get(FIRST_NAME).trim().toLowerCase();
+        String participantLastNameFromDoc = participantDataByFieldName.get(LAST_NAME).trim().toLowerCase();
 
         Optional<ParticipantWrapper> maybeParticipant =
                 ParticipantWrapper.getParticipantByShortId(ddpInstanceByRealm, participantIdFromDoc);
@@ -491,17 +498,27 @@ public class KitUploadRoute extends RequestHandler {
         return isKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, maybeParticipant);
     }
 
-    boolean isKitUploadNameMatchesToEsName(String participantFirstNameFromDoc, String participantLastNameFromDoc,
-                              Optional<ParticipantWrapper> maybeParticipant) {
+    String isKitUploadNameMatchesToEsName(String participantFirstNameFromDoc, String participantLastNameFromDoc,
+                                          Optional<ParticipantWrapper> maybeParticipant) {
 
         Map<String, String> participantProfile = new HashMap<>();
         maybeParticipant.ifPresent(p -> {
             Map<String, String> participantProfileFromEs = (Map<String, String>) p.getData().get("profile");
-            participantProfile.put("firstName", participantProfileFromEs.get("firstName"));
-            participantProfile.put("lastName", participantProfileFromEs.get("lastName"));
+            participantProfile.put("firstName", participantProfileFromEs.get("firstName").trim().toLowerCase());
+            participantProfile.put("lastName", participantProfileFromEs.get("lastName").trim().toLowerCase());
         });
-        return participantFirstNameFromDoc.equals(participantProfile.get("firstName"))
-                && participantLastNameFromDoc.equals(participantProfile.get("lastName"));
+
+        String message = "";
+        if (!participantFirstNameFromDoc.equals(participantProfile.get("firstName"))) {
+            message += "First names in kit upload don't match the participant";
+            logger.error(message);
+        }
+
+        if (!participantLastNameFromDoc.equals(participantProfile.get("lastName"))) {
+            message += " Last names in kit Upload don't match the participant";
+            logger.error(message);
+        }
+        return message;
     }
 
     public Map<String, KitRequest> checkAddress(List<KitRequest> kitUploadObjects, String phone) {
