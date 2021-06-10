@@ -107,7 +107,7 @@ public class DSMServer extends BasicServer {
     public static final String GCP_PATH_TO_DSS_TO_DSM_SUB = "pubsub.dss_to_dsm_subscription";
     public static final String GCP_PATH_TO_DSM_TO_DSS_TOPIC = "pubsub.dsm_to_dss_topic";
     public static final String GCP_PATH_TO_ELASTIC_EXPORT_SUB = "pubsub.elastic_export_subscription";
-    public static final String GCP_PATH_TO_DSM_TASKS_SUB = "pubsub.dsm-tasks-subscription";
+    public static final String GCP_PATH_TO_DSM_TASKS_SUB = "pubsub.dsm_tasks_subscription";
 
     private static Map<String, JsonElement> ddpConfigurationLookup = new HashMap<>();
     private static final String VAULT_DOT_CONF = "vault.conf";
