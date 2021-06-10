@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class DSStoDSMtasksSubscription {
+public class DSMtasksSubscription {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticExportSubscription.class);
     private static final Gson gson = new Gson();
@@ -35,7 +35,7 @@ public class DSStoDSMtasksSubscription {
     public static final String TASK_TYPE = "taskType";
     public static final String UPDATE_CUSTOM_WORKFLOW = "UPDATE_CUSTOM_WORKFLOW";
 
-    public static void subscribeGeneralDSStoDSMtask(String projectId, String subscriptionId) {
+    public static void subscribeDSMtasks(String projectId, String subscriptionId) {
         // Instantiate an asynchronous message receiver.
         MessageReceiver receiver =
                 (PubsubMessage message, AckReplyConsumer consumer) -> {
@@ -66,9 +66,9 @@ public class DSStoDSMtasksSubscription {
                 .build();
         try {
             subscriber.startAsync().awaitRunning(1L, TimeUnit.MINUTES);
-            logger.info("Started pubsub subscription receiver for DSS to DSM tasks general subscription");
+            logger.info("Started pubsub subscription receiver DSM tasks subscription");
         } catch (TimeoutException e) {
-            throw new RuntimeException("Timed out while starting pubsub subscription DSS to DSM general tasks", e);
+            throw new RuntimeException("Timed out while starting pubsub subscription for DSM tasks", e);
         }
     }
 
