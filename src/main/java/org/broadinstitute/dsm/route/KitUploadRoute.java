@@ -513,15 +513,10 @@ public class KitUploadRoute extends RequestHandler {
         });
         if (participantFirstNameFromDoc.trim().toLowerCase().equals(participantProfile.get("firstName").trim().toLowerCase())) {
             logger.info("First names in kit upload don't match");
-            logger.info(participantFirstNameFromDoc);
-            logger.info(participantProfile.get("firstName"));
-
         }
 
         if (participantLastNameFromDoc.trim().toLowerCase().equals(participantProfile.get("lastName").trim().toLowerCase())) {
             logger.info("Last names in kit upload don't match");
-            logger.info(participantLastNameFromDoc);
-            logger.info(participantProfile.get("lastName"));
         }
         return participantFirstNameFromDoc.trim().toLowerCase().equals(participantProfile.get("firstName").trim().toLowerCase())
                 && participantLastNameFromDoc.trim().toLowerCase().equals(participantProfile.get("lastName").trim().toLowerCase());
