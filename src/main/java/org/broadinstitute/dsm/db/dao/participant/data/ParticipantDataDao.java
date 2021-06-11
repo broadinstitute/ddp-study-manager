@@ -13,7 +13,6 @@ import java.util.Optional;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
-import org.broadinstitute.dsm.pubsub.ElasticExportSubscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

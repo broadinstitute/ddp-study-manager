@@ -17,7 +17,6 @@ import org.broadinstitute.dsm.db.dto.medical.records.ESMedicalRecordsDto;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
 import org.broadinstitute.dsm.db.dto.ddp.tissue.ESTissueRecordsDto;
 import org.broadinstitute.dsm.model.Value;
-import org.broadinstitute.dsm.pubsub.ElasticExportSubscription.ExportPayload;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
@@ -41,7 +40,21 @@ public class ExportToES {
     public static final String SELF = "SELF";
     public static final String FAMILY_ID = "FAMILY_ID";
 
-    public static void exportObjectsToES(ExportPayload payload) {
+    public static class ExportPayload {
+        private String index;
+        private String study;
+
+        public String getIndex() {
+            return index;
+        }
+
+        public String getStudy() {
+            return study;
+        }
+    }
+
+    public static void exportObjectsToES(String data) {
+        ExportPayload payload = gson.fromJson(data, ExportPayload.class);
         int instanceId = ddpInstanceDao.getDDPInstanceIdByGuid(payload.getStudy());
 
         logger.info("Started exporting workflows for instance with id " + instanceId);
