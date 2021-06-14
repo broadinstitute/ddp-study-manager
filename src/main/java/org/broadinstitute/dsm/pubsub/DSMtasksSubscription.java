@@ -18,7 +18,7 @@ import java.util.concurrent.TimeoutException;
 public class DSMtasksSubscription {
 
     private static final Logger logger = LoggerFactory.getLogger(DSMtasksSubscription.class);
-    public static final String TASK_TYPE = "type";
+    public static final String TASK_TYPE = "taskType";
     public static final String UPDATE_CUSTOM_WORKFLOW = "UPDATE_CUSTOM_WORKFLOW";
     public static final String ELASTIC_EXPORT = "ELASTIC_EXPORT";
 
