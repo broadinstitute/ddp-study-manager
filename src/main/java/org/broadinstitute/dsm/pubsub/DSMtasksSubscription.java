@@ -44,6 +44,7 @@ public class DSMtasksSubscription {
                             break;
                         default:
                             logger.warn("Wrong task type for a message from pubsub");
+                            break;
                     }
                 };
 

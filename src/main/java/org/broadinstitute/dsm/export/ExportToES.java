@@ -57,30 +57,25 @@ public class ExportToES {
         ExportPayload payload = gson.fromJson(data, ExportPayload.class);
         int instanceId = ddpInstanceDao.getDDPInstanceIdByGuid(payload.getStudy());
 
-        logger.info("Started exporting workflows for instance with id " + instanceId);
         exportWorkflowsAndFamilyIds(instanceId);
-        logger.info("Finished exporting workflows and family Id-s for instance with id " + instanceId);
 
-        logger.info("Started exporting medical records for instance with id " + instanceId);
         exportMedicalRecords(instanceId);
-        logger.info("Finished exporting medical records for instance with id " + instanceId);
 
-        logger.info("Started exporting tissue records for instance with id " + instanceId);
         exportTissueRecords(instanceId);
-        logger.info("Finished exporting tissue records for instance with id " + instanceId);
 
-        logger.info("Started exporting samples for instance with id " + instanceId);
         exportSamples(instanceId);
-        logger.info("Finished exporting samples for instance with id " + instanceId);
     }
 
     public static void exportWorkflowsAndFamilyIds(int instanceId) {
+        logger.info("Started exporting workflows and family ID-s for instance with id " + instanceId);
         List<String> workFlowColumnNames = findWorkFlowColumnNames(instanceId);
         List<ParticipantDataDto> allParticipantData = participantDataDao.getParticipantDataByInstanceid(instanceId);
         checkWorkflowNamesAndExport(workFlowColumnNames, allParticipantData, instanceId);
+        logger.info("Finished exporting workflows and family ID-s for instance with id " + instanceId);
     }
 
     public static void exportSamples(int instanceId) {
+        logger.info("Started exporting samples for instance with id " + instanceId);
         List<ESSamplesDto> esSamples = kitRequestDao.getESSamplesByInstanceId(instanceId);
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
         if (ddpInstance != null) {
@@ -92,9 +87,11 @@ public class ExportToES {
                 }
             }
         }
+        logger.info("Finished exporting samples for instance with id " + instanceId);
     }
 
     public static void exportMedicalRecords(int instanceId) {
+        logger.info("Started exporting medical records for instance with id " + instanceId);
         List<ESMedicalRecordsDto> esMedicalRecords = esMedicalRecordsDao.getESMedicalRecordsByInstanceId(instanceId);
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
         if (ddpInstance != null) {
@@ -106,9 +103,11 @@ public class ExportToES {
                 }
             }
         }
+        logger.info("Finished exporting medical records for instance with id " + instanceId);
     }
 
     private static void exportTissueRecords(int instanceId) {
+        logger.info("Started exporting tissue records for instance with id " + instanceId);
         List<ESTissueRecordsDto> esTissueRecords = esTissueRecordsDao.getESTissueRecordsByInstanceId(instanceId);
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
         if (ddpInstance != null) {
@@ -120,6 +119,7 @@ public class ExportToES {
                 }
             }
         }
+        logger.info("Finished exporting tissue records for instance with id " + instanceId);
     }
 
     public static void checkWorkflowNamesAndExport(List<String> workFlowColumnNames, List<ParticipantDataDto> allParticipantData, int instanceId) {
