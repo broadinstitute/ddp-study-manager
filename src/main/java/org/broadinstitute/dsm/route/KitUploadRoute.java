@@ -113,7 +113,8 @@ public class KitUploadRoute extends RequestHandler {
                 else {
                     try {
                         kitUploadContent = isFileValid(content, realm);
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e) {
                         return new Result(500, e.getMessage());
                     }
                 }
@@ -275,7 +276,8 @@ public class KitUploadRoute extends RequestHandler {
         if (checkIfKitAlreadyExists(conn, participantGuid, ddpInstance.getDdpInstanceId(), kitTypeId)) {
             isKitExsist = true;
             kit.setParticipantId(participantGuid);
-        } else if (checkIfKitAlreadyExists(conn, participantLegacyAltPid, ddpInstance.getDdpInstanceId(), kitTypeId)) {
+        }
+        else if (checkIfKitAlreadyExists(conn, participantLegacyAltPid, ddpInstance.getDdpInstanceId(), kitTypeId)) {
             isKitExsist = true;
             kit.setParticipantId(participantLegacyAltPid);
         }
@@ -395,17 +397,25 @@ public class KitUploadRoute extends RequestHandler {
     }
 
     public List<KitRequest> isFileValid(String fileContent, String realm) {
-        if (fileContent == null) throw new RuntimeException("File is empty");
+        if (fileContent == null) {
+            throw new RuntimeException("File is empty");
+        }
 
         String[] rows = fileContent.split(System.lineSeparator());
-        if (rows.length < 2) throw new RuntimeException("Text file does not contain enough information");
+        if (rows.length < 2) {
+            throw new RuntimeException("Text file does not contain enough information");
+        }
 
         String firstRow = rows[0];
-        if (!firstRow.contains(SystemUtil.SEPARATOR)) throw new FileWrongSeparator("Please use tab as separator in the text file");
+        if (!firstRow.contains(SystemUtil.SEPARATOR)) {
+            throw new FileWrongSeparator("Please use tab as separator in the text file");
+        }
 
         List<String> fieldNamesFromFileHeader = Arrays.asList(firstRow.trim().split(SystemUtil.SEPARATOR));
         String missingHeader = getMissingHeader(fieldNamesFromFileHeader);
-        if (missingHeader != null) throw new FileColumnMissing("File is missing column " + missingHeader);
+        if (missingHeader != null) {
+            throw new FileColumnMissing("File is missing column " + missingHeader);
+        }
 
         List<KitRequest> kitRequestsToUpload = new ArrayList<>();
         parseParticipantDataToUpload(realm, rows, fieldNamesFromFileHeader, kitRequestsToUpload);
@@ -434,10 +444,10 @@ public class KitUploadRoute extends RequestHandler {
                     message = userExistsInRealm(ddpInstanceByRealm, participantDataByFieldName);
                 }
                 catch (Exception e) {
-                    throw new RuntimeException(e);
+                    message = "Participant does not belong to this study";
                 }
                 if (StringUtils.isNotBlank(message)) {
-                    throw new RuntimeException("user with shortId: " + shortId + " had a problem: " + message);
+                    throw new RuntimeException("user with shortId: " + shortId + " had a problem: \n" + message);
                 }
             }
 
@@ -462,8 +472,9 @@ public class KitUploadRoute extends RequestHandler {
     Map<String, String> getParticipantDataAsMap(String row, List<String> fieldNamesFromHeader, int rowIndex) {
         Map<String, String> participantDataByFieldName = new LinkedHashMap<>();
         String[] rowItems = row.trim().split(SystemUtil.SEPARATOR);
-        if (rowItems.length != fieldNamesFromHeader.size())
+        if (rowItems.length != fieldNamesFromHeader.size()) {
             throw new UploadLineException("Error in line " + (rowIndex + 1));
+        }
 
         for (int columnIndex = 0; columnIndex < fieldNamesFromHeader.size(); columnIndex++) {
             participantDataByFieldName.put(fieldNamesFromHeader.get(columnIndex), rowItems[columnIndex]);
@@ -487,14 +498,16 @@ public class KitUploadRoute extends RequestHandler {
     }
 
     private String userExistsInRealm(DDPInstance ddpInstanceByRealm,
-                                     Map<String, String> participantDataByFieldName) throws Exception{
+                                     Map<String, String> participantDataByFieldName) throws Exception {
         String participantIdFromDoc = participantDataByFieldName.get(SHORT_ID).trim();
         String participantFirstNameFromDoc = participantDataByFieldName.get(FIRST_NAME).trim().toLowerCase();
         String participantLastNameFromDoc = participantDataByFieldName.get(LAST_NAME).trim().toLowerCase();
 
         Optional<ParticipantWrapper> maybeParticipant =
                 ParticipantWrapper.getParticipantByShortId(ddpInstanceByRealm, participantIdFromDoc);
-
+        maybeParticipant.orElseThrow(() -> {
+            throw new RuntimeException("Participant " + participantIdFromDoc + " does not belong to this study");
+        });
         return isKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, maybeParticipant);
     }
 
@@ -507,16 +520,23 @@ public class KitUploadRoute extends RequestHandler {
             participantProfile.put("firstName", participantProfileFromEs.get("firstName").trim().toLowerCase());
             participantProfile.put("lastName", participantProfileFromEs.get("lastName").trim().toLowerCase());
         });
-
         String message = "";
+
+
         if (!participantFirstNameFromDoc.equals(participantProfile.get("firstName"))) {
-            message += "First names in kit upload don't match the participant";
+            message += "First names ";
             logger.error(message);
         }
 
         if (!participantLastNameFromDoc.equals(participantProfile.get("lastName"))) {
-            message += " Last names in kit Upload don't match the participant";
+            if (StringUtils.isNotBlank(message)) {
+                message += "and ";
+            }
+            message += "xLast names ";
             logger.error(message);
+        }
+        if (StringUtils.isNotBlank(message)) {
+            message += "in kit Upload don't match the participant";
         }
         return message;
     }
