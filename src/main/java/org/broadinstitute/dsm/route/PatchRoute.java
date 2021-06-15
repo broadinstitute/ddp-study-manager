@@ -5,9 +5,13 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.*;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDao;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantRecordDao;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantRecordDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.exception.DuplicateException;
 import org.broadinstitute.dsm.model.AbstractionWrapper;
@@ -26,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -275,22 +278,13 @@ public class PatchRoute extends RequestHandler {
                     else if (Patch.DDP_PARTICIPANT_ID.equals(patch.getParent())) {
                         //new additional value for pt which is not in ddp_participant and ddp_participant_record table yet
                         DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
-                        String participantId = inTransaction(conn -> {
-                            String newParticipantId = MedicalRecordUtil.writeParticipantIntoDB(conn, patch.getParentId(), ddpInstance.getDdpInstanceId(), 0, "", patch.getUser());
-                            MedicalRecordUtil.writeNewRecordIntoDb(conn, DDPMedicalRecordDataRequest.SQL_INSERT_PARTICIPANT_RECORD, patch.getParentId(), ddpInstance.getDdpInstanceId());
-                            return newParticipantId;
-                        });
-                        if (StringUtils.isNotBlank(participantId)) {
+                        int participantId = insertDdpParticipant(patch, ddpInstance);
+                        insertDdpParticipantRecord(participantId);
+                        if (participantId > 0) {
                             DBElement dbElement = patchUtil.getColumnNameMap().get(patch.getNameValue().getName());
-                            if (dbElement != null) {
-                                Patch.patch(participantId, patch.getUser(), patch.getNameValue(), dbElement);
-                            }
-                            else {
-                                throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
-                            }
-                            Map<String, String> map = new HashMap<>();
-                            map.put(PARTICIPANT_ID, participantId);
-                            return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
+                            if (dbElement == null) throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
+                            Patch.patch(String.valueOf(participantId), patch.getUser(), patch.getNameValue(), dbElement);
+                            return new Result(200, new GsonBuilder().serializeNulls().create().toJson(Map.of(PARTICIPANT_ID, String.valueOf(participantId))));
                         }
                     }
                 }
@@ -307,6 +301,25 @@ public class PatchRoute extends RequestHandler {
             response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
         }
+    }
+
+    private void insertDdpParticipantRecord(int participantId) {
+        ParticipantRecordDto participantRecordDto =
+                new ParticipantRecordDto.Builder(participantId, System.currentTimeMillis())
+                        .withChangedBy("SYSTEM")
+                        .builder();
+        new ParticipantRecordDao().create(participantRecordDto);
+    }
+
+    private int insertDdpParticipant(Patch patch, DDPInstance ddpInstance) {
+        ParticipantDto participantDto =
+                new ParticipantDto.Builder(Integer.parseInt(ddpInstance.getDdpInstanceId()), System.currentTimeMillis())
+                        .withDdpParticipantId(patch.getParentId())
+                        .withLastVersion(0)
+                        .withLastVersionDate("")
+                        .withChangedBy(patch.getUser())
+                        .build();
+        return new ParticipantDao().create(participantDto);
     }
 
     private void writeDSMRecordsToES(@NonNull Patch patch) {

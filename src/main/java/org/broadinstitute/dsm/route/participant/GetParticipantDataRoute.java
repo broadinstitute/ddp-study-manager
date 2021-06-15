@@ -2,7 +2,7 @@ package org.broadinstitute.dsm.route.participant;
 
 import java.util.NoSuchElementException;
 
-import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.model.participant.data.NewParticipantData;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.util.ParticipantUtil;

@@ -4,15 +4,17 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ParticipantData;
-import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.model.participant.data.NewParticipantData;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class DefaultValues {
 
@@ -38,8 +40,16 @@ public class DefaultValues {
                 Map<String, Object> esParticipantData = entry.getValue();
                 Map<String, Object> profile = (Map<String, Object>) esParticipantData.get(ElasticSearchUtil.PROFILE);
 //                TODO only for `registration_type` = `self` && `dependent`
+                List<Map<String, Object>> answers = ((List<Map<String, Object>>) esParticipantData.get("activities")).stream()
+                        .filter(f -> "PREQUAL".equals(f.get("activityCode")))
+                        .map(m -> (List<Map<String, Object>>) m.get("questionsAnswers"))
+                        .findFirst()
+                        .orElse(Collections.emptyList());
+                boolean isSelfOrDependent = answers.stream()
+                        .filter(f -> "PREQUAL_SELF_DESCRIBE".equals(f.get("stableId")))
+                        .anyMatch(f -> ((List) f.get("answer")).stream().filter(f2 -> "DIAGNOSED".equals(f2) || "CHILD_DIAGNOSED".equals(f2)).findFirst().isPresent());
                 String hruid = (String) profile.get(ElasticSearchUtil.HRUID);
-                if (StringUtils.isNotBlank(hruid)) {
+                if (StringUtils.isNotBlank(hruid) && isSelfOrDependent)  {
                     NewParticipantData newParticipantData = new NewParticipantData(participantDataDao);
                     Map<String, String> dataMap = new HashMap<>();
                     dataMap.put(GENOME_STUDY_CPT_ID, PREFIX.concat(hruid));

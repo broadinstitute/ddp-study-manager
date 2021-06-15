@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.db.dto.participant.data;
+package org.broadinstitute.dsm.db.dto.ddp.participant;
 
 import lombok.Data;
 
