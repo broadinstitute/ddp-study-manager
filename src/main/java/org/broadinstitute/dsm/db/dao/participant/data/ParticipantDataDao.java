@@ -13,8 +13,12 @@ import java.util.Optional;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ParticipantDataDao implements Dao<ParticipantDataDto> {
+
+    private static final Logger logger = LoggerFactory.getLogger(ParticipantDataDao.class);
 
     private static final String SQL_PARTICIPANT_DATA_BY_PARTICIPANT_ID = "SELECT " +
             "participant_data_id," +
@@ -53,7 +57,8 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
             "last_changed = ?," +
             "changed_by = ?";
 
-    private static final String SQL_UPDATE_DATA_TO_PARTICIPANT_DATA = "UPDATE ddp_participant_data SET data = ? WHERE participant_data_id = ?";
+    private static final String SQL_UPDATE_DATA_TO_PARTICIPANT_DATA = "UPDATE ddp_participant_data SET data = ?, " +
+            "last_changed = ?, changed_by = ? WHERE participant_data_id = ?";
 
     private static final String PARTICIPANT_DATA_ID = "participant_data_id";
     private static final String DDP_PARTICIPANT_ID = "ddp_participant_id";
@@ -150,7 +155,9 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
             SimpleResult execResult = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_DATA_TO_PARTICIPANT_DATA)) {
                 stmt.setString(1, participantDataDto.getData());
-                stmt.setInt(2, participantDataDto.getParticipantDataId());
+                stmt.setLong(2, participantDataDto.getLastChanged());
+                stmt.setString(3, participantDataDto.getChangedBy());
+                stmt.setInt(4, participantDataDto.getParticipantDataId());
                 execResult.resultValue = stmt.executeUpdate();
             } catch (SQLException sqle) {
                 execResult.resultException = sqle;
@@ -161,6 +168,9 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
             throw new RuntimeException(String.format("Could not update data for participant data with id: %s for participant with guid: %s",
                     participantDataDto.getParticipantDataId(), participantDataDto.getDdpParticipantId()));
         }
+        logger.info(String.format("Updated data for participant data with id: %s for participant with guid: %s",
+                participantDataDto.getParticipantDataId(), participantDataDto.getDdpParticipantId()));
+
         return (int) result.resultValue;
     }
 

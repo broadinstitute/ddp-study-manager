@@ -17,7 +17,6 @@ import org.broadinstitute.dsm.db.dto.medical.records.ESMedicalRecordsDto;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
 import org.broadinstitute.dsm.db.dto.ddp.tissue.ESTissueRecordsDto;
 import org.broadinstitute.dsm.model.Value;
-import org.broadinstitute.dsm.pubsub.ElasticExportSubscription.ExportPayload;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
@@ -37,30 +36,46 @@ public class ExportToES {
     private static final ESTissueRecordsDao esTissueRecordsDao = new ESTissueRecordsDao();
     private static final KitRequestDao kitRequestDao = new KitRequestDao();
     private static final ObjectMapper oMapper = new ObjectMapper();
+    public static final String MEMBER_TYPE = "MEMBER_TYPE";
+    public static final String SELF = "SELF";
+    public static final String FAMILY_ID = "FAMILY_ID";
 
-    public static void exportObjectsToES(ExportPayload payload) {
-        int instanceId = ddpInstanceDao.getDDPInstanceIdByGuid(payload.getStudy());
-        logger.info("Started exporting workflows for instance with id " + instanceId);
-        exportWorkflows(instanceId);
-        logger.info("Finished exporting workflows for instance with id " + instanceId);
-        logger.info("Started exporting medical records for instance with id " + instanceId);
-        exportMedicalRecords(instanceId);
-        logger.info("Finished exporting medical records for instance with id " + instanceId);
-        logger.info("Started exporting tissue records for instance with id " + instanceId);
-        exportTissueRecords(instanceId);
-        logger.info("Finished exporting tissue records for instance with id " + instanceId);
-        logger.info("Started exporting samples for instance with id " + instanceId);
-        exportSamples(instanceId);
-        logger.info("Finished exporting samples for instance with id " + instanceId);
+    public static class ExportPayload {
+        private String index;
+        private String study;
+
+        public String getIndex() {
+            return index;
+        }
+
+        public String getStudy() {
+            return study;
+        }
     }
 
-    public static void exportWorkflows(int instanceId) {
+    public static void exportObjectsToES(String data) {
+        ExportPayload payload = gson.fromJson(data, ExportPayload.class);
+        int instanceId = ddpInstanceDao.getDDPInstanceIdByGuid(payload.getStudy());
+
+        exportWorkflowsAndFamilyIds(instanceId);
+
+        exportMedicalRecords(instanceId);
+
+        exportTissueRecords(instanceId);
+
+        exportSamples(instanceId);
+    }
+
+    public static void exportWorkflowsAndFamilyIds(int instanceId) {
+        logger.info("Started exporting workflows and family ID-s for instance with id " + instanceId);
         List<String> workFlowColumnNames = findWorkFlowColumnNames(instanceId);
         List<ParticipantDataDto> allParticipantData = participantDataDao.getParticipantDataByInstanceid(instanceId);
         checkWorkflowNamesAndExport(workFlowColumnNames, allParticipantData, instanceId);
+        logger.info("Finished exporting workflows and family ID-s for instance with id " + instanceId);
     }
 
     public static void exportSamples(int instanceId) {
+        logger.info("Started exporting samples for instance with id " + instanceId);
         List<ESSamplesDto> esSamples = kitRequestDao.getESSamplesByInstanceId(instanceId);
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
         if (ddpInstance != null) {
@@ -72,9 +87,11 @@ public class ExportToES {
                 }
             }
         }
+        logger.info("Finished exporting samples for instance with id " + instanceId);
     }
 
     public static void exportMedicalRecords(int instanceId) {
+        logger.info("Started exporting medical records for instance with id " + instanceId);
         List<ESMedicalRecordsDto> esMedicalRecords = esMedicalRecordsDao.getESMedicalRecordsByInstanceId(instanceId);
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
         if (ddpInstance != null) {
@@ -86,9 +103,11 @@ public class ExportToES {
                 }
             }
         }
+        logger.info("Finished exporting medical records for instance with id " + instanceId);
     }
 
     private static void exportTissueRecords(int instanceId) {
+        logger.info("Started exporting tissue records for instance with id " + instanceId);
         List<ESTissueRecordsDto> esTissueRecords = esTissueRecordsDao.getESTissueRecordsByInstanceId(instanceId);
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
         if (ddpInstance != null) {
@@ -100,6 +119,7 @@ public class ExportToES {
                 }
             }
         }
+        logger.info("Finished exporting tissue records for instance with id " + instanceId);
     }
 
     public static void checkWorkflowNamesAndExport(List<String> workFlowColumnNames, List<ParticipantDataDto> allParticipantData, int instanceId) {
@@ -110,8 +130,14 @@ public class ExportToES {
                 JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
                 for (Map.Entry<String, JsonElement> entry: dataJsonObject.entrySet()) {
                     if (workFlowColumnNames.contains(entry.getKey())) {
-                        ElasticSearchUtil.writeWorkflow(ddpInstance, participantData.getDdpParticipantId(), entry.getKey(), entry.getValue().getAsString());
+                        ElasticSearchUtil.writeWorkflow(ddpInstance, participantData.getDdpParticipantId(),
+                                entry.getKey(), entry.getValue().getAsString());
                     }
+                }
+                if (dataJsonObject.has(MEMBER_TYPE) && dataJsonObject.get(MEMBER_TYPE).getAsString().equals(SELF)
+                    && dataJsonObject.has(FAMILY_ID)) {
+                    ElasticSearchUtil.writeDsmRecord(ddpInstance, null,
+                            participantData.getDdpParticipantId(), ESObjectConstants.FAMILY_ID, dataJsonObject.get(FAMILY_ID).getAsString(), null);
                 }
             }
         }
