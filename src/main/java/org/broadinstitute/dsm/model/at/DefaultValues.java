@@ -39,7 +39,6 @@ public class DefaultValues {
             if (participantDataList == null) {
                 Map<String, Object> esParticipantData = entry.getValue();
                 Map<String, Object> profile = (Map<String, Object>) esParticipantData.get(ElasticSearchUtil.PROFILE);
-//                TODO only for `registration_type` = `self` && `dependent`
                 List<Map<String, Object>> answers = ((List<Map<String, Object>>) esParticipantData.get("activities")).stream()
                         .filter(f -> "PREQUAL".equals(f.get("activityCode")))
                         .map(m -> (List<Map<String, Object>>) m.get("questionsAnswers"))
