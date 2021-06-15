@@ -3,8 +3,8 @@ package org.broadinstitute.dsm.pubsub;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
-import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 
 import java.util.List;
