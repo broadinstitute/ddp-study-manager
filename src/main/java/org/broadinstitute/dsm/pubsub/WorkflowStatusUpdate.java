@@ -41,19 +41,20 @@ public class WorkflowStatusUpdate {
 
     public static void updateProbandStatusInDB(String workflow, String status, ParticipantDataDto participantDataDto, String studyGuid) {
         String oldData = participantDataDto.getData();
-        if (oldData != null) {
-            JsonObject dataJsonObject = gson.fromJson(oldData, JsonObject.class);
-            if (!RGP.equals(studyGuid) || isProband(dataJsonObject)) {
-                dataJsonObject.addProperty(workflow, status);
-                participantDataDao.updateParticipantDataColumn(
-                        new ParticipantDataDto(participantDataDto.getParticipantDataId(),
-                                participantDataDto.getDdpParticipantId(),
-                                participantDataDto.getDdpInstanceId(),
-                                participantDataDto.getFieldTypeId(),
-                                dataJsonObject.toString(),
-                                System.currentTimeMillis(), DSS)
-                );
-            }
+        if (oldData == null) {
+            return;
+        }
+        JsonObject dataJsonObject = gson.fromJson(oldData, JsonObject.class);
+        if ((!RGP.equals(studyGuid) || isProband(dataJsonObject)) && dataJsonObject.get(workflow) != null) {
+            dataJsonObject.addProperty(workflow, status);
+            participantDataDao.updateParticipantDataColumn(
+                    new ParticipantDataDto(participantDataDto.getParticipantDataId(),
+                            participantDataDto.getDdpParticipantId(),
+                            participantDataDto.getDdpInstanceId(),
+                            participantDataDto.getFieldTypeId(),
+                            dataJsonObject.toString(),
+                            System.currentTimeMillis(), DSS)
+            );
         }
     }
 
