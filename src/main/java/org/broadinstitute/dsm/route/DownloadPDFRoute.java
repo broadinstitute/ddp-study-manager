@@ -24,7 +24,11 @@ import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.ddp.PDF;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.*;
-import org.broadinstitute.dsm.util.*;
+import org.broadinstitute.dsm.util.DDPRequestUtil;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.broadinstitute.dsm.util.SystemUtil;
+import org.broadinstitute.dsm.util.UserUtil;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +93,11 @@ public class DownloadPDFRoute extends RequestHandler {
                             }
                             List<String> oncHistoryIDs = null;
                             if (jsonObject.has("requestId")) {
-                                oncHistoryIDs = Arrays.asList(new Gson().fromJson((String) jsonObject.get("requestId"), String[].class));
+                                oncHistoryIDs = new ArrayList<>();
+                                JSONArray array = (JSONArray) jsonObject.get("requestId");
+                                for(int i = 0; i < array.length(); i++){
+                                    oncHistoryIDs.add((String) array.get(i));
+                                }
                             }
                             List<PDF> pdfs = null;
                             if (jsonObject.has("pdfs")) {
