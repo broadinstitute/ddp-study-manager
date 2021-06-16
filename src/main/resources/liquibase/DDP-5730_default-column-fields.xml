@@ -12,4 +12,11 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="RGPdefaultColumns" author="ikhaladz" >
+        <update tableName="instance_settings">
+            <column name="default_columns" value="[{&quot;value&quot;:&quot;REALM&quot;},{&quot;value&quot;:&quot;SHORT_ID&quot;},{&quot;value&quot;:&quot;ENROLLMENT_STATUS&quot;}]"/>
+            <where>ddp_instance_id = '19'</where>
+        </update>
+    </changeSet>
+
 </databaseChangeLog>
