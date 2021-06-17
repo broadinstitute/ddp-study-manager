@@ -67,6 +67,18 @@ public class UpdateWorkflowStatusTest {
         Assert.assertEquals(status, dataJsonObject.get(workflow).getAsString());
     }
 
+    @Test
+    public void testAddNewParticipantDataWithStatus() {
+        String workflow = "REGISTRATION_TYPE";
+        String status = "SELF";
+        String ddpParticipantId = "RBMJW6ZIXVXBMXUX6M3W";
+        int participantDataId = WorkflowStatusUpdate.addNewParticipantDataWithStatus(workflow, status, ddpParticipantId);
+        String data = participantDataDao.get(participantDataId).orElseThrow().getData();
+        JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
+        Assert.assertEquals(status, dataJsonObject.get(workflow).getAsString());
+        participantDataDao.delete(participantDataId);
+    }
+
     private static void createDataForParticipant() {
         participantData.put("REGISTRATION_STATUS", "REGISTERED");
         participantData.put("MEMBER_TYPE", "SELF");

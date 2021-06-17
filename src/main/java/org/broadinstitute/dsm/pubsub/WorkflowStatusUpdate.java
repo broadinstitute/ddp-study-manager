@@ -3,12 +3,18 @@ package org.broadinstitute.dsm.pubsub;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
+import org.broadinstitute.dsm.model.Value;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class WorkflowStatusUpdate {
     public static final String STUDY_GUID = "studyGuid";
@@ -20,6 +26,7 @@ public class WorkflowStatusUpdate {
     private static final Gson gson = new Gson();
 
     private static final ParticipantDataDao participantDataDao = new ParticipantDataDao();
+    private static final FieldSettingsDao fieldSettingsDao = new FieldSettingsDao();
 
     public static void updateCustomWorkflow(Map<String, String> attributesMap, String data) {
         WorkflowPayload workflowPayload = gson.fromJson(data, WorkflowPayload.class);
@@ -32,11 +39,48 @@ public class WorkflowStatusUpdate {
 
         List<ParticipantDataDto> participantDatas = participantDataDao.getParticipantDataByParticipantId(ddpParticipantId);
 
-        participantDatas.forEach(participantDataDto -> {
-            updateProbandStatusInDB(workflow, status, participantDataDto, studyGuid);
-        });
+        if (!participantDatas.isEmpty()) {
+            participantDatas.forEach(participantDataDto -> {
+                updateProbandStatusInDB(workflow, status, participantDataDto, studyGuid);
+            });
+        } else {
+            addNewParticipantDataWithStatus(workflow, status, ddpParticipantId);
+        }
 
-        ElasticSearchUtil.writeWorkflow(instance, ddpParticipantId, workflow, status);
+        exportToESifNecessary(workflow, status, ddpParticipantId, instance);
+    }
+
+    public static void exportToESifNecessary(String workflow, String status, String ddpParticipantId, DDPInstance instance) {
+        Optional<FieldSettingsDto> fieldSetting = fieldSettingsDao.getFieldSettingByColumnName(workflow);
+        fieldSetting.ifPresent(setting -> {
+            String actions = setting.getActions();
+            if (actions != null) {
+                Value[] actionsArray =  gson.fromJson(actions, Value[].class);
+                for (Value action : actionsArray) {
+                    if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
+                        ElasticSearchUtil.writeWorkflow(instance, ddpParticipantId, workflow, status);
+                        break;
+                    }
+                }
+            }
+        });
+    }
+
+    public static int addNewParticipantDataWithStatus(String workflow, String status, String ddpParticipantId) {
+        Optional<FieldSettingsDto> fieldSetting = fieldSettingsDao.getFieldSettingByColumnName(workflow);
+        JsonObject dataJsonObject = new JsonObject();
+        dataJsonObject.addProperty(workflow, status);
+        AtomicInteger participantDataId = new AtomicInteger();
+        fieldSetting.ifPresent(setting ->
+                participantDataId.set(participantDataDao.create(new ParticipantDataDto(
+                        ddpParticipantId,
+                        setting.getDdpInstanceId(),
+                        setting.getFieldType(),
+                        dataJsonObject.toString(),
+                        System.currentTimeMillis(),
+                        WorkflowStatusUpdate.DSS)
+                )));
+        return participantDataId.get();
     }
 
     public static void updateProbandStatusInDB(String workflow, String status, ParticipantDataDto participantDataDto, String studyGuid) {
