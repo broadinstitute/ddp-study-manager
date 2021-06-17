@@ -69,11 +69,11 @@ public class KitRequestShipping extends KitRequest {
             "kit.tracking_return_id, kit.easypost_tracking_to_url, kit.easypost_tracking_return_url, kit.easypost_to_id, kit.easypost_shipment_status, kit.scan_date, kit.label_date, kit.error, kit.message, " +
             "kit.receive_date, kit.deactivated_date, kit.easypost_address_id_to, kit.deactivation_reason, (select t.tracking_id from ddp_kit_tracking t where t.kit_label = kit.kit_label) as tracking_id, kit.kit_label, kit.express, kit.test_result, kit.needs_approval, kit.authorization, kit.denial_reason, " +
             "kit.authorized_by, kit.ups_tracking_status, kit.ups_return_status, kit.CE_order, " +
-            "activity.ups_status_description, pack.tracking_number "+
+            "activity.ups_status_description, pack.tracking_number " +
             "FROM ddp_kit_request request " +
             "LEFT JOIN ddp_kit kit on (kit.dsm_kit_request_id = request.dsm_kit_request_id) " +
             "LEFT JOIN ddp_instance realm on (realm.ddp_instance_id = request.ddp_instance_id) " +
-            "LEFT JOIN kit_type kt on (request.kit_type_id = kt.kit_type_id) "+
+            "LEFT JOIN kit_type kt on (request.kit_type_id = kt.kit_type_id) " +
             " left join  ups_shipment shipment on (shipment.dsm_kit_request_id = kit.dsm_kit_request_id) " +
             " left join ups_package pack on ( pack.ups_shipment_id = shipment.ups_shipment_id) " +
             " left join   ups_activity activity on (pack.ups_package_id = activity.ups_package_id) " +
@@ -109,9 +109,9 @@ public class KitRequestShipping extends KitRequest {
             "ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id AND kit.dsm_kit_id = groupedKit.kit_id SET authorization = ?, authorization_date = ?, " +
             "denial_reason = ?, authorized_by = ? WHERE kit.dsm_kit_request_id = ?";
     private static final String MARK_ORDER_AS_TRANSMITTED =
-            "update ddp_kit_request set order_transmitted_at = ? "+
-            "where "+
-            "external_order_number = ?";
+            "update ddp_kit_request set order_transmitted_at = ? " +
+                    "where " +
+                    "external_order_number = ?";
 
     public static final String DEACTIVATION_REASON = "Generated Express";
 
@@ -164,7 +164,7 @@ public class KitRequestShipping extends KitRequest {
     @ColumnName (DBConstants.KIT_LABEL)
     private final String kitLabel;
 
-    @ColumnName(DBConstants.KIT_TEST_RESULT)
+    @ColumnName (DBConstants.KIT_TEST_RESULT)
     private String testResult;
 
     @ColumnName (DBConstants.DSM_SCAN_DATE)
@@ -203,7 +203,7 @@ public class KitRequestShipping extends KitRequest {
     @ColumnName (DBConstants.CARE_EVOLVE)
     private boolean careEvolve;
 
-    @ColumnName(DBConstants.UPLOAD_REASON)
+    @ColumnName (DBConstants.UPLOAD_REASON)
     private String uploadReason;
 
     public KitRequestShipping(String collaboratorParticipantId, String kitType, String dsmKitRequestId, long scanDate, boolean error, long receiveDate, long deactivatedDate, String testResult,
@@ -350,21 +350,35 @@ public class KitRequestShipping extends KitRequest {
             if (DDPInstance.getDDPInstanceWithRole(instance.getName(), DBConstants.UPS_TRACKING_ROLE).isHasRole()) {
                 query = SQL_SELECT_KIT_WITH_QUERY_EXTENSION_FOR_UPS_TABLE;
                 query = DBUtil.getFinalQuery(query.concat(QueryExtension.AND_REALM_INSTANCE_ID), addition);
-            }else{
-                query = DBUtil.getFinalQuery(query.concat(QueryExtension.WHERE_REALM_INSTANCE_ID), addition);
-            }
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setString(1, instance.getDdpInstanceId());
-                try (ResultSet rs = stmt.executeQuery()) {
-                    while (rs.next()) {
-                        addKitRequest(rs, kitRequests);
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, instance.getDdpInstanceId());
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) {
+                            addUPSKitRequest(rs, kitRequests);
+                        }
                     }
                 }
+                catch (SQLException ex) {
+                    dbVals.resultException = ex;
+                }
+                return dbVals;
             }
-            catch (SQLException ex) {
-                dbVals.resultException = ex;
+            else {
+                query = DBUtil.getFinalQuery(query.concat(QueryExtension.WHERE_REALM_INSTANCE_ID), addition);
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setString(1, instance.getDdpInstanceId());
+                    try (ResultSet rs = stmt.executeQuery()) {
+                        while (rs.next()) {
+                            addKitRequest(rs, kitRequests);
+                        }
+                    }
+                }
+                catch (SQLException ex) {
+                    dbVals.resultException = ex;
+                }
+                return dbVals;
             }
-            return dbVals;
+
         });
 
         if (results.resultException != null) {
@@ -384,6 +398,40 @@ public class KitRequestShipping extends KitRequest {
             kitRequests.put(ddpParticipantId, kitRequestList);
         }
         kitRequestList.add(getKitRequestShipping(rs));
+    }
+
+    private static void addUPSKitRequest(ResultSet rs, Map<String, List<KitRequestShipping>> kitRequests) throws SQLException {
+        String ddpParticipantId = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
+        List<KitRequestShipping> kitRequestList = new ArrayList<>();
+        KitRequestShipping krs = getKitRequestShipping(rs);
+        if (kitRequests.containsKey(ddpParticipantId)) {
+            kitRequestList = kitRequests.get(ddpParticipantId);
+            boolean kitPresent = kitRequestList.stream().filter(k -> k.getDsmKitRequestId().equals(krs.getDsmKitRequestId())).findFirst().isPresent();
+            if (kitRequestList != null && kitPresent) {
+                KitRequestShipping kit = kitRequestList.stream().filter(k -> k.getDsmKitRequestId().equals(krs.getDsmKitRequestId())).findFirst().get();
+                kitRequestList.removeIf((k -> k.getDsmKitRequestId().equals(krs.getDsmKitRequestId())));
+                if (StringUtils.isBlank(kit.getUpsTrackingStatus()) && StringUtils.isNotBlank(krs.getUpsTrackingStatus())) {
+                    kit.setUpsTrackingStatus(krs.getUpsTrackingStatus());
+                }
+                else if (StringUtils.isBlank(kit.getUpsReturnStatus()) && StringUtils.isNotBlank(krs.getUpsReturnStatus())) {
+                    kit.setUpsReturnStatus(krs.getUpsReturnStatus());
+                }
+                kitRequestList.add(kit);
+            }
+            else {
+                if (kitRequestList == null) {
+                    kitRequestList = new ArrayList<>();
+                }
+                kitRequestList.add(krs);
+                kitRequests.put(ddpParticipantId, kitRequestList);
+            }
+        }
+        else {
+            kitRequestList.add(krs);
+            kitRequests.put(ddpParticipantId, kitRequestList);
+        }
+
+
     }
 
     public String getShortId(String collaboratorParticipantId) {
@@ -526,7 +574,7 @@ public class KitRequestShipping extends KitRequest {
                 if (StringUtils.isBlank(ddpInstance.getParticipantIndexES())) {
                     throw new RuntimeException("No participant index setup in ddp_instance table for " + ddpInstance.getName());
                 }
-                Map<String, Map<String, Object>> participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(ddpInstance.getName(), ddpInstance.getParticipantIndexES());;
+                Map<String, Map<String, Object>> participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(ddpInstance.getName(), ddpInstance.getParticipantIndexES());
 
                 for (String key : kitRequests.keySet()) {
                     List<KitRequestShipping> kitRequest = kitRequests.get(key);
@@ -736,7 +784,6 @@ public class KitRequestShipping extends KitRequest {
             return null;
         });
     }
-
 
 
     // called by
@@ -1420,13 +1467,14 @@ public class KitRequestShipping extends KitRequest {
 
     /**
      * Marks the order as transmitted (successfully) at the given time
+     *
      * @param conn
      * @param kitExternalOrderId
      * @param transmittedAt
      */
     public static void markOrderTransmittedAt(Connection conn, String kitExternalOrderId, Instant transmittedAt) {
         try (PreparedStatement stmt = conn.prepareStatement(MARK_ORDER_AS_TRANSMITTED)) {
-            stmt.setTimestamp(1,Timestamp.from(transmittedAt));
+            stmt.setTimestamp(1, Timestamp.from(transmittedAt));
             stmt.setString(2, kitExternalOrderId);
 
             int numRows = stmt.executeUpdate();
@@ -1435,7 +1483,8 @@ public class KitRequestShipping extends KitRequest {
                 throw new RuntimeException("No rows updated when setting transmission date for " + kitExternalOrderId);
             }
             logger.info("Updated {} rows when setting order transmission date for {} to {}", numRows, transmittedAt, kitExternalOrderId);
-        } catch(SQLException e) {
+        }
+        catch (SQLException e) {
             throw new RuntimeException("Could not set order transmission date for " + kitExternalOrderId, e);
         }
     }
