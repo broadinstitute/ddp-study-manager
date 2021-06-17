@@ -15,6 +15,8 @@ import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 
 public class FieldSettingsDao implements Dao<FieldSettingsDto> {
 
+    private static FieldSettingsDao fieldSettingsDao;
+
     private static final String SQL_OPTIONS_BY_INSTANCE_ID = "SELECT " +
             "field_settings_id," +
             "ddp_instance_id," +
@@ -60,6 +62,15 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
     private static final String DELETED = "deleted";
     private static final String LAST_CHANGED = "last_changed";
     private static final String CHANGED_BY = "changed_by";
+
+    private FieldSettingsDao() {}
+
+    public static FieldSettingsDao of() {
+        if (fieldSettingsDao == null) {
+            fieldSettingsDao = new FieldSettingsDao();
+        }
+        return fieldSettingsDao;
+    }
 
     @Override
     public int create(FieldSettingsDto fieldSettingsDto) {
