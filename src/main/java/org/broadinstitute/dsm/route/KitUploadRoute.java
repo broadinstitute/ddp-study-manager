@@ -508,10 +508,10 @@ public class KitUploadRoute extends RequestHandler {
         maybeParticipant.orElseThrow(() -> {
             throw new RuntimeException("Participant " + participantIdFromDoc + " does not belong to this study");
         });
-        return isKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, maybeParticipant);
+        return checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, maybeParticipant);
     }
 
-    String isKitUploadNameMatchesToEsName(String participantFirstNameFromDoc, String participantLastNameFromDoc,
+    String checkKitUploadNameMatchesToEsName(String participantFirstNameFromDoc, String participantLastNameFromDoc,
                                           Optional<ParticipantWrapper> maybeParticipant) {
 
         Map<String, String> participantProfile = new HashMap<>();
@@ -532,7 +532,7 @@ public class KitUploadRoute extends RequestHandler {
             if (StringUtils.isNotBlank(message)) {
                 message += "and ";
             }
-            message += "xLast names ";
+            message += " Last names ";
             logger.error(message);
         }
         if (StringUtils.isNotBlank(message)) {

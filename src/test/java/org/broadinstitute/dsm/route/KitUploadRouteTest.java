@@ -81,7 +81,7 @@ public class KitUploadRouteTest {
 
         ParticipantWrapper testParticipant = participantFactory("Mickey", "Mouse", "");
 
-        Assert.assertNotNull(route.isKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, Optional.of(testParticipant)));
+        Assert.assertNotEquals("", route.checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, Optional.of(testParticipant)));
     }
 
     @Test
@@ -97,7 +97,7 @@ public class KitUploadRouteTest {
         String participantFirstNameFromDoc = participantDataAsMap.get("firstName");
         String participantLastNameFromDoc = participantDataAsMap.get("lastName");
 
-        Assert.assertNotNull(route.isKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, Optional.empty()));
+        Assert.assertNotEquals("", route.checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, Optional.empty()));
     }
 
     private ParticipantWrapper participantFactory(String firstName, String lastName, String shortId) {
