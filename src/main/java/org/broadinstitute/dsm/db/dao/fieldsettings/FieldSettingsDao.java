@@ -159,44 +159,38 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
     }
 
     public Optional<FieldSettingsDto>  getFieldSettingByColumnName(String columnName) {
-        List<FieldSettingsDto> fieldSettingsByOptions = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
-            SimpleResult execResult = new SimpleResult();
+            SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(GET_FIELD_SETTINGS + BY_COLUMN_NAME)) {
                 stmt.setString(1, columnName);
                 try(ResultSet fieldSettingsByColumnNameRs = stmt.executeQuery()) {
-                    while (fieldSettingsByColumnNameRs.next()) {
-                        fieldSettingsByOptions.add(
-                                new FieldSettingsDto(
-                                        fieldSettingsByColumnNameRs.getInt(FIELD_SETTINGS_ID),
-                                        fieldSettingsByColumnNameRs.getInt(DDP_INSTANCE_ID),
-                                        fieldSettingsByColumnNameRs.getString(FIELD_TYPE),
-                                        fieldSettingsByColumnNameRs.getString(COLUMN_NAME),
-                                        fieldSettingsByColumnNameRs.getString(COLUMN_DISPLAY),
-                                        fieldSettingsByColumnNameRs.getString(DISPLAY_TYPE),
-                                        fieldSettingsByColumnNameRs.getString(POSSIBLE_VALUES),
-                                        fieldSettingsByColumnNameRs.getString(ACTIONS),
-                                        fieldSettingsByColumnNameRs.getBoolean(READONLY),
-                                        fieldSettingsByColumnNameRs.getInt(ORDER_NUMBER),
-                                        fieldSettingsByColumnNameRs.getBoolean(DELETED),
-                                        fieldSettingsByColumnNameRs.getLong(LAST_CHANGED),
-                                        fieldSettingsByColumnNameRs.getString(CHANGED_BY)
-                                )
+                    if (fieldSettingsByColumnNameRs.next()) {
+                        dbVals.resultValue = new FieldSettingsDto(
+                                fieldSettingsByColumnNameRs.getInt(FIELD_SETTINGS_ID),
+                                fieldSettingsByColumnNameRs.getInt(DDP_INSTANCE_ID),
+                                fieldSettingsByColumnNameRs.getString(FIELD_TYPE),
+                                fieldSettingsByColumnNameRs.getString(COLUMN_NAME),
+                                fieldSettingsByColumnNameRs.getString(COLUMN_DISPLAY),
+                                fieldSettingsByColumnNameRs.getString(DISPLAY_TYPE),
+                                fieldSettingsByColumnNameRs.getString(POSSIBLE_VALUES),
+                                fieldSettingsByColumnNameRs.getString(ACTIONS),
+                                fieldSettingsByColumnNameRs.getBoolean(READONLY),
+                                fieldSettingsByColumnNameRs.getInt(ORDER_NUMBER),
+                                fieldSettingsByColumnNameRs.getBoolean(DELETED),
+                                fieldSettingsByColumnNameRs.getLong(LAST_CHANGED),
+                                fieldSettingsByColumnNameRs.getString(CHANGED_BY)
                         );
                     }
                 }
             }
             catch (SQLException ex) {
-                execResult.resultException = ex;
+                dbVals.resultException = ex;
             }
-            return execResult;
+            return dbVals;
         });
         if (results.resultException != null) {
             throw new RuntimeException("Error getting fieldSettings ", results.resultException);
         }
-        if (fieldSettingsByOptions.size() != 1) {
-            throw new RuntimeException("More than one row for column name " + columnName);
-        }
-        return Optional.ofNullable(fieldSettingsByOptions.get(0));
+        return Optional.ofNullable( (FieldSettingsDto) results.resultValue);
     }
 }
