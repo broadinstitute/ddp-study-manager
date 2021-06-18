@@ -126,4 +126,11 @@ public class NewParticipantData {
         return this.data.getOrDefault(FamilyMemberConstants.RELATIONSHIP_ID, null);
     }
 
+    public boolean updateParticipantData(int dataId, String changedByUser) {
+        ParticipantDataDto participantDataDto =
+                new ParticipantDataDto(dataId, this.ddpParticipantId, this.ddpInstanceId, this.fieldTypeId, new Gson().toJson(this.data),
+                        System.currentTimeMillis(), changedByUser);
+        int rowsAffected = ((ParticipantDataDao) dataAccess).updateParticipantDataColumn(participantDataDto);
+        return rowsAffected == 1;
+    }
 }
