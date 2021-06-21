@@ -28,7 +28,7 @@ public class WorkflowStatusUpdate {
 
     private static final Logger logger = LoggerFactory.getLogger(ExportToES.class);
     private static final ParticipantDataDao participantDataDao = new ParticipantDataDao();
-    private static final FieldSettingsDao fieldSettingsDao = new FieldSettingsDao();
+    private static final FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
 
     public static void updateCustomWorkflow(Map<String, String> attributesMap, String data) {
         WorkflowPayload workflowPayload = gson.fromJson(data, WorkflowPayload.class);
