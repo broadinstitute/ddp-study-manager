@@ -75,9 +75,10 @@ public class UpdateWorkflowStatusTest {
     @Test
     public void testAddNewParticipantDataWithStatus() {
         String workflow = "REGISTRATION_TYPE";
-        String status = "SELF1";
+        String status = "SELF2";
         String ddpParticipantId = "RBMJW6ZIXVXBMXUX6M3W";
-        Optional<FieldSettingsDto> fieldSetting = fieldSettingsDao.getFieldSettingByColumnName(workflow);
+        Optional<FieldSettingsDto> fieldSetting = fieldSettingsDao
+                .getFieldSettingByColumnNameAndInstanceId(workflow, "16");
         if (fieldSetting.isPresent()) {
             int participantDataId = WorkflowStatusUpdate.addNewParticipantDataWithStatus(workflow, status, ddpParticipantId, fieldSetting.get());
             String data = participantDataDao.get(participantDataId).orElseThrow().getData();

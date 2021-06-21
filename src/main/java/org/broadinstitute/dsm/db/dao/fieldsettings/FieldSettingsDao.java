@@ -48,7 +48,7 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
             " FROM field_settings";
 
     private static final String BY_INSTANCE_ID = " WHERE ddp_instance_id = ?";
-    private static final String BY_COLUMN_NAME = " WHERE column_name = ?";
+    private static final String AND_BY_COLUMN_NAME = " AND column_name = ?";
 
     private static final String FIELD_SETTINGS_ID = "field_settings_id";
     private static final String DDP_INSTANCE_ID = "ddp_instance_id";
@@ -158,11 +158,12 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
         return fieldSettingsByOptions;
     }
 
-    public Optional<FieldSettingsDto>  getFieldSettingByColumnName(String columnName) {
+    public Optional<FieldSettingsDto> getFieldSettingByColumnNameAndInstanceId(String columnName, String instanceId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(GET_FIELD_SETTINGS + BY_COLUMN_NAME)) {
-                stmt.setString(1, columnName);
+            try (PreparedStatement stmt = conn.prepareStatement(GET_FIELD_SETTINGS + BY_INSTANCE_ID + AND_BY_COLUMN_NAME)) {
+                stmt.setString(1, instanceId);
+                stmt.setString(2, columnName);
                 try(ResultSet fieldSettingsByColumnNameRs = stmt.executeQuery()) {
                     if (fieldSettingsByColumnNameRs.next()) {
                         dbVals.resultValue = new FieldSettingsDto(
