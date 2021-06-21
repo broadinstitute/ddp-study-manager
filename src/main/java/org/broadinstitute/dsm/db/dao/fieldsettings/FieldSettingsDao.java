@@ -158,11 +158,11 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
         return fieldSettingsByOptions;
     }
 
-    public Optional<FieldSettingsDto> getFieldSettingByColumnNameAndInstanceId(String columnName, String instanceId) {
+    public Optional<FieldSettingsDto> getFieldSettingByColumnNameAndInstanceId(int instanceId, String columnName) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(GET_FIELD_SETTINGS + BY_INSTANCE_ID + AND_BY_COLUMN_NAME)) {
-                stmt.setString(1, instanceId);
+                stmt.setInt(1, instanceId);
                 stmt.setString(2, columnName);
                 try(ResultSet fieldSettingsByColumnNameRs = stmt.executeQuery()) {
                     if (fieldSettingsByColumnNameRs.next()) {

@@ -40,7 +40,7 @@ public class WorkflowStatusUpdate {
         DDPInstance instance = DDPInstance.getDDPInstanceByGuid(studyGuid);
 
         List<ParticipantDataDto> participantDatas = participantDataDao.getParticipantDataByParticipantId(ddpParticipantId);
-        Optional<FieldSettingsDto> fieldSetting = fieldSettingsDao.getFieldSettingByColumnNameAndInstanceId(workflow, instance.getDdpInstanceId());
+        Optional<FieldSettingsDto> fieldSetting = fieldSettingsDao.getFieldSettingByColumnNameAndInstanceId(Integer.parseInt(instance.getDdpInstanceId()), workflow);
         if (fieldSetting.isEmpty()) {
             logger.warn("Wrong workflow name");
         } else {
