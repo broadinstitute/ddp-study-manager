@@ -41,7 +41,7 @@ public class UpdateWorkflowStatusTest {
 
     private static DDPInstanceDto ddpInstanceDto;
     private static final DDPInstanceDao ddpInstanceDao = new DDPInstanceDao();
-    private static final FieldSettingsDao fieldSettingsDao = new FieldSettingsDao();
+    private static final FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
 
     private static final UserDao userDao = new UserDao();
 
