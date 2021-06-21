@@ -13,10 +13,12 @@
     </changeSet>
 
     <changeSet id="RGPdefaultColumns" author="ikhaladz" >
-        <update tableName="instance_settings">
-            <column name="default_columns" value="[{&quot;value&quot;:&quot;REALM&quot;},{&quot;value&quot;:&quot;SHORT_ID&quot;},{&quot;value&quot;:&quot;ENROLLMENT_STATUS&quot;}]"/>
-            <where>study_guid = 'RGP'</where>
-        </update>
+        <sql>
+            UPDATE instance_settings
+            SET default_columns = '[{"value":"REALM},{"value":"SHORT_ID"},{"value":"ENROLLMENT_STATUS"}]'
+            WHERE
+            ddp_instance_id = (SELECT DDP_instance_id FROM ddp_instance WHERE study_guid = 'RGP')
+        </sql>
     </changeSet>
 
 </databaseChangeLog>
