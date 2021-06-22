@@ -86,17 +86,17 @@ public class ElasticSearch {
     }
 
     public static class Builder {
-        private Optional<ESAddress> address;
-        private Optional<List<Object>> medicalProviders;
-        private Optional<List<Object>> invitations;
-        private Optional<List<Object>> activities;
-        private Optional<Long> statusTimeStamp;
-        private Optional<ESProfile> profile;
-        private Optional<List<Object>> files;
-        private Optional<List<Object>> proxies;
-        private Optional<List<Map<String, String>>> workflows;
-        private Optional<String> status;
-        private Optional<Map<String, Object>> dsm;
+        private Optional<ESAddress> address = Optional.empty();
+        private Optional<List<Object>> medicalProviders = Optional.empty();
+        private Optional<List<Object>> invitations = Optional.empty();
+        private Optional<List<Object>> activities = Optional.empty();
+        private Optional<Long> statusTimeStamp = Optional.empty();
+        private Optional<ESProfile> profile = Optional.empty();
+        private Optional<List<Object>> files = Optional.empty();
+        private Optional<List<Object>> proxies = Optional.empty();
+        private Optional<List<Map<String, String>>> workflows = Optional.empty();
+        private Optional<String> status = Optional.empty();
+        private Optional<Map<String, Object>> dsm = Optional.empty();
 
         public Builder() {}
 
