@@ -42,46 +42,45 @@ public class ElasticSearch {
     public static ElasticSearch parseSourceMap(Map<String, Object> sourceMap) {
         if (sourceMap == null) return new ElasticSearch.Builder().build();
         Builder builder = new Builder();
-        for (Field field:ElasticSearch.class.getDeclaredFields()) {
-            switch (field.getName()) {
+        for (Map.Entry<String, Object> entry : sourceMap.entrySet()) {
+            switch (entry.getKey()) {
                 case "address":
-                    builder.withAddress(GSON.fromJson(GSON.toJson(sourceMap.get(field.getName())), ESAddress.class));
+                    builder.withAddress(GSON.fromJson(GSON.toJson(entry.getValue()), ESAddress.class));
                     break;
                 case "medicalProviders":
-                    builder.withMedicalProviders(GSON.fromJson(GSON.toJson(sourceMap.get(field.getName())), new TypeToken<List<Object>>() {}.getType()));
+                    builder.withMedicalProviders(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<Object>>() {}.getType()));
                     break;
                 case "invitations":
-                    builder.withInvitations(GSON.fromJson(GSON.toJson(sourceMap.get(field.getName())), new TypeToken<List<Object>>() {}.getType()));
+                    builder.withInvitations(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<Object>>() {}.getType()));
                     break;
                 case "activities":
-                    builder.withActivities(GSON.fromJson(GSON.toJson(sourceMap.get(field.getName())), new TypeToken<List<Object>>() {}.getType()));
+                    builder.withActivities(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<Object>>() {}.getType()));
                     break;
                 case "statusTimeStamp":
-                    builder.withStatusTimeStamp(GSON.fromJson(GSON.toJson(sourceMap.get(field.getName())), Long.class));
+                    builder.withStatusTimeStamp(GSON.fromJson(GSON.toJson(entry.getValue()), Long.class));
                     break;
                 case "profile":
-                    builder.withProfile(GSON.fromJson(GSON.toJson(sourceMap.get(field.getName())), ESProfile.class));
+                    builder.withProfile(GSON.fromJson(GSON.toJson(entry.getValue()), ESProfile.class));
                     break;
                 case "files":
-                    builder.withFiles(GSON.fromJson(GSON.toJson(sourceMap.get(field.getName())), new TypeToken<List<Object>>() {}.getType()));
+                    builder.withFiles(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<Object>>() {}.getType()));
                     break;
                 case "proxies":
-                    builder.withProxies(GSON.fromJson(GSON.toJson(sourceMap.get(field.getName())), new TypeToken<List<Object>>() {}.getType()));
+                    builder.withProxies(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<Object>>() {}.getType()));
                     break;
                 case "workflows":
-                    builder.withWorkFlows(GSON.fromJson(GSON.toJson(sourceMap.get(field.getName())), new TypeToken<List<Map<String, String>>>() {}.getType()));
+                    builder.withWorkFlows(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<Map<String, String>>>() {}.getType()));
                     break;
                 case "status":
-                    builder.withStatus(GSON.fromJson(GSON.toJson(sourceMap.get(field.getName())), String.class));
+                    builder.withStatus(GSON.fromJson(GSON.toJson(entry.getValue()), String.class));
                     break;
                 case "dsm":
-                    builder.withDsm(GSON.fromJson(GSON.toJson(sourceMap.get(field.getName())), new TypeToken<Map<String, Object>>() {}.getType()));
+                    builder.withDsm(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<Map<String, Object>>() {}.getType()));
                     break;
                 default:
                     break;
             }
         }
-
         return builder.build();
     }
 
