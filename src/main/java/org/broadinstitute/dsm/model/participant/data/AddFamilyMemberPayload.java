@@ -9,16 +9,16 @@ import lombok.Setter;
 @Setter
 public class AddFamilyMemberPayload {
 
-    private String participantGuid;
+    private String participantId;
     private String realm;
     private FamilyMemberDetails data;
     private Integer userId;
     private Boolean copyProbandInfo;
     private int probandDataId;
 
-    public AddFamilyMemberPayload(String participantGuid, String realm, FamilyMemberDetails data, Integer userId,
+    public AddFamilyMemberPayload(String participantId, String realm, FamilyMemberDetails data, Integer userId,
                                   Boolean copyProbandInfo, int probandDataId) {
-        this.participantGuid = participantGuid;
+        this.participantId = participantId;
         this.realm = realm;
         this.data = data;
         this.userId = userId;
@@ -26,8 +26,8 @@ public class AddFamilyMemberPayload {
         this.probandDataId = probandDataId;
     }
 
-    public Optional<String> getParticipantGuid() {
-        return Optional.ofNullable(participantGuid);
+    public Optional<String> getParticipantId() {
+        return Optional.ofNullable(participantId);
     }
 
     public Optional<String> getRealm() {
