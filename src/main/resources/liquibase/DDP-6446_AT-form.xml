@@ -50,9 +50,9 @@
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
             <column name="field_type" value="AT_PARTICIPANT_INFO"/>
             <column name="column_name" value="DATSTAT_SUFFIX"/>
-            <column name="column_display" value="Suffix"/>
+            <column name="column_display" value="Prefix/Suffix"/>
             <column name="display_type" value="ACTIVITY"/>
-            <column name="possible_values" value="[{&quot;value&quot;:&quot;REGISTRATION.REGISTRATION_LAST_NAME&quot;}]"/>
+            <column name="possible_values" value="[{&quot;value&quot;:&quot;REGISTRATION.REGISTRATION_PREFIX&quot;}]"/>
             <column name="order_number" value="4"/>
         </insert>
         <insert tableName="field_settings">
