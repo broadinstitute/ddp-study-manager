@@ -273,10 +273,10 @@
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='atcp')"></column>
             <column name="field_type" value="AT_PARTICIPANT_EXIT"/>
-            <column name="column_name" value=""/>
+            <column name="column_name" value="EXITSTATUS"/>
             <column name="column_display" value="Exit status:"/>
             <column name="display_type" value="RADIO"/>
-            <column name="possible_values" value="[{&quot;value&quot;:&quot;2&quot;,&quot;name&quot;:&quot;Not Exited&quot;,&quot;default&quot;:true},{&quot;value&quot;:&quot;1&quot;,&quot;name&quot;:&quot;Exited&quot;}]"/>
+            <column name="possible_values" value="[{&quot;value&quot;:&quot;0&quot;,&quot;name&quot;:&quot;Not Exited&quot;,&quot;default&quot;:true},{&quot;value&quot;:&quot;1&quot;,&quot;name&quot;:&quot;Exited&quot;}]"/>
             <column name="order_number" value="1"/>
         </insert>
         <insert tableName="field_settings">
@@ -286,7 +286,7 @@
             <column name="column_name" value="DATSTAT_EXITREASON"/>
             <column name="column_display" value="Exit reason:"/>
             <column name="display_type" value="OPTIONS"/>
-            <column name="possible_values" value="[{&quot;value&quot;:&quot;1&quot;,&quot;name&quot;:&quot;Unwilling to continue&quot;},{&quot;value&quot;:&quot;2&quot;,&quot;name&quot;:&quot;Withdrawn by study staff&quot;},{&quot;value&quot;:&quot;3&quot;,&quot;name&quot;:&quot;Other&quot;}]"/>
+            <column name="possible_values" value="[{&quot;value&quot;:&quot;C&quot;,&quot;name&quot;:&quot;Completed&quot;},{&quot;value&quot;:&quot;D&quot;,&quot;name&quot;:&quot;Deceased&quot;},{&quot;value&quot;:&quot;I&quot;,&quot;name&quot;:&quot;Incarcerated&quot;},{&quot;value&quot;:&quot;UL&quot;,&quot;name&quot;:&quot;Unable to continue&quot;},{&quot;value&quot;:&quot;UA&quot;,&quot;name&quot;:&quot;Unable to locate&quot;},{&quot;value&quot;:&quot;UW&quot;,&quot;name&quot;:&quot;Unwilling to continue&quot;},{&quot;value&quot;:&quot;W&quot;,&quot;name&quot;:&quot;Withdrawn by study staff&quot;},{&quot;value&quot;:&quot;O&quot;,&quot;name&quot;:&quot;Other&quot;}]"/>
             <column name="order_number" value="2"/>
         </insert>
         <insert tableName="field_settings">
