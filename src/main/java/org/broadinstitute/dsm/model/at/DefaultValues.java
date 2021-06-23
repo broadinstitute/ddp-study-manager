@@ -7,8 +7,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ParticipantData;
 import org.broadinstitute.dsm.db.dao.Dao;
+import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
+import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.NewParticipantData;
@@ -35,6 +37,7 @@ public class DefaultValues {
 
     private static final Gson GSON = new Gson();
     public static final String AT_PARTICIPANT_EXIT = "AT_PARTICIPANT_EXIT";
+    public static final String AT_GENOMIC_ID = "at_genomic_id";
     private Dao dataAccess;
 
     private Map<String, List<ParticipantData>> participantData;
@@ -127,16 +130,27 @@ public class DefaultValues {
 
     private boolean insertGenomicIdIfNotExistsInData(String ddpParticipantId, String hruid,
                                                      ParticipantData pData) {
-        if (StringUtils.isBlank(hruid)) return false;
         Map<String, String> dataMap = GSON.fromJson(pData.getData(), new TypeToken<Map<String, String>>() {}.getType());
         if (dataMap.containsKey(GENOME_STUDY_CPT_ID)) return false;
-        dataMap.put(GENOME_STUDY_CPT_ID, PREFIX.concat(hruid));
+        dataMap.put(GENOME_STUDY_CPT_ID, PREFIX.concat(getGenomicIdValue(hruid)));
         return updateParticipantData(ddpParticipantId, pData, dataMap);
+    }
+
+    private String getGenomicIdValue(String hruid) {
+        this.setDataAccess(new BookmarkDao());
+        BookmarkDao dataAccess = (BookmarkDao) this.dataAccess;
+        Optional<BookmarkDto> maybeGenomicId = dataAccess.getBookmarkByInstance(AT_GENOMIC_ID);
+        return maybeGenomicId
+                .map(bookmarkDto -> {
+                    dataAccess.updateBookmarkValueByBookmarkId(bookmarkDto.getBookmarkId(), bookmarkDto.getValue() + 1);
+                    return String.valueOf(bookmarkDto.getValue());
+                })
+                .orElse(hruid);
     }
 
     private boolean insertGenomicIdForParticipant(String ddpParticipantId, String hruid) {
         if (StringUtils.isBlank(hruid)) return false;
-        return insertParticipantData(Map.of(GENOME_STUDY_CPT_ID, PREFIX.concat(hruid)), ddpParticipantId, FIELD_TYPE_ID);
+        return insertParticipantData(Map.of(GENOME_STUDY_CPT_ID, PREFIX.concat(getGenomicIdValue(hruid))), ddpParticipantId, FIELD_TYPE_ID);
     }
 
     private Optional<ParticipantData> getParticipantExitFieldData(List<ParticipantData> participantDataList) {
