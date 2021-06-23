@@ -113,7 +113,8 @@ public class KitUploadRoute extends RequestHandler {
                 else {
                     try {
                         kitUploadContent = isFileValid(content, realm);
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e) {
                         return new Result(500, e.getMessage());
                     }
                 }
@@ -275,7 +276,8 @@ public class KitUploadRoute extends RequestHandler {
         if (checkIfKitAlreadyExists(conn, participantGuid, ddpInstance.getDdpInstanceId(), kitTypeId)) {
             isKitExsist = true;
             kit.setParticipantId(participantGuid);
-        } else if (checkIfKitAlreadyExists(conn, participantLegacyAltPid, ddpInstance.getDdpInstanceId(), kitTypeId)) {
+        }
+        else if (checkIfKitAlreadyExists(conn, participantLegacyAltPid, ddpInstance.getDdpInstanceId(), kitTypeId)) {
             isKitExsist = true;
             kit.setParticipantId(participantLegacyAltPid);
         }
@@ -395,17 +397,25 @@ public class KitUploadRoute extends RequestHandler {
     }
 
     public List<KitRequest> isFileValid(String fileContent, String realm) {
-        if (fileContent == null) throw new RuntimeException("File is empty");
+        if (fileContent == null) {
+            throw new RuntimeException("File is empty");
+        }
 
         String[] rows = fileContent.split(System.lineSeparator());
-        if (rows.length < 2) throw new RuntimeException("Text file does not contain enough information");
+        if (rows.length < 2) {
+            throw new RuntimeException("Text file does not contain enough information");
+        }
 
         String firstRow = rows[0];
-        if (!firstRow.contains(SystemUtil.SEPARATOR)) throw new FileWrongSeparator("Please use tab as separator in the text file");
+        if (!firstRow.contains(SystemUtil.SEPARATOR)) {
+            throw new FileWrongSeparator("Please use tab as separator in the text file");
+        }
 
         List<String> fieldNamesFromFileHeader = Arrays.asList(firstRow.trim().split(SystemUtil.SEPARATOR));
         String missingHeader = getMissingHeader(fieldNamesFromFileHeader);
-        if (missingHeader != null) throw new FileColumnMissing("File is missing column " + missingHeader);
+        if (missingHeader != null) {
+            throw new FileColumnMissing("File is missing column " + missingHeader);
+        }
 
         List<KitRequest> kitRequestsToUpload = new ArrayList<>();
         parseParticipantDataToUpload(realm, rows, fieldNamesFromFileHeader, kitRequestsToUpload);
@@ -429,8 +439,15 @@ public class KitUploadRoute extends RequestHandler {
             String shortId = participantDataByFieldName.get(SHORT_ID);
 
             if (ddpInstanceByRealm.isHasRole()) { //only check if participant shortId exists if ddp has kit request endpoints (not RGP!)
-                if (!userExistsInRealm(ddpInstanceByRealm, participantDataByFieldName)) {
-                    throw new RuntimeException("user with shortId: " + shortId + " does not belong to this study.");
+                String message = null;
+                try {
+                    message = userExistsInRealm(ddpInstanceByRealm, participantDataByFieldName);
+                }
+                catch (Exception e) {
+                    message = "Participant does not belong to this study";
+                }
+                if (StringUtils.isNotBlank(message)) {
+                    throw new RuntimeException("user with shortId: " + shortId + " had a problem: \n" + message);
                 }
             }
 
@@ -455,8 +472,9 @@ public class KitUploadRoute extends RequestHandler {
     Map<String, String> getParticipantDataAsMap(String row, List<String> fieldNamesFromHeader, int rowIndex) {
         Map<String, String> participantDataByFieldName = new LinkedHashMap<>();
         String[] rowItems = row.trim().split(SystemUtil.SEPARATOR);
-        if (rowItems.length != fieldNamesFromHeader.size())
+        if (rowItems.length != fieldNamesFromHeader.size()) {
             throw new UploadLineException("Error in line " + (rowIndex + 1));
+        }
 
         for (int columnIndex = 0; columnIndex < fieldNamesFromHeader.size(); columnIndex++) {
             participantDataByFieldName.put(fieldNamesFromHeader.get(columnIndex), rowItems[columnIndex]);
@@ -479,29 +497,47 @@ public class KitUploadRoute extends RequestHandler {
         return lastNonEmptyRowIndex;
     }
 
-    private boolean userExistsInRealm(DDPInstance ddpInstanceByRealm,
-                                      Map<String, String> participantDataByFieldName) {
-        String participantIdFromDoc = participantDataByFieldName.get(SHORT_ID);
-        String participantFirstNameFromDoc = participantDataByFieldName.get(FIRST_NAME);
-        String participantLastNameFromDoc = participantDataByFieldName.get(LAST_NAME);
+    private String userExistsInRealm(DDPInstance ddpInstanceByRealm,
+                                     Map<String, String> participantDataByFieldName) throws Exception {
+        String participantIdFromDoc = participantDataByFieldName.get(SHORT_ID).trim();
+        String participantFirstNameFromDoc = participantDataByFieldName.get(FIRST_NAME).trim().toLowerCase();
+        String participantLastNameFromDoc = participantDataByFieldName.get(LAST_NAME).trim().toLowerCase();
 
         Optional<ParticipantWrapper> maybeParticipant =
                 ParticipantWrapper.getParticipantByShortId(ddpInstanceByRealm, participantIdFromDoc);
-
-        return isKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, maybeParticipant);
+        maybeParticipant.orElseThrow(() -> {
+            throw new RuntimeException("Participant " + participantIdFromDoc + " does not belong to this study");
+        });
+        return checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, maybeParticipant);
     }
 
-    boolean isKitUploadNameMatchesToEsName(String participantFirstNameFromDoc, String participantLastNameFromDoc,
-                              Optional<ParticipantWrapper> maybeParticipant) {
+    String checkKitUploadNameMatchesToEsName(String participantFirstNameFromDoc, String participantLastNameFromDoc,
+                                          Optional<ParticipantWrapper> maybeParticipant) {
 
         Map<String, String> participantProfile = new HashMap<>();
         maybeParticipant.ifPresent(p -> {
             Map<String, String> participantProfileFromEs = (Map<String, String>) p.getData().get("profile");
-            participantProfile.put("firstName", participantProfileFromEs.get("firstName"));
-            participantProfile.put("lastName", participantProfileFromEs.get("lastName"));
+            participantProfile.put("firstName", participantProfileFromEs.get("firstName").trim().toLowerCase());
+            participantProfile.put("lastName", participantProfileFromEs.get("lastName").trim().toLowerCase());
         });
-        return participantFirstNameFromDoc.equals(participantProfile.get("firstName"))
-                && participantLastNameFromDoc.equals(participantProfile.get("lastName"));
+        String message = "";
+
+
+        if (!participantFirstNameFromDoc.equals(participantProfile.get("firstName"))) {
+            message += "First names ";
+        }
+
+        if (!participantLastNameFromDoc.equals(participantProfile.get("lastName"))) {
+            if (StringUtils.isNotBlank(message)) {
+                message += "and ";
+            }
+            message += " Last names ";
+        }
+        if (StringUtils.isNotBlank(message)) {
+            message += "in kit Upload don't match the participant";
+            logger.error(message);
+        }
+        return message;
     }
 
     public Map<String, KitRequest> checkAddress(List<KitRequest> kitUploadObjects, String phone) {
