@@ -525,7 +525,6 @@ public class KitUploadRoute extends RequestHandler {
 
         if (!participantFirstNameFromDoc.equals(participantProfile.get("firstName"))) {
             message += "First names ";
-            logger.error(message);
         }
 
         if (!participantLastNameFromDoc.equals(participantProfile.get("lastName"))) {
@@ -533,10 +532,10 @@ public class KitUploadRoute extends RequestHandler {
                 message += "and ";
             }
             message += " Last names ";
-            logger.error(message);
         }
         if (StringUtils.isNotBlank(message)) {
             message += "in kit Upload don't match the participant";
+            logger.error(message);
         }
         return message;
     }
