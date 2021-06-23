@@ -3,6 +3,7 @@ package org.broadinstitute.dsm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
@@ -711,7 +712,11 @@ public class ElasticSearchTest extends TestHelper {
         String status = "ALIVE";
         DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
                 false, null, false, null, "participants_structured.rgp.rgp", null, null);
-        ElasticSearchUtil.writeWorkflow(ddpInstance, ddpParticipantId, workflow, status);
+
+        Map<String, Object> workflowsBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
+
+        ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, ddpParticipantId,
+                workflow, status));
         Map<String, Object> workflows = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
 
         if (workflows != null && !workflows.isEmpty()) {
@@ -726,7 +731,8 @@ public class ElasticSearchTest extends TestHelper {
         }
 
         String newStatus = "DECEASED";
-        ElasticSearchUtil.writeWorkflow(ddpInstance, ddpParticipantId, workflow, newStatus);
+        ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, ddpParticipantId,
+                workflow, newStatus));
         Map<String, Object> updatedWorkflows = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
 
         if (updatedWorkflows != null && !updatedWorkflows.isEmpty()) {
@@ -740,6 +746,62 @@ public class ElasticSearchTest extends TestHelper {
             }
         }
         Assert.assertEquals(workflows.size(), updatedWorkflows.size());
+
+        ElasticSearchUtil.updateRequest(ddpParticipantId, ddpInstance.getParticipantIndexES(), workflowsBefore);
+    }
+
+    @Test
+    public void updateWorkflowValuesWithStudySpecificData() throws Exception {
+        String ddpParticipantId = "XLDUNC3BHGWGWERHW781";
+        String workflow = "ALIVE_DECEASED";
+        String status = "ALIVE";
+        String subjectId = "testId";
+        String firstname = "testfirstname";
+        String lastname = "testlastname";
+        DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
+                false, null, false, null, "participants_structured.rgp.rgp", null, null);
+        Map<String, Object> workflowsBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
+
+        ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
+                workflow, status, new WorkflowForES.StudySpecificData(subjectId, firstname, lastname)));
+
+        testWorkflowWithStudySpecificData(ddpParticipantId, workflow, status, subjectId, firstname, lastname, ddpInstance);
+
+        String newSubjectId = "testId3";
+
+        ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
+                workflow, status, new WorkflowForES.StudySpecificData(newSubjectId, firstname, lastname)));
+
+        testWorkflowWithStudySpecificData(ddpParticipantId, workflow, status, subjectId, firstname, lastname, ddpInstance);
+
+        ElasticSearchUtil.updateRequest(ddpParticipantId, ddpInstance.getParticipantIndexES(), workflowsBefore);
+
+    }
+
+    public void testWorkflowWithStudySpecificData(String ddpParticipantId, String workflow, String status, String subjectId, String firstname, String lastname, DDPInstance ddpInstance) throws Exception {
+        Map<String, Object> workflows = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
+        Assert.assertTrue(workflows != null && !workflows.isEmpty());
+        if (workflows != null && !workflows.isEmpty()) {
+            List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflows.get("workflows");
+            Assert.assertTrue(workflowListES != null && !workflowListES.isEmpty());
+            if (workflowListES != null && !workflowListES.isEmpty()) {
+                boolean dataFound = false;
+                for (Map<String, Object> workflowES : workflowListES) {
+                    Map<String, String> data = (Map<String, String>) workflowES.get("data");
+                    if (data == null) {
+                        continue;
+                    } else {
+                        dataFound = true;
+                    }
+                    if (workflow.equals(workflowES.get("workflow")) && subjectId.equals(data.get("subjectId"))) {
+                        Assert.assertEquals(status, workflowES.get("status"));
+                        Assert.assertEquals(firstname, data.get("firstname"));
+                        Assert.assertEquals(lastname, data.get("lastname"));
+                    }
+                }
+                Assert.assertTrue(dataFound);
+            }
+        }
     }
 
     @Test

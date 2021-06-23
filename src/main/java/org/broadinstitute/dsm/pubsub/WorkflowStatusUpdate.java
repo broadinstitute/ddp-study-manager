@@ -8,7 +8,9 @@ import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
 import org.broadinstitute.dsm.export.ExportToES;
+import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.Value;
+import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
@@ -47,7 +49,7 @@ public class WorkflowStatusUpdate {
             FieldSettingsDto setting = fieldSetting.get();
             boolean isOldParticipant = participantDatas.stream()
                     .anyMatch(participantDataDto -> participantDataDto.getFieldTypeId().equals(setting.getFieldType())
-                            || !participantDataDto.getFieldTypeId().contains("GROUP"));
+                            || !participantDataDto.getFieldTypeId().contains(FamilyMemberConstants.GROUP));
             if (isOldParticipant) {
                 participantDatas.forEach(participantDataDto -> {
                     updateProbandStatusInDB(workflow, status, participantDataDto, studyGuid);
@@ -55,22 +57,49 @@ public class WorkflowStatusUpdate {
             } else {
                 addNewParticipantDataWithStatus(workflow, status, ddpParticipantId, setting);
             }
-            exportToESifNecessary(workflow, status, ddpParticipantId, instance, setting);
+            exportToESifNecessary(workflow, status, ddpParticipantId, instance, setting, participantDatas);
         }
 
     }
 
-    public static void exportToESifNecessary(String workflow, String status, String ddpParticipantId, DDPInstance instance, FieldSettingsDto setting) {
+    public static void exportToESifNecessary(String workflow, String status, String ddpParticipantId,
+                                             DDPInstance instance, FieldSettingsDto setting, List<ParticipantDataDto> participantDatas) {
         String actions = setting.getActions();
-        if (actions != null) {
-            Value[] actionsArray =  gson.fromJson(actions, Value[].class);
-            for (Value action : actionsArray) {
-                if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
-                    ElasticSearchUtil.writeWorkflow(instance, ddpParticipantId, workflow, status);
-                    break;
+        if (actions == null) {
+            return;
+        }
+        Value[] actionsArray =  gson.fromJson(actions, Value[].class);
+        for (Value action : actionsArray) {
+            if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
+                if (setting.getFieldType().contains(FamilyMemberConstants.GROUP)) {
+                    ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(instance, ddpParticipantId, workflow, status));
+                } else {
+                    Optional<WorkflowForES.StudySpecificData> studySpecificDataOptional = getProbandStudySpecificData(participantDatas);
+                    studySpecificDataOptional.ifPresent(studySpecificData -> ElasticSearchUtil.writeWorkflow(WorkflowForES
+                            .createInstanceWithStudySpecificData(instance, ddpParticipantId, workflow, status, studySpecificData)));
                 }
+                break;
             }
         }
+    }
+
+    private static Optional<WorkflowForES.StudySpecificData> getProbandStudySpecificData(List<ParticipantDataDto> participantDatas) {
+        for (ParticipantDataDto participantData: participantDatas) {
+            String data = participantData.getData();
+            if (data == null) {
+                continue;
+            }
+            JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
+            if (!dataJsonObject.has(FamilyMemberConstants.LASTNAME) || !dataJsonObject.has(FamilyMemberConstants.FIRSTNAME)
+                    || !dataJsonObject.has(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID)) {
+                logger.warn("Participant data doesn't have necessary fields");
+            }
+            if(isProband(dataJsonObject)) {
+                return Optional.of(new WorkflowForES.StudySpecificData(dataJsonObject.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID).getAsString(),
+                        dataJsonObject.get(FamilyMemberConstants.FIRSTNAME).getAsString(), dataJsonObject.get(FamilyMemberConstants.LASTNAME).getAsString()));
+            }
+        }
+        return Optional.empty();
     }
 
     public static int addNewParticipantDataWithStatus(String workflow, String status, String ddpParticipantId, FieldSettingsDto setting) {

@@ -9,10 +9,12 @@ import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.exception.DuplicateException;
+import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.AbstractionWrapper;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Patch;
 import org.broadinstitute.dsm.model.Value;
+import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -303,13 +305,29 @@ public class PatchRoute extends RequestHandler {
     private void writeESWorkflow(@NonNull Patch patch, @NonNull NameValue nameValue, @NonNull Value action) {
         DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
         String status = nameValue.getValue() != null ? String.valueOf(nameValue.getValue()) : null;
-        if (StringUtils.isNotBlank(status)) {
-            Map<String,String> data = new Gson().fromJson(status, new TypeToken<Map<String, String>>(){}.getType());
-            if (action.getValue() != null && StringUtils.isNotBlank(action.getValue())) {
-                ElasticSearchUtil.writeWorkflow(ddpInstance, patch.getParentId(), action.getName(), action.getValue());
+        if (StringUtils.isBlank(status)) {
+            return;
+        }
+        Map<String,String> data = new Gson().fromJson(status, new TypeToken<Map<String, String>>(){}.getType());
+        if (action.getValue() != null && StringUtils.isNotBlank(action.getValue())) {
+            if (patch.getFieldId().contains(FamilyMemberConstants.GROUP)) {
+                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, patch.getParentId(), action.getName(), action.getValue()));
+            } else if (ParticipantDataUtil.hasProbandEmail(patch.getParentId(), data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID))) {
+                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance,
+                        patch.getParentId(), action.getName(), data.get(action.getName()), new WorkflowForES.StudySpecificData(
+                                data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+                                data.get(FamilyMemberConstants.FIRSTNAME),
+                                data.get(FamilyMemberConstants.LASTNAME))));
             }
-            else if (action.getName() != null && StringUtils.isNotBlank(action.getName()) && data.containsKey(action.getName())) {
-                ElasticSearchUtil.writeWorkflow(ddpInstance, patch.getParentId(), action.getName(), data.get(action.getName()));
+        } else if (action.getName() != null && StringUtils.isNotBlank(action.getName()) && data.containsKey(action.getName())) {
+            if (patch.getFieldId().contains(FamilyMemberConstants.GROUP)) {
+                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, patch.getParentId(), action.getName(), data.get(action.getName())));
+            } else if (ParticipantDataUtil.hasProbandEmail(patch.getParentId(), data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID))) {
+                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance,
+                        patch.getParentId(), action.getName(), data.get(action.getName()), new WorkflowForES.StudySpecificData(
+                                data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+                                data.get(FamilyMemberConstants.FIRSTNAME),
+                                data.get(FamilyMemberConstants.LASTNAME))));
             }
         }
     }

@@ -1,13 +1,10 @@
 package org.broadinstitute.dsm.model.rgp;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.google.gson.Gson;
 import lombok.NonNull;
-import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ParticipantData;
 import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
@@ -15,7 +12,7 @@ import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
-import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
+import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
 import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
@@ -79,7 +76,11 @@ public class AutomaticProbandDataCreator {
                 );
         newParticipantData.addDefaultOptionsValueToData(columnsWithDefaultOptions);
         newParticipantData.insertParticipantData("SYSTEM");
-        columnsWithDefaultOptionsFilteredByElasticExportWorkflow.forEach((col, val) -> ElasticSearchUtil.writeWorkflow(instance, participantId, col, val));
+        columnsWithDefaultOptionsFilteredByElasticExportWorkflow.forEach((col, val) ->
+                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(instance, participantId, col, val,
+                        new WorkflowForES.StudySpecificData(probandDataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+                                probandDataMap.get(FamilyMemberConstants.FIRSTNAME), probandDataMap.get(FamilyMemberConstants.LASTNAME))))
+        );
         maybeFamilyIdOfBookmark.ifPresent(familyIdBookmarkDto -> {
             insertFamilyIdToDsmES(instance.getParticipantIndexES(), participantId, familyIdBookmarkDto.getValue());
             familyIdBookmarkDto.setValue(familyIdBookmarkDto.getValue() + 1);
