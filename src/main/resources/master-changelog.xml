@@ -56,4 +56,5 @@
 <!--    TODO need to be added in for prod update-->
 <!--    <include file="liquibase/DDP-4702_AT-form.xml" relativeToChangelogFile="true"/>-->
 <!--    <include file="liquibase/DDP-5782_RGP-form.xml" relativeToChangelogFile="true"/>-->
+    <include file="liquibase/DDP-6426_at-status-possible-values.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

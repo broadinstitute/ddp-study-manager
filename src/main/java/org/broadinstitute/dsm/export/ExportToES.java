@@ -144,7 +144,7 @@ public class ExportToES {
     }
 
     private static List<String> findWorkFlowColumnNames(int instanceId) {
-        FieldSettingsDao fieldSettingsDao = new FieldSettingsDao();
+        FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
         List<FieldSettingsDto> fieldSettings = fieldSettingsDao.getFieldSettingsByInstanceId(instanceId);
         List<String> workflowColumns = new ArrayList<>();
         for (FieldSettingsDto fieldSetting: fieldSettings) {

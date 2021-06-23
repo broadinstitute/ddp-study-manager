@@ -76,7 +76,7 @@ public class AddFamilyMemberRoute extends RequestHandler {
     }
 
     private Map<String, String> getDefaultOptions(int ddpInstanceId) {
-        FieldSettingsDao fieldSettingsDao = new FieldSettingsDao();
+        FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
         FieldSettings fieldSettings = new FieldSettings();
         return fieldSettings.getColumnsWithDefaultOptions(fieldSettingsDao.getFieldSettingsByOptionAndInstanceId(ddpInstanceId));
     }

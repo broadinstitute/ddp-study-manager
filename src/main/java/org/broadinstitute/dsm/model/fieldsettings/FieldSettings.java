@@ -3,10 +3,14 @@ package org.broadinstitute.dsm.model.fieldsettings;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import com.google.gson.Gson;
 import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
+import org.broadinstitute.dsm.model.Value;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 public class FieldSettings {
 
@@ -21,6 +25,16 @@ public class FieldSettings {
             }
         }
         return defaultOptions;
+    }
+
+    public Map<String, String> getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(@NonNull List<FieldSettingsDto> fieldSettingsDtos) {
+        Map<String, String> defaultOptionsFileredByElasticExportWorkflow = new HashMap<>();
+        for (FieldSettingsDto fieldSettingsDto: fieldSettingsDtos) {
+            if (isDefaultOption(fieldSettingsDto.getPossibleValues()) && isElasticExportWorkflowType(fieldSettingsDto.getActions())) {
+                defaultOptionsFileredByElasticExportWorkflow.put(fieldSettingsDto.getColumnName(), getDefaultOption(fieldSettingsDto.getPossibleValues()));
+            }
+        }
+        return defaultOptionsFileredByElasticExportWorkflow;
     }
 
     String getDefaultOption(String possibleValuesJson) {
@@ -43,6 +57,13 @@ public class FieldSettings {
              }
          }
          return isDefault;
+    }
+
+    boolean isElasticExportWorkflowType(String action) {
+        if (StringUtils.isBlank(action)) return false;
+        Value[] actions = new Gson().fromJson(action, Value[].class);
+        return Stream.of(actions)
+                .anyMatch(act -> ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(act.getType()));
     }
 
 }
