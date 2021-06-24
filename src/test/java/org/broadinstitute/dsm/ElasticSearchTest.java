@@ -781,27 +781,23 @@ public class ElasticSearchTest extends TestHelper {
     public void testWorkflowWithStudySpecificData(String ddpParticipantId, String workflow, String status, String subjectId, String firstname, String lastname, DDPInstance ddpInstance) throws Exception {
         Map<String, Object> workflows = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
         Assert.assertTrue(workflows != null && !workflows.isEmpty());
-        if (workflows != null && !workflows.isEmpty()) {
-            List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflows.get("workflows");
-            Assert.assertTrue(workflowListES != null && !workflowListES.isEmpty());
-            if (workflowListES != null && !workflowListES.isEmpty()) {
-                boolean dataFound = false;
-                for (Map<String, Object> workflowES : workflowListES) {
-                    Map<String, String> data = (Map<String, String>) workflowES.get("data");
-                    if (data == null) {
-                        continue;
-                    } else {
-                        dataFound = true;
-                    }
-                    if (workflow.equals(workflowES.get("workflow")) && subjectId.equals(data.get("subjectId"))) {
-                        Assert.assertEquals(status, workflowES.get("status"));
-                        Assert.assertEquals(firstname, data.get("firstname"));
-                        Assert.assertEquals(lastname, data.get("lastname"));
-                    }
-                }
-                Assert.assertTrue(dataFound);
+        List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflows.get("workflows");
+        Assert.assertTrue(workflowListES != null && !workflowListES.isEmpty());
+        boolean dataFound = false;
+        for (Map<String, Object> workflowES : workflowListES) {
+            Map<String, String> data = (Map<String, String>) workflowES.get("data");
+            if (data == null) {
+                continue;
+            } else {
+                dataFound = true;
+            }
+            if (workflow.equals(workflowES.get("workflow")) && subjectId.equals(data.get("subjectId"))) {
+                Assert.assertEquals(status, workflowES.get("status"));
+                Assert.assertEquals(firstname, data.get("firstname"));
+                Assert.assertEquals(lastname, data.get("lastname"));
             }
         }
+        Assert.assertTrue(dataFound);
     }
 
     @Test

@@ -28,6 +28,7 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
@@ -518,7 +519,7 @@ public class ElasticSearchUtil {
                     .doc(objectsMapES)
                     .docAsUpsert(true);
 
-//            UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+            UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
 
         }
     }
