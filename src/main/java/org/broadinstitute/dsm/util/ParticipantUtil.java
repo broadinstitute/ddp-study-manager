@@ -28,18 +28,16 @@ public class ParticipantUtil {
             if (data == null) {
                 continue;
             }
-            JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
-            if (!dataJsonObject.has(FamilyMemberConstants.MEMBER_TYPE) || !dataJsonObject.has(FamilyMemberConstants.EMAIL)
-                    || !dataJsonObject.has(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID)) {
+            Map<String, String> dataMap = gson.fromJson(data, Map.class);
+            if (!dataMap.containsKey(FamilyMemberConstants.MEMBER_TYPE) || !dataMap.containsKey(FamilyMemberConstants.EMAIL)
+                    || !dataMap.containsKey(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID)) {
                 return false;
             }
-            for (Map.Entry<String, JsonElement> entry: dataJsonObject.entrySet()) {
-                if (dataJsonObject.get(FamilyMemberConstants.MEMBER_TYPE).getAsString().equals(FamilyMemberConstants.MEMBER_TYPE_SELF)) {
-                    currentParticipantEmail = dataJsonObject.get(FamilyMemberConstants.EMAIL).getAsString();
-                }
-                if (collaboratorParticipantId.equals(dataJsonObject.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID).getAsString())) {
-                    probandEmail = dataJsonObject.get(FamilyMemberConstants.EMAIL).getAsString();
-                }
+            if (dataMap.get(FamilyMemberConstants.MEMBER_TYPE).equals(FamilyMemberConstants.MEMBER_TYPE_SELF)) {
+                currentParticipantEmail = dataMap.get(FamilyMemberConstants.EMAIL);
+            }
+            if (collaboratorParticipantId.equals(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID))) {
+                probandEmail = dataMap.get(FamilyMemberConstants.EMAIL);
             }
         }
         return probandEmail != null && probandEmail.equals(currentParticipantEmail);

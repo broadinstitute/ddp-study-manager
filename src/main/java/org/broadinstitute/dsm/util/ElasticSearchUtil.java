@@ -379,13 +379,12 @@ public class ElasticSearchUtil {
         }
         if (!updated) {
             //add workflow
-            Map<String, Object> newWorkflowMap = Map.of(
+            workflowListES.add(Map.of(
                     ESObjectConstants.WORKFLOW, workflow,
                     STATUS, status,
                     ESObjectConstants.DATE, SystemUtil.getISO8601DateString(),
                     ESObjectConstants.DATA, new ObjectMapper().convertValue(studySpecificData, Map.class)
-            );
-            workflowListES.add(newWorkflowMap);
+            ));
         }
     }
 
@@ -409,11 +408,11 @@ public class ElasticSearchUtil {
         }
         if (!updated) {
             //add workflow
-            Map<String, Object> newWorkflowMap = new HashMap<>();
-            newWorkflowMap.put(ESObjectConstants.WORKFLOW, workflow);
-            newWorkflowMap.put(STATUS, status);
-            newWorkflowMap.put(ESObjectConstants.DATE, SystemUtil.getISO8601DateString());
-            workflowListES.add(newWorkflowMap);
+            workflowListES.add(Map.of(
+                    ESObjectConstants.WORKFLOW, workflow,
+                    STATUS, status,
+                    ESObjectConstants.DATE, SystemUtil.getISO8601DateString()
+            ));
         }
     }
 
