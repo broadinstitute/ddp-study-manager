@@ -2,8 +2,6 @@ package org.broadinstitute.dsm.export;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.kitrequest.KitRequestDao;
@@ -20,13 +18,14 @@ import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
-import org.broadinstitute.dsm.util.ParticipantDataUtil;
+import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ExportToES {
 
@@ -130,34 +129,34 @@ public class ExportToES {
             if (data == null) {
                 continue;
             }
-            JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
-            for (Map.Entry<String, JsonElement> entry: dataJsonObject.entrySet()) {
+            Map<String, String> dataMap = gson.fromJson(data, Map.class);
+            for (Map.Entry<String, String> entry: dataMap.entrySet()) {
                 if (!workFlowColumnNames.contains(entry.getKey())) {
                     continue;
                 }
                 if (participantData.getFieldTypeId().equals(RGP_PARTICIPANTS)) {
-                    if (!dataJsonObject.has(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID)
-                            || !dataJsonObject.has(FamilyMemberConstants.FIRSTNAME) || !dataJsonObject.has(FamilyMemberConstants.LASTNAME)) {
+                    if (!dataMap.containsKey(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID)
+                            || !dataMap.containsKey(FamilyMemberConstants.FIRSTNAME) || !dataMap.containsKey(FamilyMemberConstants.LASTNAME)) {
                         continue;
                     }
-                    if (ParticipantDataUtil.hasProbandEmail(participantData.getDdpParticipantId(),
-                            dataJsonObject.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID).getAsString())) {
+                    if (hasProbandEmail(participantData.getDdpParticipantId(),
+                            dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID), allParticipantData)) {
                         WorkflowForES.StudySpecificData studySpecificData = new WorkflowForES.StudySpecificData(
-                                dataJsonObject.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID).getAsString(),
-                                dataJsonObject.get(FamilyMemberConstants.FIRSTNAME).getAsString(),
-                                dataJsonObject.get(FamilyMemberConstants.LASTNAME).getAsString()
+                                dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+                                dataMap.get(FamilyMemberConstants.FIRSTNAME),
+                                dataMap.get(FamilyMemberConstants.LASTNAME)
                         );
                         ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, participantData.getDdpParticipantId(),
-                                entry.getKey(), entry.getValue().getAsString(), studySpecificData));
+                                entry.getKey(), entry.getValue(), studySpecificData));
                     }
                 } else {
                     ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, participantData.getDdpParticipantId(),
-                            entry.getKey(), entry.getValue().getAsString()));
+                            entry.getKey(), entry.getValue()));
                 }
             }
-            if (dataJsonObject.has(FamilyMemberConstants.FAMILY_ID)) {
+            if (dataMap.containsKey(FamilyMemberConstants.FAMILY_ID)) {
                 ElasticSearchUtil.writeDsmRecord(ddpInstance, null,
-                        participantData.getDdpParticipantId(), ESObjectConstants.FAMILY_ID, dataJsonObject.get(FAMILY_ID).getAsString(), null);
+                        participantData.getDdpParticipantId(), ESObjectConstants.FAMILY_ID, dataMap.get(FAMILY_ID), null);
             }
         }
     }
@@ -179,6 +178,13 @@ public class ExportToES {
             }
         }
         return workflowColumns;
+    }
+
+    public static boolean hasProbandEmail(String participantDataId, String collaboratorParticipantId, List<ParticipantDataDto> allParticipantData) {
+        List<ParticipantDataDto> participantDatas = allParticipantData.stream()
+                .filter(participantDataDto -> participantDataDto.getDdpParticipantId().equals(participantDataId))
+                .collect(Collectors.toList());
+        return ParticipantUtil.checkProbandEmail(collaboratorParticipantId, participantDatas);
     }
 
 }

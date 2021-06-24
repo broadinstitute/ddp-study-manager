@@ -89,14 +89,14 @@ public class WorkflowStatusUpdate {
             if (data == null) {
                 continue;
             }
-            JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
-            if (!dataJsonObject.has(FamilyMemberConstants.LASTNAME) || !dataJsonObject.has(FamilyMemberConstants.FIRSTNAME)
-                    || !dataJsonObject.has(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID)) {
+            Map<String, String> dataMap = gson.fromJson(data, Map.class);
+            if (!dataMap.containsKey(FamilyMemberConstants.LASTNAME) || !dataMap.containsKey(FamilyMemberConstants.FIRSTNAME)
+                    || !dataMap.containsKey(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID)) {
                 logger.warn("Participant data doesn't have necessary fields");
             }
-            if(isProband(dataJsonObject)) {
-                return Optional.of(new WorkflowForES.StudySpecificData(dataJsonObject.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID).getAsString(),
-                        dataJsonObject.get(FamilyMemberConstants.FIRSTNAME).getAsString(), dataJsonObject.get(FamilyMemberConstants.LASTNAME).getAsString()));
+            if(isProband(dataMap)) {
+                return Optional.of(new WorkflowForES.StudySpecificData(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+                        dataMap.get(FamilyMemberConstants.FIRSTNAME), dataMap.get(FamilyMemberConstants.LASTNAME)));
             }
         }
         return Optional.empty();
@@ -123,7 +123,7 @@ public class WorkflowStatusUpdate {
             return;
         }
         JsonObject dataJsonObject = gson.fromJson(oldData, JsonObject.class);
-        if ((participantDataDto.getFieldTypeId().contains("GROUP") || isProband(dataJsonObject))) {
+        if ((participantDataDto.getFieldTypeId().contains("GROUP") || isProband(gson.fromJson(dataJsonObject, Map.class)))) {
             dataJsonObject.addProperty(workflow, status);
             participantDataDao.updateParticipantDataColumn(
                     new ParticipantDataDto(participantDataDto.getParticipantDataId(),
@@ -136,8 +136,8 @@ public class WorkflowStatusUpdate {
         }
     }
 
-    private static boolean isProband(JsonObject dataJsonObject) {
-        return dataJsonObject.has(MEMBER_TYPE) && dataJsonObject.get(MEMBER_TYPE).getAsString().equals(SELF);
+    private static boolean isProband(Map<String, String> dataMap) {
+        return dataMap.containsKey(MEMBER_TYPE) && dataMap.get(MEMBER_TYPE).equals(SELF);
     }
 
     public static class WorkflowPayload {

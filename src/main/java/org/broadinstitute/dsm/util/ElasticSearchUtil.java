@@ -28,7 +28,6 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
@@ -321,11 +320,10 @@ public class ElasticSearchUtil {
             if (workflowMapES != null && !workflowMapES.isEmpty()) {
                 List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflowMapES.get(ESObjectConstants.WORKFLOWS);
                 if (workflowListES != null && !workflowListES.isEmpty()) {
-                    boolean updated = false;
                     if (workflowForES.getStudySpecificData() != null) {
-                        updateWorkflowStudySpecific(workflow, status, workflowListES, updated, workflowForES.getStudySpecificData());
+                        updateWorkflowStudySpecific(workflow, status, workflowListES, workflowForES.getStudySpecificData());
                     } else {
-                        updateWorkflow(workflow, status, workflowListES, updated);
+                        updateWorkflow(workflow, status, workflowListES);
                     }
                 }
             }
@@ -343,10 +341,11 @@ public class ElasticSearchUtil {
 
     public static Map<String, Object> addWorkflows(String workflow, String status, WorkflowForES.StudySpecificData studySpecificData) {
         Map<String, Object> workflowMapES;
-        Map<String, Object> newWorkflowMap = new HashMap<>();
-        newWorkflowMap.put(ESObjectConstants.WORKFLOW, workflow);
-        newWorkflowMap.put(ESObjectConstants.STATUS, status);
-        newWorkflowMap.put(ESObjectConstants.DATE, SystemUtil.getISO8601DateString());
+        Map<String, Object> newWorkflowMap = Map.of(
+                ESObjectConstants.WORKFLOW, workflow,
+                STATUS, status,
+                ESObjectConstants.DATE, SystemUtil.getISO8601DateString()
+        );
         if (studySpecificData != null) {
             newWorkflowMap.put(ESObjectConstants.DATA, new ObjectMapper().convertValue(studySpecificData, Map.class));
         }
@@ -358,7 +357,8 @@ public class ElasticSearchUtil {
     }
 
     public static void updateWorkflowStudySpecific(String workflow, String status, List<Map<String, Object>> workflowListES,
-                                                   boolean updated, WorkflowForES.StudySpecificData studySpecificData) {
+                                                   WorkflowForES.StudySpecificData studySpecificData) {
+        boolean updated = false;
         for (Map<String, Object> workflowES : workflowListES) {
             Map<String, String> data = (Map<String, String>) workflowES.get("data");
             String existingSubjectId = null;
@@ -379,11 +379,12 @@ public class ElasticSearchUtil {
         }
         if (!updated) {
             //add workflow
-            Map<String, Object> newWorkflowMap = new HashMap<>();
-            newWorkflowMap.put(ESObjectConstants.WORKFLOW, workflow);
-            newWorkflowMap.put(STATUS, status);
-            newWorkflowMap.put(ESObjectConstants.DATE, SystemUtil.getISO8601DateString());
-            newWorkflowMap.put(ESObjectConstants.DATA, new ObjectMapper().convertValue(studySpecificData, Map.class));
+            Map<String, Object> newWorkflowMap = Map.of(
+                    ESObjectConstants.WORKFLOW, workflow,
+                    STATUS, status,
+                    ESObjectConstants.DATE, SystemUtil.getISO8601DateString(),
+                    ESObjectConstants.DATA, new ObjectMapper().convertValue(studySpecificData, Map.class)
+            );
             workflowListES.add(newWorkflowMap);
         }
     }
@@ -395,7 +396,8 @@ public class ElasticSearchUtil {
         return true;
     }
 
-    public static void updateWorkflow(String workflow, String status, List<Map<String, Object>> workflowListES, boolean updated) {
+    public static void updateWorkflow(String workflow, String status, List<Map<String, Object>> workflowListES) {
+        boolean updated = false;
         for (Map<String, Object> workflowES : workflowListES) {
             if (workflow.equals(workflowES.get(ESObjectConstants.DATE))) {
                 //update value in existing workflow
