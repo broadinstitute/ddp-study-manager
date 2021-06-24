@@ -434,6 +434,7 @@ public class ElasticSearchUtil {
                     } else {
                         Map<String, Object> mapForDSM = new HashMap<>();
                         mapForDSM.put(objectType, idName);
+                        objectsMapES = new HashMap<>();
                         objectsMapES.put(ESObjectConstants.DSM, mapForDSM);
                     }
                 } else if (objectsMapES != null && !objectsMapES.isEmpty()) {
