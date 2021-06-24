@@ -160,7 +160,7 @@ public class ElasticSearchUtil {
                     searchRequest.source(searchSourceBuilder);
 
                     response = client.search(searchRequest, RequestOptions.DEFAULT);
-                    addingParticipantStructuredHits(response, esData, realm);
+                    addingParticipantStructuredHits(response, esData, realm, index);
                     i++;
                 }
             }
@@ -192,7 +192,7 @@ public class ElasticSearchUtil {
                     searchRequest.source(searchSourceBuilder);
 
                     response = client.search(searchRequest, RequestOptions.DEFAULT);
-                    addingParticipantStructuredHits(response, esData, realm);
+                    addingParticipantStructuredHits(response, esData, realm, index);
                     i++;
                 }
             }
@@ -246,7 +246,7 @@ public class ElasticSearchUtil {
                         searchRequest.source(searchSourceBuilder);
 
                         response = client.search(searchRequest, RequestOptions.DEFAULT);
-                        addingParticipantStructuredHits(response, esData, instance.getName());
+                        addingParticipantStructuredHits(response, esData, instance.getName(), index);
                         i++;
                     }
                 }
@@ -854,11 +854,16 @@ public class ElasticSearchUtil {
         return tmpBuilder;
     }
 
-    public static void addingParticipantStructuredHits(@NonNull SearchResponse response, Map<String, Map<String, Object>> esData, String ddp) {
+    public static void addingParticipantStructuredHits(@NonNull SearchResponse response, Map<String, Map<String, Object>> esData,
+                                                       String ddp, String index) {
         for (SearchHit hit : response.getHits()) {
             Map<String, Object> sourceMap = hit.getSourceAsMap();
             sourceMap.put("ddp", ddp);
             if (sourceMap.containsKey(PROFILE)) {
+                if (ElasticSearchUtil.isESUsersIndex(index)) {
+                    esData.put(hit.getId(), sourceMap);
+                    continue;
+                }
                 String legacyId = (String) ((Map<String, Object>) sourceMap.get(PROFILE)).get(LEGACY_ALT_PID);
                 if (StringUtils.isNotBlank(legacyId)) {
                     esData.put(legacyId, sourceMap);
@@ -1152,6 +1157,10 @@ public class ElasticSearchUtil {
         else {
             finalQuery.should(QueryBuilders.rangeQuery(name).gte(start).lte(end));
         }
+    }
+
+    private static boolean isESUsersIndex(String index) {
+        return index.startsWith("users");
     }
 
     private static class ESProfile {
