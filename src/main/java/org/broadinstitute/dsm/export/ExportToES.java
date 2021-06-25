@@ -2,29 +2,30 @@ package org.broadinstitute.dsm.export;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.kitrequest.KitRequestDao;
 import org.broadinstitute.dsm.db.dao.ddp.medical.records.ESMedicalRecordsDao;
 import org.broadinstitute.dsm.db.dao.ddp.tissue.ESTissueRecordsDao;
 import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
-import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.ddp.kitrequest.ESSamplesDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.db.dto.medical.records.ESMedicalRecordsDto;
-import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
 import org.broadinstitute.dsm.db.dto.ddp.tissue.ESTissueRecordsDto;
 import org.broadinstitute.dsm.model.Value;
+import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ExportToES {
 
@@ -36,9 +37,8 @@ public class ExportToES {
     private static final ESTissueRecordsDao esTissueRecordsDao = new ESTissueRecordsDao();
     private static final KitRequestDao kitRequestDao = new KitRequestDao();
     private static final ObjectMapper oMapper = new ObjectMapper();
-    public static final String MEMBER_TYPE = "MEMBER_TYPE";
-    public static final String SELF = "SELF";
     public static final String FAMILY_ID = "FAMILY_ID";
+    public static final String RGP_PARTICIPANTS = "RGP_PARTICIPANTS";
 
     public static class ExportPayload {
         private String index;
@@ -126,19 +126,37 @@ public class ExportToES {
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
         for (ParticipantDataDto participantData: allParticipantData) {
             String data = participantData.getData();
-            if (data != null) {
-                JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
-                for (Map.Entry<String, JsonElement> entry: dataJsonObject.entrySet()) {
-                    if (workFlowColumnNames.contains(entry.getKey())) {
-                        ElasticSearchUtil.writeWorkflow(ddpInstance, participantData.getDdpParticipantId(),
-                                entry.getKey(), entry.getValue().getAsString());
+            if (data == null) {
+                continue;
+            }
+            Map<String, String> dataMap = gson.fromJson(data, Map.class);
+            for (Map.Entry<String, String> entry: dataMap.entrySet()) {
+                if (!workFlowColumnNames.contains(entry.getKey())) {
+                    continue;
+                }
+                if (participantData.getFieldTypeId().equals(RGP_PARTICIPANTS)) {
+                    if (!dataMap.containsKey(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID)
+                            || !dataMap.containsKey(FamilyMemberConstants.FIRSTNAME) || !dataMap.containsKey(FamilyMemberConstants.LASTNAME)) {
+                        continue;
                     }
+                    if (hasProbandEmail(participantData.getDdpParticipantId(),
+                            dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID), allParticipantData)) {
+                        WorkflowForES.StudySpecificData studySpecificData = new WorkflowForES.StudySpecificData(
+                                dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+                                dataMap.get(FamilyMemberConstants.FIRSTNAME),
+                                dataMap.get(FamilyMemberConstants.LASTNAME)
+                        );
+                        ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, participantData.getDdpParticipantId(),
+                                entry.getKey(), entry.getValue(), studySpecificData));
+                    }
+                } else {
+                    ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, participantData.getDdpParticipantId(),
+                            entry.getKey(), entry.getValue()));
                 }
-                if (dataJsonObject.has(MEMBER_TYPE) && dataJsonObject.get(MEMBER_TYPE).getAsString().equals(SELF)
-                    && dataJsonObject.has(FAMILY_ID)) {
-                    ElasticSearchUtil.writeDsmRecord(ddpInstance, null,
-                            participantData.getDdpParticipantId(), ESObjectConstants.FAMILY_ID, dataJsonObject.get(FAMILY_ID).getAsString(), null);
-                }
+            }
+            if (dataMap.containsKey(FamilyMemberConstants.FAMILY_ID)) {
+                ElasticSearchUtil.writeDsmRecord(ddpInstance, null,
+                        participantData.getDdpParticipantId(), ESObjectConstants.FAMILY_ID, dataMap.get(FAMILY_ID), null);
             }
         }
     }
@@ -160,6 +178,13 @@ public class ExportToES {
             }
         }
         return workflowColumns;
+    }
+
+    public static boolean hasProbandEmail(String participantDataId, String collaboratorParticipantId, List<ParticipantDataDto> allParticipantData) {
+        List<ParticipantDataDto> participantDatas = allParticipantData.stream()
+                .filter(participantDataDto -> participantDataDto.getDdpParticipantId().equals(participantDataId))
+                .collect(Collectors.toList());
+        return ParticipantUtil.checkProbandEmail(collaboratorParticipantId, participantDatas);
     }
 
 }

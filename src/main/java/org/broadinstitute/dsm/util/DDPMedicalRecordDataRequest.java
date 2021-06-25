@@ -6,6 +6,8 @@ import org.broadinstitute.ddp.handlers.util.Institution;
 import org.broadinstitute.ddp.handlers.util.InstitutionRequest;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.MedicalRecordLog;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDao;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDto;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.slf4j.Logger;
@@ -105,8 +107,13 @@ public class DDPMedicalRecordDataRequest {
         }
         else {
             //new participant
-            MedicalRecordUtil.writeParticipantIntoDB(conn, institutionRequest.getParticipantId(), instanceId,
-                    institutionRequest.getId(), institutionRequest.getLastUpdated(), MedicalRecordUtil.SYSTEM);
+            ParticipantDto participantDto = new ParticipantDto.Builder(Integer.parseInt(instanceId), System.currentTimeMillis())
+                    .withDdpParticipantId(institutionRequest.getParticipantId())
+                    .withLastVersion(institutionRequest.getId())
+                    .withLastVersionDate(institutionRequest.getLastUpdated())
+                    .withChangedBy(MedicalRecordUtil.SYSTEM)
+                    .build();
+            new ParticipantDao().create(participantDto);
             writeInstitutionInfo(conn, institutionRequest, instanceId);
         }
     }
@@ -115,8 +122,13 @@ public class DDPMedicalRecordDataRequest {
                                       @NonNull String institutionId, @NonNull boolean institutionChangedSinceLastChecked, @NonNull String type, boolean setDuplicateFlag) {
         if (!MedicalRecordUtil.isParticipantInDB(conn, participantId, instanceId)) {
             //new participant
-            MedicalRecordUtil.writeParticipantIntoDB(conn, participantId, instanceId,
-                    0, ptLastUpdated, MedicalRecordUtil.SYSTEM);
+            ParticipantDto participantDto = new ParticipantDto.Builder(Integer.parseInt(instanceId), System.currentTimeMillis())
+                    .withDdpParticipantId(participantId)
+                    .withLastVersion(0)
+                    .withLastVersionDate(ptLastUpdated)
+                    .withChangedBy(MedicalRecordUtil.SYSTEM)
+                    .build();
+            new ParticipantDao().create(participantDto);
             MedicalRecordUtil.writeNewRecordIntoDb(conn, SQL_INSERT_ONC_HISTORY, participantId, instanceId);
             MedicalRecordUtil.writeNewRecordIntoDb(conn, SQL_INSERT_PARTICIPANT_RECORD, participantId, instanceId);
         }

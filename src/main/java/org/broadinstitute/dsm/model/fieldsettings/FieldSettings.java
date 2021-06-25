@@ -21,7 +21,7 @@ public class FieldSettings {
         Map<String, String> defaultOptions = new HashMap<>();
         for (FieldSettingsDto fieldSettingDto: fieldSettingsDtos) {
             if (isDefaultOption(fieldSettingDto.getPossibleValues())) {
-                defaultOptions.put(fieldSettingDto.getColumnName(), getDefaultOption(fieldSettingDto.getPossibleValues()));
+                defaultOptions.put(fieldSettingDto.getColumnName(), getDefaultOptionValue(fieldSettingDto.getPossibleValues()));
             }
         }
         return defaultOptions;
@@ -31,13 +31,13 @@ public class FieldSettings {
         Map<String, String> defaultOptionsFileredByElasticExportWorkflow = new HashMap<>();
         for (FieldSettingsDto fieldSettingsDto: fieldSettingsDtos) {
             if (isDefaultOption(fieldSettingsDto.getPossibleValues()) && isElasticExportWorkflowType(fieldSettingsDto.getActions())) {
-                defaultOptionsFileredByElasticExportWorkflow.put(fieldSettingsDto.getColumnName(), getDefaultOption(fieldSettingsDto.getPossibleValues()));
+                defaultOptionsFileredByElasticExportWorkflow.put(fieldSettingsDto.getColumnName(), getDefaultOptionValue(fieldSettingsDto.getPossibleValues()));
             }
         }
         return defaultOptionsFileredByElasticExportWorkflow;
     }
 
-    String getDefaultOption(String possibleValuesJson) {
+    public String getDefaultOptionValue(String possibleValuesJson) {
         List<Map<String, Object>> possibleValues = new Gson().fromJson(possibleValuesJson, List.class);
 
         return (String) possibleValues.stream()

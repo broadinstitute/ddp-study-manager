@@ -28,7 +28,7 @@ public class FieldSettingsTest {
 
     @Test
     public void testGetDefaultOption() {
-        String defaultOption = fieldSettings.getDefaultOption(acceptanceStatusPossibleValue);
+        String defaultOption = fieldSettings.getDefaultOptionValue(acceptanceStatusPossibleValue);
         Assert.assertEquals("ACCEPTED", defaultOption);
     }
 

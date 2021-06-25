@@ -12,11 +12,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class KitUploadRouteTest {
 
@@ -85,7 +81,7 @@ public class KitUploadRouteTest {
 
         ParticipantWrapper testParticipant = participantFactory("Mickey", "Mouse", "");
 
-        Assert.assertFalse(route.isKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, Optional.of(testParticipant)));
+        Assert.assertNotEquals("", route.checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, Optional.of(testParticipant)));
     }
 
     @Test
@@ -101,7 +97,7 @@ public class KitUploadRouteTest {
         String participantFirstNameFromDoc = participantDataAsMap.get("firstName");
         String participantLastNameFromDoc = participantDataAsMap.get("lastName");
 
-        Assert.assertFalse(route.isKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, Optional.empty()));
+        Assert.assertNotEquals("", route.checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, Optional.empty()));
     }
 
     private ParticipantWrapper participantFactory(String firstName, String lastName, String shortId) {

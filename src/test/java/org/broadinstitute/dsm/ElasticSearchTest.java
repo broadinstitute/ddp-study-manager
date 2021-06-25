@@ -1,16 +1,20 @@
 package org.broadinstitute.dsm;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.export.WorkflowForES;
+import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
+import org.broadinstitute.dsm.util.DBTestUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
@@ -28,7 +32,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class ElasticSearchTest extends TestHelper {
 
@@ -44,7 +50,7 @@ public class ElasticSearchTest extends TestHelper {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.rgp.rgp");
+            SearchRequest searchRequest = new SearchRequest("participants_structured.atcp.atcp");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
@@ -55,7 +61,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.rgp.rgp");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -125,7 +131,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "users.cmi.cmi-osteo");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -149,7 +155,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.cmi.cmi-osteo");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -191,7 +197,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", index);
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -272,7 +278,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", index);
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -323,7 +329,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", index);
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -351,7 +357,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.cmi.cmi-brain");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -379,7 +385,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.cmi.cmi-brain");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -394,6 +400,23 @@ public class ElasticSearchTest extends TestHelper {
     @Test
     public void searchPTByCompositeNotEmpty() throws Exception {
         notEmptyActivity("participants_structured.cmi.angio", "BIRTH_YEAR", "ANGIOABOUTYOU");
+    }
+
+    @Test
+    public void testSearchParticipantById() {
+        String pIdToFilter = "WUKIOQNKXJZGCAXCSYGB";
+        String fetchedPid = "";
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
+            ElasticSearch esObject =
+                    ElasticSearchUtil.fetchESDataByParticipantId("participants_structured.rgp.rgp", pIdToFilter, client);
+            fetchedPid = esObject.getProfile()
+                    .map(ESProfile::getParticipantGuid)
+                    .orElse("");
+        } catch (IOException e) {
+            Assert.fail();
+            e.printStackTrace();
+        }
+        Assert.assertEquals(pIdToFilter, fetchedPid);
     }
 
     public void notEmptyActivity(String index, String stableId, String activityCode) throws Exception {
@@ -428,7 +451,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", index);
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -458,7 +481,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.cmi.cmi-brain");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -492,7 +515,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.cmi.cmi-brain");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -521,7 +544,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.cmi.cmi-osteo");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -546,7 +569,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.cmi.cmi-osteo");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -577,7 +600,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.cmi.cmi-osteo");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -591,7 +614,7 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void searchPTByGUID() throws Exception {
-        searchProfileValue("participants_structured.rgp.rgp", "profile.guid", "T2SA8FUFGCT8QMFDD62W");
+        searchProfileValue("participants_structured.testboston.testboston", "profile.guid", "EG5AIEQZOJGX2HYDTQZZ");
     }
 
     @Test
@@ -622,7 +645,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", index);
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -635,55 +658,97 @@ public class ElasticSearchTest extends TestHelper {
     }
 
     @Test
-    @Ignore
     public void createTestParticipantsInES() throws Exception {
-        boolean addToDSMDB = false;
+        boolean addToDSMDB = true;
 
+        String index = "participants_structured.testboston.testboston";
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             //getting a participant ES doc
-            GetRequest getRequest = new GetRequest("participants_structured.cmi.angio", "_doc", "98JBYLZI33O0IFUMH9CS");
-            GetResponse response = client.get(getRequest, RequestOptions.DEFAULT);
-            Assert.assertNotNull(response);
-
-            for (int i = 0; i < 100; i++) {
-                String guid = "TEST000000000000000" + i;
-                String hruid = "PT000" + i;
+//            GetRequest getRequest = new GetRequest(index, "_doc", "EG5AIEQZOJGX2HYDTQZZ");
+//            GetResponse response = client.get(getRequest, RequestOptions.DEFAULT);
+//            Assert.assertNotNull(response);
+//4000
+            for (int i = 789; i < 900; i++) {
+                String guid = "TEST00000000000" + StringUtils.leftPad(String.valueOf(i), 5, "0");
+                String hruid = "P" + StringUtils.leftPad(String.valueOf(i), 5, "0");
                 //changing values to be able to create new participant
-                Map<String, Object> source = response.getSource();
-                Assert.assertNotNull(source);
-                Object profile = source.get("profile");
-                Assert.assertNotNull(profile);
-                ((Map<String, Object>) profile).put("hruid", hruid);
-                ((Map<String, Object>) profile).put("firstName", "Unit " + i);
-                ((Map<String, Object>) profile).put("lastName", "Test " + i);
-                ((Map<String, Object>) profile).put("guid", guid);
-                Object medicalProviders = source.get("medicalProviders");
-                List<Map<String, Object>> medicalProvidersList = ((List<Map<String, Object>>) medicalProviders);
-                int counter = 0;
-                for (Map<String, Object> medicalProviderMap : medicalProvidersList) {
-                    medicalProviderMap.put("guid", "MP0" + counter + hruid);
+//                Map<String, Object> source = response.getSource();
+//                Assert.assertNotNull(source);
+//                Object profile = source.get("profile");
+//                Assert.assertNotNull(profile);
+//                ((Map<String, Object>) profile).put("hruid", hruid);
+//                ((Map<String, Object>) profile).put("firstName", "Unit " + i);
+//                ((Map<String, Object>) profile).put("lastName", "Test " + i);
+//                ((Map<String, Object>) profile).put("guid", guid);
+//                Object medicalProviders = source.get("medicalProviders");
+//                List<Map<String, Object>> medicalProvidersList = ((List<Map<String, Object>>) medicalProviders);
+//                int counter = 0;
+//                for (Map<String, Object> medicalProviderMap : medicalProvidersList) {
+//                    medicalProviderMap.put("guid", "MP0" + counter + hruid);
+//
+//                    //add participant and institution into DSM DB
+//                    if (addToDSMDB) { //only use if you want your dsm db to have the participants as well
+//                        TestHelper.addTestParticipant("Angio", guid, hruid, "MP0" + counter + hruid, "20191022", true);
+//                    }
+//                    counter++;
+//                }
+//                Assert.assertNotNull(medicalProviders);
 
-                    //add participant and institution into DSM DB
-                    if (addToDSMDB) { //only use if you want your dsm db to have the participants as well
-                        TestHelper.addTestParticipant("Angio", guid, hruid, "MP0" + counter + hruid, "20191022", true);
+                if (addToDSMDB) {
+                    int kitCount = ThreadLocalRandom.current().nextInt(1, 6 + 1);
+                    long ordered = 1607644866323L;
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTimeInMillis(ordered);
+                    for (int kits = 0; kits < kitCount; kits++) {
+                        String suffix = hruid + "_" + kits;
+                        if (kits != 0) {
+                            calendar.add(Calendar.MONTH, 1);
+                            ordered = calendar.getTimeInMillis();
+                        }
+                        DBTestUtil.insertLatestKitRequest(DBTestUtil.SQL_INSERT_KIT_REQUEST, cfg.getString("portal.insertKit"),
+                                suffix, 6, "6", guid, ordered);
+                        DBTestUtil.insertLatestKitRequest(DBTestUtil.SQL_INSERT_KIT_REQUEST, cfg.getString("portal.insertKit"),
+                                suffix+"_1", 7, "6", guid, ordered);
+
+                        int status = ThreadLocalRandom.current().nextInt(1, 4 + 1);
+                        switch (status) {
+                            case 1:
+//                                shipped to PT
+                                DBTestUtil.setKitToStatus("FAKE_SPK_UUID" + suffix, "FAKE_DSM_LABEL_UID" + suffix, "I In Transit", "M Shipment Ready for UPS","20210331 140351","20210331 140351");
+                                DBTestUtil.setKitToStatus("FAKE_SPK_UUID" + suffix+"_1", "FAKE_DSM_LABEL_UID" + suffix+"_1", "I In Transit", "M Shipment Ready for UPS","20210331 140351","20210331 140351");
+                                break;
+                            case 2:
+//                                received @ PT
+                                DBTestUtil.setKitToStatus("FAKE_SPK_UUID" + suffix, "FAKE_DSM_LABEL_UID" + suffix, "D Delivered", "M Shipment Ready for UPS","20210331 140351","20210331 140351");
+                                DBTestUtil.setKitToStatus("FAKE_SPK_UUID" + suffix+"_1", "FAKE_DSM_LABEL_UID" + suffix+"_1", "D Delivered", "M Shipment Ready for UPS","20210331 140351","20210331 140351");
+                                break;
+                            case 3:
+//                                shipped to GP
+                                DBTestUtil.setKitToStatus("FAKE_SPK_UUID" + suffix, "FAKE_DSM_LABEL_UID" + suffix, "D Delivered", "I In Transit","20210331 140351","20210331 140351");
+                                DBTestUtil.setKitToStatus("FAKE_SPK_UUID" + suffix+"_1", "FAKE_DSM_LABEL_UID" + suffix+"_1", "D Delivered", "I In Transit","20210331 140351","20210331 140351");
+                                break;
+                            case 4:
+//                                returned @ GP
+                                DBTestUtil.setKitToReceived("FAKE_SPK_UUID" + suffix,"FAKE_DSM_LABEL_UID" + suffix+"_1","20210331 140351","20210331 140351");
+                                DBTestUtil.setKitToReceived("FAKE_SPK_UUID" + suffix+"_1","FAKE_DSM_LABEL_UID" + suffix+"_1","20210331 140351","20210331 140351");
+                                break;
+                        }
                     }
-                    counter++;
                 }
-                Assert.assertNotNull(medicalProviders);
 
-                //adding new participant into ES
-                IndexRequest indexRequest = new IndexRequest("participants_structured.cmi.angio", "_doc", guid).source(source);
-                UpdateRequest updateRequest = new UpdateRequest("participants_structured.cmi.angio", "_doc", guid).doc(source).upsert(indexRequest);
-                client.update(updateRequest, RequestOptions.DEFAULT);
-
-                //getting a participant ES doc
-                GetRequest getRequestAfter = new GetRequest("participants_structured.cmi.angio", "_doc", guid);
-                GetResponse responseAfter = client.get(getRequestAfter, RequestOptions.DEFAULT);
-                Assert.assertNotNull(responseAfter);
-
-                //changing values to be able to create new participant
-                Map<String, Object> sourceAfter = responseAfter.getSource();
-                Assert.assertNotNull(sourceAfter);
+//                //adding new participant into ES
+//                IndexRequest indexRequest = new IndexRequest(index, "_doc", guid).source(source);
+//                UpdateRequest updateRequest = new UpdateRequest(index, "_doc", guid).doc(source).upsert(indexRequest);
+//                client.update(updateRequest, RequestOptions.DEFAULT);
+//
+//                //getting a participant ES doc
+//                GetRequest getRequestAfter = new GetRequest(index, "_doc", guid);
+//                GetResponse responseAfter = client.get(getRequestAfter, RequestOptions.DEFAULT);
+//                Assert.assertNotNull(responseAfter);
+//
+//                //changing values to be able to create new participant
+//                Map<String, Object> sourceAfter = responseAfter.getSource();
+//                Assert.assertNotNull(sourceAfter);
                 logger.info("added participant #" + i);
             }
         }
@@ -706,12 +771,16 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void updateWorkflowValues() throws Exception {
-        String ddpParticipantId = "XLDUNC3BHGWGWERHW781";
+        String ddpParticipantId = "XLDUNC3BHGWGWERHW783";
         String workflow = "ALIVE_DECEASED";
-        String status = "ALIVE";
+        String status = "TEST";
         DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
-                false, null, false, null, "participants_structured.rgp.rgp", null, null);
-        ElasticSearchUtil.writeWorkflow(ddpInstance, ddpParticipantId, workflow, status);
+                false, null, false, null, "participants_structured.atcp.atcp", null, null);
+
+        Map<String, Object> workflowsBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
+
+        ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, ddpParticipantId,
+                workflow, status));
         Map<String, Object> workflows = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
 
         if (workflows != null && !workflows.isEmpty()) {
@@ -726,7 +795,8 @@ public class ElasticSearchTest extends TestHelper {
         }
 
         String newStatus = "DECEASED";
-        ElasticSearchUtil.writeWorkflow(ddpInstance, ddpParticipantId, workflow, newStatus);
+        ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, ddpParticipantId,
+                workflow, newStatus));
         Map<String, Object> updatedWorkflows = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
 
         if (updatedWorkflows != null && !updatedWorkflows.isEmpty()) {
@@ -740,6 +810,58 @@ public class ElasticSearchTest extends TestHelper {
             }
         }
         Assert.assertEquals(workflows.size(), updatedWorkflows.size());
+
+        ElasticSearchUtil.updateRequest(ddpParticipantId, ddpInstance.getParticipantIndexES(), workflowsBefore);
+    }
+
+    @Test
+    public void updateWorkflowValuesWithStudySpecificData() throws Exception {
+        String ddpParticipantId = "XLDUNC3BHGWGWERHW781";
+        String workflow = "ALIVE_DECEASED";
+        String status = "ALIVE";
+        String subjectId = "testId";
+        String firstname = "testfirstname";
+        String lastname = "testlastname";
+        DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
+                false, null, false, null, "participants_structured.rgp.rgp", null, null);
+        Map<String, Object> workflowsBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
+
+        ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
+                workflow, status, new WorkflowForES.StudySpecificData(subjectId, firstname, lastname)));
+
+        testWorkflowWithStudySpecificData(ddpParticipantId, workflow, status, subjectId, firstname, lastname, ddpInstance);
+
+        String newSubjectId = "testId3";
+
+        ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
+                workflow, status, new WorkflowForES.StudySpecificData(newSubjectId, firstname, lastname)));
+
+        testWorkflowWithStudySpecificData(ddpParticipantId, workflow, status, subjectId, firstname, lastname, ddpInstance);
+
+        ElasticSearchUtil.updateRequest(ddpParticipantId, ddpInstance.getParticipantIndexES(), workflowsBefore);
+
+    }
+
+    public void testWorkflowWithStudySpecificData(String ddpParticipantId, String workflow, String status, String subjectId, String firstname, String lastname, DDPInstance ddpInstance) throws Exception {
+        Map<String, Object> workflows = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
+        Assert.assertTrue(workflows != null && !workflows.isEmpty());
+        List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflows.get("workflows");
+        Assert.assertTrue(workflowListES != null && !workflowListES.isEmpty());
+        boolean dataFound = false;
+        for (Map<String, Object> workflowES : workflowListES) {
+            Map<String, String> data = (Map<String, String>) workflowES.get("data");
+            if (data == null) {
+                continue;
+            } else {
+                dataFound = true;
+            }
+            if (workflow.equals(workflowES.get("workflow")) && subjectId.equals(data.get("subjectId"))) {
+                Assert.assertEquals(status, workflowES.get("status"));
+                Assert.assertEquals(firstname, data.get("firstname"));
+                Assert.assertEquals(lastname, data.get("lastname"));
+            }
+        }
+        Assert.assertTrue(dataFound);
     }
 
     @Test
