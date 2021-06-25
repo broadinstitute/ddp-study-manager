@@ -58,7 +58,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.rgp.rgp");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -128,7 +128,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "users.cmi.cmi-osteo");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -152,7 +152,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.cmi.cmi-osteo");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -194,7 +194,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", index);
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -275,7 +275,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", index);
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -326,7 +326,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", index);
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -354,7 +354,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.cmi.cmi-brain");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -382,7 +382,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.cmi.cmi-brain");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -448,7 +448,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", index);
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -478,7 +478,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.cmi.cmi-brain");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -512,7 +512,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.cmi.cmi-brain");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -541,7 +541,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.cmi.cmi-osteo");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -566,7 +566,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.cmi.cmi-osteo");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -597,7 +597,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "participants_structured.cmi.cmi-osteo");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
@@ -642,7 +642,7 @@ public class ElasticSearchTest extends TestHelper {
                 searchRequest.source(searchSourceBuilder);
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
-                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm");
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", index);
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());
