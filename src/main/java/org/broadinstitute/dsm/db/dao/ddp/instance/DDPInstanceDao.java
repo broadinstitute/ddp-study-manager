@@ -40,16 +40,20 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
 
     private static final String SQL_DELETE_DDP_INSTANCE = "DELETE FROM ddp_instance WHERE ddp_instance_id = ?";
 
-    public static final String SQL_SELECT_INSTANCE_WITH_ROLE = "SELECT ddp_instance_id, instance_name, base_url, collaborator_id_prefix, migrated_ddp, billing_reference, " +
+    private static final String SQL_SELECT_INSTANCE_WITH_ROLE = "SELECT ddp_instance_id, instance_name, base_url, collaborator_id_prefix, migrated_ddp, billing_reference, " +
             "es_participant_index, es_activity_definition_index, es_users_index, (SELECT count(role.name) " +
             "FROM ddp_instance realm, ddp_instance_role inRol, instance_role role WHERE realm.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id AND role.name = ? " +
             "AND realm.ddp_instance_id = main.ddp_instance_id) AS 'has_role', mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients FROM ddp_instance main " +
             "WHERE is_active = 1";
 
-    public static final String SQL_GET_INSTANCE_ID_BY_GUID = "SELECT ddp_instance_id " +
+    private static final String SQL_GET_INSTANCE_ID_BY_GUID = "SELECT ddp_instance_id " +
             "FROM ddp_instance " +
             "WHERE " +
             "study_guid = ? ";
+
+    private static final String SQL_GET_PARTICIPANT_ES_INDEX_BY_ID = "SELECT es_participant_index " +
+            "FROM ddp_instance " +
+            "WHERE ddp_instance_id = ?";
 
     public static boolean getRole(@NonNull String realm, @NonNull String role) {
         SimpleResult results = inTransaction((conn) -> {
@@ -169,4 +173,31 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
         }
         return (int) results.resultValue;
     }
+
+    public Optional<String> getEsParticipantIndexByInstanceId(int instanceId) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_PARTICIPANT_ES_INDEX_BY_ID)) {
+                stmt.setInt(1, instanceId);
+                try (ResultSet rsInstanceId = stmt.executeQuery()) {
+                    if (rsInstanceId.next()) {
+                        dbVals.resultValue = rsInstanceId.getString(DBConstants.ES_PARTICIPANT_INDEX);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting participant es index with instance id: " + instanceId, e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get participant es index with instance id: " + instanceId, results.resultException);
+        }
+        return Optional.ofNullable((String) results.resultValue);
+    }
+
 }

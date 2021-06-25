@@ -31,7 +31,7 @@ public class AddFamilyMemberRoute extends RequestHandler {
         Gson gson = new Gson();
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(request.body(), AddFamilyMemberPayload.class);
 
-        String participantGuid = addFamilyMemberPayload.getParticipantGuid()
+        String participantGuid = addFamilyMemberPayload.getParticipantId()
                 .orElseThrow(() -> new NoSuchElementException("Participant Guid is not provided"));
 
         String realm =
@@ -60,12 +60,10 @@ public class AddFamilyMemberRoute extends RequestHandler {
         ParticipantDataDao participantDataDao = new ParticipantDataDao();
         try {
             NewParticipantData participantDataObject = new NewParticipantData(participantDataDao);
-            participantDataObject.setData(
-                    participantGuid,
-                    Integer.parseInt(ddpInstanceId),
-                    realm.toUpperCase() + NewParticipantData.FIELD_TYPE,
-                    participantDataObject.mergeParticipantData(addFamilyMemberPayload)
-                    );
+            participantDataObject.setDdpParticipantId(participantGuid);
+            participantDataObject.setDdpInstanceId(Integer.parseInt(ddpInstanceId));
+            participantDataObject.setFieldTypeId(realm.toUpperCase() + NewParticipantData.FIELD_TYPE);
+            participantDataObject.setData(participantDataObject.mergeParticipantData(addFamilyMemberPayload));
             participantDataObject.addDefaultOptionsValueToData(getDefaultOptions(Integer.parseInt(ddpInstanceId)));
             participantDataObject.insertParticipantData(User.getUser(uId).getEmail());
             logger.info("Family member for participant " + participantGuid + " successfully created");
