@@ -224,12 +224,40 @@ public class ElasticSearchUtil {
         return elasticSearch;
     }
 
+    public static ElasticSearch getParticipantESDataByAltpid(@NonNull String index, @NonNull String altpid) {
+        ElasticSearch elasticSearch = new ElasticSearch.Builder().build();
+        try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
+                TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
+            logger.info("Getting ES data for participant: " + altpid);
+            try {
+                elasticSearch = fetchESDataByAltpid(index, altpid, client);
+            }
+            catch (Exception e) {
+                throw new RuntimeException("Couldn't get ES for participant: " + altpid + " from " + index, e);
+            }
+            logger.info("Got ES data for participant: " + altpid + " from " + index);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return elasticSearch;
+    }
+
     public static ElasticSearch fetchESDataByParticipantId(String index, String participantId, RestHighLevelClient client) throws IOException {
         String matchQueryName = ParticipantUtil.isGuid(participantId) ? "profile.guid" : "profile.legacyAltPid";
+        return getElasticSearchForGivenMatch(index, participantId, client, matchQueryName);
+    }
+
+    public static ElasticSearch fetchESDataByAltpid(String index, String altpid, RestHighLevelClient client) throws IOException {
+        String matchQueryName = "profile.legacyAltPid";
+        return getElasticSearchForGivenMatch(index, altpid, client, matchQueryName);
+    }
+
+    public static ElasticSearch getElasticSearchForGivenMatch(String index, String id, RestHighLevelClient client, String matchQueryName) throws IOException {
         SearchRequest searchRequest = new SearchRequest(index);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         SearchResponse response = null;
-        searchSourceBuilder.query(QueryBuilders.matchQuery(matchQueryName, participantId)).sort(PROFILE_CREATED_AT, SortOrder.ASC);
+        searchSourceBuilder.query(QueryBuilders.matchQuery(matchQueryName, id)).sort(PROFILE_CREATED_AT, SortOrder.ASC);
         searchSourceBuilder.size(1);
         searchSourceBuilder.from(0);
         searchRequest.source(searchSourceBuilder);

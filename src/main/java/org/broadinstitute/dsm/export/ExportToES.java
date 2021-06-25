@@ -3,18 +3,21 @@ package org.broadinstitute.dsm.export;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.kitrequest.KitRequestDao;
 import org.broadinstitute.dsm.db.dao.ddp.medical.records.ESMedicalRecordsDao;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.ddp.tissue.ESTissueRecordsDao;
 import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
-import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.ddp.kitrequest.ESSamplesDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.tissue.ESTissueRecordsDto;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.db.dto.medical.records.ESMedicalRecordsDto;
-import org.broadinstitute.dsm.db.dto.ddp.tissue.ESTissueRecordsDto;
 import org.broadinstitute.dsm.model.Value;
+import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -25,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ExportToES {
@@ -39,6 +43,8 @@ public class ExportToES {
     private static final ObjectMapper oMapper = new ObjectMapper();
     public static final String FAMILY_ID = "FAMILY_ID";
     public static final String RGP_PARTICIPANTS = "RGP_PARTICIPANTS";
+
+    private Dao dataAccess;
 
     public static class ExportPayload {
         private String index;
@@ -124,9 +130,18 @@ public class ExportToES {
 
     public static void checkWorkflowNamesAndExport(List<String> workFlowColumnNames, List<ParticipantDataDto> allParticipantData, int instanceId) {
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
+        Optional<String> maybeEsParticipantIndex =
+                new DDPInstanceDao().getEsParticipantIndexByInstanceId(instanceId);
         for (ParticipantDataDto participantData: allParticipantData) {
             String data = participantData.getData();
             if (data == null) {
+                continue;
+            }
+            String ddpParticipantId = participantData.getDdpParticipantId();
+            if (ddpParticipantId.length() > 20) {
+                ddpParticipantId = getGuidIfWeHaveAltpid(ddpParticipantId, maybeEsParticipantIndex);
+            }
+            if ("".equals(ddpParticipantId)) {
                 continue;
             }
             Map<String, String> dataMap = gson.fromJson(data, Map.class);
@@ -139,26 +154,37 @@ public class ExportToES {
                             || !dataMap.containsKey(FamilyMemberConstants.FIRSTNAME) || !dataMap.containsKey(FamilyMemberConstants.LASTNAME)) {
                         continue;
                     }
-                    if (hasProbandEmail(participantData.getDdpParticipantId(),
+                    if (hasProbandEmail(ddpParticipantId,
                             dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID), allParticipantData)) {
                         WorkflowForES.StudySpecificData studySpecificData = new WorkflowForES.StudySpecificData(
                                 dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                                 dataMap.get(FamilyMemberConstants.FIRSTNAME),
                                 dataMap.get(FamilyMemberConstants.LASTNAME)
                         );
-                        ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, participantData.getDdpParticipantId(),
+                        ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
                                 entry.getKey(), entry.getValue(), studySpecificData));
                     }
                 } else {
-                    ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, participantData.getDdpParticipantId(),
+                    ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, ddpParticipantId,
                             entry.getKey(), entry.getValue()));
                 }
             }
             if (dataMap.containsKey(FamilyMemberConstants.FAMILY_ID)) {
                 ElasticSearchUtil.writeDsmRecord(ddpInstance, null,
-                        participantData.getDdpParticipantId(), ESObjectConstants.FAMILY_ID, dataMap.get(FAMILY_ID), null);
+                        ddpParticipantId, ESObjectConstants.FAMILY_ID, dataMap.get(FAMILY_ID), null);
             }
         }
+    }
+
+    public static String getGuidIfWeHaveAltpid(String ddpParticipantId, Optional<String> maybeEsParticipantIndex) {
+        if (maybeEsParticipantIndex.isPresent()) {
+            ElasticSearch participantESDataByAltpid =
+                    ElasticSearchUtil.getParticipantESDataByAltpid(maybeEsParticipantIndex.get(), ddpParticipantId);
+            ddpParticipantId = participantESDataByAltpid.getProfile().map(ESProfile::getParticipantGuid).orElse("");
+        } else {
+            logger.error("Wrong instance ID");
+        }
+        return ddpParticipantId;
     }
 
     private static List<String> findWorkFlowColumnNames(int instanceId) {
