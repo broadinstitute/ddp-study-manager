@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.util;
 
 import lombok.NonNull;
-import org.apache.commons.lang3.StringUtils;
 
 public class ParticipantUtil {
 
