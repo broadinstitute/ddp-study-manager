@@ -49,7 +49,7 @@ do
     if [ $COUNT -gt 3 ]
     then
       echo "Going to delete version $VERSION of the ${SERVICE} service."
-      gcloud app versions delete --quiet $VERSION --service ${SERVICE} -q
+      gcloud app versions delete --quiet $VERSION --service ${SERVICE} --project ${PROJECT_ID} -q
     else
       echo "Going to keep version $VERSION of the ${SERVICE} service."
     fi

@@ -14,6 +14,7 @@ public class FieldSettingsTest {
     private static final String acceptanceStatusPossibleValue = "[{\"value\":\"ACCEPTED\",\"name\":\"Accepted\",default:true},{\"value\":\"IN_REVIEW\",\"name\":\"In Review\"},{\"name\":\"More Info Needed\",\"value\":\"MORE_INFO_NEEDED\"},{\"name\":\"Not Accepted\",\"value\":\"NOT_ACCEPTED\"},{\"name\":\"Waitlist\",\"value\":\"WAITLIST\"},{\"name\":\"Pre-review\",\"value\":\"PRE_REVIEW\"}]";
     private static final String activePossibleValue = "[{\"value\":\"ACTIVE\",\"name\":\"Active\"},{\"value\":\"HOLD\",\"name\":\"HOLD\"},{\"value\":\"INACTIVE\",\"name\":\"Inactive\"}]";
     private static final String ethnicityPossibleValue = "[{\"name\":\"Hispanic\",\"value\":\"HISPANIC\",default:true},{\"name\":\"Not Hispanic\",\"value\":\"NOT_HISPANIC\"},{\"name\":\"Unknown or Not Reported\",\"value\":\"UNKNOWN\"}]";
+    private static final String actions = "[{\"name\":\"REGISTRATION_STATUS\",\"type\":\"ELASTIC_EXPORT.workflows\"}]";
     private static final String acceptanceStatusColumnName = "ACCEPTANCE_STATUS";
     private static final String activeColumnName = "ACTIVE";
     private static final String ethnicityColumnName = "ETHNICITY";
@@ -27,7 +28,7 @@ public class FieldSettingsTest {
 
     @Test
     public void testGetDefaultOption() {
-        String defaultOption = fieldSettings.getDefaultOption(acceptanceStatusPossibleValue);
+        String defaultOption = fieldSettings.getDefaultOptionValue(acceptanceStatusPossibleValue);
         Assert.assertEquals("ACCEPTED", defaultOption);
     }
 
@@ -42,13 +43,28 @@ public class FieldSettingsTest {
         Map<String, String> defaultOptions = fieldSettings.getColumnsWithDefaultOptions(createStaticFieldSettingDtoList());
         Assert.assertEquals("ACCEPTED", defaultOptions.get(acceptanceStatusColumnName));
         Assert.assertEquals("HISPANIC", defaultOptions.get(ethnicityColumnName));
-        Assert.assertEquals(null, defaultOptions.get(activeColumnName));
+        Assert.assertNull(defaultOptions.get(activeColumnName));
+    }
+
+    @Test
+    public void testIsElasticExportWorkflowType() {
+        boolean isElasticExportWorkflowType = fieldSettings.isElasticExportWorkflowType(actions);
+        Assert.assertTrue(isElasticExportWorkflowType);
+    }
+
+    @Test
+    public void testGetColumnsWithDefaultOptionsFilteredByElasticExportWorkflow() {
+        List<FieldSettingsDto> staticFieldSettingDtoList = createStaticFieldSettingDtoList();
+        Map<String, String> columnsWithDefaultOptionsFilteredByElasticExportWorkflow =
+                fieldSettings.getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(staticFieldSettingDtoList);
+        Assert.assertNotNull(columnsWithDefaultOptionsFilteredByElasticExportWorkflow.get(acceptanceStatusColumnName));
     }
 
     List<FieldSettingsDto> createStaticFieldSettingDtoList() {
         FieldSettingsDto fieldSettingsDto1 = new FieldSettingsDto();
         fieldSettingsDto1.setColumnName(acceptanceStatusColumnName);
         fieldSettingsDto1.setPossibleValues(acceptanceStatusPossibleValue);
+        fieldSettingsDto1.setActions(actions);
         FieldSettingsDto fieldSettingsDto2 = new FieldSettingsDto();
         fieldSettingsDto2.setColumnName(activeColumnName);
         fieldSettingsDto2.setPossibleValues(activePossibleValue);

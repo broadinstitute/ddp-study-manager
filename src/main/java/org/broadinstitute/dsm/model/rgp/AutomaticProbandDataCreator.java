@@ -1,21 +1,18 @@
 package org.broadinstitute.dsm.model.rgp;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.google.gson.Gson;
 import lombok.NonNull;
-import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ParticipantData;
 import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
 import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
-import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
-import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
+import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
 import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
@@ -32,6 +29,9 @@ public class AutomaticProbandDataCreator {
     private static final Logger logger = LoggerFactory.getLogger(AutomaticProbandDataCreator.class);
     public static final String RGP_FAMILY_ID = "rgp_family_id";
 
+    private final FieldSettings fieldSettings = new FieldSettings();
+    private final BookmarkDao bookmarkDao = new BookmarkDao();
+    private final ParticipantDataDao participantDataDao = new ParticipantDataDao();
     private boolean isParticipantDataUpdated = false;
 
     public Map<String, List<ParticipantData>> setDefaultProbandDataIfNotExists(Map<String, List<ParticipantData>> participantData,
@@ -41,12 +41,8 @@ public class AutomaticProbandDataCreator {
             logger.warn("Could not create proband/self data, participant ES data is null");
             return participantData;
         }
-        BookmarkDao bookmarkDao = new BookmarkDao();
-        ParticipantDataDao participantDataDao = new ParticipantDataDao();
-        List<FieldSettingsDto> fieldSettingsByOptionAndInstanceId =
-                new FieldSettingsDao().getFieldSettingsByOptionAndInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
-        Map<String, String> columnsWithDefaultOptions =
-                new FieldSettings().getColumnsWithDefaultOptions(fieldSettingsByOptionAndInstanceId);
+        List<FieldSettingsDto> fieldSettingsDtosByOptionAndInstanceId =
+                FieldSettingsDao.of().getFieldSettingsByOptionAndInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
         for (Map.Entry<String, Map<String, Object>> entry: participantESData.entrySet()) {
             String pId = entry.getKey();
             List<ParticipantData> participantDataList = participantData.get(entry.getKey());
@@ -56,16 +52,18 @@ public class AutomaticProbandDataCreator {
                 continue;
             }
             if (participantDataList == null) {
-                extractAndInsertProbandFromESData(instance, entry, participantDataDao, bookmarkDao, columnsWithDefaultOptions);
+                extractAndInsertProbandFromESData(instance, entry, fieldSettingsDtosByOptionAndInstanceId);
             }
         }
         return isParticipantDataUpdated ? ParticipantData.getParticipantData(instance.getName()) : participantData;
     }
 
     private void extractAndInsertProbandFromESData(DDPInstance instance, Map.Entry<String, Map<String, Object>> esData,
-                                                          ParticipantDataDao participantDataDao,
-                                                          BookmarkDao bookmarkDao,
-                                                          Map<String, String> columnsWithDefaultOptions) {
+                                                   List<FieldSettingsDto> fieldSettingsDtosByOptionAndInstanceId) {
+        Map<String, String> columnsWithDefaultOptions =
+                fieldSettings.getColumnsWithDefaultOptions(fieldSettingsDtosByOptionAndInstanceId);
+        Map<String, String> columnsWithDefaultOptionsFilteredByElasticExportWorkflow =
+                fieldSettings.getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(fieldSettingsDtosByOptionAndInstanceId);
         String participantId = esData.getKey();
         NewParticipantData newParticipantData = new NewParticipantData(participantDataDao);
         Optional<BookmarkDto> maybeFamilyIdOfBookmark = bookmarkDao.getBookmarkByInstance(RGP_FAMILY_ID);
@@ -78,6 +76,11 @@ public class AutomaticProbandDataCreator {
                 );
         newParticipantData.addDefaultOptionsValueToData(columnsWithDefaultOptions);
         newParticipantData.insertParticipantData("SYSTEM");
+        columnsWithDefaultOptionsFilteredByElasticExportWorkflow.forEach((col, val) ->
+                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(instance, participantId, col, val,
+                        new WorkflowForES.StudySpecificData(probandDataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+                                probandDataMap.get(FamilyMemberConstants.FIRSTNAME), probandDataMap.get(FamilyMemberConstants.LASTNAME))))
+        );
         maybeFamilyIdOfBookmark.ifPresent(familyIdBookmarkDto -> {
             insertFamilyIdToDsmES(instance.getParticipantIndexES(), participantId, familyIdBookmarkDto.getValue());
             familyIdBookmarkDto.setValue(familyIdBookmarkDto.getValue() + 1);
@@ -102,8 +105,8 @@ public class AutomaticProbandDataCreator {
                     .findFirst();
             maybePhoneQuestionAnswer.ifPresent(ans -> mobilePhone.append(ans.get(DDPActivityConstants.ACTIVITY_QUESTION_ANSWER)));
         });
-        String firstName = (String) profile.get(ElasticSearchUtil.FIRST_NAME_FIELD);
-        String lastName = (String) profile.get(ElasticSearchUtil.LAST_NAME_FIELD);
+        String firstName = (String) profile.get(ESObjectConstants.FIRST_NAME);
+        String lastName = (String) profile.get(ESObjectConstants.LAST_NAME);
         String familyId = maybeBookmark
                 .map(bookmarkDto -> String.valueOf(bookmarkDto.getValue()))
                 .orElse((String) profile.get(ElasticSearchUtil.HRUID));
@@ -123,6 +126,7 @@ public class AutomaticProbandDataCreator {
             Map<String, Object> esDsmObjectMap = (Map<String, Object>) esObjectMap.get(ESObjectConstants.DSM);
             esDsmObjectMap.put(ESObjectConstants.FAMILY_ID, familyId);
             ElasticSearchUtil.updateRequest(participantId, esIndex, esObjectMap);
+            logger.info("Family id for participant" + participantId + "has successfully added to ES");
         } catch (Exception e) {
             logger.error("Could not insert family id for participant: " + participantId, e);
         }

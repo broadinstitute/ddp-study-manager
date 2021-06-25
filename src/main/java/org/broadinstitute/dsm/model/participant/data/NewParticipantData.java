@@ -13,8 +13,12 @@ import com.google.gson.reflect.TypeToken;
 import lombok.Data;
 import lombok.NonNull;
 import org.broadinstitute.dsm.db.dao.Dao;
-import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
-import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 
 @Data
 public class NewParticipantData {
@@ -75,10 +79,26 @@ public class NewParticipantData {
         if (copyProbandInfo && probandDataId > 0) {
             Optional<NewParticipantData> maybeParticipantData = dataAccess.get(probandDataId).map(pd -> parseDto((ParticipantDataDto)pd));
             maybeParticipantData.ifPresent(p -> mergedData.putAll(p.getData()));
+        } else {
+            familyMemberPayload.getParticipantId().ifPresent(pId -> familyMemberData.setEmail(getParticipantEmailById(pId)));
         }
-        //after self/proband data has been put into mergedData, to replace self/proband's [FIRSTNAME, LASTNAME, MEMBER_TYPE...] values by new family member's data
-        mergedData.putAll(familyMemberData.toMap());
+        familyMemberData.toMap().forEach((k, v) -> mergedData.compute(k, (probandKey, probandVal) -> v != null ? v : probandVal));
         return mergedData;
+    }
+
+    private String getParticipantEmailById(String pId) {
+        dataAccess = new DDPInstanceDao();
+        StringBuilder email = new StringBuilder();
+        Optional<String> maybeEsParticipantIndex =
+                ((DDPInstanceDao) dataAccess).getEsParticipantIndexByInstanceId(ddpInstanceId);
+        maybeEsParticipantIndex.ifPresent(esParticipantIndex -> {
+            ElasticSearch participantESDataByParticipantId =
+                    ElasticSearchUtil.getParticipantESDataByParticipantId(esParticipantIndex, pId);
+            email.append(participantESDataByParticipantId.getProfile()
+                    .map(ESProfile::getEmail)
+                    .orElse(""));
+        });
+        return email.toString();
     }
 
     public void addDefaultOptionsValueToData(@NonNull Map<String, String> columnsWithDefaultOptions) {
@@ -95,6 +115,7 @@ public class NewParticipantData {
     }
 
     public void insertParticipantData(String userEmail) {
+        dataAccess = new ParticipantDataDao();
         ParticipantDataDto participantDataDto =
                 new ParticipantDataDto(this.ddpParticipantId, this.ddpInstanceId, this.fieldTypeId, new Gson().toJson(this.data),
                         System.currentTimeMillis(), userEmail);
@@ -126,4 +147,11 @@ public class NewParticipantData {
         return this.data.getOrDefault(FamilyMemberConstants.RELATIONSHIP_ID, null);
     }
 
+    public boolean updateParticipantData(int dataId, String changedByUser) {
+        ParticipantDataDto participantDataDto =
+                new ParticipantDataDto(dataId, this.ddpParticipantId, this.ddpInstanceId, this.fieldTypeId, new Gson().toJson(this.data),
+                        System.currentTimeMillis(), changedByUser);
+        int rowsAffected = ((ParticipantDataDao) dataAccess).updateParticipantDataColumn(participantDataDto);
+        return rowsAffected == 1;
+    }
 }

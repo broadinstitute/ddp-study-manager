@@ -10,6 +10,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDao;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -329,8 +331,13 @@ public class TissueDataMigrationTool {
                     if (!MedicalRecordUtil.isParticipantInDB(conn, ddpParticipantId, String.valueOf(realmId))) {
                         //new participant
                         logger.info("participant doesn't exist in database for realm " + realmId);
-                        MedicalRecordUtil.writeParticipantIntoDB(conn, ddpParticipantId, String.valueOf(realmId),
-                                0, "TISSUE_MIGRATION_TOOL", MedicalRecordUtil.SYSTEM);
+                        ParticipantDto participantDto = new ParticipantDto.Builder(Integer.parseInt(realmId), System.currentTimeMillis())
+                                .withDdpParticipantId(ddpParticipantId)
+                                .withLastVersion(0)
+                                .withLastVersionDate("TISSUE_MIGRATION_TOOL")
+                                .withChangedBy(MedicalRecordUtil.SYSTEM)
+                                .build();
+                        new ParticipantDao().create(participantDto);
                     }
                     return dbVals;
                 });

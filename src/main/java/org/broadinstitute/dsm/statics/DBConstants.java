@@ -302,6 +302,9 @@ public class DBConstants {
     public static final String PARTICIPANT_EVENT = "participant_event";
     public static final String DISCARD_SAMPLE = "discard_sample";
     public static final String PDF_DOWNLOAD = "pdf_download";
+    public static final String MR_ABSTRACTER = "mr_abstracter";
+    public static final String MR_QC = "mr_qc";
+    public static final String PT_LIST_VIEW = "pt_list_view";
 
     //miscellaneous
     public static final String EXIT_DATE = "exit_date";
