@@ -58,4 +58,5 @@
 <!--    <include file="liquibase/DDP-5782_RGP-form.xml" relativeToChangelogFile="true"/>-->
     <include file="liquibase/DDP-6426_at-status-possible-values.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/DDP-6446_AT-form.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/DDP-6451_at-genomic-id-counter.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

@@ -76,6 +76,7 @@ public class ParticipantWrapper {
         if (StringUtils.isBlank(instance.getParticipantIndexES())) {
             throw new RuntimeException("No participant index setup in ddp_instance table for " + instance.getName());
         }
+        DefaultValues defaultValues;
         if (filters == null) {
             Map<String, Map<String, Object>> participantESData = getESData(instance);
             Map<String, Participant> participants = Participant.getParticipants(instance.getName());
@@ -101,7 +102,8 @@ public class ParticipantWrapper {
 
             //if study is AT
             if ("atcp".equals(instance.getName())) {
-                participantData = DefaultValues.addDefaultValues(participantData, participantESData, instance, null);
+                defaultValues = new DefaultValues(participantData, participantESData, instance, null);
+                participantData = defaultValues.addDefaultValues();
             }
 
             List<String> baseList = new ArrayList<>(participantESData.keySet());
@@ -145,7 +147,9 @@ public class ParticipantWrapper {
 
                         //if study is AT
                         if ("atcp".equals(instance.getName())) {
-                            participantData = DefaultValues.addDefaultValues(participantData, participantESData, instance, filters.get(source));
+                            defaultValues =
+                                    new DefaultValues(participantData, participantESData, instance, filters.get(source));
+                            participantData = defaultValues.addDefaultValues();
                         }
                     }
                     else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
@@ -206,7 +210,8 @@ public class ParticipantWrapper {
 
                 //if study is AT
                 if ("atcp".equals(instance.getName())) {
-                    participantData = DefaultValues.addDefaultValues(participantData, participantESData, instance, null);
+                    defaultValues = new DefaultValues(participantData, participantESData, instance, null);
+                    participantData = defaultValues.addDefaultValues();
                 }
             }
             if (abstractionActivities == null) {
