@@ -771,11 +771,11 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void updateWorkflowValues() throws Exception {
-        String ddpParticipantId = "XLDUNC3BHGWGWERHW781";
+        String ddpParticipantId = "XLDUNC3BHGWGWERHW783";
         String workflow = "ALIVE_DECEASED";
-        String status = "ALIVE";
+        String status = "TEST";
         DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
-                false, null, false, null, "participants_structured.rgp.rgp", null, null);
+                false, null, false, null, "participants_structured.atcp.atcp", null, null);
 
         Map<String, Object> workflowsBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
 

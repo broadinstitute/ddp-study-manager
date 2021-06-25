@@ -433,7 +433,7 @@ public class ElasticSearchUtil {
     public static void updateWorkflow(String workflow, String status, List<Map<String, Object>> workflowListES) {
         boolean updated = false;
         for (Map<String, Object> workflowES : workflowListES) {
-            if (workflow.equals(workflowES.get(ESObjectConstants.DATE))) {
+            if (workflow.equals(workflowES.get(ESObjectConstants.WORKFLOW))) {
                 //update value in existing workflow
                 workflowES.put(STATUS, status);
                 workflowES.put(ESObjectConstants.DATE, SystemUtil.getISO8601DateString());
