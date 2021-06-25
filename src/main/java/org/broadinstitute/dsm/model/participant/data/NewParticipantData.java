@@ -13,9 +13,9 @@ import com.google.gson.reflect.TypeToken;
 import lombok.Data;
 import lombok.NonNull;
 import org.broadinstitute.dsm.db.dao.Dao;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
-import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
-import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -147,4 +147,11 @@ public class NewParticipantData {
         return this.data.getOrDefault(FamilyMemberConstants.RELATIONSHIP_ID, null);
     }
 
+    public boolean updateParticipantData(int dataId, String changedByUser) {
+        ParticipantDataDto participantDataDto =
+                new ParticipantDataDto(dataId, this.ddpParticipantId, this.ddpInstanceId, this.fieldTypeId, new Gson().toJson(this.data),
+                        System.currentTimeMillis(), changedByUser);
+        int rowsAffected = ((ParticipantDataDao) dataAccess).updateParticipantDataColumn(participantDataDto);
+        return rowsAffected == 1;
+    }
 }

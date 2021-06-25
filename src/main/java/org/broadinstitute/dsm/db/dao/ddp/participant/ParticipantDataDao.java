@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.db.dao.participant.data;
+package org.broadinstitute.dsm.db.dao.ddp.participant;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -12,7 +12,7 @@ import java.util.Optional;
 
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.dao.Dao;
-import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
