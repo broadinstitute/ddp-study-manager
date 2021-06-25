@@ -82,6 +82,9 @@ public class DisplaySettingsRoute extends RequestHandler {
                 if (instanceSettings != null && instanceSettings.getStudySpecificStatuses() != null && !instanceSettings.getStudySpecificStatuses().isEmpty()) {
                     displaySettings.put("studySpecificStatuses", instanceSettings.getStudySpecificStatuses());
                 }
+                if (instanceSettings != null && instanceSettings.getDefaultColumns() != null && !instanceSettings.getDefaultColumns().isEmpty()) {
+                    displaySettings.put("defaultColumns", instanceSettings.getDefaultColumns());
+                }
                 if (instanceSettings != null && instanceSettings.isHasInvitations()) {
                     displaySettings.put("hasInvitations", true);
                 }
