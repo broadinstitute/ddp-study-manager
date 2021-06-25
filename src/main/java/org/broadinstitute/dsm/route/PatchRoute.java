@@ -7,7 +7,11 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.*;
-import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDao;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantRecordDao;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantRecordDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.exception.DuplicateException;
 import org.broadinstitute.dsm.export.WorkflowForES;
@@ -38,6 +42,11 @@ public class PatchRoute extends RequestHandler {
     private static final Logger logger = LoggerFactory.getLogger(PatchRoute.class);
     private static final ParticipantDataDao participantDataDao = new ParticipantDataDao();
 
+    private static final String PARTICIPANT_ID = "participantId";
+    private static final String PRIMARY_KEY_ID = "primaryKeyId";
+    private static final String NAME_VALUE = "NameValue";
+    private static final String STATUS = "status";
+
     private NotificationUtil notificationUtil;
     private PatchUtil patchUtil;
 
@@ -51,8 +60,8 @@ public class PatchRoute extends RequestHandler {
         if (patchUtil.getColumnNameMap() == null) {
             return new RuntimeException("ColumnNameMap is null!");
         }
-        if (UserUtil.checkUserAccess(null, userId, "mr_view") || UserUtil.checkUserAccess(null, userId, "mr_abstracter")
-                || UserUtil.checkUserAccess(null, userId, "mr_qc") || UserUtil.checkUserAccess(null, userId, "pt_list_view")) {
+        if (UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW) || UserUtil.checkUserAccess(null, userId, DBConstants.MR_ABSTRACTER)
+                || UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW) || UserUtil.checkUserAccess(null, userId, DBConstants.PT_LIST_VIEW)) {
             try {
                 String requestBody = request.body();
                 Patch patch = new Gson().fromJson(requestBody, Patch.class);
@@ -73,12 +82,12 @@ public class PatchRoute extends RequestHandler {
                                     boolean writeBack = false;
                                     for (int i = 0; i < questionArray.length(); i++) {
                                         JSONObject question = questionArray.getJSONObject(i);
-                                        if (question.optString("status") != null && question.optString("status").equals("sent")) {
+                                        if (question.optString(STATUS) != null && question.optString(STATUS).equals("sent")) {
                                             if (question.optString("email") != null && question.optString("question") != null) {
                                                 notificationUtil.sentAbstractionExpertQuestion(user.getEmail(), user.getName(), question.optString("email"),
                                                         patch.getFieldName(), question.optString("question"), notificationUtil.getTemplate("DSM_ABSTRACTION_EXPERT_QUESTION"));
                                             }
-                                            question.put("status", "done");
+                                            question.put(STATUS, "done");
                                             writeBack = true;
                                         }
                                     }
@@ -144,7 +153,7 @@ public class PatchRoute extends RequestHandler {
                                     }
                                 }
                                 Map<String, String> map = new HashMap<>();
-                                map.put("primaryKeyId", primaryKeyId);
+                                map.put(PRIMARY_KEY_ID, primaryKeyId);
                                 //return map with nulls
                                 return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
                             }
@@ -154,7 +163,7 @@ public class PatchRoute extends RequestHandler {
                                 if (dbElement != null) {
                                     String primaryKeyId = AbstractionWrapper.createNewAbstractionFieldValue(patch.getParentId(), patch.getFieldId(), patch.getUser(), patch.getNameValue(), dbElement);
                                     Map<String, String> map = new HashMap<>();
-                                    map.put("primaryKeyId", primaryKeyId);
+                                    map.put(PRIMARY_KEY_ID, primaryKeyId);
                                     //return map with nulls
                                     return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
                                 }
@@ -212,7 +221,7 @@ public class PatchRoute extends RequestHandler {
                                 // add oncHistoryId and NameValues of objects changed by workflow to json and sent it back to UI
                                 map.put("oncHistoryDetailId", oncHistoryDetailId);
                                 nameValues.add(new NameValue("request", OncHistoryDetail.STATUS_REVIEW));
-                                map.put("NameValue", new GsonBuilder().serializeNulls().create().toJson(nameValues));
+                                map.put(NAME_VALUE, new GsonBuilder().serializeNulls().create().toJson(nameValues));
                                 //return map with nulls
                                 return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
                             }
@@ -230,7 +239,7 @@ public class PatchRoute extends RequestHandler {
                                 Map<String, String> map = new HashMap<>();
                                 map.put("tissueId", tissueId);
                                 if (!nameValues.isEmpty()) {
-                                    map.put("NameValue", new GsonBuilder().serializeNulls().create().toJson(nameValues));
+                                    map.put(NAME_VALUE, new GsonBuilder().serializeNulls().create().toJson(nameValues));
                                     return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
                                 }
                                 else {
@@ -267,6 +276,18 @@ public class PatchRoute extends RequestHandler {
                         }
                         return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
                     }
+                    else if (Patch.DDP_PARTICIPANT_ID.equals(patch.getParent())) {
+                        //new additional value for pt which is not in ddp_participant and ddp_participant_record table yet
+                        DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+                        int participantId = insertDdpParticipant(patch, ddpInstance);
+                        insertDdpParticipantRecord(participantId);
+                        if (participantId > 0) {
+                            DBElement dbElement = patchUtil.getColumnNameMap().get(patch.getNameValue().getName());
+                            if (dbElement == null) throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
+                            Patch.patch(String.valueOf(participantId), patch.getUser(), patch.getNameValue(), dbElement);
+                            return new Result(200, new GsonBuilder().serializeNulls().create().toJson(Map.of(PARTICIPANT_ID, String.valueOf(participantId))));
+                        }
+                    }
                 }
                 throw new RuntimeException("Id and parentId was null");
             }
@@ -283,6 +304,25 @@ public class PatchRoute extends RequestHandler {
         }
     }
 
+    private void insertDdpParticipantRecord(int participantId) {
+        ParticipantRecordDto participantRecordDto =
+                new ParticipantRecordDto.Builder(participantId, System.currentTimeMillis())
+                        .withChangedBy("SYSTEM")
+                        .builder();
+        new ParticipantRecordDao().create(participantRecordDto);
+    }
+
+    private int insertDdpParticipant(Patch patch, DDPInstance ddpInstance) {
+        ParticipantDto participantDto =
+                new ParticipantDto.Builder(Integer.parseInt(ddpInstance.getDdpInstanceId()), System.currentTimeMillis())
+                        .withDdpParticipantId(patch.getParentId())
+                        .withLastVersion(0)
+                        .withLastVersionDate("")
+                        .withChangedBy(patch.getUser())
+                        .build();
+        return new ParticipantDao().create(participantDto);
+    }
+
     private void writeDSMRecordsToES(@NonNull Patch patch) {
         DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
         NameValue nameValue = patch.getNameValue();
@@ -291,12 +331,12 @@ public class PatchRoute extends RequestHandler {
         String value = nameValue.getValue().toString();
         Map<String, Object> nameValueMap = new HashMap<>();
         nameValueMap.put(name, value);
-        if ("m".equals(type)) {
+        if (DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(type)) {
             if (ESObjectConstants.MEDICAL_RECORDS_FIELD_NAMES.contains(name)) {
                 ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getParentId(),
                         ESObjectConstants.MEDICAL_RECORDS, ESObjectConstants.MEDICAL_RECORDS_ID, nameValueMap);
             }
-        } else if ("oD".equals(type)) {
+        } else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(type)) {
             if (ESObjectConstants.TISSUE_RECORDS_FIELD_NAMES.contains(name)) {
                 ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getParentId(),
                         ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, nameValueMap);
@@ -372,18 +412,18 @@ public class PatchRoute extends RequestHandler {
         }
         else if (patch.getNameValue().getName().equals("t.tissueReturnDate")) {
             if (StringUtils.isNotBlank(patch.getNameValue().getValue().toString())) {
-                nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getParentId(), "participantId",
+                nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getParentId(), PARTICIPANT_ID,
                         null, patch.getUser(), patch.getNameValue(), patch.getNameValues()), "returned"));
             }
             else {
                 Boolean hasReceivedDate = OncHistoryDetail.hasReceivedDate(patch);
 
                 if (hasReceivedDate) {
-                    nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getParentId(), "participantId",
+                    nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getParentId(), PARTICIPANT_ID,
                             null, patch.getUser(), patch.getNameValue(), patch.getNameValues()), "received"));
                 }
                 else {
-                    nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getParentId(), "participantId",
+                    nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getParentId(), PARTICIPANT_ID,
                             null, patch.getUser(), patch.getNameValue(), patch.getNameValues()), "sent"));
                 }
             }
@@ -394,11 +434,11 @@ public class PatchRoute extends RequestHandler {
             Boolean hasReceivedDate = OncHistoryDetail.hasReceivedDate(patch);
 
             if (hasReceivedDate) {
-                nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getId(), "participantId",
+                nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getId(), PARTICIPANT_ID,
                         patch.getParentId(), patch.getUser(), patch.getNameValue(), patch.getNameValues()), "received"));
             }
             else {
-                nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getId(), "participantId",
+                nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getId(), PARTICIPANT_ID,
                         patch.getParentId(), patch.getUser(), patch.getNameValue(), patch.getNameValues()), "sent"));
             }
         }

@@ -1458,7 +1458,7 @@ public class RouteTest extends TestHelper {
 
         //insert a kit for pt of migrated ddp (will be uploaded with legacy shortId)
         DBTestUtil.insertLatestKitRequest(cfg.getString("portal.insertKitRequest"), cfg.getString("portal.insertKit"), "M1", 1, INSTANCE_ID_MIGRATED,
-                "adr_6c3ace20442b49bd8fae9a661e481c9e", "shp_f470591c3fb441a68dbb9b76ecf3bb3d", "FAKE.MIGRATED_PARTICIPANT_ID");
+                "adr_6c3ace20442b49bd8fae9a661e481c9e", "shp_f470591c3fb441a68dbb9b76ecf3bb3d", "FAKE.MIGRATED_PARTICIPANT_ID", 0);
         //change bsp_collaborator_ids
         DBTestUtil.executeQuery("UPDATE ddp_kit_request set bsp_collaborator_participant_id = \"MigratedProject_0111\", bsp_collaborator_sample_id =\"MigratedProject_0111_SALIVA\" where ddp_participant_id = \"FAKE.MIGRATED_PARTICIPANT_ID\"");
 

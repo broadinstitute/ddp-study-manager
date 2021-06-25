@@ -5,6 +5,14 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
+        <changeSet author="simone" id="changeType-field_settings">
+            <modifyDataType columnName="readonly" newDataType="TINYINT(1)" tableName="field_settings"/>
+        </changeSet>
+
+        <changeSet author="simone" id="changeType-ddp_participant_data">
+            <modifyDataType columnName="data" newDataType="TEXT" tableName="ddp_participant_data"/>
+        </changeSet>
+
         <changeSet author="simone" id="atForm">
             <insert tableName="field_settings">
                 <column name="ddp_instance_id"
@@ -87,8 +95,8 @@
                 <column name="field_type" value="AT_GROUP_MISCELLANEOUS"/>
                 <column name="column_name" value="REGISTRATION_TYPE"/>
                 <column name="column_display" value="Type of participant registration"/>
-                <column name="display_type" value="RADIO"/>
-                <column name="possible_values" value="[{&quot;value&quot;:&quot;2&quot;,&quot;name&quot;:&quot;Dependent&quot;},{&quot;value&quot;:&quot;3&quot;,&quot;name&quot;:&quot;Portal User&quot;},{&quot;value&quot;:&quot;1&quot;,&quot;name&quot;:&quot;Self&quot;}]"/>
+                <column name="display_type" value="ACTIVITY_STAFF"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;Dependent&quot;,&quot;name&quot;:&quot;Dependent&quot;},{&quot;value&quot;:&quot;PortalUser&quot;,&quot;name&quot;:&quot;Portal User&quot;},{&quot;value&quot;:&quot;Self&quot;,&quot;name&quot;:&quot;Self&quot;}]"/>
                 <column name="order_number" value="1"/>
             </insert>
             <insert tableName="field_settings">
@@ -98,7 +106,7 @@
                 <column name="column_name" value="REGISTRATION_STATUS"/>
                 <column name="column_display" value="Status of participant registration"/>
                 <column name="display_type" value="RADIO"/>
-                <column name="possible_values" value="[{&quot;value&quot;:&quot;0&quot;,&quot;name&quot;:&quot;Not Registered&quot;},{&quot;value&quot;:&quot;1&quot;,&quot;name&quot;:&quot;Registered&quot;},{&quot;value&quot;:&quot;3&quot;,&quot;name&quot;:&quot;Consented&quot;},{&quot;value&quot;:&quot;2&quot;,&quot;name&quot;:&quot;Consented, Needs Assent&quot;},{&quot;value&quot;:&quot;4&quot;,&quot;name&quot;:&quot;Submitted Physician Info&quot;},{&quot;value&quot;:&quot;5&quot;,&quot;name&quot;:&quot;Submitted Medical History&quot;},{&quot;value&quot;:&quot;6&quot;,&quot;name&quot;:&quot;Submitted Genome Study Shipping Info&quot;},{&quot;value&quot;:&quot;7&quot;,&quot;name&quot;:&quot;Submitted Enrollment/Pending Confirmation&quot;},{&quot;value&quot;:&quot;8&quot;,&quot;name&quot;:&quot;Enrolled&quot;},{&quot;value&quot;:&quot;9&quot;,&quot;name&quot;:&quot;Not Eligible&quot;},{&quot;value&quot;:&quot;10&quot;,&quot;name&quot;:&quot;Duplicate&quot;}]"/>
+                <column name="possible_values" value="[{&quot;value&quot;:&quot;NotRegistered&quot;,&quot;name&quot;:&quot;Not Registered&quot;},{&quot;value&quot;:&quot;Registered&quot;,&quot;name&quot;:&quot;Registered&quot;},{&quot;value&quot;:&quot;Consented&quot;,&quot;name&quot;:&quot;Consented&quot;},{&quot;value&quot;:&quot;ConsentedNeedsAssent&quot;,&quot;name&quot;:&quot;Consented, Needs Assent&quot;},{&quot;value&quot;:&quot;SubmittedPhysicianInfo&quot;,&quot;name&quot;:&quot;Submitted Physician Info&quot;},{&quot;value&quot;:&quot;SubmittedMedicalHistory&quot;,&quot;name&quot;:&quot;Submitted Medical History&quot;},{&quot;value&quot;:&quot;SubmittedGenomeStudyShippingInfo&quot;,&quot;name&quot;:&quot;Submitted Genome Study Shipping Info&quot;},{&quot;value&quot;:&quot;SubmittedEnrollment&quot;,&quot;name&quot;:&quot;Submitted Enrollment/Pending Confirmation&quot;},{&quot;value&quot;:&quot;Enrolled&quot;,&quot;name&quot;:&quot;Enrolled&quot;},{&quot;value&quot;:&quot;NotEligible&quot;,&quot;name&quot;:&quot;Not Eligible&quot;},{&quot;value&quot;:&quot;Duplicate&quot;,&quot;name&quot;:&quot;Duplicate&quot;}]"/>
                 <column name="actions" value="[{&quot;name&quot;:&quot;REGISTRATION_STATUS&quot;,&quot;type&quot;:&quot;ELASTIC_EXPORT.workflows&quot;}]"/>
                 <column name="order_number" value="2"/>
             </insert>

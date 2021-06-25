@@ -1,10 +1,8 @@
 package org.broadinstitute.dsm.util;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import lombok.NonNull;
-import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 
 import java.util.List;
