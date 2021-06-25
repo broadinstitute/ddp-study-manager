@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.annotations.SerializedName;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
@@ -19,6 +18,9 @@ import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
+import org.broadinstitute.dsm.model.elasticsearch.ESAddress;
+import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.model.gbf.Address;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -88,8 +90,6 @@ public class ElasticSearchUtil {
     public static final String STATUS = "status";
     public static final String PROFILE_CREATED_AT = "profile." + CREATED_AT;
     public static final String WORKFLOWS = "workflows";
-    public static final String FIRST_NAME_FIELD = "firstName";
-    public static final String LAST_NAME_FIELD = "lastName";
     public static final String EMAIL_FIELD = "email";
 
     public static RestHighLevelClient getClientForElasticsearchCloud(@NonNull String baseUrl,
@@ -161,7 +161,7 @@ public class ElasticSearchUtil {
                     searchRequest.source(searchSourceBuilder);
 
                     response = client.search(searchRequest, RequestOptions.DEFAULT);
-                    addingParticipantStructuredHits(response, esData, realm);
+                    addingParticipantStructuredHits(response, esData, realm, index);
                     i++;
                 }
             }
@@ -193,7 +193,7 @@ public class ElasticSearchUtil {
                     searchRequest.source(searchSourceBuilder);
 
                     response = client.search(searchRequest, RequestOptions.DEFAULT);
-                    addingParticipantStructuredHits(response, esData, realm);
+                    addingParticipantStructuredHits(response, esData, realm, index);
                     i++;
                 }
             }
@@ -203,6 +203,40 @@ public class ElasticSearchUtil {
             logger.info("Got " + esData.size() + " participants from ES for instance " + realm);
         }
         return esData;
+    }
+
+    public static ElasticSearch getParticipantESDataByParticipantId(@NonNull String index, @NonNull String participantId) {
+        ElasticSearch elasticSearch = new ElasticSearch.Builder().build();
+        try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
+                TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
+            logger.info("Getting ES data for participant: " + participantId);
+            try {
+                elasticSearch = fetchESDataByParticipantId(index, participantId, client);
+            }
+            catch (Exception e) {
+                throw new RuntimeException("Couldn't get ES for participant: " + participantId + " from " + index, e);
+            }
+            logger.info("Got ES data for participant: " + participantId + " from " + index);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return elasticSearch;
+    }
+
+    public static ElasticSearch fetchESDataByParticipantId(String index, String participantId, RestHighLevelClient client) throws IOException {
+        String matchQueryName = ParticipantUtil.isGuid(participantId) ? "profile.guid" : "profile.legacyAltPid";
+        SearchRequest searchRequest = new SearchRequest(index);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        SearchResponse response = null;
+        searchSourceBuilder.query(QueryBuilders.matchQuery(matchQueryName, participantId)).sort(PROFILE_CREATED_AT, SortOrder.ASC);
+        searchSourceBuilder.size(1);
+        searchSourceBuilder.from(0);
+        searchRequest.source(searchSourceBuilder);
+
+        response = client.search(searchRequest, RequestOptions.DEFAULT);
+        response.getHits();
+        return ElasticSearch.parseSourceMap(response.getHits().getTotalHits() > 0 ? response.getHits().getAt(0).getSourceAsMap() : null);
     }
 
     public static Map<String, Map<String, Object>> getDDPParticipantsFromES(@NonNull String realm, @NonNull String index) {
@@ -247,7 +281,7 @@ public class ElasticSearchUtil {
                         searchRequest.source(searchSourceBuilder);
 
                         response = client.search(searchRequest, RequestOptions.DEFAULT);
-                        addingParticipantStructuredHits(response, esData, instance.getName());
+                        addingParticipantStructuredHits(response, esData, instance.getName(), index);
                         i++;
                     }
                 }
@@ -917,11 +951,16 @@ public class ElasticSearchUtil {
         return tmpBuilder;
     }
 
-    public static void addingParticipantStructuredHits(@NonNull SearchResponse response, Map<String, Map<String, Object>> esData, String ddp) {
+    public static void addingParticipantStructuredHits(@NonNull SearchResponse response, Map<String, Map<String, Object>> esData,
+                                                       String ddp, String index) {
         for (SearchHit hit : response.getHits()) {
             Map<String, Object> sourceMap = hit.getSourceAsMap();
             sourceMap.put("ddp", ddp);
             if (sourceMap.containsKey(PROFILE)) {
+                if (ElasticSearchUtil.isESUsersIndex(index)) {
+                    esData.put(hit.getId(), sourceMap);
+                    continue;
+                }
                 String legacyId = (String) ((Map<String, Object>) sourceMap.get(PROFILE)).get(LEGACY_ALT_PID);
                 if (StringUtils.isNotBlank(legacyId)) {
                     esData.put(legacyId, sourceMap);
@@ -1217,87 +1256,7 @@ public class ElasticSearchUtil {
         }
     }
 
-    private static class ESProfile {
-
-        @SerializedName(FIRST_NAME_FIELD)
-        private String firstName;
-
-        @SerializedName(LAST_NAME_FIELD)
-        private String lastName;
-
-        @SerializedName("guid")
-        private String participantGuid;
-
-        public String getFirstName() {
-            return firstName;
-        }
-
-        public String getLastName() {
-            return lastName;
-        }
-
-        public String getParticipantGuid() {
-            return participantGuid;
-        }
-
-    }
-
-    private static class ESAddress {
-
-        @SerializedName("street1")
-        private String street1;
-
-        @SerializedName("street2")
-        private String street2;
-
-        @SerializedName("city")
-        private String city;
-
-        @SerializedName("state")
-        private String state;
-
-        @SerializedName("zip")
-        private String zip;
-
-        @SerializedName("country")
-        private String country;
-
-        @SerializedName("phone")
-        private String phone;
-
-        @SerializedName("mailToName")
-        private String recipient;
-
-        public String getStreet1() {
-            return street1;
-        }
-
-        public String getStreet2() {
-            return street2;
-        }
-
-        public String getCity() {
-            return city;
-        }
-
-        public String getState() {
-            return state;
-        }
-
-        public String getZip() {
-            return zip;
-        }
-
-        public String getCountry() {
-            return country;
-        }
-
-        public String getPhone() {
-            return phone;
-        }
-
-        public String getRecipient() {
-            return recipient;
-        }
+    private static boolean isESUsersIndex(String index) {
+        return index.startsWith("users");
     }
 }

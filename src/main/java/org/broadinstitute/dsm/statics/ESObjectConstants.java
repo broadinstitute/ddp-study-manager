@@ -41,4 +41,10 @@ public class ESObjectConstants {
     public static final String SUBJECT_ID = "subjectId";
     public static final String LASTNAME = "firstname";
     public static final String FIRSTNAME = "lastname";
+
+    //profile
+    public static final String EMAIL = "email";
+    public static final String FIRST_NAME = "firstName";
+    public static final String LAST_NAME = "lastName";
+    public static final String GUID = "guid";
 }

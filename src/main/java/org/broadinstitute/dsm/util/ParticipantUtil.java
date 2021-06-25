@@ -21,6 +21,10 @@ public class ParticipantUtil {
         return participantId.matches(hruidCheck);
     }
 
+    public static boolean isGuid(@NonNull String participantId) {
+        return participantId.length() == 20;
+    }
+
     public static boolean checkProbandEmail(String collaboratorParticipantId, List<ParticipantDataDto> participantDatas) {
         String probandEmail = null, currentParticipantEmail = null;
         for (ParticipantDataDto participantData: participantDatas) {

@@ -105,8 +105,8 @@ public class AutomaticProbandDataCreator {
                     .findFirst();
             maybePhoneQuestionAnswer.ifPresent(ans -> mobilePhone.append(ans.get(DDPActivityConstants.ACTIVITY_QUESTION_ANSWER)));
         });
-        String firstName = (String) profile.get(ElasticSearchUtil.FIRST_NAME_FIELD);
-        String lastName = (String) profile.get(ElasticSearchUtil.LAST_NAME_FIELD);
+        String firstName = (String) profile.get(ESObjectConstants.FIRST_NAME);
+        String lastName = (String) profile.get(ESObjectConstants.LAST_NAME);
         String familyId = maybeBookmark
                 .map(bookmarkDto -> String.valueOf(bookmarkDto.getValue()))
                 .orElse((String) profile.get(ElasticSearchUtil.HRUID));
