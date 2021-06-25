@@ -9,6 +9,11 @@ public class ESObjectConstants {
 
     //workflows
     public static final String ELASTIC_EXPORT_WORKFLOWS = "ELASTIC_EXPORT.workflows";
+    public static final String WORKFLOWS = "workflows";
+    public static final String WORKFLOW = "workflow";
+    public static final String STATUS = "status";
+    public static final String DATE = "date";
+    public static final String DATA = "data";
 
     //medical records
     public static final String MEDICAL_RECORDS = "medicalRecords";
@@ -33,6 +38,9 @@ public class ESObjectConstants {
     //dsm
     public static final String DSM = "dsm";
     public static final String FAMILY_ID = "familyId"; //needed for RGP so far
+    public static final String SUBJECT_ID = "subjectId";
+    public static final String LASTNAME = "firstname";
+    public static final String FIRSTNAME = "lastname";
 
     //profile
     public static final String EMAIL = "email";

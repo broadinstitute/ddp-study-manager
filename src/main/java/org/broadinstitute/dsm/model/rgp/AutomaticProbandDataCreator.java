@@ -12,6 +12,7 @@ import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
+import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
 import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
@@ -75,7 +76,11 @@ public class AutomaticProbandDataCreator {
                 );
         newParticipantData.addDefaultOptionsValueToData(columnsWithDefaultOptions);
         newParticipantData.insertParticipantData("SYSTEM");
-        columnsWithDefaultOptionsFilteredByElasticExportWorkflow.forEach((col, val) -> ElasticSearchUtil.writeWorkflow(instance, participantId, col, val));
+        columnsWithDefaultOptionsFilteredByElasticExportWorkflow.forEach((col, val) ->
+                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(instance, participantId, col, val,
+                        new WorkflowForES.StudySpecificData(probandDataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+                                probandDataMap.get(FamilyMemberConstants.FIRSTNAME), probandDataMap.get(FamilyMemberConstants.LASTNAME))))
+        );
         maybeFamilyIdOfBookmark.ifPresent(familyIdBookmarkDto -> {
             insertFamilyIdToDsmES(instance.getParticipantIndexES(), participantId, familyIdBookmarkDto.getValue());
             familyIdBookmarkDto.setValue(familyIdBookmarkDto.getValue() + 1);
