@@ -15,6 +15,7 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.handlers.util.MedicalInfo;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.elasticsearch.ESAddress;
@@ -340,52 +341,113 @@ public class ElasticSearchUtil {
         return addressByParticipant;
     }
 
-    public static void writeWorkflow(@NonNull DDPInstance instance, @NonNull String ddpParticipantId, @NonNull String workflow, @NonNull String status) {
+    public static void writeWorkflow(@NonNull WorkflowForES workflowForES) {
+        String ddpParticipantId = workflowForES.getDdpParticipantId();
+        DDPInstance instance = workflowForES.getInstance();
         String index = instance.getParticipantIndexES();
-        if (StringUtils.isNotBlank(index)) {
-            try {
-                Map<String, Object> workflowMapES = getObjectsMap(index, ddpParticipantId, "workflows");
-                if (workflowMapES != null && !workflowMapES.isEmpty()) {
-                    List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflowMapES.get("workflows");
-                    if (workflowListES != null && !workflowListES.isEmpty()) {
-                        boolean updated = false;
-                        for (Map<String, Object> workflowES : workflowListES) {
-                            if (workflow.equals(workflowES.get("workflow"))) {
-                                //update value in existing workflow
-                                workflowES.put("status", status);
-                                workflowES.put("date", SystemUtil.getISO8601DateString());
-                                updated = true;
-                                break;
-                            }
-                        }
-                        if (!updated) {
-                            //add workflow
-                            Map<String, Object> newWorkflowMap = new HashMap<>();
-                            newWorkflowMap.put("workflow", workflow);
-                            newWorkflowMap.put("status", status);
-                            newWorkflowMap.put("date", SystemUtil.getISO8601DateString());
-                            workflowListES.add(newWorkflowMap);
-                        }
+        if (StringUtils.isBlank(index)) {
+            return;
+        }
+        try {
+            Map<String, Object> workflowMapES = getObjectsMap(index, ddpParticipantId, ESObjectConstants.WORKFLOWS);
+            String workflow = workflowForES.getWorkflow();
+            String status = workflowForES.getStatus();
+            if (workflowMapES != null && !workflowMapES.isEmpty()) {
+                List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflowMapES.get(ESObjectConstants.WORKFLOWS);
+                if (workflowListES != null && !workflowListES.isEmpty()) {
+                    if (workflowForES.getStudySpecificData() != null) {
+                        updateWorkflowStudySpecific(workflow, status, workflowListES, workflowForES.getStudySpecificData());
+                    } else {
+                        updateWorkflow(workflow, status, workflowListES);
                     }
                 }
-                else {
-                    //add workflows
-                    Map<String, Object> newWorkflowMap = new HashMap<>();
-                    newWorkflowMap.put("workflow", workflow);
-                    newWorkflowMap.put("status", status);
-                    newWorkflowMap.put("date", SystemUtil.getISO8601DateString());
-                    List<Map<String, Object>> workflowList = new ArrayList<>();
-                    workflowList.add(newWorkflowMap);
-                    workflowMapES = new HashMap<>();
-                    workflowMapES.put("workflows", workflowList);
-                }
+            }
+            else {
+                workflowMapES = addWorkflows(workflow, status, workflowForES.getStudySpecificData());
+            }
 
-                updateRequest(ddpParticipantId, index, workflowMapES);
-                logger.info("Update workflow information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName());
+            updateRequest(ddpParticipantId, index, workflowMapES);
+            logger.info("Update workflow information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName());
+        }
+        catch (Exception e) {
+            logger.error("Couldn't write workflow information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName(), e);
+        }
+    }
+
+    public static Map<String, Object> addWorkflows(String workflow, String status, WorkflowForES.StudySpecificData studySpecificData) {
+        Map<String, Object> workflowMapES;
+        Map<String, Object> newWorkflowMap = Map.of(
+                ESObjectConstants.WORKFLOW, workflow,
+                STATUS, status,
+                ESObjectConstants.DATE, SystemUtil.getISO8601DateString()
+        );
+        if (studySpecificData != null) {
+            newWorkflowMap.put(ESObjectConstants.DATA, new ObjectMapper().convertValue(studySpecificData, Map.class));
+        }
+        List<Map<String, Object>> workflowList = new ArrayList<>();
+        workflowList.add(newWorkflowMap);
+        workflowMapES = new HashMap<>();
+        workflowMapES.put(ESObjectConstants.WORKFLOWS, workflowList);
+        return workflowMapES;
+    }
+
+    public static void updateWorkflowStudySpecific(String workflow, String status, List<Map<String, Object>> workflowListES,
+                                                   WorkflowForES.StudySpecificData studySpecificData) {
+        boolean updated = false;
+        for (Map<String, Object> workflowES : workflowListES) {
+            Map<String, String> data = (Map<String, String>) workflowES.get("data");
+            String existingSubjectId = null;
+            if (data != null) {
+                existingSubjectId = data.get(ESObjectConstants.SUBJECT_ID);
+                if (workflow.equals(workflowES.get(ESObjectConstants.WORKFLOW)) && existingSubjectId != null
+                        && studySpecificData.getSubjectId().equals(existingSubjectId)) {
+                    //update value in existing workflow
+                    updated = updateWorkflowFieldsStudySpecific(status, studySpecificData, workflowES);
+                    break;
+                }
+            } else {
+                if (workflow.equals(workflowES.get(ESObjectConstants.WORKFLOW))) {
+                    updated = updateWorkflowFieldsStudySpecific(status, studySpecificData, workflowES);
+                    break;
+                }
             }
-            catch (Exception e) {
-                logger.error("Couldn't write workflow information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName(), e);
+        }
+        if (!updated) {
+            //add workflow
+            workflowListES.add(Map.of(
+                    ESObjectConstants.WORKFLOW, workflow,
+                    STATUS, status,
+                    ESObjectConstants.DATE, SystemUtil.getISO8601DateString(),
+                    ESObjectConstants.DATA, new ObjectMapper().convertValue(studySpecificData, Map.class)
+            ));
+        }
+    }
+
+    public static boolean updateWorkflowFieldsStudySpecific(String status, WorkflowForES.StudySpecificData studySpecificData, Map<String, Object> workflowES) {
+        workflowES.put(STATUS, status);
+        workflowES.put(ESObjectConstants.DATE, SystemUtil.getISO8601DateString());
+        workflowES.put(ESObjectConstants.DATA, new ObjectMapper().convertValue(studySpecificData, Map.class));
+        return true;
+    }
+
+    public static void updateWorkflow(String workflow, String status, List<Map<String, Object>> workflowListES) {
+        boolean updated = false;
+        for (Map<String, Object> workflowES : workflowListES) {
+            if (workflow.equals(workflowES.get(ESObjectConstants.WORKFLOW))) {
+                //update value in existing workflow
+                workflowES.put(STATUS, status);
+                workflowES.put(ESObjectConstants.DATE, SystemUtil.getISO8601DateString());
+                updated = true;
+                break;
             }
+        }
+        if (!updated) {
+            //add workflow
+            workflowListES.add(Map.of(
+                    ESObjectConstants.WORKFLOW, workflow,
+                    STATUS, status,
+                    ESObjectConstants.DATE, SystemUtil.getISO8601DateString()
+            ));
         }
     }
 
@@ -406,6 +468,7 @@ public class ElasticSearchUtil {
                     } else {
                         Map<String, Object> mapForDSM = new HashMap<>();
                         mapForDSM.put(objectType, idName);
+                        objectsMapES = new HashMap<>();
                         objectsMapES.put(ESObjectConstants.DSM, mapForDSM);
                     }
                 } else if (objectsMapES != null && !objectsMapES.isEmpty()) {
@@ -1063,7 +1126,7 @@ public class ElasticSearchUtil {
                         valueQueryBuilder(queryBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered, wildCard, must);
                     }
                 }
-                else if ("status".equals(surveyParam[1])) {
+                else if (STATUS.equals(surveyParam[1])) {
                     if (wildCard) {
                         if (must) {
                             queryBuilder.must(QueryBuilders.wildcardQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered + "*"));
