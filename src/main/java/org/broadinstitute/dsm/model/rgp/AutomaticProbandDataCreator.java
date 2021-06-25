@@ -1,13 +1,10 @@
 package org.broadinstitute.dsm.model.rgp;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.google.gson.Gson;
 import lombok.NonNull;
-import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ParticipantData;
 import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
@@ -15,7 +12,6 @@ import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.participant.data.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
-import org.broadinstitute.dsm.db.dto.participant.data.ParticipantDataDto;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
 import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
@@ -104,8 +100,8 @@ public class AutomaticProbandDataCreator {
                     .findFirst();
             maybePhoneQuestionAnswer.ifPresent(ans -> mobilePhone.append(ans.get(DDPActivityConstants.ACTIVITY_QUESTION_ANSWER)));
         });
-        String firstName = (String) profile.get(ElasticSearchUtil.FIRST_NAME_FIELD);
-        String lastName = (String) profile.get(ElasticSearchUtil.LAST_NAME_FIELD);
+        String firstName = (String) profile.get(ESObjectConstants.FIRST_NAME);
+        String lastName = (String) profile.get(ESObjectConstants.LAST_NAME);
         String familyId = maybeBookmark
                 .map(bookmarkDto -> String.valueOf(bookmarkDto.getValue()))
                 .orElse((String) profile.get(ElasticSearchUtil.HRUID));

@@ -103,7 +103,7 @@ public class AddFamilyMemberRouteTest {
         String payload = payloadFactory(null, ddpInstanceDto.getInstanceName(), familyMemberData, user.getUserId());
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
         try {
-            addFamilyMemberPayload.getParticipantGuid().orElseThrow(() -> new NoSuchElementException("Participant Guid is not provided"));
+            addFamilyMemberPayload.getParticipantId().orElseThrow(() -> new NoSuchElementException("Participant Guid is not provided"));
         } catch (NoSuchElementException nsee) {
             Assert.assertEquals("Participant Guid is not provided", nsee.getMessage());
         }
@@ -148,7 +148,7 @@ public class AddFamilyMemberRouteTest {
         String payload = payloadFactory(participantId, ddpInstanceDto.getInstanceName(), probandData, user.getUserId());
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
         NewParticipantData participantData = new NewParticipantData(participantDataDao);
-        participantData.setData(addFamilyMemberPayload.getParticipantGuid().get(), ddpInstanceDto.getDdpInstanceId(),
+        participantData.setData(addFamilyMemberPayload.getParticipantId().get(), ddpInstanceDto.getDdpInstanceId(),
                 ddpInstanceDto.getInstanceName() + NewParticipantData.FIELD_TYPE, probandData);
         Assert.assertTrue(participantData.isRelationshipIdExists());
     }
@@ -160,7 +160,7 @@ public class AddFamilyMemberRouteTest {
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
         try {
             ParticipantDataDto participantDataDto = new ParticipantDataDto(
-                    addFamilyMemberPayload.getParticipantGuid().get(),
+                    addFamilyMemberPayload.getParticipantId().get(),
                     ddpInstanceDto.getDdpInstanceId(),
                     ddpInstanceDto.getInstanceName() + NewParticipantData.FIELD_TYPE,
                     gson.toJson(addFamilyMemberPayload.getData().get()),
@@ -184,7 +184,7 @@ public class AddFamilyMemberRouteTest {
         Map<String, String> copiedProbandToFamilyMember = new NewParticipantData(participantDataDao).mergeParticipantData(addFamilyMemberPayload);
         try {
             ParticipantDataDto participantDataDto = new ParticipantDataDto(
-                    addFamilyMemberPayload.getParticipantGuid().get(),
+                    addFamilyMemberPayload.getParticipantId().get(),
                     ddpInstanceDto.getDdpInstanceId(),
                     ddpInstanceDto.getInstanceName() + NewParticipantData.FIELD_TYPE,
                     gson.toJson(copiedProbandToFamilyMember),

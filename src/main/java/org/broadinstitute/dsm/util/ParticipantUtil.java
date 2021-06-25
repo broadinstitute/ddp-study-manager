@@ -10,4 +10,8 @@ public class ParticipantUtil {
         final String hruidCheck = "^P\\w{5}$";
         return participantId.matches(hruidCheck);
     }
+
+    public static boolean isGuid(@NonNull String participantId) {
+        return participantId.length() == 20;
+    }
 }
