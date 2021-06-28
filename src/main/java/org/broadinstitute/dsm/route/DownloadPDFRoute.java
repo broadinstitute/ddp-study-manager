@@ -134,6 +134,8 @@ public class DownloadPDFRoute extends RequestHandler {
                             participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId);
                             return returnPDFS(participantESData, ddpParticipantId);
                         }
+                    }else{// it is the misc download
+                        return getPDFs(realm);
                     }
                 }
             } else {
