@@ -42,83 +42,97 @@ public class RegisterBirchOrderCLI {
 
 
     public static void main(String[] args) {
-        if (args == null || args.length == 0 || ("-h".equals(args[0]))) {
-            System.out.println(USAGE);
+        try {
+            if (args == null || args.length == 0 || ("-h".equals(args[0]))) {
+                System.out.println(USAGE);
+                System.exit(0);
+            }
+            String participantHruid = args[0];  // user.hruid
+            String kitLabel = args[1]; // ddp_kit.kit_label
+            String externalOrderNumber = args[2];  // ddp_kit_request.external_order_number
+            /** {@link DATE_FORMAT} */
+            String collectionTime = args[3];
+
+            Instant collectionDate = null;
+            try {
+                collectionDate = new SimpleDateFormat(DATE_FORMAT).parse(collectionTime).toInstant();
+            } catch(ParseException e) {
+                throw new RuntimeException("Could not parse collection time '"  + collectionTime + "'.  Please use " + DATE_FORMAT + ".  You may need to quote the whole time.");
+            }
+
+            Config cfg = ConfigFactory.load();
+
+            System.out.println("About to order " + kitLabel + " for participant " + participantHruid + " with collection time " + collectionTime + " and order number " + externalOrderNumber  +".  Ctrl-c to abort...");
+            try {
+                Thread.sleep(5_000);
+            } catch(InterruptedException e) { }
+
+
+            TransactionWrapper.init(2, cfg.getString("portal.dbUrl"), cfg, true);
+
+
+            PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(5, cfg.getString("portal.dbUrl"));
+
+            String careEvolveAccount = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_ACCOUNT);
+            String careEvolveSubscriberKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SUBSCRIBER_KEY);
+            String careEvolveServiceKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SERVICE_KEY);
+            String careEvolveOrderEndpoint = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_ORDER_ENDPOINT);
+            Authentication auth = new Authentication(careEvolveSubscriberKey, careEvolveServiceKey);
+            Provider provider = new Provider(cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_FIRSTNAME),
+                    cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_LAST_NAME),
+                    cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_NPI));
+
+
+            DDPInstance ddpInstance = null;
+
+            try (Connection conn = dataSource.getConnection()) {
+                ddpInstance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
+            } catch(SQLException e) {
+                throw new RuntimeException("Cannot get instance",e);
+            }
+
+            String esUrl = cfg.getString(ApplicationConfigConstants.ES_URL);
+            String esUsername = cfg.getString(ApplicationConfigConstants.ES_USERNAME);
+            String esPassword = cfg.getString(ApplicationConfigConstants.ES_PASSWORD);
+            RestHighLevelClient esClient = null;
+
+            try {
+                esClient = ElasticSearchUtil.getClientForElasticsearchCloud(esUrl, esUsername, esPassword);
+            } catch(Exception e) {
+                throw new RuntimeException("Could not get es client--are you on the VPN?", e);
+            }
+
+            Covid19OrderRegistrar orderRegistrar = new Covid19OrderRegistrar(careEvolveOrderEndpoint, careEvolveAccount, provider, 0, 0);
+
+            Map<String, Map<String, Object>> esData = ElasticSearchUtil.getSingleParticipantFromES(ddpInstance.getName(), ddpInstance.getParticipantIndexES(), esClient, participantHruid);
+
+            if (esData.size() == 1) {
+                JsonObject participantJsonData = new JsonParser().parse(new Gson().toJson(esData.values().iterator().next())).getAsJsonObject();
+                Patient cePatient = Covid19OrderRegistrar.fromElasticData(participantJsonData);
+                System.out.println(cePatient);
+
+                OrderResponse orderResponse = orderRegistrar.orderTest(auth, cePatient, kitLabel, externalOrderNumber, collectionDate);
+
+                if (orderResponse.hasError()) {
+                    throw new RuntimeException("Error placing order: " + orderResponse.getHandle() + " " + orderResponse.getError());
+                } else {
+                    System.out.println("Placed order for " + kitLabel);
+                }
+                try (Connection conn = dataSource.getConnection()) {
+                    DdpKit.updateCEOrdered(dataSource.getConnection(), true, kitLabel);
+                    conn.commit();
+                } catch (SQLException e) {
+                    throw new RuntimeException("Could not update order status.  You may need to manually update DSM to mark ce_ordered", e);
+                }
+            } else {
+                throw new RuntimeException("Could not find es data for " + participantHruid);
+            }
+        } catch(Exception e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+        }
+        finally {
             System.exit(0);
         }
-        String participantHruid = args[0];
-        String kitLabel = args[1];
-        String externalOrderNumber = args[2];
-        String collectionTime = args[3];
-
-        Instant collectionDate = null;
-        try {
-            collectionDate = new SimpleDateFormat(DATE_FORMAT).parse(collectionTime).toInstant();
-        } catch(ParseException e) {
-            throw new RuntimeException("Could not parse collection time '"  + collectionDate + "'.  Please use " + DATE_FORMAT);
-        }
-
-        Config cfg = ConfigFactory.load();
-        TransactionWrapper.init(2, cfg.getString("portal.dbUrl"), cfg, true);
-
-
-        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(5, cfg.getString("portal.dbUrl"));
-
-        String careEvolveAccount = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_ACCOUNT);
-        String careEvolveSubscriberKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SUBSCRIBER_KEY);
-        String careEvolveServiceKey = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_SERVICE_KEY);
-        String careEvolveOrderEndpoint = cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_ORDER_ENDPOINT);
-        Authentication auth = new Authentication(careEvolveSubscriberKey, careEvolveServiceKey);
-        Provider provider = new Provider(cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_FIRSTNAME),
-                cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_LAST_NAME),
-                cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_NPI));
-
-
-        DDPInstance ddpInstance = null;
-
-        try (Connection conn = dataSource.getConnection()) {
-            ddpInstance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
-        } catch(SQLException e) {
-            throw new RuntimeException("Cannot get instance",e);
-        }
-
-        String esUrl = cfg.getString(ApplicationConfigConstants.ES_URL);
-        String esUsername = cfg.getString(ApplicationConfigConstants.ES_USERNAME);
-        String esPassword = cfg.getString(ApplicationConfigConstants.ES_PASSWORD);
-        RestHighLevelClient esClient = null;
-
-        try {
-            esClient = ElasticSearchUtil.getClientForElasticsearchCloud(esUrl, esUsername, esPassword);
-        } catch(Exception e) {
-            throw new RuntimeException("Could not get es client--are you on the VPN?", e);
-        }
-
-        Covid19OrderRegistrar orderRegistrar = new Covid19OrderRegistrar(careEvolveOrderEndpoint, careEvolveAccount, provider, 0, 0);
-
-        Map<String, Map<String, Object>> esData = ElasticSearchUtil.getSingleParticipantFromES(ddpInstance.getName(), ddpInstance.getParticipantIndexES(), esClient, participantHruid);
-
-        if (esData.size() == 1) {
-            JsonObject participantJsonData = new JsonParser().parse(new Gson().toJson(esData.values().iterator().next())).getAsJsonObject();
-            Patient cePatient = Covid19OrderRegistrar.fromElasticData(participantJsonData);
-            System.out.println(cePatient);
-
-            OrderResponse orderResponse = orderRegistrar.orderTest(auth, cePatient, kitLabel, externalOrderNumber, collectionDate);
-
-            if (orderResponse.hasError()) {
-                throw new RuntimeException("Error placing order: " + orderResponse.getHandle() + " " + orderResponse.getError());
-            } else {
-                System.out.println("Placed order for " + kitLabel);
-            }
-            try (Connection conn = dataSource.getConnection()) {
-                DdpKit.updateCEOrdered(dataSource.getConnection(), true, kitLabel);
-                conn.commit();
-            } catch (SQLException e) {
-                throw new RuntimeException("Could not update order status.  You may need to manually update DSM to mark ce_ordered", e);
-            }
-        } else {
-            throw new RuntimeException("Could not find es data for " + participantHruid);
-        }
-
-        System.exit(0);
     }
 }
