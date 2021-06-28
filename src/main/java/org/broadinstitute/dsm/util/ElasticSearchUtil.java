@@ -375,11 +375,11 @@ public class ElasticSearchUtil {
 
     public static Map<String, Object> addWorkflows(String workflow, String status, WorkflowForES.StudySpecificData studySpecificData) {
         Map<String, Object> workflowMapES;
-        Map<String, Object> newWorkflowMap = Map.of(
+        Map<String, Object> newWorkflowMap = new HashMap<>(Map.of(
                 ESObjectConstants.WORKFLOW, workflow,
                 STATUS, status,
                 ESObjectConstants.DATE, SystemUtil.getISO8601DateString()
-        );
+        ));
         if (studySpecificData != null) {
             newWorkflowMap.put(ESObjectConstants.DATA, new ObjectMapper().convertValue(studySpecificData, Map.class));
         }
