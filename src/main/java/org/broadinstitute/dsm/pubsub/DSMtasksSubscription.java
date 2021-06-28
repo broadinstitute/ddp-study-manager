@@ -8,6 +8,8 @@ import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.PubsubMessage;
 import org.broadinstitute.dsm.export.ExportToES;
+import org.broadinstitute.dsm.model.defaultvalues.Defaultable;
+import org.broadinstitute.dsm.model.defaultvalues.DefaultableMaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +23,7 @@ public class DSMtasksSubscription {
     public static final String TASK_TYPE = "taskType";
     public static final String UPDATE_CUSTOM_WORKFLOW = "UPDATE_CUSTOM_WORKFLOW";
     public static final String ELASTIC_EXPORT = "ELASTIC_EXPORT";
+    public static final String PARTICIPANT_REGISTERED = "PARTICIPANT_REGISTERED";
 
     public static void subscribeDSMtasks(String projectId, String subscriptionId) {
         // Instantiate an asynchronous message receiver.
@@ -41,6 +44,14 @@ public class DSMtasksSubscription {
                             break;
                         case ELASTIC_EXPORT:
                             ExportToES.exportObjectsToES(data);
+                            break;
+                        case PARTICIPANT_REGISTERED:
+                            String studyGuid = attributesMap.get("studyGuid");
+                            String participantGuid = attributesMap.get("participantGuid");
+                            Defaultable defaultable = DefaultableMaker
+                                    .makeDefaultable(Enum.valueOf(DefaultableMaker.Study.class, studyGuid.toUpperCase()));
+                            boolean result = defaultable.generateDefaults(studyGuid, participantGuid);
+                            if (!result) consumer.nack();
                             break;
                         default:
                             logger.warn("Wrong task type for a message from pubsub");

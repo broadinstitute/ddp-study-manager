@@ -93,7 +93,8 @@ public class NewParticipantData {
                 ((DDPInstanceDao) dataAccess).getEsParticipantIndexByInstanceId(ddpInstanceId);
         maybeEsParticipantIndex.ifPresent(esParticipantIndex -> {
             ElasticSearch participantESDataByParticipantId =
-                    ElasticSearchUtil.getParticipantESDataByParticipantId(esParticipantIndex, pId);
+                    ElasticSearchUtil.getParticipantESDataByParticipantId(esParticipantIndex, pId)
+                    .orElse(new ElasticSearch.Builder().build());
             email.append(participantESDataByParticipantId.getProfile()
                     .map(ESProfile::getEmail)
                     .orElse(""));

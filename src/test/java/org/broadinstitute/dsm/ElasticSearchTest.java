@@ -407,10 +407,11 @@ public class ElasticSearchTest extends TestHelper {
         String pIdToFilter = "WUKIOQNKXJZGCAXCSYGB";
         String fetchedPid = "";
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
-            ElasticSearch esObject =
+            Optional<ElasticSearch> esObject =
                     ElasticSearchUtil.fetchESDataByParticipantId("participants_structured.rgp.rgp", pIdToFilter, client);
-            fetchedPid = esObject.getProfile()
-                    .map(ESProfile::getParticipantGuid)
+            fetchedPid = esObject.orElse(new ElasticSearch.Builder().build())
+                    .getProfile()
+                    .map(ESProfile::getParticipantLegacyAlptid)
                     .orElse("");
         } catch (IOException e) {
             Assert.fail();

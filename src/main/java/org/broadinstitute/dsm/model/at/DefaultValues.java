@@ -14,6 +14,7 @@ import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.NewParticipantData;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +68,7 @@ public class DefaultValues {
             if (!hasParticipantDataGenomicId(participantDataList) && isSelfOrDependentParticipant(participantDataList)) {
                 Map<String, Object> esParticipantData = entry.getValue();
                 Map<String, Object> profile = (Map<String, Object>) esParticipantData.get(ElasticSearchUtil.PROFILE);
-                String hruid = (String) profile.get(ElasticSearchUtil.HRUID);
+                String hruid = (String) profile.get(ESObjectConstants.HRUID);
                 addedNewParticipantData = getParticipantGenomicFieldData(participantDataList)
                         .map(pData -> insertGenomicIdIfNotExistsInData(ddpParticipantId, hruid, pData))
                         .orElseGet(() -> insertGenomicIdForParticipant(ddpParticipantId, hruid));

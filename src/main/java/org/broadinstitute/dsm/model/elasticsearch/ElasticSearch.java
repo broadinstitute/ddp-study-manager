@@ -1,6 +1,5 @@
 package org.broadinstitute.dsm.model.elasticsearch;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,7 +16,7 @@ public class ElasticSearch {
     private Optional<ESAddress> address;
     private Optional<List<Object>> medicalProviders;
     private Optional<List<Object>> invitations;
-    private Optional<List<Object>> activities;
+    private Optional<List<ESActivities>> activities;
     private Optional<Long> statusTimeStamp;
     private Optional<ESProfile> profile;
     private Optional<List<Object>> files;
@@ -39,8 +38,8 @@ public class ElasticSearch {
         this.dsm = builder.dsm;
     }
 
-    public static ElasticSearch parseSourceMap(Map<String, Object> sourceMap) {
-        if (sourceMap == null) return new ElasticSearch.Builder().build();
+    public static Optional<ElasticSearch> parseSourceMap(Map<String, Object> sourceMap) {
+        if (sourceMap == null) return Optional.of(new ElasticSearch.Builder().build());
         Builder builder = new Builder();
         for (Map.Entry<String, Object> entry : sourceMap.entrySet()) {
             switch (entry.getKey()) {
@@ -54,7 +53,7 @@ public class ElasticSearch {
                     builder.withInvitations(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<Object>>() {}.getType()));
                     break;
                 case "activities":
-                    builder.withActivities(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<Object>>() {}.getType()));
+                    builder.withActivities(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<ESActivities>>() {}.getType()));
                     break;
                 case "statusTimeStamp":
                     builder.withStatusTimeStamp(GSON.fromJson(GSON.toJson(entry.getValue()), Long.class));
@@ -81,14 +80,14 @@ public class ElasticSearch {
                     break;
             }
         }
-        return builder.build();
+        return Optional.of(builder.build());
     }
 
     public static class Builder {
         private Optional<ESAddress> address = Optional.empty();
         private Optional<List<Object>> medicalProviders = Optional.empty();
         private Optional<List<Object>> invitations = Optional.empty();
-        private Optional<List<Object>> activities = Optional.empty();
+        private Optional<List<ESActivities>> activities = Optional.empty();
         private Optional<Long> statusTimeStamp = Optional.empty();
         private Optional<ESProfile> profile = Optional.empty();
         private Optional<List<Object>> files = Optional.empty();
@@ -114,7 +113,7 @@ public class ElasticSearch {
             return this;
         }
 
-        public Builder withActivities(List<Object> activities) {
+        public Builder withActivities(List<ESActivities> activities) {
             this.activities = Optional.ofNullable(activities);
             return this;
         }
