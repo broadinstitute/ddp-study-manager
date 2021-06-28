@@ -68,7 +68,7 @@ public class ElasticSearch {
                     builder.withProxies(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<Object>>() {}.getType()));
                     break;
                 case "workflows":
-                    builder.withWorkFlows(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<Map<String, String>>>() {}.getType()));
+                    builder.withWorkFlows(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<Map<String, Object>>>() {}.getType()));
                     break;
                 case "status":
                     builder.withStatus(GSON.fromJson(GSON.toJson(entry.getValue()), String.class));
