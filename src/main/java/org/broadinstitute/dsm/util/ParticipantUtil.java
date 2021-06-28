@@ -31,15 +31,18 @@ public class ParticipantUtil {
                 continue;
             }
             Map<String, String> dataMap = gson.fromJson(data, Map.class);
-            if (!dataMap.containsKey(FamilyMemberConstants.MEMBER_TYPE) || !dataMap.containsKey(FamilyMemberConstants.EMAIL)
+            if (!dataMap.containsKey(FamilyMemberConstants.MEMBER_TYPE)
                     || !dataMap.containsKey(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID)) {
                 return false;
             }
+            if (!dataMap.containsKey(FamilyMemberConstants.EMAIL)) {
+                continue;
+            }
             if (dataMap.get(FamilyMemberConstants.MEMBER_TYPE).equals(FamilyMemberConstants.MEMBER_TYPE_SELF)) {
-                currentParticipantEmail = dataMap.get(FamilyMemberConstants.EMAIL);
+                probandEmail = dataMap.get(FamilyMemberConstants.EMAIL);
             }
             if (collaboratorParticipantId.equals(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID))) {
-                probandEmail = dataMap.get(FamilyMemberConstants.EMAIL);
+                currentParticipantEmail = dataMap.get(FamilyMemberConstants.EMAIL);
             }
         }
         return probandEmail != null && probandEmail.equals(currentParticipantEmail);
