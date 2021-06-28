@@ -139,7 +139,7 @@ public class ExportToES {
                             || !dataMap.containsKey(FamilyMemberConstants.FIRSTNAME) || !dataMap.containsKey(FamilyMemberConstants.LASTNAME)) {
                         continue;
                     }
-                    if (hasProbandEmail(participantData.getDdpParticipantId(),
+                    if (dataMap.containsValue(FamilyMemberConstants.MEMBER_TYPE_SELF) || hasProbandEmail(participantData.getDdpParticipantId(),
                             dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID), allParticipantData)) {
                         WorkflowForES.StudySpecificData studySpecificData = new WorkflowForES.StudySpecificData(
                                 dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
