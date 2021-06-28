@@ -58,6 +58,7 @@ public class AutomaticProbandDataCreator implements Defaultable {
 
         return esData.getProfile()
                 .map(esProfile -> {
+                    logger.info("Got ES profile of participant: " + esProfile.getParticipantGuid());
                     Map<String, String> columnsWithDefaultOptions =
                             fieldSettings.getColumnsWithDefaultOptions(fieldSettingsDtosByOptionAndInstanceId);
                     Map<String, String> columnsWithDefaultOptionsFilteredByElasticExportWorkflow =
@@ -89,7 +90,10 @@ public class AutomaticProbandDataCreator implements Defaultable {
                     logger.info("Automatic proband data for participant with id: " + participantId + " has been created");
                     return true;
                 })
-                .orElse(false);
+                .orElseGet(() -> {
+                    logger.info("Participant does not have ES profile yet...");
+                    return false;
+                });
     }
 
     private Map<String, String> extractProbandDefaultDataFromParticipantProfile(@NonNull ElasticSearch esData,
@@ -100,6 +104,7 @@ public class AutomaticProbandDataCreator implements Defaultable {
                 .orElse("");
         return esData.getProfile()
             .map(esProfile -> {
+                logger.info("Starting extracting data from participant: " + esProfile.getParticipantGuid() + " ES profile");
                 String firstName = esProfile.getFirstName();
                 String lastName = esProfile.getLastName();
                 String familyId = maybeBookmark
@@ -112,6 +117,7 @@ public class AutomaticProbandDataCreator implements Defaultable {
                         new FamilyMemberDetails(firstName, lastName, memberType, familyId, collaboratorParticipantId);
                 probandMemberDetails.setMobilePhone(mobilePhone);
                 probandMemberDetails.setEmail(email);
+                logger.info("Profile data extracted from participant: " + esProfile.getParticipantGuid() + " ES profile");
                 return probandMemberDetails.toMap();
             })
             .orElse(Map.of());

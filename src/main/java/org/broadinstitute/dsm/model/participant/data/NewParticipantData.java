@@ -19,9 +19,13 @@ import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Data
 public class NewParticipantData {
+
+    private static final Logger logger = LoggerFactory.getLogger(NewParticipantData.class);
 
     public static final String FIELD_TYPE = "_PARTICIPANTS";
 
@@ -127,6 +131,7 @@ public class NewParticipantData {
         if (createdDataKey < 1) {
             throw new RuntimeException("Could not insert participant data for : " + this.ddpParticipantId);
         }
+        logger.info("Successfully inserted data for participant: " + this.ddpParticipantId);
     }
 
     public boolean isRelationshipIdExists() {

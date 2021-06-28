@@ -31,7 +31,6 @@ public class DSMtasksSubscription {
                 (PubsubMessage message, AckReplyConsumer consumer) -> {
                     // Handle incoming message, then ack the received message.
                     logger.info("Got message with Id: " + message.getMessageId());
-                    consumer.ack();
                     Map<String, String> attributesMap = message.getAttributesMap();
                     String taskType = attributesMap.get(TASK_TYPE);
                     String data = message.getData() != null ? message.getData().toStringUtf8() : null;
@@ -40,9 +39,11 @@ public class DSMtasksSubscription {
 
                     switch (taskType) {
                         case UPDATE_CUSTOM_WORKFLOW:
+                            consumer.ack();
                             WorkflowStatusUpdate.updateCustomWorkflow(attributesMap, data);
                             break;
                         case ELASTIC_EXPORT:
+                            consumer.ack();
                             ExportToES.exportObjectsToES(data);
                             break;
                         case PARTICIPANT_REGISTERED:
@@ -52,9 +53,11 @@ public class DSMtasksSubscription {
                                     .makeDefaultable(Enum.valueOf(DefaultableMaker.Study.class, studyGuid.toUpperCase()));
                             boolean result = defaultable.generateDefaults(studyGuid, participantGuid);
                             if (!result) consumer.nack();
+                            else consumer.ack();
                             break;
                         default:
                             logger.warn("Wrong task type for a message from pubsub");
+                            consumer.ack();
                             break;
                     }
                 };
