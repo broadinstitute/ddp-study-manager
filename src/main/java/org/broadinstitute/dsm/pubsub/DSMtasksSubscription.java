@@ -13,6 +13,7 @@ import org.broadinstitute.dsm.model.defaultvalues.DefaultableMaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -49,11 +50,16 @@ public class DSMtasksSubscription {
                         case PARTICIPANT_REGISTERED:
                             String studyGuid = attributesMap.get("studyGuid");
                             String participantGuid = attributesMap.get("participantGuid");
-                            Defaultable defaultable = DefaultableMaker
-                                    .makeDefaultable(Enum.valueOf(DefaultableMaker.Study.class, studyGuid.toUpperCase()));
-                            boolean result = defaultable.generateDefaults(studyGuid, participantGuid);
-                            if (!result) consumer.nack();
-                            else consumer.ack();
+                            Arrays.stream(DefaultableMaker.Study.values())
+                                    .filter(study -> study.toString().equals(studyGuid.toUpperCase()))
+                                    .findFirst()
+                                    .ifPresentOrElse(study -> {
+                                        Defaultable defaultable = DefaultableMaker
+                                                .makeDefaultable(study);
+                                        boolean result = defaultable.generateDefaults(studyGuid, participantGuid);
+                                        if (!result) consumer.nack();
+                                        else consumer.ack();
+                                    }, consumer::ack);
                             break;
                         default:
                             logger.warn("Wrong task type for a message from pubsub");
