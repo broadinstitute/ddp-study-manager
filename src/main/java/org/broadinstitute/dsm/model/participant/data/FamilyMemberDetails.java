@@ -71,5 +71,6 @@ public class FamilyMemberDetails {
         return StringUtils.isBlank(this.firstName) || StringUtils.isBlank(this.lastName) || StringUtils.isBlank(this.memberType)
                     || StringUtils.isBlank(this.familyId) || StringUtils.isBlank(this.collaboratorParticipantId);
     }
+
 }
 
