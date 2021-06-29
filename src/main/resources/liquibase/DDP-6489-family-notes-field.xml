@@ -16,5 +16,9 @@
             </column>
         </addColumn>
     </changeSet>
+    
+    <changeSet id="maxLength_data_size" author="pegah">
+        <modifyDataType tableName="ddp_participant_data" columnName="data" newDataType="LONGTEXT"/>
+    </changeSet>
 
 </databaseChangeLog>
