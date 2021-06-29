@@ -44,8 +44,6 @@ public class ExportToES {
     public static final String FAMILY_ID = "FAMILY_ID";
     public static final String RGP_PARTICIPANTS = "RGP_PARTICIPANTS";
 
-    private Dao dataAccess;
-
     public static class ExportPayload {
         private String index;
         private String study;
@@ -138,7 +136,7 @@ public class ExportToES {
                 continue;
             }
             String ddpParticipantId = participantData.getDdpParticipantId();
-            if (ddpParticipantId.length() > 20) {
+            if (!ParticipantUtil.isGuid(ddpParticipantId)) {
                 ddpParticipantId = getGuidIfWeHaveAltpid(ddpParticipantId, maybeEsParticipantIndex);
             }
             if ("".equals(ddpParticipantId)) {
