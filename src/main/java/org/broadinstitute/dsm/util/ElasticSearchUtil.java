@@ -244,7 +244,7 @@ public class ElasticSearchUtil {
 
     public static Optional<ElasticSearch> fetchESDataByParticipantId(String index, String participantId, RestHighLevelClient client) throws IOException {
         String matchQueryName = ParticipantUtil.isGuid(participantId) ? "profile.guid" : "profile.legacyAltPid";
-        return Optional.ofNullable(getElasticSearchForGivenMatch(index, participantId, client, matchQueryName));
+        return Optional.of(getElasticSearchForGivenMatch(index, participantId, client, matchQueryName));
     }
 
     public static ElasticSearch fetchESDataByAltpid(String index, String altpid, RestHighLevelClient client) throws IOException {
@@ -263,7 +263,7 @@ public class ElasticSearchUtil {
 
         response = client.search(searchRequest, RequestOptions.DEFAULT);
         response.getHits();
-        return ElasticSearch.parseSourceMap(response.getHits().getTotalHits() > 0 ? response.getHits().getAt(0).getSourceAsMap() : null);
+        return ElasticSearch.parseSourceMap(response.getHits().getTotalHits() > 0 ? response.getHits().getAt(0).getSourceAsMap() : null).get();
     }
 
     public static Map<String, Map<String, Object>> getDDPParticipantsFromES(@NonNull String realm, @NonNull String index) {
@@ -634,10 +634,10 @@ public class ElasticSearchUtil {
                     return new DDPParticipant(ddpParticipantId, firstName, lastName,
                             (String) address.get("country"), (String) address.get("city"), (String) address.get("zip"),
                             (String) address.get("street1"), (String) address.get("street2"), (String) address.get("state"),
-                            (String) profile.get(HRUID), null);
+                            (String) profile.get(ESObjectConstants.HRUID), null);
                 }
                 else if (profile != null && !profile.isEmpty()) {
-                    return new DDPParticipant((String) profile.get(HRUID), "", (String) profile.get("firstName"), (String) profile.get("lastName"));
+                    return new DDPParticipant((String) profile.get(ESObjectConstants.HRUID), "", (String) profile.get("firstName"), (String) profile.get("lastName"));
                 }
             }
         }
@@ -1061,7 +1061,7 @@ public class ElasticSearchUtil {
                 userEntered = userEntered.replaceAll("%", "").trim();
             }
             if (nameValue[0].startsWith(PROFILE)) {
-                if (nameValue[0].trim().endsWith(HRUID) || nameValue[0].trim().endsWith("legacyShortId") ||
+                if (nameValue[0].trim().endsWith(ESObjectConstants.HRUID) || nameValue[0].trim().endsWith("legacyShortId") ||
                         nameValue[0].trim().endsWith(GUID) || nameValue[0].trim().endsWith(LEGACY_ALT_PID)) {
                     valueQueryBuilder(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
                 }
