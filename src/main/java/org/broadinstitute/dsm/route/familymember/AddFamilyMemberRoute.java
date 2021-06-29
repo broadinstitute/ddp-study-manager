@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.route.familymember;
 
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -11,12 +12,15 @@ import org.broadinstitute.dsm.db.User;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
+import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.NewParticipantData;
 import org.broadinstitute.dsm.model.participant.data.AddFamilyMemberPayload;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -31,7 +35,7 @@ public class AddFamilyMemberRoute extends RequestHandler {
         Gson gson = new Gson();
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(request.body(), AddFamilyMemberPayload.class);
 
-        String participantGuid = addFamilyMemberPayload.getParticipantId()
+        String participantId = addFamilyMemberPayload.getParticipantId()
                 .orElseThrow(() -> new NoSuchElementException("Participant Guid is not provided"));
 
         String realm =
@@ -42,12 +46,13 @@ public class AddFamilyMemberRoute extends RequestHandler {
             logger.warn("Study : " + realm + " is not setup to add family member");
             return new Result(400, "Study is not setup to add family member");
         }
-        String ddpInstanceId = DDPInstance.getDDPInstance(realm).getDdpInstanceId();
+        DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
+        String ddpInstanceId = ddpInstance.getDdpInstanceId();
 
         Optional<FamilyMemberDetails> maybeFamilyMemberData = addFamilyMemberPayload.getData();
         if (maybeFamilyMemberData.isEmpty() || maybeFamilyMemberData.orElseGet(FamilyMemberDetails::new).isFamilyMemberFieldsEmpty()) {
             response.status(400);
-            logger.warn("Family member information for participant : " + participantGuid + " is not provided");
+            logger.warn("Family member information for participant : " + participantId + " is not provided");
             return new Result(400, "Family member information is not provided");
         }
 
@@ -60,23 +65,45 @@ public class AddFamilyMemberRoute extends RequestHandler {
         ParticipantDataDao participantDataDao = new ParticipantDataDao();
         try {
             NewParticipantData participantDataObject = new NewParticipantData(participantDataDao);
-            participantDataObject.setDdpParticipantId(participantGuid);
+            participantDataObject.setDdpParticipantId(participantId);
             participantDataObject.setDdpInstanceId(Integer.parseInt(ddpInstanceId));
             participantDataObject.setFieldTypeId(realm.toUpperCase() + NewParticipantData.FIELD_TYPE);
             participantDataObject.setData(participantDataObject.mergeParticipantData(addFamilyMemberPayload));
             participantDataObject.addDefaultOptionsValueToData(getDefaultOptions(Integer.parseInt(ddpInstanceId)));
             participantDataObject.insertParticipantData(User.getUser(uId).getEmail());
-            logger.info("Family member for participant " + participantGuid + " successfully created");
+            exportDefaultWorkflowsForFamilyMemberToES(participantId, ddpInstance, ddpInstanceId, maybeFamilyMemberData);
+            logger.info("Family member for participant " + participantId + " successfully created");
         } catch (Exception e) {
             throw new RuntimeException("Could not create family member " + e);
         }
-        return NewParticipantData.parseDtoList(participantDataDao.getParticipantDataByParticipantId(participantGuid));
+        return NewParticipantData.parseDtoList(participantDataDao.getParticipantDataByParticipantId(participantId));
+    }
+
+    private void exportDefaultWorkflowsForFamilyMemberToES(String participantId, DDPInstance ddpInstance, String ddpInstanceId,
+                           Optional<FamilyMemberDetails> maybeFamilyMemberData) {
+        logger.info("Exporting workflow for family member of participant: " + participantId + " to ES");
+        getDefaultOptionsByElasticWorkflow(Integer.parseInt(ddpInstanceId)).forEach((col, val) -> {
+            WorkflowForES instanceWithStudySpecificData =
+                    WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, participantId, col, val,
+                            new WorkflowForES.StudySpecificData(
+                                    maybeFamilyMemberData.get().getCollaboratorParticipantId(),
+                                    maybeFamilyMemberData.get().getFirstName(),
+                                    maybeFamilyMemberData.get().getLastName()));
+            ElasticSearchUtil.writeWorkflow(instanceWithStudySpecificData);
+        });
     }
 
     private Map<String, String> getDefaultOptions(int ddpInstanceId) {
         FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
         FieldSettings fieldSettings = new FieldSettings();
         return fieldSettings.getColumnsWithDefaultOptions(fieldSettingsDao.getFieldSettingsByOptionAndInstanceId(ddpInstanceId));
+    }
+
+    private Map<String, String> getDefaultOptionsByElasticWorkflow(int instanceId) {
+        FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
+        FieldSettings fieldSettings = new FieldSettings();
+        List<FieldSettingsDto> fieldSettingsByInstanceId = fieldSettingsDao.getFieldSettingsByInstanceId(instanceId);
+        return fieldSettings.getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(fieldSettingsByInstanceId);
     }
 
 

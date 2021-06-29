@@ -11,8 +11,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FieldSettings {
+
+    private static final Logger logger = LoggerFactory.getLogger(FieldSettings.class);
 
     public static final String KEY_DEFAULT = "default";
     public static final String KEY_VALUE = "value";
@@ -34,6 +38,7 @@ public class FieldSettings {
                 defaultOptionsFileredByElasticExportWorkflow.put(fieldSettingsDto.getColumnName(), getDefaultOptionValue(fieldSettingsDto.getPossibleValues()));
             }
         }
+        logger.info("Got filtered default options by elastic export workflow");
         return defaultOptionsFileredByElasticExportWorkflow;
     }
 
@@ -48,15 +53,16 @@ public class FieldSettings {
     }
 
     boolean isDefaultOption(String possibleValuesJson) {
-         List<Map<String, Object>> possibleValues = new Gson().fromJson(possibleValuesJson, List.class);
-         boolean isDefault = false;
-         for (Map<String, Object> opt: possibleValues) {
-             boolean hasDefault = opt.containsKey(KEY_DEFAULT);
-             if (hasDefault) {
-                 isDefault = (Boolean) opt.get(KEY_DEFAULT);
-             }
+        if (StringUtils.isBlank(possibleValuesJson)) return false;
+        List<Map<String, Object>> possibleValues = new Gson().fromJson(possibleValuesJson, List.class);
+        boolean isDefault = false;
+        for (Map<String, Object> opt: possibleValues) {
+         boolean hasDefault = opt.containsKey(KEY_DEFAULT);
+         if (hasDefault) {
+             isDefault = (Boolean) opt.get(KEY_DEFAULT);
          }
-         return isDefault;
+        }
+        return isDefault;
     }
 
     boolean isElasticExportWorkflowType(String action) {

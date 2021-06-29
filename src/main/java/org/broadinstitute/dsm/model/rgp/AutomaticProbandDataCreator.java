@@ -12,7 +12,6 @@ import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
@@ -38,9 +37,9 @@ public class AutomaticProbandDataCreator implements Defaultable {
     private final BookmarkDao bookmarkDao = new BookmarkDao();
     private final ParticipantDataDao participantDataDao = new ParticipantDataDao();
     private final DDPInstanceDao ddpInstanceDao = new DDPInstanceDao();
+    private DDPInstance instance;
 
-    public boolean setDefaultProbandData(Optional<ElasticSearch> maybeParticipantESData,
-                                         @NonNull DDPInstance instance) {
+    private boolean setDefaultProbandData(Optional<ElasticSearch> maybeParticipantESData) {
         if (maybeParticipantESData.isEmpty()) {
             logger.warn("Could not create proband/self data, participant ES data is null");
             return false;
@@ -110,7 +109,7 @@ public class AutomaticProbandDataCreator implements Defaultable {
                 String familyId = maybeBookmark
                         .map(bookmarkDto -> String.valueOf(bookmarkDto.getValue()))
                         .orElse(esProfile.getHruid());
-                String collaboratorParticipantId = familyId + "_" + FamilyMemberConstants.PROBAND_RELATIONSHIP_ID;
+                String collaboratorParticipantId = instance.getName().toUpperCase() + "_" + familyId + "_" + FamilyMemberConstants.PROBAND_RELATIONSHIP_ID;
                 String memberType = FamilyMemberConstants.MEMBER_TYPE_SELF;
                 String email = esProfile.getEmail();
                 FamilyMemberDetails probandMemberDetails =
@@ -157,7 +156,7 @@ public class AutomaticProbandDataCreator implements Defaultable {
                 .orElse("");
         Optional<ElasticSearch> maybeParticipantESDataByParticipantId =
                 ElasticSearchUtil.getParticipantESDataByParticipantId(esParticipantIndex, participantId);
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(studyGuid);
-        return setDefaultProbandData(maybeParticipantESDataByParticipantId, ddpInstance);
+        instance = DDPInstance.getDDPInstance(studyGuid);
+        return setDefaultProbandData(maybeParticipantESDataByParticipantId);
     }
 }

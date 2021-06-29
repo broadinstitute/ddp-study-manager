@@ -77,6 +77,10 @@ public class NewParticipantData {
     public Map<String, String> mergeParticipantData(@NonNull AddFamilyMemberPayload familyMemberPayload) {
         FamilyMemberDetails familyMemberData =
                 familyMemberPayload.getData().orElseThrow(() -> new NoSuchElementException("Family member data is not provided"));
+        familyMemberData.setCollaboratorParticipantId(
+                familyMemberPayload.getRealm().orElse("").toUpperCase() +
+                "_" +
+                familyMemberData.getCollaboratorParticipantId());
         Map<String, String> mergedData = new HashMap<>();
         boolean copyProbandInfo = familyMemberPayload.getCopyProbandInfo().orElse(Boolean.FALSE);
         int probandDataId = familyMemberPayload.getProbandDataId().orElse(0);
