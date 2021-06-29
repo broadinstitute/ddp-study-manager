@@ -29,7 +29,7 @@ cp ../../target/DSMServer.jar .
 cp ../../src/main/resources/log4j.xml .
 
 echo "=> downloading and configuring tcell"
-gsutil cat gs://ddp-tcell/tcell-1.11.0.tar.gz | tar -xf -
+gsutil cat gs://ddp-tcell/tcell-1.11.0.tar.gz | tar -zxf -
 gcloud --project=${PROJECT_ID} secrets versions access latest --secret="study-manager-tcell" > tcell/tcell_agent.config
 
 echo "=> deploying to appengine"
