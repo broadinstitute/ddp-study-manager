@@ -60,4 +60,5 @@
     <include file="liquibase/DDP-6446_AT-form.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/DDP-6451_at-genomic-id-counter.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/DDP-6006_RGP-form.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/DDP-6489-family-notes-field.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
