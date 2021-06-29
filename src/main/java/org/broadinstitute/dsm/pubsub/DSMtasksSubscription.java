@@ -10,6 +10,7 @@ import com.google.pubsub.v1.PubsubMessage;
 import org.broadinstitute.dsm.export.ExportToES;
 import org.broadinstitute.dsm.model.defaultvalues.Defaultable;
 import org.broadinstitute.dsm.model.defaultvalues.DefaultableMaker;
+import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,18 +49,7 @@ public class DSMtasksSubscription {
                             ExportToES.exportObjectsToES(data);
                             break;
                         case PARTICIPANT_REGISTERED:
-                            String studyGuid = attributesMap.get("studyGuid");
-                            String participantGuid = attributesMap.get("participantGuid");
-                            Arrays.stream(DefaultableMaker.Study.values())
-                                    .filter(study -> study.toString().equals(studyGuid.toUpperCase()))
-                                    .findFirst()
-                                    .ifPresentOrElse(study -> {
-                                        Defaultable defaultable = DefaultableMaker
-                                                .makeDefaultable(study);
-                                        boolean result = defaultable.generateDefaults(studyGuid, participantGuid);
-                                        if (!result) consumer.nack();
-                                        else consumer.ack();
-                                    }, consumer::ack);
+                            generateStudyDefaultValues(consumer, attributesMap);
                             break;
                         default:
                             logger.warn("Wrong task type for a message from pubsub");
@@ -82,5 +72,24 @@ public class DSMtasksSubscription {
         } catch (TimeoutException e) {
             throw new RuntimeException("Timed out while starting pubsub subscription for DSM tasks", e);
         }
+    }
+
+    private static void generateStudyDefaultValues(AckReplyConsumer consumer, Map<String, String> attributesMap) {
+        String studyGuid = attributesMap.get("studyGuid");
+        String participantGuid = attributesMap.get("participantGuid");
+        if (!ParticipantUtil.isGuid(participantGuid)) {
+            consumer.ack();
+            return;
+        };
+        Arrays.stream(DefaultableMaker.Study.values())
+                .filter(study -> study.toString().equals(studyGuid.toUpperCase()))
+                .findFirst()
+                .ifPresentOrElse(study -> {
+                    Defaultable defaultable = DefaultableMaker
+                            .makeDefaultable(study);
+                    boolean result = defaultable.generateDefaults(studyGuid, participantGuid);
+                    if (!result) consumer.nack();
+                    else consumer.ack();
+                }, consumer::ack);
     }
 }
