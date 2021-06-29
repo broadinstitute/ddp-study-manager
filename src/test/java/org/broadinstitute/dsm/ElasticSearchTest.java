@@ -419,6 +419,23 @@ public class ElasticSearchTest extends TestHelper {
         Assert.assertEquals(pIdToFilter, fetchedPid);
     }
 
+    @Test
+    public void testSearchParticipantByAltpid() {
+        String altpid = "c4aa8c50248beb9970ac94fc913ca7bbaa625726318b5705d7e42c9d9cede4b4";
+        String fetchedPid = "";
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
+            ElasticSearch esObject =
+                    ElasticSearchUtil.fetchESDataByAltpid("participants_structured.atcp.atcp", altpid, client);
+            fetchedPid = esObject.getProfile()
+                    .map(ESProfile::getLegacyAltPid)
+                    .orElse("");
+        } catch (IOException e) {
+            Assert.fail();
+            e.printStackTrace();
+        }
+        Assert.assertEquals(altpid, fetchedPid);
+    }
+
     public void notEmptyActivity(String index, String stableId, String activityCode) throws Exception {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
