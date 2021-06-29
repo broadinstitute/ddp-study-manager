@@ -428,7 +428,7 @@ public class ElasticSearchTest extends TestHelper {
             ElasticSearch esObject =
                     ElasticSearchUtil.fetchESDataByAltpid("participants_structured.atcp.atcp", altpid, client);
             fetchedPid = esObject.getProfile()
-                    .map(ESProfile::getLegacyAltPid)
+                    .map(ESProfile::getParticipantLegacyAlptid)
                     .orElse("");
         } catch (IOException e) {
             Assert.fail();
