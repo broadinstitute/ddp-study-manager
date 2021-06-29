@@ -16,10 +16,13 @@ public class ESProfile {
     @SerializedName(ESObjectConstants.GUID)
     private String participantGuid;
 
-    @SerializedName(ESObjectConstants.LEGACY_ALTPID)
-    private String legacyAltPid;
-
     @SerializedName(ESObjectConstants.EMAIL)
     private String email;
+
+    @SerializedName(ESObjectConstants.LEGACY_ALTPID)
+    private String participantLegacyAlptid;
+
+    @SerializedName(ESObjectConstants.HRUID)
+    private String hruid;
 
 }

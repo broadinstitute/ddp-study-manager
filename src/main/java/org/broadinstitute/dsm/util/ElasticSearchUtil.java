@@ -72,7 +72,6 @@ public class ElasticSearchUtil {
     public static final String INVITATIONS = "invitations";
     public static final String PDFS = "pdfs";
     public static final String GUID = "guid";
-    public static final String HRUID = "hruid";
     public static final String LEGACY_ALT_PID = "legacyAltPid";
     public static final String BY_GUID = " AND profile.guid = ";
     public static final String BY_HRUID = " AND profile.hruid = ";
@@ -205,8 +204,8 @@ public class ElasticSearchUtil {
         return esData;
     }
 
-    public static ElasticSearch getParticipantESDataByParticipantId(@NonNull String index, @NonNull String participantId) {
-        ElasticSearch elasticSearch = new ElasticSearch.Builder().build();
+    public static Optional<ElasticSearch> getParticipantESDataByParticipantId(@NonNull String index, @NonNull String participantId) {
+        Optional<ElasticSearch> elasticSearch = Optional.empty();
         try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
                 TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
             logger.info("Getting ES data for participant: " + participantId);
@@ -243,9 +242,9 @@ public class ElasticSearchUtil {
         return elasticSearch;
     }
 
-    public static ElasticSearch fetchESDataByParticipantId(String index, String participantId, RestHighLevelClient client) throws IOException {
+    public static Optional<ElasticSearch> fetchESDataByParticipantId(String index, String participantId, RestHighLevelClient client) throws IOException {
         String matchQueryName = ParticipantUtil.isGuid(participantId) ? "profile.guid" : "profile.legacyAltPid";
-        return getElasticSearchForGivenMatch(index, participantId, client, matchQueryName);
+        return Optional.of(getElasticSearchForGivenMatch(index, participantId, client, matchQueryName));
     }
 
     public static ElasticSearch fetchESDataByAltpid(String index, String altpid, RestHighLevelClient client) throws IOException {
@@ -264,7 +263,7 @@ public class ElasticSearchUtil {
 
         response = client.search(searchRequest, RequestOptions.DEFAULT);
         response.getHits();
-        return ElasticSearch.parseSourceMap(response.getHits().getTotalHits() > 0 ? response.getHits().getAt(0).getSourceAsMap() : null);
+        return ElasticSearch.parseSourceMap(response.getHits().getTotalHits() > 0 ? response.getHits().getAt(0).getSourceAsMap() : null).get();
     }
 
     public static Map<String, Map<String, Object>> getDDPParticipantsFromES(@NonNull String realm, @NonNull String index) {
@@ -404,11 +403,11 @@ public class ElasticSearchUtil {
 
     public static Map<String, Object> addWorkflows(String workflow, String status, WorkflowForES.StudySpecificData studySpecificData) {
         Map<String, Object> workflowMapES;
-        Map<String, Object> newWorkflowMap = Map.of(
+        Map<String, Object> newWorkflowMap = new HashMap<>(Map.of(
                 ESObjectConstants.WORKFLOW, workflow,
                 STATUS, status,
                 ESObjectConstants.DATE, SystemUtil.getISO8601DateString()
-        );
+        ));
         if (studySpecificData != null) {
             newWorkflowMap.put(ESObjectConstants.DATA, new ObjectMapper().convertValue(studySpecificData, Map.class));
         }
@@ -635,10 +634,10 @@ public class ElasticSearchUtil {
                     return new DDPParticipant(ddpParticipantId, firstName, lastName,
                             (String) address.get("country"), (String) address.get("city"), (String) address.get("zip"),
                             (String) address.get("street1"), (String) address.get("street2"), (String) address.get("state"),
-                            (String) profile.get(HRUID), null);
+                            (String) profile.get(ESObjectConstants.HRUID), null);
                 }
                 else if (profile != null && !profile.isEmpty()) {
-                    return new DDPParticipant((String) profile.get(HRUID), "", (String) profile.get("firstName"), (String) profile.get("lastName"));
+                    return new DDPParticipant((String) profile.get(ESObjectConstants.HRUID), "", (String) profile.get("firstName"), (String) profile.get("lastName"));
                 }
             }
         }
@@ -1062,7 +1061,7 @@ public class ElasticSearchUtil {
                 userEntered = userEntered.replaceAll("%", "").trim();
             }
             if (nameValue[0].startsWith(PROFILE)) {
-                if (nameValue[0].trim().endsWith(HRUID) || nameValue[0].trim().endsWith("legacyShortId") ||
+                if (nameValue[0].trim().endsWith(ESObjectConstants.HRUID) || nameValue[0].trim().endsWith("legacyShortId") ||
                         nameValue[0].trim().endsWith(GUID) || nameValue[0].trim().endsWith(LEGACY_ALT_PID)) {
                     valueQueryBuilder(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
                 }
