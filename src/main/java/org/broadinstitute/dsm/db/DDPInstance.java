@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
@@ -95,29 +96,30 @@ public class DDPInstance {
     }
 
     public static DDPInstance getDDPInstance(@NonNull String realm) {
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_ALL_ACTIVE_REALMS + QueryExtension.BY_INSTANCE_NAME)) {
-                stmt.setString(1, realm);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        dbVals.resultValue = getDDPInstanceFormResultSet(rs);
-                    }
-                }
-                catch (SQLException e) {
-                    throw new RuntimeException("Error getting information for " + realm, e);
-                }
-            }
-            catch (SQLException ex) {
-                dbVals.resultException = ex;
-            }
-            return dbVals;
-        });
+        return TransactionWrapper.inTransaction(conn -> getDDPInstance(conn, realm));
+    }
 
-        if (results.resultException != null) {
-            throw new RuntimeException("Couldn't get realm information for " + realm, results.resultException);
+    public static DDPInstance getDDPInstance(Connection conn, @NonNull String realm) {
+        SimpleResult dbVals = new SimpleResult();
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_ALL_ACTIVE_REALMS + QueryExtension.BY_INSTANCE_NAME)) {
+            stmt.setString(1, realm);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    dbVals.resultValue = getDDPInstanceFormResultSet(rs);
+                }
+            }
+            catch (SQLException e) {
+                throw new RuntimeException("Error getting information for " + realm, e);
+            }
         }
-        return (DDPInstance) results.resultValue;
+        catch (SQLException ex) {
+            dbVals.resultException = ex;
+        }
+
+        if (dbVals.resultException != null) {
+            throw new RuntimeException("Couldn't get realm information for " + realm, dbVals.resultException);
+        }
+        return (DDPInstance) dbVals.resultValue;
     }
 
     public static DDPInstance getDDPInstanceByGuid(@NonNull String studyGuid) {

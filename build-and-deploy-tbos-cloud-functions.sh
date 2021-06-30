@@ -1,6 +1,8 @@
 PROJECT_ID=$1
+EXPORT_BUCKET=$2
+EXPORT_PATH=$3
 
-echo "Will deploy to ${PROJECT_ID} "
+echo "Will deploy to ${PROJECT_ID} using bucket ${EXPORT_BUCKET} and ${EXPORT_PATH}"
 
 mvn -Pcloud-function -DskipTests clean install package
 
@@ -11,7 +13,7 @@ gcloud --project=${PROJECT_ID} functions deploy \
     --entry-point=org.broadinstitute.dsm.cf.TestBostonKitOrderer \
     --runtime=java11 \
     --trigger-topic=tbos-kit-dispatcher \
-    --timeout=600 \
+    --timeout=540 \
     --memory=1Gib \
     --source=target/deployment \
     --set-env-vars="PROJECT_ID=${PROJECT_ID},SECRET_ID=study-manager-config,DDP_INSTANCE=testboston,EMAIL_TO=testboston-notifications@broadinstitute.org,EMAIL_FROM=notifications-noreply@datadonationplatform.org,SHIPPING_RATE=3rd Day Air Residential" \
@@ -20,15 +22,44 @@ gcloud --project=${PROJECT_ID} functions deploy \
 
 
 
+echo "Deploying testboston kit filter report to ${PROJECT_ID}"
+gcloud --project=${PROJECT_ID} functions deploy \
+    tbos-kit-filter-report \
+    --entry-point=org.broadinstitute.dsm.cf.KitFilterReport \
+    --runtime=java11 \
+    --trigger-topic=tbos-kit-filter-report \
+    --timeout=540 \
+    --memory=1Gib \
+    --source=target/deployment \
+    --set-env-vars="PROJECT_ID=${PROJECT_ID},SECRET_ID=study-manager-config,DDP_INSTANCE=testboston,REPORT_BUCKET=${EXPORT_BUCKET},REPORT_PATH=${EXPORT_PATH}" \
+    --vpc-connector=projects/${PROJECT_ID}/locations/us-central1/connectors/appengine-default-connect
+
+
 echo "Deploying participant status report to ${PROJECT_ID}"
 gcloud --project=${PROJECT_ID} functions deploy \
     tbos-participant-report \
     --entry-point=org.broadinstitute.dsm.cf.ParticipantStatusReport \
     --runtime=java11 \
     --trigger-topic=tbos-participant-status \
-    --timeout=600 \
+    --timeout=540 \
     --memory=1Gib \
     --source=target/deployment \
-    --set-env-vars="PROJECT_ID=${PROJECT_ID},SECRET_ID=study-manager-config,DDP_INSTANCE=testboston,REPORT_BUCKET=,REPORT_PATH \
+    --set-env-vars="PROJECT_ID=${PROJECT_ID},SECRET_ID=study-manager-config,DDP_INSTANCE=testboston,REPORT_BUCKET=${EXPORT_BUCKET},REPORT_PATH=${EXPORT_PATH}" \
     --vpc-connector=projects/${PROJECT_ID}/locations/us-central1/connectors/appengine-default-connect
+
+echo "Deploying testboston kit dispatcher to ${PROJECT_ID}"
+gcloud --project=${PROJECT_ID} functions deploy \
+    tbos-kit-dispatcher \
+    --entry-point=org.broadinstitute.dsm.cf.TestBostonKitOrderer \
+    --runtime=java11 \
+    --trigger-topic=tbos-kit-dispatcher \
+    --timeout=540 \
+    --memory=1Gib \
+    --source=target/deployment \
+    --set-env-vars="PROJECT_ID=${PROJECT_ID},SECRET_ID=study-manager-config,DDP_INSTANCE=testboston,EMAIL_TO=testboston-notifications@broadinstitute.org,EMAIL_FROM=notifications-noreply@datadonationplatform.org,SHIPPING_RATE=3rd Day Air Residential" \
+    --vpc-connector=projects/${PROJECT_ID}/locations/us-central1/connectors/appengine-default-connect
+
+
+
+
 

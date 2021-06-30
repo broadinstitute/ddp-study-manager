@@ -3,11 +3,14 @@ package org.broadinstitute.dsm.cf;
 import static org.broadinstitute.dsm.model.gbf.GBFOrderGateKeeper.GBF;
 
 import java.net.MalformedURLException;
+import java.sql.Connection;
 import java.util.Collection;
 
 import com.google.cloud.functions.BackgroundFunction;
 import com.google.cloud.functions.Context;
 import com.typesafe.config.Config;
+import org.apache.commons.dbcp2.PoolableConnection;
+import org.apache.commons.dbcp2.PoolingDataSource;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
@@ -45,15 +48,23 @@ public class TestBostonKitOrderer implements BackgroundFunction<TestBostonKitOrd
             String emailSummaryTo = System.getenv("EMAIL_TO");
             String emailSummaryFrom = System.getenv("EMAIL_FROM");
 
-            TransactionWrapper.init(5, dbUrl,cfg, true);
             try {
                 esClient = ElasticSearchUtil.getClientForElasticsearchCloud(esUrl, esUser, esPassword);
             } catch (MalformedURLException e) {
                 throw new RuntimeException("Could not initialize es client", e);
             }
 
-            DDPInstance ddpInstance = DDPInstance.getDDPInstance(ddpInstanceName);
-            Collection<KitRequestSettings> kitRequestSettings = KitRequestSettings.getKitRequestSettings(ddpInstance.getDdpInstanceId()).values();
+            DDPInstance ddpInstance = null;
+            Collection<KitRequestSettings> kitRequestSettings = null;
+            PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(2, dbUrl);
+            try (Connection conn = dataSource.getConnection()) {
+                ddpInstance = DDPInstance.getDDPInstance(conn, ddpInstanceName);
+                System.out.println("Found ddp instance " + ddpInstance);
+                kitRequestSettings = KitRequestSettings.getKitRequestSettings(conn, ddpInstance.getDdpInstanceId()).values();
+            }
+
+
+
 
             for (KitRequestSettings kitRequestSetting : kitRequestSettings) {
                 if (GBF.equals(kitRequestSetting.getExternalShipper())) {
@@ -67,10 +78,10 @@ public class TestBostonKitOrderer implements BackgroundFunction<TestBostonKitOrd
             GBFOrderGateKeeper keeper = new GBFOrderGateKeeper(orderFinder, transmitter, ddpInstanceName, sendGridApiKey, emailSummaryTo, emailSummaryFrom);
 
 
-            TransactionWrapper.inTransaction(conn -> {
+
+            try (Connection conn = dataSource.getConnection()) {
                 keeper.sendPendingOrders(conn);
-                return null;
-            });
+            }
         } catch (Exception e) {
             System.err.println(e.getMessage());
             e.printStackTrace();

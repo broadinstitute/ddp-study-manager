@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.cf;
 import static org.broadinstitute.dsm.model.gbf.GBFOrderGateKeeper.GBF;
 
 import java.io.ByteArrayInputStream;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,6 +20,8 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import com.typesafe.config.ConfigUtil;
+import org.apache.commons.dbcp2.PoolableConnection;
+import org.apache.commons.dbcp2.PoolingDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.util.GoogleBucket;
@@ -344,12 +347,13 @@ public class ParticipantStatusReport implements BackgroundFunction<ParticipantSt
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
-        TransactionWrapper.init(5, dbUrl, cfg, true);
+        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(2, dbUrl);
+
 
         String fileName = "participant-status-" + dateFormat.format(System.currentTimeMillis()) + ".csv";
         StringBuilder reportBuilder = new StringBuilder();
         final AtomicInteger numRows = new AtomicInteger(0);
-        TransactionWrapper.inTransaction(conn -> {
+        try (Connection conn = dataSource.getConnection()) {
             try (PreparedStatement stmt = conn.prepareStatement(PTP_QUERY)) {
                 stmt.setString(1,ddpInstance);
 
@@ -384,8 +388,7 @@ public class ParticipantStatusReport implements BackgroundFunction<ParticipantSt
             } catch(SQLException e) {
                 throw new RuntimeException("Could not generate report", e);
             }
-            return null;
-        });
+        }
 
         String response = GoogleBucket.uploadFile(null, googleProject, bucket, filePath + "/" + fileName, new ByteArrayInputStream(reportBuilder.toString().getBytes()));
 

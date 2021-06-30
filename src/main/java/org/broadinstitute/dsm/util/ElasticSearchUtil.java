@@ -99,8 +99,13 @@ public class ElasticSearchUtil {
         credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(userName, password));
 
         URL url = new URL(baseUrl);
-        String proxy = TransactionWrapper.hasConfigPath(ApplicationConfigConstants.ES_PROXY)
-                ? TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PROXY) : null;
+        boolean hasConfigPath = false;
+        try {
+            hasConfigPath = TransactionWrapper.hasConfigPath(ApplicationConfigConstants.ES_PROXY);
+        } catch (NullPointerException e) {
+            logger.warn("No config path.  Will proceed with null", e);
+        }
+        String proxy = hasConfigPath ? TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PROXY) : null;
         return getClientForElasticsearchCloud(baseUrl, userName, password, proxy);
     }
 

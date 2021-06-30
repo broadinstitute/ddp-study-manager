@@ -8,6 +8,7 @@ import org.broadinstitute.dsm.statics.QueryExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -117,52 +118,54 @@ public class KitRequestSettings {
      */
     public static HashMap<Integer, KitRequestSettings> getKitRequestSettings(@NonNull String realmId) {
         HashMap<Integer, KitRequestSettings> carrierService = new HashMap<>();
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_CARRIER + QueryExtension.WHERE_INSTANCE_ID)) {
-                stmt.setString(1, realmId);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    while (rs.next()) {
-                        KitSubKits subKit = new KitSubKits(rs.getInt(DBConstants.KIT_TYPE_SUB_KIT), rs.getString(DBConstants.SUB_KIT_NAME), rs.getInt(DBConstants.KIT_COUNT));
-                        int key = rs.getInt(DBConstants.KIT_TYPE_ID);
-                        if (carrierService.containsKey(key)){
-                            KitRequestSettings settings = carrierService.get(key);
-                            settings.addSubKit(subKit);
-                        }
-                        else {
-                            List<KitSubKits> subKits = new ArrayList<>();
-                            subKits.add(subKit);
-                            carrierService.put(key, new KitRequestSettings(rs.getString(DBConstants.DSM_CARRIER_TO),
-                                    rs.getString(DBConstants.DSM_CARRIER_TO_ID), rs.getString(DBConstants.DSM_SERVICE_TO),
-                                    rs.getString(DBConstants.DSM_CARRIER_TO_ACCOUNT_NUMBER),
-                                    rs.getString(DBConstants.DSM_CARRIER_RETURN), rs.getString(DBConstants.DSM_CARRIER_RETURN_ID),
-                                    rs.getString(DBConstants.DSM_SERVICE_RETURN),
-                                    rs.getString(DBConstants.DSM_CARRIER_RETURN_ACCOUNT_NUMBER),
-                                    rs.getString(DBConstants.KIT_DIMENSIONS_LENGTH),
-                                    rs.getString(DBConstants.KIT_DIMENSIONS_HEIGHT), rs.getString(DBConstants.KIT_DIMENSIONS_WIDTH),
-                                    rs.getString(DBConstants.KIT_DIMENSIONS_WEIGHT), rs.getString(DBConstants.COLLABORATOR_SAMPLE_TYPE_OVERWRITE),
-                                    rs.getString(DBConstants.COLLABORATOR_PARTICIPANT_LENGTH_OVERWRITE),
-                                    rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_NAME), rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_STREET1),
-                                    rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_STREET2), rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_CITY),
-                                    rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_ZIP), rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_STATE),
-                                    rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_COUNTRY), rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_PHONE),
-                                    rs.getString(DBConstants.KIT_TYPE_DISPLAY_NAME), rs.getString(DBConstants.EXTERNAL_SHIPPER),
-                                    rs.getString(DBConstants.EXTERNAL_CLIENT_ID), rs.getString(DBConstants.EXTERNAL_KIT_NAME),
-                                    rs.getInt(DBConstants.HAS_SUB_KITS), subKits,
-                                    rs.getInt(DBConstants.DDP_INSTANCE_ID)
-                            ));
-                        }
+        return inTransaction((conn) -> getKitRequestSettings(conn, realmId));
+    }
+
+    public static HashMap<Integer, KitRequestSettings> getKitRequestSettings(Connection conn, @NonNull String realmId) {
+        HashMap<Integer, KitRequestSettings> carrierService = new HashMap<>();
+        SimpleResult dbVals = new SimpleResult();
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_CARRIER + QueryExtension.WHERE_INSTANCE_ID)) {
+            stmt.setString(1, realmId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    KitSubKits subKit = new KitSubKits(rs.getInt(DBConstants.KIT_TYPE_SUB_KIT), rs.getString(DBConstants.SUB_KIT_NAME), rs.getInt(DBConstants.KIT_COUNT));
+                    int key = rs.getInt(DBConstants.KIT_TYPE_ID);
+                    if (carrierService.containsKey(key)){
+                        KitRequestSettings settings = carrierService.get(key);
+                        settings.addSubKit(subKit);
+                    }
+                    else {
+                        List<KitSubKits> subKits = new ArrayList<>();
+                        subKits.add(subKit);
+                        carrierService.put(key, new KitRequestSettings(rs.getString(DBConstants.DSM_CARRIER_TO),
+                                rs.getString(DBConstants.DSM_CARRIER_TO_ID), rs.getString(DBConstants.DSM_SERVICE_TO),
+                                rs.getString(DBConstants.DSM_CARRIER_TO_ACCOUNT_NUMBER),
+                                rs.getString(DBConstants.DSM_CARRIER_RETURN), rs.getString(DBConstants.DSM_CARRIER_RETURN_ID),
+                                rs.getString(DBConstants.DSM_SERVICE_RETURN),
+                                rs.getString(DBConstants.DSM_CARRIER_RETURN_ACCOUNT_NUMBER),
+                                rs.getString(DBConstants.KIT_DIMENSIONS_LENGTH),
+                                rs.getString(DBConstants.KIT_DIMENSIONS_HEIGHT), rs.getString(DBConstants.KIT_DIMENSIONS_WIDTH),
+                                rs.getString(DBConstants.KIT_DIMENSIONS_WEIGHT), rs.getString(DBConstants.COLLABORATOR_SAMPLE_TYPE_OVERWRITE),
+                                rs.getString(DBConstants.COLLABORATOR_PARTICIPANT_LENGTH_OVERWRITE),
+                                rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_NAME), rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_STREET1),
+                                rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_STREET2), rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_CITY),
+                                rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_ZIP), rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_STATE),
+                                rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_COUNTRY), rs.getString(DBConstants.KIT_TYPE_RETURN_ADDRESS_PHONE),
+                                rs.getString(DBConstants.KIT_TYPE_DISPLAY_NAME), rs.getString(DBConstants.EXTERNAL_SHIPPER),
+                                rs.getString(DBConstants.EXTERNAL_CLIENT_ID), rs.getString(DBConstants.EXTERNAL_KIT_NAME),
+                                rs.getInt(DBConstants.HAS_SUB_KITS), subKits,
+                                rs.getInt(DBConstants.DDP_INSTANCE_ID)
+                        ));
                     }
                 }
             }
-            catch (SQLException ex) {
-                dbVals.resultException = ex;
-            }
-            return dbVals;
-        });
+        }
+        catch (SQLException ex) {
+            dbVals.resultException = ex;
+        }
 
-        if (results.resultException != null) {
-            throw new RuntimeException("Error looking up carrier service  ", results.resultException);
+        if (dbVals.resultException != null) {
+            throw new RuntimeException("Error looking up carrier service  ", dbVals.resultException);
         }
         logger.info("Found " + carrierService.size() + " carrier/service for realm w/ id " + realmId);
         return carrierService;

@@ -1,6 +1,7 @@
-package org.broadinstitute.dsm.tbos;
+package org.broadinstitute.dsm.cf;
 
 import java.io.ByteArrayInputStream;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -9,13 +10,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.cloud.functions.BackgroundFunction;
+import com.google.cloud.functions.Context;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import org.apache.commons.dbcp2.PoolableConnection;
+import org.apache.commons.dbcp2.PoolingDataSource;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.util.GoogleBucket;
+import org.broadinstitute.dsm.DSMServer;
+import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 
-public class KitFilterReport {
+public class KitFilterReport implements BackgroundFunction<KitFilterReport.ReportRequest> {
+
     private static final String RECENTLY_SENT =
             "select distinct u.hruid, req.external_order_number\n"+
                     "from\n"+
@@ -52,21 +60,26 @@ public class KitFilterReport {
                     "and\n"+
                     "req.order_transmitted_at is null";
 
-    public static void main(String[] args) {
+
+    @Override
+    public void accept(KitFilterReport.ReportRequest reportRequest, Context context) throws Exception {
         // run the query and write out to bucket location
-        String googleProject = args[1];
-        String ddpInstance = args[0];
-        String bucket = args[2];
-        String filePath = args[3];
-        String dbUrl = args[4];
+        String ddpInstance = System.getenv("DDP_INSTANCE");
+        String googleProject = System.getenv("PROJECT_ID");
+        String bucket = System.getenv("REPORT_BUCKET");
+        String filePath = System.getenv("REPORT_PATH");
+
+        Config cfg = CFUtil.loadConfig();
+
+        DSMServer.setupExternalShipperLookup(cfg.getString(ApplicationConfigConstants.EXTERNAL_SHIPPER));
+        String dbUrl = cfg.getString(ApplicationConfigConstants.DSM_DB_URL);
+
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Map<String, String> fileNameToQuery = new HashMap<>();
-        Config cfg = ConfigFactory.load();
         fileNameToQuery.put("recently-sent-orders-" + dateFormat.format(System.currentTimeMillis()) + ".csv",RECENTLY_SENT);
         fileNameToQuery.put("recently-filtered-orders-" + dateFormat.format(System.currentTimeMillis()) + ".csv", RECENTLY_FILTERED);
 
-
-        TransactionWrapper.init(5, dbUrl, cfg, true);
+        PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(2, dbUrl);
 
         for (Map.Entry<String, String> fileNameQuery : fileNameToQuery.entrySet()) {
             String fileName = fileNameQuery.getKey();
@@ -74,12 +87,12 @@ public class KitFilterReport {
 
             StringBuilder reportBuilder = new StringBuilder();
             final AtomicInteger numRows = new AtomicInteger(0);
-            TransactionWrapper.inTransaction(conn -> {
+            try (Connection conn = dataSource.getConnection()) {
                 try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                    stmt.setString(1,ddpInstance);
+                    stmt.setString(1, ddpInstance);
 
-                    String headerRow = StringUtils.join(new String[] {"hruid","guid","status","effective date","all returned", "all unreturned", "all scheduled",
-                            "all scheduled ordered", "all scheduled cancelled","all scheduled delivered","all scheduled unreturned", "all manual kits","all manual returned"},",");
+                    String headerRow = StringUtils.join(new String[] {"hruid", "guid", "status", "effective date", "all returned", "all unreturned", "all scheduled",
+                            "all scheduled ordered", "all scheduled cancelled", "all scheduled delivered", "all scheduled unreturned", "all manual kits", "all manual returned"}, ",");
 
                     reportBuilder.append(headerRow).append("\n");
 
@@ -88,12 +101,12 @@ public class KitFilterReport {
                             String hruid = rs.getString("hruid");
                             String externalOrderNumber = rs.getString("external_order_number");
 
-                            String rowData = StringUtils.join(new String[] {hruid,externalOrderNumber}, ",");
+                            String rowData = StringUtils.join(new String[] {hruid, externalOrderNumber}, ",");
                             reportBuilder.append(rowData).append("\n");
                             numRows.incrementAndGet();
                         }
                     }
-                } catch(SQLException e) {
+                } catch (SQLException e) {
                     throw new RuntimeException("Could not generate report", e);
                 }
 
@@ -101,12 +114,11 @@ public class KitFilterReport {
 
                 System.out.println(reportBuilder.toString());
                 System.out.println("Wrote " + numRows.get() + " rows to " + response);
-
-                return null;
-            });
+            }
         }
+    }
 
-
+    public static class ReportRequest {
 
     }
 }
