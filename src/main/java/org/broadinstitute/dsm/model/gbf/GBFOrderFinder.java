@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -39,19 +40,34 @@ public class GBFOrderFinder {
                     "subkit.external_name, " +
                     "orders.external_order_number, " +
                     "orders.ddp_participant_id, " +
+                    "orders.scheduled_date, " +
                     "(select max(req.dsm_kit_request_id) from ddp_kit_request req where req.external_order_number = orders.external_order_number) as max_kit_request_id, " +
-                    "(select req.order_transmitted_at from ddp_kit_request req where req.dsm_kit_request_id = orders.dsm_kit_request_id " +
-                    "for update) as order_transmission_date " +
+                    "(select req.order_transmitted_at from ddp_kit_request req where req.dsm_kit_request_id = orders.external_order_number " +
+                    ") as order_transmission_date, " +
+                    // todo arz enable view from dsm -> dss in all envs
+                    "(select u.hruid from dss_user u where u.guid = orders.ddp_participant_id) as hruid " +
                     "from " +
                     "ddp_instance i, " +
                     "ddp_kit_request_settings s, " +
                     "sub_kits_settings subkit, " +
+                    "dss_study_enrollment_status stat, " +
                     "(select distinct untransmitted.external_order_number, untransmitted.ddp_participant_id,  untransmitted.ddp_instance_id, " +
-                    "      untransmitted.kit_type_id, untransmitted.dsm_kit_request_id " +
+                    "      untransmitted.kit_type_id, untransmitted.dsm_kit_request_id, from_unixtime(kr.created_at) scheduled_date, kr.participant_user_id, kr.study_id " +
                     "      from " +
                     "      ddp_kit_request untransmitted, " +
-                    "      ddp_instance i " +
+                    "      ddp_instance i, " +
+                    "      dss_kit_request kr " +
                     "      where " +
+                    "      kr.kit_request_guid = untransmitted.ddp_kit_request_id " +
+                    "      and " +
+                           //original study day based scheduled kit order date is at most n days old\n" +
+                    "      DATE_ADD(from_unixtime(kr.created_at), INTERVAL ? DAY) > now() " +
+                    "      and kr.created_at = (select max(kr2.created_at)\n" +
+                    "                                         from dss_kit_request kr2\n" +
+                    "                                          where\n" +
+                    "                                          kr.participant_user_id = kr2.participant_user_id\n" +
+                    "                          )" +
+                    "      and " +
                     "      i.instance_name = ? " +
                     "      and " +
                     "      i.ddp_instance_id = untransmitted.ddp_instance_id " +
@@ -63,38 +79,64 @@ public class GBFOrderFinder {
                     "      delivered.kit_type_id, delivered.dsm_kit_request_id " +
                     "      from ddp_kit_request delivered, " +
                     "           ddp_kit k2, " +
-                    "           ddp_instance i " +
+                    "           ddp_instance i, ups_shipment ship, ups_package pack, ups_activity act " +
                     "      where " +
                     "        delivered.ddp_participant_id = untransmitted.ddp_participant_id " +
                     "        and i.instance_name = ? " +
                     "        and untransmitted.dsm_kit_request_id != delivered.dsm_kit_request_id " +
                     "        and delivered.ddp_instance_id = i.ddp_instance_id " +
                     "        and k2.dsm_kit_request_id = delivered.dsm_kit_request_id " +
+                    "        and ship.dsm_kit_request_id = delivered.dsm_kit_request_id " +
+                    "        and ship.ups_shipment_id = pack.ups_shipment_id " +
+                    "        and act.ups_package_id = pack.ups_package_id " +
+                    "        and pack.tracking_number = k2.tracking_return_id " +
+                    "        and act.ups_activity_date_time = (" +
+                    "           select max(act2.ups_activity_date_time) " +
+                    "           from ups_activity act2 where act2.ups_package_id = act.ups_package_id " +
+                    ") " +
                     // any of: any kit for the ptp has been sent back, has a CE order or a result "
                     "        and (k2.CE_order is not null " +
                     "          or " +
                     "             k2.test_result is not null " +
                     "          or " +
-                    "             k2.ups_return_status like 'D%' " +
+                    "             act.ups_status_type = 'D' " +
                     "          or " +
-                    "             k2.ups_return_status like 'I%' " +
+                    "             act.ups_status_type = 'I' or act.ups_status_description = 'Delivered'" +
                     "          ) " +
                     "        and ( " +
                     // it's been at most n days since the kit was delivered "
-                    "          (k2.ups_tracking_status like 'D%' " +
-                    "              and " +
-                    "           DATE_ADD(str_to_date(k2.ups_tracking_date, '%Y%m%d %H%i%s'), INTERVAL ? DAY) > now()) " +
-                    "          ) " +
+                    "       exists ( select 1\n" +
+                    "                            from\n" +
+                    "                            ups_package to_ptp_pkg,\n" +
+                    "                            ups_activity to_ptp_act\n" +
+                    "                            where\n" +
+                    "                            to_ptp_pkg.tracking_number = k2.tracking_to_id\n" +
+                    "                            and\n" +
+                    "                            to_ptp_pkg.ups_package_id = to_ptp_act.ups_package_id\n" +
+                    "                            and\n" +
+                    "                            to_ptp_act.ups_activity_date_time = (\n" +
+                    "                                select max(to_ptp_act2.ups_activity_date_time)\n" +
+                    "                                from\n" +
+                    "                                ups_activity to_ptp_act2\n" +
+                    "                                where\n" +
+                    "                                to_ptp_act2.ups_package_id = to_ptp_act.ups_package_id\n" +
+                    "                                and\n" +
+                    "                                (to_ptp_act2.ups_status_type = 'D' or to_ptp_act2.ups_status_description = 'Delivered')\n" +
+                    "                            )\n" +
+                    "                            and\n" +
+                    "                            DATE_ADD(act.ups_activity_date_time, INTERVAL ? DAY) > now()\n" +
+                    "                               )) " +
                     "        and " +
                     "        delivered.order_transmitted_at is not null) " +
                     "        and not exists (select 1 from ddp_participant_exit e where e.ddp_instance_id = i.ddp_instance_id and e.ddp_participant_id = untransmitted.ddp_participant_id) " +
                     "      union " +
                     " " +
                     "      select distinct req.external_order_number, req.ddp_participant_id, req.ddp_instance_id, " +
-                    "      req.kit_type_id, req.dsm_kit_request_id " +
-                    "      from ddp_kit_request req, ddp_instance i " +
+                    "      req.kit_type_id, req.dsm_kit_request_id, from_unixtime(kr.created_at) scheduled_date,  kr.participant_user_id, kr.study_id " +
+                    "      from ddp_kit_request req, ddp_instance i, dss_kit_request kr " +
                     "      where  " +
                     "      i.instance_name = ? " +
+                    "      and kr.kit_request_guid = req.ddp_kit_request_id " +
                     "      and req.upload_reason is null " +
                     "      and req.order_transmitted_at is null " +
                     "      and req.ddp_instance_id = i.ddp_instance_id " +
@@ -115,14 +157,15 @@ public class GBFOrderFinder {
                     "s.external_shipper = 'gbf' " +
                     "and " +
                     "subkit.kit_type_id = orders.kit_type_id " +
-                    "order by max_kit_request_id asc limit ? ";
+                    "and stat.user_id = orders.participant_user_id and stat.enrollment_status_type_code = 'ENROLLED' and stat.study_id = orders.study_id " +
+                    "order by scheduled_date asc limit ? ";
 
-    public GBFOrderFinder(Integer maxDaysToReturnPreviousKit,
+    public GBFOrderFinder(Integer maxDaysToReturnPreviousKitBeforeSkip,
                           int maxOrdersToProcess,
                           RestHighLevelClient esClient,
                           String esIndex) {
-        if (maxDaysToReturnPreviousKit != null) {
-            this.maxDaysToReturnPreviousKit = maxDaysToReturnPreviousKit;
+        if (maxDaysToReturnPreviousKitBeforeSkip != null) {
+            this.maxDaysToReturnPreviousKit = maxDaysToReturnPreviousKitBeforeSkip;
         }
         this.maxOrdersToProcess = maxOrdersToProcess;
         this.esClient = esClient;
@@ -131,14 +174,18 @@ public class GBFOrderFinder {
 
     public Collection<SimpleKitOrder> findKitsToOrder(String ddpInstanceName, Connection conn) {
         Set<String> participantGuids = new HashSet<>();
+        // offset for prior ship out of previous kit when it was returned?  ignore kit if within X days of previous?
+
+
         List<SimpleKitOrder> kitsToOrder = new ArrayList<>();
         try (PreparedStatement stmt = conn.prepareStatement(FIND_KITS_TO_ORDER_QUERY,ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-            stmt.setString(1, ddpInstanceName);
+            stmt.setInt(1, maxDaysToReturnPreviousKit);
             stmt.setString(2, ddpInstanceName);
-            stmt.setInt(3, maxDaysToReturnPreviousKit);
-            stmt.setString(4, ddpInstanceName);
+            stmt.setString(3, ddpInstanceName);
+            stmt.setInt(4, maxDaysToReturnPreviousKit);
             stmt.setString(5, ddpInstanceName);
-            stmt.setInt(6, maxOrdersToProcess);
+            stmt.setString(6, ddpInstanceName);
+            stmt.setInt(7, maxOrdersToProcess);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 // loop through once to get participants
@@ -146,17 +193,21 @@ public class GBFOrderFinder {
                     participantGuids.add(rs.getString(DBConstants.DDP_PARTICIPANT_ID));
                 }
 
+                // if date that kit was returned is within n days, ignore next?
+
+
                 if (!participantGuids.isEmpty()) {
-                    logger.info("Found {} participants", participantGuids.size());
                     Map<String, Address> addressForParticipants = ElasticSearchUtil.getParticipantAddresses(esClient, esIndex, participantGuids);
                     // now iterate again to get address
                     while (rs.previous()) {
                         String participantGuid = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
                         String externalOrderId = rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER);
                         String kitName = rs.getString(DBConstants.EXTERNAL_KIT_NAME);
+                        Instant scheduledAt = rs.getTimestamp("scheduled_date").toInstant();
+                        String shortId = rs.getString("hruid");
                         if (addressForParticipants.containsKey(participantGuid)) {
                             Address recipientAddress = addressForParticipants.get(participantGuid);
-                            kitsToOrder.add(new SimpleKitOrder(recipientAddress, externalOrderId, kitName, participantGuid));
+                            kitsToOrder.add(new SimpleKitOrder(recipientAddress, externalOrderId, kitName, participantGuid, shortId, scheduledAt));
                         } else {
                             logger.error("No address found in elastic for {}",participantGuid);
                         }
@@ -180,7 +231,6 @@ public class GBFOrderFinder {
         String esUser = args[1];
         String esPassword = args[2];
         String esUrl = args[3];
-        int numDays = Integer.parseInt(args[4]);
         Config cfg = ConfigFactory.load();
         TransactionWrapper.init(1, dbUrl,cfg, true);
 
@@ -190,18 +240,19 @@ public class GBFOrderFinder {
         } catch (MalformedURLException e) {
             throw new RuntimeException("Could not initialize es client",e);
         }
-        GBFOrderFinder orderFinder = new GBFOrderFinder(numDays, 10000, esClient, "participants_structured.testboston.testboston");
+        GBFOrderFinder orderFinder = new GBFOrderFinder(45, 10000, esClient, "participants_structured.testboston.testboston");
 
 
         TransactionWrapper.inTransaction(conn -> {
+            StringBuilder csvString = new StringBuilder();
+            csvString.append("short id,kit order number\n");
             Collection<SimpleKitOrder> kits = orderFinder.findKitsToOrder("testboston", conn);
-            StringBuilder guids = new StringBuilder();
             for (SimpleKitOrder kit : kits) {
-                guids.append("'").append(kit.getParticipantGuid()).append("',\n");
+                logger.info("Found {}",kit.getExternalKitOrderNumber());
+                csvString.append(kit.getShortId()).append(",").append(kit.getExternalKitOrderNumber()).append(",").append(kit.getScheduledAt()).append("\n");
             }
-
-            logger.info("Found {} kits with {} day return window", kits.size(), numDays);
-            logger.info(guids.toString());
+            logger.info(csvString.toString());
+            logger.info("Found {} kits", kits.size());
             return null;
         });
         System.exit(0);

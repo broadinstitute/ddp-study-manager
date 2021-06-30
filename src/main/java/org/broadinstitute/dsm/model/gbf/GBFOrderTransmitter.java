@@ -27,7 +27,7 @@ public class GBFOrderTransmitter {
     private final int maxRetries;
 
     private final long sleepMillisBetweenRetries;
-    private final String carrierToAccountNumber;
+    private final String shipMethod;
     private final String externalClientId;
 
     public GBFOrderTransmitter(boolean isTest,
@@ -35,19 +35,19 @@ public class GBFOrderTransmitter {
                                String apiKey,
                                int maxRetries,
                                int sleepMillisBetweenRetries,
-                               String carrierToAccountNumber,
+                               String shipMethod,
                                String externalClientId) {
         this.isTest = isTest;
         this.orderUrl = baseUrl + GBFRequestUtil.ORDER_ENDPOINT;
         this.apiKey = apiKey;
         this.maxRetries = maxRetries;
         this.sleepMillisBetweenRetries = sleepMillisBetweenRetries;
-        this.carrierToAccountNumber = carrierToAccountNumber;
+        this.shipMethod = shipMethod;
         this.externalClientId = externalClientId;
-    }
+}
 
     public Response orderKit(Address address, String externalShipperKitName, String externalOrderNumber, String participantId) {
-        ShippingInfo shippingInfo = new ShippingInfo(carrierToAccountNumber, null, address);
+        ShippingInfo shippingInfo = new ShippingInfo(null, shipMethod, address);
         List<LineItem> lineItems = new ArrayList<>();
         lineItems.add(new LineItem(externalShipperKitName, "1"));
         Orders orders = new Orders(new Order(externalOrderNumber, externalClientId, participantId, shippingInfo, lineItems));

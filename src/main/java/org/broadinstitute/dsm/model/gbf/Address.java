@@ -1,4 +1,6 @@
 package org.broadinstitute.dsm.model.gbf;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
@@ -38,10 +40,10 @@ public class Address {
         this(null, addressLine1, null, city, state, zipCode, country, phoneNumber);
     }
 
-    public Address(String company, String addressLine1, String addressLine2, String city, String state, String zipCode,
+    public Address(String recipientName, String addressLine1, String addressLine2, String city, String state, String zipCode,
                    String country, String phoneNumber) {
 
-        this.company = company;
+        this.company = recipientName;
         this.addressLine1 = addressLine1;
         this.addressLine2 = addressLine2;
         this.city = city;
@@ -49,13 +51,40 @@ public class Address {
         this.zipCode = zipCode;
         this.country = country;
         this.phoneNumber = phoneNumber;
-    }
 
+    }
 
     public boolean isComplete(){
         return  StringUtils.isNotBlank(this.company) && StringUtils.isNotBlank(this.addressLine1) &&
                 StringUtils.isNotBlank(this.city) && StringUtils.isNotBlank(this.state) &&
                 StringUtils.isNotBlank(this.zipCode) && StringUtils.isNotBlank(this.country) &&
                 StringUtils.isNotBlank(this.phoneNumber);
+    }
+
+    public static Address fromElasticParticipantAddress(String fullName, JsonObject esAddress) {
+        String street2 = esAddress.get("street2") != null ? esAddress.get("street2").getAsString() : "";
+        String country = esAddress.get("country") != null ? esAddress.get("country").getAsString() : null;
+
+        return new Address(fullName, esAddress.get("street1").getAsString(),
+                street2,
+                esAddress.get("city").getAsString(),
+                esAddress.get("state").getAsString(),
+                esAddress.get("zip").getAsString(),
+                country,
+                esAddress.get("phone").getAsString());
+    }
+
+    @Override
+    public String toString() {
+        return "Address{" +
+                "company='" + company + '\'' +
+                ", addressLine1='" + addressLine1 + '\'' +
+                ", addressLine2='" + addressLine2 + '\'' +
+                ", city='" + city + '\'' +
+                ", state='" + state + '\'' +
+                ", zipCode='" + zipCode + '\'' +
+                ", country='" + country + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                '}';
     }
 }

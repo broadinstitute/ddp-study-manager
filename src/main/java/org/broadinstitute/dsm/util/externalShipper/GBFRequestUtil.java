@@ -117,7 +117,11 @@ public class GBFRequestUtil implements ExternalShipper {
 
     private static Executor blindTrustEverythingExecutor;
 
-    public GBFRequestUtil() {
+    static {
+        initBlindTrust();
+    }
+
+    private static void initBlindTrust() {
         try {
             if (blindTrustEverythingExecutor == null) {
                 blindTrustEverythingExecutor = Executor.newInstance(SecurityUtil.buildHttpClient());
@@ -125,8 +129,11 @@ public class GBFRequestUtil implements ExternalShipper {
         }
         catch (Exception e) {
             logger.error("Starting up the blindTrustEverythingExecutor ", e);
-            System.exit(-3);
         }
+    }
+
+    public GBFRequestUtil() {
+        initBlindTrust();
     }
 
     public String getExternalShipperName() {
