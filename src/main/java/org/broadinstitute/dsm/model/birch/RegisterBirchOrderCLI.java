@@ -2,10 +2,12 @@ package org.broadinstitute.dsm.model.birch;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.Scanner;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -38,7 +40,7 @@ public class RegisterBirchOrderCLI {
     private static final String USAGE = "args in order are hruid, kitLabel, externalOrderNumber, and collectionTime\n" +
             "for example java -Dconfig.file=... RegisterBirchOrderCLI P1234 TBOS-123 12345678910111213 06/30/2020 15:34\n" +
             "Make sure you are on a broad network\n";
-    public static final String DATE_FORMAT = "MM/dd/yyyy hh:mm";
+    public static final String DATE_FORMAT = "MM/dd/yyyy HH:mm";
 
 
     public static void main(String[] args) {
@@ -54,22 +56,22 @@ public class RegisterBirchOrderCLI {
             String collectionTime = args[3];
 
             Instant collectionDate = null;
-            try {
-                collectionDate = new SimpleDateFormat(DATE_FORMAT).parse(collectionTime).toInstant();
-            } catch(ParseException e) {
-                throw new RuntimeException("Could not parse collection time '"  + collectionTime + "'.  Please use " + DATE_FORMAT + ".  You may need to quote the whole time.");
-            }
+
+            collectionDate = LocalDateTime.parse(collectionTime, DateTimeFormatter.ofPattern(DATE_FORMAT))
+                    .atZone(ZoneId.of("America/New_York"))
+                    .toInstant();
 
             Config cfg = ConfigFactory.load();
 
             System.out.println("About to order " + kitLabel + " for participant " + participantHruid + " with collection time " + collectionTime + " and order number " + externalOrderNumber  +".  Ctrl-c to abort...");
-            try {
-                Thread.sleep(5_000);
-            } catch(InterruptedException e) { }
-
+            System.out.print("Continue? [y/N] ");
+            Scanner scanner = new Scanner(System.in);
+            String input = scanner.nextLine().trim();
+            if (!"y".equalsIgnoreCase(input) && !"yes".equalsIgnoreCase(input)) {
+                return;
+            }
 
             TransactionWrapper.init(2, cfg.getString("portal.dbUrl"), cfg, true);
-
 
             PoolingDataSource<PoolableConnection> dataSource = CFUtil.createDataSource(5, cfg.getString("portal.dbUrl"));
 
@@ -83,13 +85,7 @@ public class RegisterBirchOrderCLI {
                     cfg.getString(ApplicationConfigConstants.CARE_EVOLVE_PROVIDER_NPI));
 
 
-            DDPInstance ddpInstance = null;
-
-            try (Connection conn = dataSource.getConnection()) {
-                ddpInstance = DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS);
-            } catch(SQLException e) {
-                throw new RuntimeException("Cannot get instance",e);
-            }
+            DDPInstance ddpInstance = TransactionWrapper.inTransaction(conn -> DDPInstance.getDDPInstanceWithRole("testboston", DBConstants.HAS_KIT_REQUEST_ENDPOINTS));
 
             String esUrl = cfg.getString(ApplicationConfigConstants.ES_URL);
             String esUsername = cfg.getString(ApplicationConfigConstants.ES_USERNAME);
