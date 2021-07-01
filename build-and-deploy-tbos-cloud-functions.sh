@@ -6,6 +6,20 @@ echo "Will deploy to ${PROJECT_ID} using bucket ${EXPORT_BUCKET} and ${EXPORT_PA
 
 mvn -Pcloud-function -DskipTests clean install package
 
+echo "Deploying testboston kit reporter to ${PROJECT_ID}"
+gcloud --project=${PROJECT_ID} functions deploy \
+    tbos-kit-export \
+    --entry-point=org.broadinstitute.dsm.cf.KitRequestExport \
+    --runtime=java11 \
+    --trigger-topic=tbos-kit-report \
+    --timeout=540 \
+    --memory=1Gib \
+    --source=target/deployment \
+    --set-env-vars="PROJECT_ID=${PROJECT_ID},SECRET_ID=study-manager-config,DDP_INSTANCE=testboston,DDP_INSTANCE=testboston,REPORT_BUCKET=${EXPORT_BUCKET},REPORT_PATH=${EXPORT_PATH},KIT_TYPE=AN" \
+    --vpc-connector=projects/${PROJECT_ID}/locations/us-central1/connectors/appengine-default-connect
+
+
+
 
 echo "Deploying testboston kit dispatcher to ${PROJECT_ID}"
 gcloud --project=${PROJECT_ID} functions deploy \
