@@ -31,17 +31,16 @@ public class ParticipantUtil {
                 continue;
             }
             Map<String, String> dataMap = gson.fromJson(data, Map.class);
-            if (!dataMap.containsKey(FamilyMemberConstants.DATSTAT_ALTPID)
-                    || !dataMap.containsKey(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID)) {
+            if (!dataMap.containsKey(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID)) {
                 return false;
+            }
+            if (!dataMap.containsKey(FamilyMemberConstants.DATSTAT_ALTPID)) {
+                continue;
             }
             if (dataMap.get(FamilyMemberConstants.DATSTAT_ALTPID).equals(participantData.getDdpParticipantId()) &&
                     collaboratorParticipantId.equals(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID))) {
                 return true;
             } else {
-                if (!dataMap.containsKey(FamilyMemberConstants.DATSTAT_ALTPID)) {
-                    continue;
-                }
                 if (dataMap.get(FamilyMemberConstants.DATSTAT_ALTPID).equals(participantData.getDdpParticipantId())) {
                     probandEmail = dataMap.get(FamilyMemberConstants.EMAIL);
                 }

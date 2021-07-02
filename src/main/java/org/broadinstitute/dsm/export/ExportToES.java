@@ -156,27 +156,22 @@ public class ExportToES {
 
     public static void exportWorkflows(List<String> workFlowColumnNames, DDPInstance ddpInstance, ParticipantDataDto participantData,
                                        String ddpParticipantId, List<ParticipantDataDto> participantDataFamily, Map<String, String> dataMap) {
-        for (Map.Entry<String, String> entry: dataMap.entrySet()) {
-            if (!workFlowColumnNames.contains(entry.getKey())) {
-                continue;
+        if (participantData.getFieldTypeId().equals(RGP_PARTICIPANTS)) {
+            if (!ParticipantUtil.checkProbandEmail(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID), participantDataFamily)) {
+                return;
             }
-            if (participantData.getFieldTypeId().equals(RGP_PARTICIPANTS)) {
-                if (!dataMap.containsKey(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID)) {
-                    continue;
-                }
-                if (ParticipantUtil.checkProbandEmail(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID), participantDataFamily)) {
-                    WorkflowForES.StudySpecificData studySpecificData = new WorkflowForES.StudySpecificData(
-                            dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
-                            dataMap.get(FamilyMemberConstants.FIRSTNAME),
-                            dataMap.get(FamilyMemberConstants.LASTNAME)
-                    );
-                    ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
-                            entry.getKey(), entry.getValue(), studySpecificData));
-                }
-            } else {
-                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, ddpParticipantId,
-                        entry.getKey(), entry.getValue()));
-            }
+            WorkflowForES.StudySpecificData studySpecificData = new WorkflowForES.StudySpecificData(
+                    dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+                    dataMap.get(FamilyMemberConstants.FIRSTNAME),
+                    dataMap.get(FamilyMemberConstants.LASTNAME)
+            );
+            dataMap.entrySet().stream().filter(entry -> workFlowColumnNames.contains(entry.getKey()))
+                    .forEach(entry -> ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
+                            entry.getKey(), entry.getValue(), studySpecificData)));
+        } else {
+            dataMap.entrySet().stream().filter(entry -> workFlowColumnNames.contains(entry.getKey()))
+                    .forEach(entry -> ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, ddpParticipantId,
+                            entry.getKey(), entry.getValue())));
         }
     }
 
