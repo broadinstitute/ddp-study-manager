@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.dao.Dao;
@@ -51,6 +52,7 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
 
     private static final String BY_INSTANCE_ID = " WHERE ddp_instance_id = ?";
     private static final String AND_BY_COLUMN_NAME = " AND column_name = ?";
+    private static final String AND_BY_COLUMN_NAMES = " AND column_name IN (?)";
 
     private static final String FIELD_SETTINGS_ID = "field_settings_id";
     private static final String DDP_INSTANCE_ID = "ddp_instance_id";
@@ -204,5 +206,47 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
             throw new RuntimeException("Error getting fieldSettings ", results.resultException);
         }
         return Optional.ofNullable( (FieldSettingsDto) results.resultValue);
+    }
+
+    public List<FieldSettingsDto>  getFieldSettingsByInstanceIdAndColumns(int instanceId, List<String> columns) {
+        String sql = GET_FIELD_SETTINGS
+                + BY_INSTANCE_ID
+                + AND_BY_COLUMN_NAMES.replace("?", columns.stream().collect(Collectors.joining("','","'", "'")));
+        List<FieldSettingsDto> fieldSettingsByColumnNames = new ArrayList<>();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, instanceId);
+                try(ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        fieldSettingsByColumnNames.add(
+                                new FieldSettingsDto(
+                                        rs.getInt(FIELD_SETTINGS_ID),
+                                        rs.getInt(DDP_INSTANCE_ID),
+                                        rs.getString(FIELD_TYPE),
+                                        rs.getString(COLUMN_NAME),
+                                        rs.getString(COLUMN_DISPLAY),
+                                        rs.getString(DISPLAY_TYPE),
+                                        rs.getString(POSSIBLE_VALUES),
+                                        rs.getString(ACTIONS),
+                                        rs.getBoolean(READONLY),
+                                        rs.getInt(ORDER_NUMBER),
+                                        rs.getBoolean(DELETED),
+                                        rs.getLong(LAST_CHANGED),
+                                        rs.getString(CHANGED_BY)
+                                )
+                        );
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                execResult.resultException = ex;
+            }
+            return execResult;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting fieldSettings by instance id: " + instanceId + " and columns: " + columns, results.resultException);
+        }
+        return fieldSettingsByColumnNames;
     }
 }

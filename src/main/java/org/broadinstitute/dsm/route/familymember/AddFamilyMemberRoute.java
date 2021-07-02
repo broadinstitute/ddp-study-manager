@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.route.familymember;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -70,13 +71,49 @@ public class AddFamilyMemberRoute extends RequestHandler {
             participantDataObject.setFieldTypeId(realm.toUpperCase() + NewParticipantData.FIELD_TYPE);
             participantDataObject.setData(participantDataObject.mergeParticipantData(addFamilyMemberPayload));
             participantDataObject.addDefaultOptionsValueToData(getDefaultOptions(Integer.parseInt(ddpInstanceId)));
-            participantDataObject.insertParticipantData(User.getUser(uId).getEmail());
             exportDefaultWorkflowsForFamilyMemberToES(participantId, ddpInstance, ddpInstanceId, maybeFamilyMemberData);
+            exportDataToEsIfCopyProbandInfo(addFamilyMemberPayload, ddpInstance, participantDataObject);
+            participantDataObject.insertParticipantData(User.getUser(uId).getEmail());
             logger.info("Family member for participant " + participantId + " successfully created");
         } catch (Exception e) {
             throw new RuntimeException("Could not create family member " + e);
         }
         return NewParticipantData.parseDtoList(participantDataDao.getParticipantDataByParticipantId(participantId));
+    }
+
+    private void exportDataToEsIfCopyProbandInfo(AddFamilyMemberPayload addFamilyMemberPayload, DDPInstance ddpInstance,
+                           NewParticipantData participantDataObject) {
+        addFamilyMemberPayload.getCopyProbandInfo()
+                .ifPresent(copyProbandInfo -> {
+                    if (!copyProbandInfo) return;
+                    List<FieldSettingsDto> fieldSettingsByInstanceIdAndColumns =
+                            getFieldSettingsDtosByInstanceIdAndColumns(
+                                    Integer.parseInt(ddpInstance.getDdpInstanceId()),
+                                    new ArrayList<>(participantDataObject.getData().keySet())
+                            );
+                    FieldSettings fieldSettings = new FieldSettings();
+                    logger.info("Starting exporting copied proband data to family member into ES");
+                    fieldSettingsByInstanceIdAndColumns.forEach(fieldSettingsDto -> {
+                        if (!fieldSettings.isElasticExportWorkflowType(fieldSettingsDto)) return;
+                        WorkflowForES instanceWithStudySpecificData =
+                                WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, addFamilyMemberPayload.getParticipantId().get(),
+                                        fieldSettingsDto.getColumnName(),
+                                        participantDataObject.getData().get(fieldSettingsDto.getColumnName()),
+                                        new WorkflowForES.StudySpecificData(
+                                                addFamilyMemberPayload.getData().get().getCollaboratorParticipantId(),
+                                                addFamilyMemberPayload.getData().get().getFirstName(),
+                                                addFamilyMemberPayload.getData().get().getLastName()));
+                        ElasticSearchUtil.writeWorkflow(instanceWithStudySpecificData);
+                    });
+                });
+    }
+
+    private List<FieldSettingsDto> getFieldSettingsDtosByInstanceIdAndColumns(int instanceId, List<String> columns) {
+        FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
+        return fieldSettingsDao.getFieldSettingsByInstanceIdAndColumns(
+                instanceId,
+                columns
+        );
     }
 
     private void exportDefaultWorkflowsForFamilyMemberToES(String participantId, DDPInstance ddpInstance, String ddpInstanceId,
@@ -105,6 +142,7 @@ public class AddFamilyMemberRoute extends RequestHandler {
         List<FieldSettingsDto> fieldSettingsByInstanceId = fieldSettingsDao.getFieldSettingsByInstanceId(instanceId);
         return fieldSettings.getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(fieldSettingsByInstanceId);
     }
+
 
 
 }
