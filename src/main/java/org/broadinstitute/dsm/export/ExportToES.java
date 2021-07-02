@@ -164,8 +164,7 @@ public class ExportToES {
                 if (!dataMap.containsKey(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID)) {
                     continue;
                 }
-                if (dataMap.containsValue(FamilyMemberConstants.MEMBER_TYPE_SELF) ||
-                        ParticipantUtil.checkProbandEmail(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID), participantDataFamily)) {
+                if (ParticipantUtil.checkProbandEmail(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID), participantDataFamily)) {
                     WorkflowForES.StudySpecificData studySpecificData = new WorkflowForES.StudySpecificData(
                             dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                             dataMap.get(FamilyMemberConstants.FIRSTNAME),
