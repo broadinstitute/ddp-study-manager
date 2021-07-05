@@ -181,19 +181,21 @@ public class AddFamilyMemberRouteTest {
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
         addFamilyMemberPayload.setProbandDataId(ddpExistingProbandParticipantDataId);
         addFamilyMemberPayload.setCopyProbandInfo(true);
-        Map<String, String> copiedProbandToFamilyMember = new NewParticipantData(participantDataDao).mergeParticipantData(addFamilyMemberPayload);
+        NewParticipantData participantData = new NewParticipantData(participantDataDao);
+        participantData.setData(new HashMap<>());
+        participantData.copyProbandData(addFamilyMemberPayload);
         try {
             ParticipantDataDto participantDataDto = new ParticipantDataDto(
                     addFamilyMemberPayload.getParticipantId().get(),
                     ddpInstanceDto.getDdpInstanceId(),
                     ddpInstanceDto.getInstanceName() + NewParticipantData.FIELD_TYPE,
-                    gson.toJson(copiedProbandToFamilyMember),
+                    gson.toJson(participantData.getData()),
                     System.currentTimeMillis(),
                     user.getEmail()
             );
             ddpCopiedProbandFamilyMemberParticipantDataId = participantDataDao.create(participantDataDto);
             String copiedProbandFamilyMemberData = participantDataDao.get(ddpCopiedProbandFamilyMemberParticipantDataId).orElseThrow().getData();
-            Assert.assertEquals(gson.toJson(copiedProbandToFamilyMember),copiedProbandFamilyMemberData);
+            Assert.assertEquals(gson.toJson(participantData.getData()),copiedProbandFamilyMemberData);
         } catch (Exception e) {
             result = new Result(500);
         }

@@ -101,21 +101,20 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
                 try(ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         fieldSettingsByOptions.add(
-                                new FieldSettingsDto(
-                                        rs.getInt(FIELD_SETTINGS_ID),
-                                        rs.getInt(DDP_INSTANCE_ID),
-                                        rs.getString(FIELD_TYPE),
-                                        rs.getString(COLUMN_NAME),
-                                        rs.getString(COLUMN_DISPLAY),
-                                        rs.getString(DISPLAY_TYPE),
-                                        rs.getString(POSSIBLE_VALUES),
-                                        rs.getString(ACTIONS),
-                                        rs.getBoolean(READONLY),
-                                        rs.getInt(ORDER_NUMBER),
-                                        rs.getBoolean(DELETED),
-                                        rs.getLong(LAST_CHANGED),
-                                        rs.getString(CHANGED_BY)
-                                )
+                                new FieldSettingsDto.Builder(rs.getInt(DDP_INSTANCE_ID))
+                                        .withFieldSettingsId(rs.getInt(FIELD_SETTINGS_ID))
+                                        .withFieldType(rs.getString(FIELD_TYPE))
+                                        .withColumnName(rs.getString(COLUMN_NAME))
+                                        .withColumnDisplay(rs.getString(COLUMN_DISPLAY))
+                                        .withDisplayType(rs.getString(DISPLAY_TYPE))
+                                        .withPossibleValues(rs.getString(POSSIBLE_VALUES))
+                                        .withActions(rs.getString(ACTIONS))
+                                        .withReadOnly(rs.getBoolean(READONLY))
+                                        .withOrderNumber(rs.getInt(ORDER_NUMBER))
+                                        .withDeleted(rs.getBoolean(DELETED))
+                                        .withLastChanged(rs.getLong(LAST_CHANGED))
+                                        .withChangedBy(rs.getString(CHANGED_BY))
+                                .build()
                         );
                     }
                 }
@@ -141,21 +140,20 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
                 try(ResultSet fieldSettingsByInstanceIdRs = stmt.executeQuery()) {
                     while (fieldSettingsByInstanceIdRs.next()) {
                         fieldSettingsByOptions.add(
-                                new FieldSettingsDto(
-                                        fieldSettingsByInstanceIdRs.getInt(FIELD_SETTINGS_ID),
-                                        fieldSettingsByInstanceIdRs.getInt(DDP_INSTANCE_ID),
-                                        fieldSettingsByInstanceIdRs.getString(FIELD_TYPE),
-                                        fieldSettingsByInstanceIdRs.getString(COLUMN_NAME),
-                                        fieldSettingsByInstanceIdRs.getString(COLUMN_DISPLAY),
-                                        fieldSettingsByInstanceIdRs.getString(DISPLAY_TYPE),
-                                        fieldSettingsByInstanceIdRs.getString(POSSIBLE_VALUES),
-                                        fieldSettingsByInstanceIdRs.getString(ACTIONS),
-                                        fieldSettingsByInstanceIdRs.getBoolean(READONLY),
-                                        fieldSettingsByInstanceIdRs.getInt(ORDER_NUMBER),
-                                        fieldSettingsByInstanceIdRs.getBoolean(DELETED),
-                                        fieldSettingsByInstanceIdRs.getLong(LAST_CHANGED),
-                                        fieldSettingsByInstanceIdRs.getString(CHANGED_BY)
-                                )
+                                new FieldSettingsDto.Builder(fieldSettingsByInstanceIdRs.getInt(DDP_INSTANCE_ID))
+                                        .withFieldSettingsId(fieldSettingsByInstanceIdRs.getInt(FIELD_SETTINGS_ID))
+                                        .withFieldType(fieldSettingsByInstanceIdRs.getString(FIELD_TYPE))
+                                        .withColumnName(fieldSettingsByInstanceIdRs.getString(COLUMN_NAME))
+                                        .withColumnDisplay(fieldSettingsByInstanceIdRs.getString(COLUMN_DISPLAY))
+                                        .withDisplayType(fieldSettingsByInstanceIdRs.getString(DISPLAY_TYPE))
+                                        .withPossibleValues(fieldSettingsByInstanceIdRs.getString(POSSIBLE_VALUES))
+                                        .withActions(fieldSettingsByInstanceIdRs.getString(ACTIONS))
+                                        .withReadOnly(fieldSettingsByInstanceIdRs.getBoolean(READONLY))
+                                        .withOrderNumber(fieldSettingsByInstanceIdRs.getInt(ORDER_NUMBER))
+                                        .withDeleted(fieldSettingsByInstanceIdRs.getBoolean(DELETED))
+                                        .withLastChanged(fieldSettingsByInstanceIdRs.getLong(LAST_CHANGED))
+                                        .withChangedBy(fieldSettingsByInstanceIdRs.getString(CHANGED_BY))
+                                        .build()
                         );
                     }
                 }
@@ -179,21 +177,20 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
                 stmt.setString(2, columnName);
                 try(ResultSet fieldSettingsByColumnNameRs = stmt.executeQuery()) {
                     if (fieldSettingsByColumnNameRs.next()) {
-                        dbVals.resultValue = new FieldSettingsDto(
-                                fieldSettingsByColumnNameRs.getInt(FIELD_SETTINGS_ID),
-                                fieldSettingsByColumnNameRs.getInt(DDP_INSTANCE_ID),
-                                fieldSettingsByColumnNameRs.getString(FIELD_TYPE),
-                                fieldSettingsByColumnNameRs.getString(COLUMN_NAME),
-                                fieldSettingsByColumnNameRs.getString(COLUMN_DISPLAY),
-                                fieldSettingsByColumnNameRs.getString(DISPLAY_TYPE),
-                                fieldSettingsByColumnNameRs.getString(POSSIBLE_VALUES),
-                                fieldSettingsByColumnNameRs.getString(ACTIONS),
-                                fieldSettingsByColumnNameRs.getBoolean(READONLY),
-                                fieldSettingsByColumnNameRs.getInt(ORDER_NUMBER),
-                                fieldSettingsByColumnNameRs.getBoolean(DELETED),
-                                fieldSettingsByColumnNameRs.getLong(LAST_CHANGED),
-                                fieldSettingsByColumnNameRs.getString(CHANGED_BY)
-                        );
+                        dbVals.resultValue = new FieldSettingsDto.Builder(fieldSettingsByColumnNameRs.getInt(DDP_INSTANCE_ID))
+                                .withFieldSettingsId(fieldSettingsByColumnNameRs.getInt(FIELD_SETTINGS_ID))
+                                .withFieldType(fieldSettingsByColumnNameRs.getString(FIELD_TYPE))
+                                .withColumnName(fieldSettingsByColumnNameRs.getString(COLUMN_NAME))
+                                .withColumnDisplay(fieldSettingsByColumnNameRs.getString(COLUMN_DISPLAY))
+                                .withDisplayType(fieldSettingsByColumnNameRs.getString(DISPLAY_TYPE))
+                                .withPossibleValues(fieldSettingsByColumnNameRs.getString(POSSIBLE_VALUES))
+                                .withActions(fieldSettingsByColumnNameRs.getString(ACTIONS))
+                                .withReadOnly(fieldSettingsByColumnNameRs.getBoolean(READONLY))
+                                .withOrderNumber(fieldSettingsByColumnNameRs.getInt(ORDER_NUMBER))
+                                .withDeleted(fieldSettingsByColumnNameRs.getBoolean(DELETED))
+                                .withLastChanged(fieldSettingsByColumnNameRs.getLong(LAST_CHANGED))
+                                .withChangedBy(fieldSettingsByColumnNameRs.getString(CHANGED_BY))
+                                .build();
                     }
                 }
             }
@@ -220,21 +217,20 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
                 try(ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         fieldSettingsByColumnNames.add(
-                                new FieldSettingsDto(
-                                        rs.getInt(FIELD_SETTINGS_ID),
-                                        rs.getInt(DDP_INSTANCE_ID),
-                                        rs.getString(FIELD_TYPE),
-                                        rs.getString(COLUMN_NAME),
-                                        rs.getString(COLUMN_DISPLAY),
-                                        rs.getString(DISPLAY_TYPE),
-                                        rs.getString(POSSIBLE_VALUES),
-                                        rs.getString(ACTIONS),
-                                        rs.getBoolean(READONLY),
-                                        rs.getInt(ORDER_NUMBER),
-                                        rs.getBoolean(DELETED),
-                                        rs.getLong(LAST_CHANGED),
-                                        rs.getString(CHANGED_BY)
-                                )
+                                new FieldSettingsDto.Builder(rs.getInt(DDP_INSTANCE_ID))
+                                    .withFieldSettingsId(rs.getInt(FIELD_SETTINGS_ID))
+                                    .withFieldType(rs.getString(FIELD_TYPE))
+                                    .withColumnName(rs.getString(COLUMN_NAME))
+                                    .withColumnDisplay(rs.getString(COLUMN_DISPLAY))
+                                    .withDisplayType(rs.getString(DISPLAY_TYPE))
+                                    .withPossibleValues(rs.getString(POSSIBLE_VALUES))
+                                    .withActions(rs.getString(ACTIONS))
+                                    .withReadOnly(rs.getBoolean(READONLY))
+                                    .withOrderNumber(rs.getInt(ORDER_NUMBER))
+                                    .withDeleted(rs.getBoolean(DELETED))
+                                    .withLastChanged(rs.getLong(LAST_CHANGED))
+                                    .withChangedBy(rs.getString(CHANGED_BY))
+                                    .build()
                         );
                     }
                 }

@@ -74,24 +74,49 @@ public class NewParticipantData {
         return participantData;
     }
 
-    public Map<String, String> mergeParticipantData(@NonNull AddFamilyMemberPayload familyMemberPayload) {
+//    public Map<String, String> mergeParticipantData(@NonNull AddFamilyMemberPayload familyMemberPayload) {
+//        FamilyMemberDetails familyMemberData =
+//                familyMemberPayload.getData().orElseThrow(() -> new NoSuchElementException("Family member data is not provided"));
+//        familyMemberData.setCollaboratorParticipantId(
+//                familyMemberPayload.getRealm().orElse("").toUpperCase() +
+//                "_" +
+//                familyMemberData.getCollaboratorParticipantId());
+//        Map<String, String> mergedData = new HashMap<>();
+//        boolean copyProbandInfo = familyMemberPayload.getCopyProbandInfo().orElse(Boolean.FALSE);
+//        int probandDataId = familyMemberPayload.getProbandDataId().orElse(0);
+//        if (copyProbandInfo && probandDataId > 0) {
+//            Optional<NewParticipantData> maybeParticipantData = dataAccess.get(probandDataId).map(pd -> parseDto((ParticipantDataDto)pd));
+//            maybeParticipantData.ifPresent(p -> mergedData.putAll(p.getData()));
+//        } else {
+//            familyMemberPayload.getParticipantId().ifPresent(pId -> familyMemberData.setEmail(getParticipantEmailById(pId)));
+//        }
+//        familyMemberData.toMap().forEach((k, v) -> mergedData.compute(k, (probandKey, probandVal) -> v != null ? v : probandVal));
+//        return mergedData;
+//    }
+
+    public void setFamilyMemberData(@NonNull AddFamilyMemberPayload familyMemberPayload) {
         FamilyMemberDetails familyMemberData =
                 familyMemberPayload.getData().orElseThrow(() -> new NoSuchElementException("Family member data is not provided"));
         familyMemberData.setCollaboratorParticipantId(
                 familyMemberPayload.getRealm().orElse("").toUpperCase() +
-                "_" +
-                familyMemberData.getCollaboratorParticipantId());
-        Map<String, String> mergedData = new HashMap<>();
-        boolean copyProbandInfo = familyMemberPayload.getCopyProbandInfo().orElse(Boolean.FALSE);
+                        "_" +
+                        familyMemberData.getCollaboratorParticipantId());
+        familyMemberPayload.getParticipantId().ifPresent(pId -> familyMemberData.setEmail(getParticipantEmailById(pId)));
+        this.data = familyMemberData.toMap();
+    }
+
+    public void copyProbandData(AddFamilyMemberPayload familyMemberPayload) {
+        boolean isCopyProband = familyMemberPayload.getCopyProbandInfo().orElse(Boolean.FALSE);
         int probandDataId = familyMemberPayload.getProbandDataId().orElse(0);
-        if (copyProbandInfo && probandDataId > 0) {
-            Optional<NewParticipantData> maybeParticipantData = dataAccess.get(probandDataId).map(pd -> parseDto((ParticipantDataDto)pd));
-            maybeParticipantData.ifPresent(p -> mergedData.putAll(p.getData()));
-        } else {
-            familyMemberPayload.getParticipantId().ifPresent(pId -> familyMemberData.setEmail(getParticipantEmailById(pId)));
-        }
-        familyMemberData.toMap().forEach((k, v) -> mergedData.compute(k, (probandKey, probandVal) -> v != null ? v : probandVal));
-        return mergedData;
+        if (!isCopyProband || probandDataId == 0) return;
+        ParticipantDataDao dataAccess = (ParticipantDataDao) setDataAccess(new ParticipantDataDao());
+        Optional<NewParticipantData> maybeParticipantData = dataAccess.get(probandDataId).map(NewParticipantData::parseDto);
+        maybeParticipantData.ifPresent(participantData -> participantData.data.forEach((k, v) -> this.data.putIfAbsent(k, v)));
+    }
+
+    private Dao setDataAccess(Dao dao) {
+        this.dataAccess = dao;
+        return this.dataAccess;
     }
 
     private String getParticipantEmailById(String pId) {
