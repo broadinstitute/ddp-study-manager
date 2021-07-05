@@ -72,11 +72,11 @@ public class WorkflowStatusUpdate {
         for (Value action : actionsArray) {
             if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
                 if (setting.getFieldType().contains(FamilyMemberConstants.GROUP)) {
-                    ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(instance, ddpParticipantId, workflow, status));
+                    ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(instance, ddpParticipantId, workflow, status), false);
                 } else {
                     Optional<WorkflowForES.StudySpecificData> studySpecificDataOptional = getProbandStudySpecificData(participantDatas);
                     studySpecificDataOptional.ifPresent(studySpecificData -> ElasticSearchUtil.writeWorkflow(WorkflowForES
-                            .createInstanceWithStudySpecificData(instance, ddpParticipantId, workflow, status, studySpecificData)));
+                            .createInstanceWithStudySpecificData(instance, ddpParticipantId, workflow, status, studySpecificData), false));
                 }
                 break;
             }

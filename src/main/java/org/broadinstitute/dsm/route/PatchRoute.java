@@ -363,7 +363,7 @@ public class PatchRoute extends RequestHandler {
         }.getType());
         if (StringUtils.isNotBlank(action.getValue())) {
             if (patch.getFieldId().contains(FamilyMemberConstants.GROUP)) {
-                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, patch.getParentId(), action.getName(), action.getValue()));
+                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, patch.getParentId(), action.getName(), action.getValue()), false);
             }
             else if (ParticipantUtil.checkProbandEmail(data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                     participantDataDao.getParticipantDataByParticipantId(patch.getParentId()))) {
@@ -371,12 +371,12 @@ public class PatchRoute extends RequestHandler {
                         patch.getParentId(), action.getName(), data.get(action.getName()), new WorkflowForES.StudySpecificData(
                                 data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                                 data.get(FamilyMemberConstants.FIRSTNAME),
-                                data.get(FamilyMemberConstants.LASTNAME))));
+                                data.get(FamilyMemberConstants.LASTNAME))), false);
             }
         }
         else if (StringUtils.isNotBlank(action.getName()) && data.containsKey(action.getName())) {
             if (patch.getFieldId().contains(FamilyMemberConstants.GROUP)) {
-                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, patch.getParentId(), action.getName(), data.get(action.getName())));
+                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, patch.getParentId(), action.getName(), data.get(action.getName())), false);
             }
             else if (ParticipantUtil.checkProbandEmail(data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                     participantDataDao.getParticipantDataByParticipantId(patch.getParentId()))) {
@@ -384,7 +384,7 @@ public class PatchRoute extends RequestHandler {
                         patch.getParentId(), action.getName(), data.get(action.getName()), new WorkflowForES.StudySpecificData(
                                 data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                                 data.get(FamilyMemberConstants.FIRSTNAME),
-                                data.get(FamilyMemberConstants.LASTNAME))));
+                                data.get(FamilyMemberConstants.LASTNAME))), false);
             }
         }
     }

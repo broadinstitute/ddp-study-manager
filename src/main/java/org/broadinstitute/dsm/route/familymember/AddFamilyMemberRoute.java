@@ -89,7 +89,7 @@ public class AddFamilyMemberRoute extends RequestHandler {
                                     maybeFamilyMemberData.get().getCollaboratorParticipantId(),
                                     maybeFamilyMemberData.get().getFirstName(),
                                     maybeFamilyMemberData.get().getLastName()));
-            ElasticSearchUtil.writeWorkflow(instanceWithStudySpecificData);
+            ElasticSearchUtil.writeWorkflow(instanceWithStudySpecificData, false);
         });
     }
 

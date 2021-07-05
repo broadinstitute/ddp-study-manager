@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class ExportToES {
@@ -56,11 +57,11 @@ public class ExportToES {
         }
     }
 
-    public static void exportObjectsToES(String data) {
+    public static void exportObjectsToES(String data, AtomicBoolean clearBeforeUpdate) {
         ExportPayload payload = gson.fromJson(data, ExportPayload.class);
         int instanceId = ddpInstanceDao.getDDPInstanceIdByGuid(payload.getStudy());
 
-        exportWorkflowsAndFamilyIds(instanceId);
+        exportWorkflowsAndFamilyIds(instanceId, clearBeforeUpdate);
 
         exportMedicalRecords(instanceId);
 
@@ -69,11 +70,11 @@ public class ExportToES {
         exportSamples(instanceId);
     }
 
-    public static void exportWorkflowsAndFamilyIds(int instanceId) {
+    public static void exportWorkflowsAndFamilyIds(int instanceId, AtomicBoolean clearBeforeUpdate) {
         logger.info("Started exporting workflows and family ID-s for instance with id " + instanceId);
         List<String> workFlowColumnNames = findWorkFlowColumnNames(instanceId);
         List<ParticipantDataDto> allParticipantData = participantDataDao.getParticipantDataByInstanceid(instanceId);
-        checkWorkflowNamesAndExport(workFlowColumnNames, allParticipantData, instanceId);
+        checkWorkflowNamesAndExport(workFlowColumnNames, allParticipantData, instanceId, clearBeforeUpdate);
         logger.info("Finished exporting workflows and family ID-s for instance with id " + instanceId);
     }
 
@@ -125,7 +126,8 @@ public class ExportToES {
         logger.info("Finished exporting tissue records for instance with id " + instanceId);
     }
 
-    public static void checkWorkflowNamesAndExport(List<String> workFlowColumnNames, List<ParticipantDataDto> allParticipantData, int instanceId) {
+    public static void checkWorkflowNamesAndExport(List<String> workFlowColumnNames, List<ParticipantDataDto> allParticipantData,
+                                                   int instanceId, AtomicBoolean clearBeforeUpdate) {
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
         Optional<String> maybeEsParticipantIndex =
                 new DDPInstanceDao().getEsParticipantIndexByInstanceId(instanceId);
@@ -146,7 +148,7 @@ public class ExportToES {
                 continue;
             }
             Map<String, String> dataMap = gson.fromJson(data, Map.class);
-            exportWorkflows(workFlowColumnNames, ddpInstance, participantData, ddpParticipantId, participantDataFamily, dataMap);
+            exportWorkflows(workFlowColumnNames, ddpInstance, participantData, ddpParticipantId, participantDataFamily, dataMap, clearBeforeUpdate);
             if (dataMap.containsKey(FamilyMemberConstants.FAMILY_ID)) {
                 ElasticSearchUtil.writeDsmRecord(ddpInstance, null,
                         ddpParticipantId, ESObjectConstants.FAMILY_ID, dataMap.get(FAMILY_ID), null);
@@ -155,7 +157,8 @@ public class ExportToES {
     }
 
     public static void exportWorkflows(List<String> workFlowColumnNames, DDPInstance ddpInstance, ParticipantDataDto participantData,
-                                       String ddpParticipantId, List<ParticipantDataDto> participantDataFamily, Map<String, String> dataMap) {
+                                       String ddpParticipantId, List<ParticipantDataDto> participantDataFamily, Map<String, String> dataMap,
+                                       AtomicBoolean clearBeforeUpdate) {
         if (participantData.getFieldTypeId().equals(RGP_PARTICIPANTS)) {
             if (!ParticipantUtil.checkProbandEmail(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID), participantDataFamily)) {
                 return;
@@ -166,12 +169,18 @@ public class ExportToES {
                     dataMap.get(FamilyMemberConstants.LASTNAME)
             );
             dataMap.entrySet().stream().filter(entry -> workFlowColumnNames.contains(entry.getKey()))
-                    .forEach(entry -> ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
-                            entry.getKey(), entry.getValue(), studySpecificData)));
+                    .forEach(entry -> {
+                        ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
+                                entry.getKey(), entry.getValue(), studySpecificData), clearBeforeUpdate.get());
+                        clearBeforeUpdate.set(false);
+                    });
         } else {
             dataMap.entrySet().stream().filter(entry -> workFlowColumnNames.contains(entry.getKey()))
-                    .forEach(entry -> ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, ddpParticipantId,
-                            entry.getKey(), entry.getValue())));
+                    .forEach(entry -> {
+                        ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, ddpParticipantId,
+                                entry.getKey(), entry.getValue()), clearBeforeUpdate.get());
+                        clearBeforeUpdate.set(false);
+                    });
         }
     }
 
