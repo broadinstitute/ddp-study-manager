@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.model.participant.data;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -23,9 +22,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Data
-public class NewParticipantData {
+public class ParticipantData {
 
-    private static final Logger logger = LoggerFactory.getLogger(NewParticipantData.class);
+    private static final Logger logger = LoggerFactory.getLogger(ParticipantData.class);
 
     public static final String FIELD_TYPE = "_PARTICIPANTS";
 
@@ -37,14 +36,14 @@ public class NewParticipantData {
 
     private Dao dataAccess;
 
-    public NewParticipantData() {}
+    public ParticipantData() {}
 
-    public NewParticipantData(Dao dao) {
+    public ParticipantData(Dao dao) {
         dataAccess = dao;
     }
 
-    public NewParticipantData(long participantDataId, String ddpParticipantId, int ddpInstanceId, String fieldTypeId,
-                              Map<String, String> data) {
+    public ParticipantData(long participantDataId, String ddpParticipantId, int ddpInstanceId, String fieldTypeId,
+                           Map<String, String> data) {
         this.dataId = participantDataId;
         this.ddpParticipantId = ddpParticipantId;
         this.ddpInstanceId = ddpInstanceId;
@@ -52,8 +51,8 @@ public class NewParticipantData {
         this.data = data;
     }
 
-    public static NewParticipantData parseDto(@NonNull ParticipantDataDto participantDataDto) {
-        return new NewParticipantData(
+    public static ParticipantData parseDto(@NonNull ParticipantDataDto participantDataDto) {
+        return new ParticipantData(
                 participantDataDto.getParticipantDataId(),
                 participantDataDto.getDdpParticipantId(),
                 participantDataDto.getDdpInstanceId(),
@@ -62,9 +61,9 @@ public class NewParticipantData {
         );
     }
 
-    public static List<NewParticipantData> parseDtoList(@NonNull List<ParticipantDataDto> participantDataDtoList) {
-        List<NewParticipantData> participantData = new ArrayList<>();
-        participantDataDtoList.forEach(dto -> participantData.add(new NewParticipantData(
+    public static List<ParticipantData> parseDtoList(@NonNull List<ParticipantDataDto> participantDataDtoList) {
+        List<ParticipantData> participantData = new ArrayList<>();
+        participantDataDtoList.forEach(dto -> participantData.add(new ParticipantData(
                 dto.getParticipantDataId(),
                 dto.getDdpParticipantId(),
                 dto.getDdpInstanceId(),
@@ -73,26 +72,6 @@ public class NewParticipantData {
         )));
         return participantData;
     }
-
-//    public Map<String, String> mergeParticipantData(@NonNull AddFamilyMemberPayload familyMemberPayload) {
-//        FamilyMemberDetails familyMemberData =
-//                familyMemberPayload.getData().orElseThrow(() -> new NoSuchElementException("Family member data is not provided"));
-//        familyMemberData.setCollaboratorParticipantId(
-//                familyMemberPayload.getRealm().orElse("").toUpperCase() +
-//                "_" +
-//                familyMemberData.getCollaboratorParticipantId());
-//        Map<String, String> mergedData = new HashMap<>();
-//        boolean copyProbandInfo = familyMemberPayload.getCopyProbandInfo().orElse(Boolean.FALSE);
-//        int probandDataId = familyMemberPayload.getProbandDataId().orElse(0);
-//        if (copyProbandInfo && probandDataId > 0) {
-//            Optional<NewParticipantData> maybeParticipantData = dataAccess.get(probandDataId).map(pd -> parseDto((ParticipantDataDto)pd));
-//            maybeParticipantData.ifPresent(p -> mergedData.putAll(p.getData()));
-//        } else {
-//            familyMemberPayload.getParticipantId().ifPresent(pId -> familyMemberData.setEmail(getParticipantEmailById(pId)));
-//        }
-//        familyMemberData.toMap().forEach((k, v) -> mergedData.compute(k, (probandKey, probandVal) -> v != null ? v : probandVal));
-//        return mergedData;
-//    }
 
     public void setFamilyMemberData(@NonNull AddFamilyMemberPayload familyMemberPayload) {
         FamilyMemberDetails familyMemberData =
@@ -110,7 +89,7 @@ public class NewParticipantData {
         int probandDataId = familyMemberPayload.getProbandDataId().orElse(0);
         if (!isCopyProband || probandDataId == 0) return;
         ParticipantDataDao dataAccess = (ParticipantDataDao) setDataAccess(new ParticipantDataDao());
-        Optional<NewParticipantData> maybeParticipantData = dataAccess.get(probandDataId).map(NewParticipantData::parseDto);
+        Optional<ParticipantData> maybeParticipantData = dataAccess.get(probandDataId).map(ParticipantData::parseDto);
         maybeParticipantData.ifPresent(participantData -> participantData.data.forEach((k, v) -> this.data.putIfAbsent(k, v)));
     }
 
