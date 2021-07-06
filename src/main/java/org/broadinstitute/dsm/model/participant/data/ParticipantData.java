@@ -76,10 +76,13 @@ public class ParticipantData {
     public void setFamilyMemberData(@NonNull AddFamilyMemberPayload familyMemberPayload) {
         FamilyMemberDetails familyMemberData =
                 familyMemberPayload.getData().orElseThrow(() -> new NoSuchElementException("Family member data is not provided"));
+        DDPInstanceDao dataAccess = (DDPInstanceDao) setDataAccess(new DDPInstanceDao());
+        String collaboratorIdPrefix = dataAccess.getCollaboratorIdPrefixByStudyGuid(familyMemberPayload.getRealm().orElseThrow())
+                .orElse(familyMemberPayload.getRealm().get());
         familyMemberData.setCollaboratorParticipantId(
-                familyMemberPayload.getRealm().orElse("").toUpperCase() +
-                        "_" +
-                        familyMemberData.getCollaboratorParticipantId());
+                collaboratorIdPrefix +
+                "_" +
+                familyMemberData.getCollaboratorParticipantId());
         familyMemberPayload.getParticipantId().ifPresent(pId -> familyMemberData.setEmail(getParticipantEmailById(pId)));
         this.data = familyMemberData.toMap();
     }
