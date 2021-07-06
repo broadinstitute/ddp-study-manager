@@ -21,7 +21,7 @@ import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
-import org.broadinstitute.dsm.model.participant.data.NewParticipantData;
+import org.broadinstitute.dsm.model.participant.data.ParticipantData;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
@@ -65,17 +65,17 @@ public class AutomaticProbandDataCreator implements Defaultable {
                     String participantId = StringUtils.isNotBlank(esProfile.getParticipantLegacyAlptid())
                             ? esProfile.getParticipantLegacyAlptid()
                             : esProfile.getParticipantGuid();
-                    NewParticipantData newParticipantData = new NewParticipantData(participantDataDao);
+                    ParticipantData participantData = new ParticipantData(participantDataDao);
                     Optional<BookmarkDto> maybeFamilyIdOfBookmark = bookmarkDao.getBookmarkByInstance(RGP_FAMILY_ID);
                     Map<String, String> probandDataMap = extractProbandDefaultDataFromParticipantProfile(esData, maybeFamilyIdOfBookmark);
-                    newParticipantData.setData(
+                    participantData.setData(
                             participantId,
                             Integer.parseInt(instance.getDdpInstanceId()),
-                            instance.getName().toUpperCase() + NewParticipantData.FIELD_TYPE,
+                            instance.getName().toUpperCase() + ParticipantData.FIELD_TYPE,
                             probandDataMap
                     );
-                    newParticipantData.addDefaultOptionsValueToData(columnsWithDefaultOptions);
-                    newParticipantData.insertParticipantData("SYSTEM");
+                    participantData.addDefaultOptionsValueToData(columnsWithDefaultOptions);
+                    participantData.insertParticipantData("SYSTEM");
                     columnsWithDefaultOptionsFilteredByElasticExportWorkflow.forEach((col, val) ->
                             ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(instance, participantId, col, val,
                                     new WorkflowForES.StudySpecificData(probandDataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
