@@ -74,9 +74,6 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
                 continue;
             }
             String ddpParticipantId = participantData.getDdpParticipantId();
-            if (!ddpParticipantId.equals("WUKIOQNKXJZGCAXCSYGB")) {
-                continue;
-            }
             String finalDdpParticipantId = ddpParticipantId;
             List<ParticipantDataDto> participantDataFamily = allParticipantData.stream()
                     .filter(participantDataDto -> participantDataDto.getDdpParticipantId().equals(finalDdpParticipantId))
