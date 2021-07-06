@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model;
 
+import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -8,6 +9,7 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.rgp.AutomaticProbandDataCreator;
 import org.broadinstitute.dsm.model.at.DefaultValues;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -101,6 +103,8 @@ public class ParticipantWrapper {
                 defaultValues = new DefaultValues(participantData, participantESData, instance, null);
                 participantData = defaultValues.addDefaultValues();
             }
+
+            sortBySelfElseById(participantData);
 
             List<String> baseList = new ArrayList<>(participantESData.keySet());
 
@@ -222,10 +226,20 @@ public class ParticipantWrapper {
 
             baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
 
+            sortBySelfElseById(participantData);
+
             //bring together all the information
             List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistories, kitRequests, abstractionActivities, abstractionSummary, proxyData, participantData);
             return r;
         }
+    }
+
+    private static void sortBySelfElseById(Map<String, List<ParticipantData>> participantData) {
+        participantData.values().forEach(pDataList -> pDataList.sort((o1, o2) -> {
+            Map<String, String> pData = new Gson().fromJson(o1.getData(), new TypeToken<Map<String, String>>() {}.getType());
+            if (FamilyMemberConstants.MEMBER_TYPE_SELF.equals(pData.get(FamilyMemberConstants.MEMBER_TYPE))) return -1;
+            return Integer.parseInt(o1.getDataId()) - Integer.parseInt(o2.getDataId());
+        }));
     }
 
     public static Optional<ParticipantWrapper> getParticipantFromESByHruid(DDPInstance ddpInstanceByRealm, String participantHruid) {
