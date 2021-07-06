@@ -849,6 +849,11 @@ public class ElasticSearchTest extends TestHelper {
 
         testWorkflowWithStudySpecificData(ddpParticipantId, workflow, status, subjectId, firstname, lastname, ddpInstance);
 
+        ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
+                workflow, status, new WorkflowForES.StudySpecificData(subjectId, firstname, lastname)), true);
+
+        testWorkflowWithStudySpecificData(ddpParticipantId, workflow, status, subjectId, firstname, lastname, ddpInstance);
+
         String newSubjectId = "testId3";
 
         ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
