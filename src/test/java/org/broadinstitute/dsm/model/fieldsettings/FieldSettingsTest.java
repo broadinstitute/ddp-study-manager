@@ -49,6 +49,7 @@ public class FieldSettingsTest {
     @Test
     public void testIsElasticExportWorkflowType() {
         boolean isElasticExportWorkflowType = fieldSettings.isElasticExportWorkflowType(actions);
+        Assert.assertTrue(fieldSettings.isElasticExportWorkflowType(new FieldSettingsDto.Builder(0).withActions(actions).build()));
         Assert.assertTrue(isElasticExportWorkflowType);
     }
 
@@ -61,14 +62,14 @@ public class FieldSettingsTest {
     }
 
     List<FieldSettingsDto> createStaticFieldSettingDtoList() {
-        FieldSettingsDto fieldSettingsDto1 = new FieldSettingsDto();
+        FieldSettingsDto fieldSettingsDto1 = new FieldSettingsDto.Builder(9999).build();
         fieldSettingsDto1.setColumnName(acceptanceStatusColumnName);
         fieldSettingsDto1.setPossibleValues(acceptanceStatusPossibleValue);
         fieldSettingsDto1.setActions(actions);
-        FieldSettingsDto fieldSettingsDto2 = new FieldSettingsDto();
+        FieldSettingsDto fieldSettingsDto2 = new FieldSettingsDto.Builder(10000).build();
         fieldSettingsDto2.setColumnName(activeColumnName);
         fieldSettingsDto2.setPossibleValues(activePossibleValue);
-        FieldSettingsDto fieldSettingsDto3 = new FieldSettingsDto();
+        FieldSettingsDto fieldSettingsDto3 = new FieldSettingsDto.Builder(10001).build();
         fieldSettingsDto3.setColumnName(ethnicityColumnName);
         fieldSettingsDto3.setPossibleValues(ethnicityPossibleValue);
 
