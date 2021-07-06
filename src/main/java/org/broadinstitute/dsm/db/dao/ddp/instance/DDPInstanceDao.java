@@ -246,7 +246,7 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
                     }
                 }
                 catch (SQLException e) {
-                    throw new RuntimeException("Error getting participant es index with study guid: " + studyGuid, e);
+                    throw new RuntimeException("Error getting collaborator id prefix with study guid: " + studyGuid, e);
                 }
             }
             catch (SQLException ex) {
@@ -256,7 +256,7 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
         });
 
         if (results.resultException != null) {
-            throw new RuntimeException("Couldn't get participant es index with study guid: " + studyGuid, results.resultException);
+            throw new RuntimeException("Couldn't get collaborator id prefix with study guid: " + studyGuid, results.resultException);
         }
         return Optional.ofNullable((String) results.resultValue);
     }
