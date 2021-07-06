@@ -79,7 +79,7 @@ public class AutomaticProbandDataCreator implements Defaultable {
                     columnsWithDefaultOptionsFilteredByElasticExportWorkflow.forEach((col, val) ->
                             ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(instance, participantId, col, val,
                                     new WorkflowForES.StudySpecificData(probandDataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
-                                            probandDataMap.get(FamilyMemberConstants.FIRSTNAME), probandDataMap.get(FamilyMemberConstants.LASTNAME))))
+                                            probandDataMap.get(FamilyMemberConstants.FIRSTNAME), probandDataMap.get(FamilyMemberConstants.LASTNAME))), false)
                     );
                     maybeFamilyIdOfBookmark.ifPresent(familyIdBookmarkDto -> {
                         insertFamilyIdToDsmES(instance.getParticipantIndexES(), participantId, familyIdBookmarkDto.getValue());

@@ -798,7 +798,7 @@ public class ElasticSearchTest extends TestHelper {
         Map<String, Object> workflowsBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
 
         ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, ddpParticipantId,
-                workflow, status));
+                workflow, status), false);
         Map<String, Object> workflows = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
 
         if (workflows != null && !workflows.isEmpty()) {
@@ -814,7 +814,7 @@ public class ElasticSearchTest extends TestHelper {
 
         String newStatus = "DECEASED";
         ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, ddpParticipantId,
-                workflow, newStatus));
+                workflow, newStatus), false);
         Map<String, Object> updatedWorkflows = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
 
         if (updatedWorkflows != null && !updatedWorkflows.isEmpty()) {
@@ -845,14 +845,19 @@ public class ElasticSearchTest extends TestHelper {
         Map<String, Object> workflowsBefore = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
 
         ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
-                workflow, status, new WorkflowForES.StudySpecificData(subjectId, firstname, lastname)));
+                workflow, status, new WorkflowForES.StudySpecificData(subjectId, firstname, lastname)), false);
+
+        testWorkflowWithStudySpecificData(ddpParticipantId, workflow, status, subjectId, firstname, lastname, ddpInstance);
+
+        ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
+                workflow, status, new WorkflowForES.StudySpecificData(subjectId, firstname, lastname)), true);
 
         testWorkflowWithStudySpecificData(ddpParticipantId, workflow, status, subjectId, firstname, lastname, ddpInstance);
 
         String newSubjectId = "testId3";
 
         ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
-                workflow, status, new WorkflowForES.StudySpecificData(newSubjectId, firstname, lastname)));
+                workflow, status, new WorkflowForES.StudySpecificData(newSubjectId, firstname, lastname)), false);
 
         testWorkflowWithStudySpecificData(ddpParticipantId, workflow, status, subjectId, firstname, lastname, ddpInstance);
 

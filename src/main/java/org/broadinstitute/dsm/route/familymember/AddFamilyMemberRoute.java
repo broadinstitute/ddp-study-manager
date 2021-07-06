@@ -110,7 +110,7 @@ public class AddFamilyMemberRoute extends RequestHandler {
                                     addFamilyMemberPayload.getData().get().getCollaboratorParticipantId(),
                                     addFamilyMemberPayload.getData().get().getFirstName(),
                                     addFamilyMemberPayload.getData().get().getLastName()));
-            ElasticSearchUtil.writeWorkflow(instanceWithStudySpecificData);
+            ElasticSearchUtil.writeWorkflow(instanceWithStudySpecificData, false);
         });
     }
 
@@ -132,7 +132,7 @@ public class AddFamilyMemberRoute extends RequestHandler {
                                     maybeFamilyMemberData.getCollaboratorParticipantId(),
                                     maybeFamilyMemberData.getFirstName(),
                                     maybeFamilyMemberData.getLastName()));
-            ElasticSearchUtil.writeWorkflow(instanceWithStudySpecificData);
+            ElasticSearchUtil.writeWorkflow(instanceWithStudySpecificData, false);
         });
     }
 
