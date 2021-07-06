@@ -340,6 +340,9 @@ public class FilterRoute extends RequestHandler {
             String esCondition = queryConditions.get(ElasticSearchUtil.ES);
             esCondition += newCondition.toString();
             queryConditions.put(ElasticSearchUtil.ES, esCondition);
+        } else {
+            //so that empty list is returned
+            queryConditions.put(ElasticSearchUtil.ES, ElasticSearchUtil.BY_GUID + ElasticSearchUtil.NOT_GUID);
         }
     }
 
