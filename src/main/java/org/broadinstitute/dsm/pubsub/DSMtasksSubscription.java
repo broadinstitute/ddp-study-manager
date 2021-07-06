@@ -52,7 +52,7 @@ public class DSMtasksSubscription {
                             if (attributesMap.containsKey(CLEAR_BEFORE_UPDATE)) {
                                 clearBeforeUpdate.set(true);
                             }
-                            ExportToES.exportObjectsToES(data, clearBeforeUpdate);
+                            new ExportToES().exportObjectsToES(data, clearBeforeUpdate);
                             break;
                         case PARTICIPANT_REGISTERED:
                             generateStudyDefaultValues(consumer, attributesMap);
