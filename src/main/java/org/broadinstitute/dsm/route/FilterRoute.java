@@ -41,6 +41,8 @@ public class FilterRoute extends RequestHandler {
     public static final String PARENT_PARTICIPANT_LIST = "participantList";
     public static final String TISSUE_LIST_PARENT = "tissueList";
     public static final String PARTICIPANT_DATA = "participantData";
+    public static final String OPTIONS = "OPTIONS";
+    public static final String RADIO = "RADIO";
 
     private PatchUtil patchUtil;
 
@@ -313,7 +315,7 @@ public class FilterRoute extends RequestHandler {
             String data = participantData.getData();
             if (data != null) {
                 JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
-                if (filter.getSelectedOptions() != null) {
+                if (OPTIONS.equals(filter.getType()) || RADIO.equals(filter.getType())) {
                     for (String option: filter.getSelectedOptions()) {
                         if (dataJsonObject.get(tmpName) != null && dataJsonObject.get(tmpName).getAsString()
                                 .equals(option)) {
