@@ -70,7 +70,7 @@ public class KitRequestDao implements Dao<KitRequestDto> {
         "external_order_status, " +
         "external_response, " +
         "upload_reason, " +
-        "order_transmitted_at" +
+        "order_transmitted_at " +
         "FROM " +
         "ddp_kit_request";
 
