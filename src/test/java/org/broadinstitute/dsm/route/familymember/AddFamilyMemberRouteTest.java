@@ -17,7 +17,7 @@ import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.model.participant.data.AddFamilyMemberPayload;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
-import org.broadinstitute.dsm.model.participant.data.NewParticipantData;
+import org.broadinstitute.dsm.model.participant.data.ParticipantData;
 import org.broadinstitute.dsm.util.DBTestUtil;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -77,7 +77,7 @@ public class AddFamilyMemberRouteTest {
 
     private static void createProbandTestParticipantData() {
         ParticipantDataDto probandParticipantDataDto =
-                new ParticipantDataDto(participantId, ddpInstanceDto.getDdpInstanceId(), NewParticipantData.FIELD_TYPE,
+                new ParticipantDataDto(participantId, ddpInstanceDto.getDdpInstanceId(), ParticipantData.FIELD_TYPE,
                         gson.toJson(probandData), System.currentTimeMillis(), user.getEmail());
         ddpExistingProbandParticipantDataId = participantDataDao.create(probandParticipantDataDto);
     }
@@ -147,9 +147,9 @@ public class AddFamilyMemberRouteTest {
     public void relationshipIdAlreadyExists() {
         String payload = payloadFactory(participantId, ddpInstanceDto.getInstanceName(), probandData, user.getUserId());
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
-        NewParticipantData participantData = new NewParticipantData(participantDataDao);
+        ParticipantData participantData = new ParticipantData(participantDataDao);
         participantData.setData(addFamilyMemberPayload.getParticipantId().get(), ddpInstanceDto.getDdpInstanceId(),
-                ddpInstanceDto.getInstanceName() + NewParticipantData.FIELD_TYPE, probandData);
+                ddpInstanceDto.getInstanceName() + ParticipantData.FIELD_TYPE, probandData);
         Assert.assertTrue(participantData.isRelationshipIdExists());
     }
 
@@ -162,7 +162,7 @@ public class AddFamilyMemberRouteTest {
             ParticipantDataDto participantDataDto = new ParticipantDataDto(
                     addFamilyMemberPayload.getParticipantId().get(),
                     ddpInstanceDto.getDdpInstanceId(),
-                    ddpInstanceDto.getInstanceName() + NewParticipantData.FIELD_TYPE,
+                    ddpInstanceDto.getInstanceName() + ParticipantData.FIELD_TYPE,
                     gson.toJson(addFamilyMemberPayload.getData().get()),
                     System.currentTimeMillis(),
                     user.getEmail()
@@ -181,19 +181,21 @@ public class AddFamilyMemberRouteTest {
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
         addFamilyMemberPayload.setProbandDataId(ddpExistingProbandParticipantDataId);
         addFamilyMemberPayload.setCopyProbandInfo(true);
-        Map<String, String> copiedProbandToFamilyMember = new NewParticipantData(participantDataDao).mergeParticipantData(addFamilyMemberPayload);
+        ParticipantData participantData = new ParticipantData(participantDataDao);
+        participantData.setData(new HashMap<>());
+        participantData.copyProbandData(addFamilyMemberPayload);
         try {
             ParticipantDataDto participantDataDto = new ParticipantDataDto(
                     addFamilyMemberPayload.getParticipantId().get(),
                     ddpInstanceDto.getDdpInstanceId(),
-                    ddpInstanceDto.getInstanceName() + NewParticipantData.FIELD_TYPE,
-                    gson.toJson(copiedProbandToFamilyMember),
+                    ddpInstanceDto.getInstanceName() + ParticipantData.FIELD_TYPE,
+                    gson.toJson(participantData.getData()),
                     System.currentTimeMillis(),
                     user.getEmail()
             );
             ddpCopiedProbandFamilyMemberParticipantDataId = participantDataDao.create(participantDataDto);
             String copiedProbandFamilyMemberData = participantDataDao.get(ddpCopiedProbandFamilyMemberParticipantDataId).orElseThrow().getData();
-            Assert.assertEquals(gson.toJson(copiedProbandToFamilyMember),copiedProbandFamilyMemberData);
+            Assert.assertEquals(gson.toJson(participantData.getData()),copiedProbandFamilyMemberData);
         } catch (Exception e) {
             result = new Result(500);
         }

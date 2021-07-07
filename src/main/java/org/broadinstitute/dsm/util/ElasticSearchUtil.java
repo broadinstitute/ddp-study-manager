@@ -369,7 +369,7 @@ public class ElasticSearchUtil {
         return addressByParticipant;
     }
 
-    public static void writeWorkflow(@NonNull WorkflowForES workflowForES) {
+    public static void writeWorkflow(@NonNull WorkflowForES workflowForES, boolean clearBeforeUpdate) {
         String ddpParticipantId = workflowForES.getDdpParticipantId();
         DDPInstance instance = workflowForES.getInstance();
         String index = instance.getParticipantIndexES();
@@ -380,7 +380,7 @@ public class ElasticSearchUtil {
             Map<String, Object> workflowMapES = getObjectsMap(index, ddpParticipantId, ESObjectConstants.WORKFLOWS);
             String workflow = workflowForES.getWorkflow();
             String status = workflowForES.getStatus();
-            if (workflowMapES != null && !workflowMapES.isEmpty()) {
+            if (workflowMapES != null && !workflowMapES.isEmpty() && !clearBeforeUpdate) {
                 List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflowMapES.get(ESObjectConstants.WORKFLOWS);
                 if (workflowListES != null && !workflowListES.isEmpty()) {
                     if (workflowForES.getStudySpecificData() != null) {

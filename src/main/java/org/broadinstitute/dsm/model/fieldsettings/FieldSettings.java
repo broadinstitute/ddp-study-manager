@@ -52,6 +52,11 @@ public class FieldSettings {
                 .orElse("");
     }
 
+    public boolean isElasticExportWorkflowType(FieldSettingsDto fieldSettings) {
+        if (StringUtils.isBlank(fieldSettings.getActions())) return false;
+        return isElasticExportWorkflowType(fieldSettings.getActions());
+    }
+
     boolean isDefaultOption(String possibleValuesJson) {
         if (StringUtils.isBlank(possibleValuesJson)) return false;
         List<Map<String, Object>> possibleValues = new Gson().fromJson(possibleValuesJson, List.class);

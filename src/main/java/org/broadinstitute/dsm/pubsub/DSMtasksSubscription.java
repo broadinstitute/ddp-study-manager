@@ -18,11 +18,13 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DSMtasksSubscription {
 
     private static final Logger logger = LoggerFactory.getLogger(DSMtasksSubscription.class);
     public static final String TASK_TYPE = "taskType";
+    public static final String CLEAR_BEFORE_UPDATE = "clearBeforeUpdate";
     public static final String UPDATE_CUSTOM_WORKFLOW = "UPDATE_CUSTOM_WORKFLOW";
     public static final String ELASTIC_EXPORT = "ELASTIC_EXPORT";
     public static final String PARTICIPANT_REGISTERED = "PARTICIPANT_REGISTERED";
@@ -46,7 +48,11 @@ public class DSMtasksSubscription {
                             break;
                         case ELASTIC_EXPORT:
                             consumer.ack();
-                            ExportToES.exportObjectsToES(data);
+                            AtomicBoolean clearBeforeUpdate = new AtomicBoolean(false);
+                            if (attributesMap.containsKey(CLEAR_BEFORE_UPDATE)) {
+                                clearBeforeUpdate.set(true);
+                            }
+                            new ExportToES().exportObjectsToES(data, clearBeforeUpdate);
                             break;
                         case PARTICIPANT_REGISTERED:
                             generateStudyDefaultValues(consumer, attributesMap);
