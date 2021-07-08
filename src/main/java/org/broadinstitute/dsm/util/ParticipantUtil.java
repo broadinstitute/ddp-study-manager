@@ -34,13 +34,13 @@ public class ParticipantUtil {
             if (!dataMap.containsKey(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID)) {
                 return false;
             }
-            if (dataMap.containsKey(FamilyMemberConstants.DATSTAT_ALTPID) &&
-                    dataMap.get(FamilyMemberConstants.DATSTAT_ALTPID).equals(participantData.getDdpParticipantId()) &&
+            boolean isOldApplicant = dataMap.containsKey(FamilyMemberConstants.DATSTAT_ALTPID) &&
+                    dataMap.get(FamilyMemberConstants.DATSTAT_ALTPID).equals(participantData.getDdpParticipantId());
+            if ((dataMap.containsKey(FamilyMemberConstants.IS_APPLICANT) || isOldApplicant) &&
                     collaboratorParticipantId.equals(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID))) {
                 return true;
             } else {
-                if (dataMap.containsKey(FamilyMemberConstants.DATSTAT_ALTPID) &&
-                        dataMap.get(FamilyMemberConstants.DATSTAT_ALTPID).equals(participantData.getDdpParticipantId())) {
+                if ((dataMap.containsKey(FamilyMemberConstants.IS_APPLICANT) || isOldApplicant)) {
                     probandEmail = dataMap.get(FamilyMemberConstants.EMAIL);
                 }
                 if (collaboratorParticipantId.equals(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID))) {
