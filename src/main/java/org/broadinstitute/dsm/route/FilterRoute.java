@@ -325,7 +325,10 @@ public class FilterRoute extends RequestHandler {
                             break;
                         }
                     }
-                } else {
+                } else if (filter.isNotEmpty()) {
+
+                }
+                else {
                     if (filter.getFilter1() != null && filter.getFilter1().getValue() != null) {
                         if (dataJsonObject.get(tmpName) != null && dataJsonObject.get(tmpName).getAsString()
                                 .equals(filter.getFilter1().getValue())) {
