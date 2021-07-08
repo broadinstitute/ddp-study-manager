@@ -10,7 +10,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
-import org.broadinstitute.dsm.model.rgp.AutomaticProbandDataCreator;
 import org.broadinstitute.dsm.model.at.DefaultValues;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
