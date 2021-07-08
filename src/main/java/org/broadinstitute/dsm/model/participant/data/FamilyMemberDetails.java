@@ -40,6 +40,9 @@ public class FamilyMemberDetails {
     @SerializedName(value = FamilyMemberConstants.EMAIL, alternate = "email")
     private String email;
 
+    @SerializedName(value = FamilyMemberConstants.IS_APPLICANT, alternate = "isApplicant")
+    private boolean isApplicant;
+
 
     public FamilyMemberDetails() {}
 
@@ -59,7 +62,7 @@ public class FamilyMemberDetails {
                 .collect(Collectors.toList());
         for (Field f: declaredFields) {
             try {
-                familyMemberDetailMap.put(f.getAnnotation(SerializedName.class).value(), (String) f.get(this));
+                familyMemberDetailMap.put(f.getAnnotation(SerializedName.class).value(), String.valueOf(f.get(this)));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
