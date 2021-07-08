@@ -315,7 +315,7 @@ public class FilterRoute extends RequestHandler {
             String data = participantData.getData();
             if (data != null) {
                 JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
-                if (OPTIONS.equals(filter.getType()) || RADIO.equals(filter.getType())) {
+                if (OPTIONS.equals(filter.getType()) || RADIO.equals(filter.getType()) && filter.getSelectedOptions() != null) {
                     for (String option: filter.getSelectedOptions()) {
                         if (dataJsonObject.get(tmpName) != null && dataJsonObject.get(tmpName).getAsString()
                                 .equals(option)) {
