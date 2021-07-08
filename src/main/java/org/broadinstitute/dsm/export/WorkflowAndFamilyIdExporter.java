@@ -108,7 +108,7 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
                                        String ddpParticipantId, List<ParticipantDataDto> participantDataFamily, Map<String, String> dataMap,
                                        AtomicBoolean clearBeforeUpdate) {
         if (participantData.getFieldTypeId().equals(RGP_PARTICIPANTS)) {
-            if (!ParticipantUtil.checkProbandEmail(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID), participantDataFamily)) {
+            if (!ParticipantUtil.checkApplicantEmail(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID), participantDataFamily)) {
                 return;
             }
             WorkflowForES.StudySpecificData studySpecificData = new WorkflowForES.StudySpecificData(
