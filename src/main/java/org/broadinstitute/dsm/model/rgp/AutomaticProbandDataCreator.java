@@ -116,6 +116,7 @@ public class AutomaticProbandDataCreator implements Defaultable {
                         new FamilyMemberDetails(firstName, lastName, memberType, familyId, collaboratorParticipantId);
                 probandMemberDetails.setMobilePhone(mobilePhone);
                 probandMemberDetails.setEmail(email);
+                probandMemberDetails.setApplicant(true);
                 logger.info("Profile data extracted from participant: " + esProfile.getParticipantGuid() + " ES profile");
                 return probandMemberDetails.toMap();
             })
