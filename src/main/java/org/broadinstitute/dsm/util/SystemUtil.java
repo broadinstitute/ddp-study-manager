@@ -44,6 +44,13 @@ public class SystemUtil {
         return instant.toString();
     }
 
+    public static final DateTimeFormatter USUAL_DATE = new DateTimeFormatterBuilder()
+            .appendPattern(DATE_FORMAT)
+            .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
+            .parseDefaulting(ChronoField.MINUTE_OF_DAY, 0)
+            .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
+            .toFormatter();
+    
     public static final DateTimeFormatter FULL_DATE = new DateTimeFormatterBuilder()
             .appendPattern(DATE_FORMAT)
             .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
@@ -86,6 +93,13 @@ public class SystemUtil {
     public static long getLongFromDateString(String dateString) {
         if (StringUtils.isNotBlank(dateString)) {
             return getLong(dateString, FULL_DATE);
+        }
+        return 0;
+    }
+
+    public static long getLongFromUsualDateString(String dateString) {
+        if (StringUtils.isNotBlank(dateString)) {
+            return getLong(dateString, USUAL_DATE);
         }
         return 0;
     }
