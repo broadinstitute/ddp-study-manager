@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ViewFilter;
@@ -351,14 +352,20 @@ public class FilterRoute extends RequestHandler {
         if (value1 == null || value2 == null) {
             return;
         }
-        boolean inNumberRange = value1 instanceof Double && value2 instanceof Double && dataJsonObject.get(tmpName) != null
-                && Double.compare(dataJsonObject.get(tmpName).getAsDouble(), (Double) value1) > 0
-                && Double.compare(dataJsonObject.get(tmpName).getAsDouble(), (Double) value2) < 0;
+        boolean dataIsNumber = dataJsonObject.get(tmpName) != null && NumberUtils.isNumber(dataJsonObject.get(tmpName).getAsString());
+        boolean moreThanFirstNumber = dataIsNumber && value1 instanceof Double && Double.compare(dataJsonObject.get(tmpName).getAsDouble(), (Double) value1) >= 0;
+        boolean moreThanSecondNumber = dataIsNumber && value2 instanceof Double && Double.compare(dataJsonObject.get(tmpName).getAsDouble(), (Double) value2) >= 0;
+        //range will be starting from the lower number up until the higher number
+        boolean inNumberRange = (moreThanFirstNumber && !moreThanSecondNumber) || (moreThanSecondNumber && !moreThanFirstNumber);
+
         boolean inDateRange = (dataJsonObject.get(tmpName) != null)
                 && value1 instanceof String && value2 instanceof String
                 && DATE_PATTERN.matcher((String) value1).matches() && DATE_PATTERN.matcher((String) value2).matches()
-                && SystemUtil.getLongFromUsualDateString(dataJsonObject.get(tmpName).getAsString()) > SystemUtil.getLongFromUsualDateString((String) value1)
-                && SystemUtil.getLongFromUsualDateString(dataJsonObject.get(tmpName).getAsString()) < SystemUtil.getLongFromUsualDateString((String) value2);
+                && ((SystemUtil.getLongFromUsualDateString(dataJsonObject.get(tmpName).getAsString()) >= SystemUtil.getLongFromUsualDateString((String) value1)
+                    && SystemUtil.getLongFromUsualDateString(dataJsonObject.get(tmpName).getAsString()) < SystemUtil.getLongFromUsualDateString((String) value2))
+                    || (SystemUtil.getLongFromUsualDateString(dataJsonObject.get(tmpName).getAsString()) >= SystemUtil.getLongFromUsualDateString((String) value2)
+                        && SystemUtil.getLongFromUsualDateString(dataJsonObject.get(tmpName).getAsString()) < SystemUtil.getLongFromUsualDateString((String) value1)));
+
         if (inNumberRange || inDateRange) {
             addParticipantDataCondition(newCondition, first, participantAdded, participantData);
         }
