@@ -307,7 +307,7 @@ public class FilterRoute extends RequestHandler {
             Map<String, String> dataMap = gson.fromJson(data, Map.class);
             boolean questionWithOptions = (OPTIONS.equals(filter.getType()) || RADIO.equals(filter.getType())) && filter.getSelectedOptions() != null;
             boolean notEmptyCheck = filter.isNotEmpty() && dataMap.get(fieldName) != null && !dataMap.get(fieldName).isEmpty();
-            boolean emptyCheck = filter.isEmpty() && (dataMap.get(fieldName) != null || dataMap.get(fieldName).isEmpty());
+            boolean emptyCheck = filter.isEmpty() && (dataMap.get(fieldName) == null || dataMap.get(fieldName).isEmpty());
             if (notEmptyCheck || emptyCheck) {
                 participantIdsForQuery.add(ddpParticipantId);
                 continue;
