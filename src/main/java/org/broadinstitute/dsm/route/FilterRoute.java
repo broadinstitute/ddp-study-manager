@@ -371,21 +371,21 @@ public class FilterRoute extends RequestHandler {
         }
     }
 
-    public static boolean isInDateRange(String fieldName, Map<String, String> dataMap, Object value1, Object value2) {
+    public static boolean isInDateRange(String fieldName, Map<String, String> dataMap, Object rangeValue1, Object rangeValue2) {
         return (dataMap.get(fieldName) != null)
-                    && value1 instanceof String && value2 instanceof String
-                    && DATE_PATTERN.matcher((String) value1).matches() && DATE_PATTERN.matcher((String) value2).matches()
-                    && LocalDate.parse(dataMap.get(fieldName)).compareTo(LocalDate.parse((String) value1)) >= 0
-                    && ((LocalDate.parse(dataMap.get(fieldName)).compareTo(LocalDate.parse((String) value1)) >= 0
-                        && LocalDate.parse(dataMap.get(fieldName)).compareTo(LocalDate.parse((String) value2)) < 0)
-                        || (LocalDate.parse(dataMap.get(fieldName)).compareTo(LocalDate.parse((String) value2)) >= 0
-                            && LocalDate.parse(dataMap.get(fieldName)).compareTo(LocalDate.parse((String) value1)) < 0));
+                    && rangeValue1 instanceof String && rangeValue2 instanceof String
+                    && DATE_PATTERN.matcher((String) rangeValue1).matches() && DATE_PATTERN.matcher((String) rangeValue2).matches()
+                    && LocalDate.parse(dataMap.get(fieldName)).compareTo(LocalDate.parse((String) rangeValue1)) >= 0
+                    && ((LocalDate.parse(dataMap.get(fieldName)).compareTo(LocalDate.parse((String) rangeValue1)) >= 0
+                        && LocalDate.parse(dataMap.get(fieldName)).compareTo(LocalDate.parse((String) rangeValue2)) < 0)
+                        || (LocalDate.parse(dataMap.get(fieldName)).compareTo(LocalDate.parse((String) rangeValue2)) >= 0
+                            && LocalDate.parse(dataMap.get(fieldName)).compareTo(LocalDate.parse((String) rangeValue1)) < 0));
     }
 
-    public static boolean isInNumberRange(String fieldName, Map<String, String> dataMap, Object value1, Object value2) {
+    public static boolean isInNumberRange(String fieldName, Map<String, String> dataMap, Object rangeValue1, Object rangeValue2) {
         boolean dataIsNumber = dataMap.get(fieldName) != null && NumberUtils.isNumber(dataMap.get(fieldName));
-        boolean moreThanFirstNumber = dataIsNumber && value1 instanceof Double && Double.compare(Double.parseDouble(dataMap.get(fieldName)), (Double) value1) >= 0;
-        boolean moreThanSecondNumber = dataIsNumber && value2 instanceof Double && Double.compare(Double.parseDouble(dataMap.get(fieldName)), (Double) value2) >= 0;
+        boolean moreThanFirstNumber = dataIsNumber && rangeValue1 instanceof Double && Double.compare(Double.parseDouble(dataMap.get(fieldName)), (Double) rangeValue1) >= 0;
+        boolean moreThanSecondNumber = dataIsNumber && rangeValue2 instanceof Double && Double.compare(Double.parseDouble(dataMap.get(fieldName)), (Double) rangeValue2) >= 0;
         //range will be starting from the lower number up until the higher number
         return (moreThanFirstNumber && !moreThanSecondNumber) || (moreThanSecondNumber && !moreThanFirstNumber);
     }
