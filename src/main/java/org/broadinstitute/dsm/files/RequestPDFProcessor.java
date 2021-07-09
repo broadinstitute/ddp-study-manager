@@ -31,6 +31,9 @@ public class RequestPDFProcessor extends PDFProcessor {
 
     public static final String BLOCK_COUNTER = "accessionNumber";
 
+    public static final String USER_NAME = "username";
+    public static final String USER_PHONE = "userPhone";
+
     private String ddp;
 
     public RequestPDFProcessor(String ddp) {

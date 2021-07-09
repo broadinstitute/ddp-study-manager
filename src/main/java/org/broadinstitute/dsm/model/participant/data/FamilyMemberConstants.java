@@ -17,5 +17,4 @@ public class FamilyMemberConstants {
     public static final String RELATIONSHIP_ID = "COLLABORATOR_PARTICIPANT_ID";
 
     public static final String GROUP = "GROUP";
-    public static final String IS_APPLICANT = "IS_APPLICANT";
 }

@@ -1159,7 +1159,7 @@ public class DBTestUtil {
     }
 
     public static User createTestDsmUser(String name, String email, UserDao userDao, User user) {
-        user = new User(null, name, email);
+        user = new User(null, name, email, null);
         user.setId(String.valueOf(userDao.create(user)));
         return user;
     }
