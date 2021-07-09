@@ -338,7 +338,7 @@ public class FilterRoute extends RequestHandler {
             queryConditions.put(ElasticSearchUtil.ES, esCondition);
         } else {
             //so that empty list is returned
-            queryConditions.put(ElasticSearchUtil.ES, ElasticSearchUtil.BY_GUID + ElasticSearchUtil.EMPTY);
+            queryConditions.put(ElasticSearchUtil.ES, ElasticSearchUtil.BY_PROFILE_GUID + ElasticSearchUtil.EMPTY);
         }
     }
 
@@ -347,9 +347,9 @@ public class FilterRoute extends RequestHandler {
         for (int i = 0; i < participantIdsForQuery.size(); i++) {
             String id = participantIdsForQuery.get(i);
             if (i == 0) {
-                newCondition.append(ParticipantUtil.isGuid(id) ? ElasticSearchUtil.BY_GUID + id : ElasticSearchUtil.BY_LEGACY_ALTPID + id);
+                newCondition.append(ParticipantUtil.isGuid(id) ? ElasticSearchUtil.BY_PROFILE_GUID + id : ElasticSearchUtil.BY_PROFILE_LEGACY_ALTPID + id);
             } else {
-                newCondition.append(ParticipantUtil.isGuid(id) ? ElasticSearchUtil.BY_GUIDS + id : ElasticSearchUtil.BY_LEGACY_ALTPIDS + id);
+                newCondition.append(ParticipantUtil.isGuid(id) ? ElasticSearchUtil.BY_PROFILE_GUID + id : ElasticSearchUtil.BY_PROFILE_LEGACY_ALTPID + id);
             }
         }
         return newCondition;
