@@ -297,11 +297,11 @@ public class FilterRoute extends RequestHandler {
     }
 
     public static void addParticipantDataFilters(Map<String, String> queryConditions,
-                                                 Filter filter, String tmpName, List<ParticipantDataDto> allParticipantData) {
+                                                 Filter filter, String fieldName, List<ParticipantDataDto> allParticipantData) {
         StringBuilder newCondition = new StringBuilder();
         newCondition.append(ElasticSearchUtil.BY_LEGACY_ALTPID_STARTING);
         AtomicBoolean participantAdded = new AtomicBoolean(false);
-        AtomicBoolean first = new AtomicBoolean(true);
+        AtomicBoolean isFirstCondition = new AtomicBoolean(true);
         for (ParticipantDataDto participantData : allParticipantData) {
             String data = participantData.getData();
             if (data == null) {
@@ -309,27 +309,27 @@ public class FilterRoute extends RequestHandler {
             }
             JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
             boolean questionWithOptions = OPTIONS.equals(filter.getType()) || RADIO.equals(filter.getType()) && filter.getSelectedOptions() != null;
-            boolean notEmpty = filter.isNotEmpty() && dataJsonObject.get(tmpName) != null && !dataJsonObject.get(tmpName).getAsString().isEmpty();
+            boolean notEmpty = filter.isNotEmpty() && dataJsonObject.get(fieldName) != null && !dataJsonObject.get(fieldName).getAsString().isEmpty();
 
             if (notEmpty) {
-                addParticipantDataCondition(newCondition, first, participantAdded, participantData);
+                addParticipantDataCondition(newCondition, isFirstCondition, participantAdded, participantData);
                 continue;
             }
             if (questionWithOptions) {
                 for (String option : filter.getSelectedOptions()) {
-                    if (dataJsonObject.get(tmpName) != null && dataJsonObject.get(tmpName).getAsString()
+                    if (dataJsonObject.get(fieldName) != null && dataJsonObject.get(fieldName).getAsString()
                             .equals(option)) {
-                        addParticipantDataCondition(newCondition, first, participantAdded, participantData);
+                        addParticipantDataCondition(newCondition, isFirstCondition, participantAdded, participantData);
                         break;
                     }
                 }
             } else if (filter.getFilter1() != null && filter.getFilter1().getValue() != null) {
-                boolean singleValue = dataJsonObject.get(tmpName) != null && dataJsonObject.get(tmpName).getAsString()
+                boolean singleValue = dataJsonObject.get(fieldName) != null && dataJsonObject.get(fieldName).getAsString()
                         .equals(filter.getFilter1().getValue());
                 if (singleValue) {
-                    addParticipantDataCondition(newCondition, first, participantAdded, participantData);
+                    addParticipantDataCondition(newCondition, isFirstCondition, participantAdded, participantData);
                 } else if (filter.getFilter2() != null) {
-                    addConditionForRange(filter, tmpName, newCondition, participantAdded, first, participantData, dataJsonObject);
+                    addConditionForRange(filter, fieldName, newCondition, participantAdded, isFirstCondition, participantData, dataJsonObject);
                 }
             }
         }
@@ -344,36 +344,36 @@ public class FilterRoute extends RequestHandler {
         }
     }
 
-    public static void addConditionForRange(Filter filter, String tmpName, StringBuilder newCondition,
-                                            AtomicBoolean participantAdded, AtomicBoolean first, ParticipantDataDto participantData,
+    public static void addConditionForRange(Filter filter, String fieldName, StringBuilder newCondition,
+                                            AtomicBoolean participantAdded, AtomicBoolean isFirstCondition, ParticipantDataDto participantData,
                                             JsonObject dataJsonObject) {
         Object value1 = filter.getFilter1().getValue();
         Object value2 = filter.getFilter2().getValue();
         if (value1 == null || value2 == null) {
             return;
         }
-        boolean dataIsNumber = dataJsonObject.get(tmpName) != null && NumberUtils.isNumber(dataJsonObject.get(tmpName).getAsString());
-        boolean moreThanFirstNumber = dataIsNumber && value1 instanceof Double && Double.compare(dataJsonObject.get(tmpName).getAsDouble(), (Double) value1) >= 0;
-        boolean moreThanSecondNumber = dataIsNumber && value2 instanceof Double && Double.compare(dataJsonObject.get(tmpName).getAsDouble(), (Double) value2) >= 0;
+        boolean dataIsNumber = dataJsonObject.get(fieldName) != null && NumberUtils.isNumber(dataJsonObject.get(fieldName).getAsString());
+        boolean moreThanFirstNumber = dataIsNumber && value1 instanceof Double && Double.compare(dataJsonObject.get(fieldName).getAsDouble(), (Double) value1) >= 0;
+        boolean moreThanSecondNumber = dataIsNumber && value2 instanceof Double && Double.compare(dataJsonObject.get(fieldName).getAsDouble(), (Double) value2) >= 0;
         //range will be starting from the lower number up until the higher number
         boolean inNumberRange = (moreThanFirstNumber && !moreThanSecondNumber) || (moreThanSecondNumber && !moreThanFirstNumber);
 
-        boolean inDateRange = (dataJsonObject.get(tmpName) != null)
+        boolean inDateRange = (dataJsonObject.get(fieldName) != null)
                 && value1 instanceof String && value2 instanceof String
                 && DATE_PATTERN.matcher((String) value1).matches() && DATE_PATTERN.matcher((String) value2).matches()
-                && ((SystemUtil.getLongFromUsualDateString(dataJsonObject.get(tmpName).getAsString()) >= SystemUtil.getLongFromUsualDateString((String) value1)
-                    && SystemUtil.getLongFromUsualDateString(dataJsonObject.get(tmpName).getAsString()) < SystemUtil.getLongFromUsualDateString((String) value2))
-                    || (SystemUtil.getLongFromUsualDateString(dataJsonObject.get(tmpName).getAsString()) >= SystemUtil.getLongFromUsualDateString((String) value2)
-                        && SystemUtil.getLongFromUsualDateString(dataJsonObject.get(tmpName).getAsString()) < SystemUtil.getLongFromUsualDateString((String) value1)));
+                && ((SystemUtil.getLongFromUsualDateString(dataJsonObject.get(fieldName).getAsString()) >= SystemUtil.getLongFromUsualDateString((String) value1)
+                    && SystemUtil.getLongFromUsualDateString(dataJsonObject.get(fieldName).getAsString()) < SystemUtil.getLongFromUsualDateString((String) value2))
+                    || (SystemUtil.getLongFromUsualDateString(dataJsonObject.get(fieldName).getAsString()) >= SystemUtil.getLongFromUsualDateString((String) value2)
+                        && SystemUtil.getLongFromUsualDateString(dataJsonObject.get(fieldName).getAsString()) < SystemUtil.getLongFromUsualDateString((String) value1)));
 
         if (inNumberRange || inDateRange) {
-            addParticipantDataCondition(newCondition, first, participantAdded, participantData);
+            addParticipantDataCondition(newCondition, isFirstCondition, participantAdded, participantData);
         }
     }
 
-    public static void addParticipantDataCondition(StringBuilder newCondition, AtomicBoolean first,
+    public static void addParticipantDataCondition(StringBuilder newCondition, AtomicBoolean isFirstCondition,
                                                    AtomicBoolean participantAdded, ParticipantDataDto participantData) {
-        if (first.get()) {
+        if (isFirstCondition.get()) {
             newCondition.append(participantData.getDdpParticipantId())
                     .append(ElasticSearchUtil.BY_GUIDS).append(participantData.getDdpParticipantId());
         } else {
@@ -381,7 +381,7 @@ public class FilterRoute extends RequestHandler {
                     .append(ElasticSearchUtil.BY_GUIDS).append(participantData.getDdpParticipantId());
         }
         participantAdded.set(true);
-        first.set(false);
+        isFirstCondition.set(false);
     }
 
     public static List<?> filterTissueList(Filter[] filters, Map<String, DBElement> columnNameMap, String filterName,
