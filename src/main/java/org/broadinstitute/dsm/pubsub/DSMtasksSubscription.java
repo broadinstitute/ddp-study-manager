@@ -7,6 +7,7 @@ import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.PubsubMessage;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.export.ExportToES;
 import org.broadinstitute.dsm.model.defaultvalues.Defaultable;
 import org.broadinstitute.dsm.model.defaultvalues.DefaultableMaker;
@@ -41,26 +42,32 @@ public class DSMtasksSubscription {
 
                     logger.info("Task type is: " + taskType);
 
-                    switch (taskType) {
-                        case UPDATE_CUSTOM_WORKFLOW:
-                            consumer.ack();
-                            WorkflowStatusUpdate.updateCustomWorkflow(attributesMap, data);
-                            break;
-                        case ELASTIC_EXPORT:
-                            consumer.ack();
-                            AtomicBoolean clearBeforeUpdate = new AtomicBoolean(false);
-                            if (attributesMap.containsKey(CLEAR_BEFORE_UPDATE)) {
-                                clearBeforeUpdate.set(true);
-                            }
-                            new ExportToES().exportObjectsToES(data, clearBeforeUpdate);
-                            break;
-                        case PARTICIPANT_REGISTERED:
-                            generateStudyDefaultValues(consumer, attributesMap);
-                            break;
-                        default:
-                            logger.warn("Wrong task type for a message from pubsub");
-                            consumer.ack();
-                            break;
+                    if (StringUtils.isBlank(taskType)) {
+                        logger.warn("task type from pubsub was missing");
+                        consumer.ack();
+                    }
+                    else {
+                        switch (taskType) {
+                            case UPDATE_CUSTOM_WORKFLOW:
+                                consumer.ack();
+                                WorkflowStatusUpdate.updateCustomWorkflow(attributesMap, data);
+                                break;
+                            case ELASTIC_EXPORT:
+                                consumer.ack();
+                                AtomicBoolean clearBeforeUpdate = new AtomicBoolean(false);
+                                if (attributesMap.containsKey(CLEAR_BEFORE_UPDATE)) {
+                                    clearBeforeUpdate.set(true);
+                                }
+                                new ExportToES().exportObjectsToES(data, clearBeforeUpdate);
+                                break;
+                            case PARTICIPANT_REGISTERED:
+                                generateStudyDefaultValues(consumer, attributesMap);
+                                break;
+                            default:
+                                logger.warn("Wrong task type for a message from pubsub");
+                                consumer.ack();
+                                break;
+                        }
                     }
                 };
 
