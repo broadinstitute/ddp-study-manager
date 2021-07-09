@@ -74,11 +74,13 @@ public class ElasticSearchUtil {
     public static final String GUID = "guid";
     public static final String LEGACY_ALT_PID = "legacyAltPid";
     public static final String BY_GUID = " AND profile.guid = ";
+    public static final String BY_PROFILE_GUID = "profile.guid = ";
     public static final String EMPTY = "";
     public static final String BY_HRUID = " AND profile.hruid = ";
     public static final String BY_GUIDS = " OR profile.guid = ";
     public static final String BY_LEGACY_ALTPID = " AND profile.legacyAltPid = ";
-    public static final String BY_LEGACY_ALTPID_STARTING = " AND (profile.legacyAltPid = ";
+    public static final String BY_PROFILE_LEGACY_ALTPID = "profile.legacyAltPid = ";
+    public static final String AND = " AND (";
     public static final String ES = "ES";
     public static final String CLOSING_PARENTHESIS = ")";
     public static final String BY_LEGACY_ALTPIDS = " OR profile.legacyAltPid = ";
