@@ -106,7 +106,7 @@ public class FilterTest {
     public void testAddOneParticipantDataFilterEmpty() {
         Map<String, String> queryConditions = new HashMap<>();
         Filter filter = new Filter(false, true, true, false, "DATE", "participantData",
-                new NameValue("PARTICIPANT_DEATH_DATE", "2040-10-35"), null, null, null);
+                new NameValue("PARTICIPANT_NONEXISTENT_DATE", "2040-10-35"), null, null, null);
         List<ParticipantDataDto> allParticipantData = participantDataDao
                 .getParticipantDataByInstanceid(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
         FilterRoute.addParticipantDataFilters(queryConditions, filter, filter.getFilter1().getName(), allParticipantData);
