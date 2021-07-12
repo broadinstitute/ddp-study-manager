@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.route;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -21,8 +20,8 @@ import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.broadinstitute.dsm.util.PatchUtil;
-import org.broadinstitute.dsm.util.SystemUtil;
 import org.broadinstitute.dsm.util.UserUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,11 +31,11 @@ import spark.Response;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 public class FilterRoute extends RequestHandler {
@@ -298,90 +297,97 @@ public class FilterRoute extends RequestHandler {
 
     public static void addParticipantDataFilters(Map<String, String> queryConditions,
                                                  Filter filter, String fieldName, List<ParticipantDataDto> allParticipantData) {
-        StringBuilder newCondition = new StringBuilder();
-        newCondition.append(ElasticSearchUtil.BY_LEGACY_ALTPID_STARTING);
-        AtomicBoolean participantAdded = new AtomicBoolean(false);
-        AtomicBoolean isFirstCondition = new AtomicBoolean(true);
+        List<String> participantIdsForQuery = new ArrayList<>();
         for (ParticipantDataDto participantData : allParticipantData) {
             String data = participantData.getData();
             if (data == null) {
                 continue;
             }
-            JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
-            boolean questionWithOptions = OPTIONS.equals(filter.getType()) || RADIO.equals(filter.getType()) && filter.getSelectedOptions() != null;
-            boolean notEmpty = filter.isNotEmpty() && dataJsonObject.get(fieldName) != null && !dataJsonObject.get(fieldName).getAsString().isEmpty();
-
-            if (notEmpty) {
-                addParticipantDataCondition(newCondition, isFirstCondition, participantAdded, participantData);
+            String ddpParticipantId = participantData.getDdpParticipantId();
+            Map<String, String> dataMap = gson.fromJson(data, Map.class);
+            boolean questionWithOptions = (OPTIONS.equals(filter.getType()) || RADIO.equals(filter.getType())) && filter.getSelectedOptions() != null;
+            boolean notEmptyCheck = filter.isNotEmpty() && dataMap.get(fieldName) != null && !dataMap.get(fieldName).isEmpty();
+            boolean emptyCheck = filter.isEmpty() && (dataMap.get(fieldName) == null || dataMap.get(fieldName).isEmpty());
+            if (notEmptyCheck || emptyCheck) {
+                participantIdsForQuery.add(ddpParticipantId);
                 continue;
             }
             if (questionWithOptions) {
                 for (String option : filter.getSelectedOptions()) {
-                    if (dataJsonObject.get(fieldName) != null && dataJsonObject.get(fieldName).getAsString()
+                    if (dataMap.get(fieldName) != null && dataMap.get(fieldName)
                             .equals(option)) {
-                        addParticipantDataCondition(newCondition, isFirstCondition, participantAdded, participantData);
+                        participantIdsForQuery.add(ddpParticipantId);
                         break;
                     }
                 }
             } else if (filter.getFilter1() != null && filter.getFilter1().getValue() != null) {
-                boolean singleValue = dataJsonObject.get(fieldName) != null && dataJsonObject.get(fieldName).getAsString()
+                boolean singleValue = dataMap.get(fieldName) != null && dataMap.get(fieldName)
                         .equals(filter.getFilter1().getValue());
                 if (singleValue) {
-                    addParticipantDataCondition(newCondition, isFirstCondition, participantAdded, participantData);
+                    participantIdsForQuery.add(ddpParticipantId);
                 } else if (filter.getFilter2() != null) {
-                    addConditionForRange(filter, fieldName, newCondition, participantAdded, isFirstCondition, participantData, dataJsonObject);
+                    addConditionForRange(filter, fieldName, dataMap, participantIdsForQuery, ddpParticipantId);
                 }
             }
         }
-        if (participantAdded.get()) {
+        if (!participantIdsForQuery.isEmpty()) {
+            StringBuilder newCondition = getNewCondition(participantIdsForQuery);
             newCondition.append(ElasticSearchUtil.CLOSING_PARENTHESIS);
             String esCondition = queryConditions.get(ElasticSearchUtil.ES);
             esCondition += newCondition.toString();
             queryConditions.put(ElasticSearchUtil.ES, esCondition);
         } else {
             //so that empty list is returned
-            queryConditions.put(ElasticSearchUtil.ES, ElasticSearchUtil.BY_GUID + ElasticSearchUtil.EMPTY);
+            queryConditions.put(ElasticSearchUtil.ES, ElasticSearchUtil.BY_PROFILE_GUID + ElasticSearchUtil.EMPTY);
         }
     }
 
-    public static void addConditionForRange(Filter filter, String fieldName, StringBuilder newCondition,
-                                            AtomicBoolean participantAdded, AtomicBoolean isFirstCondition, ParticipantDataDto participantData,
-                                            JsonObject dataJsonObject) {
-        Object value1 = filter.getFilter1().getValue();
-        Object value2 = filter.getFilter2().getValue();
-        if (value1 == null || value2 == null) {
+    public static StringBuilder getNewCondition(List<String> participantIdsForQuery) {
+        StringBuilder newCondition = new StringBuilder(ElasticSearchUtil.AND);
+        for (int i = 0; i < participantIdsForQuery.size(); i++) {
+            String id = participantIdsForQuery.get(i);
+            if (i == 0) {
+                newCondition.append(ParticipantUtil.isGuid(id) ? ElasticSearchUtil.BY_PROFILE_GUID + id : ElasticSearchUtil.BY_PROFILE_LEGACY_ALTPID + id);
+            } else {
+                newCondition.append(ParticipantUtil.isGuid(id) ? ElasticSearchUtil.BY_GUIDS + id : ElasticSearchUtil.BY_LEGACY_ALTPIDS + id);
+            }
+        }
+        return newCondition;
+    }
+
+    public static void addConditionForRange(Filter filter, String fieldName, Map<String, String> dataMap, List<String> participantIdsForQuery, String ddpParticipantId) {
+        Object rangeValue1 = filter.getFilter1().getValue();
+        Object rangeValue2 = filter.getFilter2().getValue();
+        if (rangeValue1 == null || rangeValue2 == null) {
             return;
         }
-        boolean dataIsNumber = dataJsonObject.get(fieldName) != null && NumberUtils.isNumber(dataJsonObject.get(fieldName).getAsString());
-        boolean moreThanFirstNumber = dataIsNumber && value1 instanceof Double && Double.compare(dataJsonObject.get(fieldName).getAsDouble(), (Double) value1) >= 0;
-        boolean moreThanSecondNumber = dataIsNumber && value2 instanceof Double && Double.compare(dataJsonObject.get(fieldName).getAsDouble(), (Double) value2) >= 0;
-        //range will be starting from the lower number up until the higher number
-        boolean inNumberRange = (moreThanFirstNumber && !moreThanSecondNumber) || (moreThanSecondNumber && !moreThanFirstNumber);
 
-        boolean inDateRange = (dataJsonObject.get(fieldName) != null)
-                && value1 instanceof String && value2 instanceof String
-                && DATE_PATTERN.matcher((String) value1).matches() && DATE_PATTERN.matcher((String) value2).matches()
-                && ((SystemUtil.getLongFromUsualDateString(dataJsonObject.get(fieldName).getAsString()) >= SystemUtil.getLongFromUsualDateString((String) value1)
-                    && SystemUtil.getLongFromUsualDateString(dataJsonObject.get(fieldName).getAsString()) < SystemUtil.getLongFromUsualDateString((String) value2))
-                    || (SystemUtil.getLongFromUsualDateString(dataJsonObject.get(fieldName).getAsString()) >= SystemUtil.getLongFromUsualDateString((String) value2)
-                        && SystemUtil.getLongFromUsualDateString(dataJsonObject.get(fieldName).getAsString()) < SystemUtil.getLongFromUsualDateString((String) value1)));
+        boolean inNumberRange = isInNumberRange(fieldName, dataMap, rangeValue1, rangeValue2);
+
+        boolean inDateRange = isInDateRange(fieldName, dataMap, rangeValue1, rangeValue2);
 
         if (inNumberRange || inDateRange) {
-            addParticipantDataCondition(newCondition, isFirstCondition, participantAdded, participantData);
+            participantIdsForQuery.add(ddpParticipantId);;
         }
     }
 
-    public static void addParticipantDataCondition(StringBuilder newCondition, AtomicBoolean isFirstCondition,
-                                                   AtomicBoolean participantAdded, ParticipantDataDto participantData) {
-        if (isFirstCondition.get()) {
-            newCondition.append(participantData.getDdpParticipantId())
-                    .append(ElasticSearchUtil.BY_GUIDS).append(participantData.getDdpParticipantId());
-        } else {
-            newCondition.append(ElasticSearchUtil.BY_LEGACY_ALTPIDS).append(participantData.getDdpParticipantId())
-                    .append(ElasticSearchUtil.BY_GUIDS).append(participantData.getDdpParticipantId());
-        }
-        participantAdded.set(true);
-        isFirstCondition.set(false);
+    public static boolean isInDateRange(String fieldName, Map<String, String> dataMap, Object rangeValue1, Object rangeValue2) {
+        return (dataMap.get(fieldName) != null)
+                    && rangeValue1 instanceof String && rangeValue2 instanceof String
+                    && DATE_PATTERN.matcher((String) rangeValue1).matches() && DATE_PATTERN.matcher((String) rangeValue2).matches()
+                    && LocalDate.parse(dataMap.get(fieldName)).compareTo(LocalDate.parse((String) rangeValue1)) >= 0
+                    && ((LocalDate.parse(dataMap.get(fieldName)).compareTo(LocalDate.parse((String) rangeValue1)) >= 0
+                        && LocalDate.parse(dataMap.get(fieldName)).compareTo(LocalDate.parse((String) rangeValue2)) < 0)
+                        || (LocalDate.parse(dataMap.get(fieldName)).compareTo(LocalDate.parse((String) rangeValue2)) >= 0
+                            && LocalDate.parse(dataMap.get(fieldName)).compareTo(LocalDate.parse((String) rangeValue1)) < 0));
+    }
+
+    public static boolean isInNumberRange(String fieldName, Map<String, String> dataMap, Object rangeValue1, Object rangeValue2) {
+        boolean dataIsNumber = dataMap.get(fieldName) != null && NumberUtils.isNumber(dataMap.get(fieldName));
+        boolean moreThanFirstNumber = dataIsNumber && rangeValue1 instanceof Double && Double.compare(Double.parseDouble(dataMap.get(fieldName)), (Double) rangeValue1) >= 0;
+        boolean moreThanSecondNumber = dataIsNumber && rangeValue2 instanceof Double && Double.compare(Double.parseDouble(dataMap.get(fieldName)), (Double) rangeValue2) >= 0;
+        //range will be starting from the lower number up until the higher number
+        return (moreThanFirstNumber && !moreThanSecondNumber) || (moreThanSecondNumber && !moreThanFirstNumber);
     }
 
     public static List<?> filterTissueList(Filter[] filters, Map<String, DBElement> columnNameMap, String filterName,
