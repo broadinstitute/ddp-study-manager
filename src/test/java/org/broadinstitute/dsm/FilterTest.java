@@ -136,7 +136,7 @@ public class FilterTest {
         List<ParticipantDataDto> allParticipantData = participantDataDao
                 .getParticipantDataByInstanceid(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
         FilterRoute.addParticipantDataFilters(queryConditions, filter, filter.getFilter1().getName(), allParticipantData);
-        Assert.assertEquals("profile.guid = ", queryConditions.get(ElasticSearchUtil.ES));
+        Assert.assertEquals("profile.guid = empty", queryConditions.get(ElasticSearchUtil.ES));
     }
 
     @Test
