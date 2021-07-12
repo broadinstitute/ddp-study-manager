@@ -62,4 +62,6 @@
     <include file="liquibase/DDP-6006_RGP-form.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/tab_grouped-column-display-fix.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/DDP-6489-family-notes-field.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/DDP-6504_tabs-to-hide.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/rgp/DDP-6504_hide-sample-information-tab.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
