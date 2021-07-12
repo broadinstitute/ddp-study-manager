@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dto.settings.InstanceSettingsDto;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitSubKits;
 import org.broadinstitute.dsm.model.ddp.PreferredLanguage;
@@ -72,22 +73,9 @@ public class DisplaySettingsRoute extends RequestHandler {
                 displaySettings.put("activityDefinitions", ElasticSearchUtil.getActivityDefinitions(instance));
                 displaySettings.put("filters", ViewFilter.getAllFilters(userIdRequest, patchUtil.getColumnNameMap(), parent, ddpGroupId, instance.getDdpInstanceId()));
                 displaySettings.put("abstractionFields", AbstractionUtil.getFormControls(realm));
-                InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(realm);
-                if (instanceSettings != null && instanceSettings.getMrCoverPdf() != null && !instanceSettings.getMrCoverPdf().isEmpty()) {
-                    displaySettings.put("mrCoverPDF", instanceSettings.getMrCoverPdf());
-                }
-                if (instanceSettings != null && instanceSettings.getHideESFields() != null && !instanceSettings.getHideESFields().isEmpty()) {
-                    displaySettings.put("hideESFields", instanceSettings.getHideESFields());
-                }
-                if (instanceSettings != null && instanceSettings.getStudySpecificStatuses() != null && !instanceSettings.getStudySpecificStatuses().isEmpty()) {
-                    displaySettings.put("studySpecificStatuses", instanceSettings.getStudySpecificStatuses());
-                }
-                if (instanceSettings != null && instanceSettings.getDefaultColumns() != null && !instanceSettings.getDefaultColumns().isEmpty()) {
-                    displaySettings.put("defaultColumns", instanceSettings.getDefaultColumns());
-                }
-                if (instanceSettings != null && instanceSettings.isHasInvitations()) {
-                    displaySettings.put("hasInvitations", true);
-                }
+                InstanceSettings instanceSettings = new InstanceSettings();
+                InstanceSettingsDto instanceSettingsDto = instanceSettings.getInstanceSettings(realm);
+                displaySettings.putAll(instanceSettings.getInstanceSettingsAsMap(instanceSettingsDto));
                 if (!instance.isHasRole()) {
                     displaySettings.put("hideMRTissueWorkflow", true);
                 }

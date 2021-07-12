@@ -9,6 +9,7 @@ import org.apache.commons.dbcp2.PoolableConnection;
 import org.apache.commons.dbcp2.PoolingDataSource;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
+import org.broadinstitute.dsm.db.dto.settings.InstanceSettingsDto;
 import org.broadinstitute.dsm.jobs.PubsubMessage;
 import org.broadinstitute.dsm.model.ups.UPSActivity;
 import org.broadinstitute.dsm.model.ups.UPSKit;
@@ -84,7 +85,10 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                     int lastKitId = 0;
                     UPSKit kit = null;
                     logger.info("tracking ups ids for " + ddpInstance.getName());
-                    boolean gbfShippedTriggerDSSDelivered = InstanceSettings.getInstanceSettings(ddpInstance.getName(), conn).isGbfShippedTriggerDSSDelivered();
+                    InstanceSettingsDto instanceSettings = new InstanceSettings().getInstanceSettings(ddpInstance.getName());
+                    boolean gbfShippedTriggerDSSDelivered = instanceSettings
+                            .isGbfShippedTriggerDSSDelivered()
+                            .orElse(Boolean.FALSE);
                     loop:
                     while (true) {
                         try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KITS_WITH_LATEST_ACTIVITY + SQL_AVOID_DELIVERED)) {

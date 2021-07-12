@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.db.dto.fieldsettings;
+package org.broadinstitute.dsm.db.dto.settings;
 
 
 import lombok.Data;

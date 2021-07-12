@@ -7,7 +7,7 @@
 
     <changeSet id="rgp-hide-sample-information-tab" author="gmakhara" >
         <update tableName="instance_settings">
-            <column name="tabs_to_hide" value="[{&quot;tabName&quot;:&quot;SAMPLE_INFORMATION&quot;,&quot;hide&quot;:true}]"/>
+            <column name="hide_samples_tab" valueBoolean="true"/>
             <where>ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE study_guid = 'rgp')</where>
         </update>
     </changeSet>
