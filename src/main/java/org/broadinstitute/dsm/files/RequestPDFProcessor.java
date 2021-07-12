@@ -64,6 +64,9 @@ public class RequestPDFProcessor extends PDFProcessor {
                 fields.put(FIELD_DATE_PX + i, valueMap.get(FIELD_DATE_PX + i));
             }
 
+            fields.put(USER_NAME, valueMap.get(USER_NAME));
+            fields.put(USER_PHONE, valueMap.get(USER_PHONE));
+
             PDFMergerUtility pdfMerger = new PDFMergerUtility();
             pdfMerger.setDestinationStream(output);
             addNormalPage(pdfMerger, fields);
