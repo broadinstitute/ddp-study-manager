@@ -581,7 +581,8 @@ public class ElasticSearchUtil {
                     .type("_doc")
                     .id(ddpParticipantId)
                     .doc(objectsMapES)
-                    .docAsUpsert(true);
+                    .docAsUpsert(true)
+                    .retryOnConflict(5);
 
             UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
 
