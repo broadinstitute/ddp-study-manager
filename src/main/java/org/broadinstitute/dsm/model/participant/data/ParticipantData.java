@@ -84,7 +84,6 @@ public class ParticipantData {
                 collaboratorIdPrefix +
                 "_" +
                 familyMemberData.getCollaboratorParticipantId());
-        familyMemberPayload.getParticipantId().ifPresent(pId -> familyMemberData.setEmail(getParticipantEmailById(pId)));
         this.data = familyMemberData.toMap();
     }
 
