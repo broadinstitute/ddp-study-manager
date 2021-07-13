@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import lombok.Data;
 import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
@@ -87,12 +88,23 @@ public class ParticipantData {
         this.data = familyMemberData.toMap();
     }
 
+//    public void copyProbandData(AddFamilyMemberPayload familyMemberPayload) {
+//        boolean isCopyProband = familyMemberPayload.getCopyProbandInfo().orElse(Boolean.FALSE);
+//        int probandDataId = familyMemberPayload.getProbandDataId().orElse(0);
+//        if (!isCopyProband || probandDataId == 0) return;
+//        ParticipantDataDao dataAccess = (ParticipantDataDao) setDataAccess(new ParticipantDataDao());
+//        Optional<ParticipantData> maybeParticipantData = dataAccess.get(probandDataId).map(ParticipantData::parseDto);
+//        maybeParticipantData.ifPresent(participantData -> participantData.data.forEach((k, v) -> this.data.putIfAbsent(k, v)));
+//    }
+
     public void copyProbandData(AddFamilyMemberPayload familyMemberPayload) {
         boolean isCopyProband = familyMemberPayload.getCopyProbandInfo().orElse(Boolean.FALSE);
-        int probandDataId = familyMemberPayload.getProbandDataId().orElse(0);
-        if (!isCopyProband || probandDataId == 0) return;
+        if (!isCopyProband || StringUtils.isBlank(familyMemberPayload.getParticipantId().orElse(""))) return;
         ParticipantDataDao dataAccess = (ParticipantDataDao) setDataAccess(new ParticipantDataDao());
-        Optional<ParticipantData> maybeParticipantData = dataAccess.get(probandDataId).map(ParticipantData::parseDto);
+        List<ParticipantDataDto> participantDataByParticipantId =
+                dataAccess.getParticipantDataByParticipantId(familyMemberPayload.getParticipantId().get());
+        Optional<ParticipantDataDto> maybeProbandData = findProband(participantDataByParticipantId);
+        Optional<ParticipantData> maybeParticipantData = maybeProbandData.map(ParticipantData::parseDto);
         maybeParticipantData.ifPresent(participantData -> participantData.data.forEach((k, v) -> this.data.putIfAbsent(k, v)));
     }
 
@@ -170,5 +182,14 @@ public class ParticipantData {
                         System.currentTimeMillis(), changedByUser);
         int rowsAffected = ((ParticipantDataDao) dataAccess).updateParticipantDataColumn(participantDataDto);
         return rowsAffected == 1;
+    }
+
+    public Optional<ParticipantDataDto> findProband(List<ParticipantDataDto> participantDataDtoList) {
+        return participantDataDtoList.stream()
+                .filter(participantDataDto -> {
+                    Map<String, String> pDataMap = new Gson().fromJson(participantDataDto.getData(), Map.class);
+                    return FamilyMemberConstants.MEMBER_TYPE_SELF.equals(pDataMap.get(FamilyMemberConstants.MEMBER_TYPE));
+                })
+                .findFirst();
     }
 }
