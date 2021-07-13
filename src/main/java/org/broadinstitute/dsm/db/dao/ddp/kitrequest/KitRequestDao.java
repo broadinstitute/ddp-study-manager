@@ -176,7 +176,7 @@ public class KitRequestDao implements Dao<KitRequestDto> {
                 stmt.setString(1, bspParticipantId);
                 try (ResultSet idByBSPrs = stmt.executeQuery()) {
                     if (idByBSPrs.next()) {
-                        dbVals.resultValue = idByBSPrs.getInt(DBConstants.DDP_INSTANCE_ID);
+                        dbVals.resultValue = idByBSPrs.getInt(DBConstants.DDP_KIT_REQUEST_ID);
                     }
                 }
 
