@@ -62,7 +62,8 @@ public class FamilyMemberDetails {
                 .collect(Collectors.toList());
         for (Field f: declaredFields) {
             try {
-                familyMemberDetailMap.put(f.getAnnotation(SerializedName.class).value(), String.valueOf(f.get(this)));
+                String fieldValue = f.get(this) == null ? "" : String.valueOf(f.get(this));
+                familyMemberDetailMap.put(f.getAnnotation(SerializedName.class).value(), fieldValue);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
