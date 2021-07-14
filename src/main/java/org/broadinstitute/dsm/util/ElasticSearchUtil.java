@@ -68,6 +68,7 @@ public class ElasticSearchUtil {
     public static final String PROXIES = "proxies";
     public static final String DSM = "dsm";
     public static final String ACTIVITY_CODE = "activityCode";
+    public static final String ACTIVITY_VERSION = "activityVersion";
     public static final String ADDRESS = "address";
     public static final String INVITATIONS = "invitations";
     public static final String PDFS = "pdfs";
@@ -581,7 +582,8 @@ public class ElasticSearchUtil {
                     .type("_doc")
                     .id(ddpParticipantId)
                     .doc(objectsMapES)
-                    .docAsUpsert(true);
+                    .docAsUpsert(true)
+                    .retryOnConflict(5);
 
             UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
 
@@ -1042,8 +1044,9 @@ public class ElasticSearchUtil {
         for (SearchHit hit : response.getHits()) {
             Map<String, Object> sourceMap = hit.getSourceAsMap();
             String activityCode = (String) sourceMap.get(ACTIVITY_CODE);
+            String activityVersion = (String) sourceMap.get(ACTIVITY_VERSION);
             if (StringUtils.isNotBlank(activityCode)) {
-                esData.put(activityCode, sourceMap);
+                esData.put(activityCode + "_" + activityVersion, sourceMap);
             }
             else {
                 esData.put(hit.getId(), sourceMap);
