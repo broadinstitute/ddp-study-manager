@@ -62,5 +62,5 @@
     <include file="liquibase/DDP-6006_RGP-form.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/tab_grouped-column-display-fix.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/DDP-6489-family-notes-field.xml" relativeToChangelogFile="true"/>
-    <include file="liquibase/circadia/DDP-6577-circadia-form.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/circadia/DDP-6577_circadia-form.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
