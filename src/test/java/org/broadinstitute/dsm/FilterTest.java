@@ -28,6 +28,7 @@ public class FilterTest {
     private static Gson gson;
 
     private static final String participantId = "RBMJW6ZIXVXBMXUX6M3Q";
+    private static final String participantId1 = "RBMJW6ZIXVXBMXUX6M31";
 
     private static User user;
 
@@ -73,7 +74,7 @@ public class FilterTest {
         participantDataId = participantDataDao.create(participantDataDto);
 
         ParticipantDataDto participantDataDto1 =
-                new ParticipantDataDto(participantId, ddpInstanceDto.getDdpInstanceId(), FILTER_TEST,
+                new ParticipantDataDto(participantId1, ddpInstanceDto.getDdpInstanceId(), FILTER_TEST,
                         gson.toJson(participantData1), System.currentTimeMillis(), user.getEmail());
         participantDataId1 = participantDataDao.create(participantDataDto1);
     }
@@ -86,7 +87,7 @@ public class FilterTest {
         List<ParticipantDataDto> allParticipantData = participantDataDao
                 .getParticipantDataByInstanceid(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
         FilterRoute.addParticipantDataFilters(queryConditions, filter, filter.getFilter1().getName(), allParticipantData);
-        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId + ")",
+        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId1 + ")",
                 queryConditions.get(ElasticSearchUtil.ES));
     }
 
@@ -98,7 +99,7 @@ public class FilterTest {
         List<ParticipantDataDto> allParticipantData = participantDataDao
                 .getParticipantDataByInstanceid(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
         FilterRoute.addParticipantDataFilters(queryConditions, filter, filter.getFilter1().getName(), allParticipantData);
-        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId + ")",
+        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId1 + ")",
                 queryConditions.get(ElasticSearchUtil.ES));
     }
 
@@ -110,7 +111,7 @@ public class FilterTest {
         List<ParticipantDataDto> allParticipantData = participantDataDao
                 .getParticipantDataByInstanceid(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
         FilterRoute.addParticipantDataFilters(queryConditions, filter, filter.getFilter1().getName(), allParticipantData);
-        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId + ")",
+        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId1 + ")",
                 queryConditions.get(ElasticSearchUtil.ES));
     }
 
@@ -123,7 +124,7 @@ public class FilterTest {
         List<ParticipantDataDto> allParticipantData = participantDataDao
                 .getParticipantDataByInstanceid(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
         FilterRoute.addParticipantDataFilters(queryConditions, filter, filter.getFilter1().getName(), allParticipantData);
-        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId + ")",
+        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId1 + ")",
                 queryConditions.get(ElasticSearchUtil.ES));
     }
 
@@ -153,9 +154,9 @@ public class FilterTest {
         FilterRoute.addParticipantDataFilters(queryConditions, filterA, filterA.getFilter1().getName(), allParticipantData);
         FilterRoute.addParticipantDataFilters(queryConditions, filterB, filterB.getFilter1().getName(), allParticipantData);
         FilterRoute.addParticipantDataFilters(queryConditions, filterC, filterC.getFilter1().getName(), allParticipantData);
-        Assert.assertEquals("null AND (profile.guid = RBMJW6ZIXVXBMXUX6M3Q" + " OR profile.guid = " + participantId + ")" +
-                        " AND (profile.guid = RBMJW6ZIXVXBMXUX6M3Q" + " OR profile.guid = " + participantId + ")" +
-                        " AND (profile.guid = RBMJW6ZIXVXBMXUX6M3Q" + " OR profile.guid = " + participantId + ")",
+        Assert.assertEquals("null AND (profile.guid = RBMJW6ZIXVXBMXUX6M3Q" + " OR profile.guid = " + participantId1 + ")" +
+                        " AND (profile.guid = RBMJW6ZIXVXBMXUX6M3Q" + " OR profile.guid = " + participantId1 + ")" +
+                        " AND (profile.guid = RBMJW6ZIXVXBMXUX6M3Q" + " OR profile.guid = " + participantId1 + ")",
                 queryConditions.get(ElasticSearchUtil.ES));
     }
 
