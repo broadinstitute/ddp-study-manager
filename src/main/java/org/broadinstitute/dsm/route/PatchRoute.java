@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDao;
@@ -15,12 +16,10 @@ import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantRecordDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.exception.DuplicateException;
 import org.broadinstitute.dsm.export.WorkflowForES;
-import org.broadinstitute.dsm.model.AbstractionWrapper;
-import org.broadinstitute.dsm.model.NameValue;
-import org.broadinstitute.dsm.model.Patch;
-import org.broadinstitute.dsm.model.Value;
+import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.security.RequestHandler;
+import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
@@ -32,10 +31,7 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class PatchRoute extends RequestHandler {
 
@@ -269,6 +265,9 @@ public class PatchRoute extends RequestHandler {
                                     for (Value action : patch.getActions()) {
                                         if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
                                             writeESWorkflow(patch, nameValue, action);
+                                        }
+                                        else if ("EVENT".equals(action.getType())) {
+//                                            KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_SENT_KIT_INFORMATION_FOR_NOTIFICATION_EMAIL), kit, 1);
                                         }
                                     }
                                 }
