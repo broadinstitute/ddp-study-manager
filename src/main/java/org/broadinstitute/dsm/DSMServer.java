@@ -197,7 +197,8 @@ public class DSMServer extends BasicServer {
                 halt(404);
             }
             res.header(HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
-        });// do we need thee same secret checking for the clinical routes?
+        });
+        // todo Pegah do we need thee same/ different secret checking for the clinical routes?
 
         //DSM internal routes
         EventUtil eventUtil = new EventUtil();
@@ -209,7 +210,7 @@ public class DSMServer extends BasicServer {
         get(API_ROOT + RoutePath.BSP_KIT_REGISTERED, new BSPKitRegisteredRoute(), new JsonTransformer());
         if(!cfg.getBoolean("ui.production")){
             get(API_ROOT + RoutePath.DUMMY_ENDPOINT, new MercuryDummyKitEndpoint(), new JsonTransformer());
-            get(API_ROOT + RoutePath.CLINICAL_KIT_ENDPOINT, new ClinicalKitsRoute(), new JsonTransformer());
+            get(API_ROOT + RoutePath.CLINICAL_KIT_ENDPOINT, new ClinicalKitsRoute(notificationUtil), new JsonTransformer());
             get(API_ROOT + RoutePath.CREATE_CLINICAL_KIT_ENDPOINT, new CreateClinicalDummyKitRoute(), new JsonTransformer());
         }
 
