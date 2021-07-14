@@ -31,6 +31,9 @@ public class RequestPDFProcessor extends PDFProcessor {
 
     public static final String BLOCK_COUNTER = "accessionNumber";
 
+    public static final String USER_NAME = "username";
+    public static final String USER_PHONE = "userPhone";
+
     private String ddp;
 
     public RequestPDFProcessor(String ddp) {
@@ -60,6 +63,9 @@ public class RequestPDFProcessor extends PDFProcessor {
                 fields.put(FIELD_ACCESSION_NUMBER + i, valueMap.get(FIELD_ACCESSION_NUMBER + i));
                 fields.put(FIELD_DATE_PX + i, valueMap.get(FIELD_DATE_PX + i));
             }
+
+            fields.put(USER_NAME, valueMap.get(USER_NAME));
+            fields.put(USER_PHONE, valueMap.get(USER_PHONE));
 
             PDFMergerUtility pdfMerger = new PDFMergerUtility();
             pdfMerger.setDestinationStream(output);

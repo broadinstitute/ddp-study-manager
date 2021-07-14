@@ -14,17 +14,19 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 @Data
 public class User {
 
-    private static final String SQL_SELECT_USER = "SELECT user.user_id, user.name, user.email FROM access_user user WHERE user.email = ?";
-    private static final String SQL_SELECT_USER_BY_ID = "SELECT user.user_id, user.name, user.email FROM access_user user WHERE user.user_id = ?";
+    private static final String SQL_SELECT_USER = "SELECT user.user_id, user.name, user.email, user.phone_number FROM access_user user WHERE user.email = ?";
+    private static final String SQL_SELECT_USER_BY_ID = "SELECT user.user_id, user.name, user.email, user.phone_number FROM access_user user WHERE user.user_id = ?";
 
     private String id;
     private String name;
     private String email;
+    private String phoneNumber;
 
-    public User(String id, String name, String email) {
+    public User(String id, String name, String email, String phoneNumber) {
         this.id = id;
         this.name = name;
         this.email = email;
+        this.phoneNumber = phoneNumber;
     }
 
     public static User getUser(@NonNull String email) {
@@ -36,7 +38,8 @@ public class User {
                     if (rs.next()) {
                         dbVals.resultValue = new User(rs.getString(DBConstants.USER_ID),
                                 rs.getString(DBConstants.NAME),
-                                rs.getString(DBConstants.EMAIL));
+                                rs.getString(DBConstants.EMAIL),
+                                rs.getString(DBConstants.PHONE_NUMBER));
                     }
                 }
             }
@@ -61,7 +64,8 @@ public class User {
                     if (rs.next()) {
                         dbVals.resultValue = new User(rs.getString(DBConstants.USER_ID),
                                 rs.getString(DBConstants.NAME),
-                                rs.getString(DBConstants.EMAIL));
+                                rs.getString(DBConstants.EMAIL),
+                                rs.getString(DBConstants.PHONE_NUMBER));
                     }
                 }
             }
