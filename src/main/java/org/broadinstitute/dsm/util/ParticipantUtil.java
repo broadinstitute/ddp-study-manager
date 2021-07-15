@@ -55,4 +55,6 @@ public class ParticipantUtil {
         }
         return applicantEmail != null && applicantEmail.equals(currentParticipantEmail);
     }
+
+
 }

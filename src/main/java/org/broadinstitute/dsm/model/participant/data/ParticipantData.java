@@ -203,5 +203,12 @@ public class ParticipantData {
                 .findFirst();
     }
 
+    public void sortBySelfMemberType(List<ParticipantData> participantData) {
+        participantData.sort((o1, o2) -> {
+            if (Objects.nonNull(o1.getData()) &&
+                    FamilyMemberConstants.MEMBER_TYPE_SELF.equals(o1.getData().get(FamilyMemberConstants.MEMBER_TYPE))) return -1;
+            return (int) (o1.getDataId() - o2.getDataId());
+        });
+    }
 
 }

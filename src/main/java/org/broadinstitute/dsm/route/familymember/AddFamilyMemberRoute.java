@@ -64,8 +64,8 @@ public class AddFamilyMemberRoute extends RequestHandler {
         }
 
         ParticipantDataDao participantDataDao = new ParticipantDataDao();
+        ParticipantData participantDataObject = new ParticipantData(participantDataDao);
         try {
-            ParticipantData participantDataObject = new ParticipantData(participantDataDao);
             participantDataObject.setDdpParticipantId(participantId);
             participantDataObject.setDdpInstanceId(Integer.parseInt(ddpInstanceId));
             participantDataObject.setFieldTypeId(realm.toUpperCase() + ParticipantData.FIELD_TYPE);
@@ -78,7 +78,10 @@ public class AddFamilyMemberRoute extends RequestHandler {
         } catch (Exception e) {
             throw new RuntimeException("Could not create family member " + e);
         }
-        return ParticipantData.parseDtoList(participantDataDao.getParticipantDataByParticipantId(participantId));
+        List<ParticipantData> participantData =
+                ParticipantData.parseDtoList(participantDataDao.getParticipantDataByParticipantId(participantId));
+        participantDataObject.sortBySelfMemberType(participantData);
+        return participantData;
     }
 
     private void exportDataToEs(AddFamilyMemberPayload addFamilyMemberPayload, DDPInstance ddpInstance,
