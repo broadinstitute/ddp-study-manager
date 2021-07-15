@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.util;
 
+import com.sun.istack.NotNull;
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
@@ -9,6 +10,7 @@ import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.TestResultEvent;
 import org.broadinstitute.dsm.model.birch.DSMTestResult;
 import org.broadinstitute.dsm.model.birch.TestBostonResult;
+import org.broadinstitute.dsm.model.participant.data.ActionEvent;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.slf4j.Logger;
@@ -89,7 +91,7 @@ public class EventUtil {
         return kitDDPNotifications;
     }
 
-    public static void triggerDDP(Connection conn,@NonNull KitDDPNotification kitDDPNotification) {
+    public static void triggerDDP(Connection conn, @NonNull KitDDPNotification kitDDPNotification) {
         Collection<String> events = ParticipantEvent.getParticipantEvent(conn, kitDDPNotification.getParticipantId(), kitDDPNotification.getDdpInstanceId());
         if (!events.contains(kitDDPNotification.getEventName())) {
             EventUtil.triggerDDP(conn, kitDDPNotification.getEventName(), kitDDPNotification);
@@ -98,6 +100,18 @@ public class EventUtil {
             logger.info("Participant direct event was added in the participant_event table. DDP will not get triggered");
             //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
             addEvent(conn, kitDDPNotification.getEventName(), kitDDPNotification.getDdpInstanceId(), kitDDPNotification.getDsmKitRequestId(), false);
+        }
+    }
+
+    public static void triggerDDP(Connection conn, @NonNull ActionEvent actionEvent, @NotNull String ddpParticipantId) {
+        Collection<String> events = ParticipantEvent.getParticipantEvent(conn, ddpParticipantId, actionEvent.getDdpInstanceId());
+        if (!events.contains(actionEvent.getEventName())) {
+            EventUtil.triggerDDP(conn, actionEvent.getEventName(), actionEvent, ddpParticipantId);
+        }
+        else {
+            logger.info("Participant direct event was added in the participant_event table. DDP will not get triggered");
+            //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
+            addEvent(conn, actionEvent.getEventName(), actionEvent.getDdpInstanceId(), ddpParticipantId, false);
         }
     }
 
@@ -131,6 +145,27 @@ public class EventUtil {
             e.printStackTrace();
             //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
             addEvent(conn, eventType, kitInfo.getDdpInstanceId(), kitInfo.getDsmKitRequestId(), false);
+        }
+    }
+
+    private static void triggerDDP(Connection conn, @NonNull String eventType, @NonNull ActionEvent actionEvent, @NotNull String ddpParticipantId) {
+        try {
+            KitEvent event = new KitEvent(ddpParticipantId, eventType, 0, null, ddpParticipantId);
+            String sendRequest = actionEvent.getBaseUrl() + RoutePath.DDP_PARTICIPANT_EVENT_PATH + "/" + ddpParticipantId;
+            DDPRequestUtil.postRequest(sendRequest, event, actionEvent.getInstanceName(), actionEvent.isHasAuth0Token());
+            addEvent(conn, eventType, actionEvent.getDdpInstanceId(), ddpParticipantId);
+        }
+        catch (IOException e) {
+            logger.error("Failed to trigger " + actionEvent.getInstanceName() + " to notify participant " +  ddpParticipantId + " about " + eventType);
+            e.printStackTrace();
+            //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
+            addEvent(conn, eventType, actionEvent.getDdpInstanceId(), ddpParticipantId, false);
+        }
+        catch (RuntimeException e) {
+            logger.error("Failed to trigger " + actionEvent.getInstanceName() + " to notify participant " +  ddpParticipantId + " about " + eventType);
+            e.printStackTrace();
+            //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
+            addEvent(conn, eventType, actionEvent.getDdpInstanceId(), ddpParticipantId, false);
         }
     }
 

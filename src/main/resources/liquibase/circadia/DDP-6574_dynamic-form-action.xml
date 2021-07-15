@@ -8,14 +8,14 @@
     <changeSet id="DDP-6574_email-event-action" author="simone" >
         <sql>
             UPDATE field_settings
-            SET actions = '[{&quot;name&quot;:&quot;KIT_SENT&quot;,&quot;type&quot;:&quot;EVENT&quot;}]'
+            SET actions = '[{&quot;name&quot;:&quot;KIT_SENT&quot;,&quot;type&quot;:&quot;PARTICIPANT_EVENT&quot;}]'
             WHERE
             ddp_instance_id = (SELECT DDP_instance_id FROM ddp_instance WHERE study_guid = 'circadia')
             AND column_name = 'KIT_SHIPPING_DATE'
         </sql>
         <sql>
             UPDATE field_settings
-            SET actions = '[{&quot;name&quot;:&quot;KIT_RECEIVED&quot;,&quot;type&quot;:&quot;EVENT&quot;}]'
+            SET actions = '[{&quot;name&quot;:&quot;KIT_RECEIVED&quot;,&quot;type&quot;:&quot;PARTICIPANT_EVENT&quot;}]'
             WHERE
             ddp_instance_id = (SELECT DDP_instance_id FROM ddp_instance WHERE study_guid = 'circadia')
             AND column_name = 'KIT_RECEIVED_DATE'

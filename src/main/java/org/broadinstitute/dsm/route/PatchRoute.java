@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDao;
@@ -17,9 +16,9 @@ import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.exception.DuplicateException;
 import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.*;
+import org.broadinstitute.dsm.model.participant.data.ActionEvent;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.security.RequestHandler;
-import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
@@ -32,6 +31,8 @@ import spark.Request;
 import spark.Response;
 
 import java.util.*;
+
+import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 public class PatchRoute extends RequestHandler {
 
@@ -101,6 +102,16 @@ public class PatchRoute extends RequestHandler {
                                     for (Value action : patch.getActions()) {
                                         if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
                                             writeESWorkflow(patch, nameValue, action);
+                                        }
+                                        else if (ActionEvent.EVENT.equals(action.getType())) {
+                                            DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+                                            inTransaction((conn) -> {
+                                                ActionEvent actionEvent = ActionEvent.getParticipantEvent(conn, action.getName(), ddpInstance.getDdpInstanceId());
+                                                if (actionEvent != null) {
+                                                    EventUtil.triggerDDP(conn, actionEvent, patch.getParentId());
+                                                }
+                                                return null;
+                                            });
                                         }
                                     }
                                 }
@@ -266,8 +277,15 @@ public class PatchRoute extends RequestHandler {
                                         if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
                                             writeESWorkflow(patch, nameValue, action);
                                         }
-                                        else if ("EVENT".equals(action.getType())) {
-//                                            KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_SENT_KIT_INFORMATION_FOR_NOTIFICATION_EMAIL), kit, 1);
+                                        else if (ActionEvent.EVENT.equals(action.getType())) {
+                                            DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+                                            inTransaction((conn) -> {
+                                                ActionEvent actionEvent = ActionEvent.getParticipantEvent(conn, action.getName(), ddpInstance.getDdpInstanceId());
+                                                if (actionEvent != null) {
+                                                    EventUtil.triggerDDP(conn, actionEvent, patch.getParentId());
+                                                }
+                                                return null;
+                                            });
                                         }
                                     }
                                 }

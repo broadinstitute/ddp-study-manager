@@ -50,7 +50,7 @@ public class ElasticSearchTest extends TestHelper {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("participants_structured.atcp.atcp");
+            SearchRequest searchRequest = new SearchRequest("participants_structured.cmi.cmi-mbc");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
@@ -73,7 +73,7 @@ public class ElasticSearchTest extends TestHelper {
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
             int scrollSize = 1000;
             Map<String, Map<String, Object>> esData = new HashMap<>();
-            SearchRequest searchRequest = new SearchRequest("activity_definition.atcp.atcp");
+            SearchRequest searchRequest = new SearchRequest("activity_definition.cmi.cmi-mbc");
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             SearchResponse response = null;
             int i = 0;
@@ -632,7 +632,7 @@ public class ElasticSearchTest extends TestHelper {
 
     @Test
     public void searchPTByGUID() throws Exception {
-        searchProfileValue("participants_structured.testboston.testboston", "profile.guid", "EG5AIEQZOJGX2HYDTQZZ");
+        searchProfileValue("participants_structured.cmi.cmi-mbc", "profile.guid", "N02WKXSXD1M0YFWYYR2U");
     }
 
     @Test
