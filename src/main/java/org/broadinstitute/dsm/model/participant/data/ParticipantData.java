@@ -1,9 +1,11 @@
 package org.broadinstitute.dsm.model.participant.data;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -11,10 +13,15 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import lombok.Data;
 import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.dao.Dao;
+import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.model.Value;
+import org.broadinstitute.dsm.model.bookmark.Bookmark;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -54,10 +61,10 @@ public class ParticipantData {
     public static ParticipantData parseDto(@NonNull ParticipantDataDto participantDataDto) {
         return new ParticipantData(
                 participantDataDto.getParticipantDataId(),
-                participantDataDto.getDdpParticipantId(),
+                participantDataDto.getDdpParticipantId().orElse(""),
                 participantDataDto.getDdpInstanceId(),
-                participantDataDto.getFieldTypeId(),
-                new Gson().fromJson(participantDataDto.getData(), new TypeToken<Map<String, String>>() {}.getType())
+                participantDataDto.getFieldTypeId().orElse(""),
+                new Gson().fromJson(participantDataDto.getData().orElse(""), new TypeToken<Map<String, String>>() {}.getType())
         );
     }
 
@@ -65,10 +72,10 @@ public class ParticipantData {
         List<ParticipantData> participantData = new ArrayList<>();
         participantDataDtoList.forEach(dto -> participantData.add(new ParticipantData(
                 dto.getParticipantDataId(),
-                dto.getDdpParticipantId(),
+                dto.getDdpParticipantId().orElse(""),
                 dto.getDdpInstanceId(),
-                dto.getFieldTypeId(),
-                new Gson().fromJson(dto.getData(), new TypeToken<Map<String, String>>() {}.getType())
+                dto.getFieldTypeId().orElse(""),
+                new Gson().fromJson(dto.getData().orElse(""), new TypeToken<Map<String, String>>() {}.getType())
         )));
         return participantData;
     }
@@ -76,23 +83,27 @@ public class ParticipantData {
     public void setFamilyMemberData(@NonNull AddFamilyMemberPayload familyMemberPayload) {
         FamilyMemberDetails familyMemberData =
                 familyMemberPayload.getData().orElseThrow(() -> new NoSuchElementException("Family member data is not provided"));
-        DDPInstanceDao dataAccess = (DDPInstanceDao) setDataAccess(new DDPInstanceDao());
-        String collaboratorIdPrefix = dataAccess.getCollaboratorIdPrefixByStudyGuid(familyMemberPayload.getRealm().orElseThrow())
-                .orElse(familyMemberPayload.getRealm().get());
-        familyMemberData.setCollaboratorParticipantId(
-                collaboratorIdPrefix +
-                "_" +
-                familyMemberData.getCollaboratorParticipantId());
+        familyMemberData.setFamilyId(familyMemberPayload.getOrGenerateFamilyId());
+        familyMemberData.setCollaboratorParticipantId(familyMemberPayload.generateCollaboratorParticipantId());
+        if (FamilyMemberConstants.MEMBER_TYPE_SELF.equalsIgnoreCase(familyMemberData.getMemberType()))
+            familyMemberData.setEmail(getParticipantEmailById(familyMemberPayload.getParticipantId().orElse("")));
         this.data = familyMemberData.toMap();
     }
 
     public void copyProbandData(AddFamilyMemberPayload familyMemberPayload) {
         boolean isCopyProband = familyMemberPayload.getCopyProbandInfo().orElse(Boolean.FALSE);
-        int probandDataId = familyMemberPayload.getProbandDataId().orElse(0);
-        if (!isCopyProband || probandDataId == 0) return;
-        ParticipantDataDao dataAccess = (ParticipantDataDao) setDataAccess(new ParticipantDataDao());
-        Optional<ParticipantData> maybeParticipantData = dataAccess.get(probandDataId).map(ParticipantData::parseDto);
+        if (!isCopyProband || StringUtils.isBlank(familyMemberPayload.getParticipantId().orElse(""))) return;
+        List<ParticipantDataDto> participantDataByParticipantId =
+                getParticipantDataByParticipantId(familyMemberPayload.getParticipantId().orElse(""));
+        Optional<ParticipantDataDto> maybeProbandData = findProband(participantDataByParticipantId);
+        Optional<ParticipantData> maybeParticipantData = maybeProbandData.map(ParticipantData::parseDto);
         maybeParticipantData.ifPresent(participantData -> participantData.data.forEach((k, v) -> this.data.putIfAbsent(k, v)));
+    }
+
+    public List<ParticipantDataDto> getParticipantDataByParticipantId(String ddpParticipantId) {
+        if (StringUtils.isBlank(ddpParticipantId)) return Collections.emptyList();
+        ParticipantDataDao dataAccess = (ParticipantDataDao) setDataAccess(new ParticipantDataDao());
+        return dataAccess.getParticipantDataByParticipantId(ddpParticipantId);
     }
 
     private Dao setDataAccess(Dao dao) {
@@ -132,8 +143,14 @@ public class ParticipantData {
     public void insertParticipantData(String userEmail) {
         dataAccess = new ParticipantDataDao();
         ParticipantDataDto participantDataDto =
-                new ParticipantDataDto(this.ddpParticipantId, this.ddpInstanceId, this.fieldTypeId, new Gson().toJson(this.data),
-                        System.currentTimeMillis(), userEmail);
+                new ParticipantDataDto.Builder()
+                    .withDdpParticipantId(this.ddpParticipantId)
+                    .withDdpInstanceId(this.ddpInstanceId)
+                    .withFieldTypeId(this.fieldTypeId)
+                    .withData(new Gson().toJson(this.data))
+                    .withLastChanged(System.currentTimeMillis())
+                    .withChangedBy(userEmail)
+                    .build();
         if (isRelationshipIdExists()) {
             throw new RuntimeException(String.format("Family member with that Relationship ID: %s already exists", getRelationshipId()));
         }
@@ -164,10 +181,27 @@ public class ParticipantData {
     }
 
     public boolean updateParticipantData(int dataId, String changedByUser) {
-        ParticipantDataDto participantDataDto =
-                new ParticipantDataDto(dataId, this.ddpParticipantId, this.ddpInstanceId, this.fieldTypeId, new Gson().toJson(this.data),
-                        System.currentTimeMillis(), changedByUser);
+        ParticipantDataDto participantDataDto = new ParticipantDataDto.Builder()
+            .withParticipantDataId(dataId)
+            .withDdpParticipantId(this.ddpParticipantId)
+            .withDdpInstanceId(this.ddpInstanceId)
+            .withFieldTypeId(this.fieldTypeId)
+            .withData(new Gson().toJson(this.data))
+            .withLastChanged(System.currentTimeMillis())
+            .withChangedBy(changedByUser)
+            .build();
         int rowsAffected = ((ParticipantDataDao) dataAccess).updateParticipantDataColumn(participantDataDto);
         return rowsAffected == 1;
     }
+
+    public Optional<ParticipantDataDto> findProband(List<ParticipantDataDto> participantDataDtoList) {
+        return Objects.requireNonNull(participantDataDtoList).stream()
+                .filter(participantDataDto -> {
+                    Map<String, String> pDataMap = new Gson().fromJson(participantDataDto.getData().orElse(""), Map.class);
+                    return FamilyMemberConstants.MEMBER_TYPE_SELF.equals(pDataMap.get(FamilyMemberConstants.MEMBER_TYPE));
+                })
+                .findFirst();
+    }
+
+
 }
