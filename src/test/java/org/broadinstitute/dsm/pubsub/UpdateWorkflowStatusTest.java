@@ -67,7 +67,7 @@ public class UpdateWorkflowStatusTest {
         String workflow = "REGISTRATION_STATUS";
         String status = "ENROLLED";
         WorkflowStatusUpdate.updateProbandStatusInDB(workflow, status, participantDataDto, RGP);
-        String data = participantDataDao.get(participantDataId).orElseThrow().getData();
+        String data = participantDataDao.get(participantDataId).orElseThrow().getData().orElse("");
         JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
         Assert.assertEquals(status, dataJsonObject.get(workflow).getAsString());
     }
@@ -81,7 +81,7 @@ public class UpdateWorkflowStatusTest {
                 .getFieldSettingByColumnNameAndInstanceId(16, workflow);
         if (fieldSetting.isPresent()) {
             int participantDataId = WorkflowStatusUpdate.addNewParticipantDataWithStatus(workflow, status, ddpParticipantId, fieldSetting.get());
-            String data = participantDataDao.get(participantDataId).orElseThrow().getData();
+            String data = participantDataDao.get(participantDataId).orElseThrow().getData().orElse("");
             JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
             Assert.assertEquals(status, dataJsonObject.get(workflow).getAsString());
             participantDataDao.delete(participantDataId);
@@ -95,12 +95,25 @@ public class UpdateWorkflowStatusTest {
 
     private static void createParticipantData() {
         participantDataDto =
-                new ParticipantDataDto(participantId, ddpInstanceDto.getDdpInstanceId(), UPDATE_WORKFLOW_TEST,
-                        gson.toJson(participantData), System.currentTimeMillis(), user.getEmail());
+                new ParticipantDataDto.Builder()
+                    .withDdpParticipantId(participantId)
+                    .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())
+                    .withFieldTypeId(UPDATE_WORKFLOW_TEST)
+                    .withData(gson.toJson(participantData))
+                    .withLastChanged(System.currentTimeMillis())
+                    .withChangedBy(user.getEmail())
+                    .build();
         participantDataId = participantDataDao.create(participantDataDto);
         participantDataDto =
-                new ParticipantDataDto(participantDataId, participantId, ddpInstanceDto.getDdpInstanceId(), UPDATE_WORKFLOW_TEST,
-                        gson.toJson(participantData), System.currentTimeMillis(), user.getEmail());
+                new ParticipantDataDto.Builder()
+                    .withParticipantDataId(participantDataId)
+                    .withDdpParticipantId(participantId)
+                    .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())
+                    .withFieldTypeId(UPDATE_WORKFLOW_TEST)
+                    .withData(gson.toJson(participantData))
+                    .withLastChanged(System.currentTimeMillis())
+                    .withChangedBy(user.getEmail())
+                    .build();
     }
 
     @AfterClass

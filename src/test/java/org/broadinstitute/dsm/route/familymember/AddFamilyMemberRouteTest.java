@@ -56,7 +56,7 @@ public class AddFamilyMemberRouteTest {
 
         user = DBTestUtil.createTestDsmUser("AddFamilyMemberUser", "addfamilymember@family.com", userDao, user);
 
-        familyMemberData.putAll(new FamilyMemberDetails("Family", "Member", "Sister", "PE3LHB", "PE3LHB_1_2").toMap());
+        familyMemberData.putAll(new FamilyMemberDetails("Family", "Member", "Sister", 99, "PE3LHB_1_2").toMap());
 
         createProbandTestData();
 
@@ -66,7 +66,7 @@ public class AddFamilyMemberRouteTest {
 
     private static void createProbandTestData() {
         Map<String, String> probandDetails =
-                new FamilyMemberDetails("probandFirstName", "probandLastName", "Self", "PE3LHB", "PE3LHB_1").toMap();
+                new FamilyMemberDetails("probandFirstName", "probandLastName", "Self", 99, "PE3LHB_1").toMap();
         probandData.put("ALIVE_DECEASED", "ALIVE");
         probandData.put("ACCEPTANCE_STATUS", "IN_REVIEW");
         probandData.put("ACTIVE", "HOLD");
@@ -77,8 +77,14 @@ public class AddFamilyMemberRouteTest {
 
     private static void createProbandTestParticipantData() {
         ParticipantDataDto probandParticipantDataDto =
-                new ParticipantDataDto(participantId, ddpInstanceDto.getDdpInstanceId(), ParticipantData.FIELD_TYPE,
-                        gson.toJson(probandData), System.currentTimeMillis(), user.getEmail());
+                new ParticipantDataDto.Builder()
+                    .withDdpParticipantId(participantId)
+                    .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())
+                    .withFieldTypeId(ParticipantData.FIELD_TYPE)
+                    .withData(gson.toJson(probandData))
+                    .withLastChanged(System.currentTimeMillis())
+                    .withChangedBy(user.getEmail())
+                    .build();
         ddpExistingProbandParticipantDataId = participantDataDao.create(probandParticipantDataDto);
     }
 
@@ -159,14 +165,15 @@ public class AddFamilyMemberRouteTest {
         Result result = new Result(200);
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
         try {
-            ParticipantDataDto participantDataDto = new ParticipantDataDto(
-                    addFamilyMemberPayload.getParticipantId().get(),
-                    ddpInstanceDto.getDdpInstanceId(),
-                    ddpInstanceDto.getInstanceName() + ParticipantData.FIELD_TYPE,
-                    gson.toJson(addFamilyMemberPayload.getData().get()),
-                    System.currentTimeMillis(),
-                    user.getEmail()
-            );
+            ParticipantDataDto participantDataDto =
+                    new ParticipantDataDto.Builder()
+                        .withDdpParticipantId(addFamilyMemberPayload.getParticipantId().get())
+                        .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())
+                        .withFieldTypeId(ddpInstanceDto.getInstanceName() + ParticipantData.FIELD_TYPE)
+                        .withData(gson.toJson(addFamilyMemberPayload.getData().get()))
+                        .withLastChanged(System.currentTimeMillis())
+                        .withChangedBy(user.getEmail())
+                        .build();
             ddpFamilyMemberParticipantDataId = participantDataDao.create(participantDataDto);
         } catch (Exception e) {
             result = new Result(500);
@@ -185,16 +192,17 @@ public class AddFamilyMemberRouteTest {
         participantData.setData(new HashMap<>());
         participantData.copyProbandData(addFamilyMemberPayload);
         try {
-            ParticipantDataDto participantDataDto = new ParticipantDataDto(
-                    addFamilyMemberPayload.getParticipantId().get(),
-                    ddpInstanceDto.getDdpInstanceId(),
-                    ddpInstanceDto.getInstanceName() + ParticipantData.FIELD_TYPE,
-                    gson.toJson(participantData.getData()),
-                    System.currentTimeMillis(),
-                    user.getEmail()
-            );
+            ParticipantDataDto participantDataDto =
+                    new ParticipantDataDto.Builder()
+                        .withDdpParticipantId(addFamilyMemberPayload.getParticipantId().get())
+                        .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())
+                        .withFieldTypeId(ddpInstanceDto.getInstanceName() + ParticipantData.FIELD_TYPE)
+                        .withData(gson.toJson(participantData.getData()))
+                        .withLastChanged(System.currentTimeMillis())
+                        .withChangedBy(user.getEmail())
+                        .build();
             ddpCopiedProbandFamilyMemberParticipantDataId = participantDataDao.create(participantDataDto);
-            String copiedProbandFamilyMemberData = participantDataDao.get(ddpCopiedProbandFamilyMemberParticipantDataId).orElseThrow().getData();
+            String copiedProbandFamilyMemberData = participantDataDao.get(ddpCopiedProbandFamilyMemberParticipantDataId).orElseThrow().getData().orElse("");
             Assert.assertEquals(gson.toJson(participantData.getData()),copiedProbandFamilyMemberData);
         } catch (Exception e) {
             result = new Result(500);
@@ -212,15 +220,19 @@ public class AddFamilyMemberRouteTest {
                     data.get(FamilyMemberDetails.class.getDeclaredField("firstName").getAnnotation(SerializedName.class).value()),
                     data.get(FamilyMemberDetails.class.getDeclaredField("lastName").getAnnotation(SerializedName.class).value()),
                     data.get(FamilyMemberDetails.class.getDeclaredField("memberType").getAnnotation(SerializedName.class).value()),
-                    data.get(FamilyMemberDetails.class.getDeclaredField("familyId").getAnnotation(SerializedName.class).value()),
+                    Long.parseLong(data.get(FamilyMemberDetails.class.getDeclaredField("familyId").getAnnotation(SerializedName.class).value())),
                     data.get(FamilyMemberDetails.class.getDeclaredField("collaboratorParticipantId").getAnnotation(SerializedName.class).value())
                 );
             } catch (Exception e) {
                 Assert.fail();
             }
         }
-        AddFamilyMemberPayload addFamilyMemberPayload = new AddFamilyMemberPayload(participantGuid, realm, familyMemberDetails, userId,
-                false, 0);
+        AddFamilyMemberPayload addFamilyMemberPayload = new AddFamilyMemberPayload.Builder(participantGuid, realm)
+                .withData(familyMemberDetails)
+                .withUserId(userId)
+                .withCopyProbandInfo(false)
+                .withProbandDataId(0)
+                .build();
 
         return gson.toJson(addFamilyMemberPayload);
     }

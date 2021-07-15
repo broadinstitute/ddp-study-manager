@@ -69,8 +69,14 @@ public class FilterTest {
 
     private static void createParticipantData() {
         ParticipantDataDto participantDataDto =
-                new ParticipantDataDto(participantId, ddpInstanceDto.getDdpInstanceId(), FILTER_TEST,
-                        gson.toJson(participantData), System.currentTimeMillis(), user.getEmail());
+                new ParticipantDataDto.Builder()
+                    .withDdpParticipantId(participantId)
+                    .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())
+                    .withFieldTypeId(FILTER_TEST)
+                    .withData(gson.toJson(participantData))
+                    .withLastChanged(System.currentTimeMillis())
+                    .withChangedBy(user.getEmail())
+                    .build();
         participantDataId = participantDataDao.create(participantDataDto);
 
         ParticipantDataDto participantDataDto1 =

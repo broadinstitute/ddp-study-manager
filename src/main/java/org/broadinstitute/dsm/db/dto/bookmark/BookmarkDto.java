@@ -1,13 +1,27 @@
 package org.broadinstitute.dsm.db.dto.bookmark;
 
-import lombok.Data;
+import java.util.Optional;
 
-@Data
+import lombok.Setter;
+
+@Setter
 public class BookmarkDto {
 
     private int bookmarkId;
     private long value;
     private String instance;
+
+    public int getBookmarkId() {
+        return bookmarkId;
+    }
+
+    public long getValue() {
+        return value;
+    }
+
+    public Optional<String> getInstance() {
+        return Optional.ofNullable(instance);
+    }
 
     private BookmarkDto(Builder builder) {
         this.bookmarkId = builder.bookmarkId;

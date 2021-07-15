@@ -27,7 +27,7 @@ public class ParticipantUtil {
     public static boolean checkApplicantEmail(String collaboratorParticipantId, List<ParticipantDataDto> participantDatas) {
         String applicantEmail = null, currentParticipantEmail = null;
         for (ParticipantDataDto participantData: participantDatas) {
-            String data = participantData.getData();
+            String data = participantData.getData().orElse(null);
             if (data == null) {
                 continue;
             }
