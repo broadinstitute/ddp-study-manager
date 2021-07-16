@@ -2,11 +2,12 @@ package org.broadinstitute.dsm.files;
 
 import org.broadinstitute.ddp.exception.FileProcessingException;
 import org.broadinstitute.dsm.db.InstanceSettings;
-import org.broadinstitute.dsm.model.Value;
+import org.broadinstitute.dsm.db.dto.settings.InstanceSettingsDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,12 +50,11 @@ public class CoverPDFProcessor extends PDFProcessor {
             fields.put(START_DATE_2, valueMap.get(START_DATE_2));
 
             //adding checkboxes configured under instance_settings
-            InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(ddp);
-            if (instanceSettings != null && instanceSettings.getMrCoverPdf() != null && !instanceSettings.getMrCoverPdf().isEmpty()) {
-                for (Value mrCoverSetting : instanceSettings.getMrCoverPdf()) {
-                    fields.put(mrCoverSetting.getValue(), valueMap.get(mrCoverSetting.getValue()));
-                }
-            }
+            InstanceSettings instanceSettings = new InstanceSettings();
+            InstanceSettingsDto instanceSettingsDto = instanceSettings.getInstanceSettings(ddp);
+            instanceSettingsDto.getMrCoverPdf()
+                    .orElse(Collections.emptyList())
+                    .forEach(mrCoverSetting -> fields.put(mrCoverSetting.getValue(), valueMap.get(mrCoverSetting.getValue())));
 
             byte[] bytes = PDFProcessor.getTemplateFromGoogleBucket(TEMPLATE_COVER_FILENAME.replace("%1", ddp));
             inputStream = generateStreamFromPdfForm(fields, bytes);

@@ -13,6 +13,7 @@ import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.dto.settings.InstanceSettingsDto;
 import org.broadinstitute.dsm.exception.FileColumnMissing;
 import org.broadinstitute.dsm.exception.FileWrongSeparator;
 import org.broadinstitute.dsm.exception.UploadLineException;
@@ -124,25 +125,19 @@ public class KitUploadRoute extends RequestHandler {
                 }
 
                 DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
-                InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(realm);
-                final AtomicReference<Value> upload = new AtomicReference<>();
-                String specialMessage = null;
-                if (instanceSettings != null && instanceSettings.getKitBehaviorChange() != null) {
-                    List<Value> kitBehavior = instanceSettings.getKitBehaviorChange();
-                    try {
-                        upload.set(kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_UPLOAD)).findFirst().get());
-                        if (upload.get() != null) {
-                            specialMessage = upload.get().getValue();
-                        }
-                    }
-                    catch (NoSuchElementException e) {
-                        upload.set(null);
-                        upload.set(kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_UPLOAD)).findFirst().get());
-                        if (upload.get() != null) {
-                            specialMessage = upload.get().getValue();
-                        }
-                    }
-                }
+                InstanceSettings instanceSettings = new InstanceSettings();
+                InstanceSettingsDto instanceSettingsDto = instanceSettings.getInstanceSettings(realm);
+                StringBuilder specialMessage = new StringBuilder();
+                Value upload = instanceSettingsDto.
+                        getKitBehaviorChange()
+                        .map(kitBehavior -> {
+                            Optional<Value> maybeKitBehaviorValue =
+                                    kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_UPLOAD))
+                                            .findFirst();
+                            maybeKitBehaviorValue.ifPresent(value -> specialMessage.append(value.getValue()));
+                            return maybeKitBehaviorValue.orElse(null);
+                        })
+                        .orElse(null);
 
                 HashMap<String, KitType> kitTypes = KitType.getKitLookup();
                 String key = kitTypeName + "_" + ddpInstance.getDdpInstanceId();
@@ -166,7 +161,7 @@ public class KitUploadRoute extends RequestHandler {
 
                 TransactionWrapper.inTransaction(conn -> {
                     uploadKit(ddpInstance, kitType, kitUploadObjects, kitHasSubKits, kitRequestSettings, easyPostUtil, userIdRequest, kitTypeName,
-                            uploadAnyway.get(), invalidAddressList, duplicateKitList, orderKits, specialKitList, upload.get(), kitUploadReason.get(), shippingCarrier.get(), conn);
+                            uploadAnyway.get(), invalidAddressList, duplicateKitList, orderKits, specialKitList, upload, kitUploadReason.get(), shippingCarrier.get(), conn);
 
                     //only order if external shipper name is set for that kit request
                     if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
@@ -193,7 +188,7 @@ public class KitUploadRoute extends RequestHandler {
                 logger.info(kitUploadObjects.size() + " " + ddpInstance.getName() + " " + kitTypeName + " kit uploaded");
                 logger.info(invalidAddressList.size() + " uploaded addresses were not valid and " + duplicateKitList.size() + " are already in DSM");
                 logger.info(specialKitList.size() + " kits didn't meet the kit behaviour");
-                return new KitUploadResponse(invalidAddressList.values(), duplicateKitList, specialKitList, specialMessage);
+                return new KitUploadResponse(invalidAddressList.values(), duplicateKitList, specialKitList, specialMessage.toString());
             }
             catch (UploadLineException e) {
                 return e.getMessage();

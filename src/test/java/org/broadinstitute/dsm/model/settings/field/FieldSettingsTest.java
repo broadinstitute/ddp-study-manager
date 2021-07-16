@@ -1,10 +1,10 @@
-package org.broadinstitute.dsm.model.fieldsettings;
+package org.broadinstitute.dsm.model.settings.field;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;

@@ -9,6 +9,7 @@ import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.dto.settings.InstanceSettingsDto;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RequestParameter;
@@ -23,9 +24,7 @@ import spark.QueryParamsMap;
 import spark.Request;
 import spark.Response;
 
-import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 public class KitDeactivationRoute extends RequestHandler {
 
@@ -69,17 +68,12 @@ public class KitDeactivationRoute extends RequestHandler {
                     }
                     else {
                         DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
-                        InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(realm);
-                        Value activation = null;
-                        if (instanceSettings != null && instanceSettings.getKitBehaviorChange() != null) {
-                            List<Value> kitBehavior = instanceSettings.getKitBehaviorChange();
-                            try {
-                                activation = kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_ACTIVATION)).findFirst().get();
-                            }
-                            catch (NoSuchElementException e) {
-                                activation = null;
-                            }
-                        }
+                        InstanceSettings instanceSettings = new InstanceSettings();
+                        InstanceSettingsDto instanceSettingsDto = instanceSettings.getInstanceSettings(realm);
+                        Value activation = instanceSettingsDto
+                                .getKitBehaviorChange()
+                                .map(kitBehavior -> kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_ACTIVATION)).findFirst().orElse(null))
+                                .orElse(null);
 
                         if (activation != null && StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
                             Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
