@@ -6,19 +6,15 @@ import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.dao.ddp.kitrequest.KitRequestDao;
-import org.broadinstitute.dsm.model.Value;
-import org.broadinstitute.dsm.model.bsp.BSPKitQueryResult;
-import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
-import org.broadinstitute.dsm.model.bsp.BSPKitStatus;
 import org.broadinstitute.dsm.model.KitDDPNotification;
+import org.broadinstitute.dsm.model.Value;
+import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
+import org.broadinstitute.dsm.model.bsp.BSPKitQueryResult;
+import org.broadinstitute.dsm.model.bsp.BSPKitStatus;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
-import org.broadinstitute.dsm.util.ElasticSearchUtil;
-import org.broadinstitute.dsm.util.EventUtil;
-import org.broadinstitute.dsm.util.KitUtil;
-import org.broadinstitute.dsm.util.NotificationUtil;
-import org.broadinstitute.dsm.util.SystemUtil;
+import org.broadinstitute.dsm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -26,7 +22,10 @@ import spark.Response;
 import spark.Route;
 
 import java.sql.Connection;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 public class BSPKitQueryRoute implements Route {
 
@@ -46,11 +45,11 @@ public class BSPKitQueryRoute implements Route {
         }
 
         return TransactionWrapper.inTransaction(conn -> {
-            return getBSPKitInfo(conn, kitLabel, response);
+            return getBSPKitInfo(conn, kitLabel, response, this.notificationUtil);
         });
     }
 
-    public Object getBSPKitInfo(Connection conn, @NonNull String kitLabel, @NonNull Response response) {
+    public static Object getBSPKitInfo(Connection conn, @NonNull String kitLabel, @NonNull Response response, NotificationUtil notificationUtil) {
         logger.info("Checking label " + kitLabel);
         BSPKitQueryResult bspKitInfo = BSPKitQueryResult.getBSPKitQueryResult(kitLabel);
 
@@ -138,7 +137,7 @@ public class BSPKitQueryRoute implements Route {
 
     }
 
-    private void writeSampleReceivedToES(DDPInstance ddpInstance, BSPKitQueryResult bspKitInfo) {
+    private static void writeSampleReceivedToES(DDPInstance ddpInstance, BSPKitQueryResult bspKitInfo) {
         String kitRequestId = new KitRequestDao().getKitRequestIdByBSPParticipantId(bspKitInfo.getBspParticipantId());
         Map<String, Object> nameValuesMap = new HashMap<>();
         nameValuesMap.put(ESObjectConstants.RECEIVED, SystemUtil.getISO8601DateString());
@@ -146,7 +145,7 @@ public class BSPKitQueryRoute implements Route {
                 ESObjectConstants.KIT_REQUEST_ID, nameValuesMap);
     }
 
-    private void triggerDDP(Connection conn, @NonNull BSPKitQueryResult bspKitInfo, boolean firstTimeReceived, String kitLabel) {
+    private static void triggerDDP(Connection conn, @NonNull BSPKitQueryResult bspKitInfo, boolean firstTimeReceived, String kitLabel) {
         try {
             if (bspKitInfo.isHasParticipantNotifications() && firstTimeReceived) {
                 KitDDPNotification kitDDPNotification = KitDDPNotification.getKitDDPNotification(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_RECEIVED_KIT_INFORMATION_FOR_NOTIFICATION_EMAIL), kitLabel, 1);

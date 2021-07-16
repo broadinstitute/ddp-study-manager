@@ -35,8 +35,8 @@ import org.broadinstitute.dsm.careevolve.Provider;
 import org.broadinstitute.dsm.jetty.JettyConfig;
 import org.broadinstitute.dsm.jobs.*;
 import org.broadinstitute.dsm.log.SlackAppender;
-import org.broadinstitute.dsm.pubsub.PubSubResultMessageSubscription;
 import org.broadinstitute.dsm.pubsub.DSMtasksSubscription;
+import org.broadinstitute.dsm.pubsub.PubSubResultMessageSubscription;
 import org.broadinstitute.dsm.route.*;
 import org.broadinstitute.dsm.route.familymember.AddFamilyMemberRoute;
 import org.broadinstitute.dsm.route.participant.GetParticipantDataRoute;
@@ -198,6 +198,7 @@ public class DSMServer extends BasicServer {
             }
             res.header(HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
         });
+        // todo Pegah do we need thee same/ different secret checking for the clinical routes?
 
         //DSM internal routes
         EventUtil eventUtil = new EventUtil();
@@ -209,6 +210,8 @@ public class DSMServer extends BasicServer {
         get(API_ROOT + RoutePath.BSP_KIT_REGISTERED, new BSPKitRegisteredRoute(), new JsonTransformer());
         if(!cfg.getBoolean("ui.production")){
             get(API_ROOT + RoutePath.DUMMY_ENDPOINT, new MercuryDummyKitEndpoint(), new JsonTransformer());
+            get(API_ROOT + RoutePath.CLINICAL_KIT_ENDPOINT, new ClinicalKitsRoute(notificationUtil), new JsonTransformer());
+            get(API_ROOT + RoutePath.CREATE_CLINICAL_KIT_ENDPOINT, new CreateClinicalDummyKitRoute(), new JsonTransformer());
         }
 
         String appRoute = cfg.hasPath("portal.appRoute") ? cfg.getString("portal.appRoute") : null;

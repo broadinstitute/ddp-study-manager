@@ -65,7 +65,7 @@ public class MercuryDummyKitEndpoint implements Route {
         return new Result(500);
     }
 
-    private void updateKitLabel(String kitLabel, String dsmKitRequestId) {
+    public static void updateKitLabel(String kitLabel, String dsmKitRequestId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_DUMMY_KIT)) {
@@ -89,7 +89,7 @@ public class MercuryDummyKitEndpoint implements Route {
         }
     }
 
-    private String getRandomParticipantIdForStudy(String ddpInstanceId) {
+    public static String getRandomParticipantIdForStudy(String ddpInstanceId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_RANDOM_PT)) {
@@ -113,7 +113,7 @@ public class MercuryDummyKitEndpoint implements Route {
         return null;
     }
 
-    private String getCollaboratorSampleId(int kitTypeId, String participantCollaboratorId) {
+    public static String getCollaboratorSampleId(int kitTypeId, String participantCollaboratorId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             String collaboratorSampleId = KitRequestShipping.generateBspSampleID(conn, participantCollaboratorId, DUMMY_KIT_TYPE_NAME, kitTypeId);
