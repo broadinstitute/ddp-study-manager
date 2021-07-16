@@ -59,7 +59,8 @@ public class ClinicalKitsRoute implements Route {
         BSPKitQueryResult bspKitQueryResult = BSPKitQueryResult.getBSPKitQueryResult(kitLabel);
         DDPInstance ddpInstance = DDPInstance.getDDPInstance(bspKitQueryResult.getInstanceName());
 
-        Optional<ParticipantWrapper> maybeParticipant = ParticipantWrapper.getParticipantFromESByHruid(ddpInstance, bspKitQueryResult.getBspParticipantId());
+        String hruid = bspKitQueryResult.getBspParticipantId().substring(bspKitQueryResult.getBspParticipantId().lastIndexOf('_')+1);
+        Optional<ParticipantWrapper> maybeParticipant = ParticipantWrapper.getParticipantFromESByHruid(ddpInstance, hruid);
         maybeParticipant.ifPresent(p -> {
             Map<String, String> dsm = (Map<String, String>) p.getData().get("dsm");
                 if (dsm != null && !dsm.isEmpty()) {

@@ -208,11 +208,12 @@ public class DSMServer extends BasicServer {
 
         get(API_ROOT + RoutePath.BSP_KIT_QUERY_PATH, new BSPKitQueryRoute(notificationUtil), new JsonTransformer());
         get(API_ROOT + RoutePath.BSP_KIT_REGISTERED, new BSPKitRegisteredRoute(), new JsonTransformer());
+        get(API_ROOT + RoutePath.CLINICAL_KIT_ENDPOINT, new ClinicalKitsRoute(notificationUtil), new JsonTransformer());
+        get(API_ROOT + RoutePath.CREATE_CLINICAL_KIT_ENDPOINT, new CreateClinicalDummyKitRoute(), new JsonTransformer());
+
         if(!cfg.getBoolean("ui.production")){
             get(API_ROOT + RoutePath.DUMMY_ENDPOINT, new MercuryDummyKitEndpoint(), new JsonTransformer());
-            get(API_ROOT + RoutePath.CLINICAL_KIT_ENDPOINT, new ClinicalKitsRoute(notificationUtil), new JsonTransformer());
-            get(API_ROOT + RoutePath.CREATE_CLINICAL_KIT_ENDPOINT, new CreateClinicalDummyKitRoute(), new JsonTransformer());
-        }
+            }
 
         String appRoute = cfg.hasPath("portal.appRoute") ? cfg.getString("portal.appRoute") : null;
 
