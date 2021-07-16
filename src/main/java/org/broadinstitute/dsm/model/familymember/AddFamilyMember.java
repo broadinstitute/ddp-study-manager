@@ -21,12 +21,12 @@ import org.broadinstitute.dsm.util.ParticipantUtil;
 
 public abstract class AddFamilyMember {
 
-    private AddFamilyMemberPayload addFamilyMemberPayload;
-    private ParticipantData participantData;
-    private int ddpInstanceId;
-    private DDPInstanceDao ddpInstanceDao;
-    private String studyGuid;
-    private String participantId;
+    protected AddFamilyMemberPayload addFamilyMemberPayload;
+    protected ParticipantData participantData;
+    protected int ddpInstanceId;
+    protected DDPInstanceDao ddpInstanceDao;
+    protected String studyGuid;
+    protected String participantId;
 
     public AddFamilyMember(AddFamilyMemberPayload addFamilyMemberPayload) {
         this.addFamilyMemberPayload = Objects.requireNonNull(addFamilyMemberPayload);
@@ -37,11 +37,14 @@ public abstract class AddFamilyMember {
         ddpInstanceId = ddpInstanceDao.getDDPInstanceIdByGuid(studyGuid);
     }
 
-    public int addFamilyMember() {
-        this.prepareFamilyMemberData();
-        this.copyProbandData();
-        this.addDefaultOptionsValueToData();
-        return this.participantData.insertParticipantData(new UserDao().get(addFamilyMemberPayload.getUserId().orElse(0)).flatMap(UserDto::getEmail).orElse("SYSTEM"));
+    public long addFamilyMember() {
+        prepareFamilyMemberData();
+        copyProbandData();
+        addDefaultOptionsValueToData();
+        long createdParticipantDataId = this.participantData.insertParticipantData(
+                new UserDao().get(addFamilyMemberPayload.getUserId().orElse(0)).flatMap(UserDto::getEmail).orElse("SYSTEM"));
+        exportDataToEs();
+        return createdParticipantDataId;
     }
 
     protected void prepareFamilyMemberData() {

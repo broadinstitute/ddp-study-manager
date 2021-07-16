@@ -74,7 +74,7 @@ public class FilterTest {
                     .withFieldTypeId(FILTER_TEST)
                     .withData(gson.toJson(participantData))
                     .withLastChanged(System.currentTimeMillis())
-                    .withChangedBy(userDto.getEmail())
+                    .withChangedBy(userDto.getEmail().orElse(""))
                     .build();
         participantDataId = participantDataDao.create(participantDataDto);
 
@@ -85,7 +85,7 @@ public class FilterTest {
                     .withFieldTypeId(FILTER_TEST)
                     .withData(gson.toJson(participantData1))
                     .withLastChanged(System.currentTimeMillis())
-                    .withChangedBy(userDto.getEmail())
+                    .withChangedBy(userDto.getEmail().orElse(""))
                     .build();
         participantDataId1 = participantDataDao.create(participantDataDto1);
     }
@@ -179,7 +179,7 @@ public class FilterTest {
         if (participantDataId1 > 0) {
             participantDataDao.delete(participantDataId1);
         }
-        userDao.delete(userDto.getUserId());
+        userDao.delete(userDto.getId());
         ddpInstanceDao.delete(ddpInstanceDto.getDdpInstanceId());
     }
 }

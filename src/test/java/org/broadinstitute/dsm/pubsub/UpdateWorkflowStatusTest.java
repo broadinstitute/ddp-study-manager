@@ -101,7 +101,7 @@ public class UpdateWorkflowStatusTest {
                     .withFieldTypeId(UPDATE_WORKFLOW_TEST)
                     .withData(gson.toJson(participantData))
                     .withLastChanged(System.currentTimeMillis())
-                    .withChangedBy(userDto.getEmail())
+                    .withChangedBy(userDto.getEmail().orElse(""))
                     .build();
         participantDataId = participantDataDao.create(participantDataDto);
         participantDataDto =
@@ -112,7 +112,7 @@ public class UpdateWorkflowStatusTest {
                     .withFieldTypeId(UPDATE_WORKFLOW_TEST)
                     .withData(gson.toJson(participantData))
                     .withLastChanged(System.currentTimeMillis())
-                    .withChangedBy(userDto.getEmail())
+                    .withChangedBy(userDto.getEmail().orElse(""))
                     .build();
     }
 
@@ -121,7 +121,7 @@ public class UpdateWorkflowStatusTest {
         if (participantDataId > 0) {
             participantDataDao.delete(participantDataId);
         }
-        userDao.delete(userDto.getUserId());
+        userDao.delete(userDto.getId());
         ddpInstanceDao.delete(ddpInstanceDto.getDdpInstanceId());
     }
 }

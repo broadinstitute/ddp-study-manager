@@ -15,6 +15,7 @@ import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.dao.Dao;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.util.ParticipantUtil;
@@ -118,7 +119,7 @@ public class ParticipantData {
         this.data = data;
     }
 
-    public void insertParticipantData(String userEmail) {
+    public long insertParticipantData(String userEmail) {
         dataAccess = new ParticipantDataDao();
         ParticipantDataDto participantDataDto =
                 new ParticipantDataDto.Builder()
@@ -137,6 +138,7 @@ public class ParticipantData {
             throw new RuntimeException("Could not insert participant data for : " + this.ddpParticipantId);
         }
         logger.info("Successfully inserted data for participant: " + this.ddpParticipantId);
+        return createdDataKey;
     }
 
     public boolean isRelationshipIdExists() {
@@ -184,7 +186,8 @@ public class ParticipantData {
     public boolean hasFamilyMemberApplicantEmail() {
         if (Objects.isNull(this.data) || StringUtils.isBlank(this.ddpParticipantId)) return false;
         String familyMemberEmail = this.data.get(FamilyMemberConstants.EMAIL);
-        String applicantEmail = ParticipantUtil.getParticipantEmailById(this, this.ddpParticipantId);
+        String esParticipantIndex = new DDPInstanceDao().getEsParticipantIndexByInstanceId(ddpInstanceId).orElse("");
+        String applicantEmail = ParticipantUtil.getParticipantEmailById(esParticipantIndex, this.ddpParticipantId);
         return applicantEmail.equals(familyMemberEmail);
     }
 
