@@ -301,12 +301,12 @@ public class FilterRoute extends RequestHandler {
         Map<String, String> participantIdsForQuery = new HashMap();
         Map<String, String> participantsNotToAdd = new HashMap();
         for (ParticipantDataDto participantData : allParticipantData) {
-            String data = participantData.getData();
-            String fieldTypeId = participantData.getFieldTypeId();
+            String data = participantData.getData().orElse(null);
+            String fieldTypeId = participantData.getFieldTypeId().orElse(null);
             if (data == null || fieldTypeId == null) {
                 continue;
             }
-            String ddpParticipantId = participantData.getDdpParticipantId();
+            String ddpParticipantId = participantData.getDdpParticipantId().orElse(null);
             Map<String, String> dataMap = gson.fromJson(data, Map.class);
             boolean questionWithOptions = (OPTIONS.equals(filter.getType()) || RADIO.equals(filter.getType())) && filter.getSelectedOptions() != null;
             boolean notEmptyCheck = filter.isNotEmpty() && dataMap.get(fieldName) != null && !dataMap.get(fieldName).isEmpty();
