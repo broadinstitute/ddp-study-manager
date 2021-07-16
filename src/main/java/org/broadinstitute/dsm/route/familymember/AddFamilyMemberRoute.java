@@ -65,23 +65,18 @@ public class AddFamilyMemberRoute extends RequestHandler {
 
         ParticipantDataDao participantDataDao = new ParticipantDataDao();
         ParticipantData participantDataObject = new ParticipantData(participantDataDao);
-        try {
-            participantDataObject.setDdpParticipantId(participantId);
-            participantDataObject.setDdpInstanceId(Integer.parseInt(ddpInstanceId));
-            participantDataObject.setFieldTypeId(realm.toUpperCase() + ParticipantData.FIELD_TYPE);
-            participantDataObject.setFamilyMemberData(addFamilyMemberPayload);
-            participantDataObject.copyProbandData(addFamilyMemberPayload);
-            participantDataObject.addDefaultOptionsValueToData(getDefaultOptions(Integer.parseInt(ddpInstanceId)));
-            exportDataToEs(addFamilyMemberPayload, ddpInstance, participantDataObject);
-            participantDataObject.insertParticipantData(User.getUser(uId).getEmail());
-            logger.info("Family member for participant " + participantId + " successfully created");
-        } catch (Exception e) {
-            throw new RuntimeException("Could not create family member " + e);
-        }
-        List<ParticipantData> participantData =
-                ParticipantData.parseDtoList(participantDataDao.getParticipantDataByParticipantId(participantId));
-        participantDataObject.sortBySelfMemberType(participantData);
-        return participantData;
+        participantDataObject.setDdpParticipantId(participantId);
+        participantDataObject.setDdpInstanceId(Integer.parseInt(ddpInstanceId));
+        participantDataObject.setFieldTypeId(realm.toUpperCase() + ParticipantData.FIELD_TYPE);
+        participantDataObject.setFamilyMemberData(addFamilyMemberPayload);
+        participantDataObject.copyProbandData(addFamilyMemberPayload);
+        participantDataObject.addDefaultOptionsValueToData(getDefaultOptions(Integer.parseInt(ddpInstanceId)));
+        exportDataToEs(addFamilyMemberPayload, ddpInstance, participantDataObject);
+        long createdParticipantDataId = participantDataObject.insertParticipantData(User.getUser(uId).getEmail());
+        logger.info("Family member for participant " + participantId + " successfully created");
+        return ParticipantData.parseDto(participantDataDao.get(createdParticipantDataId).orElseThrow(() -> {
+            throw new NoSuchElementException("Could not find participant data with id: " + createdParticipantDataId);
+        }));
     }
 
     private void exportDataToEs(AddFamilyMemberPayload addFamilyMemberPayload, DDPInstance ddpInstance,

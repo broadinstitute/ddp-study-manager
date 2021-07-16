@@ -140,7 +140,7 @@ public class ParticipantData {
         this.data = data;
     }
 
-    public void insertParticipantData(String userEmail) {
+    public long insertParticipantData(String userEmail) {
         dataAccess = new ParticipantDataDao();
         ParticipantDataDto participantDataDto =
                 new ParticipantDataDto.Builder()
@@ -154,11 +154,12 @@ public class ParticipantData {
         if (isRelationshipIdExists()) {
             throw new RuntimeException(String.format("Family member with that Relationship ID: %s already exists", getRelationshipId()));
         }
-        int createdDataKey = dataAccess.create(participantDataDto);
+        long createdDataKey = dataAccess.create(participantDataDto);
         if (createdDataKey < 1) {
             throw new RuntimeException("Could not insert participant data for : " + this.ddpParticipantId);
         }
         logger.info("Successfully inserted data for participant: " + this.ddpParticipantId);
+        return createdDataKey;
     }
 
     public boolean isRelationshipIdExists() {
@@ -201,14 +202,6 @@ public class ParticipantData {
                     return FamilyMemberConstants.MEMBER_TYPE_SELF.equals(pDataMap.get(FamilyMemberConstants.MEMBER_TYPE));
                 })
                 .findFirst();
-    }
-
-    public void sortBySelfMemberType(List<ParticipantData> participantData) {
-        participantData.sort((o1, o2) -> {
-            if (Objects.nonNull(o1.getData()) &&
-                    FamilyMemberConstants.MEMBER_TYPE_SELF.equals(o1.getData().get(FamilyMemberConstants.MEMBER_TYPE))) return -1;
-            return (int) (o1.getDataId() - o2.getDataId());
-        });
     }
 
 }
