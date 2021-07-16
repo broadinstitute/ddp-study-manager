@@ -9,6 +9,7 @@ import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.PubsubMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.export.ExportToES;
+import org.broadinstitute.dsm.model.Study;
 import org.broadinstitute.dsm.model.defaultvalues.Defaultable;
 import org.broadinstitute.dsm.model.defaultvalues.DefaultableMaker;
 import org.broadinstitute.dsm.util.ParticipantUtil;
@@ -94,7 +95,7 @@ public class DSMtasksSubscription {
             consumer.ack();
             return;
         };
-        Arrays.stream(DefaultableMaker.Study.values())
+        Arrays.stream(Study.values())
                 .filter(study -> study.toString().equals(studyGuid.toUpperCase()))
                 .findFirst()
                 .ifPresentOrElse(study -> {

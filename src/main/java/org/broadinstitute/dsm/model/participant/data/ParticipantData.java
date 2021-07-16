@@ -75,26 +75,6 @@ public class ParticipantData {
         return participantData;
     }
 
-//    public void setFamilyMemberData(@NonNull AddFamilyMemberPayload familyMemberPayload) {
-//        FamilyMemberDetails familyMemberData =
-//                familyMemberPayload.getData().orElseThrow(() -> new NoSuchElementException("Family member data is not provided"));
-//        familyMemberData.setFamilyId(familyMemberPayload.getOrGenerateFamilyId());
-//        familyMemberData.setCollaboratorParticipantId(familyMemberPayload.generateCollaboratorParticipantId());
-//        if (FamilyMemberConstants.MEMBER_TYPE_SELF.equalsIgnoreCase(familyMemberData.getMemberType()))
-//            familyMemberData.setEmail(ParticipantUtil.getParticipantEmailById(this, familyMemberPayload.getParticipantId().orElse("")));
-//        this.data = familyMemberData.toMap();
-//    }
-
-//    public void copyProbandData(AddFamilyMemberPayload familyMemberPayload) {
-//        boolean isCopyProband = familyMemberPayload.getCopyProbandInfo().orElse(Boolean.FALSE);
-//        if (!isCopyProband || StringUtils.isBlank(familyMemberPayload.getParticipantId().orElse(""))) return;
-//        List<ParticipantDataDto> participantDataByParticipantId =
-//                getParticipantDataByParticipantId(familyMemberPayload.getParticipantId().orElse(""));
-//        Optional<ParticipantDataDto> maybeProbandData = findProband(participantDataByParticipantId);
-//        Optional<ParticipantData> maybeParticipantData = maybeProbandData.map(ParticipantData::parseDto);
-//        maybeParticipantData.ifPresent(participantData -> participantData.data.forEach((k, v) -> this.data.putIfAbsent(k, v)));
-//    }
-
     public List<ParticipantDataDto> getParticipantDataByParticipantId(String ddpParticipantId) {
         if (StringUtils.isBlank(ddpParticipantId)) return Collections.emptyList();
         ParticipantDataDao dataAccess = (ParticipantDataDao) setDataAccess(new ParticipantDataDao());

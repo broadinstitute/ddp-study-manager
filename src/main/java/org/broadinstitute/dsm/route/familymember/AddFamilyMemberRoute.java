@@ -1,30 +1,21 @@
 package org.broadinstitute.dsm.route.familymember;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import com.google.gson.Gson;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.db.UserDto;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
-import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
-import org.broadinstitute.dsm.db.dao.user.UserDao;
-import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
-import org.broadinstitute.dsm.export.WorkflowForES;
+import org.broadinstitute.dsm.model.Study;
 import org.broadinstitute.dsm.model.familymember.AddFamilyMember;
-import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
-import org.broadinstitute.dsm.model.participant.data.ParticipantData;
 import org.broadinstitute.dsm.model.participant.data.AddFamilyMemberPayload;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
+import org.broadinstitute.dsm.model.participant.data.ParticipantData;
 import org.broadinstitute.dsm.model.rgp.RgpAddFamilyMember;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -50,8 +41,6 @@ public class AddFamilyMemberRoute extends RequestHandler {
             logger.warn("Study : " + realm + " is not setup to add family member");
             return new Result(400, "Study is not setup to add family member");
         }
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
-        String ddpInstanceId = ddpInstance.getDdpInstanceId();
 
         Optional<FamilyMemberDetails> maybeFamilyMemberData = addFamilyMemberPayload.getData();
         if (maybeFamilyMemberData.isEmpty() || maybeFamilyMemberData.orElseGet(FamilyMemberDetails::new).isFamilyMemberFieldsEmpty()) {
@@ -67,102 +56,10 @@ public class AddFamilyMemberRoute extends RequestHandler {
         }
 
         ParticipantDataDao participantDataDao = new ParticipantDataDao();
-//        try {
-//            ParticipantData participantDataObject = new ParticipantData(participantDataDao);
-//            participantDataObject.setDdpParticipantId(participantId);
-//            participantDataObject.setDdpInstanceId(Integer.parseInt(ddpInstanceId));
-//            participantDataObject.setFieldTypeId(realm.toUpperCase() + ParticipantData.FIELD_TYPE);
-//            participantDataObject.setFamilyMemberData(addFamilyMemberPayload);
-//            participantDataObject.copyProbandData(addFamilyMemberPayload);
-//            participantDataObject.addDefaultOptionsValueToData(getDefaultOptions(Integer.parseInt(ddpInstanceId)));
-//            exportDataToEs(addFamilyMemberPayload, ddpInstance, participantDataObject);
-//            participantDataObject.insertParticipantData(new UserDao().get(uId).flatMap(UserDto::getEmail).orElse("SYSTEM"));
-//            logger.info("Family member for participant " + participantId + " successfully created");
-//        } catch (Exception e) {
-//            throw new RuntimeException("Could not create family member " + e);
-//        }
-        AddFamilyMember addFamilyMember = new RgpAddFamilyMember(addFamilyMemberPayload);
-        long createdFamilyMemberId = addFamilyMember.addFamilyMember();
+        AddFamilyMember addFamilyMember = AddFamilyMember.instance(Study.valueOf(realm.toUpperCase()),addFamilyMemberPayload);
+        long createdFamilyMemberId = addFamilyMember.add();
         return ParticipantData.parseDto(participantDataDao.get(createdFamilyMemberId).orElseThrow());
-//        return ParticipantData.parseDtoList(participantDataDao.getParticipantDataByParticipantId(participantId));
     }
-
-//    private void exportDataToEs(AddFamilyMemberPayload addFamilyMemberPayload, DDPInstance ddpInstance,
-//                                ParticipantData participantDataObject) {
-//        boolean isCopyProband = addFamilyMemberPayload.getCopyProbandInfo().orElse(Boolean.FALSE);
-//        if (isCopyProband) {
-//            exportProbandDataForFamilyMemberToEs(addFamilyMemberPayload, ddpInstance, participantDataObject);
-//        } else {
-//            exportDefaultWorkflowsForFamilyMemberToES(addFamilyMemberPayload.getParticipantId().get(), ddpInstance, addFamilyMemberPayload.getData().get());
-//        }
-//    }
-
-//    private void exportDataToEs(AddFamilyMemberPayload addFamilyMemberPayload, DDPInstance ddpInstance,
-//                                ParticipantData participantDataObject) {
-//        boolean isCopyProband = addFamilyMemberPayload.getCopyProbandInfo().orElse(Boolean.FALSE);
-//        if (!isCopyProband) return;
-//        exportProbandDataForFamilyMemberToEs(addFamilyMemberPayload, ddpInstance, participantDataObject);
-//    }
-//
-//    private void exportProbandDataForFamilyMemberToEs(AddFamilyMemberPayload addFamilyMemberPayload, DDPInstance ddpInstance,
-//                                                      ParticipantData participantDataObject) {
-//        if(!participantDataObject.hasFamilyMemberApplicantEmail()) return;
-//        List<FieldSettingsDto> fieldSettingsByInstanceIdAndColumns =
-//                getFieldSettingsDtosByInstanceIdAndColumns(
-//                        Integer.parseInt(ddpInstance.getDdpInstanceId()),
-//                        new ArrayList<>(participantDataObject.getData().keySet())
-//                );
-//        FieldSettings fieldSettings = new FieldSettings();
-//        logger.info("Starting exporting copied proband data to family member into ES");
-//        fieldSettingsByInstanceIdAndColumns.forEach(fieldSettingsDto -> {
-//            if (!fieldSettings.isElasticExportWorkflowType(fieldSettingsDto)) return;
-//            WorkflowForES instanceWithStudySpecificData =
-//                    WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, addFamilyMemberPayload.getParticipantId().get(),
-//                            fieldSettingsDto.getColumnName(),
-//                            participantDataObject.getData().get(fieldSettingsDto.getColumnName()),
-//                            new WorkflowForES.StudySpecificData(
-//                                    addFamilyMemberPayload.getData().get().getCollaboratorParticipantId(),
-//                                    addFamilyMemberPayload.getData().get().getFirstName(),
-//                                    addFamilyMemberPayload.getData().get().getLastName()));
-//            ElasticSearchUtil.writeWorkflow(instanceWithStudySpecificData, false);
-//        });
-//    }
-
-//    private List<FieldSettingsDto> getFieldSettingsDtosByInstanceIdAndColumns(int instanceId, List<String> columns) {
-//        FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
-//        return fieldSettingsDao.getFieldSettingsByInstanceIdAndColumns(
-//                instanceId,
-//                columns
-//        );
-//    }
-//
-//    private void exportDefaultWorkflowsForFamilyMemberToES(String participantId, DDPInstance ddpInstance,
-//                           FamilyMemberDetails maybeFamilyMemberData) {
-//        logger.info("Exporting workflow for family member of participant: " + participantId + " to ES");
-//        getDefaultOptionsByElasticWorkflow(Integer.parseInt(ddpInstance.getDdpInstanceId())).forEach((col, val) -> {
-//            WorkflowForES instanceWithStudySpecificData =
-//                    WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, participantId, col, val,
-//                            new WorkflowForES.StudySpecificData(
-//                                    maybeFamilyMemberData.getCollaboratorParticipantId(),
-//                                    maybeFamilyMemberData.getFirstName(),
-//                                    maybeFamilyMemberData.getLastName()));
-//            ElasticSearchUtil.writeWorkflow(instanceWithStudySpecificData, false);
-//        });
-//    }
-
-//    private Map<String, String> getDefaultOptions(int ddpInstanceId) {
-//        FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
-//        FieldSettings fieldSettings = new FieldSettings();
-//        return fieldSettings.getColumnsWithDefaultOptions(fieldSettingsDao.getFieldSettingsByOptionAndInstanceId(ddpInstanceId));
-//    }
-//
-//    private Map<String, String> getDefaultOptionsByElasticWorkflow(int instanceId) {
-//        FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
-//        FieldSettings fieldSettings = new FieldSettings();
-//        List<FieldSettingsDto> fieldSettingsByInstanceId = fieldSettingsDao.getFieldSettingsByInstanceId(instanceId);
-//        return fieldSettings.getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(fieldSettingsByInstanceId);
-//    }
-
 
 
 }
