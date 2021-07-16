@@ -9,7 +9,7 @@ import java.util.NoSuchElementException;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import org.broadinstitute.ddp.handlers.util.Result;
-import org.broadinstitute.dsm.db.User;
+import org.broadinstitute.dsm.db.UserDto;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
@@ -30,7 +30,7 @@ public class AddFamilyMemberRouteTest {
 
     private static final String participantId = "RBMJW6ZIXVXBMXUX6M3Q";
 
-    private static User user;
+    private static UserDto userDto;
 
     private static int ddpFamilyMemberParticipantDataId;
     private static int ddpExistingProbandParticipantDataId;
@@ -54,7 +54,7 @@ public class AddFamilyMemberRouteTest {
 
         ddpInstanceDto =  DBTestUtil.createTestDdpInstance(ddpInstanceDto, ddpInstanceDao, "AddFamilyMemberInstance");
 
-        user = DBTestUtil.createTestDsmUser("AddFamilyMemberUser", "addfamilymember@family.com", userDao, user);
+        userDto = DBTestUtil.createTestDsmUser("AddFamilyMemberUser", "addfamilymember@family.com", userDao, userDto);
 
         familyMemberData.putAll(new FamilyMemberDetails("Family", "Member", "Sister", 99, "PE3LHB_1_2").toMap());
 
@@ -83,7 +83,7 @@ public class AddFamilyMemberRouteTest {
                     .withFieldTypeId(ParticipantData.FIELD_TYPE)
                     .withData(gson.toJson(probandData))
                     .withLastChanged(System.currentTimeMillis())
-                    .withChangedBy(user.getEmail())
+                    .withChangedBy(userDto.getEmail())
                     .build();
         ddpExistingProbandParticipantDataId = participantDataDao.create(probandParticipantDataDto);
     }
@@ -100,13 +100,13 @@ public class AddFamilyMemberRouteTest {
         if (ddpCopiedProbandFamilyMemberParticipantDataId > 0) {
             participantDataDao.delete(ddpCopiedProbandFamilyMemberParticipantDataId);
         }
-        userDao.delete(user.getUserId());
+        userDao.delete(userDto.getUserId());
         ddpInstanceDao.delete(ddpInstanceDto.getDdpInstanceId());
     }
 
     @Test
     public void noGuidProvided() {
-        String payload = payloadFactory(null, ddpInstanceDto.getInstanceName(), familyMemberData, user.getUserId());
+        String payload = payloadFactory(null, ddpInstanceDto.getInstanceName(), familyMemberData, userDto.getUserId());
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
         try {
             addFamilyMemberPayload.getParticipantId().orElseThrow(() -> new NoSuchElementException("Participant Guid is not provided"));
@@ -117,7 +117,7 @@ public class AddFamilyMemberRouteTest {
 
     @Test
     public void noRealmProvided() {
-        String payload = payloadFactory(participantId, null, familyMemberData, Integer.parseInt(user.getId()));
+        String payload = payloadFactory(participantId, null, familyMemberData, Integer.parseInt(userDto.getId()));
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
         try {
             addFamilyMemberPayload.getRealm().orElseThrow(() -> new NoSuchElementException("Realm is not provided"));
@@ -128,7 +128,7 @@ public class AddFamilyMemberRouteTest {
 
     @Test
     public void noFamilyMemberDataProvided(){
-        String payload = payloadFactory(participantId, ddpInstanceDto.getInstanceName(), Map.of(), user.getUserId());
+        String payload = payloadFactory(participantId, ddpInstanceDto.getInstanceName(), Map.of(), userDto.getUserId());
         Result res = new Result(200);
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
         if (addFamilyMemberPayload.getData().isEmpty() || addFamilyMemberPayload.getData().orElseGet(FamilyMemberDetails::new).isFamilyMemberFieldsEmpty()) {
@@ -151,7 +151,7 @@ public class AddFamilyMemberRouteTest {
 
     @Test
     public void relationshipIdAlreadyExists() {
-        String payload = payloadFactory(participantId, ddpInstanceDto.getInstanceName(), probandData, user.getUserId());
+        String payload = payloadFactory(participantId, ddpInstanceDto.getInstanceName(), probandData, userDto.getUserId());
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
         ParticipantData participantData = new ParticipantData(participantDataDao);
         participantData.setData(addFamilyMemberPayload.getParticipantId().get(), ddpInstanceDto.getDdpInstanceId(),
@@ -161,7 +161,7 @@ public class AddFamilyMemberRouteTest {
 
     @Test
     public void addFamilyMemberToParticipant() {
-        String payload = payloadFactory(participantId, ddpInstanceDto.getInstanceName(), familyMemberData, user.getUserId());
+        String payload = payloadFactory(participantId, ddpInstanceDto.getInstanceName(), familyMemberData, userDto.getUserId());
         Result result = new Result(200);
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
         try {
@@ -172,7 +172,7 @@ public class AddFamilyMemberRouteTest {
                         .withFieldTypeId(ddpInstanceDto.getInstanceName() + ParticipantData.FIELD_TYPE)
                         .withData(gson.toJson(addFamilyMemberPayload.getData().get()))
                         .withLastChanged(System.currentTimeMillis())
-                        .withChangedBy(user.getEmail())
+                        .withChangedBy(userDto.getEmail())
                         .build();
             ddpFamilyMemberParticipantDataId = participantDataDao.create(participantDataDto);
         } catch (Exception e) {
@@ -184,7 +184,7 @@ public class AddFamilyMemberRouteTest {
     @Test
     public void copyProbandDatatToFamilyMember() {
         Result result = new Result(200);
-        String payload = payloadFactory(participantId, ddpInstanceDto.getInstanceName(), familyMemberData, user.getUserId());
+        String payload = payloadFactory(participantId, ddpInstanceDto.getInstanceName(), familyMemberData, userDto.getUserId());
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
         addFamilyMemberPayload.setProbandDataId(ddpExistingProbandParticipantDataId);
         addFamilyMemberPayload.setCopyProbandInfo(true);
@@ -199,7 +199,7 @@ public class AddFamilyMemberRouteTest {
                         .withFieldTypeId(ddpInstanceDto.getInstanceName() + ParticipantData.FIELD_TYPE)
                         .withData(gson.toJson(participantData.getData()))
                         .withLastChanged(System.currentTimeMillis())
-                        .withChangedBy(user.getEmail())
+                        .withChangedBy(userDto.getEmail())
                         .build();
             ddpCopiedProbandFamilyMemberParticipantDataId = participantDataDao.create(participantDataDto);
             String copiedProbandFamilyMemberData = participantDataDao.get(ddpCopiedProbandFamilyMemberParticipantDataId).orElseThrow().getData().orElse("");

@@ -9,10 +9,11 @@ import java.util.Optional;
 import com.google.gson.Gson;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.db.User;
+import org.broadinstitute.dsm.db.UserDto;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
@@ -73,7 +74,7 @@ public class AddFamilyMemberRoute extends RequestHandler {
             participantDataObject.copyProbandData(addFamilyMemberPayload);
             participantDataObject.addDefaultOptionsValueToData(getDefaultOptions(Integer.parseInt(ddpInstanceId)));
             exportDataToEs(addFamilyMemberPayload, ddpInstance, participantDataObject);
-            participantDataObject.insertParticipantData(User.getUser(uId).getEmail());
+            participantDataObject.insertParticipantData(new UserDao().get(uId).flatMap(UserDto::getEmail).orElse("SYSTEM"));
             logger.info("Family member for participant " + participantId + " successfully created");
         } catch (Exception e) {
             throw new RuntimeException("Could not create family member " + e);
@@ -81,18 +82,26 @@ public class AddFamilyMemberRoute extends RequestHandler {
         return ParticipantData.parseDtoList(participantDataDao.getParticipantDataByParticipantId(participantId));
     }
 
+//    private void exportDataToEs(AddFamilyMemberPayload addFamilyMemberPayload, DDPInstance ddpInstance,
+//                                ParticipantData participantDataObject) {
+//        boolean isCopyProband = addFamilyMemberPayload.getCopyProbandInfo().orElse(Boolean.FALSE);
+//        if (isCopyProband) {
+//            exportProbandDataForFamilyMemberToEs(addFamilyMemberPayload, ddpInstance, participantDataObject);
+//        } else {
+//            exportDefaultWorkflowsForFamilyMemberToES(addFamilyMemberPayload.getParticipantId().get(), ddpInstance, addFamilyMemberPayload.getData().get());
+//        }
+//    }
+
     private void exportDataToEs(AddFamilyMemberPayload addFamilyMemberPayload, DDPInstance ddpInstance,
                                 ParticipantData participantDataObject) {
         boolean isCopyProband = addFamilyMemberPayload.getCopyProbandInfo().orElse(Boolean.FALSE);
-        if (isCopyProband) {
-            exportProbandDataForFamilyMemberToEs(addFamilyMemberPayload, ddpInstance, participantDataObject);
-        } else {
-            exportDefaultWorkflowsForFamilyMemberToES(addFamilyMemberPayload.getParticipantId().get(), ddpInstance, addFamilyMemberPayload.getData().get());
-        }
+        if (!isCopyProband) return;
+        exportProbandDataForFamilyMemberToEs(addFamilyMemberPayload, ddpInstance, participantDataObject);
     }
 
     private void exportProbandDataForFamilyMemberToEs(AddFamilyMemberPayload addFamilyMemberPayload, DDPInstance ddpInstance,
                                                       ParticipantData participantDataObject) {
+        if(!participantDataObject.hasFamilyMemberApplicantEmail()) return;
         List<FieldSettingsDto> fieldSettingsByInstanceIdAndColumns =
                 getFieldSettingsDtosByInstanceIdAndColumns(
                         Integer.parseInt(ddpInstance.getDdpInstanceId()),
@@ -136,11 +145,11 @@ public class AddFamilyMemberRoute extends RequestHandler {
         });
     }
 
-    private Map<String, String> getDefaultOptions(int ddpInstanceId) {
-        FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
-        FieldSettings fieldSettings = new FieldSettings();
-        return fieldSettings.getColumnsWithDefaultOptions(fieldSettingsDao.getFieldSettingsByOptionAndInstanceId(ddpInstanceId));
-    }
+//    private Map<String, String> getDefaultOptions(int ddpInstanceId) {
+//        FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
+//        FieldSettings fieldSettings = new FieldSettings();
+//        return fieldSettings.getColumnsWithDefaultOptions(fieldSettingsDao.getFieldSettingsByOptionAndInstanceId(ddpInstanceId));
+//    }
 
     private Map<String, String> getDefaultOptionsByElasticWorkflow(int instanceId) {
         FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();

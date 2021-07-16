@@ -46,6 +46,12 @@ public class ParticipantDataTest {
         Assert.assertEquals(2005, familyId);
     }
 
+    @Test
+    public void testFamilyMemberHasNotApplicantEmail() {
+        ParticipantData participantData = new ParticipantData(0, "", 0, "", Map.of(FamilyMemberConstants.EMAIL, "familymember@mail.com"));
+        Assert.assertFalse(participantData.hasFamilyMemberApplicantEmail());
+    }
+
     private List<ParticipantDataDto> generateParticipantData() {
         Random random = new Random();
         List<ParticipantDataDto> participantDataDtoList = new ArrayList<>();
