@@ -37,14 +37,14 @@ public class AddFamilyMember {
     protected int ddpInstanceId;
     protected DDPInstanceDao ddpInstanceDao;
     protected String studyGuid;
-    protected String participantId;
+    protected String ddpParticipantId;
 
     protected AddFamilyMember(AddFamilyMemberPayload addFamilyMemberPayload) {
         this.addFamilyMemberPayload = Objects.requireNonNull(addFamilyMemberPayload);
         this.participantData = new ParticipantData();
         ddpInstanceDao = new DDPInstanceDao();
         studyGuid = addFamilyMemberPayload.getRealm().orElseThrow();
-        participantId = addFamilyMemberPayload.getParticipantId().orElseThrow();
+        ddpParticipantId = addFamilyMemberPayload.getParticipantId().orElseThrow();
         ddpInstanceId = ddpInstanceDao.getDDPInstanceIdByGuid(studyGuid);
     }
 
@@ -61,7 +61,7 @@ public class AddFamilyMember {
     protected void prepareFamilyMemberData() {
         FamilyMemberDetails familyMemberDetails = addFamilyMemberPayload.getData().orElseThrow();
         String fieldTypeId =  studyGuid + ParticipantData.FIELD_TYPE;
-        participantData.setDdpParticipantId(participantId);
+        participantData.setDdpParticipantId(ddpParticipantId);
         participantData.setDdpInstanceId(ddpInstanceId);
         participantData.setFieldTypeId(fieldTypeId);
         familyMemberDetails.setFamilyId(addFamilyMemberPayload.getOrGenerateFamilyId());
@@ -119,10 +119,10 @@ public class AddFamilyMember {
     }
 
     protected void exportDefaultWorkflowsForFamilyMemberToES() {
-        logger.info("Exporting workflow for family member of participant: " + participantId + " to ES");
+        logger.info("Exporting workflow for family member of participant: " + ddpParticipantId + " to ES");
         getDefaultOptionsByElasticWorkflow(ddpInstanceId).forEach((col, val) -> {
             WorkflowForES instanceWithStudySpecificData =
-                    WorkflowForES.createInstanceWithStudySpecificData(DDPInstance.getDDPInstanceById(ddpInstanceId), participantId, col, val,
+                    WorkflowForES.createInstanceWithStudySpecificData(DDPInstance.getDDPInstanceById(ddpInstanceId), ddpParticipantId, col, val,
                             new WorkflowForES.StudySpecificData(
                                     addFamilyMemberPayload.getData().get().getCollaboratorParticipantId(),
                                     addFamilyMemberPayload.getData().get().getFirstName(),
