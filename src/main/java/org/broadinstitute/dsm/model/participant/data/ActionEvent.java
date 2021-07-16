@@ -24,15 +24,14 @@ public class ActionEvent {
 
     private static String SELECT_ACTION_EVENT = "SELECT " +
             "eve.event_name, eve.event_type, " +
-            "realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token, realm.notification_recipients, realm.migrated_ddp " +
+            "realm.ddp_instance_id, realm.instance_name, realm.base_url, realm.auth0_token " +
             "FROM " +
             "event_type eve, " +
             "ddp_instance realm " +
             "WHERE " +
-            "p.ddp_instance_id = realm.ddp_instance_id " +
-            "and eve.ddp_instance_id = request.ddp_instance_id " +
-            "and eve.event_type = ?" +
-            "and realm.ddp_instance_id = ?";
+            "eve.ddp_instance_id = realm.ddp_instance_id " +
+            "AND eve.event_name = ? " +
+            "AND realm.ddp_instance_id = ?";
 
     private final String ddpInstanceId;
     private final String instanceName;
@@ -54,21 +53,23 @@ public class ActionEvent {
     public static ActionEvent getParticipantEvent(Connection conn, @NotNull String eventType, @NonNull String instanceId) {
         ArrayList<String> skippedEvents = new ArrayList();
         SimpleResult dbVals = new SimpleResult();
-        try (PreparedStatement stmt = conn.prepareStatement(SELECT_ACTION_EVENT)) {
+        try (PreparedStatement stmt = conn.prepareStatement(SELECT_ACTION_EVENT, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
             stmt.setString(1, eventType);
             stmt.setString(2, instanceId);
             try (ResultSet rs = stmt.executeQuery()) {
                 rs.last();
                 int count = rs.getRow();
                 rs.beforeFirst();
-                if (rs.next()) { //if row is 0 the ddp/kit type combination does not trigger a participant event
-                    dbVals.resultValue = new ActionEvent(
-                            rs.getString(DBConstants.DDP_INSTANCE_ID),
-                            rs.getString(DBConstants.INSTANCE_NAME),
-                            rs.getString(DBConstants.BASE_URL),
-                            rs.getString(DBConstants.EVENT_NAME),
-                            rs.getString(DBConstants.EVENT_TYPE),
-                            rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN));
+                if (count == 1) {
+                    if (rs.next()) { //if row is 0 the ddp/kit type combination does not trigger a participant event
+                        dbVals.resultValue = new ActionEvent(
+                                rs.getString(DBConstants.DDP_INSTANCE_ID),
+                                rs.getString(DBConstants.INSTANCE_NAME),
+                                rs.getString(DBConstants.BASE_URL),
+                                rs.getString(DBConstants.EVENT_NAME),
+                                rs.getString(DBConstants.EVENT_TYPE),
+                                rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN));
+                    }
                 }
             }
         }

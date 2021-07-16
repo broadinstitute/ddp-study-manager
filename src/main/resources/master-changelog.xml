@@ -62,6 +62,7 @@
     <include file="liquibase/DDP-6006_RGP-form.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/tab_grouped-column-display-fix.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/DDP-6489-family-notes-field.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/DDP-6574_update_event_queue.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/circadia/DDP-6574_email-events.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/circadia/DDP-6574_dynamic-form-action.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

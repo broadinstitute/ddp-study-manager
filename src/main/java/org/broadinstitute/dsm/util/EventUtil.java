@@ -42,6 +42,7 @@ public class EventUtil {
             "WHERE ex.ddp_participant_exit_id IS NULL AND kit.scan_date IS NOT NULL " +
             "AND kit.scan_date <= (UNIX_TIMESTAMP(NOW())-(eve.hours*60*60))*1000 AND kit.receive_date IS NULL AND kit.deactivated_date IS NULL AND realm.is_active = 1 AND queue.EVENT_TYPE IS NULL";
     private static final String SQL_INSERT_EVENT = "INSERT INTO EVENT_QUEUE SET EVENT_DATE_CREATED = ?, EVENT_TYPE = ?, DDP_INSTANCE_ID = ?, DSM_KIT_REQUEST_ID = ?, EVENT_TRIGGERED = ?";
+    private static final String SQL_INSERT_PT_EVENT = "INSERT INTO EVENT_QUEUE SET EVENT_DATE_CREATED = ?, EVENT_TYPE = ?, DDP_INSTANCE_ID = ?, DDP_PARTICIPANT_ID = ?, EVENT_TRIGGERED = ?";
 
     public void triggerReminder() {
         logger.info("Triggering reminder emails now");
@@ -153,19 +154,19 @@ public class EventUtil {
             KitEvent event = new KitEvent(ddpParticipantId, eventType, 0, null, ddpParticipantId);
             String sendRequest = actionEvent.getBaseUrl() + RoutePath.DDP_PARTICIPANT_EVENT_PATH + "/" + ddpParticipantId;
             DDPRequestUtil.postRequest(sendRequest, event, actionEvent.getInstanceName(), actionEvent.isHasAuth0Token());
-            addEvent(conn, eventType, actionEvent.getDdpInstanceId(), ddpParticipantId);
+            addPTEvent(conn, eventType, actionEvent.getDdpInstanceId(), ddpParticipantId, true);
         }
         catch (IOException e) {
             logger.error("Failed to trigger " + actionEvent.getInstanceName() + " to notify participant " +  ddpParticipantId + " about " + eventType);
             e.printStackTrace();
             //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
-            addEvent(conn, eventType, actionEvent.getDdpInstanceId(), ddpParticipantId, false);
+            addPTEvent(conn, eventType, actionEvent.getDdpInstanceId(), ddpParticipantId, false);
         }
         catch (RuntimeException e) {
             logger.error("Failed to trigger " + actionEvent.getInstanceName() + " to notify participant " +  ddpParticipantId + " about " + eventType);
             e.printStackTrace();
             //to add these events also to the event table, but without triggering the ddp and flag EVENT_TRIGGERED = false
-            addEvent(conn, eventType, actionEvent.getDdpInstanceId(), ddpParticipantId, false);
+            addPTEvent(conn, eventType, actionEvent.getDdpInstanceId(), ddpParticipantId, false);
         }
     }
 
@@ -189,7 +190,15 @@ public class EventUtil {
     }
 
     public static void addEvent(Connection conn, @NonNull String type, @NonNull String instanceID, @NonNull String requestId, boolean trigger) {
-        try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_EVENT)) {
+        addEvent(conn, type, instanceID, requestId, trigger, SQL_INSERT_EVENT);
+    }
+
+    public static void addPTEvent(Connection conn, @NonNull String type, @NonNull String instanceID, @NonNull String requestId, boolean trigger) {
+        addEvent(conn, type, instanceID, requestId, trigger, SQL_INSERT_PT_EVENT);
+    }
+
+    public static void addEvent(Connection conn, @NonNull String type, @NonNull String instanceID, @NonNull String requestId, boolean trigger, String query) {
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setLong(1, System.currentTimeMillis());
             stmt.setString(2, type);
             stmt.setString(3, instanceID);
