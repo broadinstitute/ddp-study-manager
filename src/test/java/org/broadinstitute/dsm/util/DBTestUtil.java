@@ -9,7 +9,7 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.FieldSettings;
-import org.broadinstitute.dsm.db.User;
+import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
@@ -495,13 +495,13 @@ public class DBTestUtil {
         }
     }
 
-    public static void insertUser(@NonNull User user, int is_active) {
+    public static void insertUser(@NonNull UserDto userDto, int is_active) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_USER)) {
-                stmt.setInt(1, user.getUserId());
-                stmt.setString(2, user.getName());
-                stmt.setString(3, user.getEmail());
+                stmt.setInt(1, userDto.getId());
+                stmt.setString(2, userDto.getName().orElse(""));
+                stmt.setString(3, userDto.getEmail().orElse(""));
                 stmt.setInt(4, is_active);
                 int result = stmt.executeUpdate();
                 if (result != 1){
@@ -515,7 +515,7 @@ public class DBTestUtil {
         });
         if (results.resultException != null) {
             throw new RuntimeException("Error inserting user with "
-                    + user.getUserId(), results.resultException);
+                    + userDto.getId(), results.resultException);
         }
     }
 
@@ -1158,9 +1158,9 @@ public class DBTestUtil {
         return ddpInstanceDto;
     }
 
-    public static User createTestDsmUser(String name, String email, UserDao userDao, User user) {
-        user = new User(null, name, email);
-        user.setId(String.valueOf(userDao.create(user)));
-        return user;
+    public static UserDto createTestDsmUser(String name, String email, UserDao userDao, UserDto userDto) {
+        userDto = new UserDto(0, name, email);
+        userDto.setId(userDao.create(userDto));
+        return userDto;
     }
 }

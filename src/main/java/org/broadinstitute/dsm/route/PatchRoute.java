@@ -10,8 +10,10 @@ import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantRecordDao;
+import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantRecordDto;
+import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.exception.DuplicateException;
 import org.broadinstitute.dsm.export.WorkflowForES;
@@ -76,7 +78,7 @@ public class PatchRoute extends RequestHandler {
                                     return new RuntimeException("An error occurred while attempting to patch ");
                                 }
                                 if (nameValue.getName().indexOf("question") > -1) {
-                                    User user = User.getUser(patch.getUser());
+                                    UserDto userDto = new UserDao().getUserByEmail(patch.getUser()).orElseThrow();
                                     JSONObject jsonObject = new JSONObject(nameValue.getValue().toString());
                                     JSONArray questionArray = new JSONArray(jsonObject.get("questions").toString());
                                     boolean writeBack = false;
@@ -84,7 +86,7 @@ public class PatchRoute extends RequestHandler {
                                         JSONObject question = questionArray.getJSONObject(i);
                                         if (question.optString(STATUS) != null && question.optString(STATUS).equals("sent")) {
                                             if (question.optString("email") != null && question.optString("question") != null) {
-                                                notificationUtil.sentAbstractionExpertQuestion(user.getEmail(), user.getName(), question.optString("email"),
+                                                notificationUtil.sentAbstractionExpertQuestion(userDto.getEmail().orElse(""), userDto.getName().orElse(""), question.optString("email"),
                                                         patch.getFieldName(), question.optString("question"), notificationUtil.getTemplate("DSM_ABSTRACTION_EXPERT_QUESTION"));
                                             }
                                             question.put(STATUS, "done");

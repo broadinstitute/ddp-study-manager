@@ -1,7 +1,7 @@
 package org.broadinstitute.dsm;
 
 import com.google.gson.Gson;
-import org.broadinstitute.dsm.db.User;
+import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
@@ -30,7 +30,7 @@ public class FilterTest {
     private static final String participantId = "RBMJW6ZIXVXBMXUX6M3Q";
     private static final String participantId1 = "RBMJW6ZIXVXBMXUX6M31";
 
-    private static User user;
+    private static UserDto userDto;
 
     private static int participantDataId;
 
@@ -54,7 +54,7 @@ public class FilterTest {
 
         ddpInstanceDto =  DBTestUtil.createTestDdpInstance(ddpInstanceDto, ddpInstanceDao, "FilterTestInstance");
 
-        user = DBTestUtil.createTestDsmUser("testFilterUser", "testFilter@family.com", userDao, user);
+        userDto = DBTestUtil.createTestDsmUser("testFilterUser", "testFilter@family.com", userDao, userDto);
 
         createDataForParticipant();
 
@@ -75,7 +75,7 @@ public class FilterTest {
                     .withFieldTypeId(FILTER_TEST)
                     .withData(gson.toJson(participantData))
                     .withLastChanged(System.currentTimeMillis())
-                    .withChangedBy(user.getEmail())
+                    .withChangedBy(userDto.getEmail().orElse(""))
                     .build();
         participantDataId = participantDataDao.create(participantDataDto);
 
@@ -86,7 +86,7 @@ public class FilterTest {
                     .withFieldTypeId(FILTER_TEST)
                     .withData(gson.toJson(participantData1))
                     .withLastChanged(System.currentTimeMillis())
-                    .withChangedBy(user.getEmail())
+                    .withChangedBy(userDto.getEmail().orElse(""))
                     .build();
         participantDataId1 = participantDataDao.create(participantDataDto1);
     }
@@ -180,7 +180,7 @@ public class FilterTest {
         if (participantDataId1 > 0) {
             participantDataDao.delete(participantDataId1);
         }
-        userDao.delete(user.getUserId());
+        userDao.delete(userDto.getId());
         ddpInstanceDao.delete(ddpInstanceDto.getDdpInstanceId());
     }
 }
