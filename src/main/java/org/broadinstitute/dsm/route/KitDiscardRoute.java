@@ -8,7 +8,7 @@ import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.ddp.security.Auth0Util;
 import org.broadinstitute.ddp.util.GoogleBucket;
 import org.broadinstitute.dsm.db.KitDiscard;
-import org.broadinstitute.dsm.db.UserDto;
+import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;

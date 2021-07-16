@@ -7,7 +7,7 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.security.Auth0Util;
 import org.broadinstitute.ddp.security.SecurityHelper;
-import org.broadinstitute.dsm.db.UserDto;
+import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.UserSettings;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.util.UserUtil;

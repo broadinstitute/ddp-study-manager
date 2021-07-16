@@ -9,9 +9,8 @@ import java.util.Optional;
 
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.dsm.db.UserDto;
+import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.dao.Dao;
-import org.broadinstitute.dsm.statics.DBConstants;
 
 public class UserDao implements Dao<UserDto> {
 
