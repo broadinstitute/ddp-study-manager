@@ -412,6 +412,7 @@ public class DBConstants {
     public static final String MEDICAL_RECORD_FINAL_ID = "medical_record_final_id";
     public static final String ORDER_NUMBER = "order_number";
     public static final String HELP_TEXT = "help_text";
+    public static final String FILE_INFO = "file_info";
     public static final String POSSIBLE_VALUE = "possible_values";
     public static final String FILE_PAGE = "file_page";
     public static final String FILE_NAME = "file_name";

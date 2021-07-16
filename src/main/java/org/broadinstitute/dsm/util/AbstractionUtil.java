@@ -24,13 +24,13 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 public class AbstractionUtil {
 
     private static final String SQL_SELECT_FORM_CONTROLS = "SELECT cgroup.medical_record_abstraction_group_id, cgroup.display_name, cgroup.order_number, cfield.medical_record_abstraction_field_id, cfield.display_name, " +
-            "cfield.type, cfield.additional_type, cfield.possible_values, cfield.order_number, cfield.ddp_instance_id, cfield.help_text FROM medical_record_abstraction_group cgroup " +
+            "cfield.type, cfield.additional_type, cfield.possible_values, cfield.order_number, cfield.ddp_instance_id, cfield.help_text, cfield.file_info FROM medical_record_abstraction_group cgroup " +
             "LEFT JOIN medical_record_abstraction_field cfield ON (cfield.medical_record_abstraction_group_id = cgroup.medical_record_abstraction_group_id) " +
             "LEFT JOIN ddp_instance realm ON (realm.ddp_instance_id = cgroup.ddp_instance_id OR realm.ddp_instance_id = cfield.ddp_instance_id) " +
             "WHERE realm.instance_name = ? AND cgroup.deleted <=> 0 AND cfield.deleted <=> 0 " +
             "ORDER BY cgroup.order_number, cfield.order_number ASC";
     public static final String SQL_SELECT_MEDICAL_RECORD_ABSTRACTION = "SELECT abs.participant_id, pt.ddp_participant_id, cgroup.medical_record_abstraction_group_id, cgroup.display_name, cgroup.order_number, " +
-            "cfield.medical_record_abstraction_field_id, cfield.display_name, cfield.type, cfield.additional_type, cfield.possible_values, cfield.order_number, cfield.ddp_instance_id, cfield.help_text, abs.$pk, abs.value, abs.value_changed_counter, " +
+            "cfield.medical_record_abstraction_field_id, cfield.display_name, cfield.type, cfield.additional_type, cfield.possible_values, cfield.order_number, cfield.ddp_instance_id, cfield.help_text, cfield.file_info, abs.$pk, abs.value, abs.value_changed_counter, " +
             "abs.note, abs.question, abs.file_page, abs.file_name, abs.match_phrase, abs.double_check, abs.no_data FROM medical_record_abstraction_group cgroup " +
             "LEFT JOIN medical_record_abstraction_field cfield ON (cfield.medical_record_abstraction_group_id = cgroup.medical_record_abstraction_group_id) " +
             "LEFT JOIN ddp_instance realm ON (realm.ddp_instance_id = cgroup.ddp_instance_id OR realm.ddp_instance_id = cfield.ddp_instance_id) " +
@@ -39,7 +39,7 @@ public class AbstractionUtil {
             "WHERE realm.instance_name = ? AND cgroup.deleted <=> 0 AND cfield.deleted <=> 0 " +
             "ORDER BY cgroup.order_number, cfield.order_number ASC";
     private static final String SQL_SELECT_QC_VALUES = "SELECT abs.participant_id, pt.ddp_participant_id, cgroup.medical_record_abstraction_group_id, cgroup.display_name, cgroup.order_number, " +
-            "cfield.medical_record_abstraction_field_id, cfield.display_name, cfield.type, cfield.additional_type, cfield.possible_values, cfield.order_number, cfield.ddp_instance_id, cfield.help_text, abs.$pk, abs.value, " +
+            "cfield.medical_record_abstraction_field_id, cfield.display_name, cfield.type, cfield.additional_type, cfield.possible_values, cfield.order_number, cfield.ddp_instance_id, cfield.help_text, cfield.file_info, abs.$pk, abs.value, " +
             "abs.value_changed_counter, abs.note, abs.question, abs.file_page, abs.file_name, abs.match_phrase, abs.double_check, abs.no_data, rev.$pk2, rev.value, rev.value_changed_counter, rev.note, rev.question, rev.file_page, rev.file_name, rev.match_phrase, " +
             "rev.double_check, rev.no_data, qc.$pk3, qc.value, qc.value_changed_counter, qc.note, qc.question, qc.file_page, qc.file_name, qc.match_phrase, qc.no_data FROM medical_record_abstraction_group cgroup " +
             "LEFT JOIN medical_record_abstraction_field cfield ON (cfield.medical_record_abstraction_group_id = cgroup.medical_record_abstraction_group_id) " +
@@ -137,7 +137,8 @@ public class AbstractionUtil {
                         rs.getString("cfield." + DBConstants.DISPLAY_NAME),
                         rs.getString(DBConstants.TYPE), rs.getString(DBConstants.ADDITIONAL_TYPE), possibleValues,
                         rs.getString(DBConstants.HELP_TEXT),
-                        rs.getInt("cfield." + DBConstants.ORDER_NUMBER));
+                        rs.getInt("cfield." + DBConstants.ORDER_NUMBER),
+                        rs.getBoolean("cfield." + DBConstants.FILE_INFO));
                 AbstractionGroup group = new AbstractionGroup(rs.getInt(DBConstants.MEDICAL_RECORD_ABSTRACTION_GROUP_ID),
                         rs.getString("cgroup." + DBConstants.DISPLAY_NAME),
                         rs.getInt("cgroup." + DBConstants.ORDER_NUMBER));

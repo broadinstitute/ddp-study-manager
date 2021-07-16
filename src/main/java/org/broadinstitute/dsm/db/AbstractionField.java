@@ -23,9 +23,9 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 @Data
 public class AbstractionField {
 
-    private static final String SQL_INSERT_FORM_FIELD = "INSERT INTO medical_record_abstraction_field SET display_name = ?, type = ?, additional_type = ?, possible_values = ?, help_text = ?, medical_record_abstraction_group_id = ?, ddp_instance_id = (SELECT ddp_instance_id from ddp_instance where instance_name = ?), order_number = ?";
+    private static final String SQL_INSERT_FORM_FIELD = "INSERT INTO medical_record_abstraction_field SET display_name = ?, type = ?, additional_type = ?, possible_values = ?, help_text = ?, file_info = ?, medical_record_abstraction_group_id = ?, ddp_instance_id = (SELECT ddp_instance_id from ddp_instance where instance_name = ?), order_number = ?";
     private static final String SQL_DELETE_FORM_FIELD = "UPDATE medical_record_abstraction_field SET deleted = 1 WHERE medical_record_abstraction_field_id = ?";
-    private static final String SQL_UPDATE_FORM_FIELD = "UPDATE medical_record_abstraction_field SET display_name = ?, type = ?, additional_type = ?, possible_values = ?, help_text = ?, order_number = ? WHERE medical_record_abstraction_field_id = ?";
+    private static final String SQL_UPDATE_FORM_FIELD = "UPDATE medical_record_abstraction_field SET display_name = ?, type = ?, additional_type = ?, possible_values = ?, help_text = ?, file_info = ?, order_number = ? WHERE medical_record_abstraction_field_id = ?";
 
     @ColumnName (DBConstants.MEDICAL_RECORD_ABSTRACTION_FIELD_ID)
     private final int medicalRecordAbstractionFieldId;
@@ -37,6 +37,7 @@ public class AbstractionField {
     private final List<Value> possibleValues;
     private final String helpText;
     private final int orderNumber;
+    private final boolean fileInfo;
 
     private AbstractionFieldValue fieldValue;
     private AbstractionQCWrapper qcWrapper;
@@ -45,7 +46,8 @@ public class AbstractionField {
     private boolean newAdded;
     private boolean changed;
 
-    public AbstractionField(int medicalRecordAbstractionFieldId, String displayName, String type, String additionalType, List<Value> possibleValues, String helpText, int orderNumber) {
+    public AbstractionField(int medicalRecordAbstractionFieldId, String displayName, String type, String additionalType,
+                            List<Value> possibleValues, String helpText, int orderNumber, boolean fileInfo) {
         this.medicalRecordAbstractionFieldId = medicalRecordAbstractionFieldId;
         this.displayName = displayName;
         this.type = type;
@@ -53,6 +55,7 @@ public class AbstractionField {
         this.possibleValues = possibleValues;
         this.helpText = helpText;
         this.orderNumber = orderNumber;
+        this.fileInfo = fileInfo;
     }
 
     public static AbstractionField getField(@NonNull ResultSet rs) throws SQLException {
@@ -65,7 +68,7 @@ public class AbstractionField {
                 rs.getString("cfield." + DBConstants.DISPLAY_NAME),
                 rs.getString(DBConstants.TYPE), rs.getString(DBConstants.ADDITIONAL_TYPE), possibleValues,
                 rs.getString(DBConstants.HELP_TEXT),
-                rs.getInt("cfield." + DBConstants.ORDER_NUMBER));
+                rs.getInt("cfield." + DBConstants.ORDER_NUMBER), rs.getBoolean("cfield." + DBConstants.FILE_INFO));
         return field;
     }
 
@@ -80,9 +83,10 @@ public class AbstractionField {
                 stmt.setString(3, abstractionField.getAdditionalType());
                 stmt.setString(4, possibleValues != null && !"null".equals(possibleValues) ? possibleValues : null);
                 stmt.setString(5, abstractionField.getHelpText());
-                stmt.setInt(6, groupId);
-                stmt.setString(7, realm);
-                stmt.setInt(8, abstractionField.getOrderNumber());
+                stmt.setBoolean(6, abstractionField.isFileInfo());
+                stmt.setInt(7, groupId);
+                stmt.setString(8, realm);
+                stmt.setInt(9, abstractionField.getOrderNumber());
                 int result = stmt.executeUpdate();
                 if (result != 1) {
                     throw new RuntimeException("Error inserting new abstraction field. Query changed " + result + " rows");
@@ -135,8 +139,9 @@ public class AbstractionField {
                     stmt.setString(4, null);
                 }
                 stmt.setString(5, abstractionField.getHelpText());
-                stmt.setInt(6, abstractionField.getOrderNumber());
-                stmt.setInt(7, abstractionField.getMedicalRecordAbstractionFieldId());
+                stmt.setBoolean(6, abstractionField.isFileInfo());
+                stmt.setInt(7, abstractionField.getOrderNumber());
+                stmt.setInt(8, abstractionField.getMedicalRecordAbstractionFieldId());
                 int result = stmt.executeUpdate();
                 if (result != 1) {
                     throw new RuntimeException("Error updating abstraction field. Query changed " + result + " rows");
