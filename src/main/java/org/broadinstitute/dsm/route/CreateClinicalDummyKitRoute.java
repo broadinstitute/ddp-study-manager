@@ -6,6 +6,8 @@ import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.KitType;
 import org.broadinstitute.dsm.db.dao.kit.BSPKitDao;
+import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.util.DBUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -16,7 +18,7 @@ import spark.Response;
 import spark.Route;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 public class CreateClinicalDummyKitRoute implements Route {
     private static final Logger logger = LoggerFactory.getLogger(CreateClinicalDummyKitRoute.class);
@@ -34,46 +36,31 @@ public class CreateClinicalDummyKitRoute implements Route {
         }
         logger.info("Got a new Clinical Kit request with kit label " + kitLabel);
         REALM = (int) DBUtil.getBookmark(CLINICAL_KIT_REALM);
-        KitType salivaKitType = null;
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(REALM);
         if (ddpInstance != null) {
-            List<KitType> kitTypeIds = KitType.getKitTypes(ddpInstance.getName(), null);
-
-            for (KitType kitType : kitTypeIds) {
-                if (kitType.getName().equals("SALIVA")) {
-                    salivaKitType = kitType;
-                    break;
-                }
-            }
-            if (salivaKitType != null) {
-                logger.info("Got instance  " + ddpInstance.getName() + " and kit type id " + salivaKitType.getKitId());
-            }
             String kitRequestId = CLINICAL_KIT_PREFIX + KitRequestShipping.createRandom(20);
-
             String ddpParticipantId = BSPKitDao.getRandomParticipantIdForStudy(ddpInstance.getDdpInstanceId());
-            Map<String, Map<String, Object>> participantsESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance, ElasticSearchUtil.BY_GUID + ddpParticipantId);
-            if (participantsESData != null && !participantsESData.isEmpty()) {
-                Map<String, Object> participantESData = participantsESData.get(ddpParticipantId);
-                if (participantESData != null && !participantESData.isEmpty()) {
-                    Map<String, Object> profile = (Map<String, Object>) participantESData.get(ElasticSearchUtil.PROFILE);
+            if (ddpParticipantId != null) {
+                Optional<ElasticSearch> maybeParticipantByParticipantId = ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+                List<KitType> kitTypes = KitType.getKitTypes(ddpInstance.getName(), null);
+                KitType salivaKitType = kitTypes.stream().filter(k -> "SALIVA".equals(k.getName())).findFirst().orElseThrow();
+                maybeParticipantByParticipantId.ifPresentOrElse(p -> {
                     String participantCollaboratorId = KitRequestShipping.getCollaboratorParticipantId(ddpInstance.getBaseUrl(), ddpInstance.getDdpInstanceId(), ddpInstance.isMigratedDDP(),
-                            ddpInstance.getCollaboratorIdPrefix(), ddpParticipantId, (String) profile.get("hruid"), null);
+                            ddpInstance.getCollaboratorIdPrefix(), ddpParticipantId, (String) p.getProfile().map(ESProfile::getHruid).orElseThrow(), null);
                     String collaboratorSampleId = BSPKitDao.getCollaboratorSampleId(salivaKitType.getKitId(), participantCollaboratorId, salivaKitType.getName());
-                    if (ddpParticipantId != null) {
-                        //if instance not null
-                        String dsmKitRequestId = KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), kitRequestId, salivaKitType.getKitId(),
-                                ddpParticipantId, participantCollaboratorId, collaboratorSampleId,
-                                USER_ID, "", "", "", false, "");
-                        BSPKitDao.updateKitLabel(kitLabel, dsmKitRequestId);
-                    }
-                    logger.info("Kit added successfully");
-                    response.status(200);
-                    return response;
-                }
-                logger.error("Participants for realm " + ddpInstance.getName() + " not found in ES");
 
+                    //if instance not null
+                    String dsmKitRequestId = KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), kitRequestId, salivaKitType.getKitId(),
+                            ddpParticipantId, participantCollaboratorId, collaboratorSampleId,
+                            USER_ID, "", "", "", false, "");
+                    BSPKitDao.updateKitLabel(kitLabel, dsmKitRequestId);
+
+                }, () -> new RuntimeException(" Participant " + ddpParticipantId + " was not found!"));
+                logger.info("Kit added successfully");
+                response.status(200);
             }
-            logger.error("Participant " + ddpParticipantId + " was not found in ES!");
+            return response;
+
         }
         logger.error("Error occurred while adding kit");
         response.status(500);

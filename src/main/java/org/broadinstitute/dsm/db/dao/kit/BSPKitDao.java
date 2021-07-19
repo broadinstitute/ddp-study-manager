@@ -9,6 +9,7 @@ import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dao.ddp.kitrequest.KitRequestDao;
+import org.broadinstitute.dsm.db.dto.settings.InstanceSettingsDto;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
@@ -26,7 +27,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -126,17 +129,12 @@ public class BSPKitDao implements Dao<BSPKitDao> {
     private BSPKitInfo receiveBSPKit(String kitLabel, BSPKitQueryResult bspKitQueryResult, NotificationUtil notificationUtil, @NonNull Connection conn, boolean firstTimeReceived) {
         if (StringUtils.isNotBlank(bspKitQueryResult.getDdpParticipantId())) {
             DDPInstance ddpInstance = DDPInstance.getDDPInstance(bspKitQueryResult.getInstanceName());
-            InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(bspKitQueryResult.getInstanceName());
-            Value received = null;
-            if (instanceSettings != null && instanceSettings.getKitBehaviorChange() != null) {
-                List<Value> kitBehavior = instanceSettings.getKitBehaviorChange();
-                try {
-                    received = kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_RECEIVED)).findFirst().get();
-                }
-                catch (NoSuchElementException e) {
-                    received = null;
-                }
-            }
+            InstanceSettings instanceSettings = new InstanceSettings();
+            InstanceSettingsDto instanceSettingsDto = instanceSettings.getInstanceSettings(bspKitQueryResult.getInstanceName());
+            Value received = instanceSettingsDto
+                    .getKitBehaviorChange()
+                    .map(kitBehavior -> kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_RECEIVED)).findFirst().orElse(null))
+                    .orElse(null);
 
             if (received != null) {
                 Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
