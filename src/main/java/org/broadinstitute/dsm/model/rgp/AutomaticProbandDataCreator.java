@@ -9,16 +9,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
-import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
+import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
-import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
 import org.broadinstitute.dsm.model.defaultvalues.Defaultable;
 import org.broadinstitute.dsm.model.elasticsearch.ESActivities;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
-import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
+import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
 import org.broadinstitute.dsm.model.participant.data.ParticipantData;
@@ -106,9 +106,9 @@ public class AutomaticProbandDataCreator implements Defaultable {
                 logger.info("Starting extracting data from participant: " + esProfile.getParticipantGuid() + " ES profile");
                 String firstName = esProfile.getFirstName();
                 String lastName = esProfile.getLastName();
-                String familyId = maybeBookmark
-                        .map(bookmarkDto -> String.valueOf(bookmarkDto.getValue()))
-                        .orElse(esProfile.getHruid());
+                long familyId = maybeBookmark
+                        .map(bookmarkDto -> bookmarkDto.getValue())
+                        .orElseThrow();
                 String collaboratorParticipantId = instance.getName().toUpperCase() + "_" + familyId + "_" + FamilyMemberConstants.PROBAND_RELATIONSHIP_ID;
                 String memberType = FamilyMemberConstants.MEMBER_TYPE_SELF;
                 String email = esProfile.getEmail();

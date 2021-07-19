@@ -3,8 +3,8 @@ package org.broadinstitute.dsm.pubsub;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
-import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
+import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.export.ExportToES;
 import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.Value;
@@ -49,7 +49,7 @@ public class WorkflowStatusUpdate {
             FieldSettingsDto setting = fieldSetting.get();
             boolean isOldParticipant = participantDatas.stream()
                     .anyMatch(participantDataDto -> participantDataDto.getFieldTypeId().equals(setting.getFieldType())
-                            || !participantDataDto.getFieldTypeId().contains(FamilyMemberConstants.GROUP));
+                            || participantDataDto.getFieldTypeId().orElse("").contains(FamilyMemberConstants.PARTICIPANTS));
             if (isOldParticipant) {
                 participantDatas.forEach(participantDataDto -> {
                     updateProbandStatusInDB(workflow, status, participantDataDto, studyGuid);
@@ -71,7 +71,7 @@ public class WorkflowStatusUpdate {
         Value[] actionsArray =  gson.fromJson(actions, Value[].class);
         for (Value action : actionsArray) {
             if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
-                if (setting.getFieldType().contains(FamilyMemberConstants.GROUP)) {
+                if (!setting.getFieldType().contains(FamilyMemberConstants.PARTICIPANTS)) {
                     ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(instance, ddpParticipantId, workflow, status), false);
                 } else {
                     Optional<WorkflowForES.StudySpecificData> studySpecificDataOptional = getProbandStudySpecificData(participantDatas);
@@ -85,7 +85,7 @@ public class WorkflowStatusUpdate {
 
     private static Optional<WorkflowForES.StudySpecificData> getProbandStudySpecificData(List<ParticipantDataDto> participantDatas) {
         for (ParticipantDataDto participantData: participantDatas) {
-            String data = participantData.getData();
+            String data = participantData.getData().orElse(null);
             if (data == null) {
                 continue;
             }
@@ -106,32 +106,37 @@ public class WorkflowStatusUpdate {
         JsonObject dataJsonObject = new JsonObject();
         dataJsonObject.addProperty(workflow, status);
         int participantDataId;
-        participantDataId = participantDataDao.create(new ParticipantDataDto(
-                ddpParticipantId,
-                setting.getDdpInstanceId(),
-                setting.getFieldType(),
-                dataJsonObject.toString(),
-                System.currentTimeMillis(),
-                WorkflowStatusUpdate.DSS)
+        participantDataId = participantDataDao.create(
+                new ParticipantDataDto.Builder()
+                    .withDdpParticipantId(ddpParticipantId)
+                    .withDdpInstanceId(setting.getDdpInstanceId())
+                    .withFieldTypeId(setting.getFieldType())
+                    .withData(dataJsonObject.toString())
+                    .withLastChanged(System.currentTimeMillis())
+                    .withChangedBy(WorkflowStatusUpdate.DSS)
+                    .build()
         );
         return participantDataId;
     }
 
     public static void updateProbandStatusInDB(String workflow, String status, ParticipantDataDto participantDataDto, String studyGuid) {
-        String oldData = participantDataDto.getData();
+        String oldData = participantDataDto.getData().orElse(null);
         if (oldData == null) {
             return;
         }
         JsonObject dataJsonObject = gson.fromJson(oldData, JsonObject.class);
-        if ((participantDataDto.getFieldTypeId().contains("GROUP") || isProband(gson.fromJson(dataJsonObject, Map.class)))) {
+        if ((participantDataDto.getFieldTypeId().orElse("").contains("GROUP") || isProband(gson.fromJson(dataJsonObject, Map.class)))) {
             dataJsonObject.addProperty(workflow, status);
             participantDataDao.updateParticipantDataColumn(
-                    new ParticipantDataDto(participantDataDto.getParticipantDataId(),
-                            participantDataDto.getDdpParticipantId(),
-                            participantDataDto.getDdpInstanceId(),
-                            participantDataDto.getFieldTypeId(),
-                            dataJsonObject.toString(),
-                            System.currentTimeMillis(), DSS)
+                    new ParticipantDataDto.Builder()
+                        .withParticipantDataId(participantDataDto.getParticipantDataId())
+                        .withDdpParticipantId(participantDataDto.getDdpParticipantId().orElse(""))
+                        .withDdpInstanceId(participantDataDto.getDdpInstanceId())
+                        .withFieldTypeId(participantDataDto.getFieldTypeId().orElse(""))
+                        .withData(dataJsonObject.toString())
+                        .withLastChanged(System.currentTimeMillis())
+                        .withChangedBy(DSS)
+                        .build()
             );
         }
     }

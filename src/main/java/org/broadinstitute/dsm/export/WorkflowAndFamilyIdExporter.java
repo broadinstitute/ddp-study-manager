@@ -4,9 +4,9 @@ import com.google.gson.Gson;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
-import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
+import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
-import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
@@ -69,11 +69,11 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
         Optional<String> maybeEsParticipantIndex =
                 new DDPInstanceDao().getEsParticipantIndexByInstanceId(instanceId);
         for (ParticipantDataDto participantData: allParticipantData) {
-            String data = participantData.getData();
+            String data = participantData.getData().orElse(null);
             if (data == null) {
                 continue;
             }
-            String ddpParticipantId = participantData.getDdpParticipantId();
+            String ddpParticipantId = participantData.getDdpParticipantId().orElse("");
             String finalDdpParticipantId = ddpParticipantId;
             List<ParticipantDataDto> participantDataFamily = allParticipantData.stream()
                     .filter(participantDataDto -> participantDataDto.getDdpParticipantId().equals(finalDdpParticipantId))
