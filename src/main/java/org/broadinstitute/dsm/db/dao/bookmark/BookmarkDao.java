@@ -5,6 +5,7 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Optional;
 
 import org.broadinstitute.ddp.db.SimpleResult;
@@ -25,14 +26,54 @@ public class BookmarkDao implements Dao<BookmarkDto> {
     private static final String SQL_UPDATE_BOOKMARK_VALUE_BY_BOOKMARK_ID = "UPDATE " +
             "bookmark SET value = ? WHERE bookmark_id = ?";
 
+    private static final String SQL_INSERT_BOOKMARK = "INSERT INTO bookmark SET " +
+            "value = ?," +
+            "instance = ? ";
+
+    private static final String SQL_DELETE_BOOKMARK_BY_ID = "DELETE FROM bookmark " +
+            "WHERE bookmark_id = ?";
+
     @Override
     public int create(BookmarkDto bookmarkDto) {
-        return 0;
+        SimpleResult simpleResult = inTransaction(conn -> {
+            SimpleResult dbVals = new SimpleResult(-1);
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_BOOKMARK, Statement.RETURN_GENERATED_KEYS)) {
+                stmt.setLong(1, bookmarkDto.getValue());
+                stmt.setString(2, bookmarkDto.getInstance().orElseThrow());
+                stmt.executeUpdate();
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = rs.getInt(1);
+                    }
+                }
+            } catch (SQLException sqle) {
+                dbVals.resultException = sqle;
+            }
+            return dbVals;
+        });
+        if (simpleResult.resultException != null) {
+            throw new RuntimeException("Error inserting bookmark ", simpleResult.resultException);
+        }
+        return (int) simpleResult.resultValue;
     }
 
     @Override
     public int delete(int id) {
-        return 0;
+        SimpleResult simpleResult = inTransaction(conn -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_DELETE_BOOKMARK_BY_ID)) {
+                stmt.setInt(1, id);
+                execResult.resultValue = stmt.executeUpdate();
+            } catch (SQLException sqle) {
+                execResult.resultException = sqle;
+            }
+            return execResult;
+        });
+
+        if (simpleResult.resultException != null) {
+            throw new RuntimeException("Error deleting bookmark with id: " + id, simpleResult.resultException);
+        }
+        return (int) simpleResult.resultValue;
     }
 
     @Override
@@ -73,7 +114,7 @@ public class BookmarkDao implements Dao<BookmarkDto> {
             SimpleResult execResult = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_BOOKMARK)) {
                 stmt.setLong(1, bookmarkDto.getValue());
-                stmt.setString(2, bookmarkDto.getInstance());
+                stmt.setString(2, bookmarkDto.getInstance().orElseThrow());
                 stmt.setInt(3, bookmarkDto.getBookmarkId());
                 execResult.resultValue = stmt.executeUpdate();
             } catch (SQLException sqle) {

@@ -1,7 +1,7 @@
 package org.broadinstitute.dsm;
 
 import com.google.gson.Gson;
-import org.broadinstitute.dsm.db.User;
+import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
@@ -28,8 +28,9 @@ public class FilterTest {
     private static Gson gson;
 
     private static final String participantId = "RBMJW6ZIXVXBMXUX6M3Q";
+    private static final String participantId1 = "RBMJW6ZIXVXBMXUX6M31";
 
-    private static User user;
+    private static UserDto userDto;
 
     private static int participantDataId;
 
@@ -53,7 +54,7 @@ public class FilterTest {
 
         ddpInstanceDto =  DBTestUtil.createTestDdpInstance(ddpInstanceDto, ddpInstanceDao, "FilterTestInstance");
 
-        user = DBTestUtil.createTestDsmUser("testFilterUser", "testFilter@family.com", userDao, user);
+        userDto = DBTestUtil.createTestDsmUser("testFilterUser", "testFilter@family.com", userDao, userDto);
 
         createDataForParticipant();
 
@@ -68,13 +69,25 @@ public class FilterTest {
 
     private static void createParticipantData() {
         ParticipantDataDto participantDataDto =
-                new ParticipantDataDto(participantId, ddpInstanceDto.getDdpInstanceId(), FILTER_TEST,
-                        gson.toJson(participantData), System.currentTimeMillis(), user.getEmail());
+                new ParticipantDataDto.Builder()
+                    .withDdpParticipantId(participantId)
+                    .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())
+                    .withFieldTypeId(FILTER_TEST)
+                    .withData(gson.toJson(participantData))
+                    .withLastChanged(System.currentTimeMillis())
+                    .withChangedBy(userDto.getEmail().orElse(""))
+                    .build();
         participantDataId = participantDataDao.create(participantDataDto);
 
         ParticipantDataDto participantDataDto1 =
-                new ParticipantDataDto(participantId, ddpInstanceDto.getDdpInstanceId(), FILTER_TEST,
-                        gson.toJson(participantData1), System.currentTimeMillis(), user.getEmail());
+                new ParticipantDataDto.Builder()
+                    .withDdpParticipantId(participantId1)
+                    .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())
+                    .withFieldTypeId(FILTER_TEST)
+                    .withData(gson.toJson(participantData1))
+                    .withLastChanged(System.currentTimeMillis())
+                    .withChangedBy(userDto.getEmail().orElse(""))
+                    .build();
         participantDataId1 = participantDataDao.create(participantDataDto1);
     }
 
@@ -86,7 +99,7 @@ public class FilterTest {
         List<ParticipantDataDto> allParticipantData = participantDataDao
                 .getParticipantDataByInstanceid(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
         FilterRoute.addParticipantDataFilters(queryConditions, filter, filter.getFilter1().getName(), allParticipantData);
-        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId + ")",
+        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId1 + ")",
                 queryConditions.get(ElasticSearchUtil.ES));
     }
 
@@ -98,7 +111,7 @@ public class FilterTest {
         List<ParticipantDataDto> allParticipantData = participantDataDao
                 .getParticipantDataByInstanceid(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
         FilterRoute.addParticipantDataFilters(queryConditions, filter, filter.getFilter1().getName(), allParticipantData);
-        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId + ")",
+        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId1 + ")",
                 queryConditions.get(ElasticSearchUtil.ES));
     }
 
@@ -110,7 +123,7 @@ public class FilterTest {
         List<ParticipantDataDto> allParticipantData = participantDataDao
                 .getParticipantDataByInstanceid(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
         FilterRoute.addParticipantDataFilters(queryConditions, filter, filter.getFilter1().getName(), allParticipantData);
-        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId + ")",
+        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId1 + ")",
                 queryConditions.get(ElasticSearchUtil.ES));
     }
 
@@ -123,7 +136,7 @@ public class FilterTest {
         List<ParticipantDataDto> allParticipantData = participantDataDao
                 .getParticipantDataByInstanceid(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
         FilterRoute.addParticipantDataFilters(queryConditions, filter, filter.getFilter1().getName(), allParticipantData);
-        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId + ")",
+        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId1 + ")",
                 queryConditions.get(ElasticSearchUtil.ES));
     }
 
@@ -153,9 +166,9 @@ public class FilterTest {
         FilterRoute.addParticipantDataFilters(queryConditions, filterA, filterA.getFilter1().getName(), allParticipantData);
         FilterRoute.addParticipantDataFilters(queryConditions, filterB, filterB.getFilter1().getName(), allParticipantData);
         FilterRoute.addParticipantDataFilters(queryConditions, filterC, filterC.getFilter1().getName(), allParticipantData);
-        Assert.assertEquals("null AND (profile.guid = RBMJW6ZIXVXBMXUX6M3Q" + " OR profile.guid = " + participantId + ")" +
-                        " AND (profile.guid = RBMJW6ZIXVXBMXUX6M3Q" + " OR profile.guid = " + participantId + ")" +
-                        " AND (profile.guid = RBMJW6ZIXVXBMXUX6M3Q" + " OR profile.guid = " + participantId + ")",
+        Assert.assertEquals("null AND (profile.guid = RBMJW6ZIXVXBMXUX6M3Q" + " OR profile.guid = " + participantId1 + ")" +
+                        " AND (profile.guid = RBMJW6ZIXVXBMXUX6M3Q" + " OR profile.guid = " + participantId1 + ")" +
+                        " AND (profile.guid = RBMJW6ZIXVXBMXUX6M3Q" + " OR profile.guid = " + participantId1 + ")",
                 queryConditions.get(ElasticSearchUtil.ES));
     }
 
@@ -167,7 +180,7 @@ public class FilterTest {
         if (participantDataId1 > 0) {
             participantDataDao.delete(participantDataId1);
         }
-        userDao.delete(user.getUserId());
+        userDao.delete(userDto.getId());
         ddpInstanceDao.delete(ddpInstanceDto.getDdpInstanceId());
     }
 }

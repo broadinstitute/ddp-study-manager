@@ -74,12 +74,12 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
         SimpleResult simpleResult = inTransaction(conn -> {
             SimpleResult dbVals = new SimpleResult(-1);
             try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_DATA_TO_PARTICIPANT_DATA, Statement.RETURN_GENERATED_KEYS)) {
-                stmt.setString(1, participantDataDto.getDdpParticipantId());
+                stmt.setString(1, participantDataDto.getDdpParticipantId().orElse(""));
                 stmt.setInt(2, participantDataDto.getDdpInstanceId());
-                stmt.setString(3, participantDataDto.getFieldTypeId());
-                stmt.setString(4, participantDataDto.getData());
+                stmt.setString(3, participantDataDto.getFieldTypeId().orElse(""));
+                stmt.setString(4, participantDataDto.getData().orElse(""));
                 stmt.setLong(5, participantDataDto.getLastChanged());
-                stmt.setString(6, participantDataDto.getChangedBy());
+                stmt.setString(6, participantDataDto.getChangedBy().orElse("SYSTEM"));
                 stmt.executeUpdate();
                 try (ResultSet rs = stmt.getGeneratedKeys()) {
                     if (rs.next()) {
@@ -126,15 +126,15 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
                 stmt.setLong(1, id);
                 try(ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                         execResult.resultValue = new ParticipantDataDto(
-                                        rs.getInt(PARTICIPANT_DATA_ID),
-                                        rs.getString(DDP_PARTICIPANT_ID),
-                                        rs.getInt(DDP_INSTANCE_ID),
-                                        rs.getString(FIELD_TYPE_ID),
-                                        rs.getString(DATA),
-                                        rs.getLong(LAST_CHANGED),
-                                        rs.getString(CHANGED_BY)
-                         );
+                         execResult.resultValue = new ParticipantDataDto.Builder()
+                                 .withParticipantDataId(rs.getInt(PARTICIPANT_DATA_ID))
+                                 .withDdpParticipantId(rs.getString(DDP_PARTICIPANT_ID))
+                                 .withDdpInstanceId(rs.getInt(DDP_INSTANCE_ID))
+                                 .withFieldTypeId(rs.getString(FIELD_TYPE_ID))
+                                 .withData(rs.getString(DATA))
+                                 .withLastChanged(rs.getLong(LAST_CHANGED))
+                                 .withChangedBy(rs.getString(CHANGED_BY))
+                                 .build();
                     }
                 }
             }
@@ -154,9 +154,9 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
         SimpleResult result = inTransaction((conn) -> {
             SimpleResult execResult = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_DATA_TO_PARTICIPANT_DATA)) {
-                stmt.setString(1, participantDataDto.getData());
+                stmt.setString(1, participantDataDto.getData().orElse(""));
                 stmt.setLong(2, participantDataDto.getLastChanged());
-                stmt.setString(3, participantDataDto.getChangedBy());
+                stmt.setString(3, participantDataDto.getChangedBy().orElse("SYSTEM"));
                 stmt.setInt(4, participantDataDto.getParticipantDataId());
                 execResult.resultValue = stmt.executeUpdate();
             } catch (SQLException sqle) {
@@ -183,15 +183,15 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
                 try(ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         participantDataDtoList.add(
-                                new ParticipantDataDto(
-                                        rs.getInt(PARTICIPANT_DATA_ID),
-                                        rs.getString(DDP_PARTICIPANT_ID),
-                                        rs.getInt(DDP_INSTANCE_ID),
-                                        rs.getString(FIELD_TYPE_ID),
-                                        rs.getString(DATA),
-                                        rs.getLong(LAST_CHANGED),
-                                        rs.getString(CHANGED_BY)
-                                )
+                            new ParticipantDataDto.Builder()
+                                    .withParticipantDataId(rs.getInt(PARTICIPANT_DATA_ID))
+                                    .withDdpParticipantId(rs.getString(DDP_PARTICIPANT_ID))
+                                    .withDdpInstanceId(rs.getInt(DDP_INSTANCE_ID))
+                                    .withFieldTypeId(rs.getString(FIELD_TYPE_ID))
+                                    .withData(rs.getString(DATA))
+                                    .withLastChanged(rs.getLong(LAST_CHANGED))
+                                    .withChangedBy(rs.getString(CHANGED_BY))
+                                    .build()
                         );
                     }
                 }
@@ -216,15 +216,15 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
                 try(ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         participantDataDtoList.add(
-                                new ParticipantDataDto(
-                                        rs.getInt(PARTICIPANT_DATA_ID),
-                                        rs.getString(DDP_PARTICIPANT_ID),
-                                        rs.getInt(DDP_INSTANCE_ID),
-                                        rs.getString(FIELD_TYPE_ID),
-                                        rs.getString(DATA),
-                                        rs.getLong(LAST_CHANGED),
-                                        rs.getString(CHANGED_BY)
-                                )
+                                new ParticipantDataDto.Builder()
+                                        .withParticipantDataId(rs.getInt(PARTICIPANT_DATA_ID))
+                                        .withDdpParticipantId(rs.getString(DDP_PARTICIPANT_ID))
+                                        .withDdpInstanceId(rs.getInt(DDP_INSTANCE_ID))
+                                        .withFieldTypeId(rs.getString(FIELD_TYPE_ID))
+                                        .withData(rs.getString(DATA))
+                                        .withLastChanged(rs.getLong(LAST_CHANGED))
+                                        .withChangedBy(rs.getString(CHANGED_BY))
+                                        .build()
                         );
                     }
                 }
@@ -249,15 +249,15 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
                 try(ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         participantDataDtoList.add(
-                                new ParticipantDataDto(
-                                        rs.getInt(PARTICIPANT_DATA_ID),
-                                        rs.getString(DDP_PARTICIPANT_ID),
-                                        rs.getInt(DDP_INSTANCE_ID),
-                                        rs.getString(FIELD_TYPE_ID),
-                                        rs.getString(DATA),
-                                        rs.getLong(LAST_CHANGED),
-                                        rs.getString(CHANGED_BY)
-                                )
+                                new ParticipantDataDto.Builder()
+                                        .withParticipantDataId(rs.getInt(PARTICIPANT_DATA_ID))
+                                        .withDdpParticipantId(rs.getString(DDP_PARTICIPANT_ID))
+                                        .withDdpInstanceId(rs.getInt(DDP_INSTANCE_ID))
+                                        .withFieldTypeId(rs.getString(FIELD_TYPE_ID))
+                                        .withData(rs.getString(DATA))
+                                        .withLastChanged(rs.getLong(LAST_CHANGED))
+                                        .withChangedBy(rs.getString(CHANGED_BY))
+                                        .build()
                         );
                     }
                 }

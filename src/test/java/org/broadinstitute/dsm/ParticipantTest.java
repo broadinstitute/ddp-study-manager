@@ -16,27 +16,57 @@ public class ParticipantTest {
     @Before
     public void initializeParticipantDatas() {
         participantDatas = List.of(
-                new ParticipantDataDto("testId", 19, "testFieldType",
-                        "{\"DATSTAT_ALTPID\":\"testId\", \"COLLABORATOR_PARTICIPANT_ID\":\"id1\", \"DATSTAT_ALTEMAIL\":\"email\"}",
-                        0, null),
-                new ParticipantDataDto("testId2", 19, "testFieldType",
-                        "{\"COLLABORATOR_PARTICIPANT_ID\":\"id2\", \"DATSTAT_ALTEMAIL\":\"email\"}",
-                        0, null),
-                new ParticipantDataDto("testId3", 19, "testFieldType",
-                        "{\"COLLABORATOR_PARTICIPANT_ID\":\"id3\", \"DATSTAT_ALTEMAIL\":\"email1\"}",
-                        0, null)
+                new ParticipantDataDto.Builder()
+                        .withDdpParticipantId("testId")
+                        .withDdpInstanceId(19)
+                        .withFieldTypeId("testFieldType")
+                        .withData("{\"DATSTAT_ALTPID\":\"testId\", \"COLLABORATOR_PARTICIPANT_ID\":\"id1\", \"DATSTAT_ALTEMAIL\":\"email\"}")
+                        .withLastChanged(0)
+                        .withChangedBy(null)
+                        .build(),
+                new ParticipantDataDto.Builder()
+                        .withDdpParticipantId("testId2")
+                        .withDdpInstanceId(19)
+                        .withFieldTypeId("testFieldType")
+                        .withData("{\"COLLABORATOR_PARTICIPANT_ID\":\"id2\", \"DATSTAT_ALTEMAIL\":\"email\"}")
+                        .withLastChanged(0)
+                        .withChangedBy(null)
+                        .build(),
+                new ParticipantDataDto.Builder()
+                        .withDdpParticipantId("testId3")
+                        .withDdpInstanceId(19)
+                        .withFieldTypeId("testFieldType")
+                        .withData("{\"COLLABORATOR_PARTICIPANT_ID\":\"id3\", \"DATSTAT_ALTEMAIL\":\"email1\"}")
+                        .withLastChanged(0)
+                        .withChangedBy(null)
+                        .build()
         );
 
         newParticipantDatas = List.of(
-                new ParticipantDataDto("testId", 19, "testFieldType",
-                        "{\"IS_APPLICANT\":\"true\", \"COLLABORATOR_PARTICIPANT_ID\":\"id1\", \"DATSTAT_ALTEMAIL\":\"email\"}",
-                        0, null),
-                new ParticipantDataDto("testId2", 19, "testFieldType",
-                        "{\"COLLABORATOR_PARTICIPANT_ID\":\"id2\", \"DATSTAT_ALTEMAIL\":\"email\"}",
-                        0, null),
-                new ParticipantDataDto("testId3", 19, "testFieldType",
-                        "{\"COLLABORATOR_PARTICIPANT_ID\":\"id3\", \"DATSTAT_ALTEMAIL\":\"email1\"}",
-                        0, null)
+                new ParticipantDataDto.Builder()
+                        .withDdpParticipantId("testId")
+                        .withDdpInstanceId(19)
+                        .withFieldTypeId("testFieldType")
+                        .withData("{\"IS_APPLICANT\":\"true\", \"COLLABORATOR_PARTICIPANT_ID\":\"id1\", \"DATSTAT_ALTEMAIL\":\"email\"}")
+                        .withLastChanged(0)
+                        .withChangedBy(null)
+                        .build(),
+                new ParticipantDataDto.Builder()
+                        .withDdpParticipantId("testId2")
+                        .withDdpInstanceId(19)
+                        .withFieldTypeId("testFieldType")
+                        .withData("{\"COLLABORATOR_PARTICIPANT_ID\":\"id2\", \"DATSTAT_ALTEMAIL\":\"email\"}")
+                        .withLastChanged(0)
+                        .withChangedBy(null)
+                        .build(),
+                new ParticipantDataDto.Builder()
+                        .withDdpParticipantId("testId3")
+                        .withDdpInstanceId(19)
+                        .withFieldTypeId("testFieldType")
+                        .withData("{\"COLLABORATOR_PARTICIPANT_ID\":\"id3\", \"DATSTAT_ALTEMAIL\":\"email1\"}")
+                        .withLastChanged(0)
+                        .withChangedBy(null)
+                        .build()
         );
     }
 
