@@ -12,7 +12,12 @@ import org.broadinstitute.ddp.exception.FileProcessingException;
 import org.broadinstitute.ddp.handlers.util.MedicalInfo;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.ddp.util.GoogleBucket;
-import org.broadinstitute.dsm.db.*;
+import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.InstanceSettings;
+import org.broadinstitute.dsm.db.MedicalRecord;
+import org.broadinstitute.dsm.db.OncHistoryDetail;
+import org.broadinstitute.dsm.db.dao.user.UserDao;
+import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.files.CoverPDFProcessor;
 import org.broadinstitute.dsm.files.PDFProcessor;
 import org.broadinstitute.dsm.files.RequestPDFProcessor;
@@ -73,11 +78,11 @@ public class DownloadPDFRoute extends RequestHandler {
                     if (StringUtils.isNotBlank(requestBody)) {
                         JSONObject jsonObject = new JSONObject(requestBody);
                         String userIdR = (String) jsonObject.get(RequestParameter.USER_ID);
-                        Integer userIdRequest = Integer.parseInt(userIdR);
+                        Long userIdRequest = Long.parseLong(userIdR);
                         if (!userId.equals(userIdR)) {
                             throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdR);
                         }
-                        User user = User.getUser(userIdRequest);
+
                         String ddpParticipantId = (String) jsonObject.get(RequestParameter.DDP_PARTICIPANT_ID);
                         if (StringUtils.isNotBlank(ddpParticipantId)) {
                             String configName = null;
@@ -100,6 +105,7 @@ public class DownloadPDFRoute extends RequestHandler {
                             if (jsonObject.has("pdfs")) {
                                 pdfs = Arrays.asList(new Gson().fromJson((String) jsonObject.get("pdfs"), PDF[].class));
                             }
+                            UserDto user = new UserDao().get(userIdRequest).orElseThrow();
                             getPDFs(response, ddpParticipantId, configName, medicalRecord, oncHistoryIDs, pdfs, realm, requestBody, user);
                             return new Result(200);
                         }
@@ -177,7 +183,7 @@ public class DownloadPDFRoute extends RequestHandler {
     }
 
     public byte[] getPDFBundle(@NonNull String ddpParticipantId, String medicalRecordId,
-                             List<String> oncHistoryIDs, List<PDF> pdfs, @NonNull String realm, String requestBody, User user) {
+                             List<String> oncHistoryIDs, List<PDF> pdfs, @NonNull String realm, String requestBody, UserDto user) {
         DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
         if (ddpInstance != null && StringUtils.isNotBlank(ddpParticipantId)) {
             ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -217,13 +223,13 @@ public class DownloadPDFRoute extends RequestHandler {
     }
 
     private byte[] mrRequestPDF(@NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId, @NonNull String medicalRecordId,
-                                    @NonNull String requestBody, User user) {
+                                    @NonNull String requestBody, UserDto user) {
         JSONObject jsonObject = new JSONObject(requestBody);
         Set keySet = jsonObject.keySet();
         String startDate = null;
         String endDate = null;
-        String name = user.getName();
-        String phone = user.getPhoneNumber();
+        String name = user.getName().orElseThrow();
+        String phone = user.getPhoneNumber().orElseThrow();
         if (keySet.contains(JSON_START_DATE)) {
             startDate = (String) jsonObject.get(JSON_START_DATE);
             if (!"0/0".equals(startDate) && !startDate.contains("/") && startDate.contains("-")) {
@@ -286,7 +292,7 @@ public class DownloadPDFRoute extends RequestHandler {
         }
     }
 
-    private byte[] tissueRequestPDF(@NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId, @NonNull List<String> oncHistoryIDs, User user) {
+    private byte[] tissueRequestPDF(@NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId, @NonNull List<String> oncHistoryIDs, UserDto user) {
         logger.info("Generating request pdf for onc history ids {}", StringUtils.join(oncHistoryIDs, ","));
         RequestPDFProcessor processor = new RequestPDFProcessor(ddpInstance.getName());
         Map<String, Object> valueMap = new HashMap<>();
@@ -316,7 +322,11 @@ public class DownloadPDFRoute extends RequestHandler {
             valueMap.put(RequestPDFProcessor.BLOCK_COUNTER, counter + 1);
 
             valueMap.put(RequestPDFProcessor.USER_NAME, user.getName());
+            valueMap.put(RequestPDFProcessor.USER_NAME+"#1", user.getName());
+            valueMap.put(RequestPDFProcessor.USER_NAME+"#2", user.getName());
             valueMap.put(RequestPDFProcessor.USER_PHONE, user.getPhoneNumber());
+            valueMap.put(RequestPDFProcessor.USER_PHONE+"#1", user.getPhoneNumber());
+            valueMap.put(RequestPDFProcessor.USER_PHONE+"#2", user.getPhoneNumber());
 
             stream = processor.generateStream(valueMap);
             stream.mark(0);
@@ -349,7 +359,7 @@ public class DownloadPDFRoute extends RequestHandler {
      * @throws Exception
      */
     public void getPDFs(@NonNull Response response, @NonNull String ddpParticipantId, String pdfType, String medicalRecordId,
-                        List<String> oncHistoryIDs, List<PDF> pdfs, String realm, String requestBody, User user) {
+                        List<String> oncHistoryIDs, List<PDF> pdfs, String realm, String requestBody, UserDto user) {
         DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
         if (ddpInstance != null && StringUtils.isNotBlank(ddpParticipantId)) {
             byte[] pdfBytes = null;
@@ -371,7 +381,7 @@ public class DownloadPDFRoute extends RequestHandler {
             }
             if (pdfBytes != null) {
                 try {
-                    savePDFinBucket(ddpInstance.getName(), ddpParticipantId, new ByteArrayInputStream(pdfBytes), fileName, user.getUserId());
+                    savePDFinBucket(ddpInstance.getName(), ddpParticipantId, new ByteArrayInputStream(pdfBytes), fileName, user.getId());
 
                     HttpServletResponse rawResponse = response.raw();
                     rawResponse.getOutputStream().write(pdfBytes);
