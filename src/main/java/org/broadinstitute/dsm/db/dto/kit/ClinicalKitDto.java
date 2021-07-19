@@ -1,13 +1,13 @@
-package org.broadinstitute.dsm.model;
+package org.broadinstitute.dsm.db.dto.kit;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
 @Data
-public class ClinicalKit {
+public class ClinicalKitDto {
 
     @SerializedName("participant_id")
-    String participantId;
+    String collaboratorParticipantId;
 
     @SerializedName("sample_id")
     String sampleId;
@@ -27,7 +27,7 @@ public class ClinicalKit {
     @SerializedName("date_of_birth")
     String dateOfBirth;
 
-    public ClinicalKit(String ddpParrticipantId,
+    public ClinicalKitDto(String collaboratorParticipantId,
                        String sampleId,
                        String sampleCollection,
                        String materialType,
@@ -35,7 +35,7 @@ public class ClinicalKit {
                        String mailToName,
                        String dateOfBirth){
 
-        this.participantId = ddpParrticipantId;
+        this.collaboratorParticipantId = collaboratorParticipantId;
         this.sampleId = sampleId;
         this.sampleCollection = sampleCollection;
         this.materialType = materialType;
