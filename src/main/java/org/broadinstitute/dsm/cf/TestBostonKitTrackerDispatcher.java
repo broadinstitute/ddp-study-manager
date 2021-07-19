@@ -44,6 +44,11 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
     private String STUDY_MANAGER_SCHEMA = System.getenv("STUDY_MANAGER_SCHEMA") + ".";
     private int LOOKUP_CHUNK_SIZE;
     KitTrackerPubSubPublisher kitTrackerPubSubPublisher = new KitTrackerPubSubPublisher();
+    private final InstanceSettings instanceSettings;
+
+    public TestBostonKitTrackerDispatcher() {
+        instanceSettings = new InstanceSettings();
+    }
 
     @Override
     public void accept(PubsubMessage pubsubMessage, Context context) throws Exception {
@@ -85,7 +90,7 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                     int lastKitId = 0;
                     UPSKit kit = null;
                     logger.info("tracking ups ids for " + ddpInstance.getName());
-                    InstanceSettingsDto instanceSettings = new InstanceSettings().getInstanceSettings(ddpInstance.getName());
+                    InstanceSettingsDto instanceSettings = this.instanceSettings.getInstanceSettings(conn, ddpInstance.getName());
                     boolean gbfShippedTriggerDSSDelivered = instanceSettings
                             .isGbfShippedTriggerDSSDelivered()
                             .orElse(Boolean.FALSE);

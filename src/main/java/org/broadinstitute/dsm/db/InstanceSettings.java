@@ -64,6 +64,7 @@ public class InstanceSettings {
     private List<Value> defaultColumns;
     private boolean hasInvitations;
     private boolean gbfShippedTriggerDSSDelivered;
+    private final InstanceSettingsDao instanceSettingsDao = new InstanceSettingsDao();
 
     public InstanceSettings(List<Value> mrCoverPdf, List<Value> kitBehaviorChange, List<Value> specialFormat, List<Value> hideESFields, List<Value> studySpecificStatuses,
                             List<Value> defaultColumns, boolean hasInvitations, boolean gbfShippedTriggerDSSDelivered) {
@@ -83,14 +84,18 @@ public class InstanceSettings {
 
 
     public boolean getHideSamplesTabByStudyGuid(String studyGuid) {
-        InstanceSettingsDao instanceSettingsDao = new InstanceSettingsDao();
         return instanceSettingsDao.getHideSamplesTabByStudyGuid(studyGuid)
                 .orElse(false);
     }
 
     public InstanceSettingsDto getInstanceSettings(String realm) {
-        InstanceSettingsDao instanceSettingsDao = new InstanceSettingsDao();
         return instanceSettingsDao.getByStudyGuid(Objects.requireNonNull(realm))
+                .orElse(new InstanceSettingsDto.Builder().build());
+    }
+
+    //used ONLY for google cloud function
+    public InstanceSettingsDto getInstanceSettings(Connection conn, String realm) {
+        return instanceSettingsDao.getByStudyGuid(Objects.requireNonNull(conn), Objects.requireNonNull(realm))
                 .orElse(new InstanceSettingsDto.Builder().build());
     }
 

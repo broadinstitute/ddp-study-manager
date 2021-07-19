@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.db.dao.settings;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -92,38 +93,51 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
     }
 
     public Optional<InstanceSettingsDto> getByStudyGuid(String studyGuid) {
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult execResult = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_BY_STUDY_GUID)) {
-                stmt.setString(1, studyGuid);
-                try(ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        execResult.resultValue = new InstanceSettingsDto.Builder()
-                            .withInstanceSettingsId(rs.getInt(INSTANCE_SETTINGS_ID))
-                            .withDdpInstanceId(Integer.parseInt(rs.getString(DDP_INSTANCE_ID)))
-                            .withMrCoverPdf(getValuesFromJson(rs.getString(MR_COVER_PDF)))
-                            .withKitBehaviorChange(getValuesFromJson(rs.getString(KIT_BEHAVIOR_CHANGE)))
-                            .withSpecialFormat(getValuesFromJson(rs.getString(SPECIAL_FORMAT)))
-                            .withHideEsFields(getValuesFromJson(rs.getString(HIDE_ES_FIELDS)))
-                            .withHideSamplesTab(rs.getBoolean(HIDE_SAMPLES_TAB))
-                            .withStudySpecificStatuses(getValuesFromJson(rs.getString(STUDY_SPECIFIC_STATUSES)))
-                            .withDefaultColumns(getValuesFromJson(rs.getString(DEFAULT_COLUMNS)))
-                            .withHasInvitations(rs.getBoolean(HAS_INVITATIONS))
-                            .withGbfShippedTriggerDssDelivered(rs.getBoolean(GBF_SHIPPED_DSS_DELIVERED))
-                            .build();
-                    }
-                }
-            }
-            catch (SQLException ex) {
-                execResult.resultException = ex;
-            }
-            return execResult;
-        });
+        SimpleResult results = inTransaction((conn) -> getInstanceSettingsByStudyGuid(studyGuid, conn));
         if (results.resultException != null) {
             throw new RuntimeException("Error getting instance settings for study guid: "
                     + studyGuid, results.resultException);
         }
         return Optional.ofNullable((InstanceSettingsDto) results.resultValue);
+    }
+
+    //used ONLY for google cloud function
+    public Optional<InstanceSettingsDto> getByStudyGuid(Connection conn, String studyGuid) {
+        SimpleResult results = getInstanceSettingsByStudyGuid(studyGuid, conn);
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting instance settings for study guid: "
+                    + studyGuid, results.resultException);
+        }
+        return Optional.ofNullable((InstanceSettingsDto) results.resultValue);
+    }
+
+
+    private SimpleResult getInstanceSettingsByStudyGuid(String studyGuid, Connection conn) {
+        SimpleResult execResult = new SimpleResult();
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_BY_STUDY_GUID)) {
+            stmt.setString(1, studyGuid);
+            try(ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    execResult.resultValue = new InstanceSettingsDto.Builder()
+                        .withInstanceSettingsId(rs.getInt(INSTANCE_SETTINGS_ID))
+                        .withDdpInstanceId(Integer.parseInt(rs.getString(DDP_INSTANCE_ID)))
+                        .withMrCoverPdf(getValuesFromJson(rs.getString(MR_COVER_PDF)))
+                        .withKitBehaviorChange(getValuesFromJson(rs.getString(KIT_BEHAVIOR_CHANGE)))
+                        .withSpecialFormat(getValuesFromJson(rs.getString(SPECIAL_FORMAT)))
+                        .withHideEsFields(getValuesFromJson(rs.getString(HIDE_ES_FIELDS)))
+                        .withHideSamplesTab(rs.getBoolean(HIDE_SAMPLES_TAB))
+                        .withStudySpecificStatuses(getValuesFromJson(rs.getString(STUDY_SPECIFIC_STATUSES)))
+                        .withDefaultColumns(getValuesFromJson(rs.getString(DEFAULT_COLUMNS)))
+                        .withHasInvitations(rs.getBoolean(HAS_INVITATIONS))
+                        .withGbfShippedTriggerDssDelivered(rs.getBoolean(GBF_SHIPPED_DSS_DELIVERED))
+                        .build();
+                }
+            }
+        }
+        catch (SQLException ex) {
+            execResult.resultException = ex;
+        }
+        return execResult;
     }
 
     private List<Value> getValuesFromJson(String json) {
