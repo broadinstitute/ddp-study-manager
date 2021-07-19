@@ -106,9 +106,9 @@ public class AutomaticProbandDataCreator implements Defaultable {
                 logger.info("Starting extracting data from participant: " + esProfile.getParticipantGuid() + " ES profile");
                 String firstName = esProfile.getFirstName();
                 String lastName = esProfile.getLastName();
-                String familyId = maybeBookmark
-                        .map(bookmarkDto -> String.valueOf(bookmarkDto.getValue()))
-                        .orElse(esProfile.getHruid());
+                long familyId = maybeBookmark
+                        .map(bookmarkDto -> bookmarkDto.getValue())
+                        .orElseThrow();
                 String collaboratorParticipantId = instance.getName().toUpperCase() + "_" + familyId + "_" + FamilyMemberConstants.PROBAND_RELATIONSHIP_ID;
                 String memberType = FamilyMemberConstants.MEMBER_TYPE_SELF;
                 String email = esProfile.getEmail();

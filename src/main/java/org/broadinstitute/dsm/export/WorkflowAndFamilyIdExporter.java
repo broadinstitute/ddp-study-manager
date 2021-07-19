@@ -69,11 +69,11 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
         Optional<String> maybeEsParticipantIndex =
                 new DDPInstanceDao().getEsParticipantIndexByInstanceId(instanceId);
         for (ParticipantDataDto participantData: allParticipantData) {
-            String data = participantData.getData();
+            String data = participantData.getData().orElse(null);
             if (data == null) {
                 continue;
             }
-            String ddpParticipantId = participantData.getDdpParticipantId();
+            String ddpParticipantId = participantData.getDdpParticipantId().orElse("");
             String finalDdpParticipantId = ddpParticipantId;
             List<ParticipantDataDto> participantDataFamily = allParticipantData.stream()
                     .filter(participantDataDto -> participantDataDto.getDdpParticipantId().equals(finalDdpParticipantId))
