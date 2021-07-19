@@ -47,7 +47,7 @@ public class ClinicalKitsRoute implements Route {
         });
     }
 
-    private Object getClinicalKit(Connection conn, String kitLabel, Response response) {
+    private ClinicalKitDto getClinicalKit(Connection conn, String kitLabel, Response response) {
         logger.info("Checking label " + kitLabel);
 
         // this method already sets the received time, check for exited and deactivation and special behaviour, and triggers DDP, we don't need a new
@@ -68,7 +68,7 @@ public class ClinicalKitsRoute implements Route {
             hruid = bspKitQueryResult.getBspParticipantId().substring(bspKitQueryResult.getBspParticipantId().lastIndexOf('_') + 1);
         }
         Optional<ParticipantWrapper> maybeParticipant = ParticipantWrapper.getParticipantFromESByHruid(ddpInstance, hruid);
-        maybeParticipant.ifPresent(p -> {
+        maybeParticipant.ifPresentOrElse(p -> {
                     Map<String, String> dsm = (Map<String, String>) p.getData().get(ElasticSearchUtil.DSM);
                     if (dsm != null && !dsm.isEmpty()) {
                         clinicalKit.setDateOfBirth(dsm.get(DATE_OF_BIRtH));
@@ -79,8 +79,8 @@ public class ClinicalKitsRoute implements Route {
                     String mailToName = firstName + " " + lastName;
                     clinicalKit.setMailToName(mailToName);
                 }
-        );
-        maybeParticipant.orElseThrow(() -> new RuntimeException("Participant doesn't exist / is not valid for kit " + kitLabel));
+
+        ,() -> new RuntimeException("Participant doesn't exist / is not valid for kit " + kitLabel));
         return clinicalKit;
 
     }
