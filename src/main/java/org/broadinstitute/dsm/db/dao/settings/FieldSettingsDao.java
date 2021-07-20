@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.db.dao.fieldsettings;
+package org.broadinstitute.dsm.db.dao.settings;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.dao.Dao;
-import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 
 public class FieldSettingsDao implements Dao<FieldSettingsDto> {
 

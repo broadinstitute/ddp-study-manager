@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.fieldsettings;
+package org.broadinstitute.dsm.model.settings.field;
 
 import java.util.HashMap;
 import java.util.List;
@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 import com.google.gson.Gson;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.slf4j.Logger;
