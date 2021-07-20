@@ -3,11 +3,13 @@ package org.broadinstitute.dsm.model.fieldsettings;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import com.google.gson.Gson;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -20,6 +22,11 @@ public class FieldSettings {
 
     public static final String KEY_DEFAULT = "default";
     public static final String KEY_VALUE = "value";
+    private final FieldSettingsDao fieldSettingsDao;
+
+    public FieldSettings() {
+        this.fieldSettingsDao = FieldSettingsDao.of();
+    }
 
     public Map<String, String> getColumnsWithDefaultOptions(@NonNull List<FieldSettingsDto> fieldSettingsDtos) {
         Map<String, String> defaultOptions = new HashMap<>();
@@ -77,4 +84,9 @@ public class FieldSettings {
                 .anyMatch(act -> ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(act.getType()));
     }
 
+    public boolean isColumnExportable(int instanceId, String columnName) {
+        Optional<FieldSettingsDto> maybeFieldSetting =
+                fieldSettingsDao.getFieldSettingByColumnNameAndInstanceId(instanceId, columnName);
+        return isElasticExportWorkflowType(maybeFieldSetting.map(FieldSettingsDto::getActions).orElse(""));
+    }
 }

@@ -171,5 +171,8 @@ public class ParticipantData {
         return applicantEmail.equals(familyMemberEmail);
     }
 
+    public String getFamilyMemberEmail() {
+        return Objects.requireNonNull(this.data).get(FamilyMemberConstants.EMAIL);
+    }
 
 }
