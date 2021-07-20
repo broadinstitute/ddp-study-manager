@@ -2,10 +2,9 @@ package org.broadinstitute.dsm.route;
 
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.db.dao.kit.BSPKitDao;
 import org.broadinstitute.dsm.db.dto.kit.ClinicalKitDto;
+import org.broadinstitute.dsm.model.BSPKit;
 import org.broadinstitute.dsm.model.ParticipantWrapper;
 import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
 import org.broadinstitute.dsm.model.bsp.BSPKitQueryResult;
@@ -18,7 +17,6 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 
-import java.sql.Connection;
 import java.util.Map;
 import java.util.Optional;
 
@@ -41,46 +39,52 @@ public class ClinicalKitsRoute implements Route {
         if (StringUtils.isBlank(kitLabel)) {
             throw new RuntimeException("Please include a kit label as a path parameter");
         }
+        BSPKit bspKit = new BSPKit();
+        if (!bspKit.canReceiveKit(kitLabel)) {
+            Optional<Object> result = Optional.ofNullable(bspKit.getKitStatus(kitLabel, notificationUtil));
+            if(!result.isPresent()){
+                response.status(404);
+            }
+            return result.orElse(response);
+        }
 
-        return TransactionWrapper.inTransaction(conn -> {
-            return getClinicalKit(conn, kitLabel, response);
-        });
+        return getClinicalKit(kitLabel);
     }
 
-    private ClinicalKitDto getClinicalKit(Connection conn, String kitLabel, Response response) {
+    private ClinicalKitDto getClinicalKit(String kitLabel) {
         logger.info("Checking label " + kitLabel);
 
         // this method already sets the received time, check for exited and deactivation and special behaviour, and triggers DDP, we don't need a new
-        BSPKitInfo kitInfo = (BSPKitInfo) new BSPKitDao().getBSPKitInfo(kitLabel, response, notificationUtil);
-
-        ClinicalKitDto clinicalKit = new ClinicalKitDto(kitInfo.getCollaboratorParticipantId(),
-                kitInfo.getCollaboratorSampleId(),
-                kitInfo.getSampleCollectionBarcode(),
-                kitInfo.getMaterialInfo(),
-                kitInfo.getReceptacleName(),
-                null,
-                null);
-
-        BSPKitQueryResult bspKitQueryResult = BSPKitQueryResult.getBSPKitQueryResult(kitLabel);
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(bspKitQueryResult.getInstanceName());
-        String hruid = bspKitQueryResult.getBspParticipantId();
-        if (hruid.indexOf('_') != -1) {
-            hruid = bspKitQueryResult.getBspParticipantId().substring(bspKitQueryResult.getBspParticipantId().lastIndexOf('_') + 1);
-        }
-        Optional<ParticipantWrapper> maybeParticipant = ParticipantWrapper.getParticipantFromESByHruid(ddpInstance, hruid);
-        maybeParticipant.ifPresentOrElse(p -> {
-                    Map<String, String> dsm = (Map<String, String>) p.getData().get(ElasticSearchUtil.DSM);
-                    if (dsm != null && !dsm.isEmpty()) {
-                        clinicalKit.setDateOfBirth(dsm.get(DATE_OF_BIRtH));
+        BSPKit bspKit = new BSPKit();
+        ClinicalKitDto clinicalKit = new ClinicalKitDto();
+        Optional<BSPKitInfo> maybeKitInfo = Optional.of(bspKit.receiveBSPKit(kitLabel, notificationUtil));
+        maybeKitInfo.ifPresent(kitInfo -> {
+            clinicalKit.setCollaboratorParticipantId(kitInfo.getCollaboratorParticipantId());
+            clinicalKit.setSampleId(kitInfo.getCollaboratorSampleId());
+            clinicalKit.setMaterialType(kitInfo.getMaterialInfo());
+            clinicalKit.setVesselType(kitInfo.getReceptacleName());
+            BSPKitQueryResult bspKitQueryResult = BSPKitQueryResult.getBSPKitQueryResult(kitLabel);
+            DDPInstance ddpInstance = DDPInstance.getDDPInstance(bspKitQueryResult.getInstanceName());
+            String hruid = bspKitQueryResult.getBspParticipantId();
+            if (hruid.indexOf('_') != -1) {
+                hruid = bspKitQueryResult.getBspParticipantId().substring(bspKitQueryResult.getBspParticipantId().lastIndexOf('_') + 1);
+            }
+            Optional<ParticipantWrapper> maybeParticipant = ParticipantWrapper.getParticipantFromESByHruid(ddpInstance, hruid);
+            maybeParticipant.ifPresentOrElse(p -> {
+                        Map<String, String> dsm = (Map<String, String>) p.getData().get(ElasticSearchUtil.DSM);
+                        if (dsm != null && !dsm.isEmpty()) {
+                            clinicalKit.setDateOfBirth(dsm.get(DATE_OF_BIRtH));
+                        }
+                        Map<String, String> participantProfileFromEs = (Map<String, String>) p.getData().get(ElasticSearchUtil.PROFILE);
+                        String firstName = participantProfileFromEs.get(FIRSTNAME);
+                        String lastName = participantProfileFromEs.get(LASTNAME);
+                        String mailToName = firstName + " " + lastName;
+                        clinicalKit.setMailToName(mailToName);
                     }
-                    Map<String, String> participantProfileFromEs = (Map<String, String>) p.getData().get(ElasticSearchUtil.PROFILE);
-                    String firstName = participantProfileFromEs.get(FIRSTNAME);
-                    String lastName = participantProfileFromEs.get(LASTNAME);
-                    String mailToName = firstName + " " + lastName;
-                    clinicalKit.setMailToName(mailToName);
-                }
 
-        ,() -> new RuntimeException("Participant doesn't exist / is not valid for kit " + kitLabel));
+                    , () -> new RuntimeException("Participant doesn't exist / is not valid for kit " + kitLabel)
+            );
+        });
         return clinicalKit;
 
     }

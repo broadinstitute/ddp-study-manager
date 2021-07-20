@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.route;
 
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.dao.kit.BSPKitDao;
@@ -12,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 import spark.Route;
+
+import java.util.Optional;
 
 public class CreateBSPDummyKitRoute implements Route {
     private static final String DUMMY_KIT_TYPE_NAME = "DUMMY_KIT_TYPE";
@@ -24,9 +25,9 @@ public class CreateBSPDummyKitRoute implements Route {
         logger.info("Got Mercury Test request");
         String kitLabel = request.params(RequestParameter.LABEL);
         if (StringUtils.isBlank(kitLabel)) {
-            response.status(400);// return bad request
+            response.status(500);// return bad request
             logger.error("Bad request from Mercury! Should include a kitlabel");
-            return new Result(400, "Please include a kit label as a path parameter");
+           return response;
         }
         logger.info("Found kitlabel " + kitLabel + " in Mercury request");
         int ddpInstanceId = (int) DBUtil.getBookmark(DUMMY_REALM_NAME);
@@ -37,23 +38,23 @@ public class CreateBSPDummyKitRoute implements Route {
             String mercuryKitRequestId = "MERCURY_" + KitRequestShipping.createRandom(20);
             int kitTypeId = (int) DBUtil.getBookmark(DUMMY_KIT_TYPE_NAME);
             logger.info("Found kit type for Mercury Dummy Endpoint " + kitTypeId);
-
-            String ddpParticipantId = BSPKitDao.getRandomParticipantIdForStudy(mockDdpInstance.getDdpInstanceId());
+            String ddpParticipantId = Optional.ofNullable(new BSPKitDao().getRandomParticipantIdForStudy(mockDdpInstance.getDdpInstanceId())).orElseThrow(()-> {throw new RuntimeException("Random participant id was not generated");});
             String participantCollaboratorId = KitRequestShipping.getCollaboratorParticipantId(mockDdpInstance.getBaseUrl(), mockDdpInstance.getDdpInstanceId(), mockDdpInstance.isMigratedDDP(),
                     mockDdpInstance.getCollaboratorIdPrefix(), ddpParticipantId, "", null);
-            String collaboratorSampleId = BSPKitDao.getCollaboratorSampleId(kitTypeId, participantCollaboratorId, DUMMY_KIT_TYPE_NAME);
+            String collaboratorSampleId = KitRequestShipping.getCollaboratorSampleId(kitTypeId, participantCollaboratorId, DUMMY_KIT_TYPE_NAME);
             if (ddpParticipantId != null) {
                 //if instance not null
                 String dsmKitRequestId = KitRequestShipping.writeRequest(mockDdpInstance.getDdpInstanceId(), mercuryKitRequestId, kitTypeId,
                         ddpParticipantId, participantCollaboratorId, collaboratorSampleId,
                         USER_ID, "", "", "", false, "");
-                BSPKitDao.updateKitLabel(kitLabel, dsmKitRequestId);
+                new BSPKitDao().updateKitLabel(kitLabel, dsmKitRequestId);
             }
             logger.info("Returning 200 to Mercury");
-            return new Result(200);
+           response.status(200);
         }
         logger.error("Returning 500 to Mercury");
-        return new Result(500);
+        response.status(500);
+       return response;
     }
 
 
