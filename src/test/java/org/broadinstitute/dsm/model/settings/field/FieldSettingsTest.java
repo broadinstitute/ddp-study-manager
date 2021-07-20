@@ -4,11 +4,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
-import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
+import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
-import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;

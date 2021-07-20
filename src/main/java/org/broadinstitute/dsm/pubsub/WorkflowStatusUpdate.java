@@ -3,8 +3,8 @@ package org.broadinstitute.dsm.pubsub;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
-import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
+import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.export.ExportToES;
 import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.Value;
@@ -49,7 +49,7 @@ public class WorkflowStatusUpdate {
             FieldSettingsDto setting = fieldSetting.get();
             boolean isOldParticipant = participantDatas.stream()
                     .anyMatch(participantDataDto -> participantDataDto.getFieldTypeId().equals(setting.getFieldType())
-                            || !participantDataDto.getFieldTypeId().orElse("").contains(FamilyMemberConstants.GROUP));
+                            || participantDataDto.getFieldTypeId().orElse("").contains(FamilyMemberConstants.PARTICIPANTS));
             if (isOldParticipant) {
                 participantDatas.forEach(participantDataDto -> {
                     updateProbandStatusInDB(workflow, status, participantDataDto, studyGuid);
@@ -71,7 +71,7 @@ public class WorkflowStatusUpdate {
         Value[] actionsArray =  gson.fromJson(actions, Value[].class);
         for (Value action : actionsArray) {
             if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
-                if (setting.getFieldType().contains(FamilyMemberConstants.GROUP)) {
+                if (!setting.getFieldType().contains(FamilyMemberConstants.PARTICIPANTS)) {
                     ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(instance, ddpParticipantId, workflow, status), false);
                 } else {
                     Optional<WorkflowForES.StudySpecificData> studySpecificDataOptional = getProbandStudySpecificData(participantDatas);

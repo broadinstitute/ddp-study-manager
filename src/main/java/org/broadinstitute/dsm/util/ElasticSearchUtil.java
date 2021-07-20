@@ -689,12 +689,14 @@ public class ElasticSearchUtil {
         for (String f : filters) {
             if (StringUtils.isNotBlank(f) && f.contains(DBConstants.ALIAS_DELIMITER)) {
                 if (f.contains(Filter.EQUALS) || f.contains(Filter.LIKE)) {
+                    BoolQueryBuilder innerQuery = new BoolQueryBuilder();
                     f = f.replace("(", "").replace(")", "").trim();
                     if (f.contains(Filter.OR)) {
                         String[] orValues = f.split(Filter.OR);
                         for (String or : orValues) {
-                            createQuery(finalQuery, or, false);
+                            createQuery(innerQuery, or, false);
                         }
+                        finalQuery.must(innerQuery);
                     }
                     else {
                         createQuery(finalQuery, f, true);

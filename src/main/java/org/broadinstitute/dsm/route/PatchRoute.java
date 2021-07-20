@@ -83,8 +83,8 @@ public class PatchRoute extends RequestHandler {
                                     return new RuntimeException("An error occurred while attempting to patch ");
                                 }
                                 if (nameValue.getName().indexOf("question") > -1) {
-                                    JSONObject jsonObject = new JSONObject(nameValue.getValue().toString());
                                     UserDto userDto = new UserDao().getUserByEmail(patch.getUser()).orElseThrow();
+                                    JSONObject jsonObject = new JSONObject(nameValue.getValue().toString());
                                     JSONArray questionArray = new JSONArray(jsonObject.get("questions").toString());
                                     boolean writeBack = false;
                                     for (int i = 0; i < questionArray.length(); i++) {
@@ -416,7 +416,7 @@ public class PatchRoute extends RequestHandler {
         Map<String, String> data = new Gson().fromJson(status, new TypeToken<Map<String, String>>() {
         }.getType());
         if (StringUtils.isNotBlank(action.getValue())) {
-            if (patch.getFieldId().contains(FamilyMemberConstants.GROUP)) {
+            if (!patch.getFieldId().contains(FamilyMemberConstants.PARTICIPANTS)) {
                 ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, patch.getParentId(), action.getName(), action.getValue()), false);
             }
             else if (ParticipantUtil.checkApplicantEmail(data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
@@ -429,7 +429,7 @@ public class PatchRoute extends RequestHandler {
             }
         }
         else if (StringUtils.isNotBlank(action.getName()) && data.containsKey(action.getName())) {
-            if (patch.getFieldId().contains(FamilyMemberConstants.GROUP)) {
+            if (!patch.getFieldId().contains(FamilyMemberConstants.PARTICIPANTS)) {
                 ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, patch.getParentId(), action.getName(), data.get(action.getName())), false);
             }
             else if (ParticipantUtil.checkApplicantEmail(data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),

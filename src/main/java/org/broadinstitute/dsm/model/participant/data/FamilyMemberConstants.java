@@ -18,4 +18,5 @@ public class FamilyMemberConstants {
 
     public static final String GROUP = "GROUP";
     public static final String SUBJECT_ID = "SUBJECT_ID";
+    public static final String PARTICIPANTS = "PARTICIPANTS";
 }
