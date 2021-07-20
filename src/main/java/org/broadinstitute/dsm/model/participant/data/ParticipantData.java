@@ -174,13 +174,6 @@ public class ParticipantData {
     public String getFamilyMemberEmail() {
         return Objects.requireNonNull(this.data).get(FamilyMemberConstants.EMAIL);
     }
-    public boolean hasFamilyMemberApplicantEmail() {
-        if (Objects.isNull(this.data) || StringUtils.isBlank(this.ddpParticipantId)) return false;
-        String familyMemberEmail = this.data.get(FamilyMemberConstants.EMAIL);
-        String esParticipantIndex = new DDPInstanceDao().getEsParticipantIndexByInstanceId(ddpInstanceId).orElse("");
-        String applicantEmail = ParticipantUtil.getParticipantEmailById(esParticipantIndex, this.ddpParticipantId);
-        return applicantEmail.equals(familyMemberEmail);
-    }
 
 
 }

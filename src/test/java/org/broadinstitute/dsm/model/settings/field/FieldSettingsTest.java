@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.fieldsettings;
+package org.broadinstitute.dsm.model.settings.field;
 
 import java.util.Arrays;
 import java.util.List;
