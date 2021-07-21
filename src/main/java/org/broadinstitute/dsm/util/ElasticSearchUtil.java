@@ -604,12 +604,7 @@ public class ElasticSearchUtil {
     }
 
     public static void updateRequest(RestHighLevelClient client, @NonNull String ddpParticipantId, String index, Map<String, Object> objectsMapES) throws IOException {
-        try {
-            if (client == null) {
-                client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
-                        TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD));
-            }
-
+        if (client != null) {
             UpdateRequest updateRequest = new UpdateRequest()
                     .index(index)
                     .type("_doc")
@@ -620,11 +615,8 @@ public class ElasticSearchUtil {
 
             UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
         }
-        catch (MalformedURLException e) {
-            logger.error("Updating ES index " + index, e);
-        }
-        finally {
-            client.close();
+        else {
+            logger.error("RestHighLevelClient was null");
         }
     }
 
