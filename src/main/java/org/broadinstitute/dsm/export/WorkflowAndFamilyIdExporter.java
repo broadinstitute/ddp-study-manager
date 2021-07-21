@@ -76,7 +76,7 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
             String ddpParticipantId = participantData.getDdpParticipantId().orElse("");
             String finalDdpParticipantId = ddpParticipantId;
             List<ParticipantDataDto> participantDataFamily = allParticipantData.stream()
-                    .filter(participantDataDto -> participantDataDto.getDdpParticipantId().equals(finalDdpParticipantId))
+                    .filter(participantDataDto -> participantDataDto.getDdpParticipantId().orElse("").equals(finalDdpParticipantId))
                     .collect(Collectors.toList());
             if (!ParticipantUtil.isGuid(ddpParticipantId)) {
                 ddpParticipantId = getGuidIfWeHaveAltpid(ddpParticipantId, maybeEsParticipantIndex);
