@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.route;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -21,6 +22,7 @@ import org.broadinstitute.dsm.model.AbstractionWrapper;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Patch;
 import org.broadinstitute.dsm.model.Value;
+import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -38,7 +40,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+//Class needs to be refactored as soon as possible!!!
 public class PatchRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PatchRoute.class);
@@ -103,6 +108,7 @@ public class PatchRoute extends RequestHandler {
                                         nameValues.add(nameValue);
                                     }
                                 }
+                                controlWorkflowByEmail(patch, nameValue);
                                 if (patch.getActions() != null) {
                                     for (Value action : patch.getActions()) {
                                         if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
@@ -305,6 +311,52 @@ public class PatchRoute extends RequestHandler {
         else {
             response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
+        }
+    }
+
+    private void controlWorkflowByEmail(Patch patch, NameValue nameValue) {
+        try {
+            Map<String, String> pData = new Gson().fromJson(nameValue.getValue().toString(), Map.class);
+            DDPInstance ddpInstanceByGuid = Objects.requireNonNull(DDPInstance.getDDPInstanceByGuid(patch.getRealm()));
+            org.broadinstitute.dsm.model.participant.data.ParticipantData participantData =
+                    new org.broadinstitute.dsm.model.participant.data.ParticipantData(Integer.parseInt(patch.getId()),
+                            patch.getParentId(), Integer.parseInt(ddpInstanceByGuid.getDdpInstanceId()), patch.getFieldId(),
+                            pData);
+            if (participantData.hasFamilyMemberApplicantEmail()) {
+                int ddpInstanceIdByGuid = Integer.parseInt(ddpInstanceByGuid.getDdpInstanceId());
+                FieldSettings fieldSettings = new FieldSettings();
+                pData.forEach((columnName,columnValue) -> {
+                    if (!fieldSettings.isColumnExportable(ddpInstanceIdByGuid, columnName)) return;
+                    if (!patch.getFieldId().contains(org.broadinstitute.dsm.model.participant.data.ParticipantData.FIELD_TYPE)) return;
+                    ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstanceByGuid,
+                            patch.getParentId(), columnName, columnValue, new WorkflowForES.StudySpecificData(
+                                    pData.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+                                    pData.get(FamilyMemberConstants.FIRSTNAME),
+                                    pData.get(FamilyMemberConstants.LASTNAME))), false);
+                });
+            } else {
+                Map<String, Object> esMap = ElasticSearchUtil
+                        .getObjectsMap(ddpInstanceByGuid.getParticipantIndexES(), patch.getParentId(),
+                                ESObjectConstants.WORKFLOWS);
+                if (Objects.isNull(esMap)) return;
+                CopyOnWriteArrayList<Map<String, Object>> workflowsList = new CopyOnWriteArrayList<>((List<Map<String, Object>>)esMap.get(ESObjectConstants.WORKFLOWS));
+                int startingSize = workflowsList.size();
+                workflowsList.forEach(workflow -> {
+                    Map<String, String> workflowDataMap = (Map<String, String>) workflow.get(ESObjectConstants.DATA);
+                    String collaboratorParticipantId = workflowDataMap.get(ESObjectConstants.SUBJECT_ID);
+                    if (Objects.isNull(collaboratorParticipantId)) return;
+                    if (collaboratorParticipantId.equals(pData.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID))) {
+                        workflowsList.remove(workflow);
+                    }
+                });
+                if (startingSize != workflowsList.size()) {
+                    esMap.put(ESObjectConstants.WORKFLOWS, workflowsList);
+                    ElasticSearchUtil.updateRequest(patch.getParentId(), ddpInstanceByGuid.getParticipantIndexES(), esMap);
+                }
+            }
+        } catch (JsonSyntaxException ignored) {
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

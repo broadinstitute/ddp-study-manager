@@ -19,6 +19,7 @@ public class FieldSettingsDto {
     private boolean deleted;
     private long lastChanged;
     private String changedBy;
+    private int maxLength;
 
     private FieldSettingsDto(Builder builder) {
         this.fieldSettingsId = builder.fieldSettingsId;
@@ -34,6 +35,7 @@ public class FieldSettingsDto {
         this.deleted = builder.deleted;
         this.lastChanged = builder.lastChanged;
         this.changedBy = builder.changedBy;
+        this.maxLength = builder.maxLength;
     }
 
     public static class Builder {
@@ -51,6 +53,7 @@ public class FieldSettingsDto {
         private boolean deleted;
         private long lastChanged;
         private String changedBy;
+        private int maxLength;
 
         public Builder(int ddpInstanceId) {
             this.ddpInstanceId = ddpInstanceId;
@@ -115,6 +118,12 @@ public class FieldSettingsDto {
             this.changedBy = changedBy;
             return this;
         }
+
+        public Builder withMaxLength(int maxLength) {
+            this.maxLength = maxLength;
+            return this;
+        }
+
 
         public FieldSettingsDto build() {
             return new FieldSettingsDto(this);

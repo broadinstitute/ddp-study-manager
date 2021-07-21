@@ -42,7 +42,7 @@ public class ParticipantUtil {
             }
 
             boolean isOldApplicant = dataMap.containsKey(FamilyMemberConstants.DATSTAT_ALTPID)
-                    && dataMap.get(FamilyMemberConstants.DATSTAT_ALTPID).equals(participantData.getDdpParticipantId());
+                    && dataMap.get(FamilyMemberConstants.DATSTAT_ALTPID).equals(participantData.getDdpParticipantId().orElse(""));
             boolean isNewApplicant = dataMap.containsKey(FamilyMemberConstants.IS_APPLICANT)
                     && TRUE.equals(dataMap.get(FamilyMemberConstants.IS_APPLICANT));
             boolean isCurrentParticipant = collaboratorParticipantId.equals(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID));
