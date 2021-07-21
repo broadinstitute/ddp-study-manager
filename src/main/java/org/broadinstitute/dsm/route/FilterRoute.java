@@ -338,8 +338,8 @@ public class FilterRoute extends RequestHandler {
                     singleValueMatches = dataMap.get(fieldName) != null && dataMap.get(fieldName)
                             .equals(filter.getFilter1().getValue());
                 } else {
-                    singleValueMatches = dataMap.get(fieldName) != null && dataMap.get(fieldName)
-                            .contains(filter.getFilter1().getValue().toString());
+                    singleValueMatches = dataMap.get(fieldName) != null && dataMap.get(fieldName).toLowerCase()
+                            .contains(filter.getFilter1().getValue().toString().toLowerCase());
                 }
                 if (singleValueMatches) {
                     participantIdsForQuery.put(ddpParticipantId, fieldName);
