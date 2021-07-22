@@ -373,6 +373,10 @@ public class ElasticSearchUtil {
     }
 
     public static void writeWorkflow(@NonNull WorkflowForES workflowForES, boolean clearBeforeUpdate) {
+        writeWorkflow(null, workflowForES, clearBeforeUpdate);
+    }
+
+    public static void writeWorkflow(RestHighLevelClient client, @NonNull WorkflowForES workflowForES, boolean clearBeforeUpdate) {
         String ddpParticipantId = workflowForES.getDdpParticipantId();
         DDPInstance instance = workflowForES.getInstance();
         String index = instance.getParticipantIndexES();
@@ -397,7 +401,12 @@ public class ElasticSearchUtil {
                 workflowMapES = addWorkflows(workflow, status, workflowForES.getStudySpecificData());
             }
 
-            updateRequest(ddpParticipantId, index, workflowMapES);
+            if (client != null) {
+                updateRequest(client, ddpParticipantId, index, workflowMapES);
+            }
+            else {
+                updateRequest(ddpParticipantId, index, workflowMapES);
+            }
             logger.info("Update workflow information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName());
         }
         catch (Exception e) {
@@ -488,6 +497,15 @@ public class ElasticSearchUtil {
                                       @NonNull String objectType,
                                       @NonNull String idName,
                                       Map<String, Object> nameValues) {
+        writeDsmRecord(null, instance, id, ddpParticipantId, objectType, idName, nameValues);
+    }
+
+    public static void writeDsmRecord(RestHighLevelClient client, @NonNull DDPInstance instance,
+                                      Integer id,
+                                      @NonNull String ddpParticipantId,
+                                      @NonNull String objectType,
+                                      @NonNull String idName,
+                                      Map<String, Object> nameValues) {
         String index = instance.getParticipantIndexES();
         try {
             if (StringUtils.isNotBlank(index)) {
@@ -515,7 +533,12 @@ public class ElasticSearchUtil {
                     objectsMapES.put(ESObjectConstants.DSM, mapForDSM);
                 }
 
-                updateRequest(ddpParticipantId, index, objectsMapES);
+                if (client != null) {
+                    updateRequest(client, ddpParticipantId, index, objectsMapES);
+                }
+                else {
+                    updateRequest(ddpParticipantId, index, objectsMapES);
+                }
                 logger.info("Updated " + objectType + " information for participant " + ddpParticipantId + " in ES for instance " + instance.getName());
             }
         } catch (Exception e) {
@@ -587,6 +610,23 @@ public class ElasticSearchUtil {
 
             UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
 
+        }
+    }
+
+    public static void updateRequest(RestHighLevelClient client, @NonNull String ddpParticipantId, String index, Map<String, Object> objectsMapES) throws IOException {
+        if (client != null) {
+            UpdateRequest updateRequest = new UpdateRequest()
+                    .index(index)
+                    .type("_doc")
+                    .id(ddpParticipantId)
+                    .doc(objectsMapES)
+                    .docAsUpsert(true)
+                    .retryOnConflict(5);
+
+            UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+        }
+        else {
+            logger.error("RestHighLevelClient was null");
         }
     }
 
