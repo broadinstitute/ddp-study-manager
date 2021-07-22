@@ -22,7 +22,6 @@ import org.broadinstitute.dsm.model.AbstractionWrapper;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Patch;
 import org.broadinstitute.dsm.model.Value;
-import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.security.RequestHandler;

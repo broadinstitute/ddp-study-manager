@@ -44,7 +44,6 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.color.ICC_ColorSpace;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -408,9 +407,6 @@ public class ElasticSearchUtil {
                     } else {
                         updateWorkflow(workflow, status, workflowListES);
                     }
-                }
-                else {
-                    workflowMapES = addWorkflows(workflow, status, workflowForES.getStudySpecificData());
                 }
             }
             else {

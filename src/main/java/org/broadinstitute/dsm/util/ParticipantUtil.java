@@ -3,7 +3,6 @@ package org.broadinstitute.dsm.util;
 import com.google.gson.Gson;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
@@ -11,7 +10,6 @@ import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class ParticipantUtil {
 
