@@ -374,7 +374,13 @@ public class ElasticSearchUtil {
     }
 
     public static void writeWorkflow(@NonNull WorkflowForES workflowForES, boolean clearBeforeUpdate) {
-        writeWorkflow(null, workflowForES, clearBeforeUpdate);
+        try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
+            TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
+            writeWorkflow(client, workflowForES, clearBeforeUpdate);
+        }
+        catch (IOException e) {
+            logger.error("Failed to close client ", e);
+        }
     }
 
     public static void writeWorkflow(RestHighLevelClient client, @NonNull WorkflowForES workflowForES, boolean clearBeforeUpdate) {
@@ -385,7 +391,13 @@ public class ElasticSearchUtil {
             return;
         }
         try {
-            Map<String, Object> workflowMapES = getObjectsMap(index, ddpParticipantId, ESObjectConstants.WORKFLOWS);
+
+            String participantId = ParticipantUtil.isGuid(ddpParticipantId) ? ddpParticipantId : getParticipantESDataByAltpid(client, index, ddpParticipantId)
+                    .getProfile()
+                    .map(ESProfile::getParticipantGuid)
+                    .orElse(ddpParticipantId);
+
+            Map<String, Object> workflowMapES = getObjectsMap(index, participantId, ESObjectConstants.WORKFLOWS);
             String workflow = workflowForES.getWorkflow();
             String status = workflowForES.getStatus();
             if (workflowMapES != null && !workflowMapES.isEmpty() && !clearBeforeUpdate) {
@@ -396,6 +408,9 @@ public class ElasticSearchUtil {
                     } else {
                         updateWorkflow(workflow, status, workflowListES);
                     }
+                }
+                else {
+                    workflowMapES = addWorkflows(workflow, status, workflowForES.getStudySpecificData());
                 }
             }
             else {
