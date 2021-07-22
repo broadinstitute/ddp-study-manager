@@ -118,7 +118,7 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
     public void exportWorkflows(RestHighLevelClient client, List<String> workFlowColumnNames, DDPInstance ddpInstance, ParticipantDataDto participantData,
                                        String ddpParticipantId, List<ParticipantDataDto> participantDataFamily, Map<String, String> dataMap,
                                        AtomicBoolean clearBeforeUpdate) {
-        if (participantData.getFieldTypeId().equals(RGP_PARTICIPANTS)) {
+        if (participantData.getFieldTypeId().orElse("").equals(RGP_PARTICIPANTS)) {
             if (!ParticipantUtil.checkApplicantEmail(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID), participantDataFamily)) {
                 return;
             }
