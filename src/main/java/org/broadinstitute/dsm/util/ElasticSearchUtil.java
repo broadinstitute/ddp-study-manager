@@ -401,7 +401,12 @@ public class ElasticSearchUtil {
                 workflowMapES = addWorkflows(workflow, status, workflowForES.getStudySpecificData());
             }
 
-            updateRequest(client, ddpParticipantId, index, workflowMapES);
+            if (client != null) {
+                updateRequest(client, ddpParticipantId, index, workflowMapES);
+            }
+            else {
+                updateRequest(ddpParticipantId, index, workflowMapES);
+            }
             logger.info("Update workflow information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName());
         }
         catch (Exception e) {
@@ -528,7 +533,12 @@ public class ElasticSearchUtil {
                     objectsMapES.put(ESObjectConstants.DSM, mapForDSM);
                 }
 
-                updateRequest(client, ddpParticipantId, index, objectsMapES);
+                if (client != null) {
+                    updateRequest(client, ddpParticipantId, index, objectsMapES);
+                }
+                else {
+                    updateRequest(ddpParticipantId, index, objectsMapES);
+                }
                 logger.info("Updated " + objectType + " information for participant " + ddpParticipantId + " in ES for instance " + instance.getName());
             }
         } catch (Exception e) {
