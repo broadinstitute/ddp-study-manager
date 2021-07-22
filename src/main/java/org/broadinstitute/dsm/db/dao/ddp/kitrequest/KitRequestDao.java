@@ -70,7 +70,7 @@ public class KitRequestDao implements Dao<KitRequestDto> {
         "external_order_status, " +
         "external_response, " +
         "upload_reason, " +
-        "order_transmitted_at" +
+        "order_transmitted_at, dsm_kit_request_id " +
         "FROM " +
         "ddp_kit_request";
 
@@ -176,7 +176,7 @@ public class KitRequestDao implements Dao<KitRequestDto> {
                 stmt.setString(1, bspParticipantId);
                 try (ResultSet idByBSPrs = stmt.executeQuery()) {
                     if (idByBSPrs.next()) {
-                        dbVals.resultValue = idByBSPrs.getInt(DBConstants.DDP_INSTANCE_ID);
+                        dbVals.resultValue = idByBSPrs.getString(DBConstants.DDP_KIT_REQUEST_ID);
                     }
                 }
 

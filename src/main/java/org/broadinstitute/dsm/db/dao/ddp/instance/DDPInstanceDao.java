@@ -55,6 +55,15 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
             "FROM ddp_instance " +
             "WHERE ddp_instance_id = ?";
 
+    private static final String SQL_GET_PARTICIPANT_ES_INDEX_BY_STUDY_GUID = "SELECT es_participant_index " +
+            "FROM ddp_instance " +
+            "WHERE study_guid = ?";
+
+    private static final String SQL_GET_COLLABORATOR_ID_PREFIX_BY_STUDY_GUID = "SELECT collaborator_id_prefix " +
+            "FROM ddp_instance " +
+            "WHERE study_guid = ?";
+    public static final String COLLABORATOR_ID_PREFIX = "collaborator_id_prefix";
+
     public static boolean getRole(@NonNull String realm, @NonNull String role) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -200,4 +209,55 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
         return Optional.ofNullable((String) results.resultValue);
     }
 
+    public Optional<String> getEsParticipantIndexByStudyGuid(String studyGuid) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_PARTICIPANT_ES_INDEX_BY_STUDY_GUID)) {
+                stmt.setString(1, studyGuid);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = rs.getString(DBConstants.ES_PARTICIPANT_INDEX);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting participant es index with study guid: " + studyGuid, e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get participant es index with study guid: " + studyGuid, results.resultException);
+        }
+        return Optional.ofNullable((String) results.resultValue);
+    }
+
+    public Optional<String> getCollaboratorIdPrefixByStudyGuid(String studyGuid) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_COLLABORATOR_ID_PREFIX_BY_STUDY_GUID)) {
+                stmt.setString(1, studyGuid);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = rs.getString(COLLABORATOR_ID_PREFIX);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting collaborator id prefix with study guid: " + studyGuid, e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get collaborator id prefix with study guid: " + studyGuid, results.resultException);
+        }
+        return Optional.ofNullable((String) results.resultValue);
+    }
 }

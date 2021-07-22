@@ -19,4 +19,10 @@ public class ESProfile {
     @SerializedName(ESObjectConstants.EMAIL)
     private String email;
 
+    @SerializedName(ESObjectConstants.LEGACY_ALTPID)
+    private String participantLegacyAlptid;
+
+    @SerializedName(ESObjectConstants.HRUID)
+    private String hruid;
+
 }

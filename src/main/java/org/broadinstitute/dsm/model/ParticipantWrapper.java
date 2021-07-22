@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model;
 
+import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -8,7 +9,7 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
-import org.broadinstitute.dsm.model.rgp.AutomaticProbandDataCreator;
+import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.at.DefaultValues;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -17,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -95,16 +97,14 @@ public class ParticipantWrapper {
             Map<String, List<AbstractionGroup>> abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName());
             Map<String, Map<String, Object>> proxyData = getProxyData(instance);
             Map<String, List<ParticipantData>> participantData = ParticipantData.getParticipantData(instance.getName());
-            //needed for RGP family member
-            if (DDPInstanceDao.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
-                participantData = new AutomaticProbandDataCreator().setDefaultProbandDataIfNotExists(participantData, participantESData, instance);
-            }
 
             //if study is AT
             if ("atcp".equals(instance.getName())) {
                 defaultValues = new DefaultValues(participantData, participantESData, instance, null);
                 participantData = defaultValues.addDefaultValues();
             }
+
+            sortBySelfElseById(participantData);
 
             List<String> baseList = new ArrayList<>(participantESData.keySet());
 
@@ -168,15 +168,27 @@ public class ParticipantWrapper {
             }
             //get all the list which were not filtered
             if (participantESData == null) {
+                participantESData = new HashMap<>();
                 //get only pts for the filtered data
-                if (baseList != null && !baseList.isEmpty()){
-                    String filter = Arrays.stream(baseList.toArray(new String[0])).collect(Collectors.joining(ElasticSearchUtil.BY_GUIDS));
-                    participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_GUID + filter);
-                    if (instance.isMigratedDDP()) {//also check for legacyAltPid
-                        String filterLegacy = Arrays.stream(baseList.toArray(new String[0])).collect(Collectors.joining(ElasticSearchUtil.BY_LEGACY_ALTPIDS));
-                        Map<String, Map<String, Object>> tmp = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, ElasticSearchUtil.BY_LEGACY_ALTPID + filterLegacy);
-                        participantESData = Stream.of(participantESData, tmp).flatMap(m -> m.entrySet().stream())
-                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                if (baseList != null && !baseList.isEmpty()) {
+                    //ES can only filter for 1024 (too_many_clauses: maxClauseCount is set to 1024)
+                    if (baseList.size() > 1000) {
+                        //make sub-searches
+                        Collection<List<String>> partitionBaseList = partitionBasedOnSize(baseList, 1000);
+                        for (Iterator i = partitionBaseList.iterator(); i.hasNext();) {
+                            List<String> baseListPart = ((List<String>) i.next());
+                            participantESData = addParticipantESData(instance, baseListPart, participantESData, ElasticSearchUtil.BY_GUID, ElasticSearchUtil.BY_GUIDS);
+                            if (instance.isMigratedDDP()) {//also check for legacyAltPid
+                                participantESData = addParticipantESData(instance, baseListPart, participantESData, ElasticSearchUtil.BY_LEGACY_ALTPID, ElasticSearchUtil.BY_LEGACY_ALTPIDS);
+                            }
+                        }
+                    }
+                    else {
+                        //just search
+                        participantESData = addParticipantESData(instance, baseList, participantESData, ElasticSearchUtil.BY_GUID, ElasticSearchUtil.BY_GUIDS);
+                        if (instance.isMigratedDDP()) {//also check for legacyAltPid
+                            participantESData = addParticipantESData(instance, baseList, participantESData, ElasticSearchUtil.BY_LEGACY_ALTPID, ElasticSearchUtil.BY_LEGACY_ALTPIDS);
+                        }
                     }
                 }
                 else {
@@ -224,17 +236,36 @@ public class ParticipantWrapper {
                 proxyData = getProxyData(instance);
             }
 
-            //needed for RGP family member
-            if (DDPInstanceDao.getRole(instance.getName(), DBConstants.ADD_FAMILY_MEMBER)) {
-                participantData = new AutomaticProbandDataCreator().setDefaultProbandDataIfNotExists(participantData, participantESData, instance);
-            }
-
             baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
+
+            sortBySelfElseById(participantData);
 
             //bring together all the information
             List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistories, kitRequests, abstractionActivities, abstractionSummary, proxyData, participantData);
             return r;
         }
+    }
+
+    private static <String> Collection<List<String>> partitionBasedOnSize(List<String> inputList, int size) {
+        final AtomicInteger counter = new AtomicInteger(0);
+        return inputList.stream()
+                .collect(Collectors.groupingBy(s -> counter.getAndIncrement()/size))
+                .values();
+    }
+
+    private static Map<String, Map<String, Object>> addParticipantESData(DDPInstance instance, List<String> baseList, Map<String, Map<String, Object>> participantESData, String andCommand, String orCommand) {
+        String filterLegacy = Arrays.stream(baseList.toArray(new String[0])).collect(Collectors.joining(orCommand));
+        Map<String, Map<String, Object>> tmp = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, andCommand + filterLegacy);
+        return Stream.of(participantESData, tmp).flatMap(m -> m.entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private static void sortBySelfElseById(Map<String, List<ParticipantData>> participantData) {
+        participantData.values().forEach(pDataList -> pDataList.sort((o1, o2) -> {
+            Map<String, String> pData = new Gson().fromJson(o1.getData(), new TypeToken<Map<String, String>>() {}.getType());
+            if (Objects.nonNull(pData) && FamilyMemberConstants.MEMBER_TYPE_SELF.equals(pData.get(FamilyMemberConstants.MEMBER_TYPE))) return -1;
+            return Integer.parseInt(o1.getDataId()) - Integer.parseInt(o2.getDataId());
+        }));
     }
 
     public static Optional<ParticipantWrapper> getParticipantFromESByHruid(DDPInstance ddpInstanceByRealm, String participantHruid) {

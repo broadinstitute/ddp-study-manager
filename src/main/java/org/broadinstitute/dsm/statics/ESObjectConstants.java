@@ -47,4 +47,6 @@ public class ESObjectConstants {
     public static final String FIRST_NAME = "firstName";
     public static final String LAST_NAME = "lastName";
     public static final String GUID = "guid";
+    public static final String HRUID = "hruid";
+    public static final String LEGACY_ALTPID = "legacyAltPid";
 }

@@ -1,20 +1,19 @@
 package org.broadinstitute.dsm.route.familymember;
 
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import com.google.gson.Gson;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.db.User;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
-import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
-import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
-import org.broadinstitute.dsm.model.participant.data.NewParticipantData;
+import org.broadinstitute.dsm.model.Study;
+import org.broadinstitute.dsm.model.familymember.AddFamilyMember;
 import org.broadinstitute.dsm.model.participant.data.AddFamilyMemberPayload;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
+import org.broadinstitute.dsm.model.participant.data.ParticipantData;
+import org.broadinstitute.dsm.model.rgp.RgpAddFamilyMember;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
@@ -31,7 +30,7 @@ public class AddFamilyMemberRoute extends RequestHandler {
         Gson gson = new Gson();
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(request.body(), AddFamilyMemberPayload.class);
 
-        String participantGuid = addFamilyMemberPayload.getParticipantId()
+        String participantId = addFamilyMemberPayload.getParticipantId()
                 .orElseThrow(() -> new NoSuchElementException("Participant Guid is not provided"));
 
         String realm =
@@ -42,12 +41,11 @@ public class AddFamilyMemberRoute extends RequestHandler {
             logger.warn("Study : " + realm + " is not setup to add family member");
             return new Result(400, "Study is not setup to add family member");
         }
-        String ddpInstanceId = DDPInstance.getDDPInstance(realm).getDdpInstanceId();
 
         Optional<FamilyMemberDetails> maybeFamilyMemberData = addFamilyMemberPayload.getData();
         if (maybeFamilyMemberData.isEmpty() || maybeFamilyMemberData.orElseGet(FamilyMemberDetails::new).isFamilyMemberFieldsEmpty()) {
             response.status(400);
-            logger.warn("Family member information for participant : " + participantGuid + " is not provided");
+            logger.warn("Family member information for participant : " + participantId + " is not provided");
             return new Result(400, "Family member information is not provided");
         }
 
@@ -58,25 +56,9 @@ public class AddFamilyMemberRoute extends RequestHandler {
         }
 
         ParticipantDataDao participantDataDao = new ParticipantDataDao();
-        try {
-            NewParticipantData participantDataObject = new NewParticipantData(participantDataDao);
-            participantDataObject.setDdpParticipantId(participantGuid);
-            participantDataObject.setDdpInstanceId(Integer.parseInt(ddpInstanceId));
-            participantDataObject.setFieldTypeId(realm.toUpperCase() + NewParticipantData.FIELD_TYPE);
-            participantDataObject.setData(participantDataObject.mergeParticipantData(addFamilyMemberPayload));
-            participantDataObject.addDefaultOptionsValueToData(getDefaultOptions(Integer.parseInt(ddpInstanceId)));
-            participantDataObject.insertParticipantData(User.getUser(uId).getEmail());
-            logger.info("Family member for participant " + participantGuid + " successfully created");
-        } catch (Exception e) {
-            throw new RuntimeException("Could not create family member " + e);
-        }
-        return NewParticipantData.parseDtoList(participantDataDao.getParticipantDataByParticipantId(participantGuid));
-    }
-
-    private Map<String, String> getDefaultOptions(int ddpInstanceId) {
-        FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
-        FieldSettings fieldSettings = new FieldSettings();
-        return fieldSettings.getColumnsWithDefaultOptions(fieldSettingsDao.getFieldSettingsByOptionAndInstanceId(ddpInstanceId));
+        AddFamilyMember addFamilyMember = AddFamilyMember.instance(Study.valueOf(realm.toUpperCase()),addFamilyMemberPayload);
+        long createdFamilyMemberId = addFamilyMember.add();
+        return ParticipantData.parseDto(participantDataDao.get(createdFamilyMemberId).orElseThrow());
     }
 
 

@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.route;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -10,8 +11,10 @@ import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantRecordDao;
+import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantRecordDto;
+import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.exception.DuplicateException;
 import org.broadinstitute.dsm.export.WorkflowForES;
@@ -19,6 +22,7 @@ import org.broadinstitute.dsm.model.AbstractionWrapper;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Patch;
 import org.broadinstitute.dsm.model.Value;
+import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -36,7 +40,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+//Class needs to be refactored as soon as possible!!!
 public class PatchRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PatchRoute.class);
@@ -76,7 +83,7 @@ public class PatchRoute extends RequestHandler {
                                     return new RuntimeException("An error occurred while attempting to patch ");
                                 }
                                 if (nameValue.getName().indexOf("question") > -1) {
-                                    User user = User.getUser(patch.getUser());
+                                    UserDto userDto = new UserDao().getUserByEmail(patch.getUser()).orElseThrow();
                                     JSONObject jsonObject = new JSONObject(nameValue.getValue().toString());
                                     JSONArray questionArray = new JSONArray(jsonObject.get("questions").toString());
                                     boolean writeBack = false;
@@ -84,7 +91,7 @@ public class PatchRoute extends RequestHandler {
                                         JSONObject question = questionArray.getJSONObject(i);
                                         if (question.optString(STATUS) != null && question.optString(STATUS).equals("sent")) {
                                             if (question.optString("email") != null && question.optString("question") != null) {
-                                                notificationUtil.sentAbstractionExpertQuestion(user.getEmail(), user.getName(), question.optString("email"),
+                                                notificationUtil.sentAbstractionExpertQuestion(userDto.getEmail().orElse(""), userDto.getName().orElse(""), question.optString("email"),
                                                         patch.getFieldName(), question.optString("question"), notificationUtil.getTemplate("DSM_ABSTRACTION_EXPERT_QUESTION"));
                                             }
                                             question.put(STATUS, "done");
@@ -101,6 +108,7 @@ public class PatchRoute extends RequestHandler {
                                         nameValues.add(nameValue);
                                     }
                                 }
+                                controlWorkflowByEmail(patch, nameValue);
                                 if (patch.getActions() != null) {
                                     for (Value action : patch.getActions()) {
                                         if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
@@ -283,7 +291,9 @@ public class PatchRoute extends RequestHandler {
                         insertDdpParticipantRecord(participantId);
                         if (participantId > 0) {
                             DBElement dbElement = patchUtil.getColumnNameMap().get(patch.getNameValue().getName());
-                            if (dbElement == null) throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
+                            if (dbElement == null) {
+                                throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
+                            }
                             Patch.patch(String.valueOf(participantId), patch.getUser(), patch.getNameValue(), dbElement);
                             return new Result(200, new GsonBuilder().serializeNulls().create().toJson(Map.of(PARTICIPANT_ID, String.valueOf(participantId))));
                         }
@@ -301,6 +311,52 @@ public class PatchRoute extends RequestHandler {
         else {
             response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
+        }
+    }
+
+    private void controlWorkflowByEmail(Patch patch, NameValue nameValue) {
+        try {
+            Map<String, String> pData = new Gson().fromJson(nameValue.getValue().toString(), Map.class);
+            DDPInstance ddpInstanceByGuid = Objects.requireNonNull(DDPInstance.getDDPInstanceByGuid(patch.getRealm()));
+            org.broadinstitute.dsm.model.participant.data.ParticipantData participantData =
+                    new org.broadinstitute.dsm.model.participant.data.ParticipantData(Integer.parseInt(patch.getId()),
+                            patch.getParentId(), Integer.parseInt(ddpInstanceByGuid.getDdpInstanceId()), patch.getFieldId(),
+                            pData);
+            if (participantData.hasFamilyMemberApplicantEmail()) {
+                int ddpInstanceIdByGuid = Integer.parseInt(ddpInstanceByGuid.getDdpInstanceId());
+                FieldSettings fieldSettings = new FieldSettings();
+                pData.forEach((columnName,columnValue) -> {
+                    if (!fieldSettings.isColumnExportable(ddpInstanceIdByGuid, columnName)) return;
+                    if (!patch.getFieldId().contains(org.broadinstitute.dsm.model.participant.data.ParticipantData.FIELD_TYPE)) return;
+                    ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstanceByGuid,
+                            patch.getParentId(), columnName, columnValue, new WorkflowForES.StudySpecificData(
+                                    pData.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+                                    pData.get(FamilyMemberConstants.FIRSTNAME),
+                                    pData.get(FamilyMemberConstants.LASTNAME))), false);
+                });
+            } else {
+                Map<String, Object> esMap = ElasticSearchUtil
+                        .getObjectsMap(ddpInstanceByGuid.getParticipantIndexES(), patch.getParentId(),
+                                ESObjectConstants.WORKFLOWS);
+                if (Objects.isNull(esMap)) return;
+                CopyOnWriteArrayList<Map<String, Object>> workflowsList = new CopyOnWriteArrayList<>((List<Map<String, Object>>)esMap.get(ESObjectConstants.WORKFLOWS));
+                int startingSize = workflowsList.size();
+                workflowsList.forEach(workflow -> {
+                    Map<String, String> workflowDataMap = (Map<String, String>) workflow.get(ESObjectConstants.DATA);
+                    String collaboratorParticipantId = workflowDataMap.get(ESObjectConstants.SUBJECT_ID);
+                    if (Objects.isNull(collaboratorParticipantId)) return;
+                    if (collaboratorParticipantId.equals(pData.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID))) {
+                        workflowsList.remove(workflow);
+                    }
+                });
+                if (startingSize != workflowsList.size()) {
+                    esMap.put(ESObjectConstants.WORKFLOWS, workflowsList);
+                    ElasticSearchUtil.updateRequest(patch.getParentId(), ddpInstanceByGuid.getParticipantIndexES(), esMap);
+                }
+            }
+        } catch (JsonSyntaxException ignored) {
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -327,7 +383,13 @@ public class PatchRoute extends RequestHandler {
         DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
         NameValue nameValue = patch.getNameValue();
         String name = nameValue.getName().substring(nameValue.getName().lastIndexOf('.') + 1);
-        String type = nameValue.getName().substring(0, nameValue.getName().indexOf('.'));
+        String type = null;
+        if (nameValue.getName().indexOf('.') != -1) {
+            type = nameValue.getName().substring(0, nameValue.getName().indexOf('.'));
+        }
+        else {
+            return;
+        }
         String value = nameValue.getValue().toString();
         Map<String, Object> nameValueMap = new HashMap<>();
         nameValueMap.put(name, value);
@@ -336,7 +398,8 @@ public class PatchRoute extends RequestHandler {
                 ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getParentId(),
                         ESObjectConstants.MEDICAL_RECORDS, ESObjectConstants.MEDICAL_RECORDS_ID, nameValueMap);
             }
-        } else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(type)) {
+        }
+        else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(type)) {
             if (ESObjectConstants.TISSUE_RECORDS_FIELD_NAMES.contains(name)) {
                 ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getParentId(),
                         ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, nameValueMap);
@@ -350,28 +413,32 @@ public class PatchRoute extends RequestHandler {
         if (StringUtils.isBlank(status)) {
             return;
         }
-        Map<String,String> data = new Gson().fromJson(status, new TypeToken<Map<String, String>>(){}.getType());
+        Map<String, String> data = new Gson().fromJson(status, new TypeToken<Map<String, String>>() {
+        }.getType());
         if (StringUtils.isNotBlank(action.getValue())) {
-            if (patch.getFieldId().contains(FamilyMemberConstants.GROUP)) {
-                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, patch.getParentId(), action.getName(), action.getValue()));
-            } else if (ParticipantUtil.checkProbandEmail(data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
-                    participantDataDao.getParticipantDataByParticipantId(patch.getParentId()))) {
-                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance,
-                        patch.getParentId(), action.getName(), data.get(action.getName()), new WorkflowForES.StudySpecificData(
-                                data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
-                                data.get(FamilyMemberConstants.FIRSTNAME),
-                                data.get(FamilyMemberConstants.LASTNAME))));
+            if (!patch.getFieldId().contains(FamilyMemberConstants.PARTICIPANTS)) {
+                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, patch.getParentId(), action.getName(), action.getValue()), false);
             }
-        } else if (StringUtils.isNotBlank(action.getName()) && data.containsKey(action.getName())) {
-            if (patch.getFieldId().contains(FamilyMemberConstants.GROUP)) {
-                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, patch.getParentId(), action.getName(), data.get(action.getName())));
-            } else if (ParticipantUtil.checkProbandEmail(data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+            else if (ParticipantUtil.checkApplicantEmail(data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                     participantDataDao.getParticipantDataByParticipantId(patch.getParentId()))) {
                 ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance,
                         patch.getParentId(), action.getName(), data.get(action.getName()), new WorkflowForES.StudySpecificData(
                                 data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                                 data.get(FamilyMemberConstants.FIRSTNAME),
-                                data.get(FamilyMemberConstants.LASTNAME))));
+                                data.get(FamilyMemberConstants.LASTNAME))), false);
+            }
+        }
+        else if (StringUtils.isNotBlank(action.getName()) && data.containsKey(action.getName())) {
+            if (!patch.getFieldId().contains(FamilyMemberConstants.PARTICIPANTS)) {
+                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, patch.getParentId(), action.getName(), data.get(action.getName())), false);
+            }
+            else if (ParticipantUtil.checkApplicantEmail(data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+                    participantDataDao.getParticipantDataByParticipantId(patch.getParentId()))) {
+                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance,
+                        patch.getParentId(), action.getName(), data.get(action.getName()), new WorkflowForES.StudySpecificData(
+                                data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+                                data.get(FamilyMemberConstants.FIRSTNAME),
+                                data.get(FamilyMemberConstants.LASTNAME))), false);
             }
         }
     }

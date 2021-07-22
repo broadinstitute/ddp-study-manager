@@ -15,7 +15,7 @@
     <changeSet id="RGPdefaultColumns" author="ikhaladz" >
         <sql>
             UPDATE instance_settings
-            SET default_columns = '[{"value":"REALM},{"value":"SHORT_ID"},{"value":"ENROLLMENT_STATUS"}]'
+            SET default_columns = '[{"value":"REALM"},{"value":"SHORT_ID"},{"value":"ENROLLMENT_STATUS"}]'
             WHERE
             ddp_instance_id = (SELECT DDP_instance_id FROM ddp_instance WHERE study_guid = 'RGP')
         </sql>
