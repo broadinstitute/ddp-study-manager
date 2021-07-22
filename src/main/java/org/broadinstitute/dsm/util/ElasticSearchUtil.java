@@ -44,6 +44,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.color.ICC_ColorSpace;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -607,7 +608,7 @@ public class ElasticSearchUtil {
 
     private static void updateRequest(@NonNull String ddpParticipantId, String index, Map<String, Object> objectsMapES,
                                       RestHighLevelClient client) throws IOException {
-        String participantId = ParticipantUtil.isGuid(ddpParticipantId) ? ddpParticipantId : getParticipantESDataByAltpid(index, ddpParticipantId)
+        String participantId = ParticipantUtil.isGuid(ddpParticipantId) ? ddpParticipantId : getParticipantESDataByAltpid(client, index, ddpParticipantId)
                 .getProfile()
                 .map(ESProfile::getParticipantGuid)
                 .orElse(ddpParticipantId);
@@ -620,6 +621,21 @@ public class ElasticSearchUtil {
                 .retryOnConflict(5);
 
         UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+    }
+
+    private static ElasticSearch getParticipantESDataByAltpid(RestHighLevelClient client, String index, String altpid) {
+        ElasticSearch elasticSearch = new ElasticSearch.Builder().build();
+
+        logger.info("Getting ES data for participant: " + altpid);
+        try {
+            elasticSearch = fetchESDataByAltpid(index, altpid, client);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Couldn't get ES for participant: " + altpid + " from " + index, e);
+        }
+        logger.info("Got ES data for participant: " + altpid + " from " + index);
+
+        return elasticSearch;
     }
 
     public static void updateRequest(RestHighLevelClient client, @NonNull String ddpParticipantId, String index, Map<String, Object> objectsMapES) throws IOException {
