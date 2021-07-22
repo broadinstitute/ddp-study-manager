@@ -319,15 +319,9 @@ public class PatchRoute extends RequestHandler {
         try {
             Map<String, String> pData = new Gson().fromJson(nameValue.getValue().toString(), Map.class);
             DDPInstance ddpInstanceByGuid = Objects.requireNonNull(DDPInstance.getDDPInstanceByGuid(patch.getRealm()));
-            String ddpParticipantId = ParticipantUtil.isGuid(patch.getParentId())
-                    ? patch.getParentId()
-                    : ElasticSearchUtil.getParticipantESDataByAltpid(ddpInstanceByGuid.getParticipantIndexES(),patch.getParentId())
-                        .getProfile()
-                        .map(ESProfile::getParticipantGuid)
-                        .orElse(patch.getParentId());
             org.broadinstitute.dsm.model.participant.data.ParticipantData participantData =
                     new org.broadinstitute.dsm.model.participant.data.ParticipantData(Integer.parseInt(patch.getId()),
-                            ddpParticipantId, Integer.parseInt(ddpInstanceByGuid.getDdpInstanceId()), patch.getFieldId(),
+                            patch.getParentId(), Integer.parseInt(ddpInstanceByGuid.getDdpInstanceId()), patch.getFieldId(),
                             pData);
             if (participantData.hasFamilyMemberApplicantEmail()) {
                 int ddpInstanceIdByGuid = Integer.parseInt(ddpInstanceByGuid.getDdpInstanceId());
@@ -336,14 +330,14 @@ public class PatchRoute extends RequestHandler {
                     if (!fieldSettings.isColumnExportable(ddpInstanceIdByGuid, columnName)) return;
                     if (!patch.getFieldId().contains(org.broadinstitute.dsm.model.participant.data.ParticipantData.FIELD_TYPE)) return;
                     ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstanceByGuid,
-                            ddpParticipantId, columnName, columnValue, new WorkflowForES.StudySpecificData(
+                            patch.getParentId(), columnName, columnValue, new WorkflowForES.StudySpecificData(
                                     pData.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                                     pData.get(FamilyMemberConstants.FIRSTNAME),
                                     pData.get(FamilyMemberConstants.LASTNAME))), false);
                 });
             } else {
                 Map<String, Object> esMap = ElasticSearchUtil
-                        .getObjectsMap(ddpInstanceByGuid.getParticipantIndexES(), ddpParticipantId,
+                        .getObjectsMap(ddpInstanceByGuid.getParticipantIndexES(), patch.getParentId(),
                                 ESObjectConstants.WORKFLOWS);
                 if (Objects.isNull(esMap)) return;
                 CopyOnWriteArrayList<Map<String, Object>> workflowsList = new CopyOnWriteArrayList<>((List<Map<String, Object>>)esMap.get(ESObjectConstants.WORKFLOWS));
@@ -358,7 +352,7 @@ public class PatchRoute extends RequestHandler {
                 });
                 if (startingSize != workflowsList.size()) {
                     esMap.put(ESObjectConstants.WORKFLOWS, workflowsList);
-                    ElasticSearchUtil.updateRequest(ddpParticipantId, ddpInstanceByGuid.getParticipantIndexES(), esMap);
+                    ElasticSearchUtil.updateRequest(patch.getParentId(), ddpInstanceByGuid.getParticipantIndexES(), esMap);
                 }
             }
         } catch (JsonSyntaxException ignored) {

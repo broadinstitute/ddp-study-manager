@@ -600,30 +600,31 @@ public class ElasticSearchUtil {
     public static void updateRequest(@NonNull String ddpParticipantId, String index, Map<String, Object> objectsMapES) throws IOException {
         try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
                 TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
-            UpdateRequest updateRequest = new UpdateRequest()
-                    .index(index)
-                    .type("_doc")
-                    .id(ddpParticipantId)
-                    .doc(objectsMapES)
-                    .docAsUpsert(true)
-                    .retryOnConflict(5);
-
-            UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+            updateRequest(ddpParticipantId, index, objectsMapES, client);
 
         }
     }
 
+    private static void updateRequest(@NonNull String ddpParticipantId, String index, Map<String, Object> objectsMapES,
+                                      RestHighLevelClient client) throws IOException {
+        String participantId = ParticipantUtil.isGuid(ddpParticipantId) ? ddpParticipantId : getParticipantESDataByAltpid(index, ddpParticipantId)
+                .getProfile()
+                .map(ESProfile::getParticipantGuid)
+                .orElse(ddpParticipantId);
+        UpdateRequest updateRequest = new UpdateRequest()
+                .index(index)
+                .type("_doc")
+                .id(participantId)
+                .doc(objectsMapES)
+                .docAsUpsert(true)
+                .retryOnConflict(5);
+
+        UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+    }
+
     public static void updateRequest(RestHighLevelClient client, @NonNull String ddpParticipantId, String index, Map<String, Object> objectsMapES) throws IOException {
         if (client != null) {
-            UpdateRequest updateRequest = new UpdateRequest()
-                    .index(index)
-                    .type("_doc")
-                    .id(ddpParticipantId)
-                    .doc(objectsMapES)
-                    .docAsUpsert(true)
-                    .retryOnConflict(5);
-
-            UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+            updateRequest(ddpParticipantId, index, objectsMapES, client);
         }
         else {
             logger.error("RestHighLevelClient was null");
