@@ -74,7 +74,6 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                 " ))";
         String SQL_AVOID_DELIVERED = " and (tracking_to_id is not null or tracking_return_id is not null ) and kit.test_result is null " +
                 " and ( ups_status_description is null or ups_status_description not like \"%Delivered%\") "+
-                " and  from_unixtime(created_date/1000) > NOW() - INTERVAL 180 DAY"+
                 " and (kit.ups_tracking_status is null or kit.ups_tracking_status not like \"%Delivered%\" or kit.ups_return_status is null or kit.ups_return_status not like \"%Delivered%\") " +
                 " order by kit.dsm_kit_request_id ASC LIMIT ?";
         logger.info("Starting the UPS lookup job");
