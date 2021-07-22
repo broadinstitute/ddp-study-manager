@@ -161,6 +161,9 @@ public class ParticipantWrapper {
                     //                    baseList = getCommonEntries(baseList, new ArrayList<>(abstractionSummary.keySet()));
                     //                }
                     else { //source is not of any study-manager table so it must be ES
+                        String wholeFilter = filters.get(source);
+                        String[] ands = wholeFilter.split("AND");
+                        int or = Arrays.stream(ands).flatMap(and -> Arrays.stream(and.split("OR"))).collect(Collectors.toList()).size();
                         participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filters.get(source));
                         baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
                     }
