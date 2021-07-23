@@ -119,23 +119,23 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
                                        String ddpParticipantId, List<ParticipantDataDto> participantDataFamily, Map<String, String> dataMap,
                                        AtomicBoolean clearBeforeUpdate) {
         if (participantData.getFieldTypeId().orElse("").equals(RGP_PARTICIPANTS)) {
-            if (!ParticipantUtil.checkApplicantEmail(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID), participantDataFamily)) {
-                //TODO doesn't match applicant Email  => remove from ES
-                //TODO workflow object doesn't have a data object => remove from ES
-                return;
+            String collaboratorParticipantId = dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID);
+            if (!ParticipantUtil.matchesApplicantEmail(collaboratorParticipantId, participantDataFamily)) {
+                ElasticSearchUtil.removeWorkflowIfNoDataOrWrongSubject(client, ddpParticipantId, ddpInstance, collaboratorParticipantId);
+            } else {
+                //is matching applicant email => write into ES
+                WorkflowForES.StudySpecificData studySpecificData = new WorkflowForES.StudySpecificData(
+                        collaboratorParticipantId,
+                        dataMap.get(FamilyMemberConstants.FIRSTNAME),
+                        dataMap.get(FamilyMemberConstants.LASTNAME)
+                );
+                dataMap.entrySet().stream().filter(entry -> workFlowColumnNames.contains(entry.getKey()))
+                        .forEach(entry -> {
+                            ElasticSearchUtil.writeWorkflow(client, WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
+                                    entry.getKey(), entry.getValue(), studySpecificData), clearBeforeUpdate.get());
+                            clearBeforeUpdate.set(false);
+                        });
             }
-            //is matching applicant email => write into ES
-            WorkflowForES.StudySpecificData studySpecificData = new WorkflowForES.StudySpecificData(
-                    dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
-                    dataMap.get(FamilyMemberConstants.FIRSTNAME),
-                    dataMap.get(FamilyMemberConstants.LASTNAME)
-            );
-            dataMap.entrySet().stream().filter(entry -> workFlowColumnNames.contains(entry.getKey()))
-                    .forEach(entry -> {
-                        ElasticSearchUtil.writeWorkflow(client, WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
-                                entry.getKey(), entry.getValue(), studySpecificData), clearBeforeUpdate.get());
-                        clearBeforeUpdate.set(false);
-                    });
         } else {
             dataMap.entrySet().stream().filter(entry -> workFlowColumnNames.contains(entry.getKey()))
                     .forEach(entry -> {
