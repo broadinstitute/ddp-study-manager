@@ -122,20 +122,20 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
             String collaboratorParticipantId = dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID);
             if (!ParticipantUtil.matchesApplicantEmail(collaboratorParticipantId, participantDataFamily)) {
                 ElasticSearchUtil.removeWorkflowIfNoDataOrWrongSubject(client, ddpParticipantId, ddpInstance, collaboratorParticipantId);
-                return;
+            } else {
+                //is matching applicant email => write into ES
+                WorkflowForES.StudySpecificData studySpecificData = new WorkflowForES.StudySpecificData(
+                        collaboratorParticipantId,
+                        dataMap.get(FamilyMemberConstants.FIRSTNAME),
+                        dataMap.get(FamilyMemberConstants.LASTNAME)
+                );
+                dataMap.entrySet().stream().filter(entry -> workFlowColumnNames.contains(entry.getKey()))
+                        .forEach(entry -> {
+                            ElasticSearchUtil.writeWorkflow(client, WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
+                                    entry.getKey(), entry.getValue(), studySpecificData), clearBeforeUpdate.get());
+                            clearBeforeUpdate.set(false);
+                        });
             }
-            //is matching applicant email => write into ES
-            WorkflowForES.StudySpecificData studySpecificData = new WorkflowForES.StudySpecificData(
-                    collaboratorParticipantId,
-                    dataMap.get(FamilyMemberConstants.FIRSTNAME),
-                    dataMap.get(FamilyMemberConstants.LASTNAME)
-            );
-            dataMap.entrySet().stream().filter(entry -> workFlowColumnNames.contains(entry.getKey()))
-                    .forEach(entry -> {
-                        ElasticSearchUtil.writeWorkflow(client, WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
-                                entry.getKey(), entry.getValue(), studySpecificData), clearBeforeUpdate.get());
-                        clearBeforeUpdate.set(false);
-                    });
         } else {
             dataMap.entrySet().stream().filter(entry -> workFlowColumnNames.contains(entry.getKey()))
                     .forEach(entry -> {
