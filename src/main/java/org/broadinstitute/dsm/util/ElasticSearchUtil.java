@@ -408,6 +408,9 @@ public class ElasticSearchUtil {
                         updateWorkflow(workflow, status, workflowListES);
                     }
                 }
+                else {
+                    workflowMapES = addWorkflows(workflow, status, workflowForES.getStudySpecificData());
+                }
             }
             else {
                 workflowMapES = addWorkflows(workflow, status, workflowForES.getStudySpecificData());

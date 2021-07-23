@@ -120,8 +120,11 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
                                        AtomicBoolean clearBeforeUpdate) {
         if (participantData.getFieldTypeId().orElse("").equals(RGP_PARTICIPANTS)) {
             if (!ParticipantUtil.checkApplicantEmail(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID), participantDataFamily)) {
+                //TODO doesn't match applicant Email  => remove from ES
+                //TODO workflow object doesn't have a data object => remove from ES
                 return;
             }
+            //is matching applicant email => write into ES
             WorkflowForES.StudySpecificData studySpecificData = new WorkflowForES.StudySpecificData(
                     dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                     dataMap.get(FamilyMemberConstants.FIRSTNAME),
