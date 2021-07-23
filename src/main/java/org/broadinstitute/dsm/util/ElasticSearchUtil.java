@@ -419,7 +419,6 @@ public class ElasticSearchUtil {
             else {
                 updateRequest(ddpParticipantId, index, workflowMapES);
             }
-            logger.info("Update workflow information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName());
         }
         catch (Exception e) {
             logger.error("Couldn't write workflow information for participant " + ddpParticipantId + " to ES index " + instance.getParticipantIndexES() + " for instance " + instance.getName(), e);
@@ -632,6 +631,7 @@ public class ElasticSearchUtil {
                 .retryOnConflict(5);
 
         UpdateResponse updateResponse = client.update(updateRequest, RequestOptions.DEFAULT);
+        logger.info("Update workflow information for participant " + ddpParticipantId + " to ES index " + index);
     }
 
     private static ElasticSearch getParticipantESDataByAltpid(RestHighLevelClient client, String index, String altpid) {
