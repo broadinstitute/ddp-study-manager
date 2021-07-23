@@ -419,7 +419,7 @@ public class PatchRoute extends RequestHandler {
             if (!patch.getFieldId().contains(FamilyMemberConstants.PARTICIPANTS)) {
                 ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, patch.getParentId(), action.getName(), action.getValue()), false);
             }
-            else if (ParticipantUtil.checkApplicantEmail(data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+            else if (ParticipantUtil.matchesApplicantEmail(data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                     participantDataDao.getParticipantDataByParticipantId(patch.getParentId()))) {
                 ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance,
                         patch.getParentId(), action.getName(), data.get(action.getName()), new WorkflowForES.StudySpecificData(
@@ -432,7 +432,7 @@ public class PatchRoute extends RequestHandler {
             if (!patch.getFieldId().contains(FamilyMemberConstants.PARTICIPANTS)) {
                 ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, patch.getParentId(), action.getName(), data.get(action.getName())), false);
             }
-            else if (ParticipantUtil.checkApplicantEmail(data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+            else if (ParticipantUtil.matchesApplicantEmail(data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                     participantDataDao.getParticipantDataByParticipantId(patch.getParentId()))) {
                 ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance,
                         patch.getParentId(), action.getName(), data.get(action.getName()), new WorkflowForES.StudySpecificData(

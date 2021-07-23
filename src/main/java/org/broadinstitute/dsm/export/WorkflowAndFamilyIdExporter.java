@@ -119,14 +119,14 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
                                        String ddpParticipantId, List<ParticipantDataDto> participantDataFamily, Map<String, String> dataMap,
                                        AtomicBoolean clearBeforeUpdate) {
         if (participantData.getFieldTypeId().orElse("").equals(RGP_PARTICIPANTS)) {
-            if (!ParticipantUtil.checkApplicantEmail(dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID), participantDataFamily)) {
-                //TODO doesn't match applicant Email  => remove from ES
-                //TODO workflow object doesn't have a data object => remove from ES
+            String collaboratorParticipantId = dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID);
+            if (!ParticipantUtil.matchesApplicantEmail(collaboratorParticipantId, participantDataFamily)) {
+                ElasticSearchUtil.removeWorkflowIfNoDataOrWrongSubject(client, ddpParticipantId, ddpInstance, collaboratorParticipantId);
                 return;
             }
             //is matching applicant email => write into ES
             WorkflowForES.StudySpecificData studySpecificData = new WorkflowForES.StudySpecificData(
-                    dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+                    collaboratorParticipantId,
                     dataMap.get(FamilyMemberConstants.FIRSTNAME),
                     dataMap.get(FamilyMemberConstants.LASTNAME)
             );

@@ -382,6 +382,33 @@ public class ElasticSearchUtil {
         }
     }
 
+    public static void removeWorkflowIfNoDataOrWrongSubject(RestHighLevelClient client, String ddpParticipantId, DDPInstance ddpInstance, String collaboratorParticipantId) {
+        String index = ddpInstance.getParticipantIndexES();
+        try {
+            Map<String, Object> workflowMapES = getObjectsMapHavingClient(client, index, ddpParticipantId, ESObjectConstants.WORKFLOWS);
+            if (workflowMapES == null || workflowMapES.isEmpty()) {
+                return;
+            }
+            List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflowMapES.get(ESObjectConstants.WORKFLOWS);
+            int initialListSize = workflowListES.size();
+            workflowListES.removeIf(workflow -> !workflow.containsKey("data") ||
+                    (((Map<String, Object>) workflow.get("data")).get("subjectId") != null
+                            && ((Map<String, Object>) workflow.get("data")).get("subjectId").equals(collaboratorParticipantId)));
+            if (workflowListES.size() == initialListSize) {
+                return;
+            }
+            if (client != null) {
+                updateRequest(client, ddpParticipantId, index, workflowMapES);
+            }
+            else {
+                updateRequest(ddpParticipantId, index, workflowMapES);
+            }
+        }
+        catch (Exception e) {
+            logger.error("Couldn't remove workflows for participant " + ddpParticipantId + " to ES index " + ddpInstance.getParticipantIndexES() + " for instance " + ddpInstance.getName(), e);
+        }
+    }
+
     public static void writeWorkflow(RestHighLevelClient client, @NonNull WorkflowForES workflowForES, boolean clearBeforeUpdate) {
         String ddpParticipantId = workflowForES.getDdpParticipantId();
         DDPInstance instance = workflowForES.getInstance();
@@ -396,7 +423,7 @@ public class ElasticSearchUtil {
                     .map(ESProfile::getParticipantGuid)
                     .orElse(ddpParticipantId);
 
-            Map<String, Object> workflowMapES = getObjectsMap(index, participantId, ESObjectConstants.WORKFLOWS);
+            Map<String, Object> workflowMapES = getObjectsMapHavingClient(client, index, participantId, ESObjectConstants.WORKFLOWS);
             String workflow = workflowForES.getWorkflow();
             String status = workflowForES.getStatus();
             if (workflowMapES != null && !workflowMapES.isEmpty() && !clearBeforeUpdate) {
@@ -523,7 +550,7 @@ public class ElasticSearchUtil {
         String index = instance.getParticipantIndexES();
         try {
             if (StringUtils.isNotBlank(index)) {
-                Map<String, Object> objectsMapES = getObjectsMap(index, ddpParticipantId, ESObjectConstants.DSM);
+                Map<String, Object> objectsMapES = getObjectsMapHavingClient(client, index, ddpParticipantId, ESObjectConstants.DSM);
                 if (ESObjectConstants.FAMILY_ID.equals(objectType)) {
                     if (objectsMapES != null && !objectsMapES.isEmpty()) {
                         Map<String, Object> esDsmObjectMap = (Map<String, Object>) objectsMapES.get(ESObjectConstants.DSM);
@@ -565,10 +592,18 @@ public class ElasticSearchUtil {
                                    @NonNull String ddpParticipantId,
                                    @NonNull String objectType,
                                    String idName, Map<String, Object> nameValues) {
+        writeSample(null, instance, id, ddpParticipantId, objectType, idName, nameValues);
+    }
+
+    public static void writeSample(RestHighLevelClient client, @NonNull DDPInstance instance,
+                                   @NonNull String id,
+                                   @NonNull String ddpParticipantId,
+                                   @NonNull String objectType,
+                                   String idName, Map<String, Object> nameValues) {
         String index = instance.getParticipantIndexES();
         try {
             if (StringUtils.isNotBlank(index)) {
-                Map<String, Object> objectsMapES = getObjectsMap(index, ddpParticipantId, objectType);
+                Map<String, Object> objectsMapES = getObjectsMapHavingClient(client, index, ddpParticipantId, objectType);
                 if (objectsMapES != null && !objectsMapES.isEmpty()) {
                     updateOrCreateMap(id, objectType, nameValues, idName, objectsMapES);
                 } else {
@@ -578,7 +613,7 @@ public class ElasticSearchUtil {
                     objectsMapES.put(objectType, objectList);
                 }
 
-                updateRequest(ddpParticipantId, index, objectsMapES);
+                updateRequest(client, ddpParticipantId, index, objectsMapES);
                 logger.info("Updated " + objectType + " information for participant " + ddpParticipantId + " in ES for instance " + instance.getName());
             }
         } catch (Exception e) {
@@ -672,23 +707,39 @@ public class ElasticSearchUtil {
         objectList.add(newObjectMap);
     }
 
+    public static Map<String, Object> getObjectsMapHavingClient(RestHighLevelClient client, String index, String id, String object) throws Exception {
+        Map<String, Object> objectsMap = null;
+        if (client != null) {
+            objectsMap = getObjectsMap(client, index, id, object);
+            return objectsMap;
+        }
+        else {
+            logger.error("RestHighLevelClient was null");
+        }
+        return objectsMap;
+    }
+
+    public static Map<String, Object> getObjectsMap(RestHighLevelClient client, String index, String id, String object) throws Exception {
+        String[] includes = new String[] {object};
+        String[] excludes = Strings.EMPTY_ARRAY;
+        FetchSourceContext fetchSourceContext = new FetchSourceContext(true, includes, excludes);
+        GetRequest getRequest = new GetRequest()
+                .index(index)
+                .type("_doc")
+                .id(id)
+                .fetchSourceContext(fetchSourceContext);
+
+        GetResponse getResponse = null;
+        if (client.exists(getRequest, RequestOptions.DEFAULT)) {
+            getResponse = client.get(getRequest, RequestOptions.DEFAULT);
+        }
+        return getResponse != null ? getResponse.getSourceAsMap() : null;
+    }
+
     public static Map<String, Object> getObjectsMap(String index, String id, String object) throws Exception {
         try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
                 TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
-            String[] includes = new String[] {object};
-            String[] excludes = Strings.EMPTY_ARRAY;
-            FetchSourceContext fetchSourceContext = new FetchSourceContext(true, includes, excludes);
-            GetRequest getRequest = new GetRequest()
-                    .index(index)
-                    .type("_doc")
-                    .id(id)
-                    .fetchSourceContext(fetchSourceContext);
-
-            GetResponse getResponse = null;
-            if (client.exists(getRequest, RequestOptions.DEFAULT)) {
-                getResponse = client.get(getRequest, RequestOptions.DEFAULT);
-            }
-            return getResponse != null ? getResponse.getSourceAsMap() : null;
+            return getObjectsMap(client, index, id, object);
         }
     }
 
