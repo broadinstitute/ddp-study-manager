@@ -48,10 +48,6 @@ public class FamilyMemberDetails {
     @SerializedName(value = FamilyMemberConstants.EMAIL, alternate = "email")
     private String email;
 
-    @SerializedName(value = FamilyMemberConstants.IS_APPLICANT, alternate = "isApplicant")
-    private boolean isApplicant;
-
-
     public FamilyMemberDetails() {}
 
     public FamilyMemberDetails(String firstName, String lastName, String memberType, long familyId,
