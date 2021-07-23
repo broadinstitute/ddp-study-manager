@@ -392,7 +392,7 @@ public class ElasticSearchUtil {
             List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflowMapES.get(ESObjectConstants.WORKFLOWS);
             boolean removed = workflowListES.removeIf(workflow -> !workflow.containsKey(ESObjectConstants.DATA) ||
                     (((Map) workflow.get(ESObjectConstants.DATA)).get(ESObjectConstants.SUBJECT_ID) != null
-                            && collaboratorParticipantId.equals(((Map) workflow.get(ESObjectConstants.DATA)).get(ESObjectConstants.SUBJECT_ID))));
+                            && (collaboratorParticipantId != null && collaboratorParticipantId.equals(((Map) workflow.get(ESObjectConstants.DATA)).get(ESObjectConstants.SUBJECT_ID)))));
             if (!removed) {
                 return;
             }
