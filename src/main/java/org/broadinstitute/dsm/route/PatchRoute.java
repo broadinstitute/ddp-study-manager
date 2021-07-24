@@ -22,6 +22,7 @@ import org.broadinstitute.dsm.model.AbstractionWrapper;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Patch;
 import org.broadinstitute.dsm.model.Value;
+import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.security.RequestHandler;
@@ -322,7 +323,14 @@ public class PatchRoute extends RequestHandler {
                     new org.broadinstitute.dsm.model.participant.data.ParticipantData(Integer.parseInt(patch.getId()),
                             patch.getParentId(), Integer.parseInt(ddpInstanceByGuid.getDdpInstanceId()), patch.getFieldId(),
                             pData);
-            if (participantData.hasFamilyMemberApplicantEmail()) {
+
+            String ddpParticipantId = patch.getParentId();
+            String esIndex = ddpInstanceByGuid.getParticipantIndexES();
+            ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(esIndex, ddpParticipantId)
+                    .orElseThrow(() -> new RuntimeException("Unable to find ES profile for participant:"));
+
+            if (participantData.hasFamilyMemberApplicantEmail(profile)) {
+                logger.info("Email in patch data matches participant profile email, will update workflows");
                 int ddpInstanceIdByGuid = Integer.parseInt(ddpInstanceByGuid.getDdpInstanceId());
                 FieldSettings fieldSettings = new FieldSettings();
                 pData.forEach((columnName,columnValue) -> {
@@ -335,8 +343,9 @@ public class PatchRoute extends RequestHandler {
                                     pData.get(FamilyMemberConstants.LASTNAME))), false);
                 });
             } else {
+                logger.info("Email in patch data does not match participant profile email, will remove workflows");
                 Map<String, Object> esMap = ElasticSearchUtil
-                        .getObjectsMap(ddpInstanceByGuid.getParticipantIndexES(), patch.getParentId(),
+                        .getObjectsMap(ddpInstanceByGuid.getParticipantIndexES(), profile.getParticipantGuid(),
                                 ESObjectConstants.WORKFLOWS);
                 if (Objects.isNull(esMap)) return;
                 CopyOnWriteArrayList<Map<String, Object>> workflowsList = new CopyOnWriteArrayList<>((List<Map<String, Object>>)esMap.get(ESObjectConstants.WORKFLOWS));

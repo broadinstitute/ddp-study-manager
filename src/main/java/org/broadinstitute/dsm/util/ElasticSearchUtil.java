@@ -92,6 +92,8 @@ public class ElasticSearchUtil {
     public static final String LAST_UPDATED = "lastUpdatedAt";
     public static final String STATUS = "status";
     public static final String PROFILE_CREATED_AT = "profile." + CREATED_AT;
+    public static final String PROFILE_GUID = "profile.guid";
+    public static final String PROFILE_LEGACYALTPID = "profile.legacyAltPid";
     public static final String WORKFLOWS = "workflows";
     public static final String EMAIL_FIELD = "email";
 
@@ -704,6 +706,37 @@ public class ElasticSearchUtil {
             }
         }
         objectList.add(newObjectMap);
+    }
+
+    public static Optional<ESProfile> getParticipantProfileByGuidOrAltPid(String index, String guidOrAltPid) {
+        try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
+                TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            searchSourceBuilder.query(QueryBuilders.boolQuery()
+                    .should(QueryBuilders.termQuery(PROFILE_GUID, guidOrAltPid))
+                    .should(QueryBuilders.termQuery(PROFILE_LEGACYALTPID, guidOrAltPid)));
+            searchSourceBuilder.size(1);
+            searchSourceBuilder.from(0);
+            searchSourceBuilder.fetchSource(new String[] {PROFILE}, null);
+
+            SearchRequest searchRequest = new SearchRequest(index);
+            searchRequest.source(searchSourceBuilder);
+
+            logger.info("Getting ES profile for participant with guid/altpid: {}", guidOrAltPid);
+            SearchResponse response = client.search(searchRequest, RequestOptions.DEFAULT);
+
+            ESProfile profile = null;
+            if (response.getHits().getTotalHits() > 0) {
+                Map<String, Object> source = response.getHits().getAt(0).getSourceAsMap();
+                profile = ElasticSearch.parseSourceMap(source).flatMap(ElasticSearch::getProfile).orElse(null);
+                if (profile != null) {
+                    logger.info("Found ES profile for participant, guid: {} altpid: {}", profile.getParticipantGuid(), profile.getParticipantLegacyAltPid());
+                }
+            }
+            return Optional.ofNullable(profile);
+        } catch (Exception e) {
+            throw new RuntimeException("Error while fetching ES profile for participant guid/altpid: " + guidOrAltPid + " from " + index, e);
+        }
     }
 
     public static Map<String, Object> getObjectsMap(RestHighLevelClient client, String index, String id, String object) throws Exception {

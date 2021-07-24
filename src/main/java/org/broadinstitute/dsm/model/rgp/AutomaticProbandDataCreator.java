@@ -62,8 +62,8 @@ public class AutomaticProbandDataCreator implements Defaultable {
                             fieldSettings.getColumnsWithDefaultOptions(fieldSettingsDtosByOptionAndInstanceId);
                     Map<String, String> columnsWithDefaultOptionsFilteredByElasticExportWorkflow =
                             fieldSettings.getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(fieldSettingsDtosByOptionAndInstanceId);
-                    String participantId = StringUtils.isNotBlank(esProfile.getParticipantLegacyAlptid())
-                            ? esProfile.getParticipantLegacyAlptid()
+                    String participantId = StringUtils.isNotBlank(esProfile.getParticipantLegacyAltPid())
+                            ? esProfile.getParticipantLegacyAltPid()
                             : esProfile.getParticipantGuid();
                     ParticipantData participantData = new ParticipantData(participantDataDao);
                     Optional<BookmarkDto> maybeFamilyIdOfBookmark = bookmarkDao.getBookmarkByInstance(RGP_FAMILY_ID);
