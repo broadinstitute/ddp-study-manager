@@ -17,18 +17,22 @@ public class WorkflowsEditor {
     private boolean hasChanged;
 
     public WorkflowsEditor(List<Map<String, Object>> originalList) {
+        if (originalList == null) {
+            originalList = new ArrayList<>();
+        }
         this.workflows = new ArrayList<>(originalList);
     }
 
     public WorkflowsEditor clear() {
         int oldSize = workflows.size();
-        this.workflows.clear();
+        workflows.clear();
         hasChanged = hasChanged || oldSize > 0;
         return this;
     }
 
     public WorkflowsEditor upsert(WorkflowForES workflow) {
         boolean updated;
+        int oldSize = workflows.size();
         if (workflow.getStudySpecificData() != null) {
             updated = ElasticSearchUtil.updateWorkflowStudySpecific(
                     workflow.getWorkflow(), workflow.getStatus(),
@@ -37,7 +41,8 @@ public class WorkflowsEditor {
             updated = ElasticSearchUtil.updateWorkflow(
                     workflow.getWorkflow(), workflow.getStatus(), workflows);
         }
-        hasChanged = hasChanged || updated;
+        boolean added = workflows.size() > oldSize;
+        hasChanged = hasChanged || updated || added;
         return this;
     }
 

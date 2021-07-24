@@ -44,11 +44,14 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
         try {
             logger.info("Started exporting workflows and family ID-s for instance with id " + instanceId);
             List<String> workflowColumnNames = findWorkFlowColumnNames(instanceId);
+            logger.info("Found {} columns for elastic workflow export for instanceId {}", workflowColumnNames.size(), instanceId);
+
             // We use a queue here so we can pop things off as we go to save on memory.
             ArrayDeque<List<ParticipantDataDto>> queue = new ArrayDeque<>(participantDataDao
                     .getParticipantDataByInstanceId(instanceId).stream()
                     .collect(Collectors.groupingBy(dto -> dto.getDdpParticipantId().orElse("")))
                     .values());
+
             checkWorkflowNamesAndExport(instance, workflowColumnNames, queue, clearBeforeUpdate);
             logger.info("Finished exporting workflows and family ID-s for instance with id " + instanceId);
         }
@@ -86,14 +89,14 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
             }
 
             // The family all share the same id/key, so we just grab the first one here.
-            String ddpParticipantId = familyGroup.get(0).getDdpParticipantId().orElse("");
-            if (StringUtils.isBlank(ddpParticipantId)) {
+            String guidOrAltPid = familyGroup.get(0).getDdpParticipantId().orElse("");
+            if (StringUtils.isBlank(guidOrAltPid)) {
                 continue;
             }
 
-            ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(index, ddpParticipantId).orElse(null);
+            ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(index, guidOrAltPid).orElse(null);
             if (profile == null) {
-                logger.error("Unable to find ES profile for participant with guid/altpid: {}, continuing with export", ddpParticipantId);
+                logger.error("Unable to find ES profile for participant with guid/altpid: {}, continuing with export", guidOrAltPid);
                 continue;
             }
 
@@ -105,7 +108,7 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
                     editor = new WorkflowsEditor(workflowListES);
                 }
             } catch (Exception e) {
-                logger.error("Unable to fetch ES workflows for participant with guid/altpid: {}, continuing with export", ddpParticipantId);
+                logger.error("Unable to fetch ES workflows for participant with guid/altpid: {}, continuing with export", guidOrAltPid);
                 continue;
             }
 
@@ -120,27 +123,26 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
                     continue;
                 }
                 Map<String, String> dataMap = gson.fromJson(data, Map.class);
-                processWorkflows(instance, workflowColumnNames, ddpParticipantId, participantDataDto, dataMap, profile, editor);
+                processWorkflows(instance, workflowColumnNames, guidOrAltPid, participantDataDto, dataMap, profile, editor);
                 if (dataMap.containsKey(FamilyMemberConstants.FAMILY_ID)) {
                     familyId = dataMap.get(FamilyMemberConstants.FAMILY_ID);
                 }
             }
 
             try {
-                if (editor.hasChanged()) {
-                    ElasticSearchUtil.updateRequest(profile.getParticipantGuid(), index, editor.getMapForES());
-                }
+                // Even if workflow list didn't change, let's export so we start with empty list in the ES document.
+                ElasticSearchUtil.updateRequest(profile.getParticipantGuid(), index, editor.getMapForES());
                 if (StringUtils.isNotBlank(familyId)) {
                     ElasticSearchUtil.writeDsmRecord(instance, null, profile.getParticipantGuid(), ESObjectConstants.FAMILY_ID, familyId, null);
                 }
             } catch (Exception e) {
-                logger.error("Error while export ES workflows for participant with guid/altpid: {}, continuing with export", ddpParticipantId);
+                logger.error("Error while export ES workflows for participant with guid/altpid: {}, continuing with export", guidOrAltPid);
             }
         }
     }
 
     private void processWorkflows(DDPInstance instance, List<String> workflowColumnNames,
-                                  String ddpParticipantId, ParticipantDataDto participantData,
+                                  String guidOrAltPid, ParticipantDataDto participantData,
                                   Map<String, String> dataMap, ESProfile applicantProfile,
                                   WorkflowsEditor editor) {
         if (participantData.getFieldTypeId().orElse("").equals(RGP_PARTICIPANTS)) {
@@ -158,13 +160,13 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
                 dataMap.entrySet().stream()
                         .filter(entry -> workflowColumnNames.contains(entry.getKey()))
                         .forEach(entry -> editor.upsert(WorkflowForES.createInstanceWithStudySpecificData(
-                                instance, ddpParticipantId, entry.getKey(), entry.getValue(), studySpecificData)));
+                                instance, guidOrAltPid, entry.getKey(), entry.getValue(), studySpecificData)));
             }
         } else {
             dataMap.entrySet().stream()
                     .filter(entry -> workflowColumnNames.contains(entry.getKey()))
                     .forEach(entry -> editor.upsert(WorkflowForES.createInstance(
-                            instance, ddpParticipantId, entry.getKey(), entry.getValue())));
+                            instance, guidOrAltPid, entry.getKey(), entry.getValue())));
         }
     }
 }
