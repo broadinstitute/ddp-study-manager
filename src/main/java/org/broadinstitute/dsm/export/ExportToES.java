@@ -1,14 +1,14 @@
 package org.broadinstitute.dsm.export;
 
 import com.google.gson.Gson;
-import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
-
-import java.util.concurrent.atomic.AtomicBoolean;
+import org.broadinstitute.dsm.db.DDPInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ExportToES {
 
+    private static final Logger logger = LoggerFactory.getLogger(ExportToES.class);
     private static final Gson gson = new Gson();
-    private static final DDPInstanceDao ddpInstanceDao = new DDPInstanceDao();
     private WorkflowAndFamilyIdExporter workflowAndFamilyIdExporter;
     private TissueRecordExporter tissueRecordExporter;
     private MedicalRecordExporter medicalRecordExporter;
@@ -21,26 +21,25 @@ public class ExportToES {
         this.sampleExporter = new SampleExporter();
     }
 
-    public void exportObjectsToES(String data, AtomicBoolean clearBeforeUpdate) {
+    public void exportObjectsToES(String data, boolean clearBeforeUpdate) {
         ExportPayload payload = gson.fromJson(data, ExportPayload.class);
-        int instanceId = ddpInstanceDao.getDDPInstanceIdByGuid(payload.getStudy());
+        DDPInstance instance = DDPInstance.getDDPInstanceByGuid(payload.getStudy());
+        if (instance == null) {
+            logger.warn("Could not find ddp instance with study guid '{}', skipping export", payload.getStudy());
+            return;
+        }
 
-        workflowAndFamilyIdExporter.export(instanceId, clearBeforeUpdate);
+        workflowAndFamilyIdExporter.export(instance, clearBeforeUpdate);
 
-        medicalRecordExporter.export(instanceId);
+        medicalRecordExporter.export(instance);
 
-        tissueRecordExporter.export(instanceId);
+        tissueRecordExporter.export(instance);
 
-        sampleExporter.export(instanceId);
+        sampleExporter.export(instance);
     }
 
     public static class ExportPayload {
-        private String index;
         private String study;
-
-        public String getIndex() {
-            return index;
-        }
 
         public String getStudy() {
             return study;

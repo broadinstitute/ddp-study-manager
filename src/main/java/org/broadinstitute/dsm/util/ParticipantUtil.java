@@ -27,6 +27,11 @@ public class ParticipantUtil {
         return participantId.length() == 20;
     }
 
+    public static boolean matchesApplicantEmail(ESProfile applicantProfile, Map<String, String> participantDataMap) {
+        String currentParticipantEmail = participantDataMap.get(FamilyMemberConstants.EMAIL);
+        return applicantProfile.getEmail().equals(currentParticipantEmail);
+    }
+
     public static boolean matchesApplicantEmail(String collaboratorParticipantId, List<ParticipantDataDto> participantDatas) {
         String applicantEmail = null, currentParticipantEmail = null;
         for (ParticipantDataDto participantData: participantDatas) {
