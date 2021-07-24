@@ -97,6 +97,28 @@ public class ElasticSearchUtil {
     public static final String WORKFLOWS = "workflows";
     public static final String EMAIL_FIELD = "email";
 
+    // These clients are expensive. They internally have thread pools and other resources. Let's
+    // create one instance and reuse it as much as possible. Client is thread-safe per the docs.
+    private static RestHighLevelClient client;
+
+    public static synchronized void initClient() {
+        if (client == null) {
+            try {
+                client = getClientForElasticsearchCloud(
+                        TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
+                        TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME),
+                        TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD));
+            } catch (MalformedURLException e) {
+                throw new RuntimeException("Error while initialize ES client", e);
+            }
+        }
+    }
+
+    public static RestHighLevelClient getClientInstance() {
+        // This should have been initialized once at the start, so we're not locking to avoid concurrency overhead.
+        return client;
+    }
+
     public static RestHighLevelClient getClientForElasticsearchCloud(@NonNull String baseUrl,
                                                                      @NonNull String userName,
                                                                      @NonNull String password) throws MalformedURLException {
@@ -212,39 +234,27 @@ public class ElasticSearchUtil {
 
     public static Optional<ElasticSearch> getParticipantESDataByParticipantId(@NonNull String index, @NonNull String participantId) {
         Optional<ElasticSearch> elasticSearch = Optional.empty();
-        try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
-                TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
-            logger.info("Getting ES data for participant: " + participantId);
-            try {
-                elasticSearch = fetchESDataByParticipantId(index, participantId, client);
-            }
-            catch (Exception e) {
-                throw new RuntimeException("Couldn't get ES for participant: " + participantId + " from " + index, e);
-            }
-            logger.info("Got ES data for participant: " + participantId + " from " + index);
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        logger.info("Getting ES data for participant: " + participantId);
+        try {
+            elasticSearch = fetchESDataByParticipantId(index, participantId, client);
         }
+        catch (Exception e) {
+            throw new RuntimeException("Couldn't get ES for participant: " + participantId + " from " + index, e);
+        }
+        logger.info("Got ES data for participant: " + participantId + " from " + index);
         return elasticSearch;
     }
 
     public static ElasticSearch getParticipantESDataByAltpid(@NonNull String index, @NonNull String altpid) {
         ElasticSearch elasticSearch = new ElasticSearch.Builder().build();
-        try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
-                TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
-            logger.info("Getting ES data for participant: " + altpid);
-            try {
-                elasticSearch = fetchESDataByAltpid(index, altpid, client);
-            }
-            catch (Exception e) {
-                throw new RuntimeException("Couldn't get ES for participant: " + altpid + " from " + index, e);
-            }
-            logger.info("Got ES data for participant: " + altpid + " from " + index);
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        logger.info("Getting ES data for participant: " + altpid);
+        try {
+            elasticSearch = fetchESDataByAltpid(index, altpid, client);
         }
+        catch (Exception e) {
+            throw new RuntimeException("Couldn't get ES for participant: " + altpid + " from " + index, e);
+        }
+        logger.info("Got ES data for participant: " + altpid + " from " + index);
         return elasticSearch;
     }
 
@@ -277,10 +287,7 @@ public class ElasticSearchUtil {
         if (StringUtils.isNotBlank(index)) {
             logger.info("Collecting ES data from index: " +  index);
             try {
-                try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
-                        TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
-                    esData = getDDPParticipantsFromES(realm, index, client);
-                }
+                esData = getDDPParticipantsFromES(realm, index, client);
             }
             catch (Exception e) {
                 logger.error("Couldn't get participants from ES for instance " + realm, e);
@@ -296,27 +303,24 @@ public class ElasticSearchUtil {
             Map<String, Map<String, Object>> esData = new HashMap<>();
             logger.info("Collecting ES data");
             try {
-                try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
-                        TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
-                    int scrollSize = 1000;
-                    SearchRequest searchRequest = new SearchRequest(index);
-                    SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-                    SearchResponse response = null;
-                    int i = 0;
-                    AbstractQueryBuilder query = createESQuery(filter);
-                    if (query == null) {
-                        throw new RuntimeException("Couldn't create query from filter " + filter);
-                    }
-                    searchSourceBuilder.query(query).sort(PROFILE_CREATED_AT, SortOrder.ASC);
-                    while (response == null || response.getHits().getHits().length != 0) {
-                        searchSourceBuilder.size(scrollSize);
-                        searchSourceBuilder.from(i * scrollSize);
-                        searchRequest.source(searchSourceBuilder);
+                int scrollSize = 1000;
+                SearchRequest searchRequest = new SearchRequest(index);
+                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+                SearchResponse response = null;
+                int i = 0;
+                AbstractQueryBuilder query = createESQuery(filter);
+                if (query == null) {
+                    throw new RuntimeException("Couldn't create query from filter " + filter);
+                }
+                searchSourceBuilder.query(query).sort(PROFILE_CREATED_AT, SortOrder.ASC);
+                while (response == null || response.getHits().getHits().length != 0) {
+                    searchSourceBuilder.size(scrollSize);
+                    searchSourceBuilder.from(i * scrollSize);
+                    searchRequest.source(searchSourceBuilder);
 
-                        response = client.search(searchRequest, RequestOptions.DEFAULT);
-                        addingParticipantStructuredHits(response, esData, instance.getName(), index);
-                        i++;
-                    }
+                    response = client.search(searchRequest, RequestOptions.DEFAULT);
+                    addingParticipantStructuredHits(response, esData, instance.getName(), index);
+                    i++;
                 }
             }
             catch (Exception e) {
@@ -374,14 +378,8 @@ public class ElasticSearchUtil {
         return addressByParticipant;
     }
 
-    public static void writeWorkflow(@NonNull WorkflowForES workflowForES, boolean clearBeforeUpdate) {
-        try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
-            TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
-            writeWorkflow(client, workflowForES, clearBeforeUpdate);
-        }
-        catch (IOException e) {
-            logger.error("Failed to close client ", e);
-        }
+    public static void removeWorkflowIfNoDataOrWrongSubject(String ddpParticipantId, DDPInstance ddpInstance, String collaboratorParticipantId) {
+        removeWorkflowIfNoDataOrWrongSubject(client, ddpParticipantId, ddpInstance, collaboratorParticipantId);
     }
 
     public static void removeWorkflowIfNoDataOrWrongSubject(RestHighLevelClient client, String ddpParticipantId, DDPInstance ddpInstance, String collaboratorParticipantId) {
@@ -408,6 +406,10 @@ public class ElasticSearchUtil {
         catch (Exception e) {
             logger.error("Couldn't remove workflows for participant " + ddpParticipantId + " to ES index " + ddpInstance.getParticipantIndexES() + " for instance " + ddpInstance.getName(), e);
         }
+    }
+
+    public static void writeWorkflow(@NonNull WorkflowForES workflowForES, boolean clearBeforeUpdate) {
+        writeWorkflow(client, workflowForES, clearBeforeUpdate);
     }
 
     public static void writeWorkflow(RestHighLevelClient client, @NonNull WorkflowForES workflowForES, boolean clearBeforeUpdate) {
@@ -539,7 +541,7 @@ public class ElasticSearchUtil {
                                       @NonNull String objectType,
                                       @NonNull String idName,
                                       Map<String, Object> nameValues) {
-        writeDsmRecord(null, instance, id, ddpParticipantId, objectType, idName, nameValues);
+        writeDsmRecord(client, instance, id, ddpParticipantId, objectType, idName, nameValues);
     }
 
     public static void writeDsmRecord(RestHighLevelClient client, @NonNull DDPInstance instance,
@@ -593,7 +595,7 @@ public class ElasticSearchUtil {
                                    @NonNull String ddpParticipantId,
                                    @NonNull String objectType,
                                    String idName, Map<String, Object> nameValues) {
-        writeSample(null, instance, id, ddpParticipantId, objectType, idName, nameValues);
+        writeSample(client, instance, id, ddpParticipantId, objectType, idName, nameValues);
     }
 
     public static void writeSample(RestHighLevelClient client, @NonNull DDPInstance instance,
@@ -648,11 +650,7 @@ public class ElasticSearchUtil {
     }
 
     public static void updateRequest(@NonNull String ddpParticipantId, String index, Map<String, Object> objectsMapES) throws IOException {
-        try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
-                TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
-            updateRequest(ddpParticipantId, index, objectsMapES, client);
-
-        }
+        updateRequest(ddpParticipantId, index, objectsMapES, client);
     }
 
     private static void updateRequest(@NonNull String ddpParticipantId, String index, Map<String, Object> objectsMapES,
@@ -709,8 +707,7 @@ public class ElasticSearchUtil {
     }
 
     public static Optional<ESProfile> getParticipantProfileByGuidOrAltPid(String index, String guidOrAltPid) {
-        try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
-                TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
+        try {
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             searchSourceBuilder.query(QueryBuilders.boolQuery()
                     .should(QueryBuilders.termQuery(PROFILE_GUID, guidOrAltPid))
@@ -757,10 +754,7 @@ public class ElasticSearchUtil {
     }
 
     public static Map<String, Object> getObjectsMap(String index, String id, String object) throws Exception {
-        try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
-                TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
-            return getObjectsMap(client, index, id, object);
-        }
+        return getObjectsMap(client, index, id, object);
     }
 
     public static DDPParticipant getParticipantAsDDPParticipant(@NonNull Map<String, Map<String, Object>> participantsESData, @NonNull String ddpParticipantId) {
@@ -1156,24 +1150,21 @@ public class ElasticSearchUtil {
         if (StringUtils.isNotBlank(index)) {
             logger.info("Collecting activity definitions from ES");
             try {
-                try (RestHighLevelClient client = getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
-                        TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
-                    int scrollSize = 1000;
+                int scrollSize = 1000;
 
-                    SearchRequest searchRequest = new SearchRequest(index);
-                    SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-                    SearchResponse response = null;
-                    int i = 0;
-                    while (response == null || response.getHits().getHits().length != 0) {
-                        searchSourceBuilder.query(QueryBuilders.matchAllQuery());
-                        searchSourceBuilder.size(scrollSize);
-                        searchSourceBuilder.from(i * scrollSize);
-                        searchRequest.source(searchSourceBuilder);
+                SearchRequest searchRequest = new SearchRequest(index);
+                SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+                SearchResponse response = null;
+                int i = 0;
+                while (response == null || response.getHits().getHits().length != 0) {
+                    searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+                    searchSourceBuilder.size(scrollSize);
+                    searchSourceBuilder.from(i * scrollSize);
+                    searchRequest.source(searchSourceBuilder);
 
-                        response = client.search(searchRequest, RequestOptions.DEFAULT);
-                        addingActivityDefinitionHits(response, esData);
-                        i++;
-                    }
+                    response = client.search(searchRequest, RequestOptions.DEFAULT);
+                    addingActivityDefinitionHits(response, esData);
+                    i++;
                 }
             }
             catch (Exception e) {
