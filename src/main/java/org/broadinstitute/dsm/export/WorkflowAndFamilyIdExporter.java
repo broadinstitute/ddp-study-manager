@@ -1,15 +1,14 @@
 package org.broadinstitute.dsm.export;
 
 import com.google.gson.Gson;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
-import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -17,11 +16,11 @@ import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class WorkflowAndFamilyIdExporter implements Exporter {
@@ -32,16 +31,25 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
     public static final String RGP_PARTICIPANTS = "RGP_PARTICIPANTS";
 
     @Override
-    public void export(int instanceId) {
+    public void export(DDPInstance instance) {
 
     }
 
-    public void export(int instanceId, AtomicBoolean clearBeforeUpdate) {
+    public void export(DDPInstance instance, boolean clearBeforeUpdate) {
+        int instanceId = instance.getDdpInstanceIdAsInt();
+        if (StringUtils.isBlank(instance.getParticipantIndexES())) {
+            logger.error("DDP instance does not have participant index set, skipping export");
+            return;
+        }
         try {
             logger.info("Started exporting workflows and family ID-s for instance with id " + instanceId);
-            List<String> workFlowColumnNames = findWorkFlowColumnNames(instanceId);
-            List<ParticipantDataDto> allParticipantData = participantDataDao.getParticipantDataByInstanceid(instanceId);
-            checkWorkflowNamesAndExport(workFlowColumnNames, allParticipantData, instanceId, clearBeforeUpdate);
+            List<String> workflowColumnNames = findWorkFlowColumnNames(instanceId);
+            // We use a queue here so we can pop things off as we go to save on memory.
+            ArrayDeque<List<ParticipantDataDto>> queue = new ArrayDeque<>(participantDataDao
+                    .getParticipantDataByInstanceId(instanceId).stream()
+                    .collect(Collectors.groupingBy(dto -> dto.getDdpParticipantId().orElse("")))
+                    .values());
+            checkWorkflowNamesAndExport(instance, workflowColumnNames, queue, clearBeforeUpdate);
             logger.info("Finished exporting workflows and family ID-s for instance with id " + instanceId);
         }
         catch (Exception e) {
@@ -68,75 +76,95 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
         return workflowColumns;
     }
 
-    public void checkWorkflowNamesAndExport(List<String> workFlowColumnNames, List<ParticipantDataDto> allParticipantData,
-                                            int instanceId, AtomicBoolean clearBeforeUpdate) {
-        DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
-        Optional<String> maybeEsParticipantIndex =
-                new DDPInstanceDao().getEsParticipantIndexByInstanceId(instanceId);
-        for (ParticipantDataDto participantData: allParticipantData) {
-            String data = participantData.getData().orElse(null);
-            if (data == null) {
+    private void checkWorkflowNamesAndExport(DDPInstance instance, List<String> workflowColumnNames,
+                                             Deque<List<ParticipantDataDto>> queue, boolean clearBeforeUpdate) {
+        String index = instance.getParticipantIndexES();
+        while (!queue.isEmpty()) {
+            List<ParticipantDataDto> familyGroup = queue.pop();
+            if (familyGroup == null || familyGroup.isEmpty()) {
                 continue;
             }
-            String ddpParticipantId = participantData.getDdpParticipantId().orElse("");
-            String finalDdpParticipantId = ddpParticipantId;
-            List<ParticipantDataDto> participantDataFamily = allParticipantData.stream()
-                    .filter(participantDataDto -> participantDataDto.getDdpParticipantId().orElse("").equals(finalDdpParticipantId))
-                    .collect(Collectors.toList());
-            if (!ParticipantUtil.isGuid(ddpParticipantId)) {
-                ddpParticipantId = getGuidIfWeHaveAltpid(ddpParticipantId, maybeEsParticipantIndex);
-            }
-            if ("".equals(ddpParticipantId)) {
+
+            // The family all share the same id/key, so we just grab the first one here.
+            String ddpParticipantId = familyGroup.get(0).getDdpParticipantId().orElse("");
+            if (StringUtils.isBlank(ddpParticipantId)) {
                 continue;
             }
-            Map<String, String> dataMap = gson.fromJson(data, Map.class);
-            exportWorkflows(workFlowColumnNames, ddpInstance, participantData, ddpParticipantId, participantDataFamily, dataMap, clearBeforeUpdate);
-            if (dataMap.containsKey(FamilyMemberConstants.FAMILY_ID)) {
-                ElasticSearchUtil.writeDsmRecord(ddpInstance, null,
-                        ddpParticipantId, ESObjectConstants.FAMILY_ID, dataMap.get(FamilyMemberConstants.FAMILY_ID), null);
+
+            ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(index, ddpParticipantId).orElse(null);
+            if (profile == null) {
+                logger.error("Unable to find ES profile for participant with guid/altpid: {}, continuing with export", ddpParticipantId);
+                continue;
+            }
+
+            WorkflowsEditor editor = new WorkflowsEditor(new ArrayList<>());
+            try {
+                Map<String, Object> source = ElasticSearchUtil.getObjectsMap(index, profile.getParticipantGuid(), ESObjectConstants.WORKFLOWS);
+                if (source != null && source.containsKey(ESObjectConstants.WORKFLOWS)) {
+                    List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) source.get(ESObjectConstants.WORKFLOWS);
+                    editor = new WorkflowsEditor(workflowListES);
+                }
+            } catch (Exception e) {
+                logger.error("Unable to fetch ES workflows for participant with guid/altpid: {}, continuing with export", ddpParticipantId);
+                continue;
+            }
+
+            if (clearBeforeUpdate) {
+                editor.clear();
+            }
+
+            String familyId = null;
+            for (ParticipantDataDto participantDataDto : familyGroup) {
+                String data = participantDataDto.getData().orElse(null);
+                if (StringUtils.isBlank(data)) {
+                    continue;
+                }
+                Map<String, String> dataMap = gson.fromJson(data, Map.class);
+                processWorkflows(instance, workflowColumnNames, ddpParticipantId, participantDataDto, dataMap, profile, editor);
+                if (dataMap.containsKey(FamilyMemberConstants.FAMILY_ID)) {
+                    familyId = dataMap.get(FamilyMemberConstants.FAMILY_ID);
+                }
+            }
+
+            try {
+                if (editor.hasChanged()) {
+                    ElasticSearchUtil.updateRequest(profile.getParticipantGuid(), index, editor.getMapForES());
+                }
+                if (StringUtils.isNotBlank(familyId)) {
+                    ElasticSearchUtil.writeDsmRecord(instance, null, profile.getParticipantGuid(), ESObjectConstants.FAMILY_ID, familyId, null);
+                }
+            } catch (Exception e) {
+                logger.error("Error while export ES workflows for participant with guid/altpid: {}, continuing with export", ddpParticipantId);
             }
         }
     }
 
-    public String getGuidIfWeHaveAltpid(String ddpParticipantId, Optional<String> maybeEsParticipantIndex) {
-        if (maybeEsParticipantIndex.isPresent()) {
-            ElasticSearch participantESDataByAltpid =
-                    ElasticSearchUtil.getParticipantESDataByAltpid(maybeEsParticipantIndex.get(), ddpParticipantId);
-            ddpParticipantId = participantESDataByAltpid.getProfile().map(ESProfile::getParticipantGuid).orElse("");
-        } else {
-            logger.error("Wrong instance ID");
-        }
-        return ddpParticipantId;
-    }
-
-    public void exportWorkflows(List<String> workFlowColumnNames, DDPInstance ddpInstance, ParticipantDataDto participantData,
-                                String ddpParticipantId, List<ParticipantDataDto> participantDataFamily, Map<String, String> dataMap,
-                                AtomicBoolean clearBeforeUpdate) {
+    private void processWorkflows(DDPInstance instance, List<String> workflowColumnNames,
+                                  String ddpParticipantId, ParticipantDataDto participantData,
+                                  Map<String, String> dataMap, ESProfile applicantProfile,
+                                  WorkflowsEditor editor) {
         if (participantData.getFieldTypeId().orElse("").equals(RGP_PARTICIPANTS)) {
-            String collaboratorParticipantId = dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID);
-            if (!ParticipantUtil.matchesApplicantEmail(collaboratorParticipantId, participantDataFamily)) {
-                ElasticSearchUtil.removeWorkflowIfNoDataOrWrongSubject(ddpParticipantId, ddpInstance, collaboratorParticipantId);
+            // RGP_PARTICIPANTS only exports workflows with study-specific data, so remove if no data.
+            editor.removeIfNoData();
+            String subjectId = dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID);
+            if (!ParticipantUtil.matchesApplicantEmail(applicantProfile, dataMap)) {
+                editor.removeBySubjectId(subjectId);
             } else {
-                //is matching applicant email => write into ES
                 WorkflowForES.StudySpecificData studySpecificData = new WorkflowForES.StudySpecificData(
-                        collaboratorParticipantId,
+                        subjectId,
                         dataMap.get(FamilyMemberConstants.FIRSTNAME),
                         dataMap.get(FamilyMemberConstants.LASTNAME)
                 );
-                dataMap.entrySet().stream().filter(entry -> workFlowColumnNames.contains(entry.getKey()))
-                        .forEach(entry -> {
-                            ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance, ddpParticipantId,
-                                    entry.getKey(), entry.getValue(), studySpecificData), clearBeforeUpdate.get());
-                            clearBeforeUpdate.set(false);
-                        });
+                dataMap.entrySet().stream()
+                        .filter(entry -> workflowColumnNames.contains(entry.getKey()))
+                        .forEach(entry -> editor.upsert(WorkflowForES.createInstanceWithStudySpecificData(
+                                instance, ddpParticipantId, entry.getKey(), entry.getValue(), studySpecificData)));
             }
         } else {
-            dataMap.entrySet().stream().filter(entry -> workFlowColumnNames.contains(entry.getKey()))
-                    .forEach(entry -> {
-                        ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, ddpParticipantId,
-                                entry.getKey(), entry.getValue()), clearBeforeUpdate.get());
-                        clearBeforeUpdate.set(false);
-                    });
+            dataMap.entrySet().stream()
+                    .filter(entry -> workflowColumnNames.contains(entry.getKey()))
+                    .forEach(entry -> editor.upsert(WorkflowForES.createInstance(
+                            instance, ddpParticipantId, entry.getKey(), entry.getValue())));
         }
     }
 }

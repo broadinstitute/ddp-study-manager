@@ -475,7 +475,7 @@ public class ElasticSearchUtil {
         return workflowMapES;
     }
 
-    public static void updateWorkflowStudySpecific(String workflow, String status, List<Map<String, Object>> workflowListES,
+    public static boolean updateWorkflowStudySpecific(String workflow, String status, List<Map<String, Object>> workflowListES,
                                                    WorkflowForES.StudySpecificData studySpecificData) {
         boolean updated = false;
         for (Map<String, Object> workflowES : workflowListES) {
@@ -505,6 +505,7 @@ public class ElasticSearchUtil {
                     ESObjectConstants.DATA, new ObjectMapper().convertValue(studySpecificData, Map.class)
             ));
         }
+        return updated;
     }
 
     public static boolean updateWorkflowFieldsStudySpecific(String status, WorkflowForES.StudySpecificData studySpecificData, Map<String, Object> workflowES) {
@@ -514,7 +515,7 @@ public class ElasticSearchUtil {
         return true;
     }
 
-    public static void updateWorkflow(String workflow, String status, List<Map<String, Object>> workflowListES) {
+    public static boolean updateWorkflow(String workflow, String status, List<Map<String, Object>> workflowListES) {
         boolean updated = false;
         for (Map<String, Object> workflowES : workflowListES) {
             if (workflow.equals(workflowES.get(ESObjectConstants.WORKFLOW))) {
@@ -533,6 +534,7 @@ public class ElasticSearchUtil {
                     ESObjectConstants.DATE, SystemUtil.getISO8601DateString()
             ));
         }
+        return updated;
     }
 
     public static void writeDsmRecord(@NonNull DDPInstance instance,
