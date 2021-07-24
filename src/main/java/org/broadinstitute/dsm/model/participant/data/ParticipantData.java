@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,6 +17,7 @@ import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -168,6 +168,13 @@ public class ParticipantData {
         String familyMemberEmail = this.data.get(FamilyMemberConstants.EMAIL);
         String esParticipantIndex = new DDPInstanceDao().getEsParticipantIndexByInstanceId(ddpInstanceId).orElse("");
         String applicantEmail = ParticipantUtil.getParticipantEmailById(esParticipantIndex, this.ddpParticipantId);
+        return applicantEmail.equals(familyMemberEmail);
+    }
+
+    public boolean hasFamilyMemberApplicantEmail(ESProfile applicantProfile) {
+        if (Objects.isNull(this.data) || StringUtils.isBlank(this.ddpParticipantId)) return false;
+        String familyMemberEmail = this.data.get(FamilyMemberConstants.EMAIL);
+        String applicantEmail = StringUtils.defaultIfBlank(applicantProfile.getEmail(), "");
         return applicantEmail.equals(familyMemberEmail);
     }
 
