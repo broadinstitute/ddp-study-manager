@@ -1,5 +1,8 @@
 package org.broadinstitute.dsm.export;
 
+import java.time.Duration;
+import java.time.Instant;
+
 import com.google.gson.Gson;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.slf4j.Logger;
@@ -29,13 +32,14 @@ public class ExportToES {
             return;
         }
 
+        Instant start = Instant.now();
         workflowAndFamilyIdExporter.export(instance, clearBeforeUpdate);
-
         medicalRecordExporter.export(instance);
-
         tissueRecordExporter.export(instance);
-
         sampleExporter.export(instance);
+        Duration elapsed = Duration.between(start, Instant.now());
+
+        logger.info("Export took {} secs ({})", elapsed.getSeconds(), elapsed.toString());
     }
 
     public static class ExportPayload {
