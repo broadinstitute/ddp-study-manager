@@ -116,14 +116,19 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
                 editor.clear();
             }
 
+            ParticipantDataDto applicantDataDto = ParticipantUtil.findApplicantData(guidOrAltPid, familyGroup);
+            if (applicantDataDto == null) {
+                logger.error("Somehow there's no applicant for guid/altpid: {}, continuing with export", guidOrAltPid);
+                continue;
+            }
+
             String familyId = null;
             for (ParticipantDataDto participantDataDto : familyGroup) {
-                String data = participantDataDto.getData().orElse(null);
-                if (StringUtils.isBlank(data)) {
+                Map<String, String> dataMap = participantDataDto.getDataMap();
+                if (dataMap == null) {
                     continue;
                 }
-                Map<String, String> dataMap = gson.fromJson(data, Map.class);
-                processWorkflows(instance, workflowColumnNames, guidOrAltPid, participantDataDto, dataMap, profile, editor);
+                processWorkflows(instance, workflowColumnNames, guidOrAltPid, participantDataDto, applicantDataDto, profile, editor);
                 if (dataMap.containsKey(FamilyMemberConstants.FAMILY_ID)) {
                     familyId = dataMap.get(FamilyMemberConstants.FAMILY_ID);
                 }
@@ -141,15 +146,15 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
         }
     }
 
-    private void processWorkflows(DDPInstance instance, List<String> workflowColumnNames,
-                                  String guidOrAltPid, ParticipantDataDto participantData,
-                                  Map<String, String> dataMap, ESProfile applicantProfile,
-                                  WorkflowsEditor editor) {
+    private void processWorkflows(DDPInstance instance, List<String> workflowColumnNames, String guidOrAltPid,
+                                  ParticipantDataDto participantData, ParticipantDataDto applicantData,
+                                  ESProfile applicantProfile, WorkflowsEditor editor) {
+        Map<String, String> dataMap = participantData.getDataMap();
         if (participantData.getFieldTypeId().orElse("").equals(RGP_PARTICIPANTS)) {
             // RGP_PARTICIPANTS only exports workflows with study-specific data, so remove if no data.
             editor.removeIfNoData();
             String subjectId = dataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID);
-            if (!ParticipantUtil.matchesApplicantEmail(applicantProfile, dataMap)) {
+            if (!ParticipantUtil.matchesApplicantEmail(applicantProfile, applicantData.getDataMap(), dataMap)) {
                 editor.removeBySubjectId(subjectId);
             } else {
                 WorkflowForES.StudySpecificData studySpecificData = new WorkflowForES.StudySpecificData(

@@ -27,19 +27,30 @@ public class ParticipantUtil {
         return participantId.length() == 20;
     }
 
-    public static boolean matchesApplicantEmail(ESProfile applicantProfile, Map<String, String> participantDataMap) {
+    public static boolean matchesApplicantEmail(ESProfile applicantProfile,
+                                                Map<String, String> applicantDataMap,
+                                                Map<String, String> participantDataMap) {
         String currentParticipantEmail = participantDataMap.get(FamilyMemberConstants.EMAIL);
-        return applicantProfile.getEmail().equals(currentParticipantEmail);
+        if (StringUtils.isBlank(currentParticipantEmail)) {
+            return false;
+        }
+        // There might be a case where profile doesn't have email, so fallback to data map.
+        String applicantEmail = StringUtils.isNotBlank(applicantProfile.getEmail())
+                ? applicantProfile.getEmail() : applicantDataMap.get(FamilyMemberConstants.EMAIL);
+        if (StringUtils.isBlank(applicantEmail)) {
+            return false;
+        }
+        // Email addresses are technically not case-sensitive, so we ignore case when comparing.
+        return applicantEmail.equalsIgnoreCase(currentParticipantEmail);
     }
 
     public static boolean matchesApplicantEmail(String collaboratorParticipantId, List<ParticipantDataDto> participantDatas) {
         String applicantEmail = null, currentParticipantEmail = null;
         for (ParticipantDataDto participantData: participantDatas) {
-            String data = participantData.getData().orElse(null);
-            if (data == null) {
+            Map<String, String> dataMap = participantData.getDataMap();
+            if (dataMap == null) {
                 continue;
             }
-            Map<String, String> dataMap = gson.fromJson(data, Map.class);
             if (!dataMap.containsKey(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID)) {
                 return false;
             }
@@ -61,7 +72,7 @@ public class ParticipantUtil {
                 }
             }
         }
-        return applicantEmail != null && applicantEmail.equals(currentParticipantEmail);
+        return applicantEmail != null && applicantEmail.equalsIgnoreCase(currentParticipantEmail);
     }
 
     public static String getParticipantEmailById(String esParticipantIndex, String pId) {
@@ -74,5 +85,24 @@ public class ParticipantUtil {
                 .map(ESProfile::getEmail)
                 .orElse(""));
         return email.toString();
+    }
+
+    public static ParticipantDataDto findApplicantData(String ddpParticipantId, List<ParticipantDataDto> participantDataDtos) {
+        ParticipantDataDto applicantData = null;
+        for (ParticipantDataDto participantDataDto : participantDataDtos) {
+            Map<String, String> dataMap = participantDataDto.getDataMap();
+            if (dataMap == null) {
+                continue;
+            }
+            boolean isOldApplicant = dataMap.containsKey(FamilyMemberConstants.DATSTAT_ALTPID)
+                    && dataMap.get(FamilyMemberConstants.DATSTAT_ALTPID).equals(ddpParticipantId);
+            boolean isNewApplicant = dataMap.containsKey(FamilyMemberConstants.IS_APPLICANT)
+                    && TRUE.equals(dataMap.get(FamilyMemberConstants.IS_APPLICANT));
+            if (isOldApplicant || isNewApplicant) {
+                applicantData = participantDataDto;
+                break;
+            }
+        }
+        return applicantData;
     }
 }

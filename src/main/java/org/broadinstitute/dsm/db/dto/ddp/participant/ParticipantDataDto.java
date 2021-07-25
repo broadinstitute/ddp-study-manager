@@ -1,11 +1,19 @@
 package org.broadinstitute.dsm.db.dto.ddp.participant;
 
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 
 @Setter
 public class ParticipantDataDto {
+
+    private static final Gson gson = new Gson();
 
     private int participantDataId;
     private String ddpParticipantId;
@@ -14,6 +22,9 @@ public class ParticipantDataDto {
     private String data;
     private long lastChanged;
     private String changedBy;
+
+    // We cache the json data map to avoid deserializing it multiple times.
+    private Map<String, String> cachedDataMap;
 
     public int getParticipantDataId() {
         return participantDataId;
@@ -33,6 +44,23 @@ public class ParticipantDataDto {
 
     public Optional<String> getData() {
         return Optional.ofNullable(data);
+    }
+
+    public void setData(String data) {
+        this.data = data;
+        this.cachedDataMap = null;
+    }
+
+    public Map<String, String> getDataMap() {
+        if (cachedDataMap != null) {
+            return cachedDataMap;
+        }
+        if (StringUtils.isBlank(data)) {
+            return null;
+        }
+        Type type = new TypeToken<HashMap<String, String>>() {}.getType();
+        cachedDataMap = gson.fromJson(data, type);
+        return cachedDataMap;
     }
 
     public long getLastChanged() {
