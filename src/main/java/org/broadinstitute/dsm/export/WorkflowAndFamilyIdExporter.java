@@ -108,7 +108,7 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
                     editor = new WorkflowsEditor(workflowListES);
                 }
             } catch (Exception e) {
-                logger.error("Unable to fetch ES workflows for participant with guid/altpid: {}, continuing with export", guidOrAltPid);
+                logger.error("Unable to fetch ES workflows for participant with guid/altpid: {}, continuing with export", guidOrAltPid, e);
                 continue;
             }
 
@@ -141,7 +141,7 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
                     ElasticSearchUtil.writeDsmRecord(instance, null, profile.getParticipantGuid(), ESObjectConstants.FAMILY_ID, familyId, null);
                 }
             } catch (Exception e) {
-                logger.error("Error while export ES workflows for participant with guid/altpid: {}, continuing with export", guidOrAltPid);
+                logger.error("Error while export ES workflows for participant with guid/altpid: {}, continuing with export", guidOrAltPid, e);
             }
         }
     }
