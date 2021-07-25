@@ -80,7 +80,7 @@ public class PatchRoute extends RequestHandler {
                         List<NameValue> nameValues = new ArrayList<>();
                         DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
                         ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getParentId())
-                                .orElseThrow(() -> new RuntimeException("Unable to find ES profile for participant:"));
+                                .orElseThrow(() -> new RuntimeException("Unable to find ES profile for participant: " + patch.getParentId()));
                         for (NameValue nameValue : patch.getNameValues()) {
                             DBElement dbElement = patchUtil.getColumnNameMap().get(nameValue.getName());
                             if (dbElement != null) {
@@ -280,7 +280,7 @@ public class PatchRoute extends RequestHandler {
                                 }
                                 if (patch.getActions() != null) {
                                     ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getParentId())
-                                            .orElseThrow(() -> new RuntimeException("Unable to find ES profile for participant:"));
+                                            .orElseThrow(() -> new RuntimeException("Unable to find ES profile for participant: " + patch.getParentId()));
                                     for (Value action : patch.getActions()) {
                                         if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
                                             writeESWorkflow(patch, nameValue, action, ddpInstance, profile.getParticipantGuid());
