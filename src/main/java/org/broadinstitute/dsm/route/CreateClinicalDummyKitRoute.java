@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.route;
 
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.KitType;
@@ -32,7 +31,8 @@ public class CreateClinicalDummyKitRoute implements Route {
         String kitLabel = request.params(RequestParameter.LABEL);
         if (StringUtils.isBlank(kitLabel)) {
             logger.warn("Got a create Clinical Kit request without a kit label!!");
-            return new Result(500, "Please include a kit label as a path parameter");
+            response.status(500);
+            return "Please include a kit label as a path parameter";
         }
         logger.info("Got a new Clinical Kit request with kit label " + kitLabel);
         new BookmarkDao().getBookmarkByInstance(CLINICAL_KIT_REALM).ifPresentOrElse(book -> {
@@ -43,7 +43,7 @@ public class CreateClinicalDummyKitRoute implements Route {
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(REALM);
         if (ddpInstance != null) {
             String kitRequestId = CLINICAL_KIT_PREFIX + KitRequestShipping.createRandom(20);
-            String ddpParticipantId = Optional.ofNullable(new BSPKitDao().getRandomParticipantIdForStudy(ddpInstance.getDdpInstanceId())).orElseThrow(() -> {
+            String ddpParticipantId = new BSPKitDao().getRandomParticipantIdForStudy(ddpInstance.getDdpInstanceId()).orElseThrow(() -> {
                 throw new RuntimeException("Random participant id was not generated");
             });
             Optional<ElasticSearch> maybeParticipantByParticipantId = ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId);
@@ -60,7 +60,7 @@ public class CreateClinicalDummyKitRoute implements Route {
                         USER_ID, "", "", "", false, "");
                 new BSPKitDao().updateKitLabel(kitLabel, dsmKitRequestId);
 
-            }, () -> new RuntimeException(" Participant " + ddpParticipantId + " was not found!"));
+            }, () -> {throw new RuntimeException(" Participant " + ddpParticipantId + " was not found!");});
             logger.info("Kit added successfully");
             response.status(200);
             return response;

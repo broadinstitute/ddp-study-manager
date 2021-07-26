@@ -198,7 +198,12 @@ public class DSMServer extends BasicServer {
             }
             res.header(HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
         });
-        // todo Pegah do we need thee same/ different secret checking for the clinical routes?
+        before(API_ROOT + RoutePath.CLINICAL_KIT_ENDPOINT, (req, res) -> {
+            if (!new JWTRouteFilter(bspSecret, null).isAccessAllowed(req)) {
+                halt(404);
+            }
+            res.header(HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
+        });
 
         //DSM internal routes
         EventUtil eventUtil = new EventUtil();

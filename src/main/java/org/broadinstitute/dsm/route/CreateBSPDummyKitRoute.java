@@ -12,8 +12,6 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 
-import java.util.Optional;
-
 public class CreateBSPDummyKitRoute implements Route {
     private static final String DUMMY_KIT_TYPE_NAME = "DUMMY_KIT_TYPE";
     private static final String DUMMY_REALM_NAME = "DUMMY_KIT_REALM";
@@ -27,7 +25,7 @@ public class CreateBSPDummyKitRoute implements Route {
         if (StringUtils.isBlank(kitLabel)) {
             response.status(500);// return bad request
             logger.error("Bad request from Mercury! Should include a kitlabel");
-           return response;
+            return response;
         }
         logger.info("Found kitlabel " + kitLabel + " in Mercury request");
         int ddpInstanceId = (int) DBUtil.getBookmark(DUMMY_REALM_NAME);
@@ -38,7 +36,9 @@ public class CreateBSPDummyKitRoute implements Route {
             String mercuryKitRequestId = "MERCURY_" + KitRequestShipping.createRandom(20);
             int kitTypeId = (int) DBUtil.getBookmark(DUMMY_KIT_TYPE_NAME);
             logger.info("Found kit type for Mercury Dummy Endpoint " + kitTypeId);
-            String ddpParticipantId = Optional.ofNullable(new BSPKitDao().getRandomParticipantIdForStudy(mockDdpInstance.getDdpInstanceId())).orElseThrow(()-> {throw new RuntimeException("Random participant id was not generated");});
+            String ddpParticipantId = new BSPKitDao().getRandomParticipantIdForStudy(mockDdpInstance.getDdpInstanceId()).orElseThrow(() -> {
+                throw new RuntimeException("Random participant id was not generated");
+            });
             String participantCollaboratorId = KitRequestShipping.getCollaboratorParticipantId(mockDdpInstance.getBaseUrl(), mockDdpInstance.getDdpInstanceId(), mockDdpInstance.isMigratedDDP(),
                     mockDdpInstance.getCollaboratorIdPrefix(), ddpParticipantId, "", null);
             String collaboratorSampleId = KitRequestShipping.getCollaboratorSampleId(kitTypeId, participantCollaboratorId, DUMMY_KIT_TYPE_NAME);
@@ -50,11 +50,13 @@ public class CreateBSPDummyKitRoute implements Route {
                 new BSPKitDao().updateKitLabel(kitLabel, dsmKitRequestId);
             }
             logger.info("Returning 200 to Mercury");
-           response.status(200);
+            response.status(200);
         }
-        logger.error("Returning 500 to Mercury");
-        response.status(500);
-       return response;
+        else {
+            logger.error("Returning 500 to Mercury");
+            response.status(500);
+        }
+        return response;
     }
 
 

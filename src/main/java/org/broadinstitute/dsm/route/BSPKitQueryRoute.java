@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.route;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.BSPKit;
+import org.broadinstitute.dsm.model.bsp.BSPKitStatus;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.util.NotificationUtil;
 import spark.Request;
@@ -27,11 +28,12 @@ public class BSPKitQueryRoute implements Route {
         }
         BSPKit bspKit = new BSPKit();
         if (!bspKit.canReceiveKit(kitLabel)) {
-            Optional<Object> result = Optional.ofNullable(bspKit.getKitStatus(kitLabel, notificationUtil));
+            Optional<BSPKitStatus> result = bspKit.getKitStatus(kitLabel, notificationUtil);
             if(!result.isPresent()){
                 response.status(404);
+                return response;
             }
-            return result.orElse(response);
+            return result.get();
         }
 
         return bspKit.receiveBSPKit(kitLabel, this.notificationUtil);

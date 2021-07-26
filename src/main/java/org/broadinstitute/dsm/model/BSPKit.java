@@ -19,28 +19,27 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class BSPKit {
     private static Logger logger = LoggerFactory.getLogger(BSPKit.class);
 
-    public BSPKitStatus getKitStatus(@NonNull String kitLabel, NotificationUtil notificationUtil) {
+    public Optional<BSPKitStatus> getKitStatus(@NonNull String kitLabel, NotificationUtil notificationUtil) {
         logger.info("Checking label " + kitLabel);
         BSPKitQueryResult bspKitQueryResult = BSPKitQueryResult.getBSPKitQueryResult(kitLabel);
-
+        Optional<BSPKitStatus> result = Optional.empty();
         if (bspKitQueryResult == null) {
             logger.info("No kit w/ label " + kitLabel + " found");
-            return null;
         }
-
-        if (StringUtils.isNotBlank(bspKitQueryResult.getParticipantExitId())) {
+        else if (StringUtils.isNotBlank(bspKitQueryResult.getParticipantExitId())) {
             String message = "Kit of exited participant " + bspKitQueryResult.getBspParticipantId() + " was received by GP.<br>";
             notificationUtil.sentNotification(bspKitQueryResult.getNotificationRecipient(), message, NotificationUtil.DSM_SUBJECT);
-            return new BSPKitStatus(BSPKitStatus.EXITED);
+            result= Optional.of(new BSPKitStatus(BSPKitStatus.EXITED));
         }
-        if (StringUtils.isNotBlank(bspKitQueryResult.getDeactivationDate())) {
-            return new BSPKitStatus(BSPKitStatus.DEACTIVATED);
+        else if (StringUtils.isNotBlank(bspKitQueryResult.getDeactivationDate())) {
+            return Optional.of(new BSPKitStatus(BSPKitStatus.DEACTIVATED));
         }
-        return null;
+        return result;
     }
 
     public boolean canReceiveKit(@NonNull String kitLabel) {
@@ -126,7 +125,7 @@ public class BSPKit {
         });
     }
 
-    private static void writeSampleReceivedToES(DDPInstance ddpInstance, BSPKitQueryResult bspKitInfo) {
+    private void writeSampleReceivedToES(DDPInstance ddpInstance, BSPKitQueryResult bspKitInfo) {
         String kitRequestId = new KitRequestDao().getKitRequestIdByBSPParticipantId(bspKitInfo.getBspParticipantId());
         Map<String, Object> nameValuesMap = new HashMap<>();
         nameValuesMap.put(ESObjectConstants.RECEIVED, SystemUtil.getISO8601DateString());

@@ -44,7 +44,7 @@ public class BSPKitDao implements Dao<ClinicalKitDto> {
         }
     }
 
-    public String getRandomParticipantIdForStudy(String ddpInstanceId) {
+    public Optional<String> getRandomParticipantIdForStudy(String ddpInstanceId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_RANDOM_PT)) {
@@ -62,10 +62,7 @@ public class BSPKitDao implements Dao<ClinicalKitDto> {
         if (results.resultException != null) {
             throw new RuntimeException("Problem getting a random participant id for instance id " + ddpInstanceId, results.resultException);
         }
-        if (results.resultValue != null) {
-            return (String) results.resultValue;
-        }
-        return null;
+        return Optional.ofNullable((String) results.resultValue);
     }
 
     @Override
