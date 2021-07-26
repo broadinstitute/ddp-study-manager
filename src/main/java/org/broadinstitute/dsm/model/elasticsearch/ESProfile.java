@@ -20,7 +20,7 @@ public class ESProfile {
     private String email;
 
     @SerializedName(ESObjectConstants.LEGACY_ALTPID)
-    private String participantLegacyAlptid;
+    private String participantLegacyAltPid;
 
     @SerializedName(ESObjectConstants.HRUID)
     private String hruid;

@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.route;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -21,6 +22,8 @@ import org.broadinstitute.dsm.model.AbstractionWrapper;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Patch;
 import org.broadinstitute.dsm.model.Value;
+import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
+import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -38,11 +41,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+//Class needs to be refactored as soon as possible!!!
 public class PatchRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PatchRoute.class);
     private static final ParticipantDataDao participantDataDao = new ParticipantDataDao();
+    private static final Gson gson = new GsonBuilder().serializeNulls().create();
 
     private static final String PARTICIPANT_ID = "participantId";
     private static final String PRIMARY_KEY_ID = "primaryKeyId";
@@ -66,11 +73,14 @@ public class PatchRoute extends RequestHandler {
                 || UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW) || UserUtil.checkUserAccess(null, userId, DBConstants.PT_LIST_VIEW)) {
             try {
                 String requestBody = request.body();
-                Patch patch = new Gson().fromJson(requestBody, Patch.class);
+                Patch patch = gson.fromJson(requestBody, Patch.class);
                 if (StringUtils.isNotBlank(patch.getId())) {
                     //multiple values are changing
                     if (patch.getNameValues() != null && !patch.getNameValues().isEmpty()) {
                         List<NameValue> nameValues = new ArrayList<>();
+                        DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+                        ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getParentId())
+                                .orElseThrow(() -> new RuntimeException("Unable to find ES profile for participant: " + patch.getParentId()));
                         for (NameValue nameValue : patch.getNameValues()) {
                             DBElement dbElement = patchUtil.getColumnNameMap().get(nameValue.getName());
                             if (dbElement != null) {
@@ -103,10 +113,11 @@ public class PatchRoute extends RequestHandler {
                                         nameValues.add(nameValue);
                                     }
                                 }
+                                controlWorkflowByEmail(patch, nameValue, ddpInstance, profile);
                                 if (patch.getActions() != null) {
                                     for (Value action : patch.getActions()) {
                                         if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
-                                            writeESWorkflow(patch, nameValue, action);
+                                            writeESWorkflow(patch, nameValue, action, ddpInstance, profile.getParticipantGuid());
                                         }
                                     }
                                 }
@@ -115,7 +126,7 @@ public class PatchRoute extends RequestHandler {
                                 throw new RuntimeException("DBElement not found in ColumnNameMap: " + nameValue.getName());
                             }
                         }
-                        return new Result(200, new GsonBuilder().serializeNulls().create().toJson(nameValues));
+                        return new Result(200, gson.toJson(nameValues));
                     }
                     else {
                         // mr changes
@@ -125,7 +136,7 @@ public class PatchRoute extends RequestHandler {
                                 List<NameValue> nameValues = setWorkflowRelatedFields(patch);
                                 writeDSMRecordsToES(patch);
                                 //return nameValues with nulls
-                                return new Result(200, new GsonBuilder().serializeNulls().create().toJson(nameValues));
+                                return new Result(200, gson.toJson(nameValues));
                             }
                         }
                         else {
@@ -157,7 +168,7 @@ public class PatchRoute extends RequestHandler {
                                 Map<String, String> map = new HashMap<>();
                                 map.put(PRIMARY_KEY_ID, primaryKeyId);
                                 //return map with nulls
-                                return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
+                                return new Result(200, gson.toJson(map));
                             }
                             else {
                                 //single value
@@ -167,7 +178,7 @@ public class PatchRoute extends RequestHandler {
                                     Map<String, String> map = new HashMap<>();
                                     map.put(PRIMARY_KEY_ID, primaryKeyId);
                                     //return map with nulls
-                                    return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
+                                    return new Result(200, gson.toJson(map));
                                 }
                                 else {
                                     throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
@@ -223,9 +234,9 @@ public class PatchRoute extends RequestHandler {
                                 // add oncHistoryId and NameValues of objects changed by workflow to json and sent it back to UI
                                 map.put("oncHistoryDetailId", oncHistoryDetailId);
                                 nameValues.add(new NameValue("request", OncHistoryDetail.STATUS_REVIEW));
-                                map.put(NAME_VALUE, new GsonBuilder().serializeNulls().create().toJson(nameValues));
+                                map.put(NAME_VALUE, gson.toJson(nameValues));
                                 //return map with nulls
-                                return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
+                                return new Result(200, gson.toJson(map));
                             }
                             else {
                                 logger.error("No medical record id for oncHistoryDetails ");
@@ -241,11 +252,11 @@ public class PatchRoute extends RequestHandler {
                                 Map<String, String> map = new HashMap<>();
                                 map.put("tissueId", tissueId);
                                 if (!nameValues.isEmpty()) {
-                                    map.put(NAME_VALUE, new GsonBuilder().serializeNulls().create().toJson(nameValues));
-                                    return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
+                                    map.put(NAME_VALUE, gson.toJson(nameValues));
+                                    return new Result(200, gson.toJson(map));
                                 }
                                 else {
-                                    return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
+                                    return new Result(200, gson.toJson(map));
                                 }
                             }
                         }
@@ -256,11 +267,11 @@ public class PatchRoute extends RequestHandler {
                     else if (Patch.PARTICIPANT_DATA_ID.equals(patch.getParent())) {
                         String participantDataId = null;
                         Map<String, String> map = new HashMap<>();
+                        DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
                         for (NameValue nameValue : patch.getNameValues()) {
                             DBElement dbElement = patchUtil.getColumnNameMap().get(nameValue.getName());
                             if (dbElement != null) {
                                 if (participantDataId == null) {
-                                    DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
                                     participantDataId = ParticipantData.createNewParticipantData(patch.getParentId(), ddpInstance.getDdpInstanceId(), patch.getFieldId(), String.valueOf(nameValue.getValue()), patch.getUser());
                                     map.put(ESObjectConstants.PARTICIPANT_DATA_ID, participantDataId);
                                 }
@@ -268,15 +279,17 @@ public class PatchRoute extends RequestHandler {
                                     Patch.patch(participantDataId, patch.getUser(), nameValue, dbElement);
                                 }
                                 if (patch.getActions() != null) {
+                                    ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getParentId())
+                                            .orElseThrow(() -> new RuntimeException("Unable to find ES profile for participant: " + patch.getParentId()));
                                     for (Value action : patch.getActions()) {
                                         if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
-                                            writeESWorkflow(patch, nameValue, action);
+                                            writeESWorkflow(patch, nameValue, action, ddpInstance, profile.getParticipantGuid());
                                         }
                                     }
                                 }
                             }
                         }
-                        return new Result(200, new GsonBuilder().serializeNulls().create().toJson(map));
+                        return new Result(200, gson.toJson(map));
                     }
                     else if (Patch.DDP_PARTICIPANT_ID.equals(patch.getParent())) {
                         //new additional value for pt which is not in ddp_participant and ddp_participant_record table yet
@@ -289,7 +302,7 @@ public class PatchRoute extends RequestHandler {
                                 throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
                             }
                             Patch.patch(String.valueOf(participantId), patch.getUser(), patch.getNameValue(), dbElement);
-                            return new Result(200, new GsonBuilder().serializeNulls().create().toJson(Map.of(PARTICIPANT_ID, String.valueOf(participantId))));
+                            return new Result(200, gson.toJson(Map.of(PARTICIPANT_ID, String.valueOf(participantId))));
                         }
                     }
                 }
@@ -305,6 +318,56 @@ public class PatchRoute extends RequestHandler {
         else {
             response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
+        }
+    }
+
+    private void controlWorkflowByEmail(Patch patch, NameValue nameValue, DDPInstance ddpInstance, ESProfile profile) {
+        try {
+            Map<String, String> pData = gson.fromJson(nameValue.getValue().toString(), Map.class);
+            org.broadinstitute.dsm.model.participant.data.ParticipantData participantData =
+                    new org.broadinstitute.dsm.model.participant.data.ParticipantData(Integer.parseInt(patch.getId()),
+                            patch.getParentId(), Integer.parseInt(ddpInstance.getDdpInstanceId()), patch.getFieldId(),
+                            pData);
+
+            if (participantData.hasFamilyMemberApplicantEmail(profile)) {
+                logger.info("Email in patch data matches participant profile email, will update workflows");
+                int ddpInstanceIdByGuid = Integer.parseInt(ddpInstance.getDdpInstanceId());
+                FieldSettings fieldSettings = new FieldSettings();
+                pData.forEach((columnName,columnValue) -> {
+                    if (!fieldSettings.isColumnExportable(ddpInstanceIdByGuid, columnName)) return;
+                    if (!patch.getFieldId().contains(org.broadinstitute.dsm.model.participant.data.ParticipantData.FIELD_TYPE)) return;
+                    // Use participant guid here to avoid multiple ES lookups.
+                    ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance,
+                            profile.getParticipantGuid(), columnName, columnValue, new WorkflowForES.StudySpecificData(
+                                    pData.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+                                    pData.get(FamilyMemberConstants.FIRSTNAME),
+                                    pData.get(FamilyMemberConstants.LASTNAME))), false);
+                });
+            } else {
+                logger.info("Email in patch data does not match participant profile email, will remove workflows");
+                Map<String, Object> esMap = ElasticSearchUtil
+                        .getObjectsMap(ddpInstance.getParticipantIndexES(), profile.getParticipantGuid(),
+                                ESObjectConstants.WORKFLOWS);
+                if (Objects.isNull(esMap)) return;
+                CopyOnWriteArrayList<Map<String, Object>> workflowsList = new CopyOnWriteArrayList<>((List<Map<String, Object>>)esMap.get(ESObjectConstants.WORKFLOWS));
+                int startingSize = workflowsList.size();
+                workflowsList.forEach(workflow -> {
+                    Map<String, String> workflowDataMap = (Map<String, String>) workflow.get(ESObjectConstants.DATA);
+                    String collaboratorParticipantId = workflowDataMap.get(ESObjectConstants.SUBJECT_ID);
+                    if (Objects.isNull(collaboratorParticipantId)) return;
+                    if (collaboratorParticipantId.equals(pData.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID))) {
+                        workflowsList.remove(workflow);
+                    }
+                });
+                if (startingSize != workflowsList.size()) {
+                    esMap.put(ESObjectConstants.WORKFLOWS, workflowsList);
+                    // Use participant guid here to avoid another ES lookup.
+                    ElasticSearchUtil.updateRequest(profile.getParticipantGuid(), ddpInstance.getParticipantIndexES(), esMap);
+                }
+            }
+        } catch (JsonSyntaxException ignored) {
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -355,22 +418,21 @@ public class PatchRoute extends RequestHandler {
         }
     }
 
-    private void writeESWorkflow(@NonNull Patch patch, @NonNull NameValue nameValue, @NonNull Value action) {
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+    private void writeESWorkflow(@NonNull Patch patch, @NonNull NameValue nameValue, @NonNull Value action, DDPInstance ddpInstance, String esParticipantId) {
         String status = nameValue.getValue() != null ? String.valueOf(nameValue.getValue()) : null;
         if (StringUtils.isBlank(status)) {
             return;
         }
-        Map<String, String> data = new Gson().fromJson(status, new TypeToken<Map<String, String>>() {
+        Map<String, String> data = gson.fromJson(status, new TypeToken<Map<String, String>>() {
         }.getType());
         if (StringUtils.isNotBlank(action.getValue())) {
             if (!patch.getFieldId().contains(FamilyMemberConstants.PARTICIPANTS)) {
-                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, patch.getParentId(), action.getName(), action.getValue()), false);
+                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, esParticipantId, action.getName(), action.getValue()), false);
             }
-            else if (ParticipantUtil.checkApplicantEmail(data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+            else if (ParticipantUtil.matchesApplicantEmail(data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                     participantDataDao.getParticipantDataByParticipantId(patch.getParentId()))) {
                 ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance,
-                        patch.getParentId(), action.getName(), data.get(action.getName()), new WorkflowForES.StudySpecificData(
+                        esParticipantId, action.getName(), data.get(action.getName()), new WorkflowForES.StudySpecificData(
                                 data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                                 data.get(FamilyMemberConstants.FIRSTNAME),
                                 data.get(FamilyMemberConstants.LASTNAME))), false);
@@ -378,12 +440,12 @@ public class PatchRoute extends RequestHandler {
         }
         else if (StringUtils.isNotBlank(action.getName()) && data.containsKey(action.getName())) {
             if (!patch.getFieldId().contains(FamilyMemberConstants.PARTICIPANTS)) {
-                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, patch.getParentId(), action.getName(), data.get(action.getName())), false);
+                ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstance(ddpInstance, esParticipantId, action.getName(), data.get(action.getName())), false);
             }
-            else if (ParticipantUtil.checkApplicantEmail(data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
+            else if (ParticipantUtil.matchesApplicantEmail(data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                     participantDataDao.getParticipantDataByParticipantId(patch.getParentId()))) {
                 ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance,
-                        patch.getParentId(), action.getName(), data.get(action.getName()), new WorkflowForES.StudySpecificData(
+                        esParticipantId, action.getName(), data.get(action.getName()), new WorkflowForES.StudySpecificData(
                                 data.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                                 data.get(FamilyMemberConstants.FIRSTNAME),
                                 data.get(FamilyMemberConstants.LASTNAME))), false);

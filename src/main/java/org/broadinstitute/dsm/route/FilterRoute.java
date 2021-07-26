@@ -259,7 +259,7 @@ public class FilterRoute extends RequestHandler {
                     if (filter.getParticipantColumn() != null && PARTICIPANT_DATA.equals(filter.getParticipantColumn().tableAlias)) {
                         if (allParticipantData == null) {
                             allParticipantData = participantDataDao
-                                    .getParticipantDataByInstanceid(Integer.parseInt(instance.getDdpInstanceId()));
+                                    .getParticipantDataByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
                         }
                         addParticipantDataFilters(queryConditions, filter, tmpName, allParticipantData);
                     } else {
@@ -333,9 +333,15 @@ public class FilterRoute extends RequestHandler {
                     }
                 }
             } else if (filter.getFilter1() != null && filter.getFilter1().getValue() != null) {
-                boolean singleValue = dataMap.get(fieldName) != null && dataMap.get(fieldName)
-                        .equals(filter.getFilter1().getValue());
-                if (singleValue) {
+                boolean singleValueMatches;
+                if (filter.isExactMatch()) {
+                    singleValueMatches = dataMap.get(fieldName) != null && dataMap.get(fieldName)
+                            .equals(filter.getFilter1().getValue());
+                } else {
+                    singleValueMatches = dataMap.get(fieldName) != null && dataMap.get(fieldName).toLowerCase()
+                            .contains(filter.getFilter1().getValue().toString().toLowerCase());
+                }
+                if (singleValueMatches) {
                     participantIdsForQuery.put(ddpParticipantId, fieldName);
                 } else if (filter.getFilter2() != null) {
                     addConditionForRange(filter, fieldName, dataMap, participantIdsForQuery, ddpParticipantId);

@@ -1,14 +1,17 @@
 package org.broadinstitute.dsm.export;
 
-import com.google.gson.Gson;
-import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import java.time.Duration;
+import java.time.Instant;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.google.gson.Gson;
+import org.broadinstitute.dsm.db.DDPInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ExportToES {
 
+    private static final Logger logger = LoggerFactory.getLogger(ExportToES.class);
     private static final Gson gson = new Gson();
-    private static final DDPInstanceDao ddpInstanceDao = new DDPInstanceDao();
     private WorkflowAndFamilyIdExporter workflowAndFamilyIdExporter;
     private TissueRecordExporter tissueRecordExporter;
     private MedicalRecordExporter medicalRecordExporter;
@@ -21,26 +24,26 @@ public class ExportToES {
         this.sampleExporter = new SampleExporter();
     }
 
-    public void exportObjectsToES(String data, AtomicBoolean clearBeforeUpdate) {
+    public void exportObjectsToES(String data, boolean clearBeforeUpdate) {
         ExportPayload payload = gson.fromJson(data, ExportPayload.class);
-        int instanceId = ddpInstanceDao.getDDPInstanceIdByGuid(payload.getStudy());
+        DDPInstance instance = DDPInstance.getDDPInstanceByGuid(payload.getStudy());
+        if (instance == null) {
+            logger.warn("Could not find ddp instance with study guid '{}', skipping export", payload.getStudy());
+            return;
+        }
 
-        workflowAndFamilyIdExporter.export(instanceId, clearBeforeUpdate);
+        Instant start = Instant.now();
+        workflowAndFamilyIdExporter.export(instance, clearBeforeUpdate);
+        medicalRecordExporter.export(instance);
+        tissueRecordExporter.export(instance);
+        sampleExporter.export(instance);
+        Duration elapsed = Duration.between(start, Instant.now());
 
-        medicalRecordExporter.export(instanceId);
-
-        tissueRecordExporter.export(instanceId);
-
-        sampleExporter.export(instanceId);
+        logger.info("Export took {} secs ({})", elapsed.getSeconds(), elapsed.toString());
     }
 
     public static class ExportPayload {
-        private String index;
         private String study;
-
-        public String getIndex() {
-            return index;
-        }
 
         public String getStudy() {
             return study;
