@@ -29,14 +29,14 @@ public class BSPKitQueryRoute implements Route {
         BSPKit bspKit = new BSPKit();
         if (!bspKit.canReceiveKit(kitLabel)) {
             Optional<BSPKitStatus> result = bspKit.getKitStatus(kitLabel, notificationUtil);
-            if(!result.isPresent()){
+            if(result.isEmpty()){
                 response.status(404);
                 return response;
             }
             return result.get();
         }
 
-        return bspKit.receiveBSPKit(kitLabel, this.notificationUtil);
+        return bspKit.receiveBSPKit(kitLabel, this.notificationUtil).get();
 
     }
 }
