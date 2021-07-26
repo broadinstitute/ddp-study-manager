@@ -243,6 +243,8 @@ public class FilterRoute extends RequestHandler {
         Map<String, String> queryConditions = new HashMap<>();
         List<ParticipantDataDto> allParticipantData = null;
         if (filters != null && columnNameMap != null && !columnNameMap.isEmpty()) {
+            Map<String, Integer> allIdsForParticipantDataFiltering = new HashMap<>();
+            int numberOfParticipantDataFilters = 0;
             for (Filter filter : filters) {
                 if (filter != null) {
                     String tmp = null;
@@ -261,7 +263,8 @@ public class FilterRoute extends RequestHandler {
                             allParticipantData = participantDataDao
                                     .getParticipantDataByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
                         }
-                        addParticipantDataFilters(queryConditions, filter, tmpName, allParticipantData);
+                        numberOfParticipantDataFilters++;
+                        addParticipantDataIdsForFilters(filter, tmpName, allParticipantData, allIdsForParticipantDataFiltering);
                     } else {
                         if (StringUtils.isNotBlank(tmpName)) {
                             dbElement = columnNameMap.get(tmp + "." + tmpName);
@@ -270,6 +273,7 @@ public class FilterRoute extends RequestHandler {
                     }
                 }
             }
+            addParticipantDataConditionsToQuery(allIdsForParticipantDataFiltering, queryConditions, numberOfParticipantDataFilters);
         }
 
         if (!queryConditions.isEmpty()) {
@@ -296,8 +300,32 @@ public class FilterRoute extends RequestHandler {
         }
     }
 
-    public static void addParticipantDataFilters(Map<String, String> queryConditions,
-                                                 Filter filter, String fieldName, List<ParticipantDataDto> allParticipantData) {
+    public static void addParticipantDataConditionsToQuery(Map<String, Integer> allIdsForParticipantDataFiltering, Map<String, String> queryConditions, int filtersLength) {
+        StringBuilder newCondition = new StringBuilder(ElasticSearchUtil.AND);
+        int i = 0;
+        if (allIdsForParticipantDataFiltering.isEmpty()) {
+            queryConditions.put(ElasticSearchUtil.ES, ElasticSearchUtil.BY_PROFILE_GUID + ElasticSearchUtil.EMPTY);
+        } else {
+            for (Map.Entry<String, Integer> entry: allIdsForParticipantDataFiltering.entrySet()) {
+                if (entry.getValue() != filtersLength) {
+                    continue;
+                }
+                if (i == 0) {
+                    newCondition.append(ParticipantUtil.isGuid(entry.getKey()) ? ElasticSearchUtil.BY_PROFILE_GUID + entry.getKey() : ElasticSearchUtil.BY_PROFILE_LEGACY_ALTPID + entry.getKey());
+                } else {
+                    newCondition.append(ParticipantUtil.isGuid(entry.getKey()) ? ElasticSearchUtil.BY_GUIDS + entry.getKey() : ElasticSearchUtil.BY_LEGACY_ALTPIDS + entry.getKey());
+                }
+                i++;
+            }
+            newCondition.append(ElasticSearchUtil.CLOSING_PARENTHESIS);
+            String esCondition = queryConditions.get(ElasticSearchUtil.ES);
+            esCondition += newCondition.toString();
+            queryConditions.put(ElasticSearchUtil.ES, esCondition);
+        }
+    }
+
+    public static void addParticipantDataIdsForFilters(Filter filter, String fieldName, List<ParticipantDataDto> allParticipantData,
+                                                       Map<String, Integer> allIdsForParticipantDataFiltering) {
         Map<String, String> participantIdsForQuery = new HashMap();
         Map<String, String> participantsNotToAdd = new HashMap();
         for (ParticipantDataDto participantData : allParticipantData) {
@@ -348,16 +376,8 @@ public class FilterRoute extends RequestHandler {
                 }
             }
         }
-        if (!participantIdsForQuery.isEmpty()) {
-            StringBuilder newCondition = getNewCondition(participantIdsForQuery);
-            newCondition.append(ElasticSearchUtil.CLOSING_PARENTHESIS);
-            String esCondition = queryConditions.get(ElasticSearchUtil.ES);
-            esCondition += newCondition.toString();
-            queryConditions.put(ElasticSearchUtil.ES, esCondition);
-        } else {
-            //so that empty list is returned
-            queryConditions.put(ElasticSearchUtil.ES, ElasticSearchUtil.BY_PROFILE_GUID + ElasticSearchUtil.EMPTY);
-        }
+        participantIdsForQuery.forEach((key, value) -> allIdsForParticipantDataFiltering
+                .put(key, allIdsForParticipantDataFiltering.getOrDefault(key, 0) + 1));
     }
 
     public static StringBuilder getNewCondition(Map<String, String> participantIdsForQuery) {

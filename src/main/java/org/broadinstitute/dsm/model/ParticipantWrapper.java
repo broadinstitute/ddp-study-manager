@@ -162,9 +162,30 @@ public class ParticipantWrapper {
                     //                }
                     else { //source is not of any study-manager table so it must be ES
                         String wholeFilter = filters.get(source);
-                        String[] ands = wholeFilter.split("AND");
-                        int or = Arrays.stream(ands).flatMap(and -> Arrays.stream(and.split("OR"))).collect(Collectors.toList()).size();
-                        participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filters.get(source));
+                        String[] betweenAnds = wholeFilter.split(Filter.AND_TRIMMED);
+                        boolean tooManyParameters = false;
+                        participantESData = new HashMap<>();
+                        String lessThanLimit = Arrays.stream(betweenAnds).filter(query -> query.split(Filter.OR_TRIMMED).length <= 900).collect(Collectors.joining(Filter.AND));
+                        for (String query: betweenAnds) {
+                            String[] orQueries = query.split(Filter.OR_TRIMMED);
+                            if (orQueries.length <= 900) {
+                                continue;
+                            }
+                            tooManyParameters = true;
+                            Collection<List<String>> partitionBaseList = partitionBasedOnSize(Arrays.asList(orQueries), 900);
+                            for (Iterator i = partitionBaseList.iterator(); i.hasNext();) {
+                                List<String> baseListPart = ((List<String>) i.next());
+                                Map<String, Map<String, Object>> tempParticipantESData = ElasticSearchUtil
+                                        .getFilteredDDPParticipantsFromES(instance, lessThanLimit + " AND " + String.join(Filter.OR, baseListPart));
+                                if (tempParticipantESData != null) {
+                                    participantESData.putAll(tempParticipantESData);
+                                }
+                            }
+                            break;
+                        }
+                        if (!tooManyParameters) {
+                            participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filters.get(source));
+                        }
                         baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
                     }
                 }
