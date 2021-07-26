@@ -259,7 +259,7 @@ public class FilterRoute extends RequestHandler {
                     if (filter.getParticipantColumn() != null && PARTICIPANT_DATA.equals(filter.getParticipantColumn().tableAlias)) {
                         if (allParticipantData == null) {
                             allParticipantData = participantDataDao
-                                    .getParticipantDataByInstanceid(Integer.parseInt(instance.getDdpInstanceId()));
+                                    .getParticipantDataByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
                         }
                         addParticipantDataFilters(queryConditions, filter, tmpName, allParticipantData);
                     } else {
