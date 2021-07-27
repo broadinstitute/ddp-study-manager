@@ -301,17 +301,16 @@ public class FilterRoute extends RequestHandler {
     }
 
     public static void addParticipantDataConditionsToQuery(Map<String, Integer> allIdsForParticipantDataFiltering, Map<String, String> queryConditions, int filtersLength) {
-        StringBuilder newCondition = new StringBuilder(ElasticSearchUtil.AND);
         if (allIdsForParticipantDataFiltering.isEmpty()) {
             queryConditions.put(ElasticSearchUtil.ES, ElasticSearchUtil.BY_PROFILE_GUID + ElasticSearchUtil.EMPTY);
         } else {
-            createNewConditionByIds(allIdsForParticipantDataFiltering, filtersLength, newCondition);
-            newCondition.append(ElasticSearchUtil.CLOSING_PARENTHESIS);
-            queryConditions.merge(ElasticSearchUtil.ES, newCondition.toString(), (prev, next) -> prev + next);
+            String newCondition = createNewConditionByIds(allIdsForParticipantDataFiltering, filtersLength);
+            queryConditions.merge(ElasticSearchUtil.ES, newCondition, (prev, next) -> prev + next);
         }
     }
 
-    public static void createNewConditionByIds(Map<String, Integer> allIdsForParticipantDataFiltering, int filtersLength, StringBuilder newCondition) {
+    public static String createNewConditionByIds(Map<String, Integer> allIdsForParticipantDataFiltering, int filtersLength) {
+        StringBuilder newCondition = new StringBuilder(ElasticSearchUtil.AND);
         int i = 0;
         for (Map.Entry<String, Integer> entry: allIdsForParticipantDataFiltering.entrySet()) {
             if (entry.getValue() != filtersLength) {
@@ -324,6 +323,8 @@ public class FilterRoute extends RequestHandler {
             }
             i++;
         }
+        newCondition.append(ElasticSearchUtil.CLOSING_PARENTHESIS);
+        return newCondition.toString();
     }
 
     public static void addParticipantDataIdsForFilters(Filter filter, String fieldName, List<ParticipantDataDto> allParticipantData,
