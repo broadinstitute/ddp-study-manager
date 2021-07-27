@@ -307,13 +307,7 @@ public class FilterRoute extends RequestHandler {
         } else {
             createNewConditionByIds(allIdsForParticipantDataFiltering, filtersLength, newCondition);
             newCondition.append(ElasticSearchUtil.CLOSING_PARENTHESIS);
-             String esCondition = queryConditions.get(ElasticSearchUtil.ES);
-            if (esCondition == null) {
-                esCondition = newCondition.toString();
-            } else {
-                esCondition += newCondition.toString();
-            }
-            queryConditions.put(ElasticSearchUtil.ES, esCondition);
+            queryConditions.merge(ElasticSearchUtil.ES, newCondition.toString(), (prev, next) -> prev + next);
         }
     }
 
