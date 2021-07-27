@@ -302,25 +302,33 @@ public class FilterRoute extends RequestHandler {
 
     public static void addParticipantDataConditionsToQuery(Map<String, Integer> allIdsForParticipantDataFiltering, Map<String, String> queryConditions, int filtersLength) {
         StringBuilder newCondition = new StringBuilder(ElasticSearchUtil.AND);
-        int i = 0;
         if (allIdsForParticipantDataFiltering.isEmpty()) {
             queryConditions.put(ElasticSearchUtil.ES, ElasticSearchUtil.BY_PROFILE_GUID + ElasticSearchUtil.EMPTY);
         } else {
-            for (Map.Entry<String, Integer> entry: allIdsForParticipantDataFiltering.entrySet()) {
-                if (entry.getValue() != filtersLength) {
-                    continue;
-                }
-                if (i == 0) {
-                    newCondition.append(ParticipantUtil.isGuid(entry.getKey()) ? ElasticSearchUtil.BY_PROFILE_GUID + entry.getKey() : ElasticSearchUtil.BY_PROFILE_LEGACY_ALTPID + entry.getKey());
-                } else {
-                    newCondition.append(ParticipantUtil.isGuid(entry.getKey()) ? ElasticSearchUtil.BY_GUIDS + entry.getKey() : ElasticSearchUtil.BY_LEGACY_ALTPIDS + entry.getKey());
-                }
-                i++;
-            }
+            createNewConditionByIds(allIdsForParticipantDataFiltering, filtersLength, newCondition);
             newCondition.append(ElasticSearchUtil.CLOSING_PARENTHESIS);
-            String esCondition = queryConditions.get(ElasticSearchUtil.ES);
-            esCondition += newCondition.toString();
+             String esCondition = queryConditions.get(ElasticSearchUtil.ES);
+            if (esCondition == null) {
+                esCondition = newCondition.toString();
+            } else {
+                esCondition += newCondition.toString();
+            }
             queryConditions.put(ElasticSearchUtil.ES, esCondition);
+        }
+    }
+
+    public static void createNewConditionByIds(Map<String, Integer> allIdsForParticipantDataFiltering, int filtersLength, StringBuilder newCondition) {
+        int i = 0;
+        for (Map.Entry<String, Integer> entry: allIdsForParticipantDataFiltering.entrySet()) {
+            if (entry.getValue() != filtersLength) {
+                continue;
+            }
+            if (i == 0) {
+                newCondition.append(ParticipantUtil.isGuid(entry.getKey()) ? ElasticSearchUtil.BY_PROFILE_GUID + entry.getKey() : ElasticSearchUtil.BY_PROFILE_LEGACY_ALTPID + entry.getKey());
+            } else {
+                newCondition.append(ParticipantUtil.isGuid(entry.getKey()) ? ElasticSearchUtil.BY_GUIDS + entry.getKey() : ElasticSearchUtil.BY_LEGACY_ALTPIDS + entry.getKey());
+            }
+            i++;
         }
     }
 

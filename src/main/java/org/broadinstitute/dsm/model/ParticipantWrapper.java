@@ -161,31 +161,7 @@ public class ParticipantWrapper {
                     //                    baseList = getCommonEntries(baseList, new ArrayList<>(abstractionSummary.keySet()));
                     //                }
                     else { //source is not of any study-manager table so it must be ES
-                        String wholeFilter = filters.get(source);
-                        String[] betweenAnds = wholeFilter.split(Filter.AND_TRIMMED);
-                        boolean tooManyParameters = false;
-                        participantESData = new HashMap<>();
-                        String lessThanLimit = Arrays.stream(betweenAnds).filter(query -> query.split(Filter.OR_TRIMMED).length <= 900).collect(Collectors.joining(Filter.AND));
-                        for (String query: betweenAnds) {
-                            String[] orQueries = query.split(Filter.OR_TRIMMED);
-                            if (orQueries.length <= 900) {
-                                continue;
-                            }
-                            tooManyParameters = true;
-                            Collection<List<String>> partitionBaseList = partitionBasedOnSize(Arrays.asList(orQueries), 900);
-                            for (Iterator i = partitionBaseList.iterator(); i.hasNext();) {
-                                List<String> baseListPart = ((List<String>) i.next());
-                                Map<String, Map<String, Object>> tempParticipantESData = ElasticSearchUtil
-                                        .getFilteredDDPParticipantsFromES(instance, lessThanLimit + " AND " + String.join(Filter.OR, baseListPart));
-                                if (tempParticipantESData != null) {
-                                    participantESData.putAll(tempParticipantESData);
-                                }
-                            }
-                            break;
-                        }
-                        if (!tooManyParameters) {
-                            participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filters.get(source));
-                        }
+                        participantESData = getParticipantESDataConsideringNumberOfParameters(instance, filters, source);
                         baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
                     }
                 }
@@ -268,6 +244,36 @@ public class ParticipantWrapper {
             List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistories, kitRequests, abstractionActivities, abstractionSummary, proxyData, participantData);
             return r;
         }
+    }
+
+    public static Map<String, Map<String, Object>> getParticipantESDataConsideringNumberOfParameters(@NonNull DDPInstance instance, Map<String, String> filters, String source) {
+        Map<String, Map<String, Object>> participantESData;
+        String wholeFilter = filters.get(source);
+        String[] betweenAnds = wholeFilter.split(Filter.AND_TRIMMED);
+        boolean tooManyParameters = false;
+        participantESData = new HashMap<>();
+        String lessThanLimit = Arrays.stream(betweenAnds).filter(query -> query.split(Filter.OR_TRIMMED).length <= 900).collect(Collectors.joining(Filter.AND));
+        for (String query: betweenAnds) {
+            String[] orQueries = query.split(Filter.OR_TRIMMED);
+            if (orQueries.length <= 900) {
+                continue;
+            }
+            tooManyParameters = true;
+            Collection<List<String>> partitionBaseList = partitionBasedOnSize(Arrays.asList(orQueries), 900);
+            for (Iterator i = partitionBaseList.iterator(); i.hasNext();) {
+                List<String> baseListPart = ((List<String>) i.next());
+                Map<String, Map<String, Object>> tempParticipantESData = ElasticSearchUtil
+                        .getFilteredDDPParticipantsFromES(instance, lessThanLimit + " AND " + String.join(Filter.OR, baseListPart));
+                if (tempParticipantESData != null) {
+                    participantESData.putAll(tempParticipantESData);
+                }
+            }
+            break;
+        }
+        if (!tooManyParameters) {
+            participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filters.get(source));
+        }
+        return participantESData;
     }
 
     private static <String> Collection<List<String>> partitionBasedOnSize(List<String> inputList, int size) {
