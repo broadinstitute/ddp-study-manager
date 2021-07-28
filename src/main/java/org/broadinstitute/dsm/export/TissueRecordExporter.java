@@ -9,7 +9,7 @@ import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import java.util.ArrayDeque;
 import java.util.Map;
 
 public class TissueRecordExporter implements Exporter {
@@ -19,17 +19,16 @@ public class TissueRecordExporter implements Exporter {
     private static final ObjectMapper oMapper = new ObjectMapper();
 
     @Override
-    public void export(int instanceId) {
+    public void export(DDPInstance instance) {
+        int instanceId = instance.getDdpInstanceIdAsInt();
         logger.info("Started exporting tissue records for instance with id " + instanceId);
-        List<ESTissueRecordsDto> esTissueRecords = TissueRecordExporter.esTissueRecordsDao.getESTissueRecordsByInstanceId(instanceId);
-        DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(instanceId);
-        if (ddpInstance != null) {
-            for (ESTissueRecordsDto tissueRecord : esTissueRecords) {
-                Map<String, Object> map = oMapper.convertValue(tissueRecord, Map.class);
-                if (tissueRecord.getTissueRecordId() != null && tissueRecord.getDdpParticipantId() != null) {
-                    ElasticSearchUtil.writeDsmRecord(ddpInstance, tissueRecord.getTissueRecordId(), tissueRecord.getDdpParticipantId(),
-                            ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, map);
-                }
+        ArrayDeque<ESTissueRecordsDto> esTissueRecords = new ArrayDeque<>(TissueRecordExporter.esTissueRecordsDao.getESTissueRecordsByInstanceId(instanceId));
+        while (!esTissueRecords.isEmpty()) {
+            ESTissueRecordsDto tissueRecord = esTissueRecords.pop();
+            Map<String, Object> map = oMapper.convertValue(tissueRecord, Map.class);
+            if (tissueRecord.getTissueRecordId() != null && tissueRecord.getDdpParticipantId() != null) {
+                ElasticSearchUtil.writeDsmRecord(instance, tissueRecord.getTissueRecordId(), tissueRecord.getDdpParticipantId(),
+                        ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, map);
             }
         }
         logger.info("Finished exporting tissue records for instance with id " + instanceId);

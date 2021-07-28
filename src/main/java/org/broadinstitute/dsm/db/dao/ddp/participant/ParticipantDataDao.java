@@ -240,7 +240,7 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
         return participantDataDtoList;
     }
 
-    public List<ParticipantDataDto> getParticipantDataByInstanceid(int instanceId) {
+    public List<ParticipantDataDto> getParticipantDataByInstanceId(int instanceId) {
         List<ParticipantDataDto> participantDataDtoList = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult execResult = new SimpleResult();
