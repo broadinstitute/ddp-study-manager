@@ -55,28 +55,29 @@ public class KitRequestDao implements Dao<KitRequestDto> {
 
     public static final String SQL_GET_KIT_REQUEST =
         "SELECT " +
-        "ddp_kit_request_id,  " +
-        "ddp_instance_id, " +
-        "ddp_kit_request_id, " +
-        "kit_type_id," +
-        "bsp_collaborator_participant_id, " +
-        "bsp_collaborator_sample_id, " +
-        "ddp_participant_id, " +
-        "ddp_label, " +
-        "created_by, " +
-        "created_date, " +
-        "external_order_number, " +
-        "external_order_date, " +
-        "external_order_status, " +
-        "external_response, " +
-        "upload_reason, " +
-        "order_transmitted_at, dsm_kit_request_id " +
+        "req.ddp_kit_request_id,  " +
+        "req.ddp_instance_id, " +
+        "req.ddp_kit_request_id, " +
+        "req.kit_type_id," +
+        "req.bsp_collaborator_participant_id, " +
+        "req.bsp_collaborator_sample_id, " +
+        "req.ddp_participant_id, " +
+        "req.ddp_label, " +
+        "req.created_by, " +
+        "req.created_date, " +
+        "req.external_order_number, " +
+        "req.external_order_date, " +
+        "req.external_order_status, " +
+        "req.external_response, " +
+        "req.upload_reason, " +
+        "req.order_transmitted_at, " +
+        "req.dsm_kit_request_id " +
         "FROM " +
-        "ddp_kit_request";
+        "ddp_kit_request req";
 
     public static final String BY_DDP_LABEL = " where ddp_label = ?";
 
-    public static final String BY_KIT_LABEL = " where kit_label = ?";
+    public static final String BY_KIT_LABEL = " left join ddp_kit k on req.dsm_kit_request_id = k.dsm_kit_request_id where kit_label = ?";
 
     @Override
     public int create(KitRequestDto kitRequestDto) {
