@@ -76,6 +76,8 @@ public class KitRequestDao implements Dao<KitRequestDto> {
 
     public static final String BY_DDP_LABEL = " where ddp_label = ?";
 
+    public static final String BY_KIT_LABEL = " where kit_label = ?";
+
     @Override
     public int create(KitRequestDto kitRequestDto) {
         return 0;

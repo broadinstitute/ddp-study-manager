@@ -1,6 +1,6 @@
 package org.broadinstitute.dsm.jobs;
 
-import static org.broadinstitute.dsm.db.dao.ddp.kitrequest.KitRequestDao.BY_DDP_LABEL;
+import static org.broadinstitute.dsm.db.dao.ddp.kitrequest.KitRequestDao.BY_KIT_LABEL;
 import static org.broadinstitute.dsm.db.dao.ddp.kitrequest.KitRequestDao.SQL_GET_KIT_REQUEST;
 
 import com.google.cloud.functions.BackgroundFunction;
@@ -549,7 +549,7 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
      */
     private boolean doesKitHaveUploadReason(Connection conn, String kitLabel) throws SQLException {
         boolean hasUploadReason = false;
-        try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_KIT_REQUEST + BY_DDP_LABEL)) {
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_KIT_REQUEST + BY_KIT_LABEL)) {
             stmt.setString(1, kitLabel);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
