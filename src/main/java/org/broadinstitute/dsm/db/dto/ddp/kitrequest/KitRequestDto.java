@@ -62,6 +62,6 @@ public class KitRequestDto {
     }
 
     public boolean hasUploadReason() {
-        return StringUtils.isBlank(uploadReason);
+        return StringUtils.isNotBlank(uploadReason);
     }
 }
