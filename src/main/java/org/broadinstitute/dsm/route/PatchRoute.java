@@ -76,11 +76,14 @@ public class PatchRoute extends RequestHandler {
                 Patch patch = gson.fromJson(requestBody, Patch.class);
                 if (StringUtils.isNotBlank(patch.getId())) {
                     //multiple values are changing
+                    DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
                     if (patch.getNameValues() != null && !patch.getNameValues().isEmpty()) {
                         List<NameValue> nameValues = new ArrayList<>();
-                        DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
                         ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getParentId())
-                                .orElseThrow(() -> new RuntimeException("Unable to find ES profile for participant: " + patch.getParentId()));
+                                .orElse(null);
+                        if (profile == null) {
+                            logger.error("Unable to find ES profile for participant with guid/altpid: {}, continuing w/ patch", patch.getParentId());
+                        }
                         for (NameValue nameValue : patch.getNameValues()) {
                             DBElement dbElement = patchUtil.getColumnNameMap().get(nameValue.getName());
                             if (dbElement != null) {
@@ -116,7 +119,7 @@ public class PatchRoute extends RequestHandler {
                                 controlWorkflowByEmail(patch, nameValue, ddpInstance, profile);
                                 if (patch.getActions() != null) {
                                     for (Value action : patch.getActions()) {
-                                        if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
+                                        if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType()) && profile != null) {
                                             writeESWorkflow(patch, nameValue, action, ddpInstance, profile.getParticipantGuid());
                                         }
                                     }
@@ -134,7 +137,7 @@ public class PatchRoute extends RequestHandler {
                         if (dbElement != null) {
                             if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
                                 List<NameValue> nameValues = setWorkflowRelatedFields(patch);
-                                writeDSMRecordsToES(patch);
+                                writeDSMRecordsToES(patch, ddpInstance);
                                 //return nameValues with nulls
                                 return new Result(200, gson.toJson(nameValues));
                             }
@@ -322,6 +325,9 @@ public class PatchRoute extends RequestHandler {
     }
 
     private void controlWorkflowByEmail(Patch patch, NameValue nameValue, DDPInstance ddpInstance, ESProfile profile) {
+        if (profile == null) {
+            return;
+        }
         try {
             Map<String, String> pData = gson.fromJson(nameValue.getValue().toString(), Map.class);
             org.broadinstitute.dsm.model.participant.data.ParticipantData participantData =
@@ -390,8 +396,7 @@ public class PatchRoute extends RequestHandler {
         return new ParticipantDao().create(participantDto);
     }
 
-    private void writeDSMRecordsToES(@NonNull Patch patch) {
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+    private void writeDSMRecordsToES(@NonNull Patch patch, DDPInstance ddpInstance) {
         NameValue nameValue = patch.getNameValue();
         String name = nameValue.getName().substring(nameValue.getName().lastIndexOf('.') + 1);
         String type = null;
@@ -412,8 +417,11 @@ public class PatchRoute extends RequestHandler {
         }
         else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(type)) {
             if (ESObjectConstants.TISSUE_RECORDS_FIELD_NAMES.contains(name)) {
-                ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getParentId(),
-                        ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, nameValueMap);
+                if (PARTICIPANT_ID.equals(patch.getParent())) {
+                    //TODO get guid/legacyId for DSM internal participantId
+                    ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getParentId(),
+                            ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, nameValueMap);
+                }
             }
         }
     }

@@ -44,6 +44,7 @@ public class Patch {
     private Boolean isUnique;
     private String realm;
     private List<Value> actions;
+    private String ddpParticipantId;
 
     //regular patch
     public Patch(String id, String parent, String parentId, String user, NameValue nameValue, List<NameValue> nameValues) {
