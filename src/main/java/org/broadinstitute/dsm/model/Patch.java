@@ -47,7 +47,7 @@ public class Patch {
     private String ddpParticipantId;
 
     //regular patch
-    public Patch(String id, String parent, String parentId, String user, NameValue nameValue, List<NameValue> nameValues) {
+    public Patch(String id, String parent, String parentId, String user, NameValue nameValue, List<NameValue> nameValues, String ddpParticipantId) {
         this.id = id;
         this.parent = parent;
         this.parentId = parentId;
@@ -55,10 +55,11 @@ public class Patch {
         this.nameValue = nameValue;
         this.nameValues = nameValues;
         this.isUnique = false;
+        this.ddpParticipantId = ddpParticipantId;
     }
 
     //dynamic form patch
-    public Patch(String id, String parent, String parentId, String user, List<NameValue> nameValues, String realm, List<Value> actions) {
+    public Patch(String id, String parent, String parentId, String user, List<NameValue> nameValues, String realm, List<Value> actions, String ddpParticipantId) {
         this.id = id;
         this.parent = parent;
         this.parentId = parentId;
@@ -66,10 +67,11 @@ public class Patch {
         this.nameValues = nameValues;
         this.realm = realm;
         this.actions = actions;
+        this.ddpParticipantId = ddpParticipantId;
     }
 
     //unique field patch
-    public Patch(String id, String parent, String parentId, String user, NameValue nameValue, List<NameValue> nameValues, Boolean isUnique) {
+    public Patch(String id, String parent, String parentId, String user, NameValue nameValue, List<NameValue> nameValues, Boolean isUnique, String ddpParticipantId) {
         this.id = id;
         this.parent = parent;
         this.parentId = parentId;
@@ -77,10 +79,11 @@ public class Patch {
         this.nameValue = nameValue;
         this.nameValues = nameValues;
         this.isUnique = isUnique;
+        this.ddpParticipantId = ddpParticipantId;
     }
 
     //abstraction patch
-    public Patch(String id, String parent, String parentId, String fieldId, String fieldName, String user, NameValue nameValue, List<NameValue> nameValues) {
+    public Patch(String id, String parent, String parentId, String fieldId, String fieldName, String user, NameValue nameValue, List<NameValue> nameValues, String ddpParticipantId) {
         this.id = id;
         this.parent = parent;
         this.parentId = parentId;
@@ -89,6 +92,7 @@ public class Patch {
         this.user = user;
         this.nameValue = nameValue;
         this.nameValues = nameValues;
+        this.ddpParticipantId = ddpParticipantId;
     }
 
     /**

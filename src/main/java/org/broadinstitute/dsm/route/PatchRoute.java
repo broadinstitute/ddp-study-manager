@@ -79,7 +79,7 @@ public class PatchRoute extends RequestHandler {
                     DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
                     if (patch.getNameValues() != null && !patch.getNameValues().isEmpty()) {
                         List<NameValue> nameValues = new ArrayList<>();
-                        ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getParentId())
+                        ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
                                 .orElse(null);
                         if (profile == null) {
                             logger.error("Unable to find ES profile for participant with guid/altpid: {}, continuing w/ patch", patch.getParentId());
@@ -411,15 +411,14 @@ public class PatchRoute extends RequestHandler {
         nameValueMap.put(name, value);
         if (DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(type)) {
             if (ESObjectConstants.MEDICAL_RECORDS_FIELD_NAMES.contains(name)) {
-                ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getParentId(),
+                ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getDdpParticipantId(),
                         ESObjectConstants.MEDICAL_RECORDS, ESObjectConstants.MEDICAL_RECORDS_ID, nameValueMap);
             }
         }
         else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(type)) {
             if (ESObjectConstants.TISSUE_RECORDS_FIELD_NAMES.contains(name)) {
                 if (PARTICIPANT_ID.equals(patch.getParent())) {
-                    //TODO get guid/legacyId for DSM internal participantId
-                    ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getParentId(),
+                    ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getDdpParticipantId(),
                             ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, nameValueMap);
                 }
             }
@@ -498,18 +497,18 @@ public class PatchRoute extends RequestHandler {
         else if (patch.getNameValue().getName().equals("t.tissueReturnDate")) {
             if (StringUtils.isNotBlank(patch.getNameValue().getValue().toString())) {
                 nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getParentId(), PARTICIPANT_ID,
-                        null, patch.getUser(), patch.getNameValue(), patch.getNameValues()), "returned"));
+                        null, patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "returned"));
             }
             else {
                 Boolean hasReceivedDate = OncHistoryDetail.hasReceivedDate(patch);
 
                 if (hasReceivedDate) {
                     nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getParentId(), PARTICIPANT_ID,
-                            null, patch.getUser(), patch.getNameValue(), patch.getNameValues()), "received"));
+                            null, patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "received"));
                 }
                 else {
                     nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getParentId(), PARTICIPANT_ID,
-                            null, patch.getUser(), patch.getNameValue(), patch.getNameValues()), "sent"));
+                            null, patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "sent"));
                 }
             }
         }
@@ -520,11 +519,11 @@ public class PatchRoute extends RequestHandler {
 
             if (hasReceivedDate) {
                 nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getId(), PARTICIPANT_ID,
-                        patch.getParentId(), patch.getUser(), patch.getNameValue(), patch.getNameValues()), "received"));
+                        patch.getParentId(), patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "received"));
             }
             else {
                 nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getId(), PARTICIPANT_ID,
-                        patch.getParentId(), patch.getUser(), patch.getNameValue(), patch.getNameValues()), "sent"));
+                        patch.getParentId(), patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "sent"));
             }
         }
         return nameValues;
