@@ -14,6 +14,9 @@ import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.ParticipantWrapper;
 import org.broadinstitute.dsm.model.TissueList;
 import org.broadinstitute.dsm.model.TissueListWrapper;
+import org.broadinstitute.dsm.model.filter.tissue.DefaultFilterTissueList;
+import org.broadinstitute.dsm.model.filter.tissue.ManualFilterTissueList;
+import org.broadinstitute.dsm.model.filter.tissue.SearchBarFilterTissueList;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
@@ -86,128 +89,89 @@ public class FilterRoute extends RequestHandler {
                 }
             }
             if (request.url().contains(RoutePath.APPLY_FILTER)) {
-                String filterQuery = queryParams.get("filterQuery").value();
-                if (filterQuery != null) {
-                    filterQuery = " " + ViewFilter.changeFieldsInQuery(filterQuery, false);
-                    if (StringUtils.isBlank(parent)) {
-                        throw new RuntimeException("No parent was sent in the request.");
-                    }
-                    // return pt list as stream // return getListBasedOnFilterName(null, realm, parent, filterQuery, null);
-                    streamResponse(response, getListBasedOnFilterName(null, realm, parent, filterQuery, null));
-                    return "";
-                } else {
-                    String filterName = queryParams.get(RequestParameter.FILTER_NAME).value();
-
-                    if (StringUtils.isBlank(parent)) {
-                        throw new RuntimeException("No parent was sent in the request.");
-                    }
-                    if (PARENT_PARTICIPANT_LIST.equals(parent)) {
-                        Filter[] filters = null;
-                        if (request.url().contains(RoutePath.FILTER_LIST)) {
-                            String defaultFilter = null;
-                            if (queryParams.value("defaultFilter") != null) {
-                                defaultFilter = queryParams.get("defaultFilter").value();
-                            }
-                            if (StringUtils.isNotBlank(defaultFilter)) {
-                                if ("1".equals(defaultFilter)) {
-                                    String userEmail = queryParams.value("userMail");
-                                    String defaultFilterName = ViewFilter.getDefaultFilterForUser(userEmail, "tissueList");
-                                    if (StringUtils.isNotBlank(defaultFilterName)) {
-                                        // return pt list as stream // return doFiltering(json, instance, defaultFilterName, parent, null);
-                                        streamResponse(response, doFiltering(json, instance, defaultFilterName, parent, null));
-                                        return "";
-                                    }
-                                }
-                            }
-                        }
-                        if (StringUtils.isNotBlank(filterName)) {
-                            //quick filter name ptL
-                            ViewFilter requestForFiltering = new ViewFilter(filterName, parent);
-                            requestForFiltering.setFilterQuery(ViewFilter.getFilterQuery(filterName, parent));
-                            if (requestForFiltering.getFilters() == null && StringUtils.isNotBlank(requestForFiltering.getFilterQuery())) {
-                                requestForFiltering = ViewFilter.parseFilteringQuery(requestForFiltering.getFilterQuery(), requestForFiltering);
-                            }
-                            filters = requestForFiltering.getFilters();
-                        } else {
-                            //saved filter ptL
-                            if (StringUtils.isNotBlank(queryParams.get(RequestParameter.FILTERS).value())) {
-                                filters = new Gson().fromJson(queryParams.get(RequestParameter.FILTERS).value(), Filter[].class);
-                            }
-                        }
-                        if (filters != null) {
-                            //quick and saved filter ptL
-                            // return pt list as stream // return filterParticipantList(filters, patchUtil.getColumnNameMap(), instance);
-                            streamResponse(response, filterParticipantList(filters, patchUtil.getColumnNameMap(), instance));
-                            return "";
-                        }
-                        //empty manual search
-                        // return pt list as stream // return ParticipantWrapper.getFilteredList(instance, null);
-                        streamResponse(response, ParticipantWrapper.getFilteredList(instance, null));
-                        return "";
-                    } else {
-                        Filter[] filters = null;
-                        if (StringUtils.isBlank(filterName)) {
-                            filters = new Gson().fromJson(queryParams.get(RequestParameter.FILTERS).value(), Filter[].class);
-                        }
-                        // return list as stream // return doFiltering(null, instance, filterName, parent, filters);
-                        streamResponse(response, doFiltering(null, instance, filterName, parent, filters));
-                        return "";
-                    }
-                }
+                return applyFilterMethod(queryParams, parent, realm, instance);
             } else if (request.url().contains(RoutePath.GET_PARTICIPANT)) {
-                String ddpParticipantId = "";
-                if (queryParams.value(RoutePath.ddpParticipantId) != null) {
-                    ddpParticipantId = queryParams.get(RoutePath.ddpParticipantId).value();
-                } else {
-                    throw new RuntimeException("No Participant Id was sent");
-                }
-                // get pt for selected tissue (@ tissue list)
-                Map<String, String> queryConditions = new HashMap<>();
-                queryConditions.put("p", " AND p.ddp_participant_id = '" + ddpParticipantId + "'");
-                queryConditions.put("ES", ElasticSearchUtil.BY_GUID + ddpParticipantId);
-                List<ParticipantWrapper> ptList = ParticipantWrapper.getFilteredList(instance, queryConditions);
-                if (!ptList.isEmpty()) {
-                    return ptList;
-                } else {
-                    queryConditions = new HashMap<>();
-                    queryConditions.put("p", " AND p.ddp_participant_id = '" + ddpParticipantId + "'");
-                    queryConditions.put("ES", ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId);
-                    return ParticipantWrapper.getFilteredList(instance, queryConditions);
-                }
+                return getParticipantMethod(queryParams, instance);
             } else if (request.url().contains(RoutePath.FILTER_LIST)) {
-                String defaultFilter = null;
-                if (queryParams.value(RoutePath.FILTER_DEFAULT) != null) {
-                    defaultFilter = queryParams.get(RoutePath.FILTER_DEFAULT).value();
-                }
-                if (TISSUE_LIST_PARENT.equals(parent) && StringUtils.isNotBlank(defaultFilter)) {
-                    List<TissueList> tissueListList = new ArrayList<>();
-                    List<TissueListWrapper> wrapperList = null;
-                    if ("0".equals(defaultFilter)) {
-                        tissueListList = TissueList.getAllTissueListsForRealmNoFilter(realm);
-                        wrapperList = TissueListWrapper.getTissueListData(instance, null, tissueListList);
-                    } else if ("1".equals(defaultFilter)) {
-                        String userEmail = queryParams.value(RequestParameter.USER_MAIL);
-                        String defaultFilterName = ViewFilter.getDefaultFilterForUser(userEmail, TISSUE_LIST_PARENT);
-                        if (StringUtils.isNotBlank(defaultFilterName)) {
-                            wrapperList = (List<TissueListWrapper>) FilterRoute.getListBasedOnFilterName(defaultFilterName, realm, TISSUE_LIST_PARENT, null, null);
-                        } else {
-                            tissueListList = TissueList.getAllTissueListsForRealmNoFilter(realm);
-                            wrapperList = TissueListWrapper.getTissueListData(instance, null, tissueListList);
-                        }
-                    }
-                    logger.info("Found " + wrapperList.size() + " tissues for Tissue View");
-                    return wrapperList;
-                }
-                //manual search
-                // return pt list as stream // return doFiltering(json, instance, null, parent, null);
-                streamResponse(response, doFiltering(json, instance, null, parent, null));
-                return "";
+                return filterListMethod(queryParams, parent, instance, json);
             }
             throw new RuntimeException("Path was not known");
         } else {
             response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
         }
+    }
+
+    private Object filterListMethod(QueryParamsMap queryParams, String parent, DDPInstance instance,
+                                    String json) {
+        if (TISSUE_LIST_PARENT.equals(parent)) {
+            return new DefaultFilterTissueList(json).filter(queryParams);
+        }
+        //manual search
+        // return pt list as stream // return doFiltering(json, instance, null, parent, null);
+        return doFiltering(json, instance, null, parent, null);
+    }
+
+    private List<ParticipantWrapper> getParticipantMethod(QueryParamsMap queryParams, DDPInstance instance) {
+        String ddpParticipantId = queryParams.get(RoutePath.ddpParticipantId).value();
+        if (StringUtils.isBlank(ddpParticipantId)) {
+            throw new RuntimeException("No Participant Id was sent");
+        }
+
+        Map<String, String> queryConditions = Map.of(
+                "p", " AND p.ddp_participant_id = '" + ddpParticipantId + "'",
+                "ES", (ParticipantUtil.isGuid(ddpParticipantId) ? ElasticSearchUtil.BY_GUID : ElasticSearchUtil.BY_LEGACY_ALTPID) + ddpParticipantId
+        );
+        return ParticipantWrapper.getFilteredList(instance, queryConditions);
+    }
+
+    private List<?> applyFilterMethod(QueryParamsMap queryParams, String parent, String realm,
+                                      DDPInstance instance) {
+        if (StringUtils.isBlank(parent)) {
+            throw new RuntimeException("No parent was sent in the request.");
+        }
+        String filterQuery = queryParams.get("filterQuery").value();
+        if (filterQuery != null) {
+            return new SearchBarFilterTissueList().filter(queryParams);
+        } else {
+            String filterName = queryParams.get(RequestParameter.FILTER_NAME).value();
+
+            Filter[] filters = null;
+            if (PARENT_PARTICIPANT_LIST.equals(parent)) {
+                List<?> filteredByQuickOrSaved = filterByQuickElseSaved(queryParams, parent, instance, filterName);
+                if (!filteredByQuickOrSaved.isEmpty()) {
+                    return filteredByQuickOrSaved;
+                }
+                return ParticipantWrapper.getFilteredList(instance, null);
+            } else { //for tissue list parent !!!
+                return new ManualFilterTissueList(null).filter(queryParams);
+            }
+        }
+    }
+
+    private List<?> filterByQuickElseSaved(QueryParamsMap queryParams, String parent, DDPInstance instance, String filterName) {
+        List<?> result = new ArrayList<>();
+        Filter[] filters = null;
+        if (StringUtils.isNotBlank(filterName)) {
+            //quick filter name ptL
+            ViewFilter requestForFiltering = new ViewFilter(filterName, parent);
+            requestForFiltering.setFilterQuery(ViewFilter.getFilterQuery(filterName, parent));
+            if (requestForFiltering.getFilters() == null && StringUtils.isNotBlank(requestForFiltering.getFilterQuery())) {
+                requestForFiltering = ViewFilter.parseFilteringQuery(requestForFiltering.getFilterQuery(), requestForFiltering);
+            }
+            filters = requestForFiltering.getFilters();
+        } else {
+            //saved filter ptL
+            if (StringUtils.isNotBlank(queryParams.get(RequestParameter.FILTERS).value())) {
+                filters = new Gson().fromJson(queryParams.get(RequestParameter.FILTERS).value(), Filter[].class);
+            }
+        }
+        if (filters != null) {
+            //quick and saved filter ptL
+            // return pt list as stream // return filterParticipantList(filters, patchUtil.getColumnNameMap(), instance);
+            result = filterParticipantList(filters, patchUtil.getColumnNameMap(), instance);
+        }
+        return result;
     }
 
     public List<?> doFiltering(String json, DDPInstance instance, String filterName, String parent, Filter[] savedFilters) {
@@ -462,13 +426,14 @@ public class FilterRoute extends RequestHandler {
     }
 
     public static List<?> getListBasedOnFilterName(String filterName, String realm, String parent, String queryString, Map<String, String> filters) {
+        List<TissueListWrapper> wrapperList = new ArrayList<>();
         if (TISSUE_LIST_PARENT.equals(parent)) {
             DDPInstance instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.MEDICAL_RECORD_ACTIVATED);
             String subQueryForFiltering = "";
             if (StringUtils.isNotBlank(filterName)) {
                 if (filterName.equals(ViewFilter.DESTROYING_FILTERS)) {
                     List<TissueList> tissueLists = ViewFilter.getDestroyingSamples(instance.getName());
-                    List<TissueListWrapper> wrapperList = TissueListWrapper.getTissueListData(instance, filters, tissueLists);
+                    wrapperList = TissueListWrapper.getTissueListData(instance, filters, tissueLists);
                     return wrapperList;
                 }
                 subQueryForFiltering = ViewFilter.getFilterQuery(filterName, parent);
@@ -489,10 +454,10 @@ public class FilterRoute extends RequestHandler {
                 }
             }
             List<TissueList> tissueLists = TissueList.getAllTissueListsForRealm(realm, TissueList.SQL_SELECT_ALL_ONC_HISTORY_TISSUE_FOR_REALM + (queryString != null ? queryString : "") + query);
-            List<TissueListWrapper> wrapperList = TissueListWrapper.getTissueListData(instance, filters, tissueLists);
+            wrapperList = TissueListWrapper.getTissueListData(instance, filters, tissueLists);
             return wrapperList;
         }
-        return null;
+        return wrapperList;
     }
 
     private void streamResponse(@NonNull Response response, List<?> result) throws IOException {
