@@ -18,10 +18,10 @@ import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.db.dto.user.UserDto;
+import org.broadinstitute.dsm.db.dto.settings.InstanceSettingsDto;
 import org.broadinstitute.dsm.files.CoverPDFProcessor;
 import org.broadinstitute.dsm.files.PDFProcessor;
 import org.broadinstitute.dsm.files.RequestPDFProcessor;
-import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.ddp.PDF;
 import org.broadinstitute.dsm.security.RequestHandler;
@@ -260,14 +260,17 @@ public class DownloadPDFRoute extends RequestHandler {
         valueMap.put(CoverPDFProcessor.FIELD_DATE_2, StringUtils.isNotBlank(endDate) ? endDate : today); //end date
 
         //adding checkboxes configured under instance_settings
-        InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(ddpInstance.getName());
-        if (instanceSettings != null && instanceSettings.getMrCoverPdf() != null && !instanceSettings.getMrCoverPdf().isEmpty()) {
-            for (Value mrCoverSetting : instanceSettings.getMrCoverPdf()) {
-                if (keySet.contains(mrCoverSetting.getValue())) {
-                    valueMap.put(mrCoverSetting.getValue(), BooleanUtils.toBoolean((Boolean) jsonObject.get(mrCoverSetting.getValue())));
-                }
-            }
-        }
+        InstanceSettings instanceSettings = new InstanceSettings();
+        InstanceSettingsDto instanceSettingsDto = instanceSettings.getInstanceSettings(ddpInstance.getName());
+        instanceSettingsDto
+                .getMrCoverPdf()
+                .orElse(Collections.emptyList())
+                .forEach(mrCoverSetting -> {
+                    if (keySet.contains(mrCoverSetting.getValue())) {
+                        valueMap.put(mrCoverSetting.getValue(), BooleanUtils.toBoolean((Boolean) jsonObject.get(mrCoverSetting.getValue())));
+                    }
+                });
+
         addDDPParticipantDataToValueMap(ddpInstance, ddpParticipantId, valueMap, true);
 
         valueMap.put(CoverPDFProcessor.START_DATE_2, StringUtils.isNotBlank(startDate) ? startDate : valueMap.get(CoverPDFProcessor.FIELD_DATE_OF_DIAGNOSIS)); //start date

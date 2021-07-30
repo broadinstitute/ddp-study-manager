@@ -3,10 +3,12 @@ package org.broadinstitute.dsm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.join.ScoreMode;
+import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
+import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.DBTestUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -411,7 +413,7 @@ public class ElasticSearchTest extends TestHelper {
                     ElasticSearchUtil.fetchESDataByParticipantId("participants_structured.rgp.rgp", pIdToFilter, client);
             fetchedPid = esObject.orElse(new ElasticSearch.Builder().build())
                     .getProfile()
-                    .map(ESProfile::getParticipantLegacyAlptid)
+                    .map(ESProfile::getParticipantLegacyAltPid)
                     .orElse("");
         } catch (IOException e) {
             Assert.fail();
@@ -428,7 +430,7 @@ public class ElasticSearchTest extends TestHelper {
             ElasticSearch esObject =
                     ElasticSearchUtil.fetchESDataByAltpid("participants_structured.atcp.atcp", altpid, client);
             fetchedPid = esObject.getProfile()
-                    .map(ESProfile::getParticipantLegacyAlptid)
+                    .map(ESProfile::getParticipantLegacyAltPid)
                     .orElse("");
         } catch (IOException e) {
             Assert.fail();
@@ -784,6 +786,32 @@ public class ElasticSearchTest extends TestHelper {
                     .fetchSourceContext(fetchSourceContext);
             GetResponse getResponse = client.get(getRequest, RequestOptions.DEFAULT);
             return getResponse.getSourceAsMap();
+        }
+    }
+
+    @Test
+    public void testRemoveWorkflowIfNoDataOrWrongSubject() throws Exception {
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
+                TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME), TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD))) {
+            String ddpParticipantId = "TZYO5WQ7N58HX4WSJJG0";
+            String collaboratorParticipantId = "RGP_2046_3";
+            DDPInstance ddpInstance = new DDPInstance(null,null, null, null, false, 0, 0,
+                    false, null, false, null, "participants_structured.rgp.rgp", null, null);
+            Map<String, Object> workflowsBefore = ElasticSearchUtil.getObjectsMap(client, ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
+            ElasticSearchUtil.removeWorkflowIfNoDataOrWrongSubject(client, ddpParticipantId, ddpInstance, collaboratorParticipantId);
+            Map<String, Object> workflowsAfter = ElasticSearchUtil.getObjectsMap(client, ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
+            Map<String, Object> workflows = ElasticSearchUtil.getObjectsMap(ddpInstance.getParticipantIndexES(), ddpParticipantId, "workflows");
+            Assert.assertTrue(workflows != null && !workflows.isEmpty());
+            List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) workflows.get("workflows");
+            Assert.assertTrue(workflowListES != null && !workflowListES.isEmpty());
+            for (Map<String, Object> workflowES : workflowListES) {
+                Map<String, String> data = (Map<String, String>) workflowES.get("data");
+                Assert.assertTrue(data != null);
+                String subjectId = data.get("subjectId");
+                Assert.assertTrue(!collaboratorParticipantId.equalsIgnoreCase(subjectId));
+            }
+
+            ElasticSearchUtil.updateRequest(client, ddpParticipantId, ddpInstance.getParticipantIndexES(), workflowsBefore);
         }
     }
 

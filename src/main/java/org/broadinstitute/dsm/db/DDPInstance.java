@@ -94,6 +94,10 @@ public class DDPInstance {
         this.usersIndexES = usersIndexES;
     }
 
+    public int getDdpInstanceIdAsInt() {
+        return Integer.parseInt(ddpInstanceId);
+    }
+
     public static DDPInstance getDDPInstance(@NonNull String realm) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
