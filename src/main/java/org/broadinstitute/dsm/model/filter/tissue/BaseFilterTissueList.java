@@ -15,6 +15,7 @@ import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.TissueList;
 import org.broadinstitute.dsm.model.TissueListWrapper;
+import org.broadinstitute.dsm.model.filter.BaseFilter;
 import org.broadinstitute.dsm.model.filter.Filterable;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
@@ -24,39 +25,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.QueryParamsMap;
 
-public abstract class BaseFilterTissueList implements Filterable<TissueListWrapper> {
+public abstract class BaseFilterTissueList extends BaseFilter implements Filterable<TissueListWrapper> {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseFilterTissueList.class);
 
-    protected Filter[] filters;
-    protected String quickFilterName;
-    protected String filterQuery;
-    protected PatchUtil patchUtil;
-    protected String jsonBody;
+
 
     public BaseFilterTissueList(String jsonBody) {
-        this.jsonBody = jsonBody;
-        patchUtil = new PatchUtil();
+        super(jsonBody);
     }
 
-    protected void prepareNeccesaryData(String jsonBody, QueryParamsMap queryParamsMap) {
-        filterQuery = "";
-        quickFilterName = "";
-        Filter[] savedFilters = new Gson().fromJson(queryParamsMap.get(RequestParameter.FILTERS).value(), Filter[].class);
-        if (!Objects.isNull(jsonBody)) {
-            ViewFilter requestForFiltering = new Gson().fromJson(jsonBody, ViewFilter.class);
-            if (requestForFiltering != null) {
-                if (requestForFiltering.getFilters() == null && StringUtils.isNotBlank(requestForFiltering.getFilterQuery())) {
-                    filterQuery = ViewFilter.changeFieldsInQuery(requestForFiltering.getFilterQuery(), false);
-                    requestForFiltering = ViewFilter.parseFilteringQuery(filterQuery, requestForFiltering);
-                }
-                filters = requestForFiltering.getFilters();
-            }
-            quickFilterName = requestForFiltering == null ? null : requestForFiltering.getQuickFilterName();
-        } else if (savedFilters != null) {
-            filters = savedFilters;
-        }
-    }
+
 
     protected List<TissueListWrapper> filterTissueList(Filter[] filters, Map<String, DBElement> columnNameMap, String filterName,
                                                      @NonNull DDPInstance instance, String filterQuery) {
