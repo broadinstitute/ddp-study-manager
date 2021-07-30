@@ -172,9 +172,9 @@ public class ParticipantWrapper {
                 //get only pts for the filtered data
                 if (baseList != null && !baseList.isEmpty()) {
                     //ES can only filter for 1024 (too_many_clauses: maxClauseCount is set to 1024)
-                    if (baseList.size() > 1000) {
+                    if (baseList.size() > Filter.THOUSAND) {
                         //make sub-searches
-                        Collection<List<String>> partitionBaseList = partitionBasedOnSize(baseList, 1000);
+                        Collection<List<String>> partitionBaseList = partitionBasedOnSize(baseList, Filter.THOUSAND);
                         for (Iterator i = partitionBaseList.iterator(); i.hasNext();) {
                             List<String> baseListPart = ((List<String>) i.next());
                             participantESData = addParticipantESData(instance, baseListPart, participantESData, ElasticSearchUtil.BY_GUID, ElasticSearchUtil.BY_GUIDS);
@@ -252,18 +252,18 @@ public class ParticipantWrapper {
         String[] betweenAnds = wholeFilter.split(Filter.AND_TRIMMED);
         boolean tooManyParameters = false;
         participantESData = new HashMap<>();
-        String lessThanLimit = Arrays.stream(betweenAnds).filter(query -> query.split(Filter.OR_TRIMMED).length <= 900).collect(Collectors.joining(Filter.AND));
+        String lessThanLimit = Arrays.stream(betweenAnds).filter(query -> query.split(Filter.OR_TRIMMED).length <= Filter.THOUSAND).collect(Collectors.joining(Filter.AND));
         for (String query: betweenAnds) {
             String[] orQueries = query.split(Filter.OR_TRIMMED);
-            if (orQueries.length <= 900) {
+            if (orQueries.length <= Filter.THOUSAND) {
                 continue;
             }
             tooManyParameters = true;
-            Collection<List<String>> partitionBaseList = partitionBasedOnSize(Arrays.asList(orQueries), 900);
+            Collection<List<String>> partitionBaseList = partitionBasedOnSize(Arrays.asList(orQueries), Filter.THOUSAND);
             for (Iterator i = partitionBaseList.iterator(); i.hasNext();) {
                 List<String> baseListPart = ((List<String>) i.next());
                 Map<String, Map<String, Object>> tempParticipantESData = ElasticSearchUtil
-                        .getFilteredDDPParticipantsFromES(instance, lessThanLimit + " AND " + String.join(Filter.OR, baseListPart));
+                        .getFilteredDDPParticipantsFromES(instance, lessThanLimit + Filter.AND + String.join(Filter.OR, baseListPart));
                 if (tempParticipantESData != null) {
                     participantESData.putAll(tempParticipantESData);
                 }
