@@ -84,7 +84,9 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
                     }
                 }
             }
-            addParticipantDataConditionsToQuery(allIdsForParticipantDataFiltering, queryConditions, numberOfParticipantDataFilters);
+            if (numberOfParticipantDataFilters != 0) {
+                addParticipantDataConditionsToQuery(allIdsForParticipantDataFiltering, queryConditions, numberOfParticipantDataFilters);
+            }
         }
 
         if (!queryConditions.isEmpty()) {
