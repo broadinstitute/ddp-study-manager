@@ -5,7 +5,6 @@ import java.util.Objects;
 
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.model.ParticipantWrapper;
-import org.broadinstitute.dsm.model.filter.Filterable;
 import org.broadinstitute.dsm.statics.RoutePath;
 import spark.QueryParamsMap;
 

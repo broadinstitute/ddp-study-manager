@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
-import com.google.gson.Gson;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
@@ -18,12 +16,9 @@ import org.broadinstitute.dsm.model.TissueListWrapper;
 import org.broadinstitute.dsm.model.filter.BaseFilter;
 import org.broadinstitute.dsm.model.filter.Filterable;
 import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
-import org.broadinstitute.dsm.util.PatchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.QueryParamsMap;
 
 public abstract class BaseFilterTissueList extends BaseFilter implements Filterable<TissueListWrapper> {
 

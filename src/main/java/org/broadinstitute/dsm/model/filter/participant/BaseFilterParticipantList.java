@@ -1,11 +1,9 @@
 package org.broadinstitute.dsm.model.filter.participant;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
@@ -22,13 +20,10 @@ import org.broadinstitute.dsm.model.ParticipantWrapper;
 import org.broadinstitute.dsm.model.filter.BaseFilter;
 import org.broadinstitute.dsm.model.filter.Filterable;
 import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.statics.RequestParameter;
-import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.QueryParamsMap;
 
 public abstract class BaseFilterParticipantList extends BaseFilter implements Filterable<ParticipantWrapper> {
 

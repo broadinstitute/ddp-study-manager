@@ -10,7 +10,6 @@ import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ViewFilter;
 import org.broadinstitute.dsm.model.TissueList;
 import org.broadinstitute.dsm.model.TissueListWrapper;
-import org.broadinstitute.dsm.route.FilterRoute;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.PatchUtil;

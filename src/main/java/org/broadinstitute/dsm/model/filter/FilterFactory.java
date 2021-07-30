@@ -4,14 +4,13 @@ import java.util.Collections;
 import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.model.filter.BaseFilter;
-import org.broadinstitute.dsm.model.filter.Filterable;
 import org.broadinstitute.dsm.model.filter.participant.EmptyFilterParticipantList;
 import org.broadinstitute.dsm.model.filter.participant.ManualFilterParticipantList;
 import org.broadinstitute.dsm.model.filter.participant.QuickFilterParticipantList;
 import org.broadinstitute.dsm.model.filter.participant.SavedFilterParticipantList;
 import org.broadinstitute.dsm.model.filter.tissue.ManualFilterTissueList;
 import org.broadinstitute.dsm.model.filter.tissue.SavedFiltersTissueList;
+import org.broadinstitute.dsm.model.filter.tissue.SearchBarFilterTissueList;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.RoutePath;
@@ -43,7 +42,12 @@ public class FilterFactory {
                         }
                         break;
                     case BaseFilter.TISSUE_LIST_PARENT:
-                        filterable = new SavedFiltersTissueList(jsonBody);
+                        String filterQuery = queryParams.get("filterQuery").value();
+                        if (StringUtils.isNotBlank(filterQuery)) {
+                            filterable = new SearchBarFilterTissueList();
+                        } else {
+                            filterable = new SavedFiltersTissueList(jsonBody);
+                        }
                         break;
                     default:
                         break;

@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.model.filter.participant;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.broadinstitute.dsm.model.ParticipantWrapper;
 import org.broadinstitute.dsm.util.PatchUtil;
