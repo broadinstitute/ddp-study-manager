@@ -9,10 +9,10 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.FieldSettings;
-import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
+import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.util.tools.util.DBUtil;
 
@@ -1159,7 +1159,7 @@ public class DBTestUtil {
     }
 
     public static UserDto createTestDsmUser(String name, String email, UserDao userDao, UserDto userDto) {
-        userDto = new UserDto(0, name, email);
+        userDto = new UserDto(0, name, email, "");
         userDto.setId(userDao.create(userDto));
         return userDto;
     }

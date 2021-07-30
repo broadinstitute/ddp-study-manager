@@ -1,23 +1,23 @@
 package org.broadinstitute.dsm.db.dao.user;
 
-import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
+import lombok.NonNull;
+import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.db.dao.Dao;
+import org.broadinstitute.dsm.db.dto.user.UserDto;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 
-import lombok.NonNull;
-import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.dsm.db.dto.user.UserDto;
-import org.broadinstitute.dsm.db.dao.Dao;
+import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 public class UserDao implements Dao<UserDto> {
 
     private static final String SQL_INSERT_USER = "INSERT INTO access_user (name, email) VALUES (?,?)";
     private static final String SQL_DELETE_USER_BY_ID = "DELETE FROM access_user WHERE user_id = ?";
-    private static final String SQL_SELECT_USER_BY_EMAIL = "SELECT user.user_id, user.name, user.email FROM access_user user WHERE user.email = ?";
-    private static final String SQL_SELECT_USER_BY_ID = "SELECT user.user_id, user.name, user.email FROM access_user user WHERE user.user_id = ?";
+    private static final String SQL_SELECT_USER_BY_EMAIL = "SELECT user.user_id, user.name, user.email, user.phone_number FROM access_user user WHERE user.email = ?";
+    private static final String SQL_SELECT_USER_BY_ID = "SELECT user.user_id, user.name, user.email, user.phone_number FROM access_user user WHERE user.user_id = ?";
     public static final String USER_ID = "user_id";
     public static final String NAME = "name";
     public static final String EMAIL = "email";
@@ -31,7 +31,8 @@ public class UserDao implements Dao<UserDto> {
                     if (rs.next()) {
                         dbVals.resultValue = new UserDto(rs.getInt(USER_ID),
                                 rs.getString(NAME),
-                                rs.getString(EMAIL));
+                                rs.getString(EMAIL),
+                                rs.getString("phone_number"));
                     }
                 }
             }
@@ -57,7 +58,8 @@ public class UserDao implements Dao<UserDto> {
                     if (rs.next()) {
                         dbVals.resultValue = new UserDto(rs.getInt(USER_ID),
                                 rs.getString(NAME),
-                                rs.getString(EMAIL));
+                                rs.getString(EMAIL),
+                                rs.getString("phone_number"));
                     }
                 }
             }

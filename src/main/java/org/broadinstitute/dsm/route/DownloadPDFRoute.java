@@ -17,8 +17,8 @@ import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
-import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.dto.settings.InstanceSettingsDto;
+import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.files.CoverPDFProcessor;
 import org.broadinstitute.dsm.files.PDFProcessor;
 import org.broadinstitute.dsm.files.RequestPDFProcessor;
@@ -259,6 +259,13 @@ public class DownloadPDFRoute extends RequestHandler {
         valueMap.put(CoverPDFProcessor.FIELD_DATE, today);
         valueMap.put(CoverPDFProcessor.FIELD_DATE_2, StringUtils.isNotBlank(endDate) ? endDate : today); //end date
 
+        valueMap.put(RequestPDFProcessor.USER_NAME, user.getName().get());
+        valueMap.put(RequestPDFProcessor.USER_NAME+"#1", user.getName().get());
+        valueMap.put(RequestPDFProcessor.USER_NAME+"#2", user.getName().get());
+        valueMap.put(RequestPDFProcessor.USER_PHONE, user.getPhoneNumber().get());
+        valueMap.put(RequestPDFProcessor.USER_PHONE+"#1", user.getPhoneNumber().get());
+        valueMap.put(RequestPDFProcessor.USER_PHONE+"#2", user.getPhoneNumber().get());
+
         //adding checkboxes configured under instance_settings
         InstanceSettings instanceSettings = new InstanceSettings();
         InstanceSettingsDto instanceSettingsDto = instanceSettings.getInstanceSettings(ddpInstance.getName());
@@ -324,12 +331,8 @@ public class DownloadPDFRoute extends RequestHandler {
             }
             valueMap.put(RequestPDFProcessor.BLOCK_COUNTER, counter + 1);
 
-            valueMap.put(RequestPDFProcessor.USER_NAME, user.getName());
-            valueMap.put(RequestPDFProcessor.USER_NAME+"#1", user.getName());
-            valueMap.put(RequestPDFProcessor.USER_NAME+"#2", user.getName());
-            valueMap.put(RequestPDFProcessor.USER_PHONE, user.getPhoneNumber());
-            valueMap.put(RequestPDFProcessor.USER_PHONE+"#1", user.getPhoneNumber());
-            valueMap.put(RequestPDFProcessor.USER_PHONE+"#2", user.getPhoneNumber());
+            valueMap.put(RequestPDFProcessor.USER_NAME, user.getName().get());
+            valueMap.put(RequestPDFProcessor.USER_PHONE, user.getPhoneNumber().get());
 
             stream = processor.generateStream(valueMap);
             stream.mark(0);
