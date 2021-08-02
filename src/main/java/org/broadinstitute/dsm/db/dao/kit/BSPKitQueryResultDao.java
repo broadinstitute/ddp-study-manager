@@ -5,8 +5,11 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dto.kit.BSPKitQueryResultDto;
+import org.broadinstitute.dsm.model.BSPKit;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,6 +19,8 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 public class BSPKitQueryResultDao implements Dao<BSPKitQueryResultDto> {
 
+
+    Logger logger = LoggerFactory.getLogger(BSPKitQueryResultDao.class);
 
     @Override
     public int create(BSPKitQueryResultDto bspKitQueryResultDto) {
@@ -32,18 +37,24 @@ public class BSPKitQueryResultDao implements Dao<BSPKitQueryResultDto> {
         return Optional.empty();
     }
 
-    public static final String BASE_URL = "base_url";
-    public static final String BSP_SAMPLE_ID = "bsp_collaborator_sample_id";
-    public static final String BSP_PARTICIPANT_ID = "bsp_collaborator_participant_id";
-    public static final String INSTANCE_NAME = "instance_name";
-    public static final String BSP_COLLECTION = "bsp_collection";
-    public static final String BSP_ORGANISM = "bsp_organism";
-    public static final String DDP_PARTICIPANT_ID = "ddp_participant_id";
-    public static final String MATERIAL_TYPE = "bsp_material_type";
-    public static final String RECEPTACLE_TYPE = "bsp_receptacle_type";
-    public static final String PARTICIPANT_EXIT = "ddp_participant_exit_id";
+    public final String BASE_URL = "base_url";
+    public final String BSP_SAMPLE_ID = "bsp_collaborator_sample_id";
+    public final String BSP_PARTICIPANT_ID = "bsp_collaborator_participant_id";
+    public final String INSTANCE_NAME = "instance_name";
+    public final String BSP_COLLECTION = "bsp_collection";
+    public final String BSP_ORGANISM = "bsp_organism";
+    public final String DDP_PARTICIPANT_ID = "ddp_participant_id";
+    public final String MATERIAL_TYPE = "bsp_material_type";
+    public final String RECEPTACLE_TYPE = "bsp_receptacle_type";
+    public final String PARTICIPANT_EXIT = "ddp_participant_exit_id";
 
-    public static Optional<BSPKitQueryResultDto> getBSPKitQueryResult (@NonNull String kitLabel) {
+    private final String BSP = "BSP";
+
+    public final String SQL_UPDATE_KIT_RECEIVED = "UPDATE ddp_kit kit INNER JOIN( SELECT dsm_kit_request_id, MAX(dsm_kit_id) AS kit_id " +
+            "FROM ddp_kit GROUP BY dsm_kit_request_id) groupedKit ON kit.dsm_kit_request_id = groupedKit.dsm_kit_request_id " +
+            "AND kit.dsm_kit_id = groupedKit.kit_id SET receive_date = ?, receive_by = ? WHERE kit.receive_date IS NULL AND kit.kit_label = ?";
+
+    public Optional<BSPKitQueryResultDto> getBSPKitQueryResult(@NonNull String kitLabel) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try {
@@ -85,6 +96,35 @@ public class BSPKitQueryResultDao implements Dao<BSPKitQueryResultDto> {
         if (results.resultException != null) {
             throw new RuntimeException("Error looking up kit info for kit " + kitLabel, results.resultException);
         }
-        return Optional.of((BSPKitQueryResultDto) results.resultValue);
+        return Optional.ofNullable((BSPKitQueryResultDto) results.resultValue);
+    }
+
+    public void setKitReceivedAndTriggerDDP(String kitLabel, boolean triggerDDP, BSPKitQueryResultDto bspKitQueryResultDto) {
+        TransactionWrapper.inTransaction(conn -> {
+            boolean firstTimeReceived = false;
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT_RECEIVED)) {
+                stmt.setLong(1, System.currentTimeMillis());
+                stmt.setString(2, BSP);
+                stmt.setString(3, kitLabel);
+                int result = stmt.executeUpdate();
+                if (result > 1) { // 1 row or 0 row updated is perfect
+                    throw new RuntimeException("Error updating kit w/label " + kitLabel + " (was updating " + result + " rows)");
+                }
+                if (result == 1) {
+                    firstTimeReceived = true;
+                }
+                else {
+                    firstTimeReceived = false;
+                }
+            }
+            catch (Exception e) {
+                logger.error("Failed to set kit w/ label " + kitLabel + " as received ", e);
+            }
+            if (triggerDDP) {
+                BSPKit bspKit = new BSPKit();
+                bspKit.triggerDDP(conn, bspKitQueryResultDto, firstTimeReceived, kitLabel);
+            }
+            return firstTimeReceived;
+        });
     }
 }

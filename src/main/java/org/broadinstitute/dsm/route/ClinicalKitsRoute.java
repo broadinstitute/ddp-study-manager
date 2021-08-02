@@ -56,7 +56,7 @@ public class ClinicalKitsRoute implements Route {
 
     private ClinicalKitDto getClinicalKit(String kitLabel) {
         logger.info("Checking label " + kitLabel);
-
+        BSPKitQueryResultDao bspKitQueryResultDao = new BSPKitQueryResultDao();
         // this method already sets the received time, check for exited and deactivation and special behaviour, and triggers DDP, we don't need a new
         BSPKit bspKit = new BSPKit();
         ClinicalKitDto clinicalKit = new ClinicalKitDto();
@@ -66,7 +66,7 @@ public class ClinicalKitsRoute implements Route {
             clinicalKit.setSampleId(kitInfo.getCollaboratorSampleId());
             clinicalKit.setMaterialType(kitInfo.getMaterialInfo());
             clinicalKit.setVesselType(kitInfo.getReceptacleName());
-            Optional<BSPKitQueryResultDto> bspKitQueryResult = BSPKitQueryResultDao.getBSPKitQueryResult(kitLabel);
+            Optional<BSPKitQueryResultDto> bspKitQueryResult = bspKitQueryResultDao.getBSPKitQueryResult(kitLabel);
             bspKitQueryResult.orElseThrow(() -> {throw new RuntimeException("kit label was not found "+kitLabel);});
             BSPKitQueryResultDto maybeBspKitQueryResult = bspKitQueryResult.get();
             DDPInstance ddpInstance = DDPInstance.getDDPInstance(maybeBspKitQueryResult.getInstanceName());
