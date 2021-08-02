@@ -21,6 +21,7 @@ public class UserDao implements Dao<UserDto> {
     public static final String USER_ID = "user_id";
     public static final String NAME = "name";
     public static final String EMAIL = "email";
+    public static final String PHONE_NUMBER = "phone_number";
 
     public Optional<UserDto> getUserByEmail(@NonNull String email) {
         SimpleResult results = inTransaction((conn) -> {
@@ -32,7 +33,7 @@ public class UserDao implements Dao<UserDto> {
                         dbVals.resultValue = new UserDto(rs.getInt(USER_ID),
                                 rs.getString(NAME),
                                 rs.getString(EMAIL),
-                                rs.getString("phone_number"));
+                                rs.getString(PHONE_NUMBER));
                     }
                 }
             }
@@ -59,7 +60,7 @@ public class UserDao implements Dao<UserDto> {
                         dbVals.resultValue = new UserDto(rs.getInt(USER_ID),
                                 rs.getString(NAME),
                                 rs.getString(EMAIL),
-                                rs.getString("phone_number"));
+                                rs.getString(PHONE_NUMBER));
                     }
                 }
             }
