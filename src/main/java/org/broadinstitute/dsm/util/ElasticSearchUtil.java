@@ -1205,7 +1205,7 @@ public class ElasticSearchUtil {
             if (wildCard) {
                 userEntered = userEntered.replaceAll("%", "").trim();
             }
-            if (nameValue[0].startsWith(PROFILE)) {
+            if (nameValue[0].strip().startsWith(PROFILE)) {
                 if (nameValue[0].trim().endsWith(ESObjectConstants.HRUID) || nameValue[0].trim().endsWith("legacyShortId") ||
                         nameValue[0].trim().endsWith(GUID) || nameValue[0].trim().endsWith(LEGACY_ALT_PID)) {
                     valueQueryBuilder(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
