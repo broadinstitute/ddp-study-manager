@@ -273,7 +273,9 @@ public class FilterRoute extends RequestHandler {
                     }
                 }
             }
-            addParticipantDataConditionsToQuery(allIdsForParticipantDataFiltering, queryConditions, numberOfParticipantDataFilters);
+            if (numberOfParticipantDataFilters != 0) {
+                addParticipantDataConditionsToQuery(allIdsForParticipantDataFiltering, queryConditions, numberOfParticipantDataFilters);
+            }
         }
 
         if (!queryConditions.isEmpty()) {
