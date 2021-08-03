@@ -71,66 +71,67 @@ public class BSPKit {
         logger.info("Trying to receive kit " + kitLabel);
         BSPKitQueryResultDao bspKitQueryResultDao = new BSPKitQueryResultDao();
         Optional<BSPKitQueryResultDto> bspKitQueryResult = bspKitQueryResultDao.getBSPKitQueryResult(kitLabel);
-        final Optional<BSPKitInfo>[] bspKitInfo = new Optional[] {Optional.empty()};
-        bspKitQueryResult.ifPresent( maybeBspKitQueryResult -> {
-                if (StringUtils.isNotBlank(maybeBspKitQueryResult.getDdpParticipantId())) {
-                    DDPInstance ddpInstance = DDPInstance.getDDPInstance(maybeBspKitQueryResult.getInstanceName());
-                    InstanceSettings instanceSettings = new InstanceSettings();
-                    InstanceSettingsDto instanceSettingsDto = instanceSettings.getInstanceSettings(maybeBspKitQueryResult.getInstanceName());
-                    instanceSettingsDto.getKitBehaviorChange()
-                            .flatMap(kitBehavior -> kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_RECEIVED)).findFirst())
-                            .ifPresentOrElse(received -> {
-                                Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
-                                        ElasticSearchUtil.BY_GUID + maybeBspKitQueryResult.getDdpParticipantId());
-                                writeSampleReceivedToES(ddpInstance, maybeBspKitQueryResult);
-                                Map<String, Object> participant = participants.get(maybeBspKitQueryResult.getDdpParticipantId());
-                                if (participant != null) {
-                                    boolean triggerDDP = true;
-                                    boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(participant, received);
-                                    if (specialBehavior) {
-                                        //don't trigger ddp to sent out email, only email to study staff
-                                        triggerDDP = false;
-                                        if (InstanceSettings.TYPE_NOTIFICATION.equals(received.getType())) {
-                                            String message = "Kit of participant " + maybeBspKitQueryResult.getBspParticipantId() + " was received by GP. <br> " +
-                                                    "CollaboratorSampleId:  " + maybeBspKitQueryResult.getBspSampleId() + " <br> " +
-                                                    received.getValue();
-                                            notificationUtil.sentNotification(maybeBspKitQueryResult.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE, NotificationUtil.DSM_SUBJECT);
-                                        }
-                                        else {
-                                            logger.error("Instance settings behavior for kit was not known " + received.getType());
-                                        }
+        bspKitQueryResult.map(maybeBspKitQueryResult -> {
+            if (StringUtils.isNotBlank(maybeBspKitQueryResult.getDdpParticipantId())) {
+                DDPInstance ddpInstance = DDPInstance.getDDPInstance(maybeBspKitQueryResult.getInstanceName());
+                InstanceSettings instanceSettings = new InstanceSettings();
+                InstanceSettingsDto instanceSettingsDto = instanceSettings.getInstanceSettings(maybeBspKitQueryResult.getInstanceName());
+                instanceSettingsDto.getKitBehaviorChange()
+                        .flatMap(kitBehavior -> kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_RECEIVED)).findFirst())
+                        .ifPresentOrElse(received -> {
+                            Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
+                                    ElasticSearchUtil.BY_GUID + maybeBspKitQueryResult.getDdpParticipantId());
+                            writeSampleReceivedToES(ddpInstance, maybeBspKitQueryResult);
+                            Map<String, Object> participant = participants.get(maybeBspKitQueryResult.getDdpParticipantId());
+                            if (participant != null) {
+                                boolean triggerDDP = true;
+                                boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(participant, received);
+                                if (specialBehavior) {
+                                    //don't trigger ddp to sent out email, only email to study staff
+                                    triggerDDP = false;
+                                    if (InstanceSettings.TYPE_NOTIFICATION.equals(received.getType())) {
+                                        String message = "Kit of participant " + maybeBspKitQueryResult.getBspParticipantId() + " was received by GP. <br> " +
+                                                "CollaboratorSampleId:  " + maybeBspKitQueryResult.getBspSampleId() + " <br> " +
+                                                received.getValue();
+                                        notificationUtil.sentNotification(maybeBspKitQueryResult.getNotificationRecipient(), message, NotificationUtil.UNIVERSAL_NOTIFICATION_TEMPLATE, NotificationUtil.DSM_SUBJECT);
                                     }
-                                    bspKitQueryResultDao.setKitReceivedAndTriggerDDP(kitLabel, triggerDDP, maybeBspKitQueryResult);
+                                    else {
+                                        logger.error("Instance settings behavior for kit was not known " + received.getType());
+                                    }
                                 }
-                            }, () -> {bspKitQueryResultDao.setKitReceivedAndTriggerDDP(kitLabel, true, maybeBspKitQueryResult);});
+                                bspKitQueryResultDao.setKitReceivedAndTriggerDDP(kitLabel, triggerDDP, maybeBspKitQueryResult);
+                            }
+                        }, () -> {
+                            bspKitQueryResultDao.setKitReceivedAndTriggerDDP(kitLabel, true, maybeBspKitQueryResult);
+                        });
 
-                    String bspParticipantId = maybeBspKitQueryResult.getBspParticipantId();
-                    String bspSampleId = maybeBspKitQueryResult.getBspSampleId();
-                    String bspMaterialType = maybeBspKitQueryResult.getBspMaterialType();
-                    String bspReceptacleType = maybeBspKitQueryResult.getBspReceptacleType();
-                    int bspOrganism;
-                    try {
-                        bspOrganism = Integer.parseInt(maybeBspKitQueryResult.getBspOrganism());
-                    }
-                    catch (NumberFormatException e) {
-                        throw new RuntimeException("Organism " + maybeBspKitQueryResult.getBspOrganism() + " can't be parsed to integer", e);
-                    }
+                String bspParticipantId = maybeBspKitQueryResult.getBspParticipantId();
+                String bspSampleId = maybeBspKitQueryResult.getBspSampleId();
+                String bspMaterialType = maybeBspKitQueryResult.getBspMaterialType();
+                String bspReceptacleType = maybeBspKitQueryResult.getBspReceptacleType();
+                int bspOrganism;
+                try {
+                    bspOrganism = Integer.parseInt(maybeBspKitQueryResult.getBspOrganism());
+                }
+                catch (NumberFormatException e) {
+                    throw new RuntimeException("Organism " + maybeBspKitQueryResult.getBspOrganism() + " can't be parsed to integer", e);
+                }
 
-                    logger.info("Returning info for kit w/ label " + kitLabel + " for " + maybeBspKitQueryResult.getInstanceName());
-                    bspKitInfo[0] = Optional.of(new BSPKitInfo(maybeBspKitQueryResult.getBspCollection(),
-                            bspOrganism,
-                            "U",
-                            bspParticipantId,
-                            bspSampleId,
-                            bspMaterialType,
-                            bspReceptacleType));
-                }
-                else {
-                    throw new RuntimeException("No participant id for " + kitLabel + " from " + maybeBspKitQueryResult.getInstanceName());
-                }
-            });
-        return bspKitInfo[0];
-        }
+                logger.info("Returning info for kit w/ label " + kitLabel + " for " + maybeBspKitQueryResult.getInstanceName());
+                return Optional.of(new BSPKitInfo(maybeBspKitQueryResult.getBspCollection(),
+                        bspOrganism,
+                        "U",
+                        bspParticipantId,
+                        bspSampleId,
+                        bspMaterialType,
+                        bspReceptacleType));
+            }
+            else {
+                throw new RuntimeException("No participant id for " + kitLabel + " from " + maybeBspKitQueryResult.getInstanceName());
+            }
+        });
+        return Optional.empty();
+    }
 
     private void writeSampleReceivedToES(DDPInstance ddpInstance, BSPKitQueryResultDto bspKitInfo) {
         String kitRequestId = new KitRequestDao().getKitRequestIdByBSPParticipantId(bspKitInfo.getBspParticipantId());
