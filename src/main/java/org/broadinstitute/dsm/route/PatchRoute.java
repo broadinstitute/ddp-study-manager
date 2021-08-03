@@ -325,7 +325,7 @@ public class PatchRoute extends RequestHandler {
     }
 
     private void controlWorkflowByEmail(Patch patch, NameValue nameValue, DDPInstance ddpInstance, ESProfile profile) {
-        if (profile == null) {
+        if (profile == null || nameValue.getValue() == null) {
             return;
         }
         try {
