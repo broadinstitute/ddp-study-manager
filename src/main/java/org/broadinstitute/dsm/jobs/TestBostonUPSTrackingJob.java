@@ -1,5 +1,8 @@
 package org.broadinstitute.dsm.jobs;
 
+import static org.broadinstitute.dsm.db.dao.ddp.kitrequest.KitRequestDao.BY_KIT_LABEL;
+import static org.broadinstitute.dsm.db.dao.ddp.kitrequest.KitRequestDao.SQL_GET_KIT_REQUEST;
+
 import com.google.cloud.functions.BackgroundFunction;
 import com.google.cloud.functions.Context;
 import com.google.gson.Gson;
@@ -13,10 +16,12 @@ import org.broadinstitute.dsm.careevolve.Covid19OrderRegistrar;
 import org.broadinstitute.dsm.careevolve.Provider;
 import org.broadinstitute.dsm.cf.CFUtil;
 import org.broadinstitute.dsm.db.InstanceSettings;
+import org.broadinstitute.dsm.db.dto.ddp.kitrequest.KitRequestDto;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.ups.*;
 import org.broadinstitute.dsm.shipping.UPSTracker;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.EventUtil;
 import org.broadinstitute.dsm.util.KitUtil;
 import org.slf4j.Logger;
@@ -24,13 +29,18 @@ import org.slf4j.LoggerFactory;
 import spark.utils.StringUtils;
 
 import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 
 
 public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessage> {
+
+    public static final String SKIP_CE_ORDERS_FOR_SCHEDULED_KITS_AFTER = "testboston.skipCEOrdersForScheduledKitsAfter";
 
     private String STUDY_MANAGER_SCHEMA = System.getenv("STUDY_MANAGER_SCHEMA") + ".";
 
@@ -46,8 +56,10 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
     String username;
     String password;
     String accessKey;
+    Date ignoreScheduledOrdersAfter;
     Connection conn = null;
     private final int MAX_CONNECTION = 1;
+    private final String SKIP_CE_ORDER_DATE_FORMAT = "YYYY-MM-dd";
     UPSTracker upsTracker = null;
     private static Auth0Util auth0Util;
 
@@ -63,6 +75,17 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         username = cfg.getString("ups.username");
         password = cfg.getString("ups.password");
         accessKey = cfg.getString("ups.accesskey");
+        if (cfg.hasPath(SKIP_CE_ORDERS_FOR_SCHEDULED_KITS_AFTER)) {
+            String skipAfter = cfg.getString(SKIP_CE_ORDERS_FOR_SCHEDULED_KITS_AFTER);
+            try {
+                ignoreScheduledOrdersAfter = new SimpleDateFormat(SKIP_CE_ORDER_DATE_FORMAT).parse(skipAfter);
+                logger.info("Will skip all CE orders after " + skipAfter);
+            } catch (ParseException e) {
+                logger.error("Could not parse cutoff time for testboston longitudinal orders.  Expected format is " + SKIP_CE_ORDER_DATE_FORMAT,e);
+            }
+        } else {
+            logger.info("No cutoff date for CE orders of longitudinal kits.  Will continue to place CE orders");
+        }
         upsTracker = new UPSTracker(endpoint, username, password, accessKey);
         logger.info("Starting the UPS lookup job");
         auth0Util = new Auth0Util(cfg.getString(ApplicationConfigConstants.AUTH0_ACCOUNT),
@@ -457,16 +480,28 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
                     // if we have the first date of an inbound event, create an order in CE
                     // using the earliest date of inbound event
 
-                    if (orderRegistrar == null || careEvolveAuth == null) {
-                        Pair<Covid19OrderRegistrar, Authentication> careEvolveOrderingTools = createCEOrderRegistrar(cfg);
-                        orderRegistrar = careEvolveOrderingTools.getLeft();
-                        careEvolveAuth = careEvolveOrderingTools.getRight();
+                    boolean shouldPlaceCEOrder = true;
+                    if (StringUtils.isNotBlank(kit.getKitLabel())) {
+                        // if we are after the cutoff date and this is a longitudinal order, do not place the order
+                        if (ignoreScheduledOrdersAfter != null) {
+                            if (ignoreScheduledOrdersAfter.toInstant().isAfter(Instant.now())) {
+                                shouldPlaceCEOrder = doesKitHaveUploadReason(conn, kit.getKitLabel());
+                            }
+                        }
 
+                        if (shouldPlaceCEOrder) {
+                            if (orderRegistrar == null || careEvolveAuth == null) {
+                                Pair<Covid19OrderRegistrar, Authentication> careEvolveOrderingTools = createCEOrderRegistrar(cfg);
+                                orderRegistrar = careEvolveOrderingTools.getLeft();
+                                careEvolveAuth = careEvolveOrderingTools.getRight();
+
+                            }
+                            orderRegistrar.orderTest(careEvolveAuth, kit.getHruid(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime, conn, cfg);
+                            logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
+                            logger.info("Placed CE order for kit with label " + kit.getMainKitLabel() + " for time " + earliestInTransitTime);
+                            kit.changeCEOrdered(conn, true);
+                        }
                     }
-                    orderRegistrar.orderTest(careEvolveAuth, kit.getHruid(), kit.getMainKitLabel(), kit.getExternalOrderNumber(), earliestInTransitTime, conn, cfg);
-                    logger.info("Placed CE order for kit with external order number " + kit.getExternalOrderNumber());
-                    logger.info("Placed CE order for kit with label " + kit.getMainKitLabel() + " for time " + earliestInTransitTime);
-                    kit.changeCEOrdered(conn, true);
                 }
                 else {
                     logger.info("No return events for " + kit.getMainKitLabel() + ".  Will not place order yet.");
@@ -506,6 +541,43 @@ public class TestBostonUPSTrackingJob implements BackgroundFunction<PubsubMessag
         }
 
 
+    }
+
+    /**
+     * Queries the database to see whether there is an upload reason
+     * for the given kit label
+     */
+    private boolean doesKitHaveUploadReason(Connection conn, String kitLabel) throws SQLException {
+        boolean hasUploadReason = false;
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_KIT_REQUEST + BY_KIT_LABEL)) {
+            stmt.setString(1, kitLabel);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    KitRequestDto dto = new KitRequestDto(
+                            rs.getInt(DBConstants.DSM_KIT_REQUEST_ID),
+                            rs.getInt(DBConstants.DDP_INSTANCE_ID),
+                            rs.getString(DBConstants.DDP_KIT_REQUEST_ID),
+                            rs.getInt(DBConstants.KIT_TYPE_ID),
+                            rs.getString(DBConstants.COLLABORATOR_PARTICIPANT_ID),
+                            rs.getString(DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID),
+                            rs.getString(DBConstants.DDP_PARTICIPANT_ID),
+                            rs.getString(DBConstants.DSM_LABEL),
+                            rs.getString(DBConstants.CREATED_BY),
+                            rs.getLong(DBConstants.CREATED_DATE),
+                            rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER),
+                            rs.getLong(DBConstants.EXTERNAL_ORDER_DATE),
+                            rs.getString(DBConstants.EXTERNAL_ORDER_STATUS),
+                            rs.getString(DBConstants.EXTERNAL_RESPONSE),
+                            rs.getString(DBConstants.UPLOAD_REASON),
+                            rs.getTimestamp(DBConstants.ORDER_TRANSMITTED_AT));
+
+                    if (!hasUploadReason && dto.hasUploadReason()) {
+                        hasUploadReason = true;
+                    }
+                }
+            }
+        }
+        return hasUploadReason;
     }
 
     /**
