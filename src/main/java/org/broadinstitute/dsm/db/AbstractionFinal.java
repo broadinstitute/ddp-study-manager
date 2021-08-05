@@ -67,7 +67,7 @@ public class AbstractionFinal {
     }
 
     public static Map<String, List<AbstractionGroup>> getAbstractionFinalByParticipantIds(@NonNull String realm, List<String> participantIds) {
-        String queryAddition = " AND request.ddp_participant_id IN (?)".replace("?", DBUtil.participantIdsInClause(participantIds));
+        String queryAddition = " AND p.ddp_participant_id IN (?)".replace("?", DBUtil.participantIdsInClause(participantIds));
         return getAbstractionFinal(realm, queryAddition);
     }
 

@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elasticsearch;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -12,12 +13,15 @@ import java.util.stream.Collectors;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import lombok.Data;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -25,23 +29,67 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Data
+@Setter
 public class ElasticSearch implements ElasticSearchable {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearch.class);
     private static final Gson GSON = new Gson();
 
-    private Optional<ESAddress> address;
-    private Optional<List<Object>> medicalProviders;
-    private Optional<List<Object>> invitations;
-    private Optional<List<ESActivities>> activities;
-    private Optional<Long> statusTimeStamp;
-    private Optional<ESProfile> profile;
-    private Optional<List<Object>> files;
-    private Optional<List<Object>> proxies;
-    private Optional<List<Map<String, String>>> workflows;
-    private Optional<String> status;
-    private Optional<Map<String, Object>> dsm;
+    private ESAddress address;
+    private List<Object> medicalProviders;
+    private List<Object> invitations;
+    private List<ESActivities> activities;
+    private Long statusTimeStamp;
+    private ESProfile profile;
+    private List<Object> files;
+    private List<String> proxies;
+    private List<Map<String, String>> workflows;
+    private String status;
+    private Map<String, Object> dsm;
+
+    public Optional<ESAddress> getAddress() {
+        return Optional.ofNullable(address);
+    }
+
+    public Optional<List<Object>> getMedicalProviders() {
+        return Optional.ofNullable(medicalProviders);
+    }
+
+    public Optional<List<Object>> getInvitations() {
+        return Optional.ofNullable(invitations);
+    }
+
+    public Optional<List<ESActivities>> getActivities() {
+        return Optional.ofNullable(activities);
+    }
+
+    public Optional<Long> getStatusTimeStamp() {
+        return Optional.ofNullable(statusTimeStamp);
+    }
+
+    public Optional<ESProfile> getProfile() {
+        return Optional.ofNullable(profile);
+    }
+
+    public Optional<List<Object>> getFiles() {
+        return Optional.ofNullable(files);
+    }
+
+    public Optional<List<String>> getProxies() {
+        return Optional.ofNullable(proxies);
+    }
+
+    public Optional<List<Map<String, String>>> getWorkflows() {
+        return Optional.ofNullable(workflows);
+    }
+
+    public Optional<String> getStatus() {
+        return Optional.ofNullable(status);
+    }
+
+    public Optional<Map<String, Object>> getDsm() {
+        return Optional.ofNullable(dsm);
+    }
 
     private ElasticSearch(Builder builder) {
         this.address = builder.address;
@@ -51,6 +99,7 @@ public class ElasticSearch implements ElasticSearchable {
         this.statusTimeStamp = builder.statusTimeStamp;
         this.profile = builder.profile;
         this.files = builder.files;
+        this.proxies = builder.proxies;
         this.workflows = builder.workflows;
         this.status = builder.status;
         this.dsm = builder.dsm;
@@ -135,73 +184,101 @@ public class ElasticSearch implements ElasticSearchable {
         return elasticSearchList;
     }
 
+    @Override
+    public List<ElasticSearch> getParticipantsByIds(String esParticipantsIndex, List<String> participantIds) {
+        SearchRequest searchRequest = new SearchRequest(esParticipantsIndex);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        TermQueryBuilder participantIdsQuery = QueryBuilders.termQuery("participantId", participantIds);
+        searchSourceBuilder.query(participantIdsQuery).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+        searchSourceBuilder.size(participantIds.size());
+        searchSourceBuilder.from(0);
+        searchRequest.source(searchSourceBuilder);
+        SearchResponse response;
+        logger.info("Collecting ES data");
+        try {
+            response = ElasticSearchUtil.getClientInstance().search(searchRequest, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            throw new RuntimeException("Couldn't get participants from ES for instance " + esParticipantsIndex, e);
+        }
+        List<ElasticSearch> elasticSearchList = parseSourceMaps(response.getHits().getHits());
+        logger.info("Got " + elasticSearchList.size() + " participants from ES for instance " + esParticipantsIndex);
+        return elasticSearchList;
+    }
+
+    public String getParticipantIdFromProfile() {
+        return getProfile().map(esProfile -> StringUtils.isNotBlank(esProfile.getParticipantGuid())
+                ? esProfile.getParticipantGuid()
+                : esProfile.getParticipantLegacyAltPid())
+                .orElse("");
+    }
+
     public static class Builder {
-        private Optional<ESAddress> address = Optional.empty();
-        private Optional<List<Object>> medicalProviders = Optional.empty();
-        private Optional<List<Object>> invitations = Optional.empty();
-        private Optional<List<ESActivities>> activities = Optional.empty();
-        private Optional<Long> statusTimeStamp = Optional.empty();
-        private Optional<ESProfile> profile = Optional.empty();
-        private Optional<List<Object>> files = Optional.empty();
-        private Optional<List<Object>> proxies = Optional.empty();
-        private Optional<List<Map<String, String>>> workflows = Optional.empty();
-        private Optional<String> status = Optional.empty();
-        private Optional<Map<String, Object>> dsm = Optional.empty();
+        private ESAddress address;
+        private List<Object> medicalProviders;
+        private List<Object> invitations;
+        private List<ESActivities> activities;
+        private Long statusTimeStamp;
+        private ESProfile profile;
+        private List<Object> files;
+        private List<String> proxies;
+        private List<Map<String, String>> workflows;
+        private String status;
+        private Map<String, Object> dsm;
 
         public Builder() {}
 
         public Builder withAddress(ESAddress esAddress) {
-            this.address = Optional.ofNullable(esAddress);
+            this.address = esAddress;
             return this;
         }
 
         public Builder withMedicalProviders(List<Object> medicalProviders) {
-            this.medicalProviders = Optional.ofNullable(medicalProviders);
+            this.medicalProviders = medicalProviders;
             return this;
         }
 
         public Builder withInvitations(List<Object> invitations) {
-            this.invitations = Optional.ofNullable(invitations);
+            this.invitations = invitations;
             return this;
         }
 
         public Builder withActivities(List<ESActivities> activities) {
-            this.activities = Optional.ofNullable(activities);
+            this.activities = activities;
             return this;
         }
 
         public Builder withStatusTimeStamp(Long statusTimeStamp) {
-            this.statusTimeStamp = Optional.ofNullable(statusTimeStamp);
+            this.statusTimeStamp = statusTimeStamp;
             return this;
         }
 
         public Builder withProfile(ESProfile profile) {
-            this.profile = Optional.ofNullable(profile);
+            this.profile = profile;
             return this;
         }
 
         public Builder withFiles(List<Object> files) {
-            this.files = Optional.ofNullable(files);
+            this.files = files;
             return this;
         }
 
-        public Builder withProxies(List<Object> proxies) {
-            this.proxies = Optional.ofNullable(proxies);
+        public Builder withProxies(List<String> proxies) {
+            this.proxies = proxies;
             return this;
         }
 
         public Builder withWorkFlows(List<Map<String, String>> workflows) {
-            this.workflows = Optional.ofNullable(workflows);
+            this.workflows = workflows;
             return this;
         }
 
         public Builder withStatus(String status) {
-            this.status = Optional.ofNullable(status);
+            this.status = status;
             return this;
         }
 
         public Builder withDsm(Map<String, Object> dsm) {
-            this.dsm = Optional.ofNullable(dsm);
+            this.dsm = dsm;
             return this;
         }
 

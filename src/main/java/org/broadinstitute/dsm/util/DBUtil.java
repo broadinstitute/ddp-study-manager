@@ -148,6 +148,6 @@ public class DBUtil {
 
     public static String participantIdsInClause(List<String> participantIds) {
         return participantIds.stream()
-                .collect(Collectors.joining(",", "','", "'"));
+                .collect(Collectors.joining("','", "'", "'"));
     }
 }

@@ -4,7 +4,9 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapperPayload;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -38,6 +40,6 @@ public class GetParticipantRoute extends RequestHandler {
                         ? ElasticSearchUtil.BY_GUID + ddpParticipantId
                         : ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId
         );
-        return ParticipantWrapper.getFilteredList(ddpInstance, queryConditions);
+        return new ParticipantWrapper(new ParticipantWrapperPayload.Builder().build(), new ElasticSearch.Builder().build()).getFilteredList();
     }
 }

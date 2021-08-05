@@ -18,6 +18,7 @@ import org.broadinstitute.dsm.exception.FileColumnMissing;
 import org.broadinstitute.dsm.exception.FileWrongSeparator;
 import org.broadinstitute.dsm.exception.UploadLineException;
 import org.broadinstitute.dsm.model.*;
+import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
 import org.broadinstitute.dsm.security.RequestHandler;
@@ -513,9 +514,10 @@ public class KitUploadRoute extends RequestHandler {
 
         Map<String, String> participantProfile = new HashMap<>();
         maybeParticipant.ifPresent(p -> {
-            Map<String, String> participantProfileFromEs = (Map<String, String>) p.getData().get("profile");
-            participantProfile.put("firstName", participantProfileFromEs.get("firstName").trim().toLowerCase());
-            participantProfile.put("lastName", participantProfileFromEs.get("lastName").trim().toLowerCase());
+            String firstName = p.getEsData().getProfile().map(ESProfile::getFirstName).orElse("");
+            String lastName = p.getEsData().getProfile().map(ESProfile::getLastName).orElse("");
+            participantProfile.put("firstName", firstName);
+            participantProfile.put("lastName", lastName);
         });
         String message = "";
 

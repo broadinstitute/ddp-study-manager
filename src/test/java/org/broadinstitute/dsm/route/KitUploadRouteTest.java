@@ -4,7 +4,8 @@ import com.typesafe.config.Config;
 import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.exception.FileColumnMissing;
 import org.broadinstitute.dsm.exception.UploadLineException;
-import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
+import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
 import org.broadinstitute.dsm.util.NotificationUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
@@ -103,17 +104,19 @@ public class KitUploadRouteTest {
 
     private ParticipantWrapperDto participantFactory(String firstName, String lastName, String shortId) {
         ParticipantWrapperDto participant = new ParticipantWrapperDto();
-        Map<String, Object> participantData = new HashMap<>();
-        Map<String, String> participantProfile = new HashMap<>();
-        participantProfile.put("firstName", firstName);
-        participantProfile.put("lastName", lastName);
+        ESProfile esProfile = new ESProfile();
+        esProfile.setFirstName(firstName);
+        esProfile.setLastName(lastName);
         if (ParticipantUtil.isHruid(shortId)) {
-            participantProfile.put("hruid", shortId);
+            esProfile.setHruid(shortId);
         } else {
-            participantProfile.put("legacyShortId", shortId);
+            esProfile.setParticipantLegacyAltPid(shortId);
         }
-        participantData.put("profile", participantProfile);
-        participant.setData(participantData);
+
+        ElasticSearch elasticSearch = new ElasticSearch.Builder()
+                .withProfile(esProfile)
+                .build();
+        participant.setEsData(elasticSearch);
         return participant;
     }
 }

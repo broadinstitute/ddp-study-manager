@@ -152,7 +152,7 @@ public class AbstractionActivity {
     }
 
     public static Map<String, List<AbstractionActivity>> getAllAbstractionActivityByParticipantIds(@NonNull String realm, List<String> participantIds) {
-        String queryAddition = " AND request.ddp_participant_id IN (?)".replace("?", DBUtil.participantIdsInClause(participantIds));
+        String queryAddition = " AND p.ddp_participant_id IN (?)".replace("?", DBUtil.participantIdsInClause(participantIds));
         return getAllAbstractionActivityByRealm(realm, queryAddition);
     }
 

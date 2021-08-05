@@ -7,5 +7,6 @@ public interface ElasticSearchable {
 
     List<ElasticSearch> getParticipantsWithinRange(String esParticipantsIndex, int from, int to);
 
+    List<ElasticSearch> getParticipantsByIds(String esParticipantsIndex, List<String> participantIds);
 
 }

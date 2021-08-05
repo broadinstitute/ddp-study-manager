@@ -12,14 +12,18 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ViewFilter;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.Filter;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
 import org.broadinstitute.dsm.model.filter.BaseFilter;
 import org.broadinstitute.dsm.model.filter.Filterable;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapperPayload;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
@@ -108,9 +112,15 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
 
             logger.info("Found query conditions for " + mergeConditions.size() + " tables");
             //search bar ptL
-            return ParticipantWrapper.getFilteredList(instance, mergeConditions);
+            return new ParticipantWrapper(new ParticipantWrapperPayload.Builder().build(), new ElasticSearch.Builder().build()).getFilteredList();
         } else {
-            return ParticipantWrapper.getFilteredList(instance, null);
+            DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByGuid(realm).orElseThrow();
+            ParticipantWrapperPayload participantWrapperPayload = new ParticipantWrapperPayload.Builder()
+                    .withDdpInstanceDto(ddpInstanceDto)
+                    .withFrom(0)
+                    .withTo(50)
+                    .build();
+            return new ParticipantWrapper(participantWrapperPayload, new ElasticSearch.Builder().build()).getFilteredList();
         }
     }
 
