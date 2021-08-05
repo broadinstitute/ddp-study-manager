@@ -6,6 +6,7 @@ import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.dao.ddp.kitrequest.KitRequestDao;
+import org.broadinstitute.dsm.db.dto.settings.InstanceSettingsDto;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.bsp.BSPKitQueryResult;
 import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
@@ -71,17 +72,12 @@ public class BSPKitQueryRoute implements Route {
         }
         if (StringUtils.isNotBlank(bspKitInfo.getDdpParticipantId())) {
             DDPInstance ddpInstance = DDPInstance.getDDPInstance(bspKitInfo.getInstanceName());
-            InstanceSettings instanceSettings = InstanceSettings.getInstanceSettings(bspKitInfo.getInstanceName());
-            Value received = null;
-            if (instanceSettings != null && instanceSettings.getKitBehaviorChange() != null) {
-                List<Value> kitBehavior = instanceSettings.getKitBehaviorChange();
-                try {
-                    received = kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_RECEIVED)).findFirst().get();
-                }
-                catch (NoSuchElementException e) {
-                    received = null;
-                }
-            }
+            InstanceSettings instanceSettings = new InstanceSettings();
+            InstanceSettingsDto instanceSettingsDto = instanceSettings.getInstanceSettings(bspKitInfo.getInstanceName());
+            Value received = instanceSettingsDto
+                    .getKitBehaviorChange()
+                    .map(kitBehavior -> kitBehavior.stream().filter(o -> o.getName().equals(InstanceSettings.INSTANCE_SETTING_RECEIVED)).findFirst().orElse(null))
+                    .orElse(null);
 
             if (received != null && StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
                 Map<String, Map<String, Object>> participants = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,

@@ -1,7 +1,7 @@
 package org.broadinstitute.dsm;
 
 import com.google.gson.Gson;
-import org.broadinstitute.dsm.db.User;
+import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
@@ -30,7 +30,7 @@ public class FilterTest {
     private static final String participantId = "RBMJW6ZIXVXBMXUX6M3Q";
     private static final String participantId1 = "RBMJW6ZIXVXBMXUX6M31";
 
-    private static User user;
+    private static UserDto userDto;
 
     private static int participantDataId;
 
@@ -54,7 +54,7 @@ public class FilterTest {
 
         ddpInstanceDto =  DBTestUtil.createTestDdpInstance(ddpInstanceDto, ddpInstanceDao, "FilterTestInstance");
 
-        user = DBTestUtil.createTestDsmUser("testFilterUser", "testFilter@family.com", userDao, user);
+        userDto = DBTestUtil.createTestDsmUser("testFilterUser", "testFilter@family.com", userDao, userDto);
 
         createDataForParticipant();
 
@@ -75,7 +75,7 @@ public class FilterTest {
                     .withFieldTypeId(FILTER_TEST)
                     .withData(gson.toJson(participantData))
                     .withLastChanged(System.currentTimeMillis())
-                    .withChangedBy(user.getEmail())
+                    .withChangedBy(userDto.getEmail().orElse(""))
                     .build();
         participantDataId = participantDataDao.create(participantDataDto);
 
@@ -86,7 +86,7 @@ public class FilterTest {
                     .withFieldTypeId(FILTER_TEST)
                     .withData(gson.toJson(participantData1))
                     .withLastChanged(System.currentTimeMillis())
-                    .withChangedBy(user.getEmail())
+                    .withChangedBy(userDto.getEmail().orElse(""))
                     .build();
         participantDataId1 = participantDataDao.create(participantDataDto1);
     }
@@ -94,67 +94,79 @@ public class FilterTest {
     @Test
     public void testAddOneParticipantDataFilter() {
         Map<String, String> queryConditions = new HashMap<>();
+        Map<String, Integer> allParticipantDataForFiltering = new HashMap<>();
         Filter filter = new Filter(false, true, false, false, "DATE", "participantData",
                 new NameValue("PARTICIPANT_DEATH_DATE", "2040-10-30"), null, null, null);
         List<ParticipantDataDto> allParticipantData = participantDataDao
-                .getParticipantDataByInstanceid(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
-        FilterRoute.addParticipantDataFilters(queryConditions, filter, filter.getFilter1().getName(), allParticipantData);
-        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId1 + ")",
+                .getParticipantDataByInstanceId(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
+        FilterRoute.addParticipantDataIdsForFilters(filter, filter.getFilter1().getName(), allParticipantData, allParticipantDataForFiltering);
+        FilterRoute.addParticipantDataConditionsToQuery(allParticipantDataForFiltering, queryConditions, 1);
+        Assert.assertEquals(" AND (profile.guid = " + participantId + " OR profile.guid = " + participantId1 + ")",
                 queryConditions.get(ElasticSearchUtil.ES));
     }
 
     @Test
     public void testAddOneParticipantDataFilterNotEmpty() {
         Map<String, String> queryConditions = new HashMap<>();
+        Map<String, Integer> allParticipantDataForFiltering = new HashMap<>();
         Filter filter = new Filter(false, true, false, true, "DATE", "participantData",
                 new NameValue("PARTICIPANT_DEATH_DATE", "2040-10-35"), null, null, null);
         List<ParticipantDataDto> allParticipantData = participantDataDao
-                .getParticipantDataByInstanceid(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
-        FilterRoute.addParticipantDataFilters(queryConditions, filter, filter.getFilter1().getName(), allParticipantData);
-        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId1 + ")",
+                .getParticipantDataByInstanceId(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
+        FilterRoute.addParticipantDataIdsForFilters(filter, filter.getFilter1().getName(), allParticipantData, allParticipantDataForFiltering);
+        FilterRoute.addParticipantDataConditionsToQuery(allParticipantDataForFiltering, queryConditions, 1);
+        Assert.assertEquals(" AND (profile.guid = " + participantId + " OR profile.guid = " + participantId1 + ")",
                 queryConditions.get(ElasticSearchUtil.ES));
     }
 
     @Test
     public void testAddOneParticipantDataFilterEmpty() {
         Map<String, String> queryConditions = new HashMap<>();
+        Map<String, Integer> allParticipantDataForFiltering = new HashMap<>();
         Filter filter = new Filter(false, true, true, false, "DATE", "participantData",
                 new NameValue("PARTICIPANT_NONEXISTENT_DATE", "2040-10-35"), null, null, null);
         List<ParticipantDataDto> allParticipantData = participantDataDao
-                .getParticipantDataByInstanceid(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
-        FilterRoute.addParticipantDataFilters(queryConditions, filter, filter.getFilter1().getName(), allParticipantData);
-        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId1 + ")",
+                .getParticipantDataByInstanceId(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
+        FilterRoute.addParticipantDataIdsForFilters(filter, filter.getFilter1().getName(), allParticipantData, allParticipantDataForFiltering);
+        FilterRoute.addParticipantDataConditionsToQuery(allParticipantDataForFiltering, queryConditions, 1);
+        Assert.assertEquals(" AND (profile.guid = " + participantId + " OR profile.guid = " + participantId1 + ")",
                 queryConditions.get(ElasticSearchUtil.ES));
     }
 
     @Test
     public void testAddOneParticipantDataWithRange() {
         Map<String, String> queryConditions = new HashMap<>();
+        Map<String, Integer> allParticipantDataForFiltering = new HashMap<>();
         Filter filter = new Filter(false, true, false, false, "DATE", "participantData",
                 new NameValue("PARTICIPANT_DEATH_DATE", "2040-10-29"),
                 new NameValue("PARTICIPANT_DEATH_DATE", "2040-10-31"), null, null);
         List<ParticipantDataDto> allParticipantData = participantDataDao
-                .getParticipantDataByInstanceid(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
-        FilterRoute.addParticipantDataFilters(queryConditions, filter, filter.getFilter1().getName(), allParticipantData);
-        Assert.assertEquals("null AND (profile.guid = " + participantId + " OR profile.guid = " + participantId1 + ")",
+                .getParticipantDataByInstanceId(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
+        FilterRoute.addParticipantDataIdsForFilters(filter, filter.getFilter1().getName(), allParticipantData, allParticipantDataForFiltering);
+        FilterRoute.addParticipantDataConditionsToQuery(allParticipantDataForFiltering, queryConditions, 1);
+        Assert.assertEquals(" AND (profile.guid = " + participantId + " OR profile.guid = " + participantId1 + ")",
                 queryConditions.get(ElasticSearchUtil.ES));
     }
 
     @Test
     public void testAddOneParticipantDataWithRangeFalse() {
         Map<String, String> queryConditions = new HashMap<>();
+        Map<String, Integer> allParticipantDataForFiltering = new HashMap<>();
         Filter filter = new Filter(false, true, false, false, "DATE", "participantData",
                 new NameValue("PARTICIPANT_DEATH_DATE", "2020-10-29"),
                 new NameValue("PARTICIPANT_DEATH_DATE", "2020-10-31"), null, null);
         List<ParticipantDataDto> allParticipantData = participantDataDao
-                .getParticipantDataByInstanceid(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
-        FilterRoute.addParticipantDataFilters(queryConditions, filter, filter.getFilter1().getName(), allParticipantData);
+                .getParticipantDataByInstanceId(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
+        FilterRoute.addParticipantDataIdsForFilters(filter, filter.getFilter1().getName(), allParticipantData, allParticipantDataForFiltering);
+        FilterRoute.addParticipantDataConditionsToQuery(allParticipantDataForFiltering, queryConditions, 1);
         Assert.assertEquals("profile.guid = empty", queryConditions.get(ElasticSearchUtil.ES));
     }
 
     @Test
     public void testAddSeveralParticipantDataFilter() {
         Map<String, String> queryConditions = new HashMap<>();
+        Map<String, String> queryConditions1 = new HashMap<>();
+        Map<String, Integer> allParticipantDataForFiltering = new HashMap<>();
         Filter filterA = new Filter(false, true, false, false, "DATE", "participantData",
                 new NameValue("PARTICIPANT_DEATH_DATE", "2040-10-30"), null, null, null);
         Filter filterB = new Filter(false, true, false, false, "DATE", "participantData",
@@ -162,14 +174,15 @@ public class FilterTest {
         Filter filterC = new Filter(false, true, false, false, "DATE", "participantData",
                 new NameValue("PARTICIPANT_DEATH_DATE", "2040-10-30"), null, null, null);
         List<ParticipantDataDto> allParticipantData = participantDataDao
-                .getParticipantDataByInstanceid(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
-        FilterRoute.addParticipantDataFilters(queryConditions, filterA, filterA.getFilter1().getName(), allParticipantData);
-        FilterRoute.addParticipantDataFilters(queryConditions, filterB, filterB.getFilter1().getName(), allParticipantData);
-        FilterRoute.addParticipantDataFilters(queryConditions, filterC, filterC.getFilter1().getName(), allParticipantData);
-        Assert.assertEquals("null AND (profile.guid = RBMJW6ZIXVXBMXUX6M3Q" + " OR profile.guid = " + participantId1 + ")" +
-                        " AND (profile.guid = RBMJW6ZIXVXBMXUX6M3Q" + " OR profile.guid = " + participantId1 + ")" +
-                        " AND (profile.guid = RBMJW6ZIXVXBMXUX6M3Q" + " OR profile.guid = " + participantId1 + ")",
+                .getParticipantDataByInstanceId(Integer.parseInt(String.valueOf(ddpInstanceDto.getDdpInstanceId())));
+        FilterRoute.addParticipantDataIdsForFilters(filterA, filterA.getFilter1().getName(), allParticipantData, allParticipantDataForFiltering);
+        FilterRoute.addParticipantDataIdsForFilters(filterB, filterB.getFilter1().getName(), allParticipantData, allParticipantDataForFiltering);
+        FilterRoute.addParticipantDataIdsForFilters(filterC, filterC.getFilter1().getName(), allParticipantData, allParticipantDataForFiltering);
+        FilterRoute.addParticipantDataConditionsToQuery(allParticipantDataForFiltering, queryConditions, 3);
+        FilterRoute.addParticipantDataConditionsToQuery(allParticipantDataForFiltering, queryConditions1, 1);
+        Assert.assertEquals(" AND (profile.guid = RBMJW6ZIXVXBMXUX6M3Q" + " OR profile.guid = " + participantId1 + ")",
                 queryConditions.get(ElasticSearchUtil.ES));
+        Assert.assertEquals(" AND ()", queryConditions1.get(ElasticSearchUtil.ES));
     }
 
     @AfterClass
@@ -180,7 +193,7 @@ public class FilterTest {
         if (participantDataId1 > 0) {
             participantDataDao.delete(participantDataId1);
         }
-        userDao.delete(user.getUserId());
+        userDao.delete(userDto.getId());
         ddpInstanceDao.delete(ddpInstanceDto.getDdpInstanceId());
     }
 }

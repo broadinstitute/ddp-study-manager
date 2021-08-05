@@ -9,6 +9,7 @@ import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.PubsubMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.export.ExportToES;
+import org.broadinstitute.dsm.model.Study;
 import org.broadinstitute.dsm.model.defaultvalues.Defaultable;
 import org.broadinstitute.dsm.model.defaultvalues.DefaultableMaker;
 import org.broadinstitute.dsm.util.ParticipantUtil;
@@ -19,7 +20,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DSMtasksSubscription {
 
@@ -54,10 +54,8 @@ public class DSMtasksSubscription {
                                 break;
                             case ELASTIC_EXPORT:
                                 consumer.ack();
-                                AtomicBoolean clearBeforeUpdate = new AtomicBoolean(false);
-                                if (attributesMap.containsKey(CLEAR_BEFORE_UPDATE)) {
-                                    clearBeforeUpdate.set(true);
-                                }
+                                boolean clearBeforeUpdate = attributesMap.containsKey(CLEAR_BEFORE_UPDATE)
+                                        && Boolean.parseBoolean(attributesMap.get(CLEAR_BEFORE_UPDATE));
                                 new ExportToES().exportObjectsToES(data, clearBeforeUpdate);
                                 break;
                             case PARTICIPANT_REGISTERED:
@@ -94,7 +92,7 @@ public class DSMtasksSubscription {
             consumer.ack();
             return;
         };
-        Arrays.stream(DefaultableMaker.Study.values())
+        Arrays.stream(Study.values())
                 .filter(study -> study.toString().equals(studyGuid.toUpperCase()))
                 .findFirst()
                 .ifPresentOrElse(study -> {
