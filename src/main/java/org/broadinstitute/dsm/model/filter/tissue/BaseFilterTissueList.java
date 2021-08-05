@@ -24,8 +24,6 @@ public abstract class BaseFilterTissueList extends BaseFilter implements Filtera
 
     private static final Logger logger = LoggerFactory.getLogger(BaseFilterTissueList.class);
 
-
-
     public BaseFilterTissueList(String jsonBody) {
         super(jsonBody);
     }
@@ -81,7 +79,7 @@ public abstract class BaseFilterTissueList extends BaseFilter implements Filtera
             }
         }
         queryString += subQueryForFiltering;
-        return getListBasedOnFilterName(filterName, instance.getName(), "tissueList", queryString, queryConditions);
+        return getListBasedOnFilterName(filterName, instance.getName(), TISSUE_LIST_PARENT, queryString, queryConditions);
     }
 
     protected List<TissueListWrapper> getListBasedOnFilterName(String filterName, String realm, String parent, String queryString, Map<String, String> filters) {

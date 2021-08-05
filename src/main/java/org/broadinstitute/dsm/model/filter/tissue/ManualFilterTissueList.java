@@ -41,9 +41,9 @@ public class ManualFilterTissueList extends BaseFilterTissueList {
             wrapperList = TissueListWrapper.getTissueListData(ddpInstance, null, tissueListList);
         } else if ("1".equals(defaultFilter)) {
             String userEmail = queryParamsMap.value(RequestParameter.USER_MAIL);
-            String defaultFilterName = ViewFilter.getDefaultFilterForUser(userEmail, "tissueList");
+            String defaultFilterName = ViewFilter.getDefaultFilterForUser(userEmail, TISSUE_LIST_PARENT);
             if (StringUtils.isNotBlank(defaultFilterName)) {
-                wrapperList = getListBasedOnFilterName(defaultFilterName, realm, "tissueList", null, null);
+                wrapperList = getListBasedOnFilterName(defaultFilterName, realm, TISSUE_LIST_PARENT, null, null);
             } else {
                 tissueListList = TissueList.getAllTissueListsForRealmNoFilter(realm);
                 wrapperList = TissueListWrapper.getTissueListData(ddpInstance, null, tissueListList);
