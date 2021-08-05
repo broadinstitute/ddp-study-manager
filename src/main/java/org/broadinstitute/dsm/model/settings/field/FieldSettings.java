@@ -28,10 +28,10 @@ public class FieldSettings {
         this.fieldSettingsDao = FieldSettingsDao.of();
     }
 
-    public Map<String, String> getColumnsWithDefaultOptions(@NonNull List<FieldSettingsDto> fieldSettingsDtos) {
+    public Map<String, String> getColumnsWithDefaultValues(@NonNull List<FieldSettingsDto> fieldSettingsDtos) {
         Map<String, String> defaultOptions = new HashMap<>();
         for (FieldSettingsDto fieldSettingDto: fieldSettingsDtos) {
-            if (isDefaultOption(fieldSettingDto.getPossibleValues())) {
+            if (isDefaultValue(fieldSettingDto.getPossibleValues())) {
                 defaultOptions.put(fieldSettingDto.getColumnName(), getDefaultOptionValue(fieldSettingDto.getPossibleValues()));
             }
         }
@@ -41,7 +41,7 @@ public class FieldSettings {
     public Map<String, String> getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(@NonNull List<FieldSettingsDto> fieldSettingsDtos) {
         Map<String, String> defaultOptionsFileredByElasticExportWorkflow = new HashMap<>();
         for (FieldSettingsDto fieldSettingsDto: fieldSettingsDtos) {
-            if (isDefaultOption(fieldSettingsDto.getPossibleValues()) && isElasticExportWorkflowType(fieldSettingsDto.getActions())) {
+            if (isDefaultValue(fieldSettingsDto.getPossibleValues()) && isElasticExportWorkflowType(fieldSettingsDto.getActions())) {
                 defaultOptionsFileredByElasticExportWorkflow.put(fieldSettingsDto.getColumnName(), getDefaultOptionValue(fieldSettingsDto.getPossibleValues()));
             }
         }
@@ -64,7 +64,7 @@ public class FieldSettings {
         return isElasticExportWorkflowType(fieldSettings.getActions());
     }
 
-    boolean isDefaultOption(String possibleValuesJson) {
+    boolean isDefaultValue(String possibleValuesJson) {
         if (StringUtils.isBlank(possibleValuesJson)) return false;
         List<Map<String, Object>> possibleValues = new Gson().fromJson(possibleValuesJson, List.class);
         boolean isDefault = false;

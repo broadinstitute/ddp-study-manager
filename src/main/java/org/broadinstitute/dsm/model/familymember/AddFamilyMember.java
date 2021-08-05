@@ -150,7 +150,7 @@ public class AddFamilyMember {
     private Map<String, String> getDefaultOptions() {
         FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
         FieldSettings fieldSettings = new FieldSettings();
-        return fieldSettings.getColumnsWithDefaultOptions(fieldSettingsDao.getFieldSettingsByOptionAndInstanceId(ddpInstanceId));
+        return fieldSettings.getColumnsWithDefaultValues(fieldSettingsDao.getFieldSettingsWithDefaultValueByInstanceId(ddpInstanceId));
     }
 
     public static AddFamilyMember instance(Study study, AddFamilyMemberPayload addFamilyMemberPayload) {
