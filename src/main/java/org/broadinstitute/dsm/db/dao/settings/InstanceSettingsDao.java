@@ -69,6 +69,7 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
         return Optional.empty();
     }
 
+    //TODO -> since value type is boolean it is better to return true/false instead of optional
     public Optional<Boolean> getHideSamplesTabByStudyGuid(String studyGuid) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult execResult = new SimpleResult();

@@ -16,16 +16,17 @@ import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.Filter;
-import org.broadinstitute.dsm.model.ParticipantWrapper;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
 import org.broadinstitute.dsm.model.filter.BaseFilter;
 import org.broadinstitute.dsm.model.filter.Filterable;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class BaseFilterParticipantList extends BaseFilter implements Filterable<ParticipantWrapper> {
+public abstract class BaseFilterParticipantList extends BaseFilter implements Filterable<ParticipantWrapperDto> {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseFilterParticipantList.class);
     public static final String PARTICIPANT_DATA = "participantData";
@@ -50,7 +51,7 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
     }
 
 
-    protected List<ParticipantWrapper> filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap, @NonNull DDPInstance instance) {
+    protected List<ParticipantWrapperDto> filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap, @NonNull DDPInstance instance) {
         Map<String, String> queryConditions = new HashMap<>();
         List<ParticipantDataDto> allParticipantData = null;
         if (filters != null && columnNameMap != null && !columnNameMap.isEmpty()) {

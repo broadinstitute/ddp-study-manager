@@ -8,6 +8,8 @@ import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.KitType;
 import org.broadinstitute.dsm.model.*;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.*;
 import org.broadinstitute.dsm.util.AbstractionUtil;
@@ -217,7 +219,7 @@ public class DashboardRoute extends RequestHandler {
         Map<String, List<AbstractionActivity>> abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(realm);
         Map<String, List<AbstractionGroup>> abstractionSummary = AbstractionFinal.getAbstractionFinal(realm);
 
-        List<ParticipantWrapper> participantWrapperList = ParticipantWrapper.addAllData(new ArrayList<>(participantESData.keySet()), participantESData,
+        List<ParticipantWrapperDto> participantWrapperList = ParticipantWrapperDto.addAllData(new ArrayList<>(participantESData.keySet()), participantESData,
                 participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, null, null);
 
         Map<String, Integer> dashboardValues = new HashMap(); //counts only pt
@@ -226,7 +228,7 @@ public class DashboardRoute extends RequestHandler {
         Map<String, Integer> dashboardValuesPeriodDetailed = new HashMap(); //counts number of institutions in total per period
         //number of pts in ES
         dashboardValues.put("all", participantWrapperList.size());
-        for (ParticipantWrapper wrapper : participantWrapperList) {
+        for (ParticipantWrapperDto wrapper : participantWrapperList) {
             //es data information
             Map<String, Object> esData = wrapper.getData();
             //count pt enrollment status

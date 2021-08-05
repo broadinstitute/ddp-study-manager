@@ -283,6 +283,11 @@ public class OncHistoryDetail {
         return getOncHistoryDetails(realm, null);
     }
 
+    public static Map<String, List<OncHistoryDetail>> getOncHistoryDetailsByParticipantIds(@NonNull String realm, List<String> participantIds) {
+        String queryAddition = " AND p.ddp_participant_id IN (?)".replace("?", DBUtil.participantIdsInClause(participantIds));
+        return getOncHistoryDetails(realm, queryAddition);
+    }
+
     public static Map<String, List<OncHistoryDetail>> getOncHistoryDetails(@NonNull String realm, String queryAddition) {
         logger.info("Collection oncHistoryDetail information");
         Map<String, List<OncHistoryDetail>> oncHistory = new HashMap<>();

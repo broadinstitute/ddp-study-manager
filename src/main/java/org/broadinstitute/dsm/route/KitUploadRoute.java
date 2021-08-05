@@ -18,6 +18,8 @@ import org.broadinstitute.dsm.exception.FileColumnMissing;
 import org.broadinstitute.dsm.exception.FileWrongSeparator;
 import org.broadinstitute.dsm.exception.UploadLineException;
 import org.broadinstitute.dsm.model.*;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
@@ -498,7 +500,7 @@ public class KitUploadRoute extends RequestHandler {
         String participantFirstNameFromDoc = participantDataByFieldName.get(FIRST_NAME).trim().toLowerCase();
         String participantLastNameFromDoc = participantDataByFieldName.get(LAST_NAME).trim().toLowerCase();
 
-        Optional<ParticipantWrapper> maybeParticipant =
+        Optional<ParticipantWrapperDto> maybeParticipant =
                 ParticipantWrapper.getParticipantByShortId(ddpInstanceByRealm, participantIdFromDoc);
         maybeParticipant.orElseThrow(() -> {
             throw new RuntimeException("Participant " + participantIdFromDoc + " does not belong to this study");
@@ -507,7 +509,7 @@ public class KitUploadRoute extends RequestHandler {
     }
 
     String checkKitUploadNameMatchesToEsName(String participantFirstNameFromDoc, String participantLastNameFromDoc,
-                                          Optional<ParticipantWrapper> maybeParticipant) {
+                                          Optional<ParticipantWrapperDto> maybeParticipant) {
 
         Map<String, String> participantProfile = new HashMap<>();
         maybeParticipant.ifPresent(p -> {

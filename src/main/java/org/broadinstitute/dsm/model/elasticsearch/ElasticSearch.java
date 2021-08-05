@@ -1,16 +1,34 @@
 package org.broadinstitute.dsm.model.elasticsearch;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Data
-public class ElasticSearch {
+public class ElasticSearch implements ElasticSearchable {
 
+    private static final Logger logger = LoggerFactory.getLogger(ElasticSearch.class);
     private static final Gson GSON = new Gson();
 
     private Optional<ESAddress> address;
@@ -81,6 +99,40 @@ public class ElasticSearch {
             }
         }
         return Optional.of(builder.build());
+    }
+
+    public List<ElasticSearch> parseSourceMaps(SearchHit[] searchHits) {
+        if (Objects.isNull(searchHits)) return Collections.emptyList();
+        List<ElasticSearch> result = new ArrayList<>();
+        for (SearchHit searchHit: searchHits) {
+            Optional<ElasticSearch> maybeElasticSearchResult = parseSourceMap(searchHit.getSourceAsMap());
+            maybeElasticSearchResult.ifPresent(result::add);
+        }
+        return result;
+    }
+
+    @Override
+    public List<ElasticSearch> getParticipantsWithinRange(String esParticipantsIndex, int from, int to) {
+        if (StringUtils.isBlank(esParticipantsIndex)) throw new IllegalArgumentException("ES participants index cannot be empty");
+        if (to <= 0) throw new IllegalArgumentException("incorrect from/to range");
+        logger.info("Collecting ES data");
+        List<ElasticSearch> elasticSearchList;
+        try {
+            int scrollSize = to - from;
+            SearchRequest searchRequest = new SearchRequest(esParticipantsIndex);
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+            searchSourceBuilder.size(scrollSize);
+            searchSourceBuilder.from(from);
+            searchRequest.source(searchSourceBuilder);
+            SearchResponse response = ElasticSearchUtil.getClientInstance().search(searchRequest, RequestOptions.DEFAULT);
+            elasticSearchList = parseSourceMaps(response.getHits().getHits());
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Couldn't get participants from ES for instance " + esParticipantsIndex, e);
+        }
+        logger.info("Got " + elasticSearchList.size() + " participants from ES for instance " + esParticipantsIndex);
+        return elasticSearchList;
     }
 
     public static class Builder {

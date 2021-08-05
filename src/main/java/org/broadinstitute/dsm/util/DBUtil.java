@@ -6,6 +6,8 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.statics.DBConstants;
 
 import java.sql.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -142,5 +144,10 @@ public class DBUtil {
             throw new RuntimeException("Unable to get column names ", e);
         }
         return false;
+    }
+
+    public static String participantIdsInClause(List<String> participantIds) {
+        return participantIds.stream()
+                .collect(Collectors.joining(",", "','", "'"));
     }
 }

@@ -4,7 +4,8 @@ import com.typesafe.config.Config;
 import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.exception.FileColumnMissing;
 import org.broadinstitute.dsm.exception.UploadLineException;
-import org.broadinstitute.dsm.model.ParticipantWrapper;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
 import org.broadinstitute.dsm.util.NotificationUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
@@ -79,7 +80,7 @@ public class KitUploadRouteTest {
         String participantFirstNameFromDoc = participantDataAsMap.get("firstName");
         String participantLastNameFromDoc = participantDataAsMap.get("lastName");
 
-        ParticipantWrapper testParticipant = participantFactory("Mickey", "Mouse", "");
+        ParticipantWrapperDto testParticipant = participantFactory("Mickey", "Mouse", "");
 
         Assert.assertNotEquals("", route.checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, Optional.of(testParticipant)));
     }
@@ -100,8 +101,8 @@ public class KitUploadRouteTest {
         Assert.assertNotEquals("", route.checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, Optional.empty()));
     }
 
-    private ParticipantWrapper participantFactory(String firstName, String lastName, String shortId) {
-        ParticipantWrapper participant = new ParticipantWrapper();
+    private ParticipantWrapperDto participantFactory(String firstName, String lastName, String shortId) {
+        ParticipantWrapperDto participant = new ParticipantWrapperDto();
         Map<String, Object> participantData = new HashMap<>();
         Map<String, String> participantProfile = new HashMap<>();
         participantProfile.put("firstName", firstName);
