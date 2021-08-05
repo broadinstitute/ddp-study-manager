@@ -67,7 +67,7 @@ public class AbstractionFinal {
     }
 
     public static Map<String, List<AbstractionGroup>> getAbstractionFinal(@NonNull String realm, String queryAddition) {
-        logger.info("Collection mr information");
+        logger.info("Collection abstraction information");
         Map<String, List<AbstractionGroup>> abstractionFinal = new HashMap<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
