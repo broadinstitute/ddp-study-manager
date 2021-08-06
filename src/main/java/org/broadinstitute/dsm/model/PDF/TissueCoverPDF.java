@@ -47,7 +47,7 @@ public class TissueCoverPDF extends DownloadPDF {
         valueMap.put(RequestPDFProcessor.BLOCK_COUNTER, counter + 1);
 
         valueMap.put(RequestPDFProcessor.USER_NAME, user.getName().get());
-        valueMap.put(RequestPDFProcessor.USER_PHONE, user.getPhoneNumber().get());
+        user.getPhoneNumber().ifPresent(phone -> valueMap.put(RequestPDFProcessor.USER_PHONE, phone));
         return valueMap;
     }
     public byte[] getTissueCoverPDF(DDPInstance ddpInstance, UserDto user){

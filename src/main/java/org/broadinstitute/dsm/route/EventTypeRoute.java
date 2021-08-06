@@ -19,8 +19,10 @@ public class EventTypeRoute extends RequestHandler {
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         String realm = request.params(RequestParameter.REALM);
+        UserUtil userUtil = new UserUtil();
+        String userIdRequest = userUtil.getUserId(request);
         if (StringUtils.isNotBlank(realm)) {
-            if (UserUtil.checkUserAccess(realm, userId, "participant_event")) {
+            if (userUtil.checkUserAccess(realm, userId, "participant_event", userIdRequest)) {
                 return EventType.getEventTypes(realm);
             }
             else {

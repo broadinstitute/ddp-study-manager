@@ -8,8 +8,8 @@ import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.ddp.security.Auth0Util;
 import org.broadinstitute.ddp.util.GoogleBucket;
 import org.broadinstitute.dsm.db.KitDiscard;
-import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
+import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -52,9 +52,11 @@ public class KitDiscardRoute extends RequestHandler {
         else {
             throw new RuntimeException("No realm query param was sent");
         }
+        UserUtil userUtil = new UserUtil();
+        String userIdRequest = userUtil.getUserId(request);
 
         if (RoutePath.RequestMethod.GET.toString().equals(request.requestMethod())) {
-            if (UserUtil.checkUserAccess(realm, userId, "discard_sample") || UserUtil.checkUserAccess(realm, userId, "participant_exit")) {
+            if (userUtil.checkUserAccess(realm, userId, "discard_sample", userIdRequest) || userUtil.checkUserAccess(realm, userId, "participant_exit",userIdRequest)) {
                 return KitDiscard.getExitedKits(realm);
             }
             else {
@@ -66,7 +68,7 @@ public class KitDiscardRoute extends RequestHandler {
             String requestBody = request.body();
             KitDiscard kitAction = new Gson().fromJson(requestBody, KitDiscard.class);
             if (request.url().contains(RoutePath.DISCARD_SHOW_UPLOAD)) {
-                if (UserUtil.checkUserAccess(realm, userId, "discard_sample") || UserUtil.checkUserAccess(realm, userId, "participant_exit")) {
+                if (userUtil.checkUserAccess(realm, userId, "discard_sample", userIdRequest) || userUtil.checkUserAccess(realm, userId, "participant_exit", userIdRequest)) {
                     if (kitAction.getPath() != null) {
                         byte[] bytes = GoogleBucket.downloadFile(null,
                                 TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GOOGLE_PROJECT_NAME),
@@ -95,7 +97,7 @@ public class KitDiscardRoute extends RequestHandler {
             else {
                 if (StringUtils.isNotBlank(kitAction.getKitDiscardId())) {
                     if (StringUtils.isNotBlank(kitAction.getAction())) {
-                        if (UserUtil.checkUserAccess(realm, userId, "discard_sample") || UserUtil.checkUserAccess(realm, userId, "participant_exit")) {
+                        if (userUtil.checkUserAccess(realm, userId, "discard_sample", userIdRequest) || userUtil.checkUserAccess(realm, userId, "participant_exit", userIdRequest)) {
                             kitAction.setAction(kitAction.getKitDiscardId(), kitAction.getAction());
                             return new Result(200);
                         }
@@ -105,8 +107,7 @@ public class KitDiscardRoute extends RequestHandler {
                         }
                     }
                     if (StringUtils.isNotBlank(kitAction.getDiscardDate())) {
-                        if (UserUtil.checkUserAccess(realm, userId, "discard_sample")) {
-                            String userIdRequest = UserUtil.getUserId(request);
+                        if (userUtil.checkUserAccess(realm, userId, "discard_sample", userIdRequest)) {
                             kitAction.setKitDiscarded(kitAction.getKitDiscardId(), userIdRequest, kitAction.getDiscardDate());
                             return new Result(200);
                         }
@@ -158,7 +159,7 @@ public class KitDiscardRoute extends RequestHandler {
                 }
             }
             else {
-                if (UserUtil.checkUserAccess(realm, userId, "discard_sample")) {
+                if (userUtil.checkUserAccess(realm, userId, "discard_sample", userIdRequest)) {
                     //save note and files
                     String kitDiscardId = null;
                     if (queryParams.value(KitDiscard.KIT_DISCARD_ID) != null) {
@@ -170,7 +171,6 @@ public class KitDiscardRoute extends RequestHandler {
 
                     //create a kitAction with the given kitDiscardId
                     KitDiscard kitAction = new Gson().fromJson("{\"" + KitDiscard.KIT_DISCARD_ID + "\": \"" + kitDiscardId + "\"}", KitDiscard.class);
-                    String userIdRequest = UserUtil.getUserId(request);
 
                     String pathName = null;
                     String path = null;

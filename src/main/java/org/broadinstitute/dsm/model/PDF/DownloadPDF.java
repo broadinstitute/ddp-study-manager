@@ -44,6 +44,7 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 public class DownloadPDF {
     private static final String COVER = "cover";
     private static final String TISSUE = "tissue";
+    private static final String REQUEST = "request";
     private static final String IRB = "irb";
     private static final String JSON_START_DATE = "startDate";
     private static final String JSON_END_DATE = "endDate";
@@ -91,7 +92,6 @@ public class DownloadPDF {
                     pdfBytes = getPDFBundle(ddpInstance, requestBody, user);
                 }
                 else {
-                    Map<String, Object> valueMap = new HashMap<>();
                     pdfBytes = generateSinglePDF(requestBody, configName, user, ddpInstance);
                 }
                 if (pdfBytes != null) {
@@ -134,7 +134,7 @@ public class DownloadPDF {
             String groupId = DDPInstance.getDDPGroupId(ddpInstance.getName());
             pdfByte = PDFProcessor.getTemplateFromGoogleBucket(groupId + "_IRB_Letter.pdf");
         }
-        else if (TISSUE.equals(configName)) {
+        else if (TISSUE.equals(configName)||"request".equals(configName)) {
             TissueCoverPDF tissueCoverPDF = new TissueCoverPDF(requestBody);
             pdfByte = tissueCoverPDF.getTissueCoverPDF(ddpInstance, user);
         }
@@ -157,7 +157,7 @@ public class DownloadPDF {
                     pdfs.forEach(pdf -> {
                                 byte[] pdfByte;
                                 if (pdf.getOrder() > 0) {
-                                    pdfByte = generateSinglePDF(requestBody, configName, user, ddpInstance);
+                                    pdfByte = generateSinglePDF(requestBody, pdf.getConfigName(), user, ddpInstance);
                                     pdfMerger.addSource(new ByteArrayInputStream(pdfByte));
                                 }
                             }
@@ -286,5 +286,6 @@ public class DownloadPDF {
         logger.info("Found " + listOfPDFs.size() + " pdfs for realm " + realm);
         return listOfPDFs;
     }
+
 
 }

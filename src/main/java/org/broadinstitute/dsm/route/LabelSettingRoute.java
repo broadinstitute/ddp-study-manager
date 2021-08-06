@@ -18,8 +18,10 @@ public class LabelSettingRoute extends RequestHandler {
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
+        UserUtil userUtil = new UserUtil();
+        String userIdRequest = userUtil.getUserId(request);
         if (RoutePath.RequestMethod.GET.toString().equals(request.requestMethod())) {
-            if (UserUtil.checkUserAccess(null, userId, "kit_shipping") || UserUtil.checkUserAccess(null, userId, "kit_shipping_view")) {
+            if (userUtil.checkUserAccess(null, userId, "kit_shipping", userIdRequest) || userUtil.checkUserAccess(null, userId, "kit_shipping_view", userIdRequest)) {
                 return LabelSettings.getLabelSettings();
             }
             else {
@@ -28,7 +30,7 @@ public class LabelSettingRoute extends RequestHandler {
             }
         }
         if (RoutePath.RequestMethod.PATCH.toString().equals(request.requestMethod())) {
-            if (UserUtil.checkUserAccess(null, userId, "kit_shipping")) {
+            if (userUtil.checkUserAccess(null, userId, "kit_shipping", userIdRequest)) {
                 String requestBody = request.body();
                 LabelSettings[] labelSettings = new Gson().fromJson(requestBody, LabelSettings[].class);
                 LabelSettings.saveLabelSettings(labelSettings);

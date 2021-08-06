@@ -23,8 +23,8 @@ import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Patch;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
-import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
+import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -37,11 +37,7 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 //Class needs to be refactored as soon as possible!!!
@@ -69,8 +65,10 @@ public class PatchRoute extends RequestHandler {
         if (patchUtil.getColumnNameMap() == null) {
             return new RuntimeException("ColumnNameMap is null!");
         }
-        if (UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW) || UserUtil.checkUserAccess(null, userId, DBConstants.MR_ABSTRACTER)
-                || UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW) || UserUtil.checkUserAccess(null, userId, DBConstants.PT_LIST_VIEW)) {
+        UserUtil userUtil = new UserUtil();
+        String userIdRequest = userUtil.getUserId(request);
+        if (userUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW, userIdRequest) || userUtil.checkUserAccess(null, userId, DBConstants.MR_ABSTRACTER, userIdRequest)
+                || userUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW, userIdRequest) || userUtil.checkUserAccess(null, userId, DBConstants.PT_LIST_VIEW, userIdRequest)) {
             try {
                 String requestBody = request.body();
                 Patch patch = gson.fromJson(requestBody, Patch.class);

@@ -13,17 +13,8 @@ import org.broadinstitute.dsm.db.dto.ddp.kitrequest.KitRequestDto;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.at.ReceiveKitRequest;
 import org.broadinstitute.dsm.security.RequestHandler;
-import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
-import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.statics.ESObjectConstants;
-import org.broadinstitute.dsm.statics.RoutePath;
-import org.broadinstitute.dsm.statics.UserErrorMessages;
-import org.broadinstitute.dsm.util.ElasticSearchUtil;
-import org.broadinstitute.dsm.util.EventUtil;
-import org.broadinstitute.dsm.util.KitUtil;
-import org.broadinstitute.dsm.util.NotificationUtil;
-import org.broadinstitute.dsm.util.SystemUtil;
-import org.broadinstitute.dsm.util.UserUtil;
+import org.broadinstitute.dsm.statics.*;
+import org.broadinstitute.dsm.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -51,13 +42,10 @@ public class KitStatusChangeRoute extends RequestHandler {
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
-        if (UserUtil.checkUserAccess(null, userId, "kit_shipping") || UserUtil.checkUserAccess(null, userId, "kit_receiving")) {
-            String requestBody = request.body();
-            String userIdRequest = UserUtil.getUserId(request);
-            if (!userId.equals(userIdRequest)) {
-                throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
-            }
-
+        UserUtil userUtil = new UserUtil();
+        String requestBody = request.body();
+        String userIdRequest = userUtil.getUserId(request);
+        if (userUtil.checkUserAccess(null, userId, "kit_shipping", userIdRequest) || userUtil.checkUserAccess(null, userId, "kit_receiving", userIdRequest)) {
             List<ScanError> scanErrorList = new ArrayList<>();
 
             long currentTime = System.currentTimeMillis();

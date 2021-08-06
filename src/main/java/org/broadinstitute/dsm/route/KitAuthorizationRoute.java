@@ -33,12 +33,9 @@ public class KitAuthorizationRoute extends RequestHandler {
             boolean authorize = queryParams.get(RequestParameter.ACTIVATE).booleanValue();
             KitRequestShipping kitRequest = KitRequestShipping.getKitRequest(kitRequestId);
             String realm = kitRequest.getRealm();
-            String userIdRequest = UserUtil.getUserId(request);
-            if (!userId.equals(userIdRequest)) {
-                throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
-            }
-
-            if (UserUtil.checkUserAccess(realm, userId, "kit_authorization")) {
+            UserUtil userUtil = new UserUtil();
+            String userIdRequest = userUtil.getUserId(request);
+            if (userUtil.checkUserAccess(realm, userId, "kit_authorization", userIdRequest)) {
                 if (authorize) {
                     KitRequestShipping.changeAuthorizationStatus(kitRequestId, null, userIdRequest, true);
                 }

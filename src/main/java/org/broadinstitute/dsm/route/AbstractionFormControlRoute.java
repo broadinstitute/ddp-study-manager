@@ -31,8 +31,9 @@ public class AbstractionFormControlRoute extends RequestHandler {
         }
 
         if (StringUtils.isNotBlank(realm)) {
+            UserUtil userUtil = new UserUtil();
             if (RoutePath.RequestMethod.GET.toString().equals(request.requestMethod())) {
-                if (UserUtil.checkUserAccess(realm, userId, "mr_view")) {
+                if (userUtil.checkUserAccess(realm, userId, "mr_view", null)) {
                     return AbstractionUtil.getFormControls(realm);
                 }
                 else {
@@ -41,7 +42,7 @@ public class AbstractionFormControlRoute extends RequestHandler {
                 }
             }
             else if (RoutePath.RequestMethod.PATCH.toString().equals(request.requestMethod())) {
-                if (UserUtil.checkUserAccess(realm, userId, "mr_abstraction_admin")) {
+                if (userUtil.checkUserAccess(realm, userId, "mr_abstraction_admin", null)) {
                     String requestBody = request.body();
                     AbstractionGroup[] receivedAbstractionGroups = new GsonBuilder().create().fromJson(requestBody, AbstractionGroup[].class);
                     AbstractionGroup.saveFormControls(realm, receivedAbstractionGroups);

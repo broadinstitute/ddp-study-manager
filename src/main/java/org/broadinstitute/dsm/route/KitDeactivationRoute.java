@@ -40,24 +40,18 @@ public class KitDeactivationRoute extends RequestHandler {
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         String kitRequestId = request.params(RequestParameter.KITREQUESTID);
         if (StringUtils.isNotBlank(kitRequestId)) {
+            UserUtil userUtil = new UserUtil();
+            String userIdRequest = userUtil.getUserId(request);
             boolean deactivate = request.url().toLowerCase().contains("deactivate");
             KitRequestShipping kitRequest = KitRequestShipping.getKitRequest(kitRequestId);
             String realm = kitRequest.getRealm();
-            if (UserUtil.checkUserAccess(realm, userId, "kit_deactivation")) {
+            if (userUtil.checkUserAccess(realm, userId, "kit_deactivation", userIdRequest)) {
                 if (deactivate) {
-                    String userIdRequest = UserUtil.getUserId(request);
-                    if (!userId.equals(userIdRequest)) {
-                        throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
-                    }
                     JsonObject jsonObject = new JsonParser().parse(request.body()).getAsJsonObject();
                     String reason = jsonObject.get("reason").getAsString();
                     KitRequestShipping.deactivateKitRequest(kitRequestId, reason, DSMServer.getDDPEasypostApiKey(realm), userIdRequest);
                 }
                 else {
-                    String userIdRequest = UserUtil.getUserId(request);
-                    if (!userId.equals(userIdRequest)) {
-                        throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
-                    }
                     QueryParamsMap queryParams = request.queryMap();
                     boolean activateAnyway = false;
                     if (queryParams.value("activate") != null) {

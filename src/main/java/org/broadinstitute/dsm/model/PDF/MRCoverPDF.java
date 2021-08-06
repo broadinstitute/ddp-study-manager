@@ -60,7 +60,8 @@ public class MRCoverPDF extends DownloadPDF{
         valueMap.put(CoverPDFProcessor.FIELD_DATE_2, StringUtils.isNotBlank(endDate) ? endDate : today); //end date
 
         valueMap.put(RequestPDFProcessor.USER_NAME, user.getName().get());
-        valueMap.put(RequestPDFProcessor.USER_PHONE, user.getPhoneNumber().get());
+        user.getPhoneNumber().ifPresent(phone->{valueMap.put(RequestPDFProcessor.USER_PHONE, phone);});
+
 
         //adding checkboxes configured under instance_settings
         InstanceSettings instanceSettings = new InstanceSettings();

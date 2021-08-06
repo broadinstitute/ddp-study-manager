@@ -65,7 +65,8 @@ public class RequestPDFProcessor extends PDFProcessor {
             }
 
             fields.put(USER_NAME, valueMap.get(USER_NAME));
-            fields.put(USER_PHONE, valueMap.get(USER_PHONE));
+            fields.put(USER_PHONE, valueMap.getOrDefault(USER_PHONE, ""));
+            fields.put(USER_PHONE+"#1", valueMap.getOrDefault(USER_PHONE, ""));
 
             PDFMergerUtility pdfMerger = new PDFMergerUtility();
             pdfMerger.setDestinationStream(output);

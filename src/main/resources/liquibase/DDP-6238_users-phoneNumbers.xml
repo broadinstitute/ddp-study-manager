@@ -5,7 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <changeSet id="access_user_phone_number" author="pegah" >
+    <changeSet id="user_phone_number" author="pegah" >
         <addColumn tableName="access_user">
             <column name="phone_number" afterColumn="email" type="VARCHAR(20)">
             </column>

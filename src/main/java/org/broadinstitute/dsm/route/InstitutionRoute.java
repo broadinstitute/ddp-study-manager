@@ -4,9 +4,12 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.handlers.util.Result;
-import org.broadinstitute.dsm.db.*;
+import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.security.RequestHandler;
-import org.broadinstitute.dsm.statics.*;
+import org.broadinstitute.dsm.statics.RequestParameter;
+import org.broadinstitute.dsm.statics.RoutePath;
+import org.broadinstitute.dsm.statics.UserErrorMessages;
 import org.broadinstitute.dsm.util.UserUtil;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -32,15 +35,13 @@ public class InstitutionRoute extends RequestHandler {
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         String requestBody = request.body();
         JSONObject jsonObject = new JSONObject(requestBody);
+        UserUtil userUtil = new UserUtil();
         String user = String.valueOf(jsonObject.get(RequestParameter.USER_ID));
-        if (!userId.equals(user)) {
-            throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + user);
-        }
         if (RoutePath.RequestMethod.POST.toString().equals(request.requestMethod())) {
             if (StringUtils.isNotBlank(requestBody)) {
                 String ddpParticipantId = (String) jsonObject.get(RequestParameter.DDP_PARTICIPANT_ID);
                 String realm = (String) jsonObject.get(RequestParameter.DDP_REALM);
-                if (UserUtil.checkUserAccess(realm, userId, "mr_view")) {
+                if (userUtil.checkUserAccess(realm, userId, "mr_view", user)) {
                     if (StringUtils.isNotBlank(ddpParticipantId) && StringUtils.isNotBlank(realm)) {
                         DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
                         if (ddpInstance != null) {
@@ -60,7 +61,7 @@ public class InstitutionRoute extends RequestHandler {
             if (jsonObject.has(RequestParameter.POLICY)) {
                 policy = String.valueOf(jsonObject.get(RequestParameter.POLICY));
             }
-            if (UserUtil.checkUserAccess(null, userId, "mr_request")) {
+            if (userUtil.checkUserAccess(null, userId, "mr_request", user)) {
                 String facility = String.valueOf(jsonObject.get(RequestParameter.FACILITY));
                 String userMail = String.valueOf(jsonObject.get(RequestParameter.USER_MAIL));
                 applyDestructionPolicy(userMail, facility, policy);

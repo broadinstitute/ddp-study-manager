@@ -5,8 +5,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.handlers.util.Result;
-import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.KitType;
+import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.*;
@@ -49,12 +49,10 @@ public class DashboardRoute extends RequestHandler {
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         try {
-            if (UserUtil.checkUserAccess(null, userId, "kit_shipping") || UserUtil.checkUserAccess(null, userId, "kit_shipping_view")
-                    || UserUtil.checkUserAccess(null, userId, "mr_view")|| UserUtil.checkUserAccess(null, userId, "pt_list_view")) {
-                String userIdRequest = UserUtil.getUserId(request);
-                if (!userId.equals(userIdRequest)) {
-                    throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
-                }
+            UserUtil userUtil = new UserUtil();
+            String userIdRequest = userUtil.getUserId(request);
+            if (userUtil.checkUserAccess(null, userId, "kit_shipping", userIdRequest) || userUtil.checkUserAccess(null, userId, "kit_shipping_view", userIdRequest)
+                    || userUtil.checkUserAccess(null, userId, "mr_view", userIdRequest)|| userUtil.checkUserAccess(null, userId, "pt_list_view", userIdRequest)) {
                 String startDate = request.params(RequestParameter.START);
                 if (StringUtils.isNotBlank(startDate)) {
                     String endDate = request.params(RequestParameter.END);
@@ -87,7 +85,7 @@ public class DashboardRoute extends RequestHandler {
                             return getShippingDashboard(realm, userIdRequest);
                         }
                         else {
-                            Collection<String> allowedRealms = UserUtil.getListOfAllowedRealms(userIdRequest);
+                            Collection<String> allowedRealms = userUtil.getListOfAllowedRealms(userIdRequest);
                             Map<String, List<KitType>> kitTypesPerDDP = new HashMap<>();
                             for (String ddp : allowedRealms) {
                                 kitTypesPerDDP.put(ddp, KitType.getKitTypes(ddp, userIdRequest));

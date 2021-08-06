@@ -8,7 +8,8 @@ import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
-import org.broadinstitute.dsm.util.*;
+import org.broadinstitute.dsm.util.DDPRequestUtil;
+import org.broadinstitute.dsm.util.UserUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -24,10 +25,11 @@ public class MailingListRoute extends RequestHandler {
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         String realm = request.params(RequestParameter.REALM);
+        UserUtil userUtil = new UserUtil();
         if (StringUtils.isBlank(realm)) {
             throw new RuntimeException("Realm missing");
         }
-        if (UserUtil.checkUserAccess(realm, userId, "mailingList_view")) {
+        if (userUtil.checkUserAccess(realm, userId, "mailingList_view", null)) {
             return getMailingListContacts(realm);
         }
         else {

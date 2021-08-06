@@ -45,17 +45,15 @@ public class KitExpressRoute extends RequestHandler {
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
-        if (UserUtil.checkUserAccess(null, userId, "kit_express")) {
+        UserUtil userUtil = new UserUtil();
+        String userIdRequest = userUtil.getUserId(request);
+        if (userUtil.checkUserAccess(null, userId, "kit_express", userIdRequest)) {
             String kitRequestId = request.params(RequestParameter.KITREQUESTID);
             if (StringUtils.isNotBlank(kitRequestId)) {
                 if (RoutePath.RequestMethod.GET.toString().equals(request.requestMethod())) {
                     return getRateForOvernightExpress(kitRequestId);
                 }
                 if (RoutePath.RequestMethod.PATCH.toString().equals(request.requestMethod())) {
-                    String userIdRequest = UserUtil.getUserId(request);
-                    if (!userId.equals(userIdRequest)) {
-                        throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
-                    }
                     expressKitRequest(kitRequestId, userIdRequest);
                     return new Result(200);
                 }
