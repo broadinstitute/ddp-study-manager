@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.PDF;
 
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.OncHistoryDetail;
@@ -13,25 +14,26 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TissueCoverPDF extends DownloadPDF {
+public class TissueCoverPDF{
     Logger logger = LoggerFactory.getLogger(TissueCoverPDF.class);
+    private DownloadPDF originalDownloadPDF;
 
-    public TissueCoverPDF(String requestBody){
-        super(requestBody);
+    public TissueCoverPDF(@NonNull DownloadPDF downloadPDF){
+        this.originalDownloadPDF = downloadPDF;
     }
 
     public Map<String, Object> getValuesForTissueCover(DDPInstance ddpInstance, UserDto user) {
 
-        logger.info("Generating request pdf for onc history ids {}", StringUtils.join(this.oncHistoryIDs, ","));
+        logger.info("Generating request pdf for onc history ids {}", StringUtils.join(originalDownloadPDF.oncHistoryIDs, ","));
         Map<String, Object> valueMap = new HashMap<>();
         String today = new SimpleDateFormat("MM/dd/yyyy").format(new Date());
         valueMap.put(RequestPDFProcessor.FIELD_DATE, today);
         valueMap.put(RequestPDFProcessor.FIELD_DATE_2, "(" + today + ")");
-        this.addDDPParticipantDataToValueMap(ddpInstance,valueMap, false,  this.getDdpParticipantId());
+        originalDownloadPDF.addDDPParticipantDataToValueMap(ddpInstance,valueMap, false,  originalDownloadPDF.getDdpParticipantId());
         int counter = 0;
-        if (this.oncHistoryIDs != null) {
-            for (int i = 0; i < this.oncHistoryIDs.size(); i++) {
-                OncHistoryDetail oncHistoryDetail = OncHistoryDetail.getOncHistoryDetail(this.oncHistoryIDs.get(i), ddpInstance.getName());
+        if (originalDownloadPDF.oncHistoryIDs != null) {
+            for (int i = 0; i < originalDownloadPDF.oncHistoryIDs.size(); i++) {
+                OncHistoryDetail oncHistoryDetail = OncHistoryDetail.getOncHistoryDetail(originalDownloadPDF.oncHistoryIDs.get(i), ddpInstance.getName());
                 // facility information is the same in all of the requests so only need to be set ones!
                 if (i == 0) {
                     valueMap.put(RequestPDFProcessor.FIELD_CONFIRMED_INSTITUTION_NAME, oncHistoryDetail.getFacility());
@@ -52,6 +54,6 @@ public class TissueCoverPDF extends DownloadPDF {
     }
     public byte[] getTissueCoverPDF(DDPInstance ddpInstance, UserDto user){
         RequestPDFProcessor processor = new RequestPDFProcessor(ddpInstance.getName());
-        return super.generatePDFFromValues(this.getValuesForTissueCover( ddpInstance, user), ddpInstance, processor);
+        return originalDownloadPDF.generatePDFFromValues(this.getValuesForTissueCover( ddpInstance, user), ddpInstance, processor);
     }
 }

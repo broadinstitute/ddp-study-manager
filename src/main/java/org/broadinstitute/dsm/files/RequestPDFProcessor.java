@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.files;
 
+import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.broadinstitute.ddp.exception.FileProcessingException;
 import org.slf4j.Logger;
@@ -84,7 +85,7 @@ public class RequestPDFProcessor extends PDFProcessor {
                     addAdditionalPage(pdfMerger, fields);
                 }
             }
-            pdfMerger.mergeDocuments();
+            pdfMerger.mergeDocuments(MemoryUsageSetting.setupTempFileOnly());
         }
         catch (Exception ex) {
             throw new FileProcessingException("Unable to generate request pdf stream.", ex);

@@ -52,7 +52,6 @@ public class DownloadPDF {
     private String ddpParticipantId;
     private String configName;
     private String medicalRecordId;
-    private JSONArray requestId;
     private List<PDF> pdfs;
     List<String> oncHistoryIDs;
 
@@ -78,9 +77,10 @@ public class DownloadPDF {
             }
         }
         if (jsonObject.has("pdfs")) {
-            this.pdfs = Arrays.asList(new Gson().fromJson((String) jsonObject.get("pdfs"), PDF[].class));
+            this.pdfs =Arrays.asList(new Gson().fromJson(jsonObject.getString("pdfs"), PDF[].class));
         }
     }
+
 
     public Object getPDFs(@NonNull Response response, UserDto user, String realm, String requestBody) {
         if (StringUtils.isNotBlank(this.ddpParticipantId)) {
@@ -128,14 +128,14 @@ public class DownloadPDF {
     private byte[] generateSinglePDF(@NonNull String requestBody, String configName, UserDto user, DDPInstance ddpInstance) {
         byte[] pdfByte = null;
         if (COVER.equals(configName)) {
-            pdfByte = new MRCoverPDF(requestBody).getMRCoverPDF(requestBody, ddpInstance, user);
+            pdfByte = new MRCoverPDF(this).getMRCoverPDF(requestBody, ddpInstance, user);
         }
         else if (IRB.equals(configName)) {
             String groupId = DDPInstance.getDDPGroupId(ddpInstance.getName());
             pdfByte = PDFProcessor.getTemplateFromGoogleBucket(groupId + "_IRB_Letter.pdf");
         }
-        else if (TISSUE.equals(configName)||"request".equals(configName)) {
-            TissueCoverPDF tissueCoverPDF = new TissueCoverPDF(requestBody);
+        else if (TISSUE.equals(configName) || REQUEST.equals(configName)) {
+            TissueCoverPDF tissueCoverPDF = new TissueCoverPDF(this);
             pdfByte = tissueCoverPDF.getTissueCoverPDF(ddpInstance, user);
         }
         else if (configName != null) {
@@ -163,7 +163,7 @@ public class DownloadPDF {
                             }
                     );
                 }
-                pdfMerger.mergeDocuments(MemoryUsageSetting.setupMainMemoryOnly());
+                pdfMerger.mergeDocuments(MemoryUsageSetting.setupTempFileOnly());
                 //todo get page count and add them to the cover/request pdf
             }
             catch (IOException e) {

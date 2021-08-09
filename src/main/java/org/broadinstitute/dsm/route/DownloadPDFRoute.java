@@ -76,8 +76,4 @@ public class DownloadPDFRoute extends RequestHandler {
         throw new RuntimeException("Realm was missing from the request");
     }
 
-
-
-
-
 }

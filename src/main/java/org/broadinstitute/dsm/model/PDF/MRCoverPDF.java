@@ -17,13 +17,13 @@ import org.json.JSONObject;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class MRCoverPDF extends DownloadPDF{
+public class MRCoverPDF{
     private final String JSON_START_DATE = "startDate";
     private final String JSON_END_DATE = "endDate";
+    private DownloadPDF originalDownloadPDF;
 
-
-    public MRCoverPDF(String requestBody){
-        super(requestBody);
+    public MRCoverPDF(@NonNull DownloadPDF downloadPDF){
+        this.originalDownloadPDF = downloadPDF;
     }
 
     public Map<String, Object> getValuesFromRequest(@NonNull String requestBody, DDPInstance ddpInstance, UserDto user) {
@@ -44,11 +44,11 @@ public class MRCoverPDF extends DownloadPDF{
             endDate = (String) jsonObject.get(JSON_END_DATE);
             endDate = SystemUtil.changeDateFormat(SystemUtil.DATE_FORMAT, SystemUtil.US_DATE_FORMAT, endDate);
         }
-        if (StringUtils.isBlank(this.getMedicalRecordId())) {
+        if (StringUtils.isBlank(originalDownloadPDF.getMedicalRecordId())) {
             throw new RuntimeException("MedicalRecordID is missing. Can't create cover pdf");
         }
         //get information from db
-        MedicalRecord medicalRecord = MedicalRecord.getMedicalRecord(ddpInstance.getName(), this.getDdpParticipantId(), this.getMedicalRecordId());
+        MedicalRecord medicalRecord = MedicalRecord.getMedicalRecord(ddpInstance.getName(), originalDownloadPDF.getDdpParticipantId(), originalDownloadPDF.getMedicalRecordId());
 
         Map<String, Object> valueMap = new HashMap<>();
         //values same no matter from where participant/institution data comes from
@@ -75,7 +75,7 @@ public class MRCoverPDF extends DownloadPDF{
                     }
                 });
 
-        this.addDDPParticipantDataToValueMap(ddpInstance,  valueMap, true, this.getDdpParticipantId());
+        originalDownloadPDF.addDDPParticipantDataToValueMap(ddpInstance,  valueMap, true, originalDownloadPDF.getDdpParticipantId());
 
         valueMap.put(CoverPDFProcessor.START_DATE_2, StringUtils.isNotBlank(startDate) ? startDate : valueMap.get(CoverPDFProcessor.FIELD_DATE_OF_DIAGNOSIS)); //start date
         return valueMap;
@@ -83,7 +83,7 @@ public class MRCoverPDF extends DownloadPDF{
 
     public byte[] getMRCoverPDF(@NonNull String requestBody, DDPInstance ddpInstance, UserDto user){
         PDFProcessor processor = new CoverPDFProcessor(ddpInstance.getName());
-       return super.generatePDFFromValues(this.getValuesFromRequest(requestBody, ddpInstance, user), ddpInstance, processor);
+       return originalDownloadPDF.generatePDFFromValues(getValuesFromRequest(requestBody, ddpInstance, user), ddpInstance, processor);
     }
 
 }
