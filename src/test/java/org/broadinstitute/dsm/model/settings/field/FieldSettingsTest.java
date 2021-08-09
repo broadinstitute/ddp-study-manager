@@ -45,19 +45,19 @@ public class FieldSettingsTest {
 
     @Test
     public void testGetDefaultOption() {
-        String defaultOption = fieldSettings.getDefaultOptionValue(acceptanceStatusPossibleValue);
+        String defaultOption = fieldSettings.getDefaultValue(acceptanceStatusPossibleValue);
         Assert.assertEquals("ACCEPTED", defaultOption);
     }
 
     @Test
     public void testIsDefaultOption() {
-        boolean isDefaultOption = fieldSettings.isDefaultOption(acceptanceStatusPossibleValue);
+        boolean isDefaultOption = fieldSettings.isDefaultValue(acceptanceStatusPossibleValue);
         Assert.assertTrue(isDefaultOption);
     }
 
     @Test
     public void testGetDefaultOptions() {
-        Map<String, String> defaultOptions = fieldSettings.getColumnsWithDefaultOptions(createStaticFieldSettingDtoList());
+        Map<String, String> defaultOptions = fieldSettings.getColumnsWithDefaultValues(createStaticFieldSettingDtoList());
         Assert.assertEquals("ACCEPTED", defaultOptions.get(acceptanceStatusColumnName));
         Assert.assertEquals("HISPANIC", defaultOptions.get(ethnicityColumnName));
         Assert.assertNull(defaultOptions.get(activeColumnName));
