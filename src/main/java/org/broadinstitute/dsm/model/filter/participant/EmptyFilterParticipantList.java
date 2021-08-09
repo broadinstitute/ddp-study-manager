@@ -25,9 +25,10 @@ public class EmptyFilterParticipantList extends BaseFilterParticipantList {
         DDPInstanceDto ddpInstanceByGuid = new DDPInstanceDao().getDDPInstanceByInstanceName(realm).orElseThrow();
         ParticipantWrapperPayload participantWrapperPayload = new ParticipantWrapperPayload.Builder()
                 .withDdpInstanceDto(ddpInstanceByGuid)
-                .withFrom(0)
-                .withTo(50)
+                .withFrom(from)
+                .withTo(to)
                 .build();
-        return new ParticipantWrapper(participantWrapperPayload, new ElasticSearch.Builder().build()).getFilteredList();
+        ElasticSearch elasticSearch = new ElasticSearch.Builder().build();
+        return new ParticipantWrapper(participantWrapperPayload, elasticSearch).getFilteredList();
     }
 }

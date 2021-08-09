@@ -58,6 +58,12 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
     protected List<ParticipantWrapperDto> filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap, @NonNull DDPInstance instance) {
         Map<String, String> queryConditions = new HashMap<>();
         List<ParticipantDataDto> allParticipantData = null;
+        DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName(realm).orElseThrow();
+        ParticipantWrapperPayload.Builder participantWrapperPayload = new ParticipantWrapperPayload.Builder()
+                .withDdpInstanceDto(ddpInstanceDto)
+                .withFrom(from)
+                .withTo(to);
+        ElasticSearch elasticSearch = new ElasticSearch.Builder().build();
         if (filters != null && columnNameMap != null && !columnNameMap.isEmpty()) {
             Map<String, Integer> allIdsForParticipantDataFiltering = new HashMap<>();
             int numberOfParticipantDataFilters = 0;
@@ -112,21 +118,10 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
 
             logger.info("Found query conditions for " + mergeConditions.size() + " tables");
             //search bar ptL
-            DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName(realm).orElseThrow();
-            ParticipantWrapperPayload participantWrapperPayload = new ParticipantWrapperPayload.Builder()
-                    .withDdpInstanceDto(ddpInstanceDto)
-                    .withFrom(0)
-                    .withTo(50)
-                    .build();
-            return new ParticipantWrapper(participantWrapperPayload, new ElasticSearch.Builder().build()).getFilteredList();
+
+            return new ParticipantWrapper(participantWrapperPayload.withFilter(mergeConditions).build(), elasticSearch).getFilteredList();
         } else {
-            DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName(realm).orElseThrow();
-            ParticipantWrapperPayload participantWrapperPayload = new ParticipantWrapperPayload.Builder()
-                    .withDdpInstanceDto(ddpInstanceDto)
-                    .withFrom(0)
-                    .withTo(50)
-                    .build();
-            return new ParticipantWrapper(participantWrapperPayload, new ElasticSearch.Builder().build()).getFilteredList();
+            return new ParticipantWrapper(participantWrapperPayload.build(), elasticSearch).getFilteredList();
         }
     }
 
