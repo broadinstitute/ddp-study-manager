@@ -112,9 +112,15 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
 
             logger.info("Found query conditions for " + mergeConditions.size() + " tables");
             //search bar ptL
-            return new ParticipantWrapper(new ParticipantWrapperPayload.Builder().build(), new ElasticSearch.Builder().build()).getFilteredList();
+            DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName(realm).orElseThrow();
+            ParticipantWrapperPayload participantWrapperPayload = new ParticipantWrapperPayload.Builder()
+                    .withDdpInstanceDto(ddpInstanceDto)
+                    .withFrom(0)
+                    .withTo(50)
+                    .build();
+            return new ParticipantWrapper(participantWrapperPayload, new ElasticSearch.Builder().build()).getFilteredList();
         } else {
-            DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByGuid(realm).orElseThrow();
+            DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName(realm).orElseThrow();
             ParticipantWrapperPayload participantWrapperPayload = new ParticipantWrapperPayload.Builder()
                     .withDdpInstanceDto(ddpInstanceDto)
                     .withFrom(0)

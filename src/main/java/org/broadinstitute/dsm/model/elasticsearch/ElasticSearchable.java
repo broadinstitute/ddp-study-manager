@@ -9,4 +9,6 @@ public interface ElasticSearchable {
 
     List<ElasticSearch> getParticipantsByIds(String esParticipantsIndex, List<String> participantIds);
 
+    long getParticipantsSize(String esParticipantsIndex);
+
 }

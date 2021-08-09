@@ -58,6 +58,9 @@ public class ParticipantWrapperTest {
         Map<String, List<ElasticSearch>> proxiesByParticipantIds = participantWrapper.getProxiesWithParticipantIdsByProxiesIds(
                 "", proxiesIdsFromElasticList);
         Assert.assertEquals(proxiesByParticipantIds.keySet().size(), proxiesByParticipantIds.keySet().size());
+        String parentId = proxiesIdsFromElasticList.keySet().stream().findFirst().get();
+        String proxyId = proxiesIdsFromElasticList.values().stream().findFirst().get().get(0);
+        Assert.assertEquals(proxiesByParticipantIds.get(parentId).get(0).getParticipantIdFromProfile(), proxyId);
     }
 
     private static class ElasticSearchTest implements ElasticSearchable {
@@ -89,6 +92,11 @@ public class ParticipantWrapperTest {
                 );
             });
             return result;
+        }
+
+        @Override
+        public long getParticipantsSize(String esParticipantsIndex) {
+            return 0;
         }
     }
 

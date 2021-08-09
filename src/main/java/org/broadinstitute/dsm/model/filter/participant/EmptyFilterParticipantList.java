@@ -22,7 +22,7 @@ public class EmptyFilterParticipantList extends BaseFilterParticipantList {
         if(!Objects.requireNonNull(queryParamsMap).hasKey(RoutePath.REALM)) throw new RuntimeException("realm is necessary");
         String realm = queryParamsMap.get(RoutePath.REALM).value();
         DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
-        DDPInstanceDto ddpInstanceByGuid = new DDPInstanceDao().getDDPInstanceByGuid(realm).orElseThrow();
+        DDPInstanceDto ddpInstanceByGuid = new DDPInstanceDao().getDDPInstanceByInstanceName(realm).orElseThrow();
         ParticipantWrapperPayload participantWrapperPayload = new ParticipantWrapperPayload.Builder()
                 .withDdpInstanceDto(ddpInstanceByGuid)
                 .withFrom(0)

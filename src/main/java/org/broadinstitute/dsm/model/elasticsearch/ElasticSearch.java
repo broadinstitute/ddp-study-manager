@@ -2,28 +2,25 @@ package org.broadinstitute.dsm.model.elasticsearch;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
-import lombok.Data;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.query.TermsQueryBuilder;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
@@ -188,7 +185,7 @@ public class ElasticSearch implements ElasticSearchable {
     public List<ElasticSearch> getParticipantsByIds(String esParticipantsIndex, List<String> participantIds) {
         SearchRequest searchRequest = new SearchRequest(esParticipantsIndex);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        TermQueryBuilder participantIdsQuery = QueryBuilders.termQuery("participantId", participantIds);
+        TermsQueryBuilder participantIdsQuery = QueryBuilders.termsQuery(ElasticSearchUtil.PROFILE_GUID, participantIds);
         searchSourceBuilder.query(participantIdsQuery).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
         searchSourceBuilder.size(participantIds.size());
         searchSourceBuilder.from(0);
@@ -203,6 +200,21 @@ public class ElasticSearch implements ElasticSearchable {
         List<ElasticSearch> elasticSearchList = parseSourceMaps(response.getHits().getHits());
         logger.info("Got " + elasticSearchList.size() + " participants from ES for instance " + esParticipantsIndex);
         return elasticSearchList;
+    }
+
+    @Override
+    public long getParticipantsSize(String esParticipantsIndex) {
+        CountRequest countRequest = new CountRequest(Objects.requireNonNull(esParticipantsIndex));
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.matchAllQuery());
+        countRequest.source(searchSourceBuilder);
+        CountResponse response;
+        try {
+            response = ElasticSearchUtil.getClientInstance().count(countRequest, RequestOptions.DEFAULT);
+        } catch (IOException ioe) {
+            throw new RuntimeException("Couldn't get participants size of ES for instance " + esParticipantsIndex, ioe);
+        }
+        return response.getCount();
     }
 
     public String getParticipantIdFromProfile() {
