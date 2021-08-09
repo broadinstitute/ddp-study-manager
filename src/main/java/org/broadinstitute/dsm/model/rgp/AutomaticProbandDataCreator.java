@@ -44,24 +44,24 @@ public class AutomaticProbandDataCreator implements Defaultable {
             logger.warn("Could not create proband/self data, participant ES data is null");
             return false;
         }
-        List<FieldSettingsDto> fieldSettingsDtosWithDefaultValueByInstanceId =
-                FieldSettingsDao.of().getFieldSettingsWithDefaultValueByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
+        List<FieldSettingsDto> optionAndRadioFieldSettingsDtosByInstanceId =
+                FieldSettingsDao.of().getOptionAndRadioFieldSettingsByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
 
         return maybeParticipantESData
-                .map(elasticSearch -> extractAndInsertProbandFromESData(instance, elasticSearch, fieldSettingsDtosWithDefaultValueByInstanceId))
+                .map(elasticSearch -> extractAndInsertProbandFromESData(instance, elasticSearch, optionAndRadioFieldSettingsDtosByInstanceId))
                 .orElse(false);
     }
 
     private boolean extractAndInsertProbandFromESData(DDPInstance instance, ElasticSearch esData,
-                                                   List<FieldSettingsDto> fieldSettingsDtosWithDefaultValueByInstanceId) {
+                                                   List<FieldSettingsDto> optionAndRadioFieldSettingsDtosByInstanceId) {
 
         return esData.getProfile()
                 .map(esProfile -> {
                     logger.info("Got ES profile of participant: " + esProfile.getParticipantGuid());
                     Map<String, String> columnsWithDefaultOptions =
-                            fieldSettings.getColumnsWithDefaultValues(fieldSettingsDtosWithDefaultValueByInstanceId);
+                            fieldSettings.getColumnsWithDefaultValues(optionAndRadioFieldSettingsDtosByInstanceId);
                     Map<String, String> columnsWithDefaultOptionsFilteredByElasticExportWorkflow =
-                            fieldSettings.getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(fieldSettingsDtosWithDefaultValueByInstanceId);
+                            fieldSettings.getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(optionAndRadioFieldSettingsDtosByInstanceId);
                     String participantId = StringUtils.isNotBlank(esProfile.getParticipantLegacyAltPid())
                             ? esProfile.getParticipantLegacyAltPid()
                             : esProfile.getParticipantGuid();

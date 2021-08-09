@@ -19,7 +19,7 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
 
     private static FieldSettingsDao fieldSettingsDao;
 
-    private static final String SQL_SETTINGS_WITH_DEFAULT_VALUE_BY_INSTANCE_ID = "SELECT " +
+    private static final String SQL_OPTIONS_AND_RADIOS_BY_INSTANCE_ID = "SELECT " +
             "field_settings_id," +
             "ddp_instance_id," +
             "field_type," +
@@ -155,11 +155,11 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
         return Optional.empty();
     }
 
-    public List<FieldSettingsDto> getFieldSettingsWithDefaultValueByInstanceId(int instanceId) {
+    public List<FieldSettingsDto> getOptionAndRadioFieldSettingsByInstanceId(int instanceId) {
         List<FieldSettingsDto> fieldSettingsByOptions = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult execResult = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_SETTINGS_WITH_DEFAULT_VALUE_BY_INSTANCE_ID)) {
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_OPTIONS_AND_RADIOS_BY_INSTANCE_ID)) {
                 stmt.setInt(1, instanceId);
                 try(ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
