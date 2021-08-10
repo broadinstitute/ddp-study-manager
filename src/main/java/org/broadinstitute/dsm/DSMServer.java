@@ -211,7 +211,7 @@ public class DSMServer extends BasicServer {
 
         setupPubSub(cfg, notificationUtil);
 
-        get(API_ROOT + RoutePath.BSP_KIT_QUERY_PATH, new BSPKitQueryRoute(notificationUtil), new JsonTransformer());
+        get(API_ROOT + RoutePath.BSP_KIT_QUERY_PATH, new BSPKitRoute(notificationUtil), new JsonTransformer());
         get(API_ROOT + RoutePath.BSP_KIT_REGISTERED, new BSPKitRegisteredRoute(), new JsonTransformer());
         get(API_ROOT + RoutePath.CLINICAL_KIT_ENDPOINT, new ClinicalKitsRoute(notificationUtil), new JsonTransformer());
         get(API_ROOT + RoutePath.CREATE_CLINICAL_KIT_ENDPOINT, new CreateClinicalDummyKitRoute(), new JsonTransformer());

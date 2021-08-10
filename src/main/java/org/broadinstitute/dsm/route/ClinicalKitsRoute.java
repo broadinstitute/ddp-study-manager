@@ -3,8 +3,8 @@ package org.broadinstitute.dsm.route;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.db.dao.kit.BSPKitQueryResultDao;
-import org.broadinstitute.dsm.db.dto.kit.BSPKitQueryResultDto;
+import org.broadinstitute.dsm.db.dao.kit.BSPKitDao;
+import org.broadinstitute.dsm.db.dto.kit.BSPKitDto;
 import org.broadinstitute.dsm.db.dto.kit.ClinicalKitDto;
 import org.broadinstitute.dsm.model.BSPKit;
 import org.broadinstitute.dsm.model.ParticipantWrapper;
@@ -56,7 +56,7 @@ public class ClinicalKitsRoute implements Route {
 
     private ClinicalKitDto getClinicalKit(String kitLabel) {
         logger.info("Checking label " + kitLabel);
-        BSPKitQueryResultDao bspKitQueryResultDao = new BSPKitQueryResultDao();
+        BSPKitDao bspKitDao = new BSPKitDao();
         // this method already sets the received time, check for exited and deactivation and special behaviour, and triggers DDP, we don't need a new
         BSPKit bspKit = new BSPKit();
         ClinicalKitDto clinicalKit = new ClinicalKitDto();
@@ -66,9 +66,9 @@ public class ClinicalKitsRoute implements Route {
             clinicalKit.setSampleId(kitInfo.getCollaboratorSampleId());
             clinicalKit.setMaterialType(kitInfo.getMaterialInfo());
             clinicalKit.setVesselType(kitInfo.getReceptacleName());
-            Optional<BSPKitQueryResultDto> bspKitQueryResult = bspKitQueryResultDao.getBSPKitQueryResult(kitLabel);
+            Optional<BSPKitDto> bspKitQueryResult = bspKitDao.getBSPKitQueryResult(kitLabel);
             bspKitQueryResult.orElseThrow(() -> {throw new RuntimeException("kit label was not found "+kitLabel);});
-            BSPKitQueryResultDto maybeBspKitQueryResult = bspKitQueryResult.get();
+            BSPKitDto maybeBspKitQueryResult = bspKitQueryResult.get();
             DDPInstance ddpInstance = DDPInstance.getDDPInstance(maybeBspKitQueryResult.getInstanceName());
             String hruid = maybeBspKitQueryResult.getBspParticipantId();
             if (hruid.indexOf('_') != -1) {

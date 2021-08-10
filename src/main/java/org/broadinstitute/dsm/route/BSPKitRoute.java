@@ -12,11 +12,11 @@ import spark.Route;
 
 import java.util.Optional;
 
-public class BSPKitQueryRoute implements Route {
+public class BSPKitRoute implements Route {
 
     private NotificationUtil notificationUtil;
 
-    public BSPKitQueryRoute(@NonNull NotificationUtil notificationUtil) {
+    public BSPKitRoute(@NonNull NotificationUtil notificationUtil) {
         this.notificationUtil = notificationUtil;
     }
 

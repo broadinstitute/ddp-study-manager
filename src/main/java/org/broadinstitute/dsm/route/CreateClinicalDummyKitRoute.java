@@ -5,7 +5,7 @@ import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.KitType;
 import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
-import org.broadinstitute.dsm.db.dao.kit.BSPKitDao;
+import org.broadinstitute.dsm.db.dao.kit.BSPDummyKitDao;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.statics.RequestParameter;
@@ -43,7 +43,7 @@ public class CreateClinicalDummyKitRoute implements Route {
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(REALM);
         if (ddpInstance != null) {
             String kitRequestId = CLINICAL_KIT_PREFIX + KitRequestShipping.createRandom(20);
-            String ddpParticipantId = new BSPKitDao().getRandomParticipantIdForStudy(ddpInstance.getDdpInstanceId()).orElseThrow(() -> {
+            String ddpParticipantId = new BSPDummyKitDao().getRandomParticipantIdForStudy(ddpInstance.getDdpInstanceId()).orElseThrow(() -> {
                 throw new RuntimeException("Random participant id was not generated");
             });
             Optional<ElasticSearch> maybeParticipantByParticipantId = ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId);
@@ -58,7 +58,7 @@ public class CreateClinicalDummyKitRoute implements Route {
                 String dsmKitRequestId = KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), kitRequestId, salivaKitType.getKitId(),
                         ddpParticipantId, participantCollaboratorId, collaboratorSampleId,
                         USER_ID, "", "", "", false, "");
-                new BSPKitDao().updateKitLabel(kitLabel, dsmKitRequestId);
+                new BSPDummyKitDao().updateKitLabel(kitLabel, dsmKitRequestId);
 
             }, () -> {throw new RuntimeException(" Participant " + ddpParticipantId + " was not found!");});
             logger.info("Kit added successfully");

@@ -3,7 +3,7 @@ package org.broadinstitute.dsm.route;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
-import org.broadinstitute.dsm.db.dao.kit.BSPKitDao;
+import org.broadinstitute.dsm.db.dao.kit.BSPDummyKitDao;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.util.DBUtil;
 import org.slf4j.Logger;
@@ -36,7 +36,7 @@ public class CreateBSPDummyKitRoute implements Route {
             String mercuryKitRequestId = "MERCURY_" + KitRequestShipping.createRandom(20);
             int kitTypeId = (int) DBUtil.getBookmark(DUMMY_KIT_TYPE_NAME);
             logger.info("Found kit type for Mercury Dummy Endpoint " + kitTypeId);
-            String ddpParticipantId = new BSPKitDao().getRandomParticipantIdForStudy(mockDdpInstance.getDdpInstanceId()).orElseThrow(() -> {
+            String ddpParticipantId = new BSPDummyKitDao().getRandomParticipantIdForStudy(mockDdpInstance.getDdpInstanceId()).orElseThrow(() -> {
                 throw new RuntimeException("Random participant id was not generated");
             });
             String participantCollaboratorId = KitRequestShipping.getCollaboratorParticipantId(mockDdpInstance.getBaseUrl(), mockDdpInstance.getDdpInstanceId(), mockDdpInstance.isMigratedDDP(),
@@ -47,7 +47,7 @@ public class CreateBSPDummyKitRoute implements Route {
                 String dsmKitRequestId = KitRequestShipping.writeRequest(mockDdpInstance.getDdpInstanceId(), mercuryKitRequestId, kitTypeId,
                         ddpParticipantId, participantCollaboratorId, collaboratorSampleId,
                         USER_ID, "", "", "", false, "");
-                new BSPKitDao().updateKitLabel(kitLabel, dsmKitRequestId);
+                new BSPDummyKitDao().updateKitLabel(kitLabel, dsmKitRequestId);
             }
             logger.info("Returning 200 to Mercury");
             response.status(200);

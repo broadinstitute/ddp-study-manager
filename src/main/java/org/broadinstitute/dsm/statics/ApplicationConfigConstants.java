@@ -77,13 +77,11 @@ public class ApplicationConfigConstants {
     public static final String EMAIL_NOTIFICATIONS_SEND_GRID_TEMPLATE_ID = "sendGridTemplate";
 
     //db queries
-    public static final String GET_BSP_RESPONSE_INFORMATION_FOR_KIT = "portal.kit_query";
     public static final String GET_RECEIVED_KIT_INFORMATION_FOR_NOTIFICATION_EMAIL = "portal.selectReceivedKitForNotification";
     public static final String GET_SENT_KIT_INFORMATION_FOR_NOTIFICATION_EMAIL = "portal.selectSentKitForNotification";
     public static final String GET_ALLOWED_REALMS_FOR_USER_ROLE_STARTS_LIKE = "portal.selectAllowedRealmsStartsLike";
     public static final String GET_ROLES_LIKE = "portal.getRoles";
     public static final String UPDATE_KIT_REQUEST = "portal.updateKitRequest";
-    public static final String GET_DDP_KIT_REQUEST_ID = "portal.getDDPKitRequestId";
     public static final String INSERT_KIT_TRACKING = "portal.insertKitTrackingRequest";
     public static final String UPDATE_KIT_ERROR = "portal.updateKitRequestError";
     public static final String GET_DDP_PARTICIPANT_ID = "portal.getDDPParticipantId";

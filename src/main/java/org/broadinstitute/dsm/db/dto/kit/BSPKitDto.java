@@ -3,7 +3,7 @@ package org.broadinstitute.dsm.db.dto.kit;
 import lombok.Getter;
 
 @Getter
-public class BSPKitQueryResultDto  {
+public class BSPKitDto {
     private final String baseUrl;
     private final String bspSampleId;
     private final String bspParticipantId;
@@ -18,19 +18,19 @@ public class BSPKitQueryResultDto  {
     private String deactivationDate;
     private String notificationRecipient;
 
-    public BSPKitQueryResultDto (String instanceName,
-                                 String baseUrl,
-                                 String bspSampleId,
-                                 String bspParticipantId,
-                                 String bspOrganism,
-                                 String bspCollection,
-                                 String ddpParticipantId,
-                                 String bspMaterialType,
-                                 String bspReceptacleType,
-                                 boolean hasParticipantNotifications,
-                                 String participantExitId,
-                                 String deactivationDate,
-                                 String notificationRecipient) {
+    public BSPKitDto(String instanceName,
+                     String baseUrl,
+                     String bspSampleId,
+                     String bspParticipantId,
+                     String bspOrganism,
+                     String bspCollection,
+                     String ddpParticipantId,
+                     String bspMaterialType,
+                     String bspReceptacleType,
+                     boolean hasParticipantNotifications,
+                     String participantExitId,
+                     String deactivationDate,
+                     String notificationRecipient) {
 
         this.instanceName = instanceName;
         this.baseUrl = baseUrl;
