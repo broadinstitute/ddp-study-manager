@@ -65,12 +65,12 @@ public class CreateClinicalDummyKitRoute implements Route {
             });
             logger.info("Kit added successfully");
             response.status(200);
-            return response;
+            return null;
 
         }
         logger.error("Error occurred while adding kit");
         response.status(500);
-        return response;
+        return null;
     }
 
 }
