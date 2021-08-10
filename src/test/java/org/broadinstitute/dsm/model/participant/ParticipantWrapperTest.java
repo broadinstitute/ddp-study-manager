@@ -98,6 +98,16 @@ public class ParticipantWrapperTest {
         public long getParticipantsSize(String esParticipantsIndex) {
             return 0;
         }
+
+        @Override
+        public List<ElasticSearch> getParticipantsByRangeAndFilter(String esParticipantsIndex, int from, int to, String filter) {
+            return null;
+        }
+
+        @Override
+        public List<ElasticSearch> getParticipantsByRangeAndIds(String participantIndexES, int from, int to, List<String> participantIds) {
+            return null;
+        }
     }
 
 

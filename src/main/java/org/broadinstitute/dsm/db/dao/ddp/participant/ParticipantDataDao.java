@@ -42,7 +42,7 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
             "last_changed," +
             "changed_by" +
             " FROM ddp_participant_data ";
-    private static final String BY_INSTANCE_ID = "WHERE ddp_instance_id = ?";
+    private static final String BY_INSTANCE_ID = "WHERE ddp_instance_id = ? ";
     private static final String SQL_DELETE_DDP_PARTICIPANT_DATA = "DELETE FROM ddp_participant_data WHERE participant_data_id = ?";
     private static final String SQL_PARTICIPANT_DATA_BY_ID = "SELECT " +
             "participant_data_id," +
@@ -221,6 +221,46 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult execResult = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(sqlWithInClause)) {
+                try(ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        ArrayList<ParticipantDataDto> value = new ArrayList<>(
+                                List.of(new ParticipantDataDto.Builder()
+                                        .withParticipantDataId(rs.getInt(PARTICIPANT_DATA_ID))
+                                        .withDdpParticipantId(rs.getString(DDP_PARTICIPANT_ID))
+                                        .withDdpInstanceId(rs.getInt(DDP_INSTANCE_ID))
+                                        .withFieldTypeId(rs.getString(FIELD_TYPE_ID))
+                                        .withData(rs.getString(DATA))
+                                        .withLastChanged(rs.getLong(LAST_CHANGED))
+                                        .withChangedBy(rs.getString(CHANGED_BY))
+                                        .build()
+                                )
+                        );
+                        participantDatasByParticipantIds.merge(rs.getString(DDP_PARTICIPANT_ID), value, (preValue, currentValue) -> {
+                            preValue.addAll(currentValue);
+                            return preValue;
+                        });
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                execResult.resultException = ex;
+            }
+            return execResult;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting participants data with ", results.resultException);
+        }
+        return participantDatasByParticipantIds;
+    }
+
+
+
+    public Map<String, List<ParticipantDataDto>> getParticipantDataByInstanceIdAndFilterQuery(int ddpInstanceId, String filterQuery) {
+        Map<String, List<ParticipantDataDto>> participantDatasByParticipantIds = new HashMap<>();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_ALL_PARTICIPANT_DATA + BY_INSTANCE_ID + filterQuery)) {
+                stmt.setInt(1, ddpInstanceId);
                 try(ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         ArrayList<ParticipantDataDto> value = new ArrayList<>(

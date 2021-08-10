@@ -11,4 +11,7 @@ public interface ElasticSearchable {
 
     long getParticipantsSize(String esParticipantsIndex);
 
+    List<ElasticSearch> getParticipantsByRangeAndFilter(String esParticipantsIndex, int from, int to, String filter);
+
+    List<ElasticSearch> getParticipantsByRangeAndIds(String participantIndexES, int from, int to, List<String> participantIds);
 }

@@ -39,7 +39,7 @@ public class ParticipantWrapper {
     private ParticipantWrapperPayload participantWrapperPayload;
     private ElasticSearchable elasticSearchable;
 
-    private List<ElasticSearch> participantsEsDataWithinRange = new ArrayList<>();
+    private List<ElasticSearch> participantsEsData = new ArrayList<>();
     private List<Participant> participants = new ArrayList<>();
     private Map<String, List<MedicalRecord>> medicalRecords = new HashMap<>();
     private Map<String, List<OncHistoryDetail>> oncHistoryDetails = new HashMap<>();
@@ -47,7 +47,7 @@ public class ParticipantWrapper {
     private Map<String, List<AbstractionActivity>> abstractionActivities = new HashMap<>();
     private Map<String, List<AbstractionGroup>> abstractionSummary = new HashMap<>();
     private Map<String, List<ElasticSearch>> proxiesByParticipantIds = new HashMap<>();
-    private Map<String, List<ParticipantDataDto>> participantDataByParticipantIds = new HashMap<>();
+    private Map<String, List<ParticipantDataDto>> participantData = new HashMap<>();
 
     public ParticipantWrapper(ParticipantWrapperPayload participantWrapperPayload, ElasticSearchable elasticSearchable) {
         this.participantWrapperPayload = Objects.requireNonNull(participantWrapperPayload);
@@ -253,47 +253,85 @@ public class ParticipantWrapper {
 
         return participantWrapperPayload.getFilter()
                 .map(filters -> {
+                    List<String> participantIdsToFetch = Collections.emptyList();
                     for (String source : filters.keySet()) {
                         if (StringUtils.isNotBlank(filters.get(source))) {
                             if (DBConstants.DDP_PARTICIPANT_ALIAS.equals(source)) {
-                                participants = Participant.getParticipants(instance.getName(), filters.get(source));
-                                baseList = getCommonEntries(baseList, new ArrayList<>(participants.keySet()));
+                                Map<String, Participant> participants =
+                                        Participant.getParticipants(ddpInstance.getName(), filters.get(source));
+                                this.participants = new ArrayList<>(participants.values());
+                                participantIdsToFetch = new ArrayList<>(participants.keySet());
                             }
                             else if (DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(source)) {
-                                medicalRecords = MedicalRecord.getMedicalRecords(instance.getName(), filters.get(source));
-                                baseList = getCommonEntries(baseList, new ArrayList<>(medicalRecords.keySet()));
+                                medicalRecords = MedicalRecord.getMedicalRecords(ddpInstance.getName(), filters.get(source));
+                                participantIdsToFetch = new ArrayList<>(medicalRecords.keySet());
                             }
                             else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(source)) {
-                                oncHistories = OncHistoryDetail.getOncHistoryDetails(instance.getName(), filters.get(source));
-                                baseList = getCommonEntries(baseList, new ArrayList<>(oncHistories.keySet()));
+                                oncHistoryDetails = OncHistoryDetail.getOncHistoryDetails(ddpInstance.getName(), filters.get(source));
+                                participantIdsToFetch = new ArrayList<>(oncHistoryDetails.keySet());
                             }
                             else if (DBConstants.DDP_KIT_REQUEST_ALIAS.equals(source)) {
-                                kitRequests = KitRequestShipping.getKitRequests(instance, filters.get(source));
-                                baseList = getCommonEntries(baseList, new ArrayList<>(kitRequests.keySet()));
+                                kitRequests = KitRequestShipping.getKitRequests(ddpInstance, filters.get(source));
+                                participantIdsToFetch = new ArrayList<>(kitRequests.keySet());
                             }
                             else if (DBConstants.DDP_PARTICIPANT_DATA_ALIAS.equals(source)) {
-                                participantData = ParticipantData.getParticipantData(instance.getName(), filters.get(source));
-                                baseList = getCommonEntries(baseList, new ArrayList<>(participantData.keySet()));
+                                participantData = new ParticipantDataDao().getParticipantDataByInstanceIdAndFilterQuery(ddpInstanceDto.getDdpInstanceId(), filters.get(source));
+                                participantIdsToFetch = new ArrayList<>(participantData.keySet());
 
-                                //if study is AT
-                                if ("atcp".equals(instance.getName())) {
-                                    defaultValues =
-                                            new DefaultValues(participantData, participantESData, instance, filters.get(source));
-                                    participantData = defaultValues.addDefaultValues();
-                                }
+                                //if study is AT TODO
+//                                if ("atcp".equals(ddpInstance.getName())) {
+//                                    defaultValues =
+//                                            new DefaultValues(participantData, participantESData, instance, filters.get(source));
+//                                    participantData = defaultValues.addDefaultValues();
+//                                }
                             }
                             else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
-                                abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName(), filters.get(source));
-                                baseList = getCommonEntries(baseList, new ArrayList<>(abstractionActivities.keySet()));
+                                abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(ddpInstance.getName(), filters.get(source));
+                                participantIdsToFetch = new ArrayList<>(abstractionActivities.keySet());
                             }
                             //                else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
                             //                    abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName(), filters.get(source));
                             //                    baseList = getCommonEntries(baseList, new ArrayList<>(abstractionSummary.keySet()));
                             //                }
                             else { //source is not of any study-manager table so it must be ES
-                                participantESData = getParticipantESDataConsideringNumberOfParameters(instance, filters, source);
-                                baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
+                                participantsEsData = elasticSearchable.getParticipantsByRangeAndFilter(ddpInstanceDto.getEsParticipantIndex(), participantWrapperPayload.getFrom(),
+                                        participantWrapperPayload.getTo(), source);
+                                participantIdsToFetch = participantsEsData.stream().map(ElasticSearch::getParticipantIdFromProfile).collect(
+                                        Collectors.toList());
                             }
+                        }
+                    }
+                    if (participantsEsData == null) {
+                        List<ElasticSearch> l = elasticSearchable.getParticipantsByRangeAndIds(ddpInstance.getParticipantIndexES(), participantWrapperPayload.getFrom(),
+                                participantWrapperPayload.getTo(), participantIdsToFetch);
+                        for (String pId: participantIdsToFetch) {
+                        }
+                        participantESData = new HashMap<>();
+                        //get only pts for the filtered data
+                        if (baseList != null && !baseList.isEmpty()) {
+                            //ES can only filter for 1024 (too_many_clauses: maxClauseCount is set to 1024)
+                            if (baseList.size() > Filter.THOUSAND) {
+                                //make sub-searches
+                                Collection<List<String>> partitionBaseList = partitionBasedOnSize(baseList, Filter.THOUSAND);
+                                for (Iterator i = partitionBaseList.iterator(); i.hasNext();) {
+                                    List<String> baseListPart = ((List<String>) i.next());
+                                    participantESData = addParticipantESData(instance, baseListPart, participantESData, ElasticSearchUtil.BY_GUID, ElasticSearchUtil.BY_GUIDS);
+                                    if (instance.isMigratedDDP()) {//also check for legacyAltPid
+                                        participantESData = addParticipantESData(instance, baseListPart, participantESData, ElasticSearchUtil.BY_LEGACY_ALTPID, ElasticSearchUtil.BY_LEGACY_ALTPIDS);
+                                    }
+                                }
+                            }
+                            else {
+                                //just search
+                                participantESData = addParticipantESData(instance, baseList, participantESData, ElasticSearchUtil.BY_GUID, ElasticSearchUtil.BY_GUIDS);
+                                if (instance.isMigratedDDP()) {//also check for legacyAltPid
+                                    participantESData = addParticipantESData(instance, baseList, participantESData, ElasticSearchUtil.BY_LEGACY_ALTPID, ElasticSearchUtil.BY_LEGACY_ALTPIDS);
+                                }
+                            }
+                        }
+                        else {
+                            //get all pts
+                            participantESData = getESData(instance);
                         }
                     }
                     return (List<ParticipantWrapperDto>) new ArrayList<ParticipantWrapperDto>();
@@ -305,7 +343,7 @@ public class ParticipantWrapper {
 //                        defaultValues = new DefaultValues(participantData, participantESData, instance, null);
 //                        participantData = defaultValues.addDefaultValues();
 //                    }
-                    sortBySelfElseById(participantDataByParticipantIds.values());
+                    sortBySelfElseById(participantData.values());
                     return collectData();
                 });
 
@@ -477,11 +515,11 @@ public class ParticipantWrapper {
     }
 
     private void fetchAndPrepareData(DDPInstanceDto ddpInstanceDto, DDPInstance ddpInstance) {
-        participantsEsDataWithinRange = elasticSearchable.getParticipantsWithinRange(
+        participantsEsData = elasticSearchable.getParticipantsWithinRange(
                 ddpInstanceDto.getEsParticipantIndex(),
                 participantWrapperPayload.getFrom(),
                 participantWrapperPayload.getTo());
-        List<String> participantIds = getParticipantIdsFromElasticList(participantsEsDataWithinRange);
+        List<String> participantIds = getParticipantIdsFromElasticList(participantsEsData);
         participants = Participant.getParticipantsByIds(ddpInstance.getName(), participantIds);
         if (ddpInstance.isHasRole()) {
             medicalRecords = MedicalRecord.getMedicalRecordsByParticipantIds(ddpInstance.getName(), participantIds);
@@ -493,15 +531,15 @@ public class ParticipantWrapper {
         abstractionActivities =
                 AbstractionActivity.getAllAbstractionActivityByParticipantIds(ddpInstance.getName(), participantIds);
         abstractionSummary = AbstractionFinal.getAbstractionFinalByParticipantIds(ddpInstance.getName(), participantIds);
-        Map<String, List<String>> proxiesIdsFromElasticList = getProxiesIdsFromElasticList(participantsEsDataWithinRange);
+        Map<String, List<String>> proxiesIdsFromElasticList = getProxiesIdsFromElasticList(participantsEsData);
         proxiesByParticipantIds =
                 getProxiesWithParticipantIdsByProxiesIds(ddpInstance.getParticipantIndexES(), proxiesIdsFromElasticList);
-        participantDataByParticipantIds = new ParticipantDataDao().getParticipantDataByParticipantIds(participantIds);
+        participantData = new ParticipantDataDao().getParticipantDataByParticipantIds(participantIds);
     }
 
     private List<ParticipantWrapperDto> collectData() {
         List<ParticipantWrapperDto> result = new ArrayList<>();
-        for (ElasticSearch elasticSearch: participantsEsDataWithinRange) {
+        for (ElasticSearch elasticSearch: participantsEsData) {
             String participantId = elasticSearch.getParticipantIdFromProfile();
             if (StringUtils.isBlank(participantId)) continue;
             Participant participant = participants.stream()
@@ -511,7 +549,7 @@ public class ParticipantWrapper {
             result.add(new ParticipantWrapperDto(
                     elasticSearch, participant, medicalRecords.get(participantId),
                     oncHistoryDetails.get(participantId), kitRequests.get(participantId), abstractionActivities.get(participantId),
-                    abstractionSummary.get(participantId), proxiesByParticipantIds.get(participantId), participantDataByParticipantIds.get(participantId)));
+                    abstractionSummary.get(participantId), proxiesByParticipantIds.get(participantId), participantData.get(participantId)));
         }
         return result;
     }

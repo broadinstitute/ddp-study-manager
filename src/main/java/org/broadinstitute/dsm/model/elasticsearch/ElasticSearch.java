@@ -18,6 +18,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.client.core.CountResponse;
+import org.elasticsearch.index.query.AbstractQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermsQueryBuilder;
 import org.elasticsearch.search.SearchHit;
@@ -183,7 +184,7 @@ public class ElasticSearch implements ElasticSearchable {
 
     @Override
     public List<ElasticSearch> getParticipantsByIds(String esParticipantsIndex, List<String> participantIds) {
-        SearchRequest searchRequest = new SearchRequest(esParticipantsIndex);
+        SearchRequest searchRequest = new SearchRequest(Objects.requireNonNull(esParticipantsIndex));
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         TermsQueryBuilder participantIdsQuery = QueryBuilders.termsQuery(ElasticSearchUtil.PROFILE_GUID, participantIds);
         searchSourceBuilder.query(participantIdsQuery).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
@@ -215,6 +216,35 @@ public class ElasticSearch implements ElasticSearchable {
             throw new RuntimeException("Couldn't get participants size of ES for instance " + esParticipantsIndex, ioe);
         }
         return response.getCount();
+    }
+
+    @Override
+    public List<ElasticSearch> getParticipantsByRangeAndFilter(String esParticipantsIndex, int from, int to, String filter) {
+        if (to <= 0) throw new IllegalArgumentException("incorrect from/to range");
+        logger.info("Collecting ES data");
+        List<ElasticSearch> elasticSearchList;
+        try {
+            int scrollSize = to - from;
+            SearchRequest searchRequest = new SearchRequest(Objects.requireNonNull(esParticipantsIndex));
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            AbstractQueryBuilder<? extends AbstractQueryBuilder<?>> esQuery = ElasticSearchUtil.createESQuery(filter);
+            searchSourceBuilder.query(esQuery).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+            searchSourceBuilder.size(scrollSize);
+            searchSourceBuilder.from(from);
+            searchRequest.source(searchSourceBuilder);
+            SearchResponse response = ElasticSearchUtil.getClientInstance().search(searchRequest, RequestOptions.DEFAULT);
+            elasticSearchList = parseSourceMaps(response.getHits().getHits());
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Couldn't get participants from ES for instance " + esParticipantsIndex, e);
+        }
+        logger.info("Got " + elasticSearchList.size() + " participants from ES for instance " + esParticipantsIndex);
+        return elasticSearchList;
+    }
+
+    @Override
+    public List<ElasticSearch> getParticipantsByRangeAndIds(String participantIndexES, int from, int to, List<String> participantIds) {
+        return null;
     }
 
     public String getParticipantIdFromProfile() {
