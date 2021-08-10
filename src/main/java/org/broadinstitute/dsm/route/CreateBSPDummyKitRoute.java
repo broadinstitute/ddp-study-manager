@@ -36,9 +36,7 @@ public class CreateBSPDummyKitRoute implements Route {
             String mercuryKitRequestId = "MERCURY_" + KitRequestShipping.createRandom(20);
             int kitTypeId = (int) DBUtil.getBookmark(DUMMY_KIT_TYPE_NAME);
             logger.info("Found kit type for Mercury Dummy Endpoint " + kitTypeId);
-            String ddpParticipantId = new BSPDummyKitDao().getRandomParticipantIdForStudy(mockDdpInstance.getDdpInstanceId()).orElseThrow(() -> {
-                throw new RuntimeException("Random participant id was not generated");
-            });
+            String ddpParticipantId = new BSPDummyKitDao().getRandomParticipantForStudy(mockDdpInstance);
             String participantCollaboratorId = KitRequestShipping.getCollaboratorParticipantId(mockDdpInstance.getBaseUrl(), mockDdpInstance.getDdpInstanceId(), mockDdpInstance.isMigratedDDP(),
                     mockDdpInstance.getCollaboratorIdPrefix(), ddpParticipantId, "", null);
             String collaboratorSampleId = KitRequestShipping.getCollaboratorSampleId(kitTypeId, participantCollaboratorId, DUMMY_KIT_TYPE_NAME);

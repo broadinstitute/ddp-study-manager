@@ -44,16 +44,14 @@ public class CreateClinicalDummyKitRoute implements Route {
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(REALM);
         if (ddpInstance != null) {
             String kitRequestId = CLINICAL_KIT_PREFIX + KitRequestShipping.createRandom(20);
-            String ddpParticipantId = new BSPDummyKitDao().getRandomParticipantIdForStudy(ddpInstance.getDdpInstanceId()).orElseThrow(() -> {
-                throw new RuntimeException("Random participant id was not generated");
-            });
+            String ddpParticipantId = new BSPDummyKitDao().getRandomParticipantForStudy(ddpInstance);
             Optional<ElasticSearch> maybeParticipantByParticipantId = ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId);
             List<KitType> kitTypes = KitType.getKitTypes(ddpInstance.getName(), null);
             KitType desiredKitType = kitTypes.stream().filter(k -> kitTypeString.equalsIgnoreCase(k.getName())).findFirst().orElseThrow();
             logger.info("Found kit type " + desiredKitType.getName());
             maybeParticipantByParticipantId.ifPresentOrElse(p -> {
                 String participantCollaboratorId = KitRequestShipping.getCollaboratorParticipantId(ddpInstance.getBaseUrl(), ddpInstance.getDdpInstanceId(), ddpInstance.isMigratedDDP(),
-                        ddpInstance.getCollaboratorIdPrefix(), ddpParticipantId, (String) p.getProfile().map(ESProfile::getHruid).orElseThrow(), null);
+                        ddpInstance.getCollaboratorIdPrefix(), ddpParticipantId, p.getProfile().map(ESProfile::getHruid).orElseThrow(), null);
                 String collaboratorSampleId = KitRequestShipping.getCollaboratorSampleId(desiredKitType.getKitId(), participantCollaboratorId, desiredKitType.getName());
                 logger.info("Found collaboratorSampleId  " + collaboratorSampleId);
                 //if instance not null

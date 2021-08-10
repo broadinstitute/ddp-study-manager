@@ -1,9 +1,13 @@
 package org.broadinstitute.dsm.db.dao.kit;
 
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dto.kit.ClinicalKitDto;
+import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +48,19 @@ public class BSPDummyKitDao implements Dao<ClinicalKitDto> {
         }
     }
 
+    public String getRandomParticipantForStudy(DDPInstance ddpInstance){
+        String ddpParticipantId = new BSPDummyKitDao().getRandomParticipantIdForStudy(ddpInstance.getDdpInstanceId()).orElseThrow(() -> {
+            throw new RuntimeException("Random participant id was not generated");
+        });
+        Optional<ElasticSearch> maybeParticipantByParticipantId = ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+        while (maybeParticipantByParticipantId.isEmpty() || maybeParticipantByParticipantId.get().getProfile().map(ESProfile::getHruid).isEmpty()){
+            ddpParticipantId = new BSPDummyKitDao().getRandomParticipantIdForStudy(ddpInstance.getDdpInstanceId()).orElseThrow(() -> {
+                throw new RuntimeException("Random participant id was not generated");
+            });
+            maybeParticipantByParticipantId = ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+        }
+        return ddpParticipantId;
+    }
     public Optional<String> getRandomParticipantIdForStudy(String ddpInstanceId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();

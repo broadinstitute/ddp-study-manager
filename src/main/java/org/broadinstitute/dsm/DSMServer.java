@@ -218,7 +218,7 @@ public class DSMServer extends BasicServer {
 
         if(!cfg.getBoolean("ui.production")){
             get(API_ROOT + RoutePath.DUMMY_ENDPOINT, new CreateBSPDummyKitRoute(), new JsonTransformer());
-            }
+        }
 
         String appRoute = cfg.hasPath("portal.appRoute") ? cfg.getString("portal.appRoute") : null;
 
