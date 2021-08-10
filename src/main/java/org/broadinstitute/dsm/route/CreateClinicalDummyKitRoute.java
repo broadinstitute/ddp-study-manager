@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.route;
 
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.KitType;
@@ -66,12 +65,12 @@ public class CreateClinicalDummyKitRoute implements Route {
             });
             logger.info("Kit added successfully");
             response.status(200);
-            return new Result(200);
+            return null;
 
         }
         logger.error("Error occurred while adding kit");
         response.status(500);
-        return new Result(500);
+        return null;
     }
 
 }
