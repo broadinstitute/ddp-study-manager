@@ -51,7 +51,7 @@ public class AddFamilyMember {
     public long add() {
         prepareFamilyMemberData();
         copyProbandData();
-        addDefaultOptionsValueToData();
+        addDefaultValueToData();
         long createdParticipantDataId = this.participantData.insertParticipantData(
                 new UserDao().get(addFamilyMemberPayload.getUserId().orElse(0)).flatMap(UserDto::getEmail).orElse("SYSTEM"));
         exportDataToEs();
@@ -85,8 +85,8 @@ public class AddFamilyMember {
         maybeParticipantData.ifPresent(participantData -> participantData.getData().forEach(participantDataData::putIfAbsent));
     }
 
-    protected void addDefaultOptionsValueToData() {
-        participantData.addDefaultOptionsValueToData(getDefaultOptions());
+    protected void addDefaultValueToData() {
+        participantData.addDefaultOptionsValueToData(getDefaultValues());
     }
 
     public void exportDataToEs() {
@@ -147,10 +147,10 @@ public class AddFamilyMember {
         );
     }
 
-    private Map<String, String> getDefaultOptions() {
+    private Map<String, String> getDefaultValues() {
         FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
         FieldSettings fieldSettings = new FieldSettings();
-        return fieldSettings.getColumnsWithDefaultOptions(fieldSettingsDao.getFieldSettingsByOptionAndInstanceId(ddpInstanceId));
+        return fieldSettings.getColumnsWithDefaultValues(fieldSettingsDao.getOptionAndRadioFieldSettingsByInstanceId(ddpInstanceId));
     }
 
     public static AddFamilyMember instance(Study study, AddFamilyMemberPayload addFamilyMemberPayload) {

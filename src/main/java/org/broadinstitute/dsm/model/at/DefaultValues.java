@@ -200,7 +200,7 @@ public class DefaultValues {
         return fieldSettingByColumnNameAndInstanceId.
                 map(fieldSettingsDto -> {
                     FieldSettings fieldSettings = new FieldSettings();
-                    return fieldSettings.getDefaultOptionValue(fieldSettingsDto.getPossibleValues());
+                    return fieldSettings.getDefaultValue(fieldSettingsDto.getPossibleValues());
                 })
                 .orElse("");
     }
