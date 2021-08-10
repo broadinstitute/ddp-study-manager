@@ -29,12 +29,13 @@ public class CreateClinicalDummyKitRoute implements Route {
     @Override
     public Object handle(Request request, Response response) {
         String kitLabel = request.params(RequestParameter.LABEL);
+        String kitTypeString = request.params(RequestParameter.KIT_TYPE);
         if (StringUtils.isBlank(kitLabel)) {
             logger.warn("Got a create Clinical Kit request without a kit label!!");
             response.status(500);
             return "Please include a kit label as a path parameter";
         }
-        logger.info("Got a new Clinical Kit request with kit label " + kitLabel);
+        logger.info("Got a new Clinical Kit request with kit label " + kitLabel+" and kit type "+kitTypeString);
         new BookmarkDao().getBookmarkByInstance(CLINICAL_KIT_REALM).ifPresentOrElse(book -> {
             REALM = (int) book.getValue();
         }, () -> {
@@ -48,19 +49,22 @@ public class CreateClinicalDummyKitRoute implements Route {
             });
             Optional<ElasticSearch> maybeParticipantByParticipantId = ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId);
             List<KitType> kitTypes = KitType.getKitTypes(ddpInstance.getName(), null);
-            KitType salivaKitType = kitTypes.stream().filter(k -> "SALIVA".equals(k.getName())).findFirst().orElseThrow();
+            KitType desiredKitType = kitTypes.stream().filter(k -> kitTypeString.equalsIgnoreCase(k.getName())).findFirst().orElseThrow();
+            logger.info("Found kit type " + desiredKitType.getName());
             maybeParticipantByParticipantId.ifPresentOrElse(p -> {
                 String participantCollaboratorId = KitRequestShipping.getCollaboratorParticipantId(ddpInstance.getBaseUrl(), ddpInstance.getDdpInstanceId(), ddpInstance.isMigratedDDP(),
                         ddpInstance.getCollaboratorIdPrefix(), ddpParticipantId, (String) p.getProfile().map(ESProfile::getHruid).orElseThrow(), null);
-                String collaboratorSampleId = KitRequestShipping.getCollaboratorSampleId(salivaKitType.getKitId(), participantCollaboratorId, salivaKitType.getName());
-
+                String collaboratorSampleId = KitRequestShipping.getCollaboratorSampleId(desiredKitType.getKitId(), participantCollaboratorId, desiredKitType.getName());
+                logger.info("Found collaboratorSampleId  " + collaboratorSampleId);
                 //if instance not null
-                String dsmKitRequestId = KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), kitRequestId, salivaKitType.getKitId(),
+                String dsmKitRequestId = KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), kitRequestId, desiredKitType.getKitId(),
                         ddpParticipantId, participantCollaboratorId, collaboratorSampleId,
                         USER_ID, "", "", "", false, "");
                 new BSPDummyKitDao().updateKitLabel(kitLabel, dsmKitRequestId);
 
-            }, () -> {throw new RuntimeException(" Participant " + ddpParticipantId + " was not found!");});
+            }, () -> {
+                throw new RuntimeException(" Participant " + ddpParticipantId + " was not found!");
+            });
             logger.info("Kit added successfully");
             response.status(200);
             return response;

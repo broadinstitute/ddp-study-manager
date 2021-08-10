@@ -32,7 +32,7 @@ public class RoutePath {
     public static final String BSP_KIT_QUERY_PATH = "/Kits/:label";
     public static final String BSP_KIT_REGISTERED = "/KitsRegistered";
     public static final String DUMMY_ENDPOINT = "/createDummy/:label";
-    public static final String CREATE_CLINICAL_KIT_ENDPOINT = "/createClinicalDummy/:label";
+    public static final String CREATE_CLINICAL_KIT_ENDPOINT = "/createClinicalDummy/:label/:type";
     public static final String CLINICAL_KIT_ENDPOINT = "/clinicalKits/:label";
 
     //Drug list endpoint route
