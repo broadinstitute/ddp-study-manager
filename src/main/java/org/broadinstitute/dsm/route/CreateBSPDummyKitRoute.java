@@ -25,7 +25,7 @@ public class CreateBSPDummyKitRoute implements Route {
         if (StringUtils.isBlank(kitLabel)) {
             response.status(500);// return bad request
             logger.error("Bad request from Mercury! Should include a kitlabel");
-            return response;
+            return null;
         }
         logger.info("Found kitlabel " + kitLabel + " in Mercury request");
         int ddpInstanceId = (int) DBUtil.getBookmark(DUMMY_REALM_NAME);
@@ -54,7 +54,7 @@ public class CreateBSPDummyKitRoute implements Route {
             logger.error("Returning 500 to Mercury");
             response.status(500);
         }
-        return response;
+        return null;
     }
 
 

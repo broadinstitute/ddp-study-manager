@@ -46,7 +46,7 @@ public class ClinicalKitsRoute implements Route {
             Optional<BSPKitStatus> result = bspKit.getKitStatus(kitLabel, notificationUtil);
             if(result.isEmpty()){
                 response.status(404);
-                return response;
+                return null;
             }
             return result.get();
         }
