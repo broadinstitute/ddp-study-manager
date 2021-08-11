@@ -7,7 +7,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
-import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.exception.FileProcessingException;
 import org.broadinstitute.ddp.handlers.util.MedicalInfo;
@@ -19,7 +18,6 @@ import org.broadinstitute.dsm.files.PDFProcessor;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.ddp.PDF;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
-import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.DDPRequestUtil;
@@ -31,12 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
-
-import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 @Getter
 public class DownloadPDF {
@@ -81,11 +74,10 @@ public class DownloadPDF {
 
 
     public Optional<byte[]> getPDFs(UserDto user, String realm, String requestBody) {
-        Optional results = Optional.empty();
+        Optional<byte[]> pdfBytes = Optional.empty();
         if (StringUtils.isNotBlank(this.ddpParticipantId)) {
             DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
             if (ddpInstance != null && StringUtils.isNotBlank(ddpParticipantId)) {
-                Optional<byte[]> pdfBytes;
                 String fileName = "";
                 if (configName == null) {
                     pdfBytes = getPDFBundle(ddpInstance, requestBody, user);
@@ -93,18 +85,16 @@ public class DownloadPDF {
                 else {
                     pdfBytes = generateSinglePDF(requestBody, configName, user, ddpInstance);
                 }
-                pdfBytes.ifPresentOrElse(bytes -> {
+                pdfBytes.ifPresent(bytes -> {
                     savePDFinBucket(ddpInstance.getName(), ddpParticipantId, new ByteArrayInputStream(bytes), fileName, user.getId());
-                    results = Optional.ofNullable(pdfBytes);
                 });
-
                 pdfBytes.orElseThrow();
             }
             else {
                 throw new RuntimeException("DDPInstance of participant " + ddpParticipantId + " not found");
             }
         }
-        return results;
+        return pdfBytes;
     }
 
     private Optional<byte[]> generateSinglePDF(@NonNull String requestBody, String configName, UserDto user, DDPInstance ddpInstance) {
@@ -159,24 +149,12 @@ public class DownloadPDF {
     }
 
     protected byte[] generatePDFFromValues(Map<String, Object> valueMap, DDPInstance ddpInstance, PDFProcessor processor) {
-        InputStream stream = null;
-        try {
-            stream = processor.generateStream(valueMap);
+        try (InputStream stream = processor.generateStream(valueMap)) {
             stream.mark(0);
             return IOUtils.toByteArray(stream);
         }
         catch (IOException e) {
             throw new RuntimeException("Couldn't get pdf for participant " + ddpParticipantId + " of ddpInstance " + ddpInstance.getName(), e);
-        }
-        finally {
-            try {
-                if (stream != null) {
-                    stream.close();
-                }
-            }
-            catch (IOException e) {
-                throw new RuntimeException("Error closing stream", e);
-            }
         }
     }
 
@@ -240,36 +218,5 @@ public class DownloadPDF {
             throw new RuntimeException("Couldn't get pdf for participant " + ddpParticipantId + " of ddpInstance " + ddpInstance.getName(), e);
         }
     }
-
-    public List<String> getPDFs(@NonNull String realm) {
-        List<String> listOfPDFs = new ArrayList<>();
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            String query = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.GET_ROLES_LIKE);
-            query = query.replace("%1", DBConstants.PDF_DOWNLOAD);
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                stmt.setString(1, realm);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    while (rs.next()) {
-                        listOfPDFs.add(rs.getString(DBConstants.NAME));
-                    }
-                }
-                catch (SQLException e) {
-                    throw new RuntimeException("Error getting pdfs for " + realm, e);
-                }
-            }
-            catch (SQLException ex) {
-                dbVals.resultException = ex;
-            }
-            return dbVals;
-        });
-
-        if (results.resultException != null) {
-            throw new RuntimeException("Couldn't get pdfs for realm " + realm, results.resultException);
-        }
-        logger.info("Found " + listOfPDFs.size() + " pdfs for realm " + realm);
-        return listOfPDFs;
-    }
-
 
 }
