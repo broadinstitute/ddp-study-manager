@@ -62,6 +62,7 @@ public class ClinicalKitsRoute implements Route {
         ClinicalKitDto clinicalKit = new ClinicalKitDto();
         Optional<BSPKitInfo> maybeKitInfo = bspKit.receiveBSPKit(kitLabel, notificationUtil);
         maybeKitInfo.ifPresent(kitInfo -> {
+            logger.info("Creating clinical kit to return to GP "+kitLabel);
             clinicalKit.setCollaboratorParticipantId(kitInfo.getCollaboratorParticipantId());
             clinicalKit.setSampleId(kitInfo.getCollaboratorSampleId());
             clinicalKit.setMaterialType(kitInfo.getMaterialInfo());
@@ -90,6 +91,7 @@ public class ClinicalKitsRoute implements Route {
                     , () -> {throw new RuntimeException("Participant doesn't exist / is not valid for kit " + kitLabel);}
             );
         });
+        maybeKitInfo.orElseThrow();
         return clinicalKit;
 
     }
