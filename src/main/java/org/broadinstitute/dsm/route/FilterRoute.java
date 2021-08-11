@@ -48,6 +48,7 @@ public class FilterRoute extends RequestHandler {
     private static final Logger logger = LoggerFactory.getLogger(FilterRoute.class);
     private static final Gson gson = new Gson();
     private static final ParticipantDataDao participantDataDao = new ParticipantDataDao();
+    public static final String PARTICIPANTS = "PARTICIPANTS";
     private static Pattern DATE_PATTERN = Pattern.compile(
             "^\\d{4}-\\d{2}-\\d{2}$");
 
@@ -242,6 +243,8 @@ public class FilterRoute extends RequestHandler {
         Map<String, String> queryConditions = new HashMap<>();
         List<ParticipantDataDto> allParticipantData = null;
         if (filters != null && columnNameMap != null && !columnNameMap.isEmpty()) {
+            Map<String, Integer> allIdsForParticipantDataFiltering = new HashMap<>();
+            int numberOfParticipantDataFilters = 0;
             for (Filter filter : filters) {
                 if (filter != null) {
                     String tmp = null;
@@ -258,9 +261,10 @@ public class FilterRoute extends RequestHandler {
                     if (filter.getParticipantColumn() != null && PARTICIPANT_DATA.equals(filter.getParticipantColumn().tableAlias)) {
                         if (allParticipantData == null) {
                             allParticipantData = participantDataDao
-                                    .getParticipantDataByInstanceid(Integer.parseInt(instance.getDdpInstanceId()));
+                                    .getParticipantDataByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
                         }
-                        addParticipantDataFilters(queryConditions, filter, tmpName, allParticipantData);
+                        numberOfParticipantDataFilters++;
+                        addParticipantDataIdsForFilters(filter, tmpName, allParticipantData, allIdsForParticipantDataFiltering);
                     } else {
                         if (StringUtils.isNotBlank(tmpName)) {
                             dbElement = columnNameMap.get(tmp + "." + tmpName);
@@ -268,6 +272,9 @@ public class FilterRoute extends RequestHandler {
                         ViewFilter.addQueryCondition(queryConditions, dbElement, filter);
                     }
                 }
+            }
+            if (numberOfParticipantDataFilters != 0) {
+                addParticipantDataConditionsToQuery(allIdsForParticipantDataFiltering, queryConditions, numberOfParticipantDataFilters);
             }
         }
 
@@ -295,12 +302,41 @@ public class FilterRoute extends RequestHandler {
         }
     }
 
-    public static void addParticipantDataFilters(Map<String, String> queryConditions,
-                                                 Filter filter, String fieldName, List<ParticipantDataDto> allParticipantData) {
-        List<String> participantIdsForQuery = new ArrayList<>();
+    public static void addParticipantDataConditionsToQuery(Map<String, Integer> allIdsForParticipantDataFiltering, Map<String, String> queryConditions, int filtersLength) {
+        if (allIdsForParticipantDataFiltering.isEmpty()) {
+            queryConditions.put(ElasticSearchUtil.ES, ElasticSearchUtil.BY_PROFILE_GUID + ElasticSearchUtil.EMPTY);
+        } else {
+            String newCondition = createNewConditionByIds(allIdsForParticipantDataFiltering, filtersLength);
+            queryConditions.merge(ElasticSearchUtil.ES, newCondition, (prev, next) -> prev + next);
+        }
+    }
+
+    public static String createNewConditionByIds(Map<String, Integer> allIdsForParticipantDataFiltering, int filtersLength) {
+        StringBuilder newCondition = new StringBuilder(ElasticSearchUtil.AND);
+        int i = 0;
+        for (Map.Entry<String, Integer> entry: allIdsForParticipantDataFiltering.entrySet()) {
+            if (entry.getValue() != filtersLength) {
+                continue;
+            }
+            if (i == 0) {
+                newCondition.append(ParticipantUtil.isGuid(entry.getKey()) ? ElasticSearchUtil.BY_PROFILE_GUID + entry.getKey() : ElasticSearchUtil.BY_PROFILE_LEGACY_ALTPID + entry.getKey());
+            } else {
+                newCondition.append(ParticipantUtil.isGuid(entry.getKey()) ? ElasticSearchUtil.BY_GUIDS + entry.getKey() : ElasticSearchUtil.BY_LEGACY_ALTPIDS + entry.getKey());
+            }
+            i++;
+        }
+        newCondition.append(ElasticSearchUtil.CLOSING_PARENTHESIS);
+        return newCondition.toString();
+    }
+
+    public static void addParticipantDataIdsForFilters(Filter filter, String fieldName, List<ParticipantDataDto> allParticipantData,
+                                                       Map<String, Integer> allIdsForParticipantDataFiltering) {
+        Map<String, String> participantIdsForQuery = new HashMap();
+        Map<String, String> participantsNotToAdd = new HashMap();
         for (ParticipantDataDto participantData : allParticipantData) {
             String data = participantData.getData().orElse(null);
-            if (data == null) {
+            String fieldTypeId = participantData.getFieldTypeId().orElse(null);
+            if (data == null || fieldTypeId == null) {
                 continue;
             }
             String ddpParticipantId = participantData.getDdpParticipantId().orElse(null);
@@ -308,54 +344,62 @@ public class FilterRoute extends RequestHandler {
             boolean questionWithOptions = (OPTIONS.equals(filter.getType()) || RADIO.equals(filter.getType())) && filter.getSelectedOptions() != null;
             boolean notEmptyCheck = filter.isNotEmpty() && dataMap.get(fieldName) != null && !dataMap.get(fieldName).isEmpty();
             boolean emptyCheck = filter.isEmpty() && (dataMap.get(fieldName) == null || dataMap.get(fieldName).isEmpty());
-            if (notEmptyCheck || emptyCheck) {
-                participantIdsForQuery.add(ddpParticipantId);
+            if (notEmptyCheck || emptyCheck && !participantsNotToAdd.containsKey(ddpParticipantId)) {
+                participantIdsForQuery.put(ddpParticipantId, fieldName);
                 continue;
             }
+            //For the participants, which are saved in several rows (for example AT participants)
+            boolean shouldNotHaveBeenAdded = filter.isEmpty() && !(dataMap.get(fieldName) == null || dataMap.get(fieldName).isEmpty())
+                    && !fieldTypeId.contains(PARTICIPANTS);
+            if (shouldNotHaveBeenAdded) {
+                participantIdsForQuery.remove(ddpParticipantId);
+                participantsNotToAdd.put(ddpParticipantId, fieldName);
+                continue;
+            }
+
             if (questionWithOptions) {
                 for (String option : filter.getSelectedOptions()) {
                     if (dataMap.get(fieldName) != null && dataMap.get(fieldName)
                             .equals(option)) {
-                        participantIdsForQuery.add(ddpParticipantId);
+                        participantIdsForQuery.put(ddpParticipantId, fieldName);
                         break;
                     }
                 }
             } else if (filter.getFilter1() != null && filter.getFilter1().getValue() != null) {
-                boolean singleValue = dataMap.get(fieldName) != null && dataMap.get(fieldName)
-                        .equals(filter.getFilter1().getValue());
-                if (singleValue) {
-                    participantIdsForQuery.add(ddpParticipantId);
+                boolean singleValueMatches;
+                if (filter.isExactMatch()) {
+                    singleValueMatches = dataMap.get(fieldName) != null && dataMap.get(fieldName)
+                            .equals(filter.getFilter1().getValue());
+                } else {
+                    singleValueMatches = dataMap.get(fieldName) != null && dataMap.get(fieldName).toLowerCase()
+                            .contains(filter.getFilter1().getValue().toString().toLowerCase());
+                }
+                if (singleValueMatches) {
+                    participantIdsForQuery.put(ddpParticipantId, fieldName);
                 } else if (filter.getFilter2() != null) {
                     addConditionForRange(filter, fieldName, dataMap, participantIdsForQuery, ddpParticipantId);
                 }
             }
         }
-        if (!participantIdsForQuery.isEmpty()) {
-            StringBuilder newCondition = getNewCondition(participantIdsForQuery);
-            newCondition.append(ElasticSearchUtil.CLOSING_PARENTHESIS);
-            String esCondition = queryConditions.get(ElasticSearchUtil.ES);
-            esCondition += newCondition.toString();
-            queryConditions.put(ElasticSearchUtil.ES, esCondition);
-        } else {
-            //so that empty list is returned
-            queryConditions.put(ElasticSearchUtil.ES, ElasticSearchUtil.BY_PROFILE_GUID + ElasticSearchUtil.EMPTY);
-        }
+        participantIdsForQuery.forEach((key, value) -> allIdsForParticipantDataFiltering
+                .put(key, allIdsForParticipantDataFiltering.getOrDefault(key, 0) + 1));
     }
 
-    public static StringBuilder getNewCondition(List<String> participantIdsForQuery) {
+    public static StringBuilder getNewCondition(Map<String, String> participantIdsForQuery) {
         StringBuilder newCondition = new StringBuilder(ElasticSearchUtil.AND);
-        for (int i = 0; i < participantIdsForQuery.size(); i++) {
-            String id = participantIdsForQuery.get(i);
+        int i = 0;
+        for (String id : participantIdsForQuery.keySet()) {
             if (i == 0) {
                 newCondition.append(ParticipantUtil.isGuid(id) ? ElasticSearchUtil.BY_PROFILE_GUID + id : ElasticSearchUtil.BY_PROFILE_LEGACY_ALTPID + id);
             } else {
                 newCondition.append(ParticipantUtil.isGuid(id) ? ElasticSearchUtil.BY_GUIDS + id : ElasticSearchUtil.BY_LEGACY_ALTPIDS + id);
             }
+            i++;
         }
         return newCondition;
     }
 
-    public static void addConditionForRange(Filter filter, String fieldName, Map<String, String> dataMap, List<String> participantIdsForQuery, String ddpParticipantId) {
+    public static void addConditionForRange(Filter filter, String fieldName, Map<String, String> dataMap, Map<String, String> participantIdsForQuery, String ddpParticipantId) {
         Object rangeValue1 = filter.getFilter1().getValue();
         Object rangeValue2 = filter.getFilter2().getValue();
         if (rangeValue1 == null || rangeValue2 == null) {
@@ -367,7 +411,7 @@ public class FilterRoute extends RequestHandler {
         boolean inDateRange = isInDateRange(fieldName, dataMap, rangeValue1, rangeValue2);
 
         if (inNumberRange || inDateRange) {
-            participantIdsForQuery.add(ddpParticipantId);;
+            participantIdsForQuery.put(ddpParticipantId, fieldName);
         }
     }
 

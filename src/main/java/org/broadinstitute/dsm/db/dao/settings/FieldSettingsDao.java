@@ -1,10 +1,11 @@
-package org.broadinstitute.dsm.db.dao.fieldsettings;
+package org.broadinstitute.dsm.db.dao.settings;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -12,13 +13,13 @@ import java.util.stream.Collectors;
 
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.dao.Dao;
-import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 
 public class FieldSettingsDao implements Dao<FieldSettingsDto> {
 
     private static FieldSettingsDao fieldSettingsDao;
 
-    private static final String SQL_OPTIONS_BY_INSTANCE_ID = "SELECT " +
+    private static final String SQL_OPTIONS_AND_RADIOS_BY_INSTANCE_ID = "SELECT " +
             "field_settings_id," +
             "ddp_instance_id," +
             "field_type," +
@@ -32,7 +33,7 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
             "deleted," +
             "last_changed," +
             "changed_by" +
-            " FROM field_settings WHERE ddp_instance_id = ? and display_type = 'OPTIONS'";
+            " FROM field_settings WHERE ddp_instance_id = ? and (display_type = 'OPTIONS' or display_type = 'RADIO') ";
 
     private static final String GET_FIELD_SETTINGS = "SELECT " +
             "field_settings_id," +
@@ -49,6 +50,24 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
             "last_changed," +
             "changed_by" +
             " FROM field_settings";
+
+    private static final String SQL_INSERT_FIELD_SETTING = "INSERT INTO field_settings SET " +
+            "ddp_instance_id = ?, " +
+            "field_type = ?, " +
+            "column_name = ?, " +
+            "column_display = ?, " +
+            "display_type = ?, " +
+            "possible_values = ?, " +
+            "actions = ?, " +
+            "order_number = ?, " +
+            "deleted = ?, " +
+            "last_changed = ?, " +
+            "changed_by = ?, " +
+            "readonly = ?, " +
+            "max_length = ?";
+
+    private static final String SQL_DELETE_FIELD_SETTING_BY_ID = "DELETE FROM field_settings " +
+            "WHERE field_settings_id = ?";
 
     private static final String BY_INSTANCE_ID = " WHERE ddp_instance_id = ?";
     private static final String AND_BY_COLUMN_NAME = " AND column_name = ?";
@@ -79,12 +98,56 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
 
     @Override
     public int create(FieldSettingsDto fieldSettingsDto) {
-        return 0;
+        SimpleResult simpleResult = inTransaction(conn -> {
+            SimpleResult dbVals = new SimpleResult(-1);
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_FIELD_SETTING, Statement.RETURN_GENERATED_KEYS)) {
+                stmt.setInt(1, fieldSettingsDto.getDdpInstanceId());
+                stmt.setString(2, fieldSettingsDto.getFieldType());
+                stmt.setString(3, fieldSettingsDto.getColumnName());
+                stmt.setString(4, fieldSettingsDto.getColumnDisplay());
+                stmt.setString(5, fieldSettingsDto.getDisplayType());
+                stmt.setString(6, fieldSettingsDto.getPossibleValues());
+                stmt.setString(7, fieldSettingsDto.getActions());
+                stmt.setInt(8, fieldSettingsDto.getOrderNumber());
+                stmt.setBoolean(9, fieldSettingsDto.isDeleted());
+                stmt.setLong(10, fieldSettingsDto.getLastChanged());
+                stmt.setString(11, fieldSettingsDto.getChangedBy());
+                stmt.setBoolean(12, fieldSettingsDto.isReadonly());
+                stmt.setInt(13, fieldSettingsDto.getMaxLength());
+                stmt.executeUpdate();
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = rs.getInt(1);
+                    }
+                }
+            } catch (SQLException sqle) {
+                dbVals.resultException = sqle;
+            }
+            return dbVals;
+        });
+        if (simpleResult.resultException != null) {
+            throw new RuntimeException("Error inserting field setting ", simpleResult.resultException);
+        }
+        return (int) simpleResult.resultValue;
     }
 
     @Override
     public int delete(int id) {
-        return 0;
+        SimpleResult simpleResult = inTransaction(conn -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_DELETE_FIELD_SETTING_BY_ID)) {
+                stmt.setInt(1, id);
+                execResult.resultValue = stmt.executeUpdate();
+            } catch (SQLException sqle) {
+                execResult.resultException = sqle;
+            }
+            return execResult;
+        });
+
+        if (simpleResult.resultException != null) {
+            throw new RuntimeException("Error deleting field setting with id: " + id, simpleResult.resultException);
+        }
+        return (int) simpleResult.resultValue;
     }
 
     @Override
@@ -92,11 +155,11 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
         return Optional.empty();
     }
 
-    public List<FieldSettingsDto> getFieldSettingsByOptionAndInstanceId(int instanceId) {
+    public List<FieldSettingsDto> getOptionAndRadioFieldSettingsByInstanceId(int instanceId) {
         List<FieldSettingsDto> fieldSettingsByOptions = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult execResult = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(SQL_OPTIONS_BY_INSTANCE_ID)) {
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_OPTIONS_AND_RADIOS_BY_INSTANCE_ID)) {
                 stmt.setInt(1, instanceId);
                 try(ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {

@@ -74,42 +74,42 @@ public class ParticipantTest {
     public void checkApplicant() {
         String collaboratorParticipantId1 = "id1";
 
-        Assert.assertTrue(ParticipantUtil.checkApplicantEmail(collaboratorParticipantId1, participantDatas));
+        Assert.assertTrue(ParticipantUtil.matchesApplicantEmail(collaboratorParticipantId1, participantDatas));
     }
 
     @Test
     public void checkMemberWithSameEmail() {
         String collaboratorParticipantId2 = "id2";
 
-        Assert.assertTrue(ParticipantUtil.checkApplicantEmail(collaboratorParticipantId2, participantDatas));
+        Assert.assertTrue(ParticipantUtil.matchesApplicantEmail(collaboratorParticipantId2, participantDatas));
     }
 
     @Test
     public void checkMemberWithDifferentEmail() {
         String collaboratorParticipantId3 = "id3";
 
-        Assert.assertFalse(ParticipantUtil.checkApplicantEmail(collaboratorParticipantId3, participantDatas));
+        Assert.assertFalse(ParticipantUtil.matchesApplicantEmail(collaboratorParticipantId3, participantDatas));
     }
 
     @Test
     public void checkNewApplicant() {
         String collaboratorParticipantId1 = "id1";
 
-        Assert.assertTrue(ParticipantUtil.checkApplicantEmail(collaboratorParticipantId1, newParticipantDatas));
+        Assert.assertTrue(ParticipantUtil.matchesApplicantEmail(collaboratorParticipantId1, newParticipantDatas));
     }
 
     @Test
     public void checkNewMemberWithSameEmail() {
         String collaboratorParticipantId2 = "id2";
 
-        Assert.assertTrue(ParticipantUtil.checkApplicantEmail(collaboratorParticipantId2, newParticipantDatas));
+        Assert.assertTrue(ParticipantUtil.matchesApplicantEmail(collaboratorParticipantId2, newParticipantDatas));
     }
 
     @Test
     public void checkNewMemberWithDifferentEmail() {
         String collaboratorParticipantId3 = "id3";
 
-        Assert.assertFalse(ParticipantUtil.checkApplicantEmail(collaboratorParticipantId3, newParticipantDatas));
+        Assert.assertFalse(ParticipantUtil.matchesApplicantEmail(collaboratorParticipantId3, newParticipantDatas));
     }
 
 }

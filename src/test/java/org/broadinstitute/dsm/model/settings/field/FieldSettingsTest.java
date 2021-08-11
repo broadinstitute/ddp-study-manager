@@ -1,10 +1,15 @@
-package org.broadinstitute.dsm.model.fieldsettings;
+package org.broadinstitute.dsm.model.settings.field;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
+import org.broadinstitute.dsm.TestHelper;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -18,29 +23,41 @@ public class FieldSettingsTest {
     private static final String acceptanceStatusColumnName = "ACCEPTANCE_STATUS";
     private static final String activeColumnName = "ACTIVE";
     private static final String ethnicityColumnName = "ETHNICITY";
+    public static final String REGISTRATION_STATUS = "REGISTRATION_STATUS";
 
     private static FieldSettings fieldSettings;
+    private static int instanceId;
+    private static int fieldSettingsId;
+    private static DDPInstanceDao ddpInstanceDao;
 
     @BeforeClass
     public static void first() {
+        TestHelper.setupDB();
         fieldSettings = new FieldSettings();
+        ddpInstanceDao = new DDPInstanceDao();
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        if (instanceId > -1) ddpInstanceDao.delete(instanceId);
+        if (fieldSettingsId > -1) FieldSettingsDao.of().delete(fieldSettingsId);
     }
 
     @Test
     public void testGetDefaultOption() {
-        String defaultOption = fieldSettings.getDefaultOptionValue(acceptanceStatusPossibleValue);
+        String defaultOption = fieldSettings.getDefaultValue(acceptanceStatusPossibleValue);
         Assert.assertEquals("ACCEPTED", defaultOption);
     }
 
     @Test
     public void testIsDefaultOption() {
-        boolean isDefaultOption = fieldSettings.isDefaultOption(acceptanceStatusPossibleValue);
+        boolean isDefaultOption = fieldSettings.isDefaultValue(acceptanceStatusPossibleValue);
         Assert.assertTrue(isDefaultOption);
     }
 
     @Test
     public void testGetDefaultOptions() {
-        Map<String, String> defaultOptions = fieldSettings.getColumnsWithDefaultOptions(createStaticFieldSettingDtoList());
+        Map<String, String> defaultOptions = fieldSettings.getColumnsWithDefaultValues(createStaticFieldSettingDtoList());
         Assert.assertEquals("ACCEPTED", defaultOptions.get(acceptanceStatusColumnName));
         Assert.assertEquals("HISPANIC", defaultOptions.get(ethnicityColumnName));
         Assert.assertNull(defaultOptions.get(activeColumnName));
@@ -59,6 +76,17 @@ public class FieldSettingsTest {
         Map<String, String> columnsWithDefaultOptionsFilteredByElasticExportWorkflow =
                 fieldSettings.getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(staticFieldSettingDtoList);
         Assert.assertNotNull(columnsWithDefaultOptionsFilteredByElasticExportWorkflow.get(acceptanceStatusColumnName));
+    }
+
+    @Test
+    public void isColumnExportable() {
+        instanceId = ddpInstanceDao.create(DDPInstanceDto.of(false, false, false));
+        FieldSettingsDto fieldSettingsDto = new FieldSettingsDto.Builder(instanceId)
+                .withActions(actions)
+                .withColumnName(REGISTRATION_STATUS)
+                .build();
+        fieldSettingsId = FieldSettingsDao.of().create(fieldSettingsDto);
+        Assert.assertTrue(fieldSettings.isColumnExportable(instanceId, REGISTRATION_STATUS));
     }
 
     List<FieldSettingsDto> createStaticFieldSettingDtoList() {

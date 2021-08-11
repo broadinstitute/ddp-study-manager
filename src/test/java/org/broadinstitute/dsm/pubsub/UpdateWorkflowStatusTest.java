@@ -2,13 +2,13 @@ package org.broadinstitute.dsm.pubsub;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.broadinstitute.dsm.db.User;
+import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
-import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
+import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
-import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.util.DBTestUtil;
 import org.junit.AfterClass;
@@ -31,7 +31,7 @@ public class UpdateWorkflowStatusTest {
 
     private static final String participantId = "RBMJW6ZIXVXBMXUX6M3Q";
 
-    private static User user;
+    private static UserDto userDto;
 
     private static int participantDataId;
 
@@ -54,7 +54,7 @@ public class UpdateWorkflowStatusTest {
 
         ddpInstanceDto =  DBTestUtil.createTestDdpInstance(ddpInstanceDto, ddpInstanceDao, "UpdateWorkflowInstance");
 
-        user = DBTestUtil.createTestDsmUser("UpdateWorkflowUser", "UpdateWorkflow@status.com", userDao, user);
+        userDto = DBTestUtil.createTestDsmUser("UpdateWorkflowUser", "UpdateWorkflow@status.com", userDao, userDto);
 
         createDataForParticipant();
 
@@ -101,7 +101,7 @@ public class UpdateWorkflowStatusTest {
                     .withFieldTypeId(UPDATE_WORKFLOW_TEST)
                     .withData(gson.toJson(participantData))
                     .withLastChanged(System.currentTimeMillis())
-                    .withChangedBy(user.getEmail())
+                    .withChangedBy(userDto.getEmail().orElse(""))
                     .build();
         participantDataId = participantDataDao.create(participantDataDto);
         participantDataDto =
@@ -112,7 +112,7 @@ public class UpdateWorkflowStatusTest {
                     .withFieldTypeId(UPDATE_WORKFLOW_TEST)
                     .withData(gson.toJson(participantData))
                     .withLastChanged(System.currentTimeMillis())
-                    .withChangedBy(user.getEmail())
+                    .withChangedBy(userDto.getEmail().orElse(""))
                     .build();
     }
 
@@ -121,7 +121,7 @@ public class UpdateWorkflowStatusTest {
         if (participantDataId > 0) {
             participantDataDao.delete(participantDataId);
         }
-        userDao.delete(user.getUserId());
+        userDao.delete(userDto.getId());
         ddpInstanceDao.delete(ddpInstanceDto.getDdpInstanceId());
     }
 }

@@ -583,6 +583,11 @@ public class ViewFilter {
                                 state = 22;
                                 break;
                             }
+                            else if (word.equals(Filter.TRUE) || word.equals(Filter.FALSE)) {
+                                value = word;
+                                type = Filter.BOOLEAN;
+                                state = 40;
+                            }
                             else {
                                 tempValue = word;
                                 if (!longWord) {
@@ -879,11 +884,13 @@ public class ViewFilter {
                                 state = 8;
                             }
                             break;
+                        case 40:
+                            break;
 
                     }
                 }
             }
-            if (state != 7 && state != 9 && state != 10 && state != 11 && state != 13 && state != 22 && state != 25 && state != 37) {// terminal states
+            if (state != 7 && state != 9 && state != 10 && state != 11 && state != 13 && state != 22 && state != 25 && state != 37 && state != 40) {// terminal states
                 throw new RuntimeException("Query parsing ended in bad state: " + state);
             }
             String columnKey = columnName;
@@ -943,7 +950,7 @@ public class ViewFilter {
                 if (Filter.ADDITIONAL_VALUES.equals(filter.type)) {
                     filter.setParticipantColumn(new ParticipantColumn(path, tableName));
                 }
-                else if (Filter.TEXT.equals(filter.type)) {
+                else if (Filter.TEXT.equals(filter.type) || Filter.BOOLEAN.equals(filter.type)) {
                     filter.setFilter1(new NameValue(columnName, value));
                 }
                 else if (!Filter.CHECKBOX.equals(filter.type)) {

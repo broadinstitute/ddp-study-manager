@@ -9,19 +9,19 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
-import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
+import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
-import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
 import org.broadinstitute.dsm.model.defaultvalues.Defaultable;
 import org.broadinstitute.dsm.model.elasticsearch.ESActivities;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
-import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
 import org.broadinstitute.dsm.model.participant.data.ParticipantData;
+import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
@@ -44,26 +44,26 @@ public class AutomaticProbandDataCreator implements Defaultable {
             logger.warn("Could not create proband/self data, participant ES data is null");
             return false;
         }
-        List<FieldSettingsDto> fieldSettingsDtosByOptionAndInstanceId =
-                FieldSettingsDao.of().getFieldSettingsByOptionAndInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
+        List<FieldSettingsDto> optionAndRadioFieldSettingsDtosByInstanceId =
+                FieldSettingsDao.of().getOptionAndRadioFieldSettingsByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
 
         return maybeParticipantESData
-                .map(elasticSearch -> extractAndInsertProbandFromESData(instance, elasticSearch, fieldSettingsDtosByOptionAndInstanceId))
+                .map(elasticSearch -> extractAndInsertProbandFromESData(instance, elasticSearch, optionAndRadioFieldSettingsDtosByInstanceId))
                 .orElse(false);
     }
 
     private boolean extractAndInsertProbandFromESData(DDPInstance instance, ElasticSearch esData,
-                                                   List<FieldSettingsDto> fieldSettingsDtosByOptionAndInstanceId) {
+                                                   List<FieldSettingsDto> optionAndRadioFieldSettingsDtosByInstanceId) {
 
         return esData.getProfile()
                 .map(esProfile -> {
                     logger.info("Got ES profile of participant: " + esProfile.getParticipantGuid());
                     Map<String, String> columnsWithDefaultOptions =
-                            fieldSettings.getColumnsWithDefaultOptions(fieldSettingsDtosByOptionAndInstanceId);
+                            fieldSettings.getColumnsWithDefaultValues(optionAndRadioFieldSettingsDtosByInstanceId);
                     Map<String, String> columnsWithDefaultOptionsFilteredByElasticExportWorkflow =
-                            fieldSettings.getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(fieldSettingsDtosByOptionAndInstanceId);
-                    String participantId = StringUtils.isNotBlank(esProfile.getParticipantLegacyAlptid())
-                            ? esProfile.getParticipantLegacyAlptid()
+                            fieldSettings.getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(optionAndRadioFieldSettingsDtosByInstanceId);
+                    String participantId = StringUtils.isNotBlank(esProfile.getParticipantLegacyAltPid())
+                            ? esProfile.getParticipantLegacyAltPid()
                             : esProfile.getParticipantGuid();
                     ParticipantData participantData = new ParticipantData(participantDataDao);
                     Optional<BookmarkDto> maybeFamilyIdOfBookmark = bookmarkDao.getBookmarkByInstance(RGP_FAMILY_ID);

@@ -8,10 +8,10 @@ import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
-import org.broadinstitute.dsm.db.dao.fieldsettings.FieldSettingsDao;
+import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
-import org.broadinstitute.dsm.db.dto.fieldsettings.FieldSettingsDto;
-import org.broadinstitute.dsm.model.fieldsettings.FieldSettings;
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
+import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.ParticipantData;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -200,7 +200,7 @@ public class DefaultValues {
         return fieldSettingByColumnNameAndInstanceId.
                 map(fieldSettingsDto -> {
                     FieldSettings fieldSettings = new FieldSettings();
-                    return fieldSettings.getDefaultOptionValue(fieldSettingsDto.getPossibleValues());
+                    return fieldSettings.getDefaultValue(fieldSettingsDto.getPossibleValues());
                 })
                 .orElse("");
     }

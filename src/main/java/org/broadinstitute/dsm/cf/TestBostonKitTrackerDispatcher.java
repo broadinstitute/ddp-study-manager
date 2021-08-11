@@ -9,6 +9,7 @@ import org.apache.commons.dbcp2.PoolableConnection;
 import org.apache.commons.dbcp2.PoolingDataSource;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
+import org.broadinstitute.dsm.db.dto.settings.InstanceSettingsDto;
 import org.broadinstitute.dsm.jobs.PubsubMessage;
 import org.broadinstitute.dsm.model.ups.UPSActivity;
 import org.broadinstitute.dsm.model.ups.UPSKit;
@@ -43,6 +44,11 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
     private String STUDY_MANAGER_SCHEMA = System.getenv("STUDY_MANAGER_SCHEMA") + ".";
     private int LOOKUP_CHUNK_SIZE;
     KitTrackerPubSubPublisher kitTrackerPubSubPublisher = new KitTrackerPubSubPublisher();
+    private final InstanceSettings instanceSettings;
+
+    public TestBostonKitTrackerDispatcher() {
+        instanceSettings = new InstanceSettings();
+    }
 
     @Override
     public void accept(PubsubMessage pubsubMessage, Context context) throws Exception {
@@ -68,7 +74,7 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                 " ))";
         String SQL_AVOID_DELIVERED = " and (tracking_to_id is not null or tracking_return_id is not null ) and kit.test_result is null " +
                 " and ( ups_status_description is null or ups_status_description not like \"%Delivered%\") "+
-                " and  from_unixtime(created_date/1000) > NOW() - INTERVAL 180 DAY"+
+                " and from_unixtime(created_date/1000) > NOW() - INTERVAL 360 DAY"+
                 " and (kit.ups_tracking_status is null or kit.ups_tracking_status not like \"%Delivered%\" or kit.ups_return_status is null or kit.ups_return_status not like \"%Delivered%\") " +
                 " order by kit.dsm_kit_request_id ASC LIMIT ?";
         logger.info("Starting the UPS lookup job");
@@ -84,7 +90,10 @@ public class TestBostonKitTrackerDispatcher implements BackgroundFunction<Pubsub
                     int lastKitId = 0;
                     UPSKit kit = null;
                     logger.info("tracking ups ids for " + ddpInstance.getName());
-                    boolean gbfShippedTriggerDSSDelivered = InstanceSettings.getInstanceSettings(ddpInstance.getName(), conn).isGbfShippedTriggerDSSDelivered();
+                    InstanceSettingsDto instanceSettings = this.instanceSettings.getInstanceSettings(conn, ddpInstance.getName());
+                    boolean gbfShippedTriggerDSSDelivered = instanceSettings
+                            .isGbfShippedTriggerDSSDelivered()
+                            .orElse(Boolean.FALSE);
                     loop:
                     while (true) {
                         try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KITS_WITH_LATEST_ACTIVITY + SQL_AVOID_DELIVERED)) {
