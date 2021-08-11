@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.PDF;
 
 import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -14,6 +15,21 @@ import java.util.Map;
 
 public class MiscPDFDownload {
     Logger logger = LoggerFactory.getLogger(MiscPDFDownload.class);
+    String ddpParticipantId = null;
+
+    public MiscPDFDownload(String ddpParticipantId) {
+        this.ddpParticipantId = ddpParticipantId;
+    }
+
+    public Object create(String realm) {
+        if (StringUtils.isNotBlank(ddpParticipantId)) {
+            return returnPDFS(ddpParticipantId, realm);
+        }
+        else {// it is the misc download
+            return getPDFRole(realm);
+        }
+    }
+
     public Object returnPDFS(@NonNull String ddpParticipantId, String realm) {
         DDPInstance instance = DDPInstance.getDDPInstance(realm);
         Map<String, Map<String, Object>> participantESData;

@@ -1,8 +1,6 @@
 package org.broadinstitute.dsm.route;
 
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.db.dao.user.UserDao;
-import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.model.PDF.DownloadPDF;
 import org.broadinstitute.dsm.model.PDF.MiscPDFDownload;
 import org.broadinstitute.dsm.security.RequestHandler;
@@ -40,55 +38,46 @@ public class DownloadPDFRoute extends RequestHandler {
         if (queryParams.value(RoutePath.REALM) != null) {
             realm = queryParams.get(RoutePath.REALM).value();
         }
-        if (StringUtils.isNotBlank(realm)) {
-            String requestBody = request.body();
-            UserUtil userUtil = new UserUtil();
-            String userIdR = userUtil.getUserId(request);
-            if (userUtil.checkUserAccess(realm, userId, PDF_ROLE, userIdR)) {
-                if (request.url().contains(RoutePath.DOWNLOAD_PDF)) {
-                    if (StringUtils.isBlank(requestBody)) {
-                        response.status(500);
-                        throw new RuntimeException("Error missing requestBody");
-                    }
-                    Long userIdRequest = Long.parseLong((String) new JSONObject(requestBody).get(RequestParameter.USER_ID));
-                    DownloadPDF downloadPDFRequest = new DownloadPDF(requestBody);
-                    UserDto user = new UserDao().get(userIdRequest).orElseThrow();
-                    Optional<byte[]> pdfBytes = downloadPDFRequest.getPDFs(user, realm, requestBody);
-                    pdfBytes.ifPresent(pdfBytesArray -> {
-                        try {
-                            HttpServletResponse rawResponse = response.raw();
-                            rawResponse.getOutputStream().write(pdfBytesArray);
-                            rawResponse.setStatus(200);
-                            rawResponse.getOutputStream().flush();
-                            rawResponse.getOutputStream().close();
-                        }
-                        catch (IOException e) {
-                            throw new RuntimeException("Couldn't make pdf of ddpInstance " + queryParams.get(RoutePath.REALM).value(), e);
-                        }
-                    });
-
+        if (StringUtils.isBlank(realm)) {
+            response.status(500);
+            throw new RuntimeException("Realm was missing from the request");
+        }
+        String requestBody = request.body();
+        UserUtil userUtil = new UserUtil();
+        String userIdR = userUtil.getUserId(request);
+        if (userUtil.checkUserAccess(realm, userId, PDF_ROLE, userIdR)) {
+            if (request.url().contains(RoutePath.DOWNLOAD_PDF)) {
+                if (StringUtils.isBlank(requestBody)) {
+                    response.status(500);
+                    throw new RuntimeException("Error missing requestBody");
                 }
-                else {
-                    MiscPDFDownload miscPDFDownload = new MiscPDFDownload();
-                    String ddpParticipantId = null;
-                    if (queryParams.value(RequestParameter.DDP_PARTICIPANT_ID) != null) {
-                        ddpParticipantId = queryParams.get(RequestParameter.DDP_PARTICIPANT_ID).value();
+                Long userIdRequest = Long.parseLong((String) new JSONObject(requestBody).get(RequestParameter.USER_ID));
+                DownloadPDF downloadPDFRequest = new DownloadPDF(requestBody);
+                Optional<byte[]> pdfBytes = downloadPDFRequest.getPDFs(userIdRequest, realm, requestBody);
+                pdfBytes.ifPresent(pdfBytesArray -> {
+                    try {
+                        HttpServletResponse rawResponse = response.raw();
+                        rawResponse.getOutputStream().write(pdfBytesArray);
+                        rawResponse.setStatus(200);
+                        rawResponse.getOutputStream().flush();
+                        rawResponse.getOutputStream().close();
                     }
-                    if (StringUtils.isNotBlank(ddpParticipantId)) {
-                        return miscPDFDownload.returnPDFS(ddpParticipantId, realm);
+                    catch (IOException e) {
+                        throw new RuntimeException("Couldn't make pdf of ddpInstance " + queryParams.get(RoutePath.REALM).value(), e);
                     }
-                    else {// it is the misc download
-                        return miscPDFDownload.getPDFRole(realm);
-                    }
-                }
+                });
+                return null;
             }
             else {
-                response.status(500);
-                return UserErrorMessages.NO_RIGHTS;
+                String ddpParticipantId = null;
+                if (queryParams.value(RequestParameter.DDP_PARTICIPANT_ID) != null) {
+                    ddpParticipantId = queryParams.get(RequestParameter.DDP_PARTICIPANT_ID).value();
+                }
+                return new MiscPDFDownload(ddpParticipantId).create(realm);
             }
         }
         response.status(500);
-        throw new RuntimeException("Realm was missing from the request");
+        return UserErrorMessages.NO_RIGHTS;
     }
 
 }

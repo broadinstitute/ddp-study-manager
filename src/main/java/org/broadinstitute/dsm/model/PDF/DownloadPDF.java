@@ -12,6 +12,7 @@ import org.broadinstitute.ddp.exception.FileProcessingException;
 import org.broadinstitute.ddp.handlers.util.MedicalInfo;
 import org.broadinstitute.ddp.util.GoogleBucket;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.files.CoverPDFProcessor;
 import org.broadinstitute.dsm.files.PDFProcessor;
@@ -73,7 +74,8 @@ public class DownloadPDF {
     }
 
 
-    public Optional<byte[]> getPDFs(UserDto user, String realm, String requestBody) {
+    public Optional<byte[]> getPDFs(long userIdRequest, String realm, String requestBody) {
+        UserDto user = new UserDao().get(userIdRequest ).orElseThrow();
         Optional<byte[]> pdfBytes = Optional.empty();
         if (StringUtils.isNotBlank(this.ddpParticipantId)) {
             DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
