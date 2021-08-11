@@ -29,9 +29,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Response;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -77,16 +75,17 @@ public class DownloadPDF {
             }
         }
         if (jsonObject.has("pdfs")) {
-            this.pdfs =Arrays.asList(new Gson().fromJson(jsonObject.getString("pdfs"), PDF[].class));
+            this.pdfs = Arrays.asList(new Gson().fromJson(jsonObject.getString("pdfs"), PDF[].class));
         }
     }
 
 
-    public Object getPDFs(@NonNull Response response, UserDto user, String realm, String requestBody) {
+    public Optional<byte[]> getPDFs(UserDto user, String realm, String requestBody) {
+        Optional results = Optional.empty();
         if (StringUtils.isNotBlank(this.ddpParticipantId)) {
             DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
             if (ddpInstance != null && StringUtils.isNotBlank(ddpParticipantId)) {
-                byte[] pdfBytes;
+                Optional<byte[]> pdfBytes;
                 String fileName = "";
                 if (configName == null) {
                     pdfBytes = getPDFBundle(ddpInstance, requestBody, user);
@@ -94,38 +93,21 @@ public class DownloadPDF {
                 else {
                     pdfBytes = generateSinglePDF(requestBody, configName, user, ddpInstance);
                 }
-                if (pdfBytes != null) {
-                    try {
-                        savePDFinBucket(ddpInstance.getName(), ddpParticipantId, new ByteArrayInputStream(pdfBytes), fileName, user.getId());
+                pdfBytes.ifPresentOrElse(bytes -> {
+                    savePDFinBucket(ddpInstance.getName(), ddpParticipantId, new ByteArrayInputStream(bytes), fileName, user.getId());
+                    results = Optional.ofNullable(pdfBytes);
+                });
 
-                        HttpServletResponse rawResponse = response.raw();
-                        rawResponse.getOutputStream().write(pdfBytes);
-                        rawResponse.setStatus(200);
-                        rawResponse.getOutputStream().flush();
-                        rawResponse.getOutputStream().close();
-                    }
-                    catch (IOException e) {
-                        throw new RuntimeException("Couldn't make pdf for participant " + ddpParticipantId + " of ddpInstance " + ddpInstance.getName(), e);
-                    }
-                }
-                else {
-                    throw new RuntimeException("byte[] was null");
-                }
+                pdfBytes.orElseThrow();
             }
             else {
                 throw new RuntimeException("DDPInstance of participant " + ddpParticipantId + " not found");
             }
-            response.status(200);
         }
-        else {
-            response.status(500);
-            throw new RuntimeException("Error missing ddpParticipantId");
-        }
-        return response;
-
+        return results;
     }
 
-    private byte[] generateSinglePDF(@NonNull String requestBody, String configName, UserDto user, DDPInstance ddpInstance) {
+    private Optional<byte[]> generateSinglePDF(@NonNull String requestBody, String configName, UserDto user, DDPInstance ddpInstance) {
         byte[] pdfByte = null;
         if (COVER.equals(configName)) {
             pdfByte = new MRCoverPDF(this).getMRCoverPDF(requestBody, ddpInstance, user);
@@ -141,10 +123,10 @@ public class DownloadPDF {
         else if (configName != null) {
             pdfByte = requestPDF(ddpInstance, ddpParticipantId, configName);
         }
-        return pdfByte;
+        return Optional.ofNullable(pdfByte);
     }
 
-    private byte[] getPDFBundle(DDPInstance ddpInstance, String requestBody, UserDto user) {
+    private Optional<byte[]> getPDFBundle(DDPInstance ddpInstance, String requestBody, UserDto user) {
         if (ddpInstance != null && StringUtils.isNotBlank(ddpParticipantId)) {
             ByteArrayOutputStream output = new ByteArrayOutputStream();
             try {
@@ -155,10 +137,12 @@ public class DownloadPDF {
                 //make cover pdf first
                 if (pdfs != null && pdfs.size() > 0) {
                     pdfs.forEach(pdf -> {
-                                byte[] pdfByte;
+                                Optional<byte[]> pdfByte;
                                 if (pdf.getOrder() > 0) {
                                     pdfByte = generateSinglePDF(requestBody, pdf.getConfigName(), user, ddpInstance);
-                                    pdfMerger.addSource(new ByteArrayInputStream(pdfByte));
+                                    pdfByte.ifPresent(bytes -> {
+                                        pdfMerger.addSource(new ByteArrayInputStream(bytes));
+                                    });
                                 }
                             }
                     );
@@ -169,9 +153,9 @@ public class DownloadPDF {
             catch (IOException e) {
                 throw new FileProcessingException("Unable to merge documents ", e);
             }
-            return output.toByteArray();
+            return Optional.ofNullable(output.toByteArray());
         }
-        return null;
+        return Optional.empty();
     }
 
     protected byte[] generatePDFFromValues(Map<String, Object> valueMap, DDPInstance ddpInstance, PDFProcessor processor) {

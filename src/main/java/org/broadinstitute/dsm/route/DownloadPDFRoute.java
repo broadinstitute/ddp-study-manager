@@ -17,6 +17,10 @@ import spark.QueryParamsMap;
 import spark.Request;
 import spark.Response;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Optional;
+
 
 public class DownloadPDFRoute extends RequestHandler {
 
@@ -42,16 +46,27 @@ public class DownloadPDFRoute extends RequestHandler {
             String userIdR = userUtil.getUserId(request);
             if (userUtil.checkUserAccess(realm, userId, PDF_ROLE, userIdR)) {
                 if (request.url().contains(RoutePath.DOWNLOAD_PDF)) {
-                    if (StringUtils.isNotBlank(requestBody)) {
-                        Long userIdRequest = Long.parseLong((String) new JSONObject(requestBody).get(RequestParameter.USER_ID));
-                        DownloadPDF downloadPDFRequest = new DownloadPDF(requestBody);
-                        UserDto user = new UserDao().get(userIdRequest).orElseThrow();
-                        return downloadPDFRequest.getPDFs(response, user, realm, requestBody);
-                    }
-                    else {
+                    if (StringUtils.isBlank(requestBody)) {
                         response.status(500);
                         throw new RuntimeException("Error missing requestBody");
                     }
+                    Long userIdRequest = Long.parseLong((String) new JSONObject(requestBody).get(RequestParameter.USER_ID));
+                    DownloadPDF downloadPDFRequest = new DownloadPDF(requestBody);
+                    UserDto user = new UserDao().get(userIdRequest).orElseThrow();
+                    Optional<byte[]> pdfBytes = downloadPDFRequest.getPDFs(user, realm, requestBody);
+                    pdfBytes.ifPresent(pdfBytesArray -> {
+                        try {
+                            HttpServletResponse rawResponse = response.raw();
+                            rawResponse.getOutputStream().write(pdfBytesArray);
+                            rawResponse.setStatus(200);
+                            rawResponse.getOutputStream().flush();
+                            rawResponse.getOutputStream().close();
+                        }
+                        catch (IOException e) {
+                            throw new RuntimeException("Couldn't make pdf of ddpInstance " + queryParams.get(RoutePath.REALM).value(), e);
+                        }
+                    });
+
                 }
                 else {
                     MiscPDFDownload miscPDFDownload = new MiscPDFDownload();
