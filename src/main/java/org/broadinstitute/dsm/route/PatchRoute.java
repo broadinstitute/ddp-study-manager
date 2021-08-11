@@ -121,7 +121,6 @@ public class PatchRoute extends RequestHandler {
                                         }
                                         else if (ActionEvent.EVENT.equals(action.getType())) {
                                             //TODO only trigger if field was filled out first time!
-                                            DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
                                             inTransaction((conn) -> {
                                                 ActionEvent actionEvent = ActionEvent.getParticipantEvent(conn, action.getName(), ddpInstance.getDdpInstanceId());
                                                 if (actionEvent != null) {
@@ -298,7 +297,6 @@ public class PatchRoute extends RequestHandler {
                                         }
                                         else if (ActionEvent.EVENT.equals(action.getType())) {
                                             //TODO only trigger if field was filled out first time!
-                                            DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
                                             inTransaction((conn) -> {
                                                 ActionEvent actionEvent = ActionEvent.getParticipantEvent(conn, action.getName(), ddpInstance.getDdpInstanceId());
                                                 if (actionEvent != null) {
