@@ -50,8 +50,7 @@ public class EditParticipantTest extends TestHelper {
     public void testEditParticipantFeature() {
 
         String realm = null;
-        UserUtil userUtil = new UserUtil();
-        if (userUtil.checkUserAccess(realm, Integer.toString(userId), "participant_edit", null)) {
+        if (UserUtil.checkUserAccess(realm, Integer.toString(userId), "participant_edit", null)) {
             try {
                 PubSubResultMessageSubscription.dssToDsmSubscriber(projectId, dsmToDssSubscriptionId);
             } catch (Exception e) {
