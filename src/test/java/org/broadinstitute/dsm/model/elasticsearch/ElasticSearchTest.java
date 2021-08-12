@@ -3,38 +3,37 @@ package org.broadinstitute.dsm.model.elasticsearch;
 
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperTest;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class ElasticSearchTest {
 
-
-
     @Test
     public void getParticipantIdFromProfile() {
         ESProfile profile = esProfileGeneratorWithGuid();
-        ElasticSearch elasticSearch = new ElasticSearch.Builder()
+        ElasticSearchParticipantDto elasticSearchParticipantDto = new ElasticSearchParticipantDto.Builder()
                 .withProfile(profile)
                 .build();
-        String participantId = elasticSearch.getParticipantIdFromProfile();
+        String participantId = elasticSearchParticipantDto.getParticipantId();
         Assert.assertEquals(profile.getParticipantGuid(), participantId);
     }
 
     @Test
     public void getParticipantIdFromProfileIfGuidEmpty() {
         ESProfile esProfileWithLegacyAltPid = esProfileGeneratorWithLegacyAltPid();
-        ElasticSearch elasticSearch = new ElasticSearch.Builder()
+        ElasticSearchParticipantDto elasticSearchParticipantDto = new ElasticSearchParticipantDto.Builder()
                 .withProfile(esProfileWithLegacyAltPid)
                 .build();
-        String participantId = elasticSearch.getParticipantIdFromProfile();
+        String participantId = elasticSearchParticipantDto.getParticipantId();
         Assert.assertEquals(esProfileWithLegacyAltPid.getParticipantLegacyAltPid(), participantId);
     }
 
     @Test
     public void getParticipantIdFromProfileIfEmpty() {
         ESProfile esProfile = new ESProfile();
-        ElasticSearch elasticSearch = new ElasticSearch.Builder()
+        ElasticSearchParticipantDto elasticSearchParticipantDto = new ElasticSearchParticipantDto.Builder()
                 .build();
-        String participantId = elasticSearch.getParticipantIdFromProfile();
+        String participantId = elasticSearchParticipantDto.getParticipantId();
         Assert.assertEquals("", participantId);
     }
 

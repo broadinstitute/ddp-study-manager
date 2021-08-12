@@ -24,7 +24,7 @@ public class ParticipantsSizeRoute extends RequestHandler {
 
         DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName(realm).orElseThrow();
 
-        ElasticSearch elasticSearch = new ElasticSearch.Builder().build();
+        ElasticSearch elasticSearch = new ElasticSearch();
 
         return elasticSearch.getParticipantsSize(ddpInstanceDto.getEsParticipantIndex());
     }

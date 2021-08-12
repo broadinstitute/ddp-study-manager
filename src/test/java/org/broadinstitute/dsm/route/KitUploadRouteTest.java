@@ -6,6 +6,7 @@ import org.broadinstitute.dsm.exception.FileColumnMissing;
 import org.broadinstitute.dsm.exception.UploadLineException;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
 import org.broadinstitute.dsm.util.NotificationUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
@@ -113,10 +114,10 @@ public class KitUploadRouteTest {
             esProfile.setParticipantLegacyAltPid(shortId);
         }
 
-        ElasticSearch elasticSearch = new ElasticSearch.Builder()
+        ElasticSearchParticipantDto elasticSearchParticipantDto = new ElasticSearchParticipantDto.Builder()
                 .withProfile(esProfile)
                 .build();
-        participant.setEsData(elasticSearch);
+        participant.setEsData(elasticSearchParticipantDto);
         return participant;
     }
 }

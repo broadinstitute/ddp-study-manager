@@ -40,6 +40,6 @@ public class GetParticipantRoute extends RequestHandler {
                         ? ElasticSearchUtil.BY_GUID + ddpParticipantId
                         : ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId
         );
-        return new ParticipantWrapper(new ParticipantWrapperPayload.Builder().build(), new ElasticSearch.Builder().build()).getFilteredList();
+        return new ParticipantWrapper(new ParticipantWrapperPayload.Builder().build(), new ElasticSearch()).getFilteredList();
     }
 }

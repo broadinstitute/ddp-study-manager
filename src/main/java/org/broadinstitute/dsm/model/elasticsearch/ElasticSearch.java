@@ -7,20 +7,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.index.query.AbstractQueryBuilder;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.TermsQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
@@ -33,79 +35,23 @@ public class ElasticSearch implements ElasticSearchable {
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearch.class);
     private static final Gson GSON = new Gson();
 
-    private ESAddress address;
-    private List<Object> medicalProviders;
-    private List<Object> invitations;
-    private List<ESActivities> activities;
-    private Long statusTimeStamp;
-    private ESProfile profile;
-    private List<Object> files;
-    private List<String> proxies;
-    private List<Map<String, String>> workflows;
-    private String status;
-    private Map<String, Object> dsm;
+    List<ElasticSearchParticipantDto> esParticipants;
+    long totalCount;
 
-    public Optional<ESAddress> getAddress() {
-        return Optional.ofNullable(address);
+    public List<ElasticSearchParticipantDto> getEsParticipants() {
+        if (Objects.isNull(esParticipants)) {
+            esParticipants = Collections.emptyList();
+        }
+        return esParticipants;
     }
 
-    public Optional<List<Object>> getMedicalProviders() {
-        return Optional.ofNullable(medicalProviders);
+    public long getTotalCount() {
+        return totalCount;
     }
 
-    public Optional<List<Object>> getInvitations() {
-        return Optional.ofNullable(invitations);
-    }
-
-    public Optional<List<ESActivities>> getActivities() {
-        return Optional.ofNullable(activities);
-    }
-
-    public Optional<Long> getStatusTimeStamp() {
-        return Optional.ofNullable(statusTimeStamp);
-    }
-
-    public Optional<ESProfile> getProfile() {
-        return Optional.ofNullable(profile);
-    }
-
-    public Optional<List<Object>> getFiles() {
-        return Optional.ofNullable(files);
-    }
-
-    public Optional<List<String>> getProxies() {
-        return Optional.ofNullable(proxies);
-    }
-
-    public Optional<List<Map<String, String>>> getWorkflows() {
-        return Optional.ofNullable(workflows);
-    }
-
-    public Optional<String> getStatus() {
-        return Optional.ofNullable(status);
-    }
-
-    public Optional<Map<String, Object>> getDsm() {
-        return Optional.ofNullable(dsm);
-    }
-
-    private ElasticSearch(Builder builder) {
-        this.address = builder.address;
-        this.medicalProviders = builder.medicalProviders;
-        this.invitations = builder.invitations;
-        this.activities = builder.activities;
-        this.statusTimeStamp = builder.statusTimeStamp;
-        this.profile = builder.profile;
-        this.files = builder.files;
-        this.proxies = builder.proxies;
-        this.workflows = builder.workflows;
-        this.status = builder.status;
-        this.dsm = builder.dsm;
-    }
-
-    public static Optional<ElasticSearch> parseSourceMap(Map<String, Object> sourceMap) {
-        if (sourceMap == null) return Optional.of(new ElasticSearch.Builder().build());
-        Builder builder = new Builder();
+    public static Optional<ElasticSearchParticipantDto> parseSourceMap(Map<String, Object> sourceMap) {
+        if (sourceMap == null) return Optional.of(new ElasticSearchParticipantDto.Builder().build());
+        ElasticSearchParticipantDto.Builder builder = new ElasticSearchParticipantDto.Builder();
         for (Map.Entry<String, Object> entry : sourceMap.entrySet()) {
             switch (entry.getKey()) {
                 case "address":
@@ -148,22 +94,21 @@ public class ElasticSearch implements ElasticSearchable {
         return Optional.of(builder.build());
     }
 
-    public List<ElasticSearch> parseSourceMaps(SearchHit[] searchHits) {
+    public List<ElasticSearchParticipantDto> parseSourceMaps(SearchHit[] searchHits) {
         if (Objects.isNull(searchHits)) return Collections.emptyList();
-        List<ElasticSearch> result = new ArrayList<>();
+        List<ElasticSearchParticipantDto> result = new ArrayList<>();
         for (SearchHit searchHit: searchHits) {
-            Optional<ElasticSearch> maybeElasticSearchResult = parseSourceMap(searchHit.getSourceAsMap());
+            Optional<ElasticSearchParticipantDto> maybeElasticSearchResult = parseSourceMap(searchHit.getSourceAsMap());
             maybeElasticSearchResult.ifPresent(result::add);
         }
         return result;
     }
 
     @Override
-    public List<ElasticSearch> getParticipantsWithinRange(String esParticipantsIndex, int from, int to) {
+    public ElasticSearch getParticipantsWithinRange(String esParticipantsIndex, int from, int to) {
         if (StringUtils.isBlank(esParticipantsIndex)) throw new IllegalArgumentException("ES participants index cannot be empty");
         if (to <= 0) throw new IllegalArgumentException("incorrect from/to range");
         logger.info("Collecting ES data");
-        List<ElasticSearch> elasticSearchList;
         try {
             int scrollSize = to - from;
             SearchRequest searchRequest = new SearchRequest(esParticipantsIndex);
@@ -173,21 +118,21 @@ public class ElasticSearch implements ElasticSearchable {
             searchSourceBuilder.from(from);
             searchRequest.source(searchSourceBuilder);
             SearchResponse response = ElasticSearchUtil.getClientInstance().search(searchRequest, RequestOptions.DEFAULT);
-            elasticSearchList = parseSourceMaps(response.getHits().getHits());
+            esParticipants = parseSourceMaps(response.getHits().getHits());
+            totalCount = response.getHits().getTotalHits();
         }
         catch (Exception e) {
             throw new RuntimeException("Couldn't get participants from ES for instance " + esParticipantsIndex, e);
         }
-        logger.info("Got " + elasticSearchList.size() + " participants from ES for instance " + esParticipantsIndex);
-        return elasticSearchList;
+        logger.info("Got " + esParticipants.size() + " participants from ES for instance " + esParticipantsIndex);
+        return this;
     }
 
     @Override
-    public List<ElasticSearch> getParticipantsByIds(String esParticipantsIndex, List<String> participantIds) {
+    public ElasticSearch getParticipantsByIds(String esParticipantsIndex, List<String> participantIds) {
         SearchRequest searchRequest = new SearchRequest(Objects.requireNonNull(esParticipantsIndex));
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        TermsQueryBuilder participantIdsQuery = QueryBuilders.termsQuery(ElasticSearchUtil.PROFILE_GUID, participantIds);
-        searchSourceBuilder.query(participantIdsQuery).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+        searchSourceBuilder.query(getBoolQueryOfParticipantsId(participantIds)).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
         searchSourceBuilder.size(participantIds.size());
         searchSourceBuilder.from(0);
         searchRequest.source(searchSourceBuilder);
@@ -198,9 +143,10 @@ public class ElasticSearch implements ElasticSearchable {
         } catch (IOException e) {
             throw new RuntimeException("Couldn't get participants from ES for instance " + esParticipantsIndex, e);
         }
-        List<ElasticSearch> elasticSearchList = parseSourceMaps(response.getHits().getHits());
-        logger.info("Got " + elasticSearchList.size() + " participants from ES for instance " + esParticipantsIndex);
-        return elasticSearchList;
+        esParticipants = parseSourceMaps(response.getHits().getHits());
+        totalCount = response.getHits().getTotalHits();
+        logger.info("Got " + esParticipants.size() + " participants from ES for instance " + esParticipantsIndex);
+        return this;
     }
 
     @Override
@@ -219,7 +165,7 @@ public class ElasticSearch implements ElasticSearchable {
     }
 
     @Override
-    public List<ElasticSearch> getParticipantsByRangeAndFilter(String esParticipantsIndex, int from, int to, String filter) {
+    public ElasticSearch getParticipantsByRangeAndFilter(String esParticipantsIndex, int from, int to, String filter) {
         if (to <= 0) throw new IllegalArgumentException("incorrect from/to range");
         logger.info("Collecting ES data");
         List<ElasticSearch> elasticSearchList;
@@ -233,100 +179,44 @@ public class ElasticSearch implements ElasticSearchable {
             searchSourceBuilder.from(from);
             searchRequest.source(searchSourceBuilder);
             SearchResponse response = ElasticSearchUtil.getClientInstance().search(searchRequest, RequestOptions.DEFAULT);
-            elasticSearchList = parseSourceMaps(response.getHits().getHits());
+            esParticipants = parseSourceMaps(response.getHits().getHits());
+            totalCount = response.getHits().getTotalHits();
         }
         catch (Exception e) {
             throw new RuntimeException("Couldn't get participants from ES for instance " + esParticipantsIndex, e);
         }
-        logger.info("Got " + elasticSearchList.size() + " participants from ES for instance " + esParticipantsIndex);
-        return elasticSearchList;
+        logger.info("Got " + esParticipants.size() + " participants from ES for instance " + esParticipantsIndex);
+        return this;
     }
 
     @Override
-    public List<ElasticSearch> getParticipantsByRangeAndIds(String participantIndexES, int from, int to, List<String> participantIds) {
-        return null;
+    public ElasticSearch getParticipantsByRangeAndIds(String participantIndexES, int from, int to, List<String> participantIds) {
+        SearchRequest searchRequest = new SearchRequest(Objects.requireNonNull(participantIndexES));
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(getBoolQueryOfParticipantsId(participantIds)).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+        searchSourceBuilder.size(to - from);
+        searchSourceBuilder.from(from);
+        searchRequest.source(searchSourceBuilder);
+        SearchResponse response;
+        logger.info("Collecting ES data");
+        try {
+            response = ElasticSearchUtil.getClientInstance().search(searchRequest, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            throw new RuntimeException("Couldn't get participants from ES for instance " + participantIndexES, e);
+        }
+        esParticipants = parseSourceMaps(response.getHits().getHits());
+        totalCount = response.getHits().getTotalHits();
+        logger.info("Got " + esParticipants.size() + " participants from ES for instance " + participantIndexES);
+        return this;
     }
 
-    public String getParticipantIdFromProfile() {
-        return getProfile().map(esProfile -> StringUtils.isNotBlank(esProfile.getParticipantGuid())
-                ? esProfile.getParticipantGuid()
-                : esProfile.getParticipantLegacyAltPid())
-                .orElse("");
-    }
-
-    public static class Builder {
-        private ESAddress address;
-        private List<Object> medicalProviders;
-        private List<Object> invitations;
-        private List<ESActivities> activities;
-        private Long statusTimeStamp;
-        private ESProfile profile;
-        private List<Object> files;
-        private List<String> proxies;
-        private List<Map<String, String>> workflows;
-        private String status;
-        private Map<String, Object> dsm;
-
-        public Builder() {}
-
-        public Builder withAddress(ESAddress esAddress) {
-            this.address = esAddress;
-            return this;
-        }
-
-        public Builder withMedicalProviders(List<Object> medicalProviders) {
-            this.medicalProviders = medicalProviders;
-            return this;
-        }
-
-        public Builder withInvitations(List<Object> invitations) {
-            this.invitations = invitations;
-            return this;
-        }
-
-        public Builder withActivities(List<ESActivities> activities) {
-            this.activities = activities;
-            return this;
-        }
-
-        public Builder withStatusTimeStamp(Long statusTimeStamp) {
-            this.statusTimeStamp = statusTimeStamp;
-            return this;
-        }
-
-        public Builder withProfile(ESProfile profile) {
-            this.profile = profile;
-            return this;
-        }
-
-        public Builder withFiles(List<Object> files) {
-            this.files = files;
-            return this;
-        }
-
-        public Builder withProxies(List<String> proxies) {
-            this.proxies = proxies;
-            return this;
-        }
-
-        public Builder withWorkFlows(List<Map<String, String>> workflows) {
-            this.workflows = workflows;
-            return this;
-        }
-
-        public Builder withStatus(String status) {
-            this.status = status;
-            return this;
-        }
-
-        public Builder withDsm(Map<String, Object> dsm) {
-            this.dsm = dsm;
-            return this;
-        }
-
-        public ElasticSearch build() {
-            return new ElasticSearch(this);
-        }
+    private BoolQueryBuilder getBoolQueryOfParticipantsId(List<String> participantIds) {
+        Map<Boolean, List<String>> isGuidMap = participantIds.stream().collect(Collectors.partitioningBy(ParticipantUtil::isGuid));
+        BoolQueryBuilder boolQuery = new BoolQueryBuilder();
+        isGuidMap.forEach((booleanId, idValues) -> boolQuery.should(QueryBuilders.termsQuery(booleanId
+                ? ElasticSearchUtil.PROFILE_GUID
+                : ElasticSearchUtil.PROFILE_LEGACYALTPID, idValues)));
+        return boolQuery;
     }
 
 }

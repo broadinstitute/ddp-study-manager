@@ -3,12 +3,14 @@ package org.broadinstitute.dsm.model.participant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchable;
 import org.junit.Assert;
 import org.junit.Test;
@@ -32,7 +34,7 @@ public class ParticipantWrapperTest {
         ParticipantWrapperPayload participantWrapperPayload = new ParticipantWrapperPayload.Builder()
                 .build();
         ParticipantWrapper participantWrapper = new ParticipantWrapper(participantWrapperPayload, new ElasticSearchTest());
-        List<ElasticSearch> elasticSearchList = participantWrapper.getElasticSearchable().getParticipantsWithinRange("", 0, 50);
+        List<ElasticSearchParticipantDto> elasticSearchList = participantWrapper.getElasticSearchable().getParticipantsWithinRange("", 0, 50).getEsParticipants();
         List<String> participantIds = participantWrapper.getParticipantIdsFromElasticList(elasticSearchList);
         Assert.assertEquals(10, participantIds.size());
     }
@@ -42,7 +44,7 @@ public class ParticipantWrapperTest {
         ParticipantWrapperPayload participantWrapperPayload = new ParticipantWrapperPayload.Builder()
                 .build();
         ParticipantWrapper participantWrapper = new ParticipantWrapper(participantWrapperPayload, new ElasticSearchTest());
-        List<ElasticSearch> elasticSearchList = participantWrapper.getElasticSearchable().getParticipantsWithinRange("", 0, 50);
+        List<ElasticSearchParticipantDto> elasticSearchList = participantWrapper.getElasticSearchable().getParticipantsWithinRange("", 0, 50).getEsParticipants();
         Map<String, List<String>> proxyIds = participantWrapper.getProxiesIdsFromElasticList(elasticSearchList);
         Assert.assertTrue(proxyIds.size() > 0);
         Assert.assertEquals(PROXIES_QUANTITY, proxyIds.values().stream().findFirst().get().size());
@@ -52,46 +54,52 @@ public class ParticipantWrapperTest {
     public void getProxiesWithParticipantIdsByProxiesIds() {
         ParticipantWrapperPayload participantWrapperPayload = new ParticipantWrapperPayload.Builder()
                 .build();
-        ParticipantWrapper participantWrapper = new ParticipantWrapper(participantWrapperPayload, new ElasticSearchTest());
-        List<ElasticSearch> elasticSearchList = participantWrapper.getElasticSearchable().getParticipantsWithinRange("", 0, 50);
+        ElasticSearchTest elasticSearchable = new ElasticSearchTest();
+        ParticipantWrapper participantWrapper = new ParticipantWrapper(participantWrapperPayload, elasticSearchable);
+        List<ElasticSearchParticipantDto> elasticSearchList = participantWrapper.getElasticSearchable().getParticipantsWithinRange("", 0, 50).getEsParticipants();
         Map<String, List<String>> proxiesIdsFromElasticList = participantWrapper.getProxiesIdsFromElasticList(elasticSearchList);
-        Map<String, List<ElasticSearch>> proxiesByParticipantIds = participantWrapper.getProxiesWithParticipantIdsByProxiesIds(
+        Map<String, List<ElasticSearchParticipantDto>> proxiesByParticipantIds = participantWrapper.getProxiesWithParticipantIdsByProxiesIds(
                 "", proxiesIdsFromElasticList);
         Assert.assertEquals(proxiesByParticipantIds.keySet().size(), proxiesByParticipantIds.keySet().size());
         String parentId = proxiesIdsFromElasticList.keySet().stream().findFirst().get();
         String proxyId = proxiesIdsFromElasticList.values().stream().findFirst().get().get(0);
-        Assert.assertEquals(proxiesByParticipantIds.get(parentId).get(0).getParticipantIdFromProfile(), proxyId);
+        Assert.assertEquals(proxiesByParticipantIds.get(parentId).get(0).getParticipantId(), proxyId);
     }
 
     private static class ElasticSearchTest implements ElasticSearchable {
 
+        ElasticSearch elasticSearch = new ElasticSearch();
+
         @Override
-        public List<ElasticSearch> getParticipantsWithinRange(String esParticipantsIndex, int from, int to) {
-            return Stream.generate(() -> {
-                ESProfile esProfile = new ESProfile();
-                esProfile.setParticipantGuid(randomGuidGenerator());
-                return new ElasticSearch.Builder()
-                        .withProfile(esProfile)
-                        .withProxies(generateProxies())
-                        .build();
-                })
+        public ElasticSearch getParticipantsWithinRange(String esParticipantsIndex, int from, int to) {
+            List<ElasticSearchParticipantDto> result = Stream.generate(() -> {
+                        ESProfile esProfile = new ESProfile();
+                        esProfile.setParticipantGuid(randomGuidGenerator());
+                        return new ElasticSearchParticipantDto.Builder()
+                                .withProfile(esProfile)
+                                .withProxies(generateProxies())
+                                .build();
+                    })
                     .limit(10)
                     .collect(Collectors.toList());
+            elasticSearch.setEsParticipants(result);
+            return elasticSearch;
         }
 
         @Override
-        public List<ElasticSearch> getParticipantsByIds(String esParticipantIndex, List<String> participantIds) {
-            List<ElasticSearch> result = new ArrayList<>();
+        public ElasticSearch getParticipantsByIds(String esParticipantIndex, List<String> participantIds) {
+            List<ElasticSearchParticipantDto> result = new ArrayList<>();
             participantIds.forEach(pId -> {
                 ESProfile esProfile = new ESProfile();
                 esProfile.setParticipantGuid(pId);
                 result.add(
-                        new ElasticSearch.Builder()
+                        new ElasticSearchParticipantDto.Builder()
                                 .withProfile(esProfile)
                                 .build()
                 );
             });
-            return result;
+            elasticSearch.setEsParticipants(result);
+            return elasticSearch;
         }
 
         @Override
@@ -100,12 +108,12 @@ public class ParticipantWrapperTest {
         }
 
         @Override
-        public List<ElasticSearch> getParticipantsByRangeAndFilter(String esParticipantsIndex, int from, int to, String filter) {
+        public ElasticSearch getParticipantsByRangeAndFilter(String esParticipantsIndex, int from, int to, String filter) {
             return null;
         }
 
         @Override
-        public List<ElasticSearch> getParticipantsByRangeAndIds(String participantIndexES, int from, int to, List<String> participantIds) {
+        public ElasticSearch getParticipantsByRangeAndIds(String participantIndexES, int from, int to, List<String> participantIds) {
             return null;
         }
     }

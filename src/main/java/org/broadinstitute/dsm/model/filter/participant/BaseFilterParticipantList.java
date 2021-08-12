@@ -24,13 +24,14 @@ import org.broadinstitute.dsm.model.filter.BaseFilter;
 import org.broadinstitute.dsm.model.filter.Filterable;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperPayload;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapperResult;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class BaseFilterParticipantList extends BaseFilter implements Filterable<ParticipantWrapperDto> {
+public abstract class BaseFilterParticipantList extends BaseFilter implements Filterable<ParticipantWrapperResult> {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseFilterParticipantList.class);
     public static final String PARTICIPANT_DATA = "participantData";
@@ -55,7 +56,7 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
     }
 
 
-    protected List<ParticipantWrapperDto> filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap, @NonNull DDPInstance instance) {
+    protected ParticipantWrapperResult filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap, @NonNull DDPInstance instance) {
         Map<String, String> queryConditions = new HashMap<>();
         List<ParticipantDataDto> allParticipantData = null;
         DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName(realm).orElseThrow();
@@ -63,7 +64,7 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
                 .withDdpInstanceDto(ddpInstanceDto)
                 .withFrom(from)
                 .withTo(to);
-        ElasticSearch elasticSearch = new ElasticSearch.Builder().build();
+        ElasticSearch elasticSearch = new ElasticSearch();
         if (filters != null && columnNameMap != null && !columnNameMap.isEmpty()) {
             Map<String, Integer> allIdsForParticipantDataFiltering = new HashMap<>();
             int numberOfParticipantDataFilters = 0;

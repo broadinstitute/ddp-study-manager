@@ -19,6 +19,7 @@ import org.broadinstitute.dsm.db.Participant;
 import org.broadinstitute.dsm.db.ParticipantData;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,20 +29,20 @@ public class ParticipantWrapperDto {
 
     private static final Logger logger = LoggerFactory.getLogger(ParticipantWrapperDto.class);
 
-    private ElasticSearch esData;
+    private ElasticSearchParticipantDto esData;
     private Participant participant;
     private List<MedicalRecord> medicalRecords;
     private List<OncHistoryDetail> oncHistoryDetails;
     private List<KitRequestShipping> kits;
     private List<AbstractionActivity> abstractionActivities;
     private List<AbstractionGroup> abstractionSummary;
-    private List<ElasticSearch> proxyData;
+    private List<ElasticSearchParticipantDto> proxyData;
 //    private List<ParticipantData> participantData;
     private List<ParticipantDataDto> participantData;
 
-    public ParticipantWrapperDto(ElasticSearch esData, Participant participant, List<MedicalRecord> medicalRecords,
+    public ParticipantWrapperDto(ElasticSearchParticipantDto esData, Participant participant, List<MedicalRecord> medicalRecords,
                                  List<OncHistoryDetail> oncHistoryDetails, List<KitRequestShipping> kits, List<AbstractionActivity> abstractionActivities,
-                                 List<AbstractionGroup> abstractionSummary, List<ElasticSearch> proxyData, List<ParticipantDataDto> participantData) {
+                                 List<AbstractionGroup> abstractionSummary, List<ElasticSearchParticipantDto> proxyData, List<ParticipantDataDto> participantData) {
         this.esData = esData;
         this.participant = participant;
         this.medicalRecords = medicalRecords;
@@ -60,7 +61,7 @@ public class ParticipantWrapperDto {
     public Map<String, Object> getEsDataAsMap() {
         Map<String, Object> esDataMap = new HashMap<>();
         if (Objects.isNull(esData)) return esDataMap;
-        Class<? extends ElasticSearch> esDataClazz = esData.getClass();
+        Class<? extends ElasticSearchParticipantDto> esDataClazz = esData.getClass();
         Field[] esClassDeclaredFields = esDataClazz.getDeclaredFields();
         for (Field field: esClassDeclaredFields) {
             try {

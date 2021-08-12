@@ -8,19 +8,20 @@ import org.broadinstitute.dsm.db.ViewFilter;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapperResult;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.util.PatchUtil;
 import spark.QueryParamsMap;
 
-public class QuickFilterParticipantList extends BaseFilterParticipantList{
+public class QuickFilterParticipantList extends BaseFilterParticipantList {
 
 
     @Override
-    public List<ParticipantWrapperDto> filter(QueryParamsMap queryParamsMap) {
+    public ParticipantWrapperResult filter(QueryParamsMap queryParamsMap) {
         prepareNeccesaryData(queryParamsMap);
-        List<ParticipantWrapperDto> participantWrapperList = Collections.emptyList();
+        ParticipantWrapperResult participantWrapperResult = new ParticipantWrapperResult();
         String filterName = queryParamsMap.get(RequestParameter.FILTER_NAME).value();
-        if (StringUtils.isBlank(filterName)) return participantWrapperList;
+        if (StringUtils.isBlank(filterName)) return participantWrapperResult;
         ViewFilter requestForFiltering = new ViewFilter(filterName, parent);
         requestForFiltering.setFilterQuery(ViewFilter.getFilterQuery(filterName, parent));
         if (requestForFiltering.getFilters() == null && StringUtils.isNotBlank(requestForFiltering.getFilterQuery())) {
@@ -28,8 +29,8 @@ public class QuickFilterParticipantList extends BaseFilterParticipantList{
         }
         Filter[] filters = requestForFiltering.getFilters();
         if (filters != null) {
-            participantWrapperList = filterParticipantList(filters, PatchUtil.getColumnNameMap(), ddpInstance);
+            participantWrapperResult = filterParticipantList(filters, PatchUtil.getColumnNameMap(), ddpInstance);
         }
-        return participantWrapperList;
+        return participantWrapperResult;
     }
 }
