@@ -33,9 +33,8 @@ public class NDIRoute extends RequestHandler {
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
-        UserUtil userUtil = new UserUtil();
-        String userIdRequest = userUtil.getUserId(request);
-        if (userUtil.checkUserAccess(null, userId, "ndi_download", userIdRequest)) {
+        String userIdRequest = UserUtil.getUserId(request);
+        if (UserUtil.checkUserAccess(null, userId, "ndi_download", userIdRequest)) {
             HttpServletRequest rawRequest = request.raw();
             String content = SystemUtil.getBody(rawRequest);
             try {

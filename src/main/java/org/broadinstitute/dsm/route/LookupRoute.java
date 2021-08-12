@@ -82,8 +82,7 @@ public class LookupRoute extends RequestHandler {
             shortId = queryParams.get(SHORT_ID).value();
         }
         if (StringUtils.isNotBlank(field)) {
-            UserUtil userUtil = new UserUtil();
-            if (userUtil.checkUserAccess(realm, userId, "mr_view", null)) {
+            if (UserUtil.checkUserAccess(realm, userId, "mr_view", null)) {
                 String query = null;
                 if (MEDICAL_RECORD_CONTACT.equals(field)) {
                     query = SQL_SELECT_CONTACT;

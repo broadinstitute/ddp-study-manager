@@ -35,13 +35,12 @@ public class InstitutionRoute extends RequestHandler {
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         String requestBody = request.body();
         JSONObject jsonObject = new JSONObject(requestBody);
-        UserUtil userUtil = new UserUtil();
         String user = String.valueOf(jsonObject.get(RequestParameter.USER_ID));
         if (RoutePath.RequestMethod.POST.toString().equals(request.requestMethod())) {
             if (StringUtils.isNotBlank(requestBody)) {
                 String ddpParticipantId = (String) jsonObject.get(RequestParameter.DDP_PARTICIPANT_ID);
                 String realm = (String) jsonObject.get(RequestParameter.DDP_REALM);
-                if (userUtil.checkUserAccess(realm, userId, "mr_view", user)) {
+                if (UserUtil.checkUserAccess(realm, userId, "mr_view", user)) {
                     if (StringUtils.isNotBlank(ddpParticipantId) && StringUtils.isNotBlank(realm)) {
                         DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
                         if (ddpInstance != null) {
@@ -61,7 +60,7 @@ public class InstitutionRoute extends RequestHandler {
             if (jsonObject.has(RequestParameter.POLICY)) {
                 policy = String.valueOf(jsonObject.get(RequestParameter.POLICY));
             }
-            if (userUtil.checkUserAccess(null, userId, "mr_request", user)) {
+            if (UserUtil.checkUserAccess(null, userId, "mr_request", user)) {
                 String facility = String.valueOf(jsonObject.get(RequestParameter.FACILITY));
                 String userMail = String.valueOf(jsonObject.get(RequestParameter.USER_MAIL));
                 applyDestructionPolicy(userMail, facility, policy);

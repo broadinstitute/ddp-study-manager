@@ -42,10 +42,9 @@ public class KitStatusChangeRoute extends RequestHandler {
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
-        UserUtil userUtil = new UserUtil();
         String requestBody = request.body();
-        String userIdRequest = userUtil.getUserId(request);
-        if (userUtil.checkUserAccess(null, userId, "kit_shipping", userIdRequest) || userUtil.checkUserAccess(null, userId, "kit_receiving", userIdRequest)) {
+        String userIdRequest = UserUtil.getUserId(request);
+        if (UserUtil.checkUserAccess(null, userId, "kit_shipping", userIdRequest) || UserUtil.checkUserAccess(null, userId, "kit_receiving", userIdRequest)) {
             List<ScanError> scanErrorList = new ArrayList<>();
 
             long currentTime = System.currentTimeMillis();

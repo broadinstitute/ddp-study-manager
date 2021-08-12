@@ -29,10 +29,9 @@ public class CarrierServiceRoute extends RequestHandler {
     @Override
     protected Object processRequest(Request request, Response response, String userId) throws Exception {
         String realm = request.params(RequestParameter.REALM);
-        UserUtil userUtil = new UserUtil();
-        String userIdRequest = userUtil.getUserId(request);
+        String userIdRequest = UserUtil.getUserId(request);
         if (request.url().contains(RoutePath.CARRIERS)) {
-            if (userUtil.checkUserAccess(realm, userId, "kit_shipping_view", userIdRequest) || userUtil.checkUserAccess(realm, userId, "kit_shipping", userIdRequest)) {
+            if (UserUtil.checkUserAccess(realm, userId, "kit_shipping_view", userIdRequest) || UserUtil.checkUserAccess(realm, userId, "kit_shipping", userIdRequest)) {
                 if (StringUtils.isNotBlank(realm)) {
                     return this.getCarriers(realm);
                 }

@@ -40,12 +40,11 @@ public class KitDeactivationRoute extends RequestHandler {
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         String kitRequestId = request.params(RequestParameter.KITREQUESTID);
         if (StringUtils.isNotBlank(kitRequestId)) {
-            UserUtil userUtil = new UserUtil();
-            String userIdRequest = userUtil.getUserId(request);
+            String userIdRequest =  UserUtil.getUserId(request);
             boolean deactivate = request.url().toLowerCase().contains("deactivate");
             KitRequestShipping kitRequest = KitRequestShipping.getKitRequest(kitRequestId);
             String realm = kitRequest.getRealm();
-            if (userUtil.checkUserAccess(realm, userId, "kit_deactivation", userIdRequest)) {
+            if ( UserUtil.checkUserAccess(realm, userId, "kit_deactivation", userIdRequest)) {
                 if (deactivate) {
                     JsonObject jsonObject = new JsonParser().parse(request.body()).getAsJsonObject();
                     String reason = jsonObject.get("reason").getAsString();

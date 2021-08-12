@@ -52,8 +52,7 @@ public class KitDiscardRoute extends RequestHandler {
         else {
             throw new RuntimeException("No realm query param was sent");
         }
-        UserUtil userUtil = new UserUtil();
-        String userIdRequest = userUtil.getUserId(request);
+        String userIdRequest = UserUtil.getUserId(request);
 
         if (RoutePath.RequestMethod.GET.toString().equals(request.requestMethod())) {
             if (userUtil.checkUserAccess(realm, userId, "discard_sample", userIdRequest) || userUtil.checkUserAccess(realm, userId, "participant_exit",userIdRequest)) {

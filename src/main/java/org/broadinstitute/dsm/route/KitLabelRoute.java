@@ -22,9 +22,8 @@ public class KitLabelRoute extends RequestHandler {
             return new Result(200, String.valueOf(DBUtil.getBookmark(KitUtil.BOOKMARK_LABEL_CREATION_RUNNING)));
         }
         else {
-            UserUtil userUtil = new UserUtil();
-            String userIdRequest = userUtil.getUserId(request);
-            if (userUtil.checkUserAccess(null, userId, "kit_shipping", userIdRequest)) {
+            String userIdRequest = UserUtil.getUserId(request);
+            if (UserUtil.checkUserAccess(null, userId, "kit_shipping", userIdRequest)) {
                 QueryParamsMap queryParams = request.queryMap();
 
                 String requestBody = request.body();

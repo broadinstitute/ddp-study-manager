@@ -26,11 +26,10 @@ public class FieldSettingsRoute extends RequestHandler {
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         String realm = request.params(RequestParameter.REALM);
-        UserUtil userUtil = new UserUtil();
-        String userIdRequest = userUtil.getUserId(request);
+        String userIdRequest = UserUtil.getUserId(request);
         if (StringUtils.isNotBlank(realm)) {
             if (RoutePath.RequestMethod.GET.toString().equals(request.requestMethod())) {
-                if (userUtil.checkUserAccess(realm, userId, "mr_view", userIdRequest) || userUtil.checkUserAccess(realm, userId, "pt_list_view", userIdRequest)) {
+                if (UserUtil.checkUserAccess(realm, userId, "mr_view", userIdRequest) || UserUtil.checkUserAccess(realm, userId, "pt_list_view", userIdRequest)) {
                     return FieldSettings.getFieldSettings(realm);
                 }
                 else {
@@ -39,7 +38,7 @@ public class FieldSettingsRoute extends RequestHandler {
                 }
             }
             if (RoutePath.RequestMethod.PATCH.toString().equals(request.requestMethod())) {
-                if (userUtil.checkUserAccess(realm, userId, "field_settings", userIdRequest)) {
+                if (UserUtil.checkUserAccess(realm, userId, "field_settings", userIdRequest)) {
                     try {
                         String requestBody = request.body();
                         Type settingsType = new TypeToken<Map<String, Collection<FieldSettings>>>() {

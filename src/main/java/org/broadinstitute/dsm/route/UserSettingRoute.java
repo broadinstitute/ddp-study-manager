@@ -20,11 +20,10 @@ public class UserSettingRoute extends RequestHandler {
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         QueryParamsMap queryParams = request.queryMap();
-        UserUtil userUtil = new UserUtil();
-        if (queryParams.value(userUtil.USER_ID) != null) {
-            String userIdRequest = queryParams.get(userUtil.USER_ID).value();
-            if (userUtil.checkUserAccess(null, userId, "kit_shipping",userIdRequest) || userUtil.checkUserAccess(null, userId, "mr_view",userIdRequest)
-                    || userUtil.checkUserAccess(null, userId, "pt_list_view",userIdRequest)) {
+        if (queryParams.value(UserUtil.USER_ID) != null) {
+            String userIdRequest = queryParams.get(UserUtil.USER_ID).value();
+            if (UserUtil.checkUserAccess(null, userId, "kit_shipping",userIdRequest) || UserUtil.checkUserAccess(null, userId, "mr_view",userIdRequest)
+                    || UserUtil.checkUserAccess(null, userId, "pt_list_view",userIdRequest)) {
                 if (StringUtils.isNotBlank(userIdRequest)) {
                     String requestBody = request.body();
                     UserSettings userSettings = new Gson().fromJson(requestBody, UserSettings.class);

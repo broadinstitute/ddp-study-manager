@@ -46,11 +46,10 @@ public class TriggerSurveyRoute extends RequestHandler {
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
-        UserUtil userUtil = new UserUtil();
-        String userIdRequest = userUtil.getUserId(request);
+        String userIdRequest = UserUtil.getUserId(request);
         if (request.requestMethod().equals(RoutePath.RequestMethod.GET.toString())) {
             String realm = request.params(RequestParameter.REALM);
-            if (userUtil.checkUserAccess(realm, userId, "survey_creation", userIdRequest)) {
+            if (UserUtil.checkUserAccess(realm, userId, "survey_creation", userIdRequest)) {
                 if (StringUtils.isNotBlank(realm)) {
                     DDPInstance instance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.SURVEY_STATUS_ENDPOINTS);
                     QueryParamsMap queryParams = request.queryMap();
@@ -113,7 +112,7 @@ public class TriggerSurveyRoute extends RequestHandler {
             else {
                 throw new RuntimeException("No realm query param was sent");
             }
-            if (userUtil.checkUserAccess(realm, userId, "survey_creation", userIdRequest)) {
+            if (UserUtil.checkUserAccess(realm, userId, "survey_creation", userIdRequest)) {
                 String surveyName;
                 if (queryParams.value("surveyName") != null) {
                     surveyName = queryParams.get("surveyName").value();

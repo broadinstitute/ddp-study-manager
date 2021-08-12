@@ -45,12 +45,11 @@ public class ViewFilterRoute extends RequestHandler {
         else {
             throw new RuntimeException("No realm is sent!");
         }
-        UserUtil userUtil = new UserUtil();
         String userIdRequest = null;
         if (queryParams.value(UserUtil.USER_ID) != null) {
-            userIdRequest = userUtil.getUserId(request);
+            userIdRequest = UserUtil.getUserId(request);
         }
-        if (userUtil.checkUserAccess(realm, userId, "mr_view", userIdRequest) || userUtil.checkUserAccess(realm, userId, "pt_list_view", userIdRequest)) {
+        if (UserUtil.checkUserAccess(realm, userId, "mr_view", userIdRequest) || UserUtil.checkUserAccess(realm, userId, "pt_list_view", userIdRequest)) {
             String json = request.body();
             if (request.url().contains(RoutePath.GET_FILTERS)) {
                 if (StringUtils.isNotBlank(realm)) {

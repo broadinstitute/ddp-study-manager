@@ -25,11 +25,10 @@ public class MailingListRoute extends RequestHandler {
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         String realm = request.params(RequestParameter.REALM);
-        UserUtil userUtil = new UserUtil();
         if (StringUtils.isBlank(realm)) {
             throw new RuntimeException("Realm missing");
         }
-        if (userUtil.checkUserAccess(realm, userId, "mailingList_view", null)) {
+        if (UserUtil.checkUserAccess(realm, userId, "mailingList_view", null)) {
             return getMailingListContacts(realm);
         }
         else {

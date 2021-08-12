@@ -59,7 +59,7 @@ public class AssignParticipantRoute extends RequestHandler {
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         String realm = RoutePath.getRealm(request);
-        if (new UserUtil().checkUserAccess(realm, userId, "mr_request", null)) {
+        if (UserUtil.checkUserAccess(realm, userId, "mr_request", null)) {
             String requestBody = request.body();
             JsonArray scans = (JsonArray) (new JsonParser().parse(requestBody));
             if (scans.size() > 0) {

@@ -49,10 +49,9 @@ public class DashboardRoute extends RequestHandler {
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         try {
-            UserUtil userUtil = new UserUtil();
-            String userIdRequest = userUtil.getUserId(request);
-            if (userUtil.checkUserAccess(null, userId, "kit_shipping", userIdRequest) || userUtil.checkUserAccess(null, userId, "kit_shipping_view", userIdRequest)
-                    || userUtil.checkUserAccess(null, userId, "mr_view", userIdRequest)|| userUtil.checkUserAccess(null, userId, "pt_list_view", userIdRequest)) {
+            String userIdRequest = UserUtil.getUserId(request);
+            if (UserUtil.checkUserAccess(null, userId, "kit_shipping", userIdRequest) || UserUtil.checkUserAccess(null, userId, "kit_shipping_view", userIdRequest)
+                    || UserUtil.checkUserAccess(null, userId, "mr_view", userIdRequest)|| UserUtil.checkUserAccess(null, userId, "pt_list_view", userIdRequest)) {
                 String startDate = request.params(RequestParameter.START);
                 if (StringUtils.isNotBlank(startDate)) {
                     String endDate = request.params(RequestParameter.END);
@@ -85,7 +84,7 @@ public class DashboardRoute extends RequestHandler {
                             return getShippingDashboard(realm, userIdRequest);
                         }
                         else {
-                            Collection<String> allowedRealms = userUtil.getListOfAllowedRealms(userIdRequest);
+                            Collection<String> allowedRealms = UserUtil.getListOfAllowedRealms(userIdRequest);
                             Map<String, List<KitType>> kitTypesPerDDP = new HashMap<>();
                             for (String ddp : allowedRealms) {
                                 kitTypesPerDDP.put(ddp, KitType.getKitTypes(ddp, userIdRequest));

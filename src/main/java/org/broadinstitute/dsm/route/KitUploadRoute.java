@@ -78,9 +78,8 @@ public class KitUploadRoute extends RequestHandler {
         else {
             throw new RuntimeException("No realm query param was sent");
         }
-        UserUtil userUtil = new UserUtil();
-        String userIdRequest = userUtil.getUserId(request);
-        if (userUtil.checkUserAccess(realm, userId, "kit_upload", userIdRequest)) {
+        String userIdRequest = UserUtil.getUserId(request);
+        if (UserUtil.checkUserAccess(realm, userId, "kit_upload", userIdRequest)) {
             String kitTypeName;
             AtomicReference<String> kitUploadReason = new AtomicReference<>();
             AtomicReference<String> shippingCarrier = new AtomicReference<>();

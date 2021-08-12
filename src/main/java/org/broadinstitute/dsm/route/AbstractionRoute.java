@@ -29,11 +29,10 @@ public class AbstractionRoute extends RequestHandler {
         if (StringUtils.isNotBlank(requestBody)) {
             JSONObject jsonObject = new JSONObject(requestBody);
             String ddpParticipantId = (String) jsonObject.get(RequestParameter.DDP_PARTICIPANT_ID);
-            UserUtil userUtil = new UserUtil();
-            String userIdReq = userUtil.getUserId(request);
+            String userIdReq = UserUtil.getUserId(request);
             String realm = (String) jsonObject.get(RequestParameter.DDP_REALM);
 
-            if (userUtil.checkUserAccess(realm, userId, "mr_abstracter", userIdReq) || userUtil.checkUserAccess(realm, userId, "mr_qc", userIdReq)) {
+            if (UserUtil.checkUserAccess(realm, userId, "mr_abstracter", userIdReq) || UserUtil.checkUserAccess(realm, userId, "mr_qc", userIdReq)) {
                 if (StringUtils.isNotBlank(ddpParticipantId)) {
                     String status = null;
                     if (jsonObject.has(RequestParameter.STATUS) && !jsonObject.isNull(RequestParameter.STATUS)) {

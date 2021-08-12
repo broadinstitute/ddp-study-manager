@@ -14,9 +14,8 @@ public class AssigneeRoute extends RequestHandler {
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         String realm = RoutePath.getRealm(request);
-        UserUtil userUtil = new UserUtil();
-        String userIdRequest = userUtil.getUserId(request);
-        if (userUtil.checkUserAccess(realm, userId, "mr_view", userIdRequest)) {
+        String userIdRequest = UserUtil.getUserId(request);
+        if (UserUtil.checkUserAccess(realm, userId, "mr_view", userIdRequest)) {
             return Assignee.getAssignees(realm);
         }
         else {

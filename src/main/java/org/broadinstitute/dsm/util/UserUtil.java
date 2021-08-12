@@ -313,7 +313,7 @@ public class UserUtil {
         }
     }
 
-    public boolean checkUserAccess(String realm, String userId, String role,  String userIdRequest) {
+    public static boolean checkUserAccess(String realm, String userId, String role,  String userIdRequest) {
         if (StringUtils.isNotBlank(userIdRequest) && !userId.equals(userIdRequest)) {
             throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
         }

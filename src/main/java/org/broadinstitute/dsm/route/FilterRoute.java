@@ -76,9 +76,8 @@ public class FilterRoute extends RequestHandler {
         } else {
             throw new RuntimeException("No realm is sent!");
         }
-        UserUtil userUtil = new UserUtil();
-        String userIdRequest = userUtil.getUserId(request);
-        if (userUtil.checkUserAccess(realm, userId, "mr_view", userIdRequest) || userUtil.checkUserAccess(realm, userId, "pt_list_view", userIdRequest)) {
+        String userIdRequest = UserUtil.getUserId(request);
+        if (UserUtil.checkUserAccess(realm, userId, "mr_view", userIdRequest) || UserUtil.checkUserAccess(realm, userId, "pt_list_view", userIdRequest)) {
             String json = request.body();
             if (request.url().contains(RoutePath.APPLY_FILTER)) {
                 String filterQuery = queryParams.get("filterQuery").value();
