@@ -3,9 +3,9 @@ package org.broadinstitute.dsm.route;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.PDF.DownloadPDF;
 import org.broadinstitute.dsm.model.PDF.MiscPDFDownload;
+import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.RoutePath;
-import org.broadinstitute.dsm.statics.UserErrorMessages;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 
-public class DownloadPDFRoute extends BasicRoute {
+public class DownloadPDFRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(DownloadPDFRoute.class);
 
@@ -34,10 +34,6 @@ public class DownloadPDFRoute extends BasicRoute {
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
-        if (Integer.parseInt((String) super.processRequest(request, response, userId)) == 404) {
-            response.status(500);
-            return UserErrorMessages.NO_RIGHTS;
-        }
         String requestBody = request.body();
         String realm = null;
         QueryParamsMap queryParams = request.queryMap();
