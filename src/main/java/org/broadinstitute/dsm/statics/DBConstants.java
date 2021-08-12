@@ -241,6 +241,8 @@ public class DBConstants {
     public static final String USS_COUNT = "uss_count";
     public static final String SCROLLS_COUNT = "scrolls_count";
     public static final String H_E_COUNT = "h_e_count";
+    public static final String USS_SMIDS = "uss_sm_ids";
+    public static final String SCROLL_SMIDS = "scrolls_sm_ids";
     public static final String BLOCKS_COUNT = "blocks_count";
 
 

@@ -64,4 +64,5 @@
     <include file="liquibase/DDP-6489-family-notes-field.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/DDP-6504_hide-samples-tab.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/rgp/DDP-6504_hide-sample-information-tab.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/DDP-6034_SMIDS.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
