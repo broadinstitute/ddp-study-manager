@@ -3,6 +3,9 @@ package org.broadinstitute.dsm.model.participant;
 import java.util.Collections;
 import java.util.List;
 
+import lombok.Getter;
+
+@Getter
 public class ParticipantWrapperResult {
 
     private final long totalCount;
@@ -16,5 +19,6 @@ public class ParticipantWrapperResult {
     public ParticipantWrapperResult() {
         this(0, Collections.emptyList());
     }
+
 
 }

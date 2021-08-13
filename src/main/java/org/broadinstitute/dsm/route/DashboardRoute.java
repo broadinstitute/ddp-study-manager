@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.route;
 
+import com.google.gson.Gson;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
@@ -8,6 +9,7 @@ import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.KitType;
 import org.broadinstitute.dsm.model.*;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.*;
@@ -46,6 +48,34 @@ public class DashboardRoute extends RequestHandler {
 
     public DashboardRoute(@NonNull KitUtil kitUtil) {
         this.kitUtil = kitUtil;
+    }
+
+    public static List<ParticipantWrapperDto> addAllData(List<String> baseList, Map<String, Map<String, Object>> esDataMap,
+                                                         Map<String, Participant> participantMap, Map<String, List<MedicalRecord>> medicalRecordMap,
+                                                         Map<String, List<OncHistoryDetail>> oncHistoryMap, Map<String, List<KitRequestShipping>> kitRequestMap,
+                                                         Map<String, List<AbstractionActivity>> abstractionActivityMap, Map<String, List<AbstractionGroup>> abstractionSummary,
+                                                         Map<String, Map<String, Object>> proxyData, Map<String, List<ParticipantData>> participantData) {
+        Gson gson = new Gson();
+        List<ParticipantWrapperDto> participantList = new ArrayList<>();
+        for (String ddpParticipantId : baseList) {
+            Participant participant = participantMap != null ? participantMap.get(ddpParticipantId) : null;
+            Map<String, Object> participantESData = esDataMap.get(ddpParticipantId);
+            if (participantESData != null) {
+                String participantEsDataAsJson = gson.toJson(participantESData);
+                ElasticSearchParticipantDto elasticSearchParticipantDto =
+                        gson.fromJson(participantEsDataAsJson, ElasticSearchParticipantDto.class);
+                participantList.add(new ParticipantWrapperDto(elasticSearchParticipantDto, participant,
+                        medicalRecordMap != null ? medicalRecordMap.get(ddpParticipantId) : null,
+                        oncHistoryMap != null ? oncHistoryMap.get(ddpParticipantId) : null,
+                        kitRequestMap != null ? kitRequestMap.get(ddpParticipantId) : null,
+                        abstractionActivityMap != null ? abstractionActivityMap.get(ddpParticipantId) : null,
+                        abstractionSummary != null ? abstractionSummary.get(ddpParticipantId) : null,
+                        null,
+                null));
+            }
+        }
+        logger.info("Returning list w/ " + participantList.size() + " pts now");
+        return participantList;
     }
 
     @Override
@@ -219,7 +249,7 @@ public class DashboardRoute extends RequestHandler {
         Map<String, List<AbstractionActivity>> abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(realm);
         Map<String, List<AbstractionGroup>> abstractionSummary = AbstractionFinal.getAbstractionFinal(realm);
 
-        List<ParticipantWrapperDto> participantWrapperList = ParticipantWrapperDto.addAllData(new ArrayList<>(participantESData.keySet()), participantESData,
+        List<ParticipantWrapperDto> participantWrapperList = addAllData(new ArrayList<>(participantESData.keySet()), participantESData,
                 participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, null, null);
 
         Map<String, Integer> dashboardValues = new HashMap(); //counts only pt
