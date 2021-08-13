@@ -40,6 +40,7 @@ import org.broadinstitute.dsm.pubsub.PubSubResultMessageSubscription;
 import org.broadinstitute.dsm.route.*;
 import org.broadinstitute.dsm.route.familymember.AddFamilyMemberRoute;
 import org.broadinstitute.dsm.route.participant.GetParticipantDataRoute;
+import org.broadinstitute.dsm.route.participant.GetParticipantRoute;
 import org.broadinstitute.dsm.security.JWTConverter;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
@@ -474,12 +475,12 @@ public class DSMServer extends BasicServer {
         patch(UI_ROOT + RoutePath.SAVE_FILTER, viewFilterRoute, new JsonTransformer());
         patch(UI_ROOT + RoutePath.FILTER_DEFAULT, viewFilterRoute, new JsonTransformer());
 
-        FilterRoute filterRoute = new FilterRoute(patchUtil);
+        FilterRoute filterRoute = new FilterRoute();
         //returns List[] that is filtered based on the filterName
         get(UI_ROOT + RoutePath.APPLY_FILTER, filterRoute, new JsonTransformer());
         patch(UI_ROOT + RoutePath.FILTER_LIST, filterRoute, new JsonTransformer());
         //gets the participant to go to the tissue that was clicked on
-        get(UI_ROOT + RoutePath.GET_PARTICIPANT, filterRoute, new JsonTransformer());
+        get(UI_ROOT + RoutePath.GET_PARTICIPANT, new GetParticipantRoute(), new JsonTransformer());
 
         MedicalRecordLogRoute medicalRecordLogRoute = new MedicalRecordLogRoute();
         get(UI_ROOT + RoutePath.MEDICAL_RECORD_LOG_REQUEST, medicalRecordLogRoute, new JsonTransformer());
