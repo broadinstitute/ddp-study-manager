@@ -14,14 +14,10 @@ import java.util.List;
 import java.util.Map;
 
 public class MiscPDFDownload {
-    Logger logger = LoggerFactory.getLogger(MiscPDFDownload.class);
-    String ddpParticipantId = null;
 
-    public MiscPDFDownload(String ddpParticipantId) {
-        this.ddpParticipantId = ddpParticipantId;
-    }
+    private static final Logger logger = LoggerFactory.getLogger(MiscPDFDownload.class);
 
-    public Object create(String realm) {
+    public Object create(String ddpParticipantId, String realm) {
         if (StringUtils.isNotBlank(ddpParticipantId)) {
             return returnPDFS(ddpParticipantId, realm);
         }

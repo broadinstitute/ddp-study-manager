@@ -19,7 +19,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
 
-
 public class DownloadPDFRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(DownloadPDFRoute.class);
@@ -28,7 +27,6 @@ public class DownloadPDFRoute extends RequestHandler {
     public static final String BUNDLE = "/bundle";
 
     private final String PDF_ROLE = "pdf_download";
-
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
@@ -72,7 +70,7 @@ public class DownloadPDFRoute extends RequestHandler {
                 if (queryParams.value(RequestParameter.DDP_PARTICIPANT_ID) != null) {
                     ddpParticipantId = queryParams.get(RequestParameter.DDP_PARTICIPANT_ID).value();
                 }
-                return new MiscPDFDownload(ddpParticipantId).create(realm);
+                return new MiscPDFDownload().create(ddpParticipantId, realm);
             }
         }
         response.status(500);

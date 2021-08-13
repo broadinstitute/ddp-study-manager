@@ -25,11 +25,10 @@ public class GetParticipantRoute extends RequestHandler {
         String requestUserId = queryParamsMap.get(UserUtil.USER_ID).value();
         if (!userId.equals(requestUserId)) throw new IllegalAccessException("User id: " + userId  + "does not match to request user id: " + requestUserId);
 
-
         String realm = queryParamsMap.get(RoutePath.REALM).value();
         if (StringUtils.isBlank(realm)) throw new IllegalArgumentException("realm cannot be empty");
 
-        if (!UserUtil.checkUserAccess(realm, userId, "mr_view") && !UserUtil.checkUserAccess(realm, userId, "pt_list_view")) {
+        if (!UserUtil.checkUserAccess(realm, userId, "mr_view", requestUserId) && !UserUtil.checkUserAccess(realm, userId, "pt_list_view", requestUserId)) {
             response.status(500);
             return UserErrorMessages.NO_RIGHTS;
         }
