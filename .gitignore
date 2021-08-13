@@ -70,3 +70,5 @@ logs
 *.pem
 *.env
 *.jks
+/config/
+/appengine/deploy/config/
