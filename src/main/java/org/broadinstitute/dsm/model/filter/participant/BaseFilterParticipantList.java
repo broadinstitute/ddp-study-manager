@@ -127,12 +127,8 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
     }
 
     public void addParticipantDataConditionsToQuery(Map<String, Integer> allIdsForParticipantDataFiltering, Map<String, String> queryConditions, int filtersLength) {
-        if (allIdsForParticipantDataFiltering.isEmpty()) {
-            queryConditions.put(ElasticSearchUtil.ES, ElasticSearchUtil.BY_PROFILE_GUID + ElasticSearchUtil.EMPTY);
-        } else {
-            String newCondition = createNewConditionByIds(allIdsForParticipantDataFiltering, filtersLength);
-            queryConditions.merge(ElasticSearchUtil.ES, newCondition, (prev, next) -> prev + next);
-        }
+        String newCondition = createNewConditionByIds(allIdsForParticipantDataFiltering, filtersLength);
+        queryConditions.merge(ElasticSearchUtil.ES, newCondition, (prev, next) -> prev + next);
     }
 
     public String createNewConditionByIds(Map<String, Integer> allIdsForParticipantDataFiltering, int filtersLength) {
@@ -148,6 +144,9 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
                 newCondition.append(ParticipantUtil.isGuid(entry.getKey()) ? ElasticSearchUtil.BY_GUIDS + entry.getKey() : ElasticSearchUtil.BY_LEGACY_ALTPIDS + entry.getKey());
             }
             i++;
+        }
+        if (i == 0) {
+            newCondition.append(ElasticSearchUtil.BY_PROFILE_GUID + ElasticSearchUtil.EMPTY);
         }
         newCondition.append(ElasticSearchUtil.CLOSING_PARENTHESIS);
         return newCondition.toString();

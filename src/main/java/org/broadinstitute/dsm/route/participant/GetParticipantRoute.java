@@ -9,6 +9,7 @@ import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperPayload;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RoutePath;
+import org.broadinstitute.dsm.statics.UserErrorMessages;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.broadinstitute.dsm.util.UserUtil;
@@ -26,9 +27,14 @@ public class GetParticipantRoute extends RequestHandler {
         String requestUserId = queryParamsMap.get(UserUtil.USER_ID).value();
         if (!userId.equals(requestUserId)) throw new IllegalAccessException("User id: " + userId  + "does not match to request user id: " + requestUserId);
 
+
         String realm = queryParamsMap.get(RoutePath.REALM).value();
         if (StringUtils.isBlank(realm)) throw new IllegalArgumentException("realm cannot be empty");
 
+        if (!UserUtil.checkUserAccess(realm, userId, "mr_view") && !UserUtil.checkUserAccess(realm, userId, "pt_list_view")) {
+            response.status(500);
+            return UserErrorMessages.NO_RIGHTS;
+        }
         DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
 
         String ddpParticipantId = queryParamsMap.get(RoutePath.DDP_PARTICIPANT_ID).value();

@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.db.dto.ddp.kitrequest;
 
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -58,5 +59,9 @@ public class KitRequestDto {
         this.externalResponse = externalResponse;
         this.uploadReason = uploadReason;
         this.orderTransmitted_at = orderTransmitted_at;
+    }
+
+    public boolean hasUploadReason() {
+        return StringUtils.isNotBlank(uploadReason);
     }
 }
