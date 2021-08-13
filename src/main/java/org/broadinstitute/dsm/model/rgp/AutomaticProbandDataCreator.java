@@ -46,7 +46,7 @@ public class AutomaticProbandDataCreator implements Defaultable {
             return false;
         }
         List<FieldSettingsDto> fieldSettingsDtosByOptionAndInstanceId =
-                FieldSettingsDao.of().getFieldSettingsByOptionAndInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
+                FieldSettingsDao.of().getOptionAndRadioFieldSettingsByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
 
         return maybeParticipantESData
                 .map(elasticSearch -> extractAndInsertProbandFromESData(instance, elasticSearch, fieldSettingsDtosByOptionAndInstanceId))
@@ -60,7 +60,7 @@ public class AutomaticProbandDataCreator implements Defaultable {
                 .map(esProfile -> {
                     logger.info("Got ES profile of participant: " + esProfile.getParticipantGuid());
                     Map<String, String> columnsWithDefaultOptions =
-                            fieldSettings.getColumnsWithDefaultOptions(fieldSettingsDtosByOptionAndInstanceId);
+                            fieldSettings.getColumnsWithDefaultValues(fieldSettingsDtosByOptionAndInstanceId);
                     Map<String, String> columnsWithDefaultOptionsFilteredByElasticExportWorkflow =
                             fieldSettings.getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(fieldSettingsDtosByOptionAndInstanceId);
                     String participantId = StringUtils.isNotBlank(esProfile.getParticipantLegacyAltPid())
