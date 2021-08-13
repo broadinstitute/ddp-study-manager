@@ -13,16 +13,20 @@ import spark.Request;
 import spark.Response;
 
 public class FilterRoute extends RequestHandler {
+
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         QueryParamsMap queryParams = request.queryMap();
         String parent = queryParams.get(DBConstants.FILTER_PARENT).value();
         if (StringUtils.isBlank(parent)) throw new IllegalArgumentException("parent cannot be empty");
+
         String realm = queryParams.get(RoutePath.REALM).value();
         if (StringUtils.isBlank(realm)) throw new IllegalArgumentException("realm cannot be empty");
+
         String userIdRequest = queryParams.get(UserUtil.USER_ID).value();
         if (!userId.equals(userIdRequest)) throw new IllegalAccessException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
-        if (!UserUtil.checkUserAccess(realm, userId, "mr_view") && !UserUtil.checkUserAccess(realm, userId, "pt_list_view")) {
+
+        if (!UserUtil.checkUserAccess(realm, userId, "mr_view", userIdRequest) && !UserUtil.checkUserAccess(realm, userId, "pt_list_view", userIdRequest)) {
             response.status(500);
             return UserErrorMessages.NO_RIGHTS;
         }

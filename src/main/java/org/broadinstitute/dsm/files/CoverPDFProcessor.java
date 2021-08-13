@@ -28,6 +28,9 @@ public class CoverPDFProcessor extends PDFProcessor {
     public static final String FIELD_DATE_OF_DIAGNOSIS = "dateOfDiagnosis";
     public static final String START_DATE_2 = "start_page2";
 
+    public static final String USER_NAME = "username";
+    public static final String USER_PHONE = "userPhone";
+
     private String ddp;
 
     public CoverPDFProcessor(String ddp) {
@@ -48,6 +51,9 @@ public class CoverPDFProcessor extends PDFProcessor {
             fields.put(FIELD_DATE, valueMap.get(FIELD_DATE));
             fields.put(FIELD_DATE_2, valueMap.get(FIELD_DATE_2));
             fields.put(START_DATE_2, valueMap.get(START_DATE_2));
+
+            fields.put(USER_NAME, valueMap.get(USER_NAME));
+            fields.put(USER_PHONE, valueMap.get(USER_PHONE));
 
             //adding checkboxes configured under instance_settings
             InstanceSettings instanceSettings = new InstanceSettings();

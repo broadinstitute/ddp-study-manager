@@ -78,7 +78,8 @@ public class KitUploadRoute extends RequestHandler {
         else {
             throw new RuntimeException("No realm query param was sent");
         }
-        if (UserUtil.checkUserAccess(realm, userId, "kit_upload")) {
+        String userIdRequest = UserUtil.getUserId(request);
+        if (UserUtil.checkUserAccess(realm, userId, "kit_upload", userIdRequest)) {
             String kitTypeName;
             AtomicReference<String> kitUploadReason = new AtomicReference<>();
             AtomicReference<String> shippingCarrier = new AtomicReference<>();
@@ -100,10 +101,6 @@ public class KitUploadRoute extends RequestHandler {
                 uploadAnyway.set(queryParams.get("uploadAnyway").booleanValue());
             }
 
-            String userIdRequest = UserUtil.getUserId(request);
-            if (!userId.equals(userIdRequest)) {
-                throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
-            }
             HttpServletRequest rawRequest = request.raw();
             String content = SystemUtil.getBody(rawRequest);
             try {

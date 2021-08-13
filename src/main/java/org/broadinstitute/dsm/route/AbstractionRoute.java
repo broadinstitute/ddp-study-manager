@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.route;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.*;
@@ -28,9 +29,10 @@ public class AbstractionRoute extends RequestHandler {
         if (StringUtils.isNotBlank(requestBody)) {
             JSONObject jsonObject = new JSONObject(requestBody);
             String ddpParticipantId = (String) jsonObject.get(RequestParameter.DDP_PARTICIPANT_ID);
+            String userIdReq = UserUtil.getUserId(request);
             String realm = (String) jsonObject.get(RequestParameter.DDP_REALM);
 
-            if (UserUtil.checkUserAccess(realm, userId, "mr_abstracter") || UserUtil.checkUserAccess(realm, userId, "mr_qc")) {
+            if (UserUtil.checkUserAccess(realm, userId, "mr_abstracter", userIdReq) || UserUtil.checkUserAccess(realm, userId, "mr_qc", userIdReq)) {
                 if (StringUtils.isNotBlank(ddpParticipantId)) {
                     String status = null;
                     if (jsonObject.has(RequestParameter.STATUS) && !jsonObject.isNull(RequestParameter.STATUS)) {

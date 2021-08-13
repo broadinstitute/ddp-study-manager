@@ -14,9 +14,9 @@ import org.broadinstitute.ddp.security.Auth0Util;
 import org.broadinstitute.ddp.util.GoogleBucket;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.exception.SurveyNotCreated;
+import org.broadinstitute.dsm.model.PDF.MiscPDFDownload;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.ddp.PreferredLanguage;
-import org.broadinstitute.dsm.route.DownloadPDFRoute;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
@@ -305,22 +305,7 @@ public class DDPRequestUtil {
     }
 
     public static void makeNonStandardPDF(@NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId, @NonNull String userId, @NonNull String reason) {
-        //get pdf info from ES (get participant)
-        Map<String, Map<String, Object>> participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
-                ElasticSearchUtil.BY_GUID + ddpParticipantId);
-        if (participantESData != null && !participantESData.isEmpty()) {
-            makeNonStandardPDF(participantESData, ddpInstance, ddpParticipantId, userId, reason);
-        }
-        else {
-            participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance, ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId);
-            if (participantESData != null && !participantESData.isEmpty()) {
-                makeNonStandardPDF(participantESData, ddpInstance, ddpParticipantId, userId, reason);
-            }
-        }
-    }
-
-    private static void makeNonStandardPDF(@NonNull Map<String, Map<String, Object>> participantESData, @NonNull DDPInstance ddpInstance, @NonNull String ddpParticipantId, @NonNull String userId, @NonNull String reason) {
-        Object pdfs = DownloadPDFRoute.returnPDFS(participantESData, ddpParticipantId);
+        Object pdfs = new MiscPDFDownload().returnPDFS(ddpParticipantId, ddpInstance.getName());
         List<Map<String, String>> pdfList = (List<Map<String, String>>) pdfs;
         long time = System.currentTimeMillis();
         for (Map<String, String> pdf : pdfList) {
