@@ -16,4 +16,8 @@ public interface ElasticSearchable {
 
     ElasticSearch getParticipantsByRangeAndIds(String participantIndexES, int from, int to, List<String> participantIds);
 
+    ElasticSearchParticipantDto getParticipantByShortId(String esParticipantsIndex, String shortId);
+
+    ElasticSearch getAllParticipantsDataByInstanceIndex(String esParticipantsIndex);
+
 }

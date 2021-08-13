@@ -3,7 +3,6 @@ package org.broadinstitute.dsm.model;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +29,7 @@ public class TissueListWrapper {
             participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(instance, filters.get("ES"));
         }
         else if ((filters == null || !filters.containsKey("ES")) || (filters.containsKey("ES") && participantESData == null) || !hasESData) {
-            participantESData = ParticipantWrapper.getESData(instance);
+            participantESData = ElasticSearchUtil.getESData(instance);
         }
         List<TissueListWrapper> results = new ArrayList<>();
         long timeBegin = System.currentTimeMillis();

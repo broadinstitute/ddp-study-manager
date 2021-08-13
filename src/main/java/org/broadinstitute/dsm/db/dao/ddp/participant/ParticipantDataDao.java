@@ -358,4 +358,38 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
         return participantDataDtoList;
     }
 
+
+    public List<ParticipantDataDto> getParticipantDataByInstanceIdAndQueryAddition(int instanceId, String queryAddition) {
+        List<ParticipantDataDto> participantDataDtoList = new ArrayList<>();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_ALL_PARTICIPANT_DATA + BY_INSTANCE_ID + queryAddition)) {
+                stmt.setInt(1, instanceId);
+                try(ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        participantDataDtoList.add(
+                                new ParticipantDataDto.Builder()
+                                        .withParticipantDataId(rs.getInt(PARTICIPANT_DATA_ID))
+                                        .withDdpParticipantId(rs.getString(DDP_PARTICIPANT_ID))
+                                        .withDdpInstanceId(rs.getInt(DDP_INSTANCE_ID))
+                                        .withFieldTypeId(rs.getString(FIELD_TYPE_ID))
+                                        .withData(rs.getString(DATA))
+                                        .withLastChanged(rs.getLong(LAST_CHANGED))
+                                        .withChangedBy(rs.getString(CHANGED_BY))
+                                        .build()
+                        );
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                execResult.resultException = ex;
+            }
+            return execResult;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting participant data ", results.resultException);
+        }
+        return participantDataDtoList;
+    }
+
 }

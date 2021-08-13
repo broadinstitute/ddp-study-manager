@@ -82,9 +82,14 @@ public class KitUploadRouteTest {
         String participantFirstNameFromDoc = participantDataAsMap.get("firstName");
         String participantLastNameFromDoc = participantDataAsMap.get("lastName");
 
-        ParticipantWrapperDto testParticipant = participantFactory("Mickey", "Mouse", "");
-
-        Assert.assertNotEquals("", route.checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, Optional.of(testParticipant)));
+        ESProfile esProfile = new ESProfile();
+        esProfile.setFirstName("Mickey");
+        esProfile.setLastName("Mouse");
+        esProfile.setHruid("");
+        ElasticSearchParticipantDto elasticSearchParticipantDto = new ElasticSearchParticipantDto.Builder()
+                .withProfile(esProfile)
+                .build();
+        Assert.assertNotEquals("", route.checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, elasticSearchParticipantDto));
     }
 
     @Test
@@ -100,7 +105,8 @@ public class KitUploadRouteTest {
         String participantFirstNameFromDoc = participantDataAsMap.get("firstName");
         String participantLastNameFromDoc = participantDataAsMap.get("lastName");
 
-        Assert.assertNotEquals("", route.checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, Optional.empty()));
+        ElasticSearchParticipantDto elasticSearchParticipantDto = new ElasticSearchParticipantDto.Builder().build();
+        Assert.assertNotEquals("", route.checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, elasticSearchParticipantDto));
     }
 
     private ParticipantWrapperDto participantFactory(String firstName, String lastName, String shortId) {

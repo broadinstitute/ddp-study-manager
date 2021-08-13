@@ -1432,4 +1432,11 @@ public class ElasticSearchUtil {
     private static boolean isESUsersIndex(String index) {
         return index.startsWith("users");
     }
+
+    public static Map<String, Map<String, Object>> getESData(@NonNull DDPInstance instance) {
+        if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
+            return getDDPParticipantsFromES(instance.getName(), instance.getParticipantIndexES());
+        }
+        return null;
+    }
 }
