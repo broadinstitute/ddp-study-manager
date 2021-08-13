@@ -6,8 +6,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.handlers.util.Result;
-import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.KitType;
+import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
@@ -81,12 +81,9 @@ public class DashboardRoute extends RequestHandler {
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         try {
-            if (UserUtil.checkUserAccess(null, userId, "kit_shipping") || UserUtil.checkUserAccess(null, userId, "kit_shipping_view")
-                    || UserUtil.checkUserAccess(null, userId, "mr_view")|| UserUtil.checkUserAccess(null, userId, "pt_list_view")) {
-                String userIdRequest = UserUtil.getUserId(request);
-                if (!userId.equals(userIdRequest)) {
-                    throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
-                }
+            String userIdRequest = UserUtil.getUserId(request);
+            if (UserUtil.checkUserAccess(null, userId, "kit_shipping", userIdRequest) || UserUtil.checkUserAccess(null, userId, "kit_shipping_view", userIdRequest)
+                    || UserUtil.checkUserAccess(null, userId, "mr_view", userIdRequest)|| UserUtil.checkUserAccess(null, userId, "pt_list_view", userIdRequest)) {
                 String startDate = request.params(RequestParameter.START);
                 if (StringUtils.isNotBlank(startDate)) {
                     String endDate = request.params(RequestParameter.END);

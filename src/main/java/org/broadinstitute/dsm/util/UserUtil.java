@@ -14,11 +14,7 @@ import org.slf4j.LoggerFactory;
 import spark.QueryParamsMap;
 import spark.Request;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.*;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
@@ -149,7 +145,7 @@ public class UserUtil {
         }
 
         if (StringUtils.isBlank(userId)) {
-            throw new RuntimeException("No userId query param was sent");
+            logger.warn("No userId query param was sent");
         }
         return userId;
     }
@@ -221,9 +217,9 @@ public class UserUtil {
                     getList(conn, query, instanceRole, userId, listOfRealms);
                 }
                 else if (MEDICALRECORD_MENU.equals(menu)) {
-//                    query = query + QueryExtension.BY_ROLE_NAME;
-//                    query = query.replace("%1", DBConstants.MR_VIEW);
-//                    getList(conn, query, instanceRole, userId, listOfRealms);
+                    //                    query = query + QueryExtension.BY_ROLE_NAME;
+                    //                    query = query.replace("%1", DBConstants.MR_VIEW);
+                    //                    getList(conn, query, instanceRole, userId, listOfRealms);
                     getList(conn, query, instanceRole, userId, listOfRealms);
                 }
                 else if (SHIPPING_MENU.equals(menu)) {
@@ -317,7 +313,10 @@ public class UserUtil {
         }
     }
 
-    public static boolean checkUserAccess(String realm, String userId, String role) {
+    public static boolean checkUserAccess(String realm, String userId, String role,  String userIdRequest) {
+        if (StringUtils.isNotBlank(userIdRequest) && !userId.equals(userIdRequest)) {
+            throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
+        }
         List<String> roles;
         if (StringUtils.isBlank(realm)) {
             roles = getUserRolesPerRealm(SQL_USER_ROLES, userId, null);
