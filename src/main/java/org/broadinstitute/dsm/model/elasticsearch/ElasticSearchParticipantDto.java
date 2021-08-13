@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
+@Setter
 public class ElasticSearchParticipantDto {
 
     private ESAddress address;
@@ -19,6 +21,7 @@ public class ElasticSearchParticipantDto {
     private List<Map<String, String>> workflows;
     private String status;
     private Map<String, Object> dsm;
+    private String ddp;
 
     public Optional<ESAddress> getAddress() {
         return Optional.ofNullable(address);

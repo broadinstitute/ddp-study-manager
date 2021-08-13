@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.model.elasticsearch;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -107,9 +108,18 @@ public class ElasticSearch implements ElasticSearchable {
     public List<ElasticSearchParticipantDto> parseSourceMaps(SearchHit[] searchHits) {
         if (Objects.isNull(searchHits)) return Collections.emptyList();
         List<ElasticSearchParticipantDto> result = new ArrayList<>();
+        String ddp = Arrays.stream(searchHits)
+                .findFirst()
+                .map(searchHit -> {
+                        int dotIndex = searchHit.getIndex().lastIndexOf('.');
+                        return searchHit.getIndex().substring(dotIndex + 1);})
+                .orElse("");
         for (SearchHit searchHit: searchHits) {
             Optional<ElasticSearchParticipantDto> maybeElasticSearchResult = parseSourceMap(searchHit.getSourceAsMap());
-            maybeElasticSearchResult.ifPresent(result::add);
+            maybeElasticSearchResult.ifPresent(elasticSearchParticipantDto -> {
+                elasticSearchParticipantDto.setDdp(ddp);
+                result.add(elasticSearchParticipantDto);
+            });
         }
         return result;
     }
