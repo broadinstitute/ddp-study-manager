@@ -49,4 +49,8 @@ public class ESObjectConstants {
     public static final String GUID = "guid";
     public static final String HRUID = "hruid";
     public static final String LEGACY_ALTPID = "legacyAltPid";
+    public static final String LEGACY_SHORTID = "legacyShortId";
+    public static final String PREFERED_LANGUAGE = "preferredLanguage";
+    public static final String DO_NOT_CONTACT = "doNotContact";
+    public static final String CREATED_AT = "createdAt";
 }
