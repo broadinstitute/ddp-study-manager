@@ -18,11 +18,14 @@ import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.exception.DuplicateException;
 import org.broadinstitute.dsm.export.WorkflowForES;
-import org.broadinstitute.dsm.model.*;
+import org.broadinstitute.dsm.model.AbstractionWrapper;
+import org.broadinstitute.dsm.model.NameValue;
+import org.broadinstitute.dsm.model.Patch;
+import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.participant.data.ActionEvent;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
-import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
+import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -36,10 +39,8 @@ import spark.Request;
 import spark.Response;
 
 import java.util.*;
-
-import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
-import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
+import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 //Class needs to be refactored as soon as possible!!!
 public class PatchRoute extends RequestHandler {
@@ -66,8 +67,9 @@ public class PatchRoute extends RequestHandler {
         if (patchUtil.getColumnNameMap() == null) {
             return new RuntimeException("ColumnNameMap is null!");
         }
-        if (UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW) || UserUtil.checkUserAccess(null, userId, DBConstants.MR_ABSTRACTER)
-                || UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW) || UserUtil.checkUserAccess(null, userId, DBConstants.PT_LIST_VIEW)) {
+        String userIdRequest = UserUtil.getUserId(request);
+        if (UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW, userIdRequest) || UserUtil.checkUserAccess(null, userId, DBConstants.MR_ABSTRACTER, userIdRequest)
+                || UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW, userIdRequest) || UserUtil.checkUserAccess(null, userId, DBConstants.PT_LIST_VIEW, userIdRequest)) {
             try {
                 String requestBody = request.body();
                 Patch patch = gson.fromJson(requestBody, Patch.class);

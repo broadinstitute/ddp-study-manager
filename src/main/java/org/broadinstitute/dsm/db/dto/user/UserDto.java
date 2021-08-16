@@ -1,8 +1,8 @@
 package org.broadinstitute.dsm.db.dto.user;
 
-import java.util.Optional;
-
 import lombok.Setter;
+
+import java.util.Optional;
 
 @Setter
 public class UserDto {
@@ -10,11 +10,13 @@ public class UserDto {
     private int id;
     private String name;
     private String email;
+    private String phoneNumber;
 
-    public UserDto(int id, String name, String email) {
+    public UserDto(int id, String name, String email, String phoneNumber) {
         this.id = id;
         this.name = name;
         this.email = email;
+        this.phoneNumber = phoneNumber;
     }
 
     public UserDto() {
@@ -31,5 +33,8 @@ public class UserDto {
 
     public Optional<String> getEmail() {
         return Optional.ofNullable(email);
+    }
+    public Optional<String> getPhoneNumber() {
+        return Optional.ofNullable(phoneNumber);
     }
 }
