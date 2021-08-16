@@ -161,7 +161,7 @@ public class ParticipantWrapper {
             abstractionSummary = AbstractionFinal.getAbstractionFinal(ddpInstance.getName());
         }
         if (proxiesByParticipantIds.isEmpty()) {
-            proxiesByParticipantIds = getProxiesWithParticipantIdsFromElasticList(ddpInstance.getParticipantIndexES(), esData.getEsParticipants());
+            proxiesByParticipantIds = getProxiesWithParticipantIdsFromElasticList(ddpInstance.getUsersIndexES(), esData.getEsParticipants());
         }
     }
 
@@ -182,7 +182,7 @@ public class ParticipantWrapper {
         abstractionActivities =
                 AbstractionActivity.getAllAbstractionActivityByParticipantIds(ddpInstance.getName(), participantIds);
         abstractionSummary = AbstractionFinal.getAbstractionFinalByParticipantIds(ddpInstance.getName(), participantIds);
-        proxiesByParticipantIds = getProxiesWithParticipantIdsFromElasticList(ddpInstance.getParticipantIndexES(), esData.getEsParticipants());
+        proxiesByParticipantIds = getProxiesWithParticipantIdsFromElasticList(ddpInstance.getUsersIndexES(), esData.getEsParticipants());
         participantData = new ParticipantDataDao().getParticipantDataByParticipantIds(participantIds);
     }
 
