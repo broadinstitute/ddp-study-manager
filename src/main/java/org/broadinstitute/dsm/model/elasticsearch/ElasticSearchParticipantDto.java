@@ -14,13 +14,13 @@ public class ElasticSearchParticipantDto {
     private List<Object> medicalProviders;
     private List<Object> invitations;
     private List<ESActivities> activities;
-    private Long statusTimeStamp;
+    private Long statusTimestamp;
     private ESProfile profile;
     private List<Object> files;
     private List<String> proxies;
-    private List<Map<String, String>> workflows;
+    private List<Map<String, Object>> workflows;
     private String status;
-    private Map<String, Object> dsm;
+    private ESDsm dsm;
     private String ddp;
 
     public Optional<ESAddress> getAddress() {
@@ -39,8 +39,8 @@ public class ElasticSearchParticipantDto {
         return Optional.ofNullable(activities);
     }
 
-    public Optional<Long> getStatusTimeStamp() {
-        return Optional.ofNullable(statusTimeStamp);
+    public Optional<Long> getStatusTimestamp() {
+        return Optional.ofNullable(statusTimestamp);
     }
 
     public Optional<ESProfile> getProfile() {
@@ -55,7 +55,7 @@ public class ElasticSearchParticipantDto {
         return Optional.ofNullable(proxies);
     }
 
-    public Optional<List<Map<String, String>>> getWorkflows() {
+    public Optional<List<Map<String, Object>>> getWorkflows() {
         return Optional.ofNullable(workflows);
     }
 
@@ -63,7 +63,7 @@ public class ElasticSearchParticipantDto {
         return Optional.ofNullable(status);
     }
 
-    public Optional<Map<String, Object>> getDsm() {
+    public Optional<ESDsm> getDsm() {
         return Optional.ofNullable(dsm);
     }
 
@@ -79,7 +79,7 @@ public class ElasticSearchParticipantDto {
         this.medicalProviders = builder.medicalProviders;
         this.invitations = builder.invitations;
         this.activities = builder.activities;
-        this.statusTimeStamp = builder.statusTimeStamp;
+        this.statusTimestamp = builder.statusTimeStamp;
         this.profile = builder.profile;
         this.files = builder.files;
         this.proxies = builder.proxies;
@@ -97,9 +97,9 @@ public class ElasticSearchParticipantDto {
         private ESProfile profile;
         private List<Object> files;
         private List<String> proxies;
-        private List<Map<String, String>> workflows;
+        private List<Map<String, Object>> workflows;
         private String status;
-        private Map<String, Object> dsm;
+        private ESDsm dsm;
 
         public Builder() {}
 
@@ -143,7 +143,7 @@ public class ElasticSearchParticipantDto {
             return this;
         }
 
-        public Builder withWorkFlows(List<Map<String, String>> workflows) {
+        public Builder withWorkFlows(List<Map<String, Object>> workflows) {
             this.workflows = workflows;
             return this;
         }
@@ -153,7 +153,7 @@ public class ElasticSearchParticipantDto {
             return this;
         }
 
-        public Builder withDsm(Map<String, Object> dsm) {
+        public Builder withDsm(ESDsm dsm) {
             this.dsm = dsm;
             return this;
         }

@@ -62,58 +62,14 @@ public class ElasticSearch implements ElasticSearchable {
 
     public static Optional<ElasticSearchParticipantDto> parseSourceMap(Map<String, Object> sourceMap) {
         if (sourceMap == null) return Optional.of(new ElasticSearchParticipantDto.Builder().build());
-        ElasticSearchParticipantDto.Builder builder = new ElasticSearchParticipantDto.Builder();
-        for (Map.Entry<String, Object> entry : sourceMap.entrySet()) {
-            switch (entry.getKey()) {
-                case "address":
-                    builder.withAddress(GSON.fromJson(GSON.toJson(entry.getValue()), ESAddress.class));
-                    break;
-                case "medicalProviders":
-                    builder.withMedicalProviders(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<Object>>() {}.getType()));
-                    break;
-                case "invitations":
-                    builder.withInvitations(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<Object>>() {}.getType()));
-                    break;
-                case "activities":
-                    builder.withActivities(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<ESActivities>>() {}.getType()));
-                    break;
-                case "statusTimeStamp":
-                    builder.withStatusTimeStamp(GSON.fromJson(GSON.toJson(entry.getValue()), Long.class));
-                    break;
-                case "profile":
-                    builder.withProfile(GSON.fromJson(GSON.toJson(entry.getValue()), ESProfile.class));
-                    break;
-                case "files":
-                    builder.withFiles(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<Object>>() {}.getType()));
-                    break;
-                case "proxies":
-                    builder.withProxies(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<Object>>() {}.getType()));
-                    break;
-                case "workflows":
-                    builder.withWorkFlows(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<List<Map<String, Object>>>() {}.getType()));
-                    break;
-                case "status":
-                    builder.withStatus(GSON.fromJson(GSON.toJson(entry.getValue()), String.class));
-                    break;
-                case "dsm":
-                    builder.withDsm(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<Map<String, Object>>() {}.getType()));
-                    break;
-                default:
-                    break;
-            }
-        }
-        return Optional.of(builder.build());
+        ElasticSearchParticipantDto elasticSearchParticipantDto = GSON.fromJson(GSON.toJson(sourceMap), ElasticSearchParticipantDto.class);
+        return Optional.of(elasticSearchParticipantDto);
     }
 
     public List<ElasticSearchParticipantDto> parseSourceMaps(SearchHit[] searchHits) {
         if (Objects.isNull(searchHits)) return Collections.emptyList();
         List<ElasticSearchParticipantDto> result = new ArrayList<>();
-        String ddp = Arrays.stream(searchHits)
-                .findFirst()
-                .map(searchHit -> {
-                        int dotIndex = searchHit.getIndex().lastIndexOf('.');
-                        return searchHit.getIndex().substring(dotIndex + 1);})
-                .orElse("");
+        String ddp = getDdpFromSearchHit(Arrays.stream(searchHits).findFirst().orElse(null));
         for (SearchHit searchHit: searchHits) {
             Optional<ElasticSearchParticipantDto> maybeElasticSearchResult = parseSourceMap(searchHit.getSourceAsMap());
             maybeElasticSearchResult.ifPresent(elasticSearchParticipantDto -> {
@@ -122,6 +78,17 @@ public class ElasticSearch implements ElasticSearchable {
             });
         }
         return result;
+    }
+
+    private String getDdpFromSearchHit(SearchHit searchHit) {
+        if (Objects.isNull(searchHit)) return "";
+        return getDdpFromIndex(searchHit.getIndex());
+    }
+
+    String getDdpFromIndex(String searchHitIndex) {
+        if (StringUtils.isBlank(searchHitIndex)) return "";
+        int dotIndex = searchHitIndex.lastIndexOf('.');
+        return searchHitIndex.substring(dotIndex + 1);
     }
 
     @Override

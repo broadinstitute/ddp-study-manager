@@ -12,6 +12,7 @@ import org.broadinstitute.dsm.db.dto.kit.ClinicalKitDto;
 import org.broadinstitute.dsm.model.BSPKit;
 import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
 import org.broadinstitute.dsm.model.bsp.BSPKitStatus;
+import org.broadinstitute.dsm.model.elasticsearch.ESDsm;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
@@ -88,7 +89,7 @@ public class ClinicalKitsRoute implements Route {
     private void setNeccessaryDataToClinicalKit(ClinicalKitDto clinicalKit,
                                                 ElasticSearchParticipantDto participantByShortId) {
         try {
-            clinicalKit.setDateOfBirth((String) Objects.requireNonNull(participantByShortId).getDsm().map(m -> m.get(DATE_OF_BIRtH)).orElse(""));
+            clinicalKit.setDateOfBirth(Objects.requireNonNull(participantByShortId).getDsm().map(ESDsm::getDateOfBirth).orElse(""));
             String firstName = participantByShortId.getProfile().map(ESProfile::getFirstName).orElse("");
             String lastName = participantByShortId.getProfile().map(ESProfile::getLastName).orElse("");
             String mailToName = firstName + " " + lastName;
