@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.model.elasticsearch;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ElasticSearchable {
 

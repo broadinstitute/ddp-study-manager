@@ -10,14 +10,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -116,8 +113,9 @@ public class ElasticSearch implements ElasticSearchable {
     }
 
     @Override
-    public ElasticSearch getParticipantsByIds(String esParticipantsIndex, List<String> participantIds) {
-        SearchRequest searchRequest = new SearchRequest(Objects.requireNonNull(esParticipantsIndex));
+    public ElasticSearch getParticipantsByIds(String esIndex, List<String> participantIds) {
+        if (Objects.isNull(esIndex)) return new ElasticSearch();
+        SearchRequest searchRequest = new SearchRequest(Objects.requireNonNull(esIndex));
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(getBoolQueryOfParticipantsId(participantIds)).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
         searchSourceBuilder.size(participantIds.size());
@@ -128,10 +126,10 @@ public class ElasticSearch implements ElasticSearchable {
         try {
             response = ElasticSearchUtil.getClientInstance().search(searchRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
-            throw new RuntimeException("Couldn't get participants from ES for instance " + esParticipantsIndex, e);
+            throw new RuntimeException("Couldn't get participants from ES for instance " + esIndex, e);
         }
         List<ElasticSearchParticipantDto> esParticipants = parseSourceMaps(response.getHits().getHits());
-        logger.info("Got " + esParticipants.size() + " participants from ES for instance " + esParticipantsIndex);
+        logger.info("Got " + esParticipants.size() + " participants from ES for instance " + esIndex);
         return new ElasticSearch(esParticipants, response.getHits().getTotalHits());
     }
 

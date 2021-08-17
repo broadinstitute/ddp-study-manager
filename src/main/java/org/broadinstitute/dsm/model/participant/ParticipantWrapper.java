@@ -186,9 +186,9 @@ public class ParticipantWrapper {
         participantData = new ParticipantDataDao().getParticipantDataByParticipantIds(participantIds);
     }
 
-    Map<String, List<ElasticSearchParticipantDto>> getProxiesWithParticipantIdsFromElasticList(String esParticipantsIndex, List<ElasticSearchParticipantDto> elasticSearchParticipantDtos) {
+    Map<String, List<ElasticSearchParticipantDto>> getProxiesWithParticipantIdsFromElasticList(String esUsersIndex, List<ElasticSearchParticipantDto> elasticSearchParticipantDtos) {
         Map<String, List<String>> proxiesIdsFromElasticList = getProxiesIdsFromElasticList(elasticSearchParticipantDtos);
-        return getProxiesWithParticipantIdsByProxiesIds(esParticipantsIndex, proxiesIdsFromElasticList);
+        return getProxiesWithParticipantIdsByProxiesIds(esUsersIndex, proxiesIdsFromElasticList);
     }
 
     private List<ParticipantWrapperDto> collectData() {
@@ -234,11 +234,11 @@ public class ParticipantWrapper {
         return participantsWithProxies;
     }
 
-    Map<String, List<ElasticSearchParticipantDto>> getProxiesWithParticipantIdsByProxiesIds(String participantIndexES,
+    Map<String, List<ElasticSearchParticipantDto>> getProxiesWithParticipantIdsByProxiesIds(String esUsersIndex,
                                                                                      Map<String, List<String>> proxiesIdsByParticipantIds) {
         Map<String, List<ElasticSearchParticipantDto>> proxiesByParticipantIds = new HashMap<>();
         List<String> proxiesIds = proxiesIdsByParticipantIds.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
-        List<ElasticSearchParticipantDto> participantsByIds = elasticSearchable.getParticipantsByIds(participantIndexES, proxiesIds).getEsParticipants();
+        List<ElasticSearchParticipantDto> participantsByIds = elasticSearchable.getParticipantsByIds(esUsersIndex, proxiesIds).getEsParticipants();
         participantsByIds.forEach(elasticSearchParticipantDto -> {
             String proxyId = elasticSearchParticipantDto.getParticipantId();
             for (Map.Entry<String, List<String>> entry: proxiesIdsByParticipantIds.entrySet()) {
