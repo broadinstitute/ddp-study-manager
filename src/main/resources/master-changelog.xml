@@ -66,6 +66,7 @@
     <include file="liquibase/DDP-6504_hide-samples-tab.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/rgp/DDP-6504_hide-sample-information-tab.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/DDP-6574_update_event_queue.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/circadia/DDP-6577_circadia-form.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/circadia/DDP-6574_email-events.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/circadia/DDP-6574_dynamic-form-action.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
