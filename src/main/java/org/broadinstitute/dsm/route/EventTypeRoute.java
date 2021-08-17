@@ -2,7 +2,7 @@ package org.broadinstitute.dsm.route;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
-import org.broadinstitute.dsm.db.EventType;
+import org.broadinstitute.dsm.db.dao.settings.EventTypeDao;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
@@ -22,7 +22,7 @@ public class EventTypeRoute extends RequestHandler {
         String userIdRequest = UserUtil.getUserId(request);
         if (StringUtils.isNotBlank(realm)) {
             if (UserUtil.checkUserAccess(realm, userId, "participant_event", userIdRequest)) {
-                return EventType.getEventTypes(realm);
+                return EventTypeDao.getEventTypeByInstanceName(realm);
             }
             else {
                 response.status(500);

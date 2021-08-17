@@ -15,14 +15,14 @@
         <insert tableName="event_type">
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='circadia')"></column>
-            <column name="event_name" value="KIT_SENT"/>
+            <column name="event_name" value="CIRCADIA_SENT"/>
             <column name="event_description" value="Kit sent"/>
             <column name="event_type" value="SENT"/>
         </insert>
         <insert tableName="event_type">
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='circadia')"></column>
-            <column name="event_name" value="KIT_RECEIVED"/>
+            <column name="event_name" value="CIRCADIA_RECEIVED"/>
             <column name="event_description" value="Kit received"/>
             <column name="event_type" value="RECEIVED"/>
         </insert>
