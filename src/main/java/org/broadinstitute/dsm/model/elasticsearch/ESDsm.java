@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.elasticsearch;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Getter;
@@ -33,6 +34,7 @@ public class ESDsm {
     @SerializedName(ESObjectConstants.DIAGNOSIS_YEAR)
     Object diagnosisYear;
 
-
+    @SerializedName(ESObjectConstants.TISSUE_RECORDS)
+    List<Map<String, Object>> tissueRecords;
 
 }
