@@ -69,4 +69,5 @@
     <include file="liquibase/circadia/DDP-6577_circadia-form.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/circadia/DDP-6574_email-events.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/circadia/DDP-6574_dynamic-form-action.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/circadia/DDP-6688_DLMO-form.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
