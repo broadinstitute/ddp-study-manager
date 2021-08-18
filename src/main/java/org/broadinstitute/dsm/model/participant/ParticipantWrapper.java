@@ -59,7 +59,7 @@ public class ParticipantWrapper {
             throw new RuntimeException("No participant index setup in ddp_instance table for " + ddpInstanceDto.getInstanceName());
         }
 
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(ddpInstanceDto.getInstanceName());
+        DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole(ddpInstanceDto.getInstanceName(), DBConstants.HAS_MEDICAL_RECORD_ENDPOINTS);
         return participantWrapperPayload.getFilter()
                 .map(filters -> {
                     fetchAndPrepareDataByFilters(ddpInstance, filters);
