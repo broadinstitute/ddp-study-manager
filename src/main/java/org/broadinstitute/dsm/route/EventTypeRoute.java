@@ -16,13 +16,15 @@ public class EventTypeRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(EventTypeRoute.class);
 
+    private static final EventTypeDao eventTypeDao = new EventTypeDao();
+
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         String realm = request.params(RequestParameter.REALM);
         String userIdRequest = UserUtil.getUserId(request);
         if (StringUtils.isNotBlank(realm)) {
             if (UserUtil.checkUserAccess(realm, userId, "participant_event", userIdRequest)) {
-                return EventTypeDao.getEventTypeByInstanceName(realm);
+                return eventTypeDao.getEventTypeByInstanceName(realm);
             }
             else {
                 response.status(500);

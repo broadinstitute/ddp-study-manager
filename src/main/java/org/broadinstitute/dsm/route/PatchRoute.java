@@ -49,6 +49,8 @@ public class PatchRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PatchRoute.class);
     private static final ParticipantDataDao participantDataDao = new ParticipantDataDao();
+    private static final EventDao eventDao = new EventDao();
+    private static final EventTypeDao eventTypeDao = new EventTypeDao();
     private static final Gson gson = new GsonBuilder().serializeNulls().create();
 
     private static final String PARTICIPANT_ID = "participantId";
@@ -549,17 +551,18 @@ public class PatchRoute extends RequestHandler {
     }
 
     private void triggerParticipantEvent(DDPInstance ddpInstance, Patch patch, Value action){
-        inTransaction((conn) -> {
-            Optional<EventTypeDto> eventType = EventTypeDao.getEventTypeByEventTypeAndInstanceId(conn, action.getName(), ddpInstance.getDdpInstanceId());
+            Optional<EventTypeDto> eventType = eventTypeDao.getEventTypeByEventTypeAndInstanceId(action.getName(), ddpInstance.getDdpInstanceId());
             if (eventType != null && !eventType.isEmpty()) {
-                if (!EventDao.hasTriggeredEventByEventTypeAndDdpParticipantId(conn, action.getName(), patch.getParentId())) {
-                    EventUtil.triggerDDP(conn, eventType, patch.getParentId());
+                boolean participantHasTriggeredEventByEventType = eventDao.hasTriggeredEventByEventTypeAndDdpParticipantId(action.getName(), patch.getParentId()).orElse(false);
+                if (!participantHasTriggeredEventByEventType) {
+                    inTransaction((conn) -> {
+                        EventUtil.triggerDDP(conn, eventType, patch.getParentId());
+                        return null;
+                    });
                 }
                 else {
                     logger.info("Participant " + patch.getParentId() + " was already triggered for event type " + action.getName());
                 }
             }
-            return null;
-        });
     }
 }

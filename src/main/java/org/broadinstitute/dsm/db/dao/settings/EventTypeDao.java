@@ -9,9 +9,9 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -60,10 +60,10 @@ public class EventTypeDao implements Dao<EventTypeDto> {
         return Optional.empty();
     }
 
-    public static List<EventTypeDto> getEventTypeByInstanceName(@NonNull String instanceName) {
+    public List<EventTypeDto> getEventTypeByInstanceName(@NonNull String instanceName) {
         List<EventTypeDto> eventTypeList = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
-            SimpleResult execResult = new SimpleResult();
+            SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(GET_EVENT_TYPE_BY_INSTANCE_NAME)) {
                 stmt.setString(1, instanceName);
                 try (ResultSet rs = stmt.executeQuery()) {
@@ -80,9 +80,9 @@ public class EventTypeDao implements Dao<EventTypeDto> {
                 }
             }
             catch (Exception ex) {
-                logger.error("Couldn't get event types for " + instanceName, ex);
+                dbVals.resultException = ex;
             }
-            return execResult;
+            return dbVals;
         });
         if (results.resultException != null) {
             throw new RuntimeException("Error getting event types ", results.resultException);
@@ -90,31 +90,38 @@ public class EventTypeDao implements Dao<EventTypeDto> {
         return eventTypeList;
     }
 
-    public static Optional<EventTypeDto> getEventTypeByEventTypeAndInstanceId(Connection conn, @NotNull String eventType, @NonNull String instanceId) {
-        SimpleResult dbVals = new SimpleResult();
-        try (PreparedStatement stmt = conn.prepareStatement(GET_EVENT_TYPE_BY_EVENT_NAME_AND_INSTANCE_ID, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
-            stmt.setString(1, eventType);
-            stmt.setString(2, instanceId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                rs.last();
-                int count = rs.getRow();
-                rs.beforeFirst();
-                if (count == 1) {
-                    if (rs.next()) { //if row is 0 the ddp/kit type combination does not trigger a participant event
-                        dbVals.resultValue = new EventTypeDto.Builder(rs.getString(DBConstants.DDP_INSTANCE_ID))
-                                .withEventName(rs.getString(EVENT_NAME))
-                                .withEventType(rs.getString(EVENT_TYPE))
-                                .withInstanceName(rs.getString(DBConstants.INSTANCE_NAME))
-                                .withBaseUrl(rs.getString(DBConstants.BASE_URL))
-                                .withAuth0Token(rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN))
-                                .build();
+    public Optional<EventTypeDto> getEventTypeByEventTypeAndInstanceId(@NotNull String eventType, @NonNull String instanceId) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(GET_EVENT_TYPE_BY_EVENT_NAME_AND_INSTANCE_ID, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
+                stmt.setString(1, eventType);
+                stmt.setString(2, instanceId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    rs.last();
+                    int count = rs.getRow();
+                    rs.beforeFirst();
+                    if (count == 1) {
+                        if (rs.next()) { //if row is 0 the ddp/kit type combination does not trigger a participant event
+                            dbVals.resultValue = new EventTypeDto.Builder(rs.getString(DBConstants.DDP_INSTANCE_ID))
+                                    .withEventName(rs.getString(EVENT_NAME))
+                                    .withEventType(rs.getString(EVENT_TYPE))
+                                    .withInstanceName(rs.getString(DBConstants.INSTANCE_NAME))
+                                    .withBaseUrl(rs.getString(DBConstants.BASE_URL))
+                                    .withAuth0Token(rs.getBoolean(DBConstants.NEEDS_AUTH0_TOKEN))
+                                    .build();
+                        }
                     }
                 }
             }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            logger.error("Couldn't get exited participants for " + instanceId, results.resultException);
         }
-        catch (Exception ex) {
-            logger.error("Couldn't get exited participants for " + instanceId, ex);
-        }
-        return Optional.ofNullable((EventTypeDto) dbVals.resultValue);
+        return Optional.ofNullable((EventTypeDto) results.resultValue);
     }
 }
