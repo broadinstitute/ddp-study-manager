@@ -551,18 +551,18 @@ public class PatchRoute extends RequestHandler {
     }
 
     private void triggerParticipantEvent(DDPInstance ddpInstance, Patch patch, Value action){
-            Optional<EventTypeDto> eventType = eventTypeDao.getEventTypeByEventTypeAndInstanceId(action.getName(), ddpInstance.getDdpInstanceId());
-            if (eventType != null && !eventType.isEmpty()) {
-                boolean participantHasTriggeredEventByEventType = eventDao.hasTriggeredEventByEventTypeAndDdpParticipantId(action.getName(), patch.getParentId()).orElse(false);
-                if (!participantHasTriggeredEventByEventType) {
-                    inTransaction((conn) -> {
-                        EventUtil.triggerDDP(conn, eventType, patch.getParentId());
-                        return null;
-                    });
-                }
-                else {
-                    logger.info("Participant " + patch.getParentId() + " was already triggered for event type " + action.getName());
-                }
+        Optional<EventTypeDto> eventType = eventTypeDao.getEventTypeByEventTypeAndInstanceId(action.getName(), ddpInstance.getDdpInstanceId());
+        eventType.ifPresent(eventTypeDto -> {
+            boolean participantHasTriggeredEventByEventType = eventDao.hasTriggeredEventByEventTypeAndDdpParticipantId(action.getName(), patch.getParentId()).orElse(false);
+            if (!participantHasTriggeredEventByEventType) {
+                inTransaction((conn) -> {
+                    EventUtil.triggerDDP(conn, eventType, patch.getParentId());
+                    return null;
+                });
             }
+            else {
+                logger.info("Participant " + patch.getParentId() + " was already triggered for event type " + action.getName());
+            }
+        });
     }
 }
