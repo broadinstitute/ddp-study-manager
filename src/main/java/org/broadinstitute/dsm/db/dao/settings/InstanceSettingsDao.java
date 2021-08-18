@@ -26,7 +26,7 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
             "FROM instance_settings " +
             "WHERE ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE study_guid = ?)";
 
-    private static final String SQL_GET_BY_STUDY_GUID = "SELECT " +
+    private static final String SQL_GET_BY_INSTANCE_NAME = "SELECT " +
             "instance_settings_id, " +
             "ddp_instance_id, " +
             "mr_cover_pdf, " +
@@ -114,7 +114,7 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
 
     private SimpleResult getInstanceSettingsByInstanceName(String instanceName, Connection conn) {
         SimpleResult execResult = new SimpleResult();
-        try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_BY_STUDY_GUID)) {
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_BY_INSTANCE_NAME)) {
             stmt.setString(1, instanceName);
             try(ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
