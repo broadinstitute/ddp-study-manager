@@ -1,11 +1,13 @@
 package org.broadinstitute.dsm.model.participant;
 
-import java.lang.reflect.Field;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import lombok.Getter;
 import lombok.Setter;
 import org.broadinstitute.dsm.db.AbstractionActivity;
@@ -56,14 +58,12 @@ public class ParticipantWrapperDto {
     public Map<String, Object> getEsDataAsMap() {
         Map<String, Object> esDataMap = new HashMap<>();
         if (Objects.isNull(esData)) return esDataMap;
-        Class<? extends ElasticSearchParticipantDto> esDataClazz = esData.getClass();
-        Field[] esClassDeclaredFields = esDataClazz.getDeclaredFields();
-        for (Field field: esClassDeclaredFields) {
-            try {
-                esDataMap.put(field.getName(), field.get(esData));
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
+        ObjectMapper objectMapper = new ObjectMapper();
+        String esDataAsJson = new Gson().toJson(esData);
+        try {
+            esDataMap = objectMapper.readValue(esDataAsJson, Map.class);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return esDataMap;
     }

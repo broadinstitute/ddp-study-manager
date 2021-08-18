@@ -575,12 +575,24 @@ public class DashboardRoute extends RequestHandler {
                                 @NonNull Map<String, Object> map, @NonNull String key, boolean date) {
         if (map.get(key) != null) {
             if (date) {
-                if ((Long) map.get(key) == 0) {
+                long epochMillis = getEpochMillis(map, key);
+                if (epochMillis == 0) {
                     return;
                 }
             }
             incrementCounter(dashboardValues, dashboardValueName);
         }
+    }
+
+    private long getEpochMillis(Map<String, Object> map, String key) {
+        Object val = map.get(key);
+        long epochMillis = 0;
+        if (val instanceof Integer) {
+            epochMillis = (int) val;
+        } else if (val instanceof Long) {
+            epochMillis = (long) val;
+        }
+        return epochMillis;
     }
 
     private void countBooleanParameter(@NonNull Map<String, Integer> dashboardValues, @NonNull String dashboardValueName,
@@ -596,7 +608,7 @@ public class DashboardRoute extends RequestHandler {
     private void countParameterPeriod(@NonNull Map<String, Integer> dashboardValues, @NonNull String dashboardValueName,
                                       @NonNull Map<String, Object> map, @NonNull String key, long start, long end) {
         if (map.get(key) != null) {
-            Long date = (Long) map.get(key);
+            long date = getEpochMillis(map, key);
             if (date != 0) {
                 incrementCounterPeriod(dashboardValues, dashboardValueName, date, start, end);
             }
