@@ -12,20 +12,26 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ViewFilter;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.Filter;
-import org.broadinstitute.dsm.model.ParticipantWrapper;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
 import org.broadinstitute.dsm.model.filter.BaseFilter;
 import org.broadinstitute.dsm.model.filter.Filterable;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapperPayload;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapperResult;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class BaseFilterParticipantList extends BaseFilter implements Filterable<ParticipantWrapper> {
+public abstract class BaseFilterParticipantList extends BaseFilter implements Filterable<ParticipantWrapperResult> {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseFilterParticipantList.class);
     public static final String PARTICIPANT_DATA = "participantData";
@@ -50,9 +56,15 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
     }
 
 
-    protected List<ParticipantWrapper> filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap, @NonNull DDPInstance instance) {
+    protected ParticipantWrapperResult filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap, @NonNull DDPInstance instance) {
         Map<String, String> queryConditions = new HashMap<>();
         List<ParticipantDataDto> allParticipantData = null;
+        DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName(realm).orElseThrow();
+        ParticipantWrapperPayload.Builder participantWrapperPayload = new ParticipantWrapperPayload.Builder()
+                .withDdpInstanceDto(ddpInstanceDto)
+                .withFrom(from)
+                .withTo(to);
+        ElasticSearch elasticSearch = new ElasticSearch();
         if (filters != null && columnNameMap != null && !columnNameMap.isEmpty()) {
             Map<String, Integer> allIdsForParticipantDataFiltering = new HashMap<>();
             int numberOfParticipantDataFilters = 0;
@@ -107,9 +119,10 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
 
             logger.info("Found query conditions for " + mergeConditions.size() + " tables");
             //search bar ptL
-            return ParticipantWrapper.getFilteredList(instance, mergeConditions);
+
+            return new ParticipantWrapper(participantWrapperPayload.withFilter(mergeConditions).build(), elasticSearch).getFilteredList();
         } else {
-            return ParticipantWrapper.getFilteredList(instance, null);
+            return new ParticipantWrapper(participantWrapperPayload.build(), elasticSearch).getFilteredList();
         }
     }
 

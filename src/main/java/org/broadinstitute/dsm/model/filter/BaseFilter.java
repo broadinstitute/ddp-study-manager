@@ -16,6 +16,8 @@ public class BaseFilter {
 
     public static final String PARENT_PARTICIPANT_LIST = "participantList";
     public static final String TISSUE_LIST_PARENT = "tissueList";
+    public static final String LIST_RANGE_FROM = "from";
+    public static final String LIST_RANGE_TO = "to";
     protected Filter[] filters;
     protected String quickFilterName;
     protected String filterQuery;
@@ -23,6 +25,8 @@ public class BaseFilter {
     protected String parent;
     protected String realm;
     protected DDPInstance ddpInstance;
+    protected int from;
+    protected int to;
 
     public BaseFilter(String jsonBody) {
         this.jsonBody = jsonBody;
@@ -50,6 +54,8 @@ public class BaseFilter {
         } else if (savedFilters != null) {
             filters = savedFilters;
         }
+        this.from = Integer.parseInt(queryParamsMap.get(LIST_RANGE_FROM).value());
+        this.to = Integer.parseInt(queryParamsMap.get(LIST_RANGE_TO).value());
     }
 
 }

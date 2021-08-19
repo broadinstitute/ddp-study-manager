@@ -7,7 +7,7 @@ import org.broadinstitute.dsm.db.KitType;
 import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
 import org.broadinstitute.dsm.db.dao.kit.BSPDummyKitDao;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
-import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
@@ -45,7 +45,7 @@ public class CreateClinicalDummyKitRoute implements Route {
         if (ddpInstance != null) {
             String kitRequestId = CLINICAL_KIT_PREFIX + KitRequestShipping.createRandom(20);
             String ddpParticipantId = new BSPDummyKitDao().getRandomParticipantForStudy(ddpInstance);
-            Optional<ElasticSearch> maybeParticipantByParticipantId = ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+            Optional<ElasticSearchParticipantDto> maybeParticipantByParticipantId = ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId);
             List<KitType> kitTypes = KitType.getKitTypes(ddpInstance.getName(), null);
             KitType desiredKitType = kitTypes.stream().filter(k -> kitTypeString.equalsIgnoreCase(k.getName())).findFirst().orElseThrow();
             logger.info("Found kit type " + desiredKitType.getName());

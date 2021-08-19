@@ -10,7 +10,7 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
 import spark.QueryParamsMap;
 
-public class SearchBarFilterTissueList extends BaseFilterTissueList{
+public class SearchBarFilterTissueList extends BaseFilterTissueList {
 
     public SearchBarFilterTissueList() {
         super(null);

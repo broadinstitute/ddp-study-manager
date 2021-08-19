@@ -4,7 +4,12 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.model.ParticipantWrapper;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapperPayload;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapperResult;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
@@ -32,7 +37,7 @@ public class GetParticipantRoute extends RequestHandler {
             response.status(500);
             return UserErrorMessages.NO_RIGHTS;
         }
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
+        DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName(realm).orElseThrow();
 
         String ddpParticipantId = queryParamsMap.get(RoutePath.DDP_PARTICIPANT_ID).value();
         if (StringUtils.isBlank(ddpParticipantId)) throw new IllegalArgumentException("participant id cannot be empty");
@@ -43,6 +48,14 @@ public class GetParticipantRoute extends RequestHandler {
                         ? ElasticSearchUtil.BY_GUID + ddpParticipantId
                         : ElasticSearchUtil.BY_LEGACY_ALTPID + ddpParticipantId
         );
-        return ParticipantWrapper.getFilteredList(ddpInstance, queryConditions);
+        ParticipantWrapperPayload participantWrapperPayload = new ParticipantWrapperPayload.Builder()
+                .withFilter(queryConditions)
+                .withDdpInstanceDto(ddpInstanceDto)
+                .withFrom(0)
+                .withTo(10)
+                .build();
+        ElasticSearch elasticSearch = new ElasticSearch();
+
+        return new ParticipantWrapper(participantWrapperPayload, elasticSearch).getFilteredList().getParticipants();
     }
 }

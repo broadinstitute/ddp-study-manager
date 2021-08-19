@@ -89,13 +89,13 @@ public class InstanceSettings {
     }
 
     public InstanceSettingsDto getInstanceSettings(String realm) {
-        return instanceSettingsDao.getByStudyGuid(Objects.requireNonNull(realm))
+        return instanceSettingsDao.getByInstanceName(Objects.requireNonNull(realm))
                 .orElse(new InstanceSettingsDto.Builder().build());
     }
 
     //used ONLY for google cloud function
     public InstanceSettingsDto getInstanceSettings(Connection conn, String realm) {
-        return instanceSettingsDao.getByStudyGuid(Objects.requireNonNull(conn), Objects.requireNonNull(realm))
+        return instanceSettingsDao.getByInstanceName(Objects.requireNonNull(conn), Objects.requireNonNull(realm))
                 .orElse(new InstanceSettingsDto.Builder().build());
     }
 
@@ -242,7 +242,7 @@ public class InstanceSettings {
                 .map(Field::getName)
                 .collect(Collectors.toList());
         List<Method> methods = Arrays.stream(clazz.getMethods())
-                .filter(method -> method.getName().startsWith("get") || method.getName().startsWith("is"))
+                .filter(method -> method.getName().startsWith("get") || method.getName().startsWith("is") || method.getName().startsWith("has"))
                 .collect(Collectors.toList());
         fieldNames.forEach(fieldName -> {
             Optional<Method> methodByFieldName = methods.stream()

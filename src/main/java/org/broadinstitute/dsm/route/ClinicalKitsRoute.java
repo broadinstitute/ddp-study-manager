@@ -1,5 +1,8 @@
 package org.broadinstitute.dsm.route;
 
+import java.util.Objects;
+import java.util.Optional;
+
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
@@ -7,20 +10,19 @@ import org.broadinstitute.dsm.db.dao.kit.BSPKitDao;
 import org.broadinstitute.dsm.db.dto.kit.BSPKitDto;
 import org.broadinstitute.dsm.db.dto.kit.ClinicalKitDto;
 import org.broadinstitute.dsm.model.BSPKit;
-import org.broadinstitute.dsm.model.ParticipantWrapper;
 import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
 import org.broadinstitute.dsm.model.bsp.BSPKitStatus;
+import org.broadinstitute.dsm.model.elasticsearch.ESDsm;
+import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.statics.RequestParameter;
-import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.NotificationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 import spark.Route;
-
-import java.util.Map;
-import java.util.Optional;
 
 public class ClinicalKitsRoute implements Route {
     private String FIRSTNAME = "firstName";
@@ -75,24 +77,25 @@ public class ClinicalKitsRoute implements Route {
             if (hruid.indexOf('_') != -1) {
                 hruid = maybeBspKitQueryResult.getBspParticipantId().substring(maybeBspKitQueryResult.getBspParticipantId().lastIndexOf('_') + 1);
             }
-            Optional<ParticipantWrapper> maybeParticipant = ParticipantWrapper.getParticipantFromESByHruid(ddpInstance, hruid);
-            maybeParticipant.ifPresentOrElse(p -> {
-                        Map<String, String> dsm = (Map<String, String>) p.getData().get(ElasticSearchUtil.DSM);
-                        if (dsm != null && !dsm.isEmpty()) {
-                            clinicalKit.setDateOfBirth(dsm.get(DATE_OF_BIRtH));
-                        }
-                        Map<String, String> participantProfileFromEs = (Map<String, String>) p.getData().get(ElasticSearchUtil.PROFILE);
-                        String firstName = participantProfileFromEs.get(FIRSTNAME);
-                        String lastName = participantProfileFromEs.get(LASTNAME);
-                        String mailToName = firstName + " " + lastName;
-                        clinicalKit.setMailToName(mailToName);
-                    }
-
-                    , () -> {throw new RuntimeException("Participant doesn't exist / is not valid for kit " + kitLabel);}
-            );
+            ElasticSearchParticipantDto participantByShortId =
+                    new ElasticSearch().getParticipantByShortId(ddpInstance.getParticipantIndexES(), hruid);
+            setNeccessaryDataToClinicalKit(clinicalKit, participantByShortId);
         });
         maybeKitInfo.orElseThrow();
         return clinicalKit;
 
+    }
+
+    private void setNeccessaryDataToClinicalKit(ClinicalKitDto clinicalKit,
+                                                ElasticSearchParticipantDto participantByShortId) {
+        try {
+            clinicalKit.setDateOfBirth(Objects.requireNonNull(participantByShortId).getDsm().map(ESDsm::getDateOfBirth).orElse(""));
+            String firstName = participantByShortId.getProfile().map(ESProfile::getFirstName).orElse("");
+            String lastName = participantByShortId.getProfile().map(ESProfile::getLastName).orElse("");
+            String mailToName = firstName + " " + lastName;
+            clinicalKit.setMailToName(mailToName);
+        } catch (Exception e) {
+            throw new RuntimeException("Participant doesn't exist / is not valid for kit ");
+        }
     }
 }

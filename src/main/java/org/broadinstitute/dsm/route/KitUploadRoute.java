@@ -18,6 +18,10 @@ import org.broadinstitute.dsm.exception.FileColumnMissing;
 import org.broadinstitute.dsm.exception.FileWrongSeparator;
 import org.broadinstitute.dsm.exception.UploadLineException;
 import org.broadinstitute.dsm.model.*;
+import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
@@ -45,9 +49,11 @@ public class KitUploadRoute extends RequestHandler {
     private static final Logger logger = LoggerFactory.getLogger(KitUploadRoute.class);
 
     private NotificationUtil notificationUtil;
+    private ElasticSearch elasticSearch;
 
     public KitUploadRoute(@NonNull NotificationUtil notificationUtil) {
         this.notificationUtil = notificationUtil;
+        this.elasticSearch = new ElasticSearch();
     }
 
     private static final String SQL_SELECT_CHECK_KIT_ALREADY_EXISTS = "SELECT count(*) as found FROM ddp_kit_request request LEFT JOIN ddp_kit kit on (request.dsm_kit_request_id = kit.dsm_kit_request_id) " +
@@ -210,8 +216,10 @@ public class KitUploadRoute extends RequestHandler {
                 String participantLegacyAltPid = "";
                 //if kit has ddpParticipantId use that (RGP!)
                 if (StringUtils.isBlank(kit.getParticipantId())) {
-                    participantGuid = ParticipantWrapper.getParticipantGuid(ParticipantWrapper.getParticipantFromESByHruid(ddpInstance, kit.getShortId()));
-                    participantLegacyAltPid = ParticipantWrapper.getParticipantLegacyAltPid(ParticipantWrapper.getParticipantFromESByLegacyShortId(ddpInstance, kit.getShortId()));
+                    ElasticSearchParticipantDto participantByShortId =
+                            elasticSearch.getParticipantByShortId(ddpInstance.getParticipantIndexES(), kit.getShortId());
+                    participantGuid = participantByShortId.getProfile().map(ESProfile::getParticipantGuid).orElse("");
+                    participantLegacyAltPid = participantByShortId.getProfile().map(ESProfile::getParticipantLegacyAltPid).orElse("");
                     kit.setParticipantId(!participantGuid.isEmpty() ? participantGuid : participantLegacyAltPid);
                 }
                 else {
@@ -327,8 +335,8 @@ public class KitUploadRoute extends RequestHandler {
             }
         }
         else {
-            String participantGuid = ParticipantWrapper.getParticipantGuid(ParticipantWrapper.getParticipantFromESByHruid(ddpInstance, kit.getShortId()));
-            String participantLegacyAltPid = ParticipantWrapper.getParticipantLegacyAltPid(ParticipantWrapper.getParticipantFromESByLegacyShortId(ddpInstance, kit.getShortId()));
+            String participantGuid = elasticSearch.getParticipantByShortId(ddpInstance.getParticipantIndexES(), kit.getShortId()).getProfile().map(ESProfile::getParticipantGuid).orElse("");
+            String participantLegacyAltPid = elasticSearch.getParticipantByShortId(ddpInstance.getParticipantIndexES(), kit.getShortId()).getProfile().map(ESProfile::getParticipantLegacyAltPid).orElse("");
             if (checkAndSetParticipantIdIfKitExists(ddpInstance, conn, kit, participantGuid, participantLegacyAltPid, kitType.getKitTypeId()) && !uploadAnyway) {
                 duplicateKitList.add(kit);
             }
@@ -495,23 +503,23 @@ public class KitUploadRoute extends RequestHandler {
         String participantFirstNameFromDoc = participantDataByFieldName.get(FIRST_NAME).trim().toLowerCase();
         String participantLastNameFromDoc = participantDataByFieldName.get(LAST_NAME).trim().toLowerCase();
 
-        Optional<ParticipantWrapper> maybeParticipant =
-                ParticipantWrapper.getParticipantByShortId(ddpInstanceByRealm, participantIdFromDoc);
-        maybeParticipant.orElseThrow(() -> {
-            throw new RuntimeException("Participant " + participantIdFromDoc + " does not belong to this study");
-        });
-        return checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, maybeParticipant);
+        ElasticSearchParticipantDto participantByShortId;
+        try {
+            participantByShortId = elasticSearch.getParticipantByShortId(ddpInstanceByRealm.getParticipantIndexES(), participantIdFromDoc);
+        } catch (Exception e) {
+            throw new RuntimeException("Participant " + participantIdFromDoc + " does not belong to this study", e);
+        }
+        return checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, participantByShortId);
     }
 
     String checkKitUploadNameMatchesToEsName(String participantFirstNameFromDoc, String participantLastNameFromDoc,
-                                          Optional<ParticipantWrapper> maybeParticipant) {
+                                             ElasticSearchParticipantDto maybeParticipant) {
 
         Map<String, String> participantProfile = new HashMap<>();
-        maybeParticipant.ifPresent(p -> {
-            Map<String, String> participantProfileFromEs = (Map<String, String>) p.getData().get("profile");
-            participantProfile.put("firstName", participantProfileFromEs.get("firstName").trim().toLowerCase());
-            participantProfile.put("lastName", participantProfileFromEs.get("lastName").trim().toLowerCase());
-        });
+        String firstName = maybeParticipant.getProfile().map(ESProfile::getFirstName).orElse("");
+        String lastName = maybeParticipant.getProfile().map(ESProfile::getLastName).orElse("");
+        participantProfile.put("firstName", firstName);
+        participantProfile.put("lastName", lastName);
         String message = "";
 
 

@@ -64,6 +64,58 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
             "WHERE study_guid = ?";
     public static final String COLLABORATOR_ID_PREFIX = "collaborator_id_prefix";
 
+    private static final String SQL_BASE_SELECT = "SELECT " +
+            "ddp_instance_id," +
+            "instance_name," +
+            "study_guid," +
+            "display_name," +
+            "base_url," +
+            "is_active," +
+            "bsp_group," +
+            "bsp_collection," +
+            "bsp_organism," +
+            "collaborator_id_prefix," +
+            "reminder_notification_wks," +
+            "mr_attention_flag_d," +
+            "tissue_attention_flag_d," +
+            "auth0_token," +
+            "notification_recipients," +
+            "migrated_ddp," +
+            "billing_reference," +
+            "es_participant_index," +
+            "es_activity_definition_index," +
+            "es_users_index " +
+            "FROM ddp_instance ";
+
+    private static final String SQL_SELECT_DDP_INSTANCE_BY_GUID = SQL_BASE_SELECT +
+            "WHERE study_guid = ? ";
+
+    private static final String SQL_SELECT_DDP_INSTANCE_BY_INSTANCE_NAME = SQL_BASE_SELECT +
+            "WHERE instance_name = ? ";
+
+
+
+    public static final String DDP_INSTANCE_ID = "ddp_instance_id";
+    public static final String INSTANCE_NAME = "instance_name";
+    public static final String STUDY_GUID = "study_guid";
+    public static final String DISPLAY_NAME = "display_name";
+    public static final String BASE_URL = "base_url";
+    public static final String IS_ACTIVE = "is_active";
+    public static final String BSP_GROUP = "bsp_group";
+    public static final String BSP_COLLECTION = "bsp_collection";
+    public static final String BSP_ORGANISM = "bsp_organism";
+    public static final String COLLABORATOR_ID_PREFIX1 = "collaborator_id_prefix";
+    public static final String REMINDER_NOTIFICATION_WKS = "reminder_notification_wks";
+    public static final String MR_ATTENTION_FLAG_D = "mr_attention_flag_d";
+    public static final String TISSUE_ATTENTION_FLAG_D = "tissue_attention_flag_d";
+    public static final String AUTH0_TOKEN = "auth0_token";
+    public static final String NOTIFICATION_RECIPIENTS = "notification_recipients";
+    public static final String MIGRATED_DDP = "migrated_ddp";
+    public static final String BILLING_REFERENCE = "billing_reference";
+    public static final String ES_PARTICIPANT_INDEX = "es_participant_index";
+    public static final String ES_ACTIVITY_DEFINITION_INDEX = "es_activity_definition_index";
+    public static final String ES_USERS_INDEX = "es_users_index";
+
     public static boolean getRole(@NonNull String realm, @NonNull String role) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -110,7 +162,7 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
                 stmt.setObject(11, ddpInstanceDto.getMrAttentionFlagD());
                 stmt.setObject(12, ddpInstanceDto.getTissueAttentionFlagD());
                 stmt.setBoolean(13, ddpInstanceDto.getAuth0Token());
-                stmt.setString(14, ddpInstanceDto.getNotificiationRecipients());
+                stmt.setString(14, ddpInstanceDto.getNotificationRecipients());
                 stmt.setBoolean(15, ddpInstanceDto.getMigratedDdp());
                 stmt.setString(16, ddpInstanceDto.getBillingReference());
                 stmt.setString(17, ddpInstanceDto.getEsParticipantIndex());
@@ -181,6 +233,84 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
             throw new RuntimeException("Couldn't get realm information for " + studyGuid, results.resultException);
         }
         return (int) results.resultValue;
+    }
+
+    public Optional<DDPInstanceDto> getDDPInstanceByGuid(@NonNull String studyGuid) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_DDP_INSTANCE_BY_GUID)) {
+                stmt.setString(1, studyGuid);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = getDdpInstanceDtoFromResultSet(rs);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting ddp instance for " + studyGuid, e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get ddp instance for " + studyGuid, results.resultException);
+        }
+        return Optional.ofNullable((DDPInstanceDto) results.resultValue);
+    }
+
+
+    public Optional<DDPInstanceDto> getDDPInstanceByInstanceName(@NonNull String instanceName) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_DDP_INSTANCE_BY_INSTANCE_NAME)) {
+                stmt.setString(1, instanceName);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = getDdpInstanceDtoFromResultSet(rs);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting ddp instance for " + instanceName, e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get ddp instance for " + instanceName, results.resultException);
+        }
+        return Optional.ofNullable((DDPInstanceDto) results.resultValue);
+    }
+
+    private DDPInstanceDto getDdpInstanceDtoFromResultSet(ResultSet rs) throws SQLException {
+        return new DDPInstanceDto.Builder()
+                .withDdpInstanceId(rs.getInt(DDP_INSTANCE_ID))
+                .withInstanceName(rs.getString(INSTANCE_NAME))
+                .withStudyGuid(rs.getString(STUDY_GUID))
+                .withDisplayName(rs.getString(DISPLAY_NAME))
+                .withBaseUrl(rs.getString(BASE_URL))
+                .withIsActive(rs.getBoolean(IS_ACTIVE))
+                .withBspGroup(rs.getString(BSP_GROUP))
+                .withBspCollection(rs.getString(BSP_COLLECTION))
+                .withBspOrganims(rs.getString(BSP_ORGANISM))
+                .withCollaboratorIdPrefix(rs.getString(COLLABORATOR_ID_PREFIX1))
+                .withReminderNotificationWks(rs.getInt(REMINDER_NOTIFICATION_WKS))
+                .withMrAttentionFlagD(rs.getInt(MR_ATTENTION_FLAG_D))
+                .withTissueAttentionFlagD(rs.getInt(TISSUE_ATTENTION_FLAG_D))
+                .withAuth0Token(rs.getBoolean(AUTH0_TOKEN))
+                .withNotificationRecipient(rs.getString(NOTIFICATION_RECIPIENTS))
+                .withMigratedDdp(rs.getBoolean(MIGRATED_DDP))
+                .withBillingReference(rs.getString(BILLING_REFERENCE))
+                .withEsParticipantIndex(rs.getString(ES_PARTICIPANT_INDEX))
+                .withEsActivityDefinitionIndex(rs.getString(ES_ACTIVITY_DEFINITION_INDEX))
+                .withEsUsersIndex(rs.getString(ES_USERS_INDEX))
+                .build();
     }
 
     public Optional<String> getEsParticipantIndexByInstanceId(int instanceId) {
