@@ -65,4 +65,6 @@
     <include file="liquibase/DDP-6238_users-phoneNumbers.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/DDP-6504_hide-samples-tab.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/rgp/DDP-6504_hide-sample-information-tab.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/DDP-6586.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/DDP-6586_update_has_address_tab_to_true_for_pancan.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
