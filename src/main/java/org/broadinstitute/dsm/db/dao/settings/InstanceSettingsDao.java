@@ -20,12 +20,6 @@ import org.broadinstitute.dsm.model.Value;
 
 public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
 
-
-    private static final String SQL_GET_HIDE_SAMPLES_TAB_BY_STUDY_GUID = "SELECT " +
-            "hide_samples_tab " +
-            "FROM instance_settings " +
-            "WHERE ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE study_guid = ?)";
-
     private static final String SQL_GET_BY_STUDY_GUID = "SELECT " +
             "instance_settings_id, " +
             "ddp_instance_id, " +
@@ -41,6 +35,17 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
             "FROM instance_settings " +
             "WHERE ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE study_guid = ?)";
 
+    private static final String SQL_GET_HIDE_SAMPLES_TAB_BY_STUDY_GUID = "SELECT " +
+            "hide_samples_tab " +
+            "FROM instance_settings " +
+            "WHERE ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE study_guid = ?)";
+
+
+    private static final String SQL_GET_HAS_ADDRESS_TAB_BY_INSTANCE_NAME = "SELECT " +
+            "has_address_tab " +
+            "FROM instance_settings " +
+            "WHERE ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE instance_name = ?)";
+
     public static final String HIDE_SAMPLES_TAB = "hide_samples_tab";
     public static final String INSTANCE_SETTINGS_ID = "instance_settings_id";
     public static final String DDP_INSTANCE_ID = "ddp_instance_id";
@@ -52,6 +57,7 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
     public static final String DEFAULT_COLUMNS = "default_columns";
     public static final String HAS_INVITATIONS = "has_invitations";
     public static final String GBF_SHIPPED_DSS_DELIVERED = "GBF_SHIPPED_DSS_DELIVERED";
+    public static final String HAS_ADDRESS_TAB = "has_address_tab";
 
 
     @Override
@@ -90,6 +96,28 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
                     + studyGuid, results.resultException);
         }
         return Optional.ofNullable((Boolean) results.resultValue);
+    }
+
+    public Optional<Boolean> getHasAddressTabByStudyInstanceName(String instanceName) {
+        SimpleResult result = inTransaction((conn) -> {
+            SimpleResult executionResult = new SimpleResult();
+            try(PreparedStatement statement = conn.prepareStatement(SQL_GET_HAS_ADDRESS_TAB_BY_INSTANCE_NAME)) {
+                statement.setString(1, instanceName);
+                try(ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        executionResult.resultValue = resultSet.getBoolean(HAS_ADDRESS_TAB);
+                    }
+                }
+            } catch (SQLException sqlException) {
+                executionResult.resultValue = sqlException;
+            }
+            return executionResult;
+        });
+        if (result.resultException != null) {
+            throw new RuntimeException("Error occured while getting has_address_tab for instance_name: "
+                    + instanceName, result.resultException);
+        }
+        return Optional.ofNullable((Boolean) result.resultValue);
     }
 
     public Optional<InstanceSettingsDto> getByStudyGuid(String studyGuid) {
