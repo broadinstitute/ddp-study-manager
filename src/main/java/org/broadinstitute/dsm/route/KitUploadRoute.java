@@ -21,7 +21,6 @@ import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
-import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
@@ -522,12 +521,11 @@ public class KitUploadRoute extends RequestHandler {
         participantProfile.put("lastName", lastName);
         String message = "";
 
-
-        if (!participantFirstNameFromDoc.equals(participantProfile.get("firstName"))) {
+        if (!participantFirstNameFromDoc.equalsIgnoreCase(participantProfile.get("firstName"))) {
             message += "First names ";
         }
 
-        if (!participantLastNameFromDoc.equals(participantProfile.get("lastName"))) {
+        if (!participantLastNameFromDoc.equalsIgnoreCase(participantProfile.get("lastName"))) {
             if (StringUtils.isNotBlank(message)) {
                 message += "and ";
             }
