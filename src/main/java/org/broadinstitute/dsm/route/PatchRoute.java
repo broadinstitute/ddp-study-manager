@@ -11,9 +11,12 @@ import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantRecordDao;
+import org.broadinstitute.dsm.db.dao.queue.EventDao;
+import org.broadinstitute.dsm.db.dao.settings.EventTypeDao;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantRecordDto;
+import org.broadinstitute.dsm.db.dto.settings.EventTypeDto;
 import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.exception.DuplicateException;
@@ -23,8 +26,8 @@ import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Patch;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
-import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
+import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -37,18 +40,17 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 //Class needs to be refactored as soon as possible!!!
 public class PatchRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PatchRoute.class);
     private static final ParticipantDataDao participantDataDao = new ParticipantDataDao();
+    private static final EventDao eventDao = new EventDao();
+    private static final EventTypeDao eventTypeDao = new EventTypeDao();
     private static final Gson gson = new GsonBuilder().serializeNulls().create();
 
     private static final String PARTICIPANT_ID = "participantId";
@@ -69,18 +71,22 @@ public class PatchRoute extends RequestHandler {
         if (patchUtil.getColumnNameMap() == null) {
             return new RuntimeException("ColumnNameMap is null!");
         }
-        if (UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW) || UserUtil.checkUserAccess(null, userId, DBConstants.MR_ABSTRACTER)
-                || UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW) || UserUtil.checkUserAccess(null, userId, DBConstants.PT_LIST_VIEW)) {
+        String userIdRequest = UserUtil.getUserId(request);
+        if (UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW, userIdRequest) || UserUtil.checkUserAccess(null, userId, DBConstants.MR_ABSTRACTER, userIdRequest)
+                || UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW, userIdRequest) || UserUtil.checkUserAccess(null, userId, DBConstants.PT_LIST_VIEW, userIdRequest)) {
             try {
                 String requestBody = request.body();
                 Patch patch = gson.fromJson(requestBody, Patch.class);
                 if (StringUtils.isNotBlank(patch.getId())) {
                     //multiple values are changing
+                    DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
                     if (patch.getNameValues() != null && !patch.getNameValues().isEmpty()) {
                         List<NameValue> nameValues = new ArrayList<>();
-                        DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
-                        ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getParentId())
-                                .orElseThrow(() -> new RuntimeException("Unable to find ES profile for participant: " + patch.getParentId()));
+                        ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
+                                .orElse(null);
+                        if (profile == null) {
+                            logger.error("Unable to find ES profile for participant with guid/altpid: {}, continuing w/ patch", patch.getParentId());
+                        }
                         for (NameValue nameValue : patch.getNameValues()) {
                             DBElement dbElement = patchUtil.getColumnNameMap().get(nameValue.getName());
                             if (dbElement != null) {
@@ -116,8 +122,11 @@ public class PatchRoute extends RequestHandler {
                                 controlWorkflowByEmail(patch, nameValue, ddpInstance, profile);
                                 if (patch.getActions() != null) {
                                     for (Value action : patch.getActions()) {
-                                        if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
+                                        if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType()) && profile != null) {
                                             writeESWorkflow(patch, nameValue, action, ddpInstance, profile.getParticipantGuid());
+                                        }
+                                        else if (EventTypeDao.EVENT.equals(action.getType())) {
+                                            triggerParticipantEvent(ddpInstance, patch, action);
                                         }
                                     }
                                 }
@@ -134,7 +143,7 @@ public class PatchRoute extends RequestHandler {
                         if (dbElement != null) {
                             if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
                                 List<NameValue> nameValues = setWorkflowRelatedFields(patch);
-                                writeDSMRecordsToES(patch);
+                                writeDSMRecordsToES(patch, ddpInstance);
                                 //return nameValues with nulls
                                 return new Result(200, gson.toJson(nameValues));
                             }
@@ -285,6 +294,9 @@ public class PatchRoute extends RequestHandler {
                                         if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
                                             writeESWorkflow(patch, nameValue, action, ddpInstance, profile.getParticipantGuid());
                                         }
+                                        else if (EventTypeDao.EVENT.equals(action.getType())) {
+                                            triggerParticipantEvent(ddpInstance, patch, action);
+                                        }
                                     }
                                 }
                             }
@@ -322,6 +334,9 @@ public class PatchRoute extends RequestHandler {
     }
 
     private void controlWorkflowByEmail(Patch patch, NameValue nameValue, DDPInstance ddpInstance, ESProfile profile) {
+        if (profile == null || nameValue.getValue() == null) {
+            return;
+        }
         try {
             Map<String, String> pData = gson.fromJson(nameValue.getValue().toString(), Map.class);
             org.broadinstitute.dsm.model.participant.data.ParticipantData participantData =
@@ -348,7 +363,7 @@ public class PatchRoute extends RequestHandler {
                 Map<String, Object> esMap = ElasticSearchUtil
                         .getObjectsMap(ddpInstance.getParticipantIndexES(), profile.getParticipantGuid(),
                                 ESObjectConstants.WORKFLOWS);
-                if (Objects.isNull(esMap)) return;
+                if (Objects.isNull(esMap) || esMap.isEmpty()) return;
                 CopyOnWriteArrayList<Map<String, Object>> workflowsList = new CopyOnWriteArrayList<>((List<Map<String, Object>>)esMap.get(ESObjectConstants.WORKFLOWS));
                 int startingSize = workflowsList.size();
                 workflowsList.forEach(workflow -> {
@@ -390,8 +405,7 @@ public class PatchRoute extends RequestHandler {
         return new ParticipantDao().create(participantDto);
     }
 
-    private void writeDSMRecordsToES(@NonNull Patch patch) {
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+    private void writeDSMRecordsToES(@NonNull Patch patch, DDPInstance ddpInstance) {
         NameValue nameValue = patch.getNameValue();
         String name = nameValue.getName().substring(nameValue.getName().lastIndexOf('.') + 1);
         String type = null;
@@ -406,14 +420,16 @@ public class PatchRoute extends RequestHandler {
         nameValueMap.put(name, value);
         if (DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(type)) {
             if (ESObjectConstants.MEDICAL_RECORDS_FIELD_NAMES.contains(name)) {
-                ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getParentId(),
+                ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getDdpParticipantId(),
                         ESObjectConstants.MEDICAL_RECORDS, ESObjectConstants.MEDICAL_RECORDS_ID, nameValueMap);
             }
         }
         else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(type)) {
             if (ESObjectConstants.TISSUE_RECORDS_FIELD_NAMES.contains(name)) {
-                ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getParentId(),
-                        ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, nameValueMap);
+                if (PARTICIPANT_ID.equals(patch.getParent())) {
+                    ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getDdpParticipantId(),
+                            ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, nameValueMap);
+                }
             }
         }
     }
@@ -490,18 +506,18 @@ public class PatchRoute extends RequestHandler {
         else if (patch.getNameValue().getName().equals("t.tissueReturnDate")) {
             if (StringUtils.isNotBlank(patch.getNameValue().getValue().toString())) {
                 nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getParentId(), PARTICIPANT_ID,
-                        null, patch.getUser(), patch.getNameValue(), patch.getNameValues()), "returned"));
+                        null, patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "returned"));
             }
             else {
                 Boolean hasReceivedDate = OncHistoryDetail.hasReceivedDate(patch);
 
                 if (hasReceivedDate) {
                     nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getParentId(), PARTICIPANT_ID,
-                            null, patch.getUser(), patch.getNameValue(), patch.getNameValues()), "received"));
+                            null, patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "received"));
                 }
                 else {
                     nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getParentId(), PARTICIPANT_ID,
-                            null, patch.getUser(), patch.getNameValue(), patch.getNameValues()), "sent"));
+                            null, patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "sent"));
                 }
             }
         }
@@ -512,11 +528,11 @@ public class PatchRoute extends RequestHandler {
 
             if (hasReceivedDate) {
                 nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getId(), PARTICIPANT_ID,
-                        patch.getParentId(), patch.getUser(), patch.getNameValue(), patch.getNameValues()), "received"));
+                        patch.getParentId(), patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "received"));
             }
             else {
                 nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getId(), PARTICIPANT_ID,
-                        patch.getParentId(), patch.getUser(), patch.getNameValue(), patch.getNameValues()), "sent"));
+                        patch.getParentId(), patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "sent"));
             }
         }
         return nameValues;
@@ -532,5 +548,21 @@ public class PatchRoute extends RequestHandler {
         else {
             throw new RuntimeException("DBElement not found in ColumnNameMap: " + additionalValue);
         }
+    }
+
+    private void triggerParticipantEvent(DDPInstance ddpInstance, Patch patch, Value action){
+        Optional<EventTypeDto> eventType = eventTypeDao.getEventTypeByEventTypeAndInstanceId(action.getName(), ddpInstance.getDdpInstanceId());
+        eventType.ifPresent(eventTypeDto -> {
+            boolean participantHasTriggeredEventByEventType = eventDao.hasTriggeredEventByEventTypeAndDdpParticipantId(action.getName(), patch.getParentId()).orElse(false);
+            if (!participantHasTriggeredEventByEventType) {
+                inTransaction((conn) -> {
+                    EventUtil.triggerDDP(conn, eventType, patch.getParentId());
+                    return null;
+                });
+            }
+            else {
+                logger.info("Participant " + patch.getParentId() + " was already triggered for event type " + action.getName());
+            }
+        });
     }
 }

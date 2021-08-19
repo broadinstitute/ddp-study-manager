@@ -6,8 +6,8 @@ import com.typesafe.config.Config;
 import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.EditParticipantMessage;
-import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
+import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.route.EditParticipantPublisherRoute;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.DBTestUtil;
@@ -50,8 +50,7 @@ public class EditParticipantTest extends TestHelper {
     public void testEditParticipantFeature() {
 
         String realm = null;
-
-        if (UserUtil.checkUserAccess(realm, Integer.toString(userId), "participant_edit")) {
+        if (UserUtil.checkUserAccess(realm, Integer.toString(userId), "participant_edit", null)) {
             try {
                 PubSubResultMessageSubscription.dssToDsmSubscriber(projectId, dsmToDssSubscriptionId);
             } catch (Exception e) {

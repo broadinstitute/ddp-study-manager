@@ -66,6 +66,11 @@ public class AbstractionFinal {
         return getAbstractionFinal(realm, null);
     }
 
+    public static Map<String, List<AbstractionGroup>> getAbstractionFinalByParticipantIds(@NonNull String realm, List<String> participantIds) {
+        String queryAddition = " AND p.ddp_participant_id IN (?)".replace("?", DBUtil.participantIdsInClause(participantIds));
+        return getAbstractionFinal(realm, queryAddition);
+    }
+
     public static Map<String, List<AbstractionGroup>> getAbstractionFinal(@NonNull String realm, String queryAddition) {
         logger.info("Collection mr information");
         Map<String, List<AbstractionGroup>> abstractionFinal = new HashMap<>();

@@ -7,8 +7,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.dao.Dao;
@@ -38,7 +42,7 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
             "last_changed," +
             "changed_by" +
             " FROM ddp_participant_data ";
-    private static final String BY_INSTANCE_ID = "WHERE ddp_instance_id = ?";
+    private static final String BY_INSTANCE_ID = "WHERE ddp_instance_id = ? ";
     private static final String SQL_DELETE_DDP_PARTICIPANT_DATA = "DELETE FROM ddp_participant_data WHERE participant_data_id = ?";
     private static final String SQL_PARTICIPANT_DATA_BY_ID = "SELECT " +
             "participant_data_id," +
@@ -59,6 +63,8 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
 
     private static final String SQL_UPDATE_DATA_TO_PARTICIPANT_DATA = "UPDATE ddp_participant_data SET data = ?, " +
             "last_changed = ?, changed_by = ? WHERE participant_data_id = ?";
+
+    private static final String SQL_GET_PARTICIPANT_DATA_BY_PARTICIPANT_IDS = SQL_ALL_PARTICIPANT_DATA + "WHERE ddp_participant_id IN (?)";
 
     private static final String PARTICIPANT_DATA_ID = "participant_data_id";
     private static final String DDP_PARTICIPANT_ID = "ddp_participant_id";
@@ -208,6 +214,85 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
         return participantDataDtoList;
     }
 
+    public Map<String, List<ParticipantDataDto>> getParticipantDataByParticipantIds(List<String> participantIds) {
+        String sqlWithInClause = SQL_GET_PARTICIPANT_DATA_BY_PARTICIPANT_IDS.replace("?",
+                participantIds.stream().collect(Collectors.joining("','", "'", "'")));
+        Map<String, List<ParticipantDataDto>> participantDatasByParticipantIds = new HashMap<>();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(sqlWithInClause)) {
+                try(ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        ArrayList<ParticipantDataDto> value = new ArrayList<>(
+                                List.of(new ParticipantDataDto.Builder()
+                                        .withParticipantDataId(rs.getInt(PARTICIPANT_DATA_ID))
+                                        .withDdpParticipantId(rs.getString(DDP_PARTICIPANT_ID))
+                                        .withDdpInstanceId(rs.getInt(DDP_INSTANCE_ID))
+                                        .withFieldTypeId(rs.getString(FIELD_TYPE_ID))
+                                        .withData(rs.getString(DATA))
+                                        .withLastChanged(rs.getLong(LAST_CHANGED))
+                                        .withChangedBy(rs.getString(CHANGED_BY))
+                                        .build()
+                                )
+                        );
+                        participantDatasByParticipantIds.merge(rs.getString(DDP_PARTICIPANT_ID), value, (preValue, currentValue) -> {
+                            preValue.addAll(currentValue);
+                            return preValue;
+                        });
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                execResult.resultException = ex;
+            }
+            return execResult;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting participants data with ", results.resultException);
+        }
+        return participantDatasByParticipantIds;
+    }
+
+
+
+    public Map<String, List<ParticipantDataDto>> getParticipantDataByInstanceIdAndFilterQuery(int ddpInstanceId, String filterQuery) {
+        Map<String, List<ParticipantDataDto>> participantDatasByParticipantIds = new HashMap<>();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_ALL_PARTICIPANT_DATA + BY_INSTANCE_ID + filterQuery)) {
+                stmt.setInt(1, ddpInstanceId);
+                try(ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        ArrayList<ParticipantDataDto> value = new ArrayList<>(
+                                List.of(new ParticipantDataDto.Builder()
+                                        .withParticipantDataId(rs.getInt(PARTICIPANT_DATA_ID))
+                                        .withDdpParticipantId(rs.getString(DDP_PARTICIPANT_ID))
+                                        .withDdpInstanceId(rs.getInt(DDP_INSTANCE_ID))
+                                        .withFieldTypeId(rs.getString(FIELD_TYPE_ID))
+                                        .withData(rs.getString(DATA))
+                                        .withLastChanged(rs.getLong(LAST_CHANGED))
+                                        .withChangedBy(rs.getString(CHANGED_BY))
+                                        .build()
+                                )
+                        );
+                        participantDatasByParticipantIds.merge(rs.getString(DDP_PARTICIPANT_ID), value, (preValue, currentValue) -> {
+                            preValue.addAll(currentValue);
+                            return preValue;
+                        });
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                execResult.resultException = ex;
+            }
+            return execResult;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting participants data with ", results.resultException);
+        }
+        return participantDatasByParticipantIds;
+    }
+
     public List<ParticipantDataDto> getAllParticipantData() {
         List<ParticipantDataDto> participantDataDtoList = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
@@ -245,6 +330,40 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult execResult = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_ALL_PARTICIPANT_DATA + BY_INSTANCE_ID)) {
+                stmt.setInt(1, instanceId);
+                try(ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        participantDataDtoList.add(
+                                new ParticipantDataDto.Builder()
+                                        .withParticipantDataId(rs.getInt(PARTICIPANT_DATA_ID))
+                                        .withDdpParticipantId(rs.getString(DDP_PARTICIPANT_ID))
+                                        .withDdpInstanceId(rs.getInt(DDP_INSTANCE_ID))
+                                        .withFieldTypeId(rs.getString(FIELD_TYPE_ID))
+                                        .withData(rs.getString(DATA))
+                                        .withLastChanged(rs.getLong(LAST_CHANGED))
+                                        .withChangedBy(rs.getString(CHANGED_BY))
+                                        .build()
+                        );
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                execResult.resultException = ex;
+            }
+            return execResult;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting participant data ", results.resultException);
+        }
+        return participantDataDtoList;
+    }
+
+
+    public List<ParticipantDataDto> getParticipantDataByInstanceIdAndQueryAddition(int instanceId, String queryAddition) {
+        List<ParticipantDataDto> participantDataDtoList = new ArrayList<>();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_ALL_PARTICIPANT_DATA + BY_INSTANCE_ID + queryAddition)) {
                 stmt.setInt(1, instanceId);
                 try(ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {

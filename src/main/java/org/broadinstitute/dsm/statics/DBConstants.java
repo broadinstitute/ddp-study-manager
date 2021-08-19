@@ -476,7 +476,8 @@ public class DBConstants {
     public static final String UPS_LOCATION = "ups_location";
     public static final String UPS_ACTIVITY_ID = "ups_activity_id";
 
-
+    //access_user
+    public static final String PHONE_NUMBER = "phone_number";
 
 
 

@@ -1,7 +1,9 @@
 package org.broadinstitute.dsm.model.elasticsearch;
 
 import com.google.gson.annotations.SerializedName;
+import lombok.Setter;
 
+@Setter
 public class ESAddress {
 
     @SerializedName("street1")

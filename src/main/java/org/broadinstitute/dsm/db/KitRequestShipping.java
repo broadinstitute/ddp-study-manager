@@ -205,7 +205,6 @@ public class KitRequestShipping extends KitRequest {
 
     @ColumnName (DBConstants.UPLOAD_REASON)
     private String uploadReason;
-
     public KitRequestShipping(String collaboratorParticipantId, String kitType, String dsmKitRequestId, long scanDate, boolean error, long receiveDate, long deactivatedDate, String testResult,
                               String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus, String externalOrderNumber, long externalOrderDate, boolean careEvolve, String uploadReason) {
         this(null, collaboratorParticipantId, null, null, null, kitType, dsmKitRequestId, null, null, null,
@@ -334,6 +333,11 @@ public class KitRequestShipping extends KitRequest {
 
     public static Map<String, List<KitRequestShipping>> getKitRequests(@NonNull DDPInstance instance) {
         return getKitRequests(instance, null);
+    }
+
+    public static Map<String, List<KitRequestShipping>> getKitRequestsByParticipantIds(@NonNull DDPInstance instance, List<String> participantIds) {
+        String queryAddition = " AND request.ddp_participant_id IN (?)".replace("?", DBUtil.participantIdsInClause(participantIds));
+        return getKitRequests(instance, queryAddition);
     }
 
     public static Map<String, List<KitRequestShipping>> getKitRequests(@NonNull DDPInstance instance, String queryAddition) {
@@ -1486,6 +1490,21 @@ public class KitRequestShipping extends KitRequest {
         }
         catch (SQLException e) {
             throw new RuntimeException("Could not set order transmission date for " + kitExternalOrderId, e);
+        }
+    }
+
+    public static String getCollaboratorSampleId(int kitTypeId, String participantCollaboratorId, String kitType) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            String collaboratorSampleId = generateBspSampleID(conn, participantCollaboratorId, kitType, kitTypeId);
+            dbVals.resultValue = collaboratorSampleId;
+            return dbVals;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting Collaborator Sample Id for  " + participantCollaboratorId, results.resultException);
+        }
+        else {
+            return (String) results.resultValue;
         }
     }
 }
