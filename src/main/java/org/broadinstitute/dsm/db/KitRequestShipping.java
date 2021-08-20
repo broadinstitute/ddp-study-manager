@@ -335,6 +335,11 @@ public class KitRequestShipping extends KitRequest {
         return getKitRequests(instance, null);
     }
 
+    public static Map<String, List<KitRequestShipping>> getKitRequestsByParticipantIds(@NonNull DDPInstance instance, List<String> participantIds) {
+        String queryAddition = " AND request.ddp_participant_id IN (?)".replace("?", DBUtil.participantIdsInClause(participantIds));
+        return getKitRequests(instance, queryAddition);
+    }
+
     public static Map<String, List<KitRequestShipping>> getKitRequests(@NonNull DDPInstance instance, String queryAddition) {
         logger.info("Collection sample information");
         Map<String, List<KitRequestShipping>> kitRequests = new HashMap<>();

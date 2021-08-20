@@ -6,7 +6,7 @@ import spark.QueryParamsMap;
 
 public interface Filterable<T> {
 
-    List<T> filter(QueryParamsMap queryParamsMap);
+    T filter(QueryParamsMap queryParamsMap);
 
 
 }

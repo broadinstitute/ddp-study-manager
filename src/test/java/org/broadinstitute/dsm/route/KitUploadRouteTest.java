@@ -4,7 +4,10 @@ import com.typesafe.config.Config;
 import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.exception.FileColumnMissing;
 import org.broadinstitute.dsm.exception.UploadLineException;
-import org.broadinstitute.dsm.model.ParticipantWrapper;
+import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
 import org.broadinstitute.dsm.util.NotificationUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
@@ -79,9 +82,14 @@ public class KitUploadRouteTest {
         String participantFirstNameFromDoc = participantDataAsMap.get("firstName");
         String participantLastNameFromDoc = participantDataAsMap.get("lastName");
 
-        ParticipantWrapper testParticipant = participantFactory("Mickey", "Mouse", "");
-
-        Assert.assertNotEquals("", route.checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, Optional.of(testParticipant)));
+        ESProfile esProfile = new ESProfile();
+        esProfile.setFirstName("Mickey");
+        esProfile.setLastName("Mouse");
+        esProfile.setHruid("");
+        ElasticSearchParticipantDto elasticSearchParticipantDto = new ElasticSearchParticipantDto.Builder()
+                .withProfile(esProfile)
+                .build();
+        Assert.assertNotEquals("", route.checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, elasticSearchParticipantDto));
     }
 
     @Test
@@ -97,22 +105,25 @@ public class KitUploadRouteTest {
         String participantFirstNameFromDoc = participantDataAsMap.get("firstName");
         String participantLastNameFromDoc = participantDataAsMap.get("lastName");
 
-        Assert.assertNotEquals("", route.checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, Optional.empty()));
+        ElasticSearchParticipantDto elasticSearchParticipantDto = new ElasticSearchParticipantDto.Builder().build();
+        Assert.assertNotEquals("", route.checkKitUploadNameMatchesToEsName(participantFirstNameFromDoc, participantLastNameFromDoc, elasticSearchParticipantDto));
     }
 
-    private ParticipantWrapper participantFactory(String firstName, String lastName, String shortId) {
-        ParticipantWrapper participant = new ParticipantWrapper();
-        Map<String, Object> participantData = new HashMap<>();
-        Map<String, String> participantProfile = new HashMap<>();
-        participantProfile.put("firstName", firstName);
-        participantProfile.put("lastName", lastName);
+    private ParticipantWrapperDto participantFactory(String firstName, String lastName, String shortId) {
+        ParticipantWrapperDto participant = new ParticipantWrapperDto();
+        ESProfile esProfile = new ESProfile();
+        esProfile.setFirstName(firstName);
+        esProfile.setLastName(lastName);
         if (ParticipantUtil.isHruid(shortId)) {
-            participantProfile.put("hruid", shortId);
+            esProfile.setHruid(shortId);
         } else {
-            participantProfile.put("legacyShortId", shortId);
+            esProfile.setParticipantLegacyAltPid(shortId);
         }
-        participantData.put("profile", participantProfile);
-        participant.setData(participantData);
+
+        ElasticSearchParticipantDto elasticSearchParticipantDto = new ElasticSearchParticipantDto.Builder()
+                .withProfile(esProfile)
+                .build();
+        participant.setEsData(elasticSearchParticipantDto);
         return participant;
     }
 }

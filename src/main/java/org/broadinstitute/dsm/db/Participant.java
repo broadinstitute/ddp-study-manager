@@ -15,6 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -174,6 +175,11 @@ public class Participant {
 
     public static Map<String, Participant> getParticipants(@NonNull String realm) {
         return getParticipants(realm, null);
+    }
+
+    public static List<Participant> getParticipantsByIds(@NonNull String realm, List<String> participantIds) {
+        String queryAddition = " AND p.ddp_participant_id IN (?)".replace("?", DBUtil.participantIdsInClause(participantIds));
+        return new ArrayList<>(getParticipants(realm, queryAddition).values());
     }
 
     public static Map<String, Participant> getParticipants(@NonNull String realm, String queryAddition) {

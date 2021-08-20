@@ -8,15 +8,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
-import org.broadinstitute.ddp.email.SendGridEvent;
-import org.broadinstitute.ddp.email.SendGridEventData;
 import org.broadinstitute.ddp.handlers.util.*;
 import org.broadinstitute.ddp.security.SecurityHelper;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.model.*;
-import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
 import org.broadinstitute.dsm.util.*;
-import org.jruby.embed.ScriptingContainer;
 import org.junit.*;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.model.JsonBody;
@@ -446,16 +444,16 @@ public class RouteTest extends TestHelper {
 
     @Test
     public void participantEndpoint() throws Exception {
-        ParticipantWrapper[] participants = getParticipants("/ui/applyFilter?parent=participantList&userId=26&realm=" + TEST_DDP);
+        ParticipantWrapperDto[] participants = getParticipants("/ui/applyFilter?parent=participantList&userId=26&realm=" + TEST_DDP);
         Assert.assertNotNull(participants);
         Assert.assertTrue(participants.length > 0);
     }
 
-    public static ParticipantWrapper[] getParticipants(String sentRequest) throws Exception {
+    public static ParticipantWrapperDto[] getParticipants(String sentRequest) throws Exception {
         HttpResponse response = TestUtil.performGet(DSM_BASE_URL, sentRequest, testUtil.buildAuthHeaders()).returnResponse();
         Assert.assertEquals(200, response.getStatusLine().getStatusCode());
         Gson gson = new GsonBuilder().create();
-        ParticipantWrapper[] participants = gson.fromJson(DDPRequestUtil.getContentAsString(response), ParticipantWrapper[].class);
+        ParticipantWrapperDto[] participants = gson.fromJson(DDPRequestUtil.getContentAsString(response), ParticipantWrapperDto[].class);
         return participants;
     }
 

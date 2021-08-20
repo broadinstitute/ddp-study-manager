@@ -1151,7 +1151,7 @@ public class DBTestUtil {
     }
 
     public static DDPInstanceDto createTestDdpInstance(DDPInstanceDto ddpInstanceDto, DDPInstanceDao ddpInstanceDao, String ddpInstanceName) {
-        ddpInstanceDto = DDPInstanceDto.of(true, true, true);
+        ddpInstanceDto = new DDPInstanceDto.Builder().build();
         ddpInstanceDto.setInstanceName(ddpInstanceName);
         int testCreatedInstanceId = ddpInstanceDao.create(ddpInstanceDto);
         ddpInstanceDto.setDdpInstanceId(testCreatedInstanceId);

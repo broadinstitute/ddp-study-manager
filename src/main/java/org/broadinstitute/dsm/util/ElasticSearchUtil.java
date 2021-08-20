@@ -22,6 +22,7 @@ import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.elasticsearch.ESAddress;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.gbf.Address;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -234,8 +235,8 @@ public class ElasticSearchUtil {
         return esData;
     }
 
-    public static Optional<ElasticSearch> getParticipantESDataByParticipantId(@NonNull String index, @NonNull String participantId) {
-        Optional<ElasticSearch> elasticSearch = Optional.empty();
+    public static Optional<ElasticSearchParticipantDto> getParticipantESDataByParticipantId(@NonNull String index, @NonNull String participantId) {
+        Optional<ElasticSearchParticipantDto> elasticSearch = Optional.empty();
         logger.info("Getting ES data for participant: " + participantId);
         try {
             elasticSearch = fetchESDataByParticipantId(index, participantId, client);
@@ -247,8 +248,8 @@ public class ElasticSearchUtil {
         return elasticSearch;
     }
 
-    public static ElasticSearch getParticipantESDataByAltpid(@NonNull String index, @NonNull String altpid) {
-        ElasticSearch elasticSearch = new ElasticSearch.Builder().build();
+    public static ElasticSearchParticipantDto getParticipantESDataByAltpid(@NonNull String index, @NonNull String altpid) {
+        ElasticSearchParticipantDto elasticSearch = new ElasticSearchParticipantDto.Builder().build();
         logger.info("Getting ES data for participant: " + altpid);
         try {
             elasticSearch = fetchESDataByAltpid(index, altpid, client);
@@ -260,17 +261,17 @@ public class ElasticSearchUtil {
         return elasticSearch;
     }
 
-    public static Optional<ElasticSearch> fetchESDataByParticipantId(String index, String participantId, RestHighLevelClient client) throws IOException {
+    public static Optional<ElasticSearchParticipantDto> fetchESDataByParticipantId(String index, String participantId, RestHighLevelClient client) throws IOException {
         String matchQueryName = ParticipantUtil.isGuid(participantId) ? "profile.guid" : "profile.legacyAltPid";
         return Optional.of(getElasticSearchForGivenMatch(index, participantId, client, matchQueryName));
     }
 
-    public static ElasticSearch fetchESDataByAltpid(String index, String altpid, RestHighLevelClient client) throws IOException {
+    public static ElasticSearchParticipantDto fetchESDataByAltpid(String index, String altpid, RestHighLevelClient client) throws IOException {
         String matchQueryName = "profile.legacyAltPid";
         return getElasticSearchForGivenMatch(index, altpid, client, matchQueryName);
     }
 
-    public static ElasticSearch getElasticSearchForGivenMatch(String index, String id, RestHighLevelClient client, String matchQueryName) throws IOException {
+    public static ElasticSearchParticipantDto getElasticSearchForGivenMatch(String index, String id, RestHighLevelClient client, String matchQueryName) throws IOException {
         SearchRequest searchRequest = new SearchRequest(index);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         SearchResponse response = null;
@@ -675,8 +676,8 @@ public class ElasticSearchUtil {
         logger.info("Update workflow information for participant " + ddpParticipantId + " to ES index " + index);
     }
 
-    private static ElasticSearch getParticipantESDataByAltpid(RestHighLevelClient client, String index, String altpid) {
-        ElasticSearch elasticSearch = new ElasticSearch.Builder().build();
+    private static ElasticSearchParticipantDto getParticipantESDataByAltpid(RestHighLevelClient client, String index, String altpid) {
+        ElasticSearchParticipantDto elasticSearch = new ElasticSearchParticipantDto.Builder().build();
 
         logger.info("Getting ES data for participant: " + altpid);
         try {
@@ -729,7 +730,7 @@ public class ElasticSearchUtil {
             ESProfile profile = null;
             if (response.getHits().getTotalHits() > 0) {
                 Map<String, Object> source = response.getHits().getAt(0).getSourceAsMap();
-                profile = ElasticSearch.parseSourceMap(source).flatMap(ElasticSearch::getProfile).orElse(null);
+                profile = ElasticSearch.parseSourceMap(source).flatMap(ElasticSearchParticipantDto::getProfile).orElse(null);
                 if (profile != null) {
                     logger.info("Found ES profile for participant, guid: {} altpid: {}", profile.getParticipantGuid(), profile.getParticipantLegacyAltPid());
                 }
@@ -822,7 +823,7 @@ public class ElasticSearchUtil {
         return null;
     }
 
-    private static AbstractQueryBuilder<? extends AbstractQueryBuilder<?>> createESQuery(@NonNull String filter) {
+    public static AbstractQueryBuilder<? extends AbstractQueryBuilder<?>> createESQuery(@NonNull String filter) {
         String[] filters = filter.split(Filter.AND);
         BoolQueryBuilder finalQuery = new BoolQueryBuilder();
 
@@ -1403,10 +1404,10 @@ public class ElasticSearchUtil {
     private static void valueQueryBuilder(@NonNull BoolQueryBuilder finalQuery, @NonNull String name, @NonNull String query, boolean wildCard, boolean must) {
         if (wildCard) {
             if (must) {
-                finalQuery.must(QueryBuilders.wildcardQuery(name, query.toLowerCase() + "*"));
+                finalQuery.must(QueryBuilders.wildcardQuery(name, "*" + query.toLowerCase() + "*"));
             }
             else {
-                finalQuery.should(QueryBuilders.wildcardQuery(name, query.toLowerCase() + "*"));
+                finalQuery.should(QueryBuilders.wildcardQuery(name, "*" + query.toLowerCase() + "*"));
             }
         }
         else {
@@ -1430,5 +1431,12 @@ public class ElasticSearchUtil {
 
     private static boolean isESUsersIndex(String index) {
         return index.startsWith("users");
+    }
+
+    public static Map<String, Map<String, Object>> getESData(@NonNull DDPInstance instance) {
+        if (StringUtils.isNotBlank(instance.getParticipantIndexES())) {
+            return getDDPParticipantsFromES(instance.getName(), instance.getParticipantIndexES());
+        }
+        return null;
     }
 }

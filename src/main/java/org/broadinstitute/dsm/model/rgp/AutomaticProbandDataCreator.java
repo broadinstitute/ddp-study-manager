@@ -18,6 +18,7 @@ import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
 import org.broadinstitute.dsm.model.defaultvalues.Defaultable;
 import org.broadinstitute.dsm.model.elasticsearch.ESActivities;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
 import org.broadinstitute.dsm.model.participant.data.ParticipantData;
@@ -39,29 +40,29 @@ public class AutomaticProbandDataCreator implements Defaultable {
     private final DDPInstanceDao ddpInstanceDao = new DDPInstanceDao();
     private DDPInstance instance;
 
-    private boolean setDefaultProbandData(Optional<ElasticSearch> maybeParticipantESData) {
+    private boolean setDefaultProbandData(Optional<ElasticSearchParticipantDto> maybeParticipantESData) {
         if (maybeParticipantESData.isEmpty()) {
             logger.warn("Could not create proband/self data, participant ES data is null");
             return false;
         }
-        List<FieldSettingsDto> optionAndRadioFieldSettingsDtosByInstanceId =
+        List<FieldSettingsDto> fieldSettingsDtosByOptionAndInstanceId =
                 FieldSettingsDao.of().getOptionAndRadioFieldSettingsByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
 
         return maybeParticipantESData
-                .map(elasticSearch -> extractAndInsertProbandFromESData(instance, elasticSearch, optionAndRadioFieldSettingsDtosByInstanceId))
+                .map(elasticSearch -> extractAndInsertProbandFromESData(instance, elasticSearch, fieldSettingsDtosByOptionAndInstanceId))
                 .orElse(false);
     }
 
-    private boolean extractAndInsertProbandFromESData(DDPInstance instance, ElasticSearch esData,
-                                                   List<FieldSettingsDto> optionAndRadioFieldSettingsDtosByInstanceId) {
+    private boolean extractAndInsertProbandFromESData(DDPInstance instance, ElasticSearchParticipantDto esData,
+                                                   List<FieldSettingsDto> fieldSettingsDtosByOptionAndInstanceId) {
 
         return esData.getProfile()
                 .map(esProfile -> {
                     logger.info("Got ES profile of participant: " + esProfile.getParticipantGuid());
                     Map<String, String> columnsWithDefaultOptions =
-                            fieldSettings.getColumnsWithDefaultValues(optionAndRadioFieldSettingsDtosByInstanceId);
+                            fieldSettings.getColumnsWithDefaultValues(fieldSettingsDtosByOptionAndInstanceId);
                     Map<String, String> columnsWithDefaultOptionsFilteredByElasticExportWorkflow =
-                            fieldSettings.getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(optionAndRadioFieldSettingsDtosByInstanceId);
+                            fieldSettings.getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(fieldSettingsDtosByOptionAndInstanceId);
                     String participantId = StringUtils.isNotBlank(esProfile.getParticipantLegacyAltPid())
                             ? esProfile.getParticipantLegacyAltPid()
                             : esProfile.getParticipantGuid();
@@ -95,7 +96,7 @@ public class AutomaticProbandDataCreator implements Defaultable {
                 });
     }
 
-    private Map<String, String> extractProbandDefaultDataFromParticipantProfile(@NonNull ElasticSearch esData,
+    private Map<String, String> extractProbandDefaultDataFromParticipantProfile(@NonNull ElasticSearchParticipantDto esData,
                                                                                        Optional<BookmarkDto> maybeBookmark) {
         Optional<List<ESActivities>> participantActivities = esData.getActivities();
         String mobilePhone = participantActivities
@@ -155,7 +156,7 @@ public class AutomaticProbandDataCreator implements Defaultable {
     public boolean generateDefaults(String studyGuid, String participantId) {
         String esParticipantIndex = ddpInstanceDao.getEsParticipantIndexByStudyGuid(studyGuid)
                 .orElse("");
-        Optional<ElasticSearch> maybeParticipantESDataByParticipantId =
+        Optional<ElasticSearchParticipantDto> maybeParticipantESDataByParticipantId =
                 ElasticSearchUtil.getParticipantESDataByParticipantId(esParticipantIndex, participantId);
         instance = DDPInstance.getDDPInstance(studyGuid);
         return setDefaultProbandData(maybeParticipantESDataByParticipantId);

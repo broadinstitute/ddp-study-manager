@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 
 import java.util.List;
@@ -78,10 +79,10 @@ public class ParticipantUtil {
     public static String getParticipantEmailById(String esParticipantIndex, String pId) {
         if (StringUtils.isBlank(esParticipantIndex) || StringUtils.isBlank(pId)) throw new IllegalArgumentException();
         StringBuilder email = new StringBuilder();
-        ElasticSearch participantESDataByParticipantId =
+        ElasticSearchParticipantDto elasticSearchParticipantDto =
                 ElasticSearchUtil.getParticipantESDataByParticipantId(esParticipantIndex, pId)
-                .orElse(new ElasticSearch.Builder().build());
-        email.append(participantESDataByParticipantId.getProfile()
+                        .orElse(new ElasticSearchParticipantDto.Builder().build());
+        email.append(elasticSearchParticipantDto.getProfile()
                 .map(ESProfile::getEmail)
                 .orElse(""));
         return email.toString();

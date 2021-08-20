@@ -20,7 +20,7 @@ import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class BaseFilterTissueList extends BaseFilter implements Filterable<TissueListWrapper> {
+public abstract class BaseFilterTissueList extends BaseFilter implements Filterable<List<TissueListWrapper>> {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseFilterTissueList.class);
 

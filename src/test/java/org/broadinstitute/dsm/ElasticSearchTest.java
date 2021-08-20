@@ -8,6 +8,7 @@ import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.DBTestUtil;
@@ -409,9 +410,9 @@ public class ElasticSearchTest extends TestHelper {
         String pIdToFilter = "WUKIOQNKXJZGCAXCSYGB";
         String fetchedPid = "";
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
-            Optional<ElasticSearch> esObject =
+            Optional<ElasticSearchParticipantDto> esObject =
                     ElasticSearchUtil.fetchESDataByParticipantId("participants_structured.rgp.rgp", pIdToFilter, client);
-            fetchedPid = esObject.orElse(new ElasticSearch.Builder().build())
+            fetchedPid = esObject.orElse(new ElasticSearchParticipantDto.Builder().build())
                     .getProfile()
                     .map(ESProfile::getParticipantLegacyAltPid)
                     .orElse("");
@@ -427,7 +428,7 @@ public class ElasticSearchTest extends TestHelper {
         String altpid = "c4aa8c50248beb9970ac94fc913ca7bbaa625726318b5705d7e42c9d9cede4b4";
         String fetchedPid = "";
         try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
-            ElasticSearch esObject =
+            ElasticSearchParticipantDto esObject =
                     ElasticSearchUtil.fetchESDataByAltpid("participants_structured.atcp.atcp", altpid, client);
             fetchedPid = esObject.getProfile()
                     .map(ESProfile::getParticipantLegacyAltPid)

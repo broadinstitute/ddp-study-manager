@@ -389,6 +389,11 @@ public class MedicalRecord {
         return getMedicalRecords(realm, null);
     }
 
+    public static Map<String, List<MedicalRecord>> getMedicalRecordsByParticipantIds(@NonNull String realm, List<String> participantIds) {
+        String queryAddition = " AND p.ddp_participant_id IN (?)".replace("?", DBUtil.participantIdsInClause(participantIds));
+        return getMedicalRecords(realm, queryAddition);
+    }
+
     public static Map<String, List<MedicalRecord>> getMedicalRecords(@NonNull String realm, String queryAddition) {
         logger.info("Collection mr information");
         Map<String, List<MedicalRecord>> medicalRecords = new HashMap<>();
