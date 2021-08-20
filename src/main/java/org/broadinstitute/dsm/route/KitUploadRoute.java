@@ -514,12 +514,11 @@ public class KitUploadRoute extends RequestHandler {
         });
         String message = "";
 
-
-        if (!participantFirstNameFromDoc.equals(participantProfile.get("firstName"))) {
+        if (!participantFirstNameFromDoc.equalsIgnoreCase(participantProfile.get("firstName"))) {
             message += "First names ";
         }
 
-        if (!participantLastNameFromDoc.equals(participantProfile.get("lastName"))) {
+        if (!participantLastNameFromDoc.equalsIgnoreCase(participantProfile.get("lastName"))) {
             if (StringUtils.isNotBlank(message)) {
                 message += "and ";
             }

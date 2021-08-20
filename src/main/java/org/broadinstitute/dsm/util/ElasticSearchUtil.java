@@ -1403,10 +1403,10 @@ public class ElasticSearchUtil {
     private static void valueQueryBuilder(@NonNull BoolQueryBuilder finalQuery, @NonNull String name, @NonNull String query, boolean wildCard, boolean must) {
         if (wildCard) {
             if (must) {
-                finalQuery.must(QueryBuilders.wildcardQuery(name, query.toLowerCase() + "*"));
+                finalQuery.must(QueryBuilders.wildcardQuery(name, "*" + query.toLowerCase() + "*"));
             }
             else {
-                finalQuery.should(QueryBuilders.wildcardQuery(name, query.toLowerCase() + "*"));
+                finalQuery.should(QueryBuilders.wildcardQuery(name, "*" + query.toLowerCase() + "*"));
             }
         }
         else {
