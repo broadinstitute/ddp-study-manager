@@ -18,6 +18,8 @@ public class BaseFilter {
     public static final String TISSUE_LIST_PARENT = "tissueList";
     public static final String LIST_RANGE_FROM = "from";
     public static final String LIST_RANGE_TO = "to";
+    public static final String LIST_SORT_FIELD = "sortField";
+    public static final String LIST_SORT_DIR = "sortDir";
     protected Filter[] filters;
     protected String quickFilterName;
     protected String filterQuery;
@@ -27,6 +29,8 @@ public class BaseFilter {
     protected DDPInstance ddpInstance;
     protected int from;
     protected int to;
+    protected String sortField;
+    protected String sortDir;
 
     public BaseFilter(String jsonBody) {
         this.jsonBody = jsonBody;
@@ -56,6 +60,8 @@ public class BaseFilter {
         }
         this.from = Integer.parseInt(queryParamsMap.get(LIST_RANGE_FROM).value());
         this.to = Integer.parseInt(queryParamsMap.get(LIST_RANGE_TO).value());
+        this.sortField = queryParamsMap.get(LIST_SORT_FIELD).value();
+        this.sortDir = queryParamsMap.get(LIST_SORT_DIR).value();
     }
 
 }

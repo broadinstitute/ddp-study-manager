@@ -118,7 +118,8 @@ public class ParticipantWrapper {
                 }
                 else { //source is not of any study-manager table so it must be ES
                     esData = elasticSearchable.getParticipantsByRangeAndFilter(ddpInstance.getParticipantIndexES(), participantWrapperPayload.getFrom(),
-                            participantWrapperPayload.getTo(), filters.get(source));
+                            participantWrapperPayload.getTo(), participantWrapperPayload.getSortField(),
+                            participantWrapperPayload.getSortDir(), filters.get(source));
                     participantIdsToFetch = esData.getEsParticipants().stream().map(ElasticSearchParticipantDto::getParticipantId)
                             .collect(
                             Collectors.toList());
@@ -127,7 +128,8 @@ public class ParticipantWrapper {
         }
         if (esData.getEsParticipants().isEmpty()) {
             esData = elasticSearchable.getParticipantsByRangeAndIds(ddpInstance.getParticipantIndexES(), participantWrapperPayload.getFrom(),
-                    participantWrapperPayload.getTo(), participantIdsToFetch);
+                    participantWrapperPayload.getTo(), participantWrapperPayload.getSortField(),
+                    participantWrapperPayload.getSortDir(), participantIdsToFetch);
         }
         if (participants.isEmpty()) {
             participants = Participant.getParticipantsByIds(ddpInstance.getName(), participantIdsToFetch);
@@ -168,8 +170,8 @@ public class ParticipantWrapper {
     private void fetchAndPrepareData(DDPInstance ddpInstance) {
         esData = elasticSearchable.getParticipantsWithinRange(
                 ddpInstance.getParticipantIndexES(),
-                participantWrapperPayload.getFrom(),
-                participantWrapperPayload.getTo());
+                participantWrapperPayload.getFrom(), participantWrapperPayload.getTo(),
+                participantWrapperPayload.getSortField(), participantWrapperPayload.getSortDir());
         List<String> participantIds = getParticipantIdsFromElasticList(esData.getEsParticipants());
         participants = Participant.getParticipantsByIds(ddpInstance.getName(), participantIds);
         if (ddpInstance.isHasRole()) {
@@ -238,7 +240,8 @@ public class ParticipantWrapper {
                                                                                      Map<String, List<String>> proxiesIdsByParticipantIds) {
         Map<String, List<ElasticSearchParticipantDto>> proxiesByParticipantIds = new HashMap<>();
         List<String> proxiesIds = proxiesIdsByParticipantIds.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
-        List<ElasticSearchParticipantDto> participantsByIds = elasticSearchable.getParticipantsByIds(esUsersIndex, proxiesIds).getEsParticipants();
+        List<ElasticSearchParticipantDto> participantsByIds = elasticSearchable.getParticipantsByIds(esUsersIndex, proxiesIds,
+                participantWrapperPayload.getSortField(), participantWrapperPayload.getSortDir()).getEsParticipants();
         participantsByIds.forEach(elasticSearchParticipantDto -> {
             String proxyId = elasticSearchParticipantDto.getParticipantId();
             for (Map.Entry<String, List<String>> entry: proxiesIdsByParticipantIds.entrySet()) {

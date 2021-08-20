@@ -89,7 +89,7 @@ public class ElasticSearch implements ElasticSearchable {
     }
 
     @Override
-    public ElasticSearch getParticipantsWithinRange(String esParticipantsIndex, int from, int to) {
+    public ElasticSearch getParticipantsWithinRange(String esParticipantsIndex, int from, int to, String sortField, String sortDir) {
         if (StringUtils.isBlank(esParticipantsIndex)) throw new IllegalArgumentException("ES participants index cannot be empty");
         if (to <= 0) throw new IllegalArgumentException("incorrect from/to range");
         logger.info("Collecting ES data");
@@ -98,7 +98,7 @@ public class ElasticSearch implements ElasticSearchable {
             int scrollSize = to - from;
             SearchRequest searchRequest = new SearchRequest(esParticipantsIndex);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+            searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(sortField, "asc".equals(sortDir) ? SortOrder.ASC: SortOrder.DESC);
             searchSourceBuilder.size(scrollSize);
             searchSourceBuilder.from(from);
             searchRequest.source(searchSourceBuilder);
@@ -113,11 +113,11 @@ public class ElasticSearch implements ElasticSearchable {
     }
 
     @Override
-    public ElasticSearch getParticipantsByIds(String esIndex, List<String> participantIds) {
+    public ElasticSearch getParticipantsByIds(String esIndex, List<String> participantIds, String sortField, String sortDir) {
         if (Objects.isNull(esIndex)) return new ElasticSearch();
         SearchRequest searchRequest = new SearchRequest(Objects.requireNonNull(esIndex));
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(getBoolQueryOfParticipantsId(participantIds)).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+        searchSourceBuilder.query(getBoolQueryOfParticipantsId(participantIds)).sort(sortField, "asc".equals(sortDir) ? SortOrder.ASC: SortOrder.DESC);
         searchSourceBuilder.size(participantIds.size());
         searchSourceBuilder.from(0);
         searchRequest.source(searchSourceBuilder);
@@ -149,7 +149,7 @@ public class ElasticSearch implements ElasticSearchable {
     }
 
     @Override
-    public ElasticSearch getParticipantsByRangeAndFilter(String esParticipantsIndex, int from, int to, String filter) {
+    public ElasticSearch getParticipantsByRangeAndFilter(String esParticipantsIndex, int from, int to, String sortField, String sortDir, String filter) {
         if (to <= 0) throw new IllegalArgumentException("incorrect from/to range");
         logger.info("Collecting ES data");
         SearchResponse response;
@@ -158,7 +158,7 @@ public class ElasticSearch implements ElasticSearchable {
             SearchRequest searchRequest = new SearchRequest(Objects.requireNonNull(esParticipantsIndex));
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             AbstractQueryBuilder<? extends AbstractQueryBuilder<?>> esQuery = ElasticSearchUtil.createESQuery(filter);
-            searchSourceBuilder.query(esQuery).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+            searchSourceBuilder.query(esQuery).sort(sortField, "asc".equals(sortDir) ? SortOrder.ASC: SortOrder.DESC);
             searchSourceBuilder.size(scrollSize);
             searchSourceBuilder.from(from);
             searchRequest.source(searchSourceBuilder);
@@ -173,10 +173,10 @@ public class ElasticSearch implements ElasticSearchable {
     }
 
     @Override
-    public ElasticSearch getParticipantsByRangeAndIds(String participantIndexES, int from, int to, List<String> participantIds) {
+    public ElasticSearch getParticipantsByRangeAndIds(String participantIndexES, int from, int to, String sortField, String sortDir, List<String> participantIds) {
         SearchRequest searchRequest = new SearchRequest(Objects.requireNonNull(participantIndexES));
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(getBoolQueryOfParticipantsId(participantIds)).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+        searchSourceBuilder.query(getBoolQueryOfParticipantsId(participantIds)).sort(sortField, "asc".equals(sortDir) ? SortOrder.ASC: SortOrder.DESC);
         searchSourceBuilder.size(to - from);
         searchSourceBuilder.from(from);
         searchRequest.source(searchSourceBuilder);
@@ -219,11 +219,11 @@ public class ElasticSearch implements ElasticSearchable {
     }
 
     @Override
-    public ElasticSearch getAllParticipantsDataByInstanceIndex(String esParticipantsIndex) {
+    public ElasticSearch getAllParticipantsDataByInstanceIndex(String esParticipantsIndex, String sortField, String sortDir) {
         long participantsSize = getParticipantsSize(Objects.requireNonNull(esParticipantsIndex));
         SearchRequest searchRequest = new SearchRequest(esParticipantsIndex);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+        searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(sortField, "asc".equals(sortDir) ? SortOrder.ASC: SortOrder.DESC);
         searchSourceBuilder.from(0);
         searchSourceBuilder.size((int) participantsSize);
         searchRequest.source(searchSourceBuilder);

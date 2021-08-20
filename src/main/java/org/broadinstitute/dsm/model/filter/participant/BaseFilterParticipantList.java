@@ -22,7 +22,6 @@ import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
 import org.broadinstitute.dsm.model.filter.BaseFilter;
 import org.broadinstitute.dsm.model.filter.Filterable;
-import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperPayload;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperResult;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -55,7 +54,6 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
         super(jsonBody);
     }
 
-
     protected ParticipantWrapperResult filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap, @NonNull DDPInstance instance) {
         Map<String, String> queryConditions = new HashMap<>();
         List<ParticipantDataDto> allParticipantData = null;
@@ -63,7 +61,9 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
         ParticipantWrapperPayload.Builder participantWrapperPayload = new ParticipantWrapperPayload.Builder()
                 .withDdpInstanceDto(ddpInstanceDto)
                 .withFrom(from)
-                .withTo(to);
+                .withTo(to)
+                .withSortField(sortField)
+                .withSortDir(sortDir);
         ElasticSearch elasticSearch = new ElasticSearch();
         if (filters != null && columnNameMap != null && !columnNameMap.isEmpty()) {
             Map<String, Integer> allIdsForParticipantDataFiltering = new HashMap<>();

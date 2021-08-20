@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 
-
 public class ParticipantWrapperPayload {
 
     private DDPInstanceDto ddpInstanceDto;
@@ -13,6 +12,8 @@ public class ParticipantWrapperPayload {
     private int userId;
     private int from;
     private int to;
+    private String sortField;
+    private String sortDir;
 
     public Optional<DDPInstanceDto> getDdpInstanceDto() {
         return Optional.ofNullable(ddpInstanceDto);
@@ -34,18 +35,30 @@ public class ParticipantWrapperPayload {
         return this.to;
     }
 
+    public String getSortField() {
+        return this.sortField;
+    }
+
+    public String getSortDir() {
+        return this.sortDir;
+    }
+
     private ParticipantWrapperPayload(Builder builder) {
         this.ddpInstanceDto = builder.ddpInstanceDto;
         this.filter = builder.filter;
         this.userId = builder.userId;
         this.from = builder.from;
         this.to = builder.to;
+        this.sortField = builder.sortField;
+        this.sortDir = builder.sortDir;
     }
 
     public static class Builder {
 
         public int from;
         public int to;
+        private String sortField;
+        private String sortDir;
         private DDPInstanceDto ddpInstanceDto;
         private Map<String, String> filter;
         private int userId;
@@ -72,6 +85,16 @@ public class ParticipantWrapperPayload {
 
         public Builder withTo(int to) {
             this.to = to;
+            return this;
+        }
+
+        public Builder withSortField(String sortField) {
+            this.sortField = sortField;
+            return this;
+        }
+
+        public Builder withSortDir(String sortDir) {
+            this.sortDir = sortDir;
             return this;
         }
 
