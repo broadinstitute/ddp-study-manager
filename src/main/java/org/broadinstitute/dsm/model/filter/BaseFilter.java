@@ -33,7 +33,7 @@ public class BaseFilter {
         if (StringUtils.isBlank(parent)) throw new RuntimeException("parent is necessary");
         realm = queryParamsMap.get(RoutePath.REALM).value();
         if (StringUtils.isBlank(realm)) throw new RuntimeException("realm is necessary");
-        ddpInstance = DDPInstance.getDDPInstance(realm);
+        ddpInstance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.HAS_MEDICAL_RECORD_ENDPOINTS);
         filterQuery = "";
         quickFilterName = "";
         Filter[] savedFilters = new Gson().fromJson(queryParamsMap.get(RequestParameter.FILTERS).value(), Filter[].class);

@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.model.ParticipantWrapper;
 import org.broadinstitute.dsm.security.RequestHandler;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.statics.UserErrorMessages;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -32,7 +33,7 @@ public class GetParticipantRoute extends RequestHandler {
             response.status(500);
             return UserErrorMessages.NO_RIGHTS;
         }
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
+        DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.HAS_MEDICAL_RECORD_ENDPOINTS);
 
         String ddpParticipantId = queryParamsMap.get(RoutePath.DDP_PARTICIPANT_ID).value();
         if (StringUtils.isBlank(ddpParticipantId)) throw new IllegalArgumentException("participant id cannot be empty");
