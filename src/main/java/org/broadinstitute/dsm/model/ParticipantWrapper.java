@@ -17,6 +17,8 @@ import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -74,6 +76,7 @@ public class ParticipantWrapper {
 
     public static List<ParticipantWrapper> getFilteredList(@NonNull DDPInstance instance, Map<String, String> filters) {
         logger.info("Getting list of participant information");
+        Instant start = Instant.now();
 
         if (StringUtils.isBlank(instance.getParticipantIndexES())) {
             throw new RuntimeException("No participant index setup in ddp_instance table for " + instance.getName());
@@ -108,7 +111,10 @@ public class ParticipantWrapper {
 
             List<String> baseList = new ArrayList<>(participantESData.keySet());
 
-            return addAllData(baseList, participantESData, participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, proxyData, participantData);
+            List<ParticipantWrapper> r =  addAllData(baseList, participantESData, participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, proxyData, participantData);
+            Duration elapsed = Duration.between(start, Instant.now());
+            logger.info("Getting all participant information took {} secs ({})", elapsed.getSeconds(), elapsed.toString());
+            return r;
         }
         else {
             //no filters, return all participants which came from ES with DSM data added to it
@@ -242,6 +248,8 @@ public class ParticipantWrapper {
 
             //bring together all the information
             List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistories, kitRequests, abstractionActivities, abstractionSummary, proxyData, participantData);
+            Duration elapsed = Duration.between(start, Instant.now());
+            logger.info("Getting all participant information took {} secs ({})", elapsed.getSeconds(), elapsed.toString());
             return r;
         }
     }
