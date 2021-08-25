@@ -32,7 +32,7 @@
         </sql>
     </changeSet>
 
-    <changeSet author="simone" id="DDP-6688_DLMO-event">
+    <changeSet author="simone" id="DDP-6688_DLMO-event2">
         <insert tableName="event_type">
             <column name="ddp_instance_id"
                     valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='circadia')"></column>
