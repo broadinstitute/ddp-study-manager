@@ -1,8 +1,5 @@
 package org.broadinstitute.dsm.route;
 
-import java.util.Objects;
-import java.util.Optional;
-
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
@@ -23,6 +20,9 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 import spark.Route;
+
+import java.util.Objects;
+import java.util.Optional;
 
 public class ClinicalKitsRoute implements Route {
     private String FIRSTNAME = "firstName";
@@ -69,6 +69,7 @@ public class ClinicalKitsRoute implements Route {
             clinicalKit.setSampleId(kitInfo.getCollaboratorSampleId());
             clinicalKit.setMaterialType(kitInfo.getMaterialInfo());
             clinicalKit.setVesselType(kitInfo.getReceptacleName());
+            clinicalKit.setSampleCollection(kitInfo.getSampleCollectionBarcode());
             Optional<BSPKitDto> bspKitQueryResult = bspKitDao.getBSPKitQueryResult(kitLabel);
             bspKitQueryResult.orElseThrow(() -> {throw new RuntimeException("kit label was not found "+kitLabel);});
             BSPKitDto maybeBspKitQueryResult = bspKitQueryResult.get();
