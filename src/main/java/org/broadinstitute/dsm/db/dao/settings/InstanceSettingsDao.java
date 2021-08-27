@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.db.dao.settings;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
+import static org.broadinstitute.dsm.statics.DBConstants.HAS_COMPUTED_OBJECT;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -43,6 +44,11 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
   
   private static final String SQL_GET_HAS_ADDRESS_TAB_BY_INSTANCE_NAME = "SELECT " +
             "has_address_tab " +
+            "FROM instance_settings " +
+            "WHERE ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE instance_name = ?)";
+
+    private static final String SQL_GET_HAS_COMPUTED_OBJECT_BY_INSTANCE_NAME = "SELECT " +
+            "has_computed_object " +
             "FROM instance_settings " +
             "WHERE ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE instance_name = ?)";
 
@@ -107,6 +113,28 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
                 try(ResultSet resultSet = statement.executeQuery()) {
                     if (resultSet.next()) {
                         executionResult.resultValue = resultSet.getBoolean(HAS_ADDRESS_TAB);
+                    }
+                }
+            } catch (SQLException sqlException) {
+                executionResult.resultValue = sqlException;
+            }
+            return executionResult;
+        });
+        if (result.resultException != null) {
+            throw new RuntimeException("Error occured while getting has_address_tab for instance_name: "
+                    + instanceName, result.resultException);
+        }
+        return Optional.ofNullable((Boolean) result.resultValue);
+    }
+
+    public Optional<Boolean> getHasComputedObjectByStudyInstanceName(String instanceName) {
+        SimpleResult result = inTransaction((conn) -> {
+            SimpleResult executionResult = new SimpleResult();
+            try(PreparedStatement statement = conn.prepareStatement(SQL_GET_HAS_COMPUTED_OBJECT_BY_INSTANCE_NAME)) {
+                statement.setString(1, instanceName);
+                try(ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        executionResult.resultValue = resultSet.getBoolean(HAS_COMPUTED_OBJECT);
                     }
                 }
             } catch (SQLException sqlException) {

@@ -41,11 +41,11 @@ public class InstanceSettings {
 
     private static final String SQL_SELECT_INSTANCE_SETTINGS =
             "SELECT mr_cover_pdf, kit_behavior_change, special_format, hide_ES_fields, study_specific_statuses, default_columns, has_invitations, " +
-                    "GBF_SHIPPED_DSS_DELIVERED, has_address_tab " +
+                    "GBF_SHIPPED_DSS_DELIVERED, has_address_tab, has_computed_object " +
                     "FROM instance_settings settings, ddp_instance realm " +
                     "WHERE realm.ddp_instance_id = settings.ddp_instance_id AND realm.instance_name = ?";
     private static final String SQL_SELECT_INSTANCE_SETTINGS_BY_ID =
-            "SELECT mr_cover_pdf, kit_behavior_change, special_format, hide_ES_fields, study_specific_statuses, default_columns, has_invitations, GBF_SHIPPED_DSS_DELIVERED, has_address_tab " +
+            "SELECT mr_cover_pdf, kit_behavior_change, special_format, hide_ES_fields, study_specific_statuses, default_columns, has_invitations, GBF_SHIPPED_DSS_DELIVERED, has_address_tab, has_computed_object " +
             "FROM instance_settings settings " +
             "WHERE settings.ddp_instance_id = ?";
 
@@ -95,6 +95,11 @@ public class InstanceSettings {
 
     public boolean getHasAddressTabByStudyInstanceName(String instanceName) {
         return instanceSettingsDao.getHasAddressTabByStudyInstanceName(instanceName)
+                .orElse(false);
+    }
+
+    public boolean getHasComputedObjectByStudyInstanceName(String instanceName) {
+        return instanceSettingsDao.getHasComputedObjectByStudyInstanceName(instanceName)
                 .orElse(false);
     }
 
