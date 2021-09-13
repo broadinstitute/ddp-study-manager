@@ -72,7 +72,8 @@ To read secrets for a specific environment:
 ```
 gcloud --project=${PROJECT_ID} secrets versions access latest --secret="${CONFIG_SECRETS}" > config/vault.conf
 ```
-This will put `vault.conf` into the `config` dir.  `DSMServer` will look at `conf/vault.conf` at boot time.  **Do not
+This will put `vault.conf` into the `config` dir.  `DSMServer` will look at `conf/vault.conf` at boot time. For local run In the `appengine/deploy/vault.conf`
+Change the `elasticSearch.proxy` object to use the correct ip from gcp instead of the proxy (you can find it in compute engine/VM instances in GCP in dev project)  **Do not
 commit any generated .conf files!**
 
 To seed configuration values for local development, run `render-testing-configs.sh`.   This will put
@@ -91,8 +92,10 @@ java -Dlog4j.configuration=test-log4j.xml ...
 This repo has a starter `DSMServer` app.  To setup the code in Intellj, click `File->New->Project From Existing Sources`
 and then point Intellij at `pom.xml`.
 
+To get the frontend talk to the backend on the right port, the server needs to run locally on the correct port, you can either change the port and environment variables in the config or directly in the intelliJ setting to the port frontend is using (found inf `ddp_config.js`)
+
 To run it from Intellij, just right click on the `main()` method, click `debug`,
-and then point your browser at [localhost](http://localhost:4567).
+and then point your browser at [localhost](http://localhost:4567). 
 
 # Making a single executable jar
 `mvn -DskipTests package` will create `target/DSMServer.jar`.  You can then run this via `java -jar ./target/DSMServer.jar`
