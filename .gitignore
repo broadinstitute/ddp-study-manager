@@ -72,3 +72,10 @@ logs
 *.jks
 /config/
 /appengine/deploy/config/
+
+# Visual Studio Code Workspace
+.vscode/
+.factorypath
+
+# asdf configuration
+.tool-versions
