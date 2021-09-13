@@ -65,11 +65,11 @@ public class InstanceSettingsDto {
         return Optional.of(gbfShippedTriggerDSSDelivered);
     }
 
-    public Optional<Boolean> isHasAddressTab() {
+    public Optional<Boolean> hasAddressTab() {
         return Optional.of(hasAddressTab);
     }
 
-    public Optional<Boolean> isHasComputedObject() {
+    public Optional<Boolean> hasComputedObject() {
         return Optional.of(hasComputedObject);
     }
 

@@ -93,14 +93,6 @@ public class InstanceSettings {
                 .orElse(new InstanceSettingsDto.Builder().build());
     }
 
-    public boolean getHasAddressTabByStudyInstanceName(String instanceName) {
-        return instanceSettingsDao.getHasAddressTabByStudyInstanceName(instanceName);
-    }
-
-    public boolean getHasComputedObjectByStudyInstanceName(String instanceName) {
-        return instanceSettingsDao.getHasComputedObjectByStudyInstanceName(instanceName);
-    }
-
     //used ONLY for google cloud function
     public InstanceSettingsDto getInstanceSettings(Connection conn, String realm) {
         return instanceSettingsDao.getByInstanceName(Objects.requireNonNull(conn), Objects.requireNonNull(realm))
@@ -265,7 +257,6 @@ public class InstanceSettings {
                 }
             });
         });
-        System.out.println(settingsMap);
         return settingsMap;
     }
 }
