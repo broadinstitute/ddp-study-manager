@@ -38,6 +38,8 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
             "study_specific_statuses, " +
             "default_columns, " +
             "has_invitations, " +
+            "has_address_tab, " +
+            "has_computed_object, " +
             "GBF_SHIPPED_DSS_DELIVERED " +
             "FROM instance_settings " +
             "WHERE ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE instance_name = ?)";
@@ -105,7 +107,7 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
         return Optional.ofNullable((Boolean) results.resultValue);
     }
   
-    public Optional<Boolean> getHasAddressTabByStudyInstanceName(String instanceName) {
+    public boolean getHasAddressTabByStudyInstanceName(String instanceName) {
         SimpleResult result = inTransaction((conn) -> {
             SimpleResult executionResult = new SimpleResult();
             try(PreparedStatement statement = conn.prepareStatement(SQL_GET_HAS_ADDRESS_TAB_BY_INSTANCE_NAME)) {
@@ -124,10 +126,10 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
             throw new RuntimeException("Error occured while getting has_address_tab for instance_name: "
                     + instanceName, result.resultException);
         }
-        return Optional.ofNullable((Boolean) result.resultValue);
+        return (boolean) result.resultValue;
     }
 
-    public Optional<Boolean> getHasComputedObjectByStudyInstanceName(String instanceName) {
+    public boolean getHasComputedObjectByStudyInstanceName(String instanceName) {
         SimpleResult result = inTransaction((conn) -> {
             SimpleResult executionResult = new SimpleResult();
             try(PreparedStatement statement = conn.prepareStatement(SQL_GET_HAS_COMPUTED_OBJECT_BY_INSTANCE_NAME)) {
@@ -146,7 +148,7 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
             throw new RuntimeException("Error occured while getting has_address_tab for instance_name: "
                     + instanceName, result.resultException);
         }
-        return Optional.ofNullable((Boolean) result.resultValue);
+        return (boolean) result.resultValue;
     }
 
     public Optional<InstanceSettingsDto> getByInstanceName(String instanceName) {
@@ -187,6 +189,8 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
                         .withDefaultColumns(getValuesFromJson(rs.getString(DEFAULT_COLUMNS)))
                         .withHasInvitations(rs.getBoolean(HAS_INVITATIONS))
                         .withGbfShippedTriggerDssDelivered(rs.getBoolean(GBF_SHIPPED_DSS_DELIVERED))
+                        .withHasAddressTab(rs.getBoolean(HAS_ADDRESS_TAB))
+                        .withHasComputedObject(rs.getBoolean(HAS_COMPUTED_OBJECT))
                         .build();
                 }
             }

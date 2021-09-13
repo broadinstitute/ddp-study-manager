@@ -1,7 +1,5 @@
 package org.broadinstitute.dsm.route;
 
-import com.google.gson.Gson;
-import com.sun.xml.bind.v2.runtime.output.SAXOutput;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
@@ -75,8 +73,6 @@ public class DisplaySettingsRoute extends RequestHandler {
                 displaySettings.put("activityDefinitions", ElasticSearchUtil.getActivityDefinitions(instance));
                 displaySettings.put("filters", ViewFilter.getAllFilters(userIdRequest, patchUtil.getColumnNameMap(), parent, ddpGroupId, instance.getDdpInstanceId()));
                 displaySettings.put("abstractionFields", AbstractionUtil.getFormControls(realm));
-                displaySettings.put("hasAddressTab", instanceSettings.getHasAddressTabByStudyInstanceName(realm));
-                displaySettings.put("hasComputedObject", instanceSettings.getHasComputedObjectByStudyInstanceName(realm));
                 InstanceSettingsDto instanceSettingsDto = instanceSettings.getInstanceSettings(realm);
                 displaySettings.putAll(instanceSettings.getInstanceSettingsAsMap(instanceSettingsDto));
                 if (!instance.isHasRole()) {

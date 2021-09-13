@@ -94,13 +94,11 @@ public class InstanceSettings {
     }
 
     public boolean getHasAddressTabByStudyInstanceName(String instanceName) {
-        return instanceSettingsDao.getHasAddressTabByStudyInstanceName(instanceName)
-                .orElse(false);
+        return instanceSettingsDao.getHasAddressTabByStudyInstanceName(instanceName);
     }
 
     public boolean getHasComputedObjectByStudyInstanceName(String instanceName) {
-        return instanceSettingsDao.getHasComputedObjectByStudyInstanceName(instanceName)
-                .orElse(false);
+        return instanceSettingsDao.getHasComputedObjectByStudyInstanceName(instanceName);
     }
 
     //used ONLY for google cloud function
