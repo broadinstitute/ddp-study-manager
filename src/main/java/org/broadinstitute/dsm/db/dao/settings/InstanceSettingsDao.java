@@ -44,16 +44,6 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
             "FROM instance_settings " +
             "WHERE ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE instance_name = ?)";
   
-  private static final String SQL_GET_HAS_ADDRESS_TAB_BY_INSTANCE_NAME = "SELECT " +
-            "has_address_tab " +
-            "FROM instance_settings " +
-            "WHERE ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE instance_name = ?)";
-
-    private static final String SQL_GET_HAS_COMPUTED_OBJECT_BY_INSTANCE_NAME = "SELECT " +
-            "has_computed_object " +
-            "FROM instance_settings " +
-            "WHERE ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE instance_name = ?)";
-
     public static final String HIDE_SAMPLES_TAB = "hide_samples_tab";
     public static final String INSTANCE_SETTINGS_ID = "instance_settings_id";
     public static final String DDP_INSTANCE_ID = "ddp_instance_id";
