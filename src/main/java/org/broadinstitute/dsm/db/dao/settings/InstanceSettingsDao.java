@@ -106,50 +106,6 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
         }
         return Optional.ofNullable((Boolean) results.resultValue);
     }
-  
-    public boolean getHasAddressTabByStudyInstanceName(String instanceName) {
-        SimpleResult result = inTransaction((conn) -> {
-            SimpleResult executionResult = new SimpleResult();
-            try(PreparedStatement statement = conn.prepareStatement(SQL_GET_HAS_ADDRESS_TAB_BY_INSTANCE_NAME)) {
-                statement.setString(1, instanceName);
-                try(ResultSet resultSet = statement.executeQuery()) {
-                    if (resultSet.next()) {
-                        executionResult.resultValue = resultSet.getBoolean(HAS_ADDRESS_TAB);
-                    }
-                }
-            } catch (SQLException sqlException) {
-                executionResult.resultValue = sqlException;
-            }
-            return executionResult;
-        });
-        if (result.resultException != null) {
-            throw new RuntimeException("Error occured while getting has_address_tab for instance_name: "
-                    + instanceName, result.resultException);
-        }
-        return (boolean) result.resultValue;
-    }
-
-    public boolean getHasComputedObjectByStudyInstanceName(String instanceName) {
-        SimpleResult result = inTransaction((conn) -> {
-            SimpleResult executionResult = new SimpleResult();
-            try(PreparedStatement statement = conn.prepareStatement(SQL_GET_HAS_COMPUTED_OBJECT_BY_INSTANCE_NAME)) {
-                statement.setString(1, instanceName);
-                try(ResultSet resultSet = statement.executeQuery()) {
-                    if (resultSet.next()) {
-                        executionResult.resultValue = resultSet.getBoolean(HAS_COMPUTED_OBJECT);
-                    }
-                }
-            } catch (SQLException sqlException) {
-                executionResult.resultValue = sqlException;
-            }
-            return executionResult;
-        });
-        if (result.resultException != null) {
-            throw new RuntimeException("Error occured while getting has_address_tab for instance_name: "
-                    + instanceName, result.resultException);
-        }
-        return (boolean) result.resultValue;
-    }
 
     public Optional<InstanceSettingsDto> getByInstanceName(String instanceName) {
         SimpleResult results = inTransaction((conn) -> getInstanceSettingsByInstanceName(instanceName, conn));
