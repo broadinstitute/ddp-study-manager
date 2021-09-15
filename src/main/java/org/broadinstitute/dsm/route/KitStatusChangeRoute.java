@@ -121,7 +121,7 @@ public class KitStatusChangeRoute extends RequestHandler {
         int ddpInstanceId = kitRequest.getDdpInstanceId();
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(ddpInstanceId);
         Map<String, Object> nameValuesMap = new HashMap<>();
-        nameValuesMap.put(ESObjectConstants.SENT, SystemUtil.getISO8601DateString());
+        ElasticSearchDataUtil.setCurrentStrictYearMonthDay(nameValuesMap, ESObjectConstants.SENT);
         if (ddpInstance != null && kitRequest.getDdpKitRequestId() != null && kitRequest.getDdpParticipantId() != null) {
             ElasticSearchUtil.writeSample(
                     ddpInstance,
