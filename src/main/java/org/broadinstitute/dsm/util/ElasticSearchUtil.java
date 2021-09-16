@@ -98,6 +98,7 @@ public class ElasticSearchUtil {
     public static final String PROFILE_LEGACYALTPID = "profile.legacyAltPid";
     public static final String WORKFLOWS = "workflows";
     public static final String EMAIL_FIELD = "email";
+    public static final String NORMALIZE = ".normalize";
 
     // These clients are expensive. They internally have thread pools and other resources. Let's
     // create one instance and reuse it as much as possible. Client is thread-safe per the docs.
@@ -1412,7 +1413,8 @@ public class ElasticSearchUtil {
         }
         else {
             if (must) {
-                finalQuery.must(QueryBuilders.matchQuery(name, query));
+                String normalizedField = new StringBuilder(name).append(NORMALIZE).toString();
+                finalQuery.must(QueryBuilders.matchQuery(normalizedField, query));
             }
             else {
                 finalQuery.should(QueryBuilders.matchQuery(name, query));
