@@ -13,10 +13,10 @@ import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
 import org.broadinstitute.dsm.model.bsp.BSPKitStatus;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
+import org.broadinstitute.dsm.util.ElasticSearchDataUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.EventUtil;
 import org.broadinstitute.dsm.util.NotificationUtil;
-import org.broadinstitute.dsm.util.SystemUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -139,7 +139,7 @@ public class BSPKit {
     private void writeSampleReceivedToES(DDPInstance ddpInstance, BSPKitDto bspKitInfo) {
         String kitRequestId = new KitRequestDao().getKitRequestIdByBSPParticipantId(bspKitInfo.getBspParticipantId());
         Map<String, Object> nameValuesMap = new HashMap<>();
-        nameValuesMap.put(ESObjectConstants.RECEIVED, SystemUtil.getISO8601DateString());
+        ElasticSearchDataUtil.setCurrentStrictYearMonthDay(nameValuesMap, ESObjectConstants.RECEIVED);
         ElasticSearchUtil.writeSample(ddpInstance, kitRequestId, bspKitInfo.getDdpParticipantId(), ESObjectConstants.SAMPLES,
                 ESObjectConstants.KIT_REQUEST_ID, nameValuesMap);
     }
