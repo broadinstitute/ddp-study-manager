@@ -4,6 +4,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
+import org.broadinstitute.dsm.db.structure.DbDateConversion;
+import org.broadinstitute.dsm.db.structure.SqlDateConverter;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.db.ViewFilter;
 import org.broadinstitute.dsm.model.KitRequest;
@@ -104,7 +106,14 @@ public class PatchUtil {
                     if (StringUtils.isNotBlank(columnPrefix)) {
                         fieldKey = columnPrefix.concat("_").concat(field.getName());
                     }
-                    columnNameMap.put(fieldKey, new DBElement(tableName, tableAlias, primaryKey, column.value()));
+                    DbDateConversion[] dbDateConversions = field.getAnnotationsByType(DbDateConversion.class);
+                    SqlDateConverter dateConverter = null;
+                    if (dbDateConversions != null && dbDateConversions.length == 1) {
+                        dateConverter = dbDateConversions[0].value();
+                    }
+
+
+                    columnNameMap.put(fieldKey, new DBElement(tableName, tableAlias, primaryKey, column.value(), dateConverter));
                     dataBaseMap.put(nameKey, field.getName());
                 }
             }

@@ -1,9 +1,14 @@
 package org.broadinstitute.dsm.model;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
 import lombok.Getter;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.structure.DBElement;
+import org.broadinstitute.dsm.db.structure.SqlDateConverter;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -154,8 +159,7 @@ public class Filter {
                 if (filter.getFilter1() != null) {
                     query = AND + filter.getColumnName(dbElement);
                     if (String.valueOf(filter.getFilter1().getValue()).length() == 10) {
-                        condition = EQUALS + "'" + filter.getFilter1().getValue() + "'";
-                        finalQuery = query + condition;
+                        finalQuery = generateDateComparisonSql(filter, dbElement,EQUALS,filter.getFilter1().getValue());
                     }
                     else {
                         if (filter.isEmpty()) {
@@ -165,8 +169,7 @@ public class Filter {
                             finalQuery = query + IS_NOT_NULL + " ";
                         }
                         else {
-                            condition = LIKE + " '%" + filter.getFilter1().getValue() + "%'";
-                            finalQuery = query + condition;
+                            throw new RuntimeException("Cannot compare to unknown date format " + filter.getFilter1().getValue());
                         }
                     }
                 }
@@ -174,20 +177,15 @@ public class Filter {
             else {
                 filter = convertFilterDateValues(filter);
                 String notNullQuery = AND + filter.getColumnName(dbElement) + IS_NOT_NULL;
+                String query1 = "";
                 if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue()))) {
-                    query = AND + filter.getColumnName(dbElement);
-                    condition = LARGER_EQUALS + "'" + filter.getFilter1().getValue() + "'";
+                    query1 = generateDateComparisonSql(filter,dbElement, LARGER_EQUALS, filter.getFilter1().getValue());
                 }
                 String query2 = "";
-                String condition2 = "";
                 if (filter.getFilter2() != null && filter.getFilter2() != null && filter.getFilter2().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue()))) {
-                    query2 = AND + filter.getColumnName(dbElement);
-                    condition2 = SMALLER_EQUALS + "'" + filter.getFilter2().getValue() + "'";
+                    query2 = generateDateComparisonSql(filter,dbElement, SMALLER_EQUALS,filter.getFilter2().getValue());
                 }
-                finalQuery = query + condition + query2 + condition2;
-                if (filter.getFilter1().getValue() != null && filter.getFilter2() != null && filter.getFilter2().getValue() != null && !filter.getFilter1().getValue().equals("") && !filter.getFilter2().getValue().equals("")) {
-                    finalQuery = finalQuery + notNullQuery;
-                }
+                finalQuery = query1 + query2 + notNullQuery;
             }
         }
         else if (ADDITIONAL_VALUES.equals(filter.getType())) {
@@ -268,7 +266,35 @@ public class Filter {
         return finalQuery;
     }
 
+    /**
+     * Uses the appropriate date converter (if given) to write SQL that can
+     * compare either exact dates or "in the day" dates.
+     */
+    private static String generateDateComparisonSql(Filter filter, DBElement dbElement, String comparison, Object arg) {
+        String column = filter.getColumnName(dbElement);
+        SqlDateConverter dateConverter = dbElement.getDateConverter();
+
+        Instant instant = null;
+        try {
+            instant = new SimpleDateFormat("yyyy-MM-dd").parse(arg.toString()).toInstant().atZone(ZoneId.of("UTC")).toInstant();
+        } catch (ParseException e) {
+            throw new RuntimeException("Could not parse " + arg + " into a date", e);
+        }
+
+        if (dateConverter != null) {
+            if (EQUALS.equals(comparison)) {
+                return AND + dateConverter.convertColumnForSqlDay(column) + " " + comparison + dateConverter.convertArgToSqlDay(instant);
+            } else {
+                return AND + column + " " + comparison + dateConverter.convertArgToSql(instant);
+            }
+        } else {
+            String stringArg = "'" + arg + "'";
+            return AND + column + " " + comparison + stringArg;
+        }
+    }
+
     private static Filter convertFilterDateValues(Filter filter) {
+        // what is length of filter?
         if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && String.valueOf(filter.getFilter1().getValue()).length() != 10) {
             if (String.valueOf(filter.getFilter1().getValue()).length() == 4) {
                 filter.getFilter1().setValue(filter.getFilter1().getValue() + "-01-01");
