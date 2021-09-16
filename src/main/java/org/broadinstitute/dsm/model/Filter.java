@@ -294,7 +294,6 @@ public class Filter {
     }
 
     private static Filter convertFilterDateValues(Filter filter) {
-        // what is length of filter?
         if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && String.valueOf(filter.getFilter1().getValue()).length() != 10) {
             if (String.valueOf(filter.getFilter1().getValue()).length() == 4) {
                 filter.getFilter1().setValue(filter.getFilter1().getValue() + "-01-01");
