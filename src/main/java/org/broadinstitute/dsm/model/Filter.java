@@ -273,20 +273,21 @@ public class Filter {
      */
     private static String generateDateComparisonSql(Filter filter, DBElement dbElement, String comparison, Object arg) {
         String column = filter.getColumnName(dbElement);
-        SqlDateConverter dateConverter = dbElement.getDateConverter();
+        SqlDateConverter dateConverter = null;
+        if (dbElement != null) {
+            dateConverter = dbElement.getDateConverter();
+            Instant instant = LocalDate.parse(arg.toString(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay().toInstant(ZoneOffset.UTC);
 
-        Instant instant = LocalDate.parse(arg.toString(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay().toInstant(ZoneOffset.UTC);
-
-        if (dateConverter != null) {
-            if (EQUALS.equals(comparison)) {
-                return AND + dateConverter.convertColumnForSqlDay(column) + " " + comparison + dateConverter.convertArgToSqlDay(instant);
-            } else {
-                return AND + column + " " + comparison + dateConverter.convertArgToSql(instant);
+            if (dateConverter != null) {
+                if (EQUALS.equals(comparison)) {
+                    return AND + dateConverter.convertColumnForSqlDay(column) + " " + comparison + dateConverter.convertArgToSqlDay(instant);
+                } else {
+                    return AND + column + " " + comparison + dateConverter.convertArgToSql(instant);
+                }
             }
-        } else {
-            String stringArg = "'" + arg + "'";
-            return AND + column + " " + comparison + stringArg;
         }
+        String stringArg = "'" + arg + "'";
+        return AND + column + " " + comparison + stringArg;
     }
 
     private static Filter convertFilterDateValues(Filter filter) {
