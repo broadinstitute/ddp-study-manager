@@ -170,7 +170,6 @@ public class DSMServer extends BasicServer {
         registerAppEngineStartupCallback(bootTimeoutSeconds);
 
         setupDB(config);
-        ElasticSearchUtil.initClient();
 
         // don't run superclass routing--it won't work with JettyConfig changes for capturing proper IP address in GAE
         setupCustomRouting(config);
