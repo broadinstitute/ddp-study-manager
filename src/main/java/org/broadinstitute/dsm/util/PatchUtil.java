@@ -106,14 +106,8 @@ public class PatchUtil {
                     if (StringUtils.isNotBlank(columnPrefix)) {
                         fieldKey = columnPrefix.concat("_").concat(field.getName());
                     }
-                    DbDateConversion dbDateConversion = field.getAnnotation(DbDateConversion.class);
-                    SqlDateConverter dateConverter = null;
-                    if (dbDateConversion != null) {
-                        dateConverter = dbDateConversion.value();
-                    }
 
-
-                    columnNameMap.put(fieldKey, new DBElement(tableName, tableAlias, primaryKey, column.value(), dateConverter));
+                    columnNameMap.put(fieldKey, new DBElement(tableName, tableAlias, primaryKey, column.value(), field.getAnnotation(DbDateConversion.class)));
                     dataBaseMap.put(nameKey, field.getName());
                 }
             }

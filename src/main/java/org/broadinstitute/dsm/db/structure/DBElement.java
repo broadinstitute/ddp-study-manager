@@ -23,9 +23,11 @@ public class DBElement {
         this.columnName = columnName;
     }
 
-    public DBElement(String tableName, String tableAlias, String primaryKey, String columnName, SqlDateConverter dateConverter) {
+    public DBElement(String tableName, String tableAlias, String primaryKey, String columnName, DbDateConversion dateConverter) {
         this(tableName, tableAlias, primaryKey, columnName);
-        this.dateConverter = dateConverter;
+        if (dateConverter != null) {
+            this.dateConverter = dateConverter.value();
+        }
     }
 
     /**
