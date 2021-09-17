@@ -275,8 +275,7 @@ public class Filter {
         String column = filter.getColumnName(dbElement);
         SqlDateConverter dateConverter = dbElement.getDateConverter();
 
-        Instant instant = null;
-        instant = LocalDate.parse(arg.toString(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay().toInstant(ZoneOffset.UTC);
+        Instant instant = LocalDate.parse(arg.toString(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay().toInstant(ZoneOffset.UTC);
 
         if (dateConverter != null) {
             if (EQUALS.equals(comparison)) {
