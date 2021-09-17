@@ -57,7 +57,7 @@ public class Filter {
     public static String CHECKBOX = "CHECKBOX";
     public static String COMPOSITE = "COMPOSITE";//ES type
     public static String JSON_ARRAY = "JSONARRAY";//Sample result
-    public static String AGREEMENT = "AGREEMENT";//Sample result
+    public static String AGREEMENT = "AGREEMENT";
 
 
     private boolean range = false;
