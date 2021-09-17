@@ -106,10 +106,10 @@ public class PatchUtil {
                     if (StringUtils.isNotBlank(columnPrefix)) {
                         fieldKey = columnPrefix.concat("_").concat(field.getName());
                     }
-                    DbDateConversion[] dbDateConversions = field.getAnnotationsByType(DbDateConversion.class);
+                    DbDateConversion dbDateConversion = field.getAnnotation(DbDateConversion.class);
                     SqlDateConverter dateConverter = null;
-                    if (dbDateConversions != null && dbDateConversions.length == 1) {
-                        dateConverter = dbDateConversions[0].value();
+                    if (dbDateConversion != null) {
+                        dateConverter = dbDateConversion.value();
                     }
 
 

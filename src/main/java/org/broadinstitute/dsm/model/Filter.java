@@ -1,9 +1,10 @@
 package org.broadinstitute.dsm.model;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.time.ZoneId;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+
 import lombok.Getter;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -275,11 +276,7 @@ public class Filter {
         SqlDateConverter dateConverter = dbElement.getDateConverter();
 
         Instant instant = null;
-        try {
-            instant = new SimpleDateFormat("yyyy-MM-dd").parse(arg.toString()).toInstant().atZone(ZoneId.of("UTC")).toInstant();
-        } catch (ParseException e) {
-            throw new RuntimeException("Could not parse " + arg + " into a date", e);
-        }
+        instant = LocalDate.parse(arg.toString(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay().toInstant(ZoneOffset.UTC);
 
         if (dateConverter != null) {
             if (EQUALS.equals(comparison)) {

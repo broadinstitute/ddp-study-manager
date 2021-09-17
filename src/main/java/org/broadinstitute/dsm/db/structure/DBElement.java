@@ -56,7 +56,7 @@ public class DBElement {
     public static class StringDayConverter implements DateConverter {
 
         public String convertArgToSql(Instant arg) {
-            return "STR_TO_DATE(" + "'" + DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.of("UTC")).format(arg) + "'" + ",'%Y-%m-%d')";
+            return "STR_TO_DATE(" + "'" + DateTimeFormatter.ISO_LOCAL_DATE.withZone(ZoneId.of("UTC")).format(arg) + "'" + ",'%Y-%m-%d')";
         }
 
         public String convertColumnForSql(String column) {
