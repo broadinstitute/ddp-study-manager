@@ -63,6 +63,8 @@ public class Filter {
     public static String CHECKBOX = "CHECKBOX";
     public static String COMPOSITE = "COMPOSITE";//ES type
     public static String JSON_ARRAY = "JSONARRAY";//Sample result
+    public static String AGREEMENT = "AGREEMENT";
+
 
     private boolean range = false;
     private boolean exactMatch = false;
@@ -253,7 +255,7 @@ public class Filter {
             //                finalQuery = notNullQuery + query;
             finalQuery = query;
         }
-        else if (BOOLEAN.equals(filter.getType())) { //true/false
+        else if (BOOLEAN.equals(filter.getType()) || AGREEMENT.equals(filter.getType())) { //true/false
             if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())) && TRUE.equals(filter.getFilter1().getValue())) {
                 query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + filter.getFilter1().getName() + EQUALS + filter.getFilter1().getValue();
             }
