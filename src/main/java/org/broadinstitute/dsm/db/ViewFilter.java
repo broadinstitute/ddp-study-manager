@@ -936,6 +936,7 @@ public class ViewFilter {
                 filter.setExactMatch(exact);
                 filter.setRange(range);
                 filter.setNotEmpty(notEmpty);
+                filter.setParentName(viewFilter.getParent());
                 filter.setEmpty(empty);
                 filter.setParticipantColumn(new ParticipantColumn(columnName, tableName));
                 if (StringUtils.isNotBlank(type) && type.equals(Filter.JSON_ARRAY) && StringUtils.isNotBlank(path)) {
@@ -963,6 +964,10 @@ public class ViewFilter {
                     }
                     if (path != null && !f2) {//additional field
                         filter.setFilter2(new NameValue(path, ""));
+                    }
+                    if (f1 && !f2 && Filter.DATE.equals(filter.type) && filter.isRange()) {
+                        // set max date to very far in the future
+                        filter.setFilter2(new NameValue(filter.getFilter1().getName(), LocalDateTime.now().plusYears(10).format(DateTimeFormatter.ISO_LOCAL_DATE)));
                     }
                     if (f2) {// maximum set in a range filter
                         if (filter.getFilter1() == null) {
