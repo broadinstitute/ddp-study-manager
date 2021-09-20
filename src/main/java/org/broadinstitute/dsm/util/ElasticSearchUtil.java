@@ -827,6 +827,9 @@ public class ElasticSearchUtil {
         String[] filters = filter.split(Filter.AND);
         BoolQueryBuilder finalQuery = new BoolQueryBuilder();
 
+        Map<String, String> queryPartsMap = new HashMap<>();  // store query path pointing associated with field name (to be compared)
+        NestedQueryBuilder parentNestedOfRangeBuilder = null; // store NestedQueryBuilder which is a parent of RangeBuilder
+
         for (String f : filters) {
             if (StringUtils.isNotBlank(f) && f.contains(DBConstants.ALIAS_DELIMITER)) {
                 if (f.contains(Filter.EQUALS) || f.contains(Filter.LIKE)) {
@@ -926,6 +929,24 @@ public class ElasticSearchUtil {
                                 catch (ParseException e) {
                                     logger.error("range was not date. user entered: " + userEntered);
                                 }
+                            } else if (StringUtils.isNumeric(userEntered)) { // separately process expressions with numbers
+                                QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, surveyParam[1], queryPartsMap);
+                                if (tmpBuilder != null) {
+                                    ((RangeQueryBuilder) tmpBuilder).gte(userEntered);
+                                }
+                                else {
+                                    tmpBuilder = new BoolQueryBuilder();
+                                    ((BoolQueryBuilder) tmpBuilder).must(QueryBuilders.rangeQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER).gte(userEntered));
+                                    NestedQueryBuilder query = QueryBuilders.nestedQuery(ACTIVITIES, tmpBuilder, ScoreMode.Avg);
+                                    parentNestedOfRangeBuilder = query;
+                                    finalQuery.must(query);
+                                    // store in the map a pair `activities.questionsAnswers.answer`-> [field_name]
+                                    // in order to be possible to put all queries into same must() block.
+                                    // Example of field name: `SELF_CURRENT_AGE`
+                                    // Example of expression from which to generate ES query (contained of one Range and one 'IS NOT NULL'):
+                                    // `AND PREQUAL.SELF_CURRENT_AGE >= 20 AND PREQUAL.SELF_CURRENT_AGE <= 46 AND PREQUAL.SELF_CURRENT_AGE IS NOT NULL`
+                                    queryPartsMap.put(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, surveyParam[1]);
+                                }
                             }
                         }
                     }
@@ -1012,6 +1033,23 @@ public class ElasticSearchUtil {
                                 catch (ParseException e) {
                                     logger.error("range was not date. user entered: " + userEntered);
                                 }
+                            } else if (StringUtils.isNumeric(userEntered)) { // separately process expressions with numbers
+                                QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, surveyParam[1], queryPartsMap);
+                                if (tmpBuilder != null) {
+                                    ((RangeQueryBuilder) tmpBuilder).lte(userEntered);
+                                } else {
+                                    tmpBuilder = new BoolQueryBuilder();
+                                    ((BoolQueryBuilder) tmpBuilder).must(QueryBuilders.rangeQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER).lte(userEntered));
+                                    NestedQueryBuilder query = QueryBuilders.nestedQuery(ACTIVITIES, tmpBuilder, ScoreMode.Avg);
+                                    parentNestedOfRangeBuilder = query;
+                                    finalQuery.must(query);
+                                    // store in the map a pair `activities.questionsAnswers.answer`-> [field_name]
+                                    // in order to be possible to put all queries into same must() block.
+                                    // Example of field name: `SELF_CURRENT_AGE`
+                                    // Example of expression from which to generate ES query (contained of one Range and one 'IS NOT NULL'):
+                                    // `AND PREQUAL.SELF_CURRENT_AGE >= 20 AND PREQUAL.SELF_CURRENT_AGE <= 46 AND PREQUAL.SELF_CURRENT_AGE IS NOT NULL`
+                                    queryPartsMap.put(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, surveyParam[1]);
+                                }
                             }
                         }
                     }
@@ -1062,6 +1100,23 @@ public class ElasticSearchUtil {
                                 queryBuilder.must(queryActivityAnswer);
                                 NestedQueryBuilder query = QueryBuilders.nestedQuery(ACTIVITIES, queryBuilder, ScoreMode.Avg);
                                 finalQuery.must(query);
+
+                                // search for queries for the same field:
+                                // if found and it is Range and it was inserted into Nested block then remove
+                                // this Range from former place and add it into must() block together with this
+                                // `activities.questionsAnswers.stableId`==[field_name] query.
+                                QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, surveyParam[1], queryPartsMap);
+                                if (tmpBuilder instanceof RangeQueryBuilder && parentNestedOfRangeBuilder != null) {
+                                    activityAnswer.must(tmpBuilder);
+                                    BoolQueryBuilder finalQueryCopy = new BoolQueryBuilder();
+                                    for (Iterator<QueryBuilder> iterator = finalQuery.must().iterator(); iterator.hasNext(); ) {
+                                        QueryBuilder builder = iterator.next();
+                                        if (!builder.equals(parentNestedOfRangeBuilder)) {
+                                            finalQueryCopy.must(builder);
+                                        }
+                                    }
+                                    finalQuery = finalQueryCopy;
+                                }
                             }
                         }
                     }
@@ -1084,25 +1139,37 @@ public class ElasticSearchUtil {
     }
 
     private static QueryBuilder findQueryBuilderForFieldName(BoolQueryBuilder finalQuery, String fieldName) {
-        QueryBuilder tmpBuilder = findQueryBuilder(finalQuery.must(), fieldName);
+        return findQueryBuilderForFieldName(finalQuery, fieldName, null);
+    }
+
+    private static QueryBuilder findQueryBuilderForFieldName(BoolQueryBuilder finalQuery, String fieldName, Map<String, String> queryPartsMap) {
+        QueryBuilder tmpBuilder = findQueryBuilder(finalQuery.must(), fieldName, queryPartsMap);
         if (tmpBuilder != null) {
             return tmpBuilder;
         }
         else {
-            return findQueryBuilder(finalQuery.should(), fieldName);
+            return findQueryBuilder(finalQuery.should(), fieldName, queryPartsMap);
         }
     }
 
-    private static QueryBuilder findQueryBuilder(List<QueryBuilder> tmpFilters, @NonNull String fieldName) {
+    /**
+     * Find a query which was added to finalQuert for the same [field_name]
+     * @param tmpFilters     parent block must() of a final query
+     * @param fieldName      name of a field which queried
+     * @param queryPartsMap  map with queries paths which was added for field names
+     */
+    private static QueryBuilder findQueryBuilder(List<QueryBuilder> tmpFilters, @NonNull String fieldName, Map<String, String> queryPartsMap) {
         QueryBuilder tmpBuilder = null;
         if (!tmpFilters.isEmpty()) {
             for (Iterator<QueryBuilder> iterator = tmpFilters.iterator(); iterator.hasNext() && tmpBuilder == null; ) {
                 QueryBuilder builder = iterator.next();
-                if (builder instanceof RangeQueryBuilder && ((RangeQueryBuilder) builder).fieldName().equals(fieldName)) {
+                if (builder instanceof RangeQueryBuilder &&
+                        (((RangeQueryBuilder) builder).fieldName().equals(fieldName) ||
+                                queryPartsMap != null && fieldName.equals(queryPartsMap.get(((RangeQueryBuilder) builder).fieldName())))) {
                     tmpBuilder = builder;
                 }
                 else if (builder instanceof NestedQueryBuilder) {
-                    tmpBuilder = findQueryBuilder(((BoolQueryBuilder) ((NestedQueryBuilder) builder).query()).must(), fieldName);
+                    tmpBuilder = findQueryBuilder(((BoolQueryBuilder) ((NestedQueryBuilder) builder).query()).must(), fieldName, queryPartsMap);
                 }
                 else {
                     String name = builder.getName();
@@ -1114,7 +1181,8 @@ public class ElasticSearchUtil {
                         for (QueryBuilder should : shouldQueries) {
                             if (should instanceof MatchQueryBuilder) {
                                 String otherName = ((MatchQueryBuilder) should).fieldName();
-                                if (StringUtils.isNotBlank(otherName) && fieldName.equals(otherName)) {
+                                if (StringUtils.isNotBlank(otherName) && (fieldName.equals(otherName) ||
+                                        queryPartsMap != null && fieldName.equals(queryPartsMap.get(otherName)))) {
                                     tmpBuilder = builder;
                                 }
                             }

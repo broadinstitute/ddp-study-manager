@@ -587,6 +587,10 @@ public class ViewFilter {
                                 value = word;
                                 type = Filter.BOOLEAN;
                                 state = 40;
+                            } else if (StringUtils.isNumeric(word)) {
+                                value = word;
+                                type = Filter.NUMBER;
+                                state = 40;
                             }
                             else {
                                 tempValue = word;
@@ -625,6 +629,8 @@ public class ViewFilter {
                             value = trimValue(word);
                             if (isValidDate(value, false)) {
                                 type = Filter.DATE;
+                            } else if (StringUtils.isNumeric(word)) {
+                                type = Filter.NUMBER;
                             }
                             state = 11;
                             break;
@@ -950,7 +956,7 @@ public class ViewFilter {
                 if (Filter.ADDITIONAL_VALUES.equals(filter.type)) {
                     filter.setParticipantColumn(new ParticipantColumn(path, tableName));
                 }
-                else if (Filter.TEXT.equals(filter.type) || Filter.BOOLEAN.equals(filter.type)) {
+                else if (Filter.TEXT.equals(filter.type) || Filter.BOOLEAN.equals(filter.type) || Filter.NUMBER.equals(filter.type)) {
                     filter.setFilter1(new NameValue(columnName, value));
                 }
                 else if (!Filter.CHECKBOX.equals(filter.type)) {
