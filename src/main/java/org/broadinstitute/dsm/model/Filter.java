@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -278,7 +279,13 @@ public class Filter {
         SqlDateConverter dateConverter = null;
         if (dbElement != null) {
             dateConverter = dbElement.getDateConverter();
-            Instant instant = LocalDate.parse(arg.toString(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay().toInstant(ZoneOffset.UTC);
+            Instant instant = null;
+            try {
+                instant = LocalDate.parse(arg.toString(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay().toInstant(ZoneOffset.UTC);
+            } catch (DateTimeParseException e) {
+                // might be an epoch time in an older saved filter
+                instant = Instant.ofEpochMilli(Long.valueOf(arg.toString()));
+            }
 
             if (dateConverter != null) {
                 if (EQUALS.equals(comparison)) {
