@@ -261,10 +261,20 @@ public class ViewFilter {
         }
         else {
             String queryCondition = "";
-            if (queryConditions.containsKey("ES")) {
-                queryCondition = queryConditions.get("ES");
+            if (filter != null && filter.getParentName() != null &&
+                    filter.getParticipantColumn().getTableAlias() != null && "proxy".equals(filter.getParticipantColumn().getTableAlias())) {
+                if (queryConditions.containsKey("proxy")) {
+                    queryCondition = queryConditions.get("proxy");
+                }
+                queryConditions.put("proxy", queryCondition.concat(Filter.getQueryStringForFiltering(filter, null)));
+
             }
-            queryConditions.put("ES", queryCondition.concat(Filter.getQueryStringForFiltering(filter, null)));
+            else {
+                if (queryConditions.containsKey("ES")) {
+                    queryCondition = queryConditions.get("ES");
+                }
+                queryConditions.put("ES", queryCondition.concat(Filter.getQueryStringForFiltering(filter, null)));
+            }
         }
     }
 

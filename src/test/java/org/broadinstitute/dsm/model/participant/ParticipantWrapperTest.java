@@ -4,13 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.gson.Gson;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
@@ -139,6 +137,11 @@ public class ParticipantWrapperTest {
 
         @Override
         public ElasticSearch getAllParticipantsDataByInstanceIndex(String esParticipantsIndex) {
+            return null;
+        }
+
+        @Override
+        public ElasticSearch getProxiesByFilter(String esParticipantsIndex, String filter) {
             return null;
         }
     }

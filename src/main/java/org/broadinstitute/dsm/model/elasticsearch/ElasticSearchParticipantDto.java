@@ -22,6 +22,7 @@ public class ElasticSearchParticipantDto {
     private String status;
     private ESDsm dsm;
     private String ddp;
+    private List<String> governedUsers;
 
     public Optional<ESAddress> getAddress() {
         return Optional.ofNullable(address);
@@ -65,6 +66,10 @@ public class ElasticSearchParticipantDto {
 
     public Optional<ESDsm> getDsm() {
         return Optional.ofNullable(dsm);
+    }
+
+    public Optional<List<String>> getGovernedUsers() {
+        return Optional.ofNullable(governedUsers);
     }
 
     public String getParticipantId() {

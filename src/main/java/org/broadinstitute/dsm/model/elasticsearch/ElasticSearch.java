@@ -248,4 +248,26 @@ public class ElasticSearch implements ElasticSearchable {
         return boolQuery;
     }
 
+    @Override
+    public ElasticSearch getProxiesByFilter(String esParticipantsIndex, String filter) {
+        long participantsSize = getParticipantsSize(Objects.requireNonNull(esParticipantsIndex));
+        SearchResponse response;
+        try {
+            SearchRequest searchRequest = new SearchRequest(Objects.requireNonNull(esParticipantsIndex));
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            AbstractQueryBuilder<? extends AbstractQueryBuilder<?>> esQuery = ElasticSearchUtil.createESQuery(filter);
+            ((BoolQueryBuilder)esQuery).must(QueryBuilders.regexpQuery("governedUsers",".+"));
+            searchSourceBuilder.query(esQuery).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+            searchSourceBuilder.from(0);
+            searchSourceBuilder.size((int) participantsSize);
+            searchRequest.source(searchSourceBuilder);
+            response = ElasticSearchUtil.getClientInstance().search(searchRequest, RequestOptions.DEFAULT);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Couldn't get participants from ES for instance " + esParticipantsIndex, e);
+        }
+        List<ElasticSearchParticipantDto> esParticipants = parseSourceMaps(response.getHits().getHits());
+        logger.info("Got " + esParticipants.size() + " participants from ES for instance " + esParticipantsIndex);
+        return new ElasticSearch(esParticipants, response.getHits().getTotalHits());
+    }
 }

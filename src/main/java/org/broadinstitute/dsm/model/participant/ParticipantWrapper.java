@@ -116,6 +116,10 @@ public class ParticipantWrapper {
                     abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(ddpInstance.getName(), filters.get(source));
                     participantIdsToFetch = new ArrayList<>(abstractionActivities.keySet());
                 }
+                else if ("proxy".equals(source)) {
+                    ElasticSearch proxyData = elasticSearchable.getProxiesByFilter(ddpInstance.getUsersIndexES(), filters.get(source).replaceAll("proxy", "profile"));
+                    participantIdsToFetch = getGovernedUserIdsFromElasticList(proxyData.getEsParticipants());
+                }
                 else { //source is not of any study-manager table so it must be ES
                     esData = elasticSearchable.getParticipantsByRangeAndFilter(ddpInstance.getParticipantIndexES(), participantWrapperPayload.getFrom(),
                             participantWrapperPayload.getTo(), filters.get(source));
@@ -163,6 +167,16 @@ public class ParticipantWrapper {
         if (proxiesByParticipantIds.isEmpty()) {
             proxiesByParticipantIds = getProxiesWithParticipantIdsFromElasticList(ddpInstance.getUsersIndexES(), esData.getEsParticipants());
         }
+    }
+
+    List<String> getGovernedUserIdsFromElasticList(List<ElasticSearchParticipantDto> proxyData) {
+        List<String> participantGovernedUserIds = new ArrayList<>();
+
+        proxyData.stream()
+                .filter(esGovernedUserData -> esGovernedUserData.getGovernedUsers().orElse(Collections.emptyList()).size() > 0)
+                .forEach(esGovernedUserData ->
+                        participantGovernedUserIds.addAll(esGovernedUserData.getGovernedUsers().get()));
+        return participantGovernedUserIds;
     }
 
     private void fetchAndPrepareData(DDPInstance ddpInstance) {

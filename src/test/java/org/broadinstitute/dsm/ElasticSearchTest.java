@@ -7,7 +7,6 @@ import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
-import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -135,6 +134,33 @@ public class ElasticSearchTest extends TestHelper {
 
                 response = client.search(searchRequest, RequestOptions.DEFAULT);
                 ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "users.cmi.cmi-osteo");
+                i++;
+            }
+            Assert.assertNotEquals(0, esData.size());
+        }
+    }
+
+    @Test
+    public void searchUserByLastName() throws Exception {
+        try (RestHighLevelClient client = ElasticSearchUtil.getClientForElasticsearchCloud(cfg.getString("elasticSearch.url"), cfg.getString("elasticSearch.username"), cfg.getString("elasticSearch.password"))) {
+            int scrollSize = 1000;
+            Map<String, Map<String, Object>> esData = new HashMap<>();
+            SearchRequest searchRequest = new SearchRequest("users.cmi.cmi-brain");
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            SearchResponse response = null;
+            int i = 0;
+            while (response == null || response.getHits().getHits().length != 0) {
+                BoolQueryBuilder activityAnswer = new BoolQueryBuilder();
+                activityAnswer.must(QueryBuilders.matchQuery("profile.lastName", "Mae"));
+                activityAnswer.must(QueryBuilders.regexpQuery("governedUsers",".+"));
+                searchSourceBuilder.query(activityAnswer);
+
+                searchSourceBuilder.size(scrollSize);
+                searchSourceBuilder.from(i * scrollSize);
+                searchRequest.source(searchSourceBuilder);
+
+                response = client.search(searchRequest, RequestOptions.DEFAULT);
+                ElasticSearchUtil.addingParticipantStructuredHits(response, esData, "realm", "users.cmi.cmi-brain");
                 i++;
             }
             Assert.assertNotEquals(0, esData.size());

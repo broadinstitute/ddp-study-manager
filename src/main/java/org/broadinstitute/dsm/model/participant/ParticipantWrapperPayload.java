@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 
-
 public class ParticipantWrapperPayload {
 
     private DDPInstanceDto ddpInstanceDto;
