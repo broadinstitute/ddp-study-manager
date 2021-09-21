@@ -961,7 +961,12 @@ public class ViewFilter {
                     filter.setParticipantColumn(new ParticipantColumn(path, tableName));
                 }
                 else if (Filter.TEXT.equals(filter.type) || Filter.BOOLEAN.equals(filter.type) || Filter.NUMBER.equals(filter.type)) {
-                    filter.setFilter1(new NameValue(columnName, value));
+                    if (Filter.NUMBER.equals(filter.type)
+                            && condition.contains(Filter.SMALLER_EQUALS_TRIMMED) && !arrayContains(conditions, Filter.LARGER_EQUALS_TRIMMED)) {
+                        filter.setFilter2(new NameValue(columnName, value));
+                    } else {
+                        filter.setFilter1(new NameValue(columnName, value));
+                    }
                 }
                 else if (!Filter.CHECKBOX.equals(filter.type)) {
                     if (f1) {// first in range
@@ -1000,6 +1005,15 @@ public class ViewFilter {
                 viewFilter.userId, filters.values().toArray(a), viewFilter.parent,
                 viewFilter.icon, viewFilter.quickFilterName, newQuery, null, viewFilter.realmId);
         return result;
+    }
+
+    private static boolean arrayContains(String[] arr, String str) {
+        for (String s : arr) {
+            if (s.contains(str)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String[] getColumnTableNames(String word) {
