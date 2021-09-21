@@ -5,6 +5,7 @@
 2. [OpenJDK 11](https://openjdk.java.net/)
 3. [gcloud CLI](https://cloud.google.com/sdk)
 4. [Homebrew](https://brew.sh/)
+5. [Lombok](https://projectlombok.org/setup/overview)
 
 ## Installing java
 Building DDP Study Manager requires the installation of both an OpenJDK 11-compatible distribution
