@@ -578,8 +578,12 @@ public class ViewFilter {
                             break;
 
                         case 3: // exact matching value
-                            if (word.equals(Filter.TODAY)) {
-                                value = getDate();
+                            if (word.equals(Filter.TODAY) || word.matches("'\\d{4}-\\d{1,2}-\\d{1,2}'")) {
+                                if (word.equals(Filter.TODAY)) {
+                                    value = getDate();
+                                } else {
+                                    value = word.replace("'","");
+                                }
                                 state = 22;
                                 break;
                             }
@@ -947,7 +951,7 @@ public class ViewFilter {
                 filter.setSelectedOptions(selectedOptions.toArray(b));
                 filter.setType(type == null ? Filter.TEXT : type);
                 if (isValidDate(value, false)) {
-                    type = Filter.DATE;
+                    filter.setType(Filter.DATE);
                 }
                 if (Filter.JSON_ARRAY.equals(filter.type)) {
                     filter.setFilter1(new NameValue(columnName, value));
