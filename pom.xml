@@ -178,16 +178,6 @@
             <version>2.0.0</version>
         </dependency>
         <dependency>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-            <version>1.4.01</version>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.xml.bind</groupId>
-            <artifactId>jakarta.xml.bind-api</artifactId>
-            <version>2.3.2</version>
-        </dependency>
-        <dependency>
             <groupId>xerces</groupId>
             <artifactId>xerces</artifactId>
             <version>2.4.0</version>
@@ -202,19 +192,36 @@
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
             <version>2.12.1</version>
+            <exclusions>
+                <!--
+                    Excluded to avoid conflicts with the javax.xml.* and org.w3c.dom.* modules.
+                    JDK 11 includes Xerces already (11.0.5 includes Xerces 2.12.0) so modules can clash
+                    here. If using the `xml-apis` dependency is a requirement, work will need to be
+                    done to modularize the project so a module-info.java can be used to specify
+                    the specific implementation.                   
+                -->
+                <exclusion>
+                    <artifactId>xml-apis</artifactId>
+                    <groupId>xml-apis</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-        <!-- Runtime, com.sun.xml.bind module -->
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>2.3.2</version>
+        </dependency>
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
             <version>2.3.2</version>
         </dependency>
-
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
             <version>2.3.0</version>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/javax.activation/activation -->
@@ -353,14 +360,6 @@
                         <artifactId>maven-compiler-plugin</artifactId>
                         <version>3.8.0</version>
                         <configuration>
-                            <release>11</release>
-                            <annotationProcessorPaths>
-                                <path>
-                                    <groupId>org.projectlombok</groupId>
-                                    <artifactId>lombok</artifactId>
-                                    <version>1.18.12</version>
-                                </path>
-                            </annotationProcessorPaths>
                         </configuration>
                     </plugin>
                     <plugin>
