@@ -111,6 +111,7 @@
             <artifactId>jruby-complete</artifactId>
             <version>9.1.15.0</version>
         </dependency>
+
         <!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -124,6 +125,7 @@
             <artifactId>lombok</artifactId>
             <version>1.18.12</version>
         </dependency>
+
         <!-- liquibase -->
         <dependency>
             <groupId>org.liquibase</groupId>
@@ -370,8 +372,8 @@
         </profile>
     </profiles>
     <build>
-            <sourceDirectory>src/main/java</sourceDirectory>
-            <testSourceDirectory>src/test/java</testSourceDirectory>
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <testSourceDirectory>src/test/java</testSourceDirectory>
     </build>
 
 </project>
