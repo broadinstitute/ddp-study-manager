@@ -6,8 +6,8 @@
 3. [gcloud CLI](https://cloud.google.com/sdk)
 4. [Homebrew](https://brew.sh/)
 ```
-brew tap homebrew/cask-versions
-brew cask install java11
+brew install java11
+brew install maven
 ```
 
 # Setting up maven
