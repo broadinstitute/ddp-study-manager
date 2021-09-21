@@ -5,6 +5,10 @@
 2. [OpenJDK 11](https://openjdk.java.net/)
 3. [gcloud CLI](https://cloud.google.com/sdk)
 4. [Homebrew](https://brew.sh/)
+
+## Installing java
+Building DDP Study Manager requires the installation of both an OpenJDK 11-compatible distribution
+and maven. Homebrew includes packages for both, and can be installed with the commands
 ```
 brew install java11
 brew install maven
