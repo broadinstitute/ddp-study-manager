@@ -140,7 +140,7 @@ public class Filter {
                     condition2 = SMALLER_EQUALS + (int) Double.parseDouble(String.valueOf(filter.getFilter2().getValue()));
                 }
                 finalQuery = query + condition + query2 + condition2 + notNullQuery;
-                if (StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())) && !StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue()))) {
+                if (isNotEmpty(filter.getFilter1()) || isNotEmpty(filter.getFilter2())) {
                     finalQuery = finalQuery + notNullQuery;
                 }
             }
@@ -268,6 +268,14 @@ public class Filter {
 
         //        logger.info(finalQuery);
         return finalQuery;
+    }
+
+    /**
+     * Check if filter value is not null and is not blank
+     * @return boolean is true if a filter is not null and not blank
+     */
+    private static boolean isNotEmpty(NameValue filter) {
+        return filter != null && StringUtils.isNotBlank(String.valueOf(filter.getValue()));
     }
 
     /**
