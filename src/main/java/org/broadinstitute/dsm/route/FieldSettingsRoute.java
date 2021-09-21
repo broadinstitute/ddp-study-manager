@@ -55,7 +55,7 @@ public class FieldSettingsRoute extends RequestHandler {
                 }
                 else {
                     response.status(500);
-                    return new Result(500, UserErrorMessages.NO_RIGHTS);
+                    return new Result(500, UserErrorMessages.NO_RIGHTS_OF_CHANGES);
                 }
             }
         }
