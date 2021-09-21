@@ -271,6 +271,13 @@
                         <version>3.8.0</version>
                         <configuration>
                             <release>11</release>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>org.projectlombok</groupId>
+                                    <artifactId>lombok</artifactId>
+                                    <version>1.18.12</version>
+                                </path>
+                            </annotationProcessorPaths>
                         </configuration>
                     </plugin>
                     <plugin>
@@ -347,6 +354,13 @@
                         <version>3.8.0</version>
                         <configuration>
                             <release>11</release>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>org.projectlombok</groupId>
+                                    <artifactId>lombok</artifactId>
+                                    <version>1.18.12</version>
+                                </path>
+                            </annotationProcessorPaths>
                         </configuration>
                     </plugin>
                     <plugin>
