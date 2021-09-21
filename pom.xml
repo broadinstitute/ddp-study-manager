@@ -316,7 +316,7 @@
                                         <resource>
                                             <directory>${project.build.directory}</directory>
                                             <includes>
-                                                <include>${build.finalName}.jar</include>
+                                                <include>${project.build.finalName}.jar</include>
                                                 <include>libs/**</include>
                                             </includes>
                                             <filtering>false</filtering>
