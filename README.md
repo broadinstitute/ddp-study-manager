@@ -15,56 +15,54 @@ brew install maven
 ```
 
 # Setting up maven
-In addition to the usual public repos, we use github package manager for the older lddp core dependency.
+In addition to the Maven Central public repository, we use GitHub Packages' [Maven registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry)
+for the [broadinstitute/lddp-backend](https://github.com/broadinstitute/lddp-backend) dependency.
 
-To download this dependency, generate a github token and add it to your `~/.m2/settings.xml`:
+To install this dependency, [create](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+a GitHub personal access token with the `read:packages` scope, and add the token to your
+`~/.m2/settings.xml`. An example `settings.xml` file follows- replace `USERNAME` and `TOKEN` with your GitHub username and personal access token, respectively.
+```xml
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                      http://maven.apache.org/xsd/settings-1.0.0.xsd">
+  
+  <activeProfiles>
+    <activeProfile>broad-institute</activeProfile>
+  </activeProfiles>
 
-````
-<settings>
-   
-   ...
-   
-    <activeProfiles>
-       <activeProfile>github</activeProfile>
-     </activeProfiles>
-   
-   ...
-   
-   <servers>
-       <server>
-         <id>github</id>
-         <username>...github username...</username>
-         <password>...github token...</password>
-       </server>
-     </servers>
-     
-     ...
-     
-     <profiles>
-         <profile>
-           <id>github</id>
-           <repositories>
-             <repository>
-               <id>central</id>
-               <url>https://repo1.maven.org/maven2</url>
-               <releases><enabled>true</enabled></releases>
-               <snapshots><enabled>true</enabled></snapshots>
-             </repository>
-             <repository>
-               <id>github</id>
-               <name>GitHub OWNER Apache Maven Packages</name>
-               <url>https://maven.pkg.github.com/broadinstitute/ddp-study-manager</url>
-               </repository>
-     	</repositories>
-         </profile>
-       </profiles>
-       
-       ...
-       
-       
+  <servers>
+    <server>
+      <id>github</id>
+      <username>USERNAME</username>
+      <password>TOKEN</password>
+    </server>
+  </servers>
+  
+  <profiles>
+    <profile>
+      <id>broad-institute</id>
+        <repositories>
+          <repository>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2</url>
+            <releases>
+              <enabled>true</enabled>
+            </releases>
+            <snapshots>
+              <enabled>true</enabled>
+            </snapshots>
+          </repository>
+          <repository>
+            <id>github</id>
+            <name>broadinstitute/ddp-study-manager</name>
+            <url>https://maven.pkg.github.com/broadinstitute/ddp-study-manager</url>
+          </repository>
+        </repositories>
+    </profile>
+  </profiles>
 </settings>
-
-````
+```
 
 DSM uses a single `pom.xml` but two different profile values for building the backend APIs
 for GAE and background jobs for Cloud Functions.  When building the APIs, use `-Papis`.  To 
