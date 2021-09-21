@@ -65,8 +65,8 @@ a GitHub personal access token with the `read:packages` scope, and add the token
 ```
 
 DSM uses a single `pom.xml` but two different profile values for building the backend APIs
-for GAE and background jobs for Cloud Functions.  When building the APIs, use `-Papis`.  To 
-build cloud functions, use `Pcloud-function`
+for GAE and background jobs for Cloud Functions.  When building the APIs, use `-Pbackend`.  To
+build cloud functions, use `-Pcloud-function`
 
 # Secrets
 DSM uses GCP's [secret manager (SM)](https://cloud.google.com/secret-manager) to store credentials.
