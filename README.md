@@ -4,6 +4,7 @@
 1. [Maven 3](https://maven.apache.org/download.cgi)
 2. OpenJDK 11
 3. [gcloud CLI](https://cloud.google.com/sdk)
+4. [Homebrew](https://brew.sh/)
 ```
 brew tap homebrew/cask-versions
 brew cask install java11
