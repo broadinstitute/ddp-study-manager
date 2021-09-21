@@ -2,7 +2,7 @@
 
 # Prerequisites
 1. [Maven 3](https://maven.apache.org/download.cgi)
-2. OpenJDK 11
+2. [OpenJDK 11](https://openjdk.java.net/)
 3. [gcloud CLI](https://cloud.google.com/sdk)
 4. [Homebrew](https://brew.sh/)
 ```
