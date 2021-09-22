@@ -855,6 +855,14 @@ public class ElasticSearchUtil {
         String[] filters = filter.split(Filter.AND);
         BoolQueryBuilder finalQuery = new BoolQueryBuilder();
 
+        // This map used to store query path associated with a field name (to be compared, for example: `SELF_CURRENT_AGE`)
+        // this data is used in method findQueryBuilderForFieldName() in order to properly find a range of numbers which
+        // is created out of such filter like f.ex: `PREQUAL.SELF_CURRENT_AGE >= 20 AND PREQUAL.SELF_CURRENT_AGE <= 46`
+        Map<String, String> queryPartsMap = new HashMap<>();
+
+        // store NestedQueryBuilder which is a parent of a Range of numbers
+        NestedQueryBuilder parentNestedOfRangeBuilderOfNumbers = null;
+
         for (String f : filters) {
             if (StringUtils.isNotBlank(f) && f.contains(DBConstants.ALIAS_DELIMITER)) {
                 if (f.contains(Filter.EQUALS) || f.contains(Filter.LIKE)) {
@@ -954,6 +962,12 @@ public class ElasticSearchUtil {
                                 catch (ParseException e) {
                                     logger.error("range was not date. user entered: " + userEntered);
                                 }
+                            } else if (StringUtils.isNumeric(userEntered)) { // separately process expressions with numbers
+                                NestedQueryBuilder query = addRangeLimitForNumber(
+                                        Filter.LARGER_EQUALS, surveyParam[1], userEntered, finalQuery, queryPartsMap);
+                                if (query != null) {
+                                    parentNestedOfRangeBuilderOfNumbers = query;
+                                }
                             }
                         }
                     }
@@ -1040,6 +1054,12 @@ public class ElasticSearchUtil {
                                 catch (ParseException e) {
                                     logger.error("range was not date. user entered: " + userEntered);
                                 }
+                            } else if (StringUtils.isNumeric(userEntered)) { // separately process expressions with numbers
+                                NestedQueryBuilder query = addRangeLimitForNumber(
+                                        Filter.SMALLER_EQUALS, surveyParam[1], userEntered, finalQuery, queryPartsMap);
+                                if (query != null) {
+                                    parentNestedOfRangeBuilderOfNumbers = query;
+                                }
                             }
                         }
                     }
@@ -1090,10 +1110,11 @@ public class ElasticSearchUtil {
                                 queryBuilder.must(queryActivityAnswer);
                                 NestedQueryBuilder query = QueryBuilders.nestedQuery(ACTIVITIES, queryBuilder, ScoreMode.Avg);
                                 finalQuery.must(query);
+                                finalQuery = processIsNotNullForRangeOfNumbers(
+                                        surveyParam[1], activityAnswer, finalQuery, queryPartsMap, parentNestedOfRangeBuilderOfNumbers);
                             }
                         }
-                    }
-                    else {
+                    }else {
                         logger.error("one of the following is null: fieldName: " + nameValue[0] + " userEntered: [hidingValueInCasePHI]");
                     }
                 }
@@ -1112,25 +1133,37 @@ public class ElasticSearchUtil {
     }
 
     private static QueryBuilder findQueryBuilderForFieldName(BoolQueryBuilder finalQuery, String fieldName) {
-        QueryBuilder tmpBuilder = findQueryBuilder(finalQuery.must(), fieldName);
+        return findQueryBuilderForFieldName(finalQuery, fieldName, null);
+    }
+
+    private static QueryBuilder findQueryBuilderForFieldName(BoolQueryBuilder finalQuery, String fieldName, Map<String, String> queryPartsMap) {
+        QueryBuilder tmpBuilder = findQueryBuilder(finalQuery.must(), fieldName, queryPartsMap);
         if (tmpBuilder != null) {
             return tmpBuilder;
         }
         else {
-            return findQueryBuilder(finalQuery.should(), fieldName);
+            return findQueryBuilder(finalQuery.should(), fieldName, queryPartsMap);
         }
     }
 
-    private static QueryBuilder findQueryBuilder(List<QueryBuilder> tmpFilters, @NonNull String fieldName) {
+    /**
+     * Find a query which was added to finalQuery for the same [field_name]
+     * @param tmpFilters     parent block must() of a final query
+     * @param fieldName      name of a field which queried
+     * @param queryPartsMap  map with queries paths which was added for field names
+     */
+    private static QueryBuilder findQueryBuilder(List<QueryBuilder> tmpFilters, @NonNull String fieldName, Map<String, String> queryPartsMap) {
         QueryBuilder tmpBuilder = null;
         if (!tmpFilters.isEmpty()) {
             for (Iterator<QueryBuilder> iterator = tmpFilters.iterator(); iterator.hasNext() && tmpBuilder == null; ) {
                 QueryBuilder builder = iterator.next();
-                if (builder instanceof RangeQueryBuilder && ((RangeQueryBuilder) builder).fieldName().equals(fieldName)) {
+                if (builder instanceof RangeQueryBuilder &&
+                        (((RangeQueryBuilder) builder).fieldName().equals(fieldName) ||
+                                queryPartsMap != null && fieldName.equals(queryPartsMap.get(((RangeQueryBuilder) builder).fieldName())))) {
                     tmpBuilder = builder;
                 }
                 else if (builder instanceof NestedQueryBuilder) {
-                    tmpBuilder = findQueryBuilder(((BoolQueryBuilder) ((NestedQueryBuilder) builder).query()).must(), fieldName);
+                    tmpBuilder = findQueryBuilder(((BoolQueryBuilder) ((NestedQueryBuilder) builder).query()).must(), fieldName, queryPartsMap);
                 }
                 else {
                     String name = builder.getName();
@@ -1141,7 +1174,8 @@ public class ElasticSearchUtil {
                         for (QueryBuilder should : shouldQueries) {
                             if (should instanceof MatchQueryBuilder) {
                                 String otherName = ((MatchQueryBuilder) should).fieldName();
-                                if (StringUtils.isNotBlank(otherName) && fieldName.equals(otherName)) {
+                                if (StringUtils.isNotBlank(otherName) && (fieldName.equals(otherName) ||
+                                        queryPartsMap != null && fieldName.equals(queryPartsMap.get(otherName)))) {
                                     tmpBuilder = builder;
                                 }
                             }
@@ -1151,6 +1185,108 @@ public class ElasticSearchUtil {
             }
         }
         return tmpBuilder;
+    }
+
+    /**
+     * Process a Range limit expression for numeric values.<br>
+     * Examples of numeric range limit expressions: `PREQUAL.SELF_CURRENT_AGE >= 20`, `PREQUAL.SELF_CURRENT_AGE <= 46`.<br>
+     * Range can have 1 or 2 limits.<br>
+     * Examples of ranges:
+     * <pre>
+     * PREQUAL.SELF_CURRENT_AGE >= 20 AND PREQUAL.SELF_CURRENT_AGE <= 46 - range with 2 limits
+     * PREQUAL.SELF_CURRENT_AGE >= 20  - range with 1st limit only
+     * PREQUAL.SELF_CURRENT_AGE <= 46  - range with 2nd limit only
+     * </pre>
+     *
+     * <b>Algorithm:</b>
+     * <ul>
+     *     <li>find in `finalQuery' already created range for the same `fieldName';</li>
+     *     <li>if a range is found then add a limit into this range;</li>
+     *     <li>if a range is NOT found then:
+     *        1) create a Range and wrap it into Nested block;
+     *        2) add Nested block to `finalQuery` (note: later it can be removed and added into a block together with `IS NOT NULL'
+     *        expression (for same field), if such expression exists);
+     *        3) Store in `queryPartsMap` a pair `activities.questionsAnswers.answer`-> 'fieldName`
+     *        in order to be possible to find Range limits (for same `fieldName`) and find `IS NOT NULL` for same `fieldName`.
+     *     </li>
+     * </ul>
+     *
+     * @param operatorType     operator type (Filter.LARGER_EQUALS or Filter.SMALLER_EQUALS)
+     * @param fieldName        name of a field (for example 'SELF_CURRENT_AGE')
+     * @param userEnteredValue range value (for example '20')
+     * @param finalQuery       query where to add a created Range (wrapped into Nested block)
+     * @param queryPartsMap    map where to save query name and fieldName - in order to find all queries related to
+     *                         a same fieldName (for example related tp `SELF_CURRENT_AGE`)
+     * @return NestedQueryBuilder - built query containing the numeric Range
+     */
+    private static NestedQueryBuilder addRangeLimitForNumber(
+            String operatorType,
+            String fieldName,
+            String userEnteredValue,
+            BoolQueryBuilder finalQuery,
+            Map<String, String> queryPartsMap) {
+
+        QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, fieldName, queryPartsMap);
+        if (tmpBuilder != null) {
+            if (operatorType.equals(Filter.LARGER_EQUALS)) {
+                ((RangeQueryBuilder)tmpBuilder).gte(userEnteredValue);
+            } else {
+                ((RangeQueryBuilder)tmpBuilder).lte(userEnteredValue);
+            }
+        }
+        else {
+            tmpBuilder = new BoolQueryBuilder();
+            RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
+            if (operatorType.equals(Filter.LARGER_EQUALS)) {
+                ((BoolQueryBuilder)tmpBuilder).must(rangeQueryBuilder.gte(userEnteredValue));
+            } else {
+                ((BoolQueryBuilder)tmpBuilder).must(rangeQueryBuilder.lte(userEnteredValue));
+            }
+            NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(ACTIVITIES, tmpBuilder, ScoreMode.Avg);
+            finalQuery.must(nestedQueryBuilder);
+            queryPartsMap.put(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, fieldName);
+            return nestedQueryBuilder;
+        }
+        return null;
+    }
+
+    /**
+     * This method called when processed an expression `IS NOT NULL` for the case of Range of numbers.
+     * If Range of numbers already exists and added
+     * search for queries for the same fieldName:
+     * if found and it is Range and it was inserted into Nested block then remove
+     * this Range from former place and add it into must() block together with this
+     * `activities.questionsAnswers.stableId`==[field_name] query.
+     *
+     * @param fieldName        name of a field (for example 'SELF_CURRENT_AGE')
+     * @param activityAnswer   sub-query (inside `finalQuery`) where to add a Range of numbers
+     * @param finalQuery       a resulting ElasticSearch query
+     * @param queryPartsMap    map where to save query name and fieldName - in order to find all queries related to
+     *                         a same fieldName (for example related tp `SELF_CURRENT_AGE`)
+     * @param parentNestedOfRangeBuilderOfNumbers  reference to NestedQueryBuilder containing a Range of numbers
+     * @return BoolQueryBuilder  finalQuery: it can be the same finalQuery or it can be reorganized finalQuery
+     *    where RangeQueryBuilder removed from the initial place inside finalQuery and added into a must()-block
+     *    together with `IS NOT NULL` query (for a field `fieldName`)
+     */
+    private static BoolQueryBuilder processIsNotNullForRangeOfNumbers(
+            String fieldName,
+            BoolQueryBuilder activityAnswer,
+            BoolQueryBuilder finalQuery,
+            Map<String, String> queryPartsMap,
+            NestedQueryBuilder parentNestedOfRangeBuilderOfNumbers) {
+
+        QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, fieldName, queryPartsMap);
+        if (tmpBuilder instanceof RangeQueryBuilder && parentNestedOfRangeBuilderOfNumbers != null) {
+            activityAnswer.must(tmpBuilder);
+            BoolQueryBuilder finalQueryReorganized = new BoolQueryBuilder();
+            finalQuery.must().forEach( builder -> {
+                if (!builder.equals(parentNestedOfRangeBuilderOfNumbers)) {
+                    finalQueryReorganized.must(builder);
+                }
+            });
+            return finalQueryReorganized;
+        }
+        return finalQuery;
     }
 
     public static void addingParticipantStructuredHits(@NonNull SearchResponse response, Map<String, Map<String, Object>> esData,
