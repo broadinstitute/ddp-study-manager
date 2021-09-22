@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elasticsearch;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -68,8 +69,11 @@ public class ElasticSearchParticipantDto {
         return Optional.ofNullable(dsm);
     }
 
-    public Optional<List<String>> getGovernedUsers() {
-        return Optional.ofNullable(governedUsers);
+    public List<String> getGovernedUsers() {
+        if (this.governedUsers == null) {
+            this.governedUsers = Collections.emptyList();
+        }
+        return this.governedUsers;
     }
 
     public String getParticipantId() {

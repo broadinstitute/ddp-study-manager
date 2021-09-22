@@ -15,6 +15,7 @@ import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.ParticipantColumn;
 import org.broadinstitute.dsm.model.TissueList;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.PatchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.slf4j.Logger;
@@ -262,18 +263,18 @@ public class ViewFilter {
         else {
             String queryCondition = "";
             if (filter != null && filter.getParentName() != null &&
-                    filter.getParticipantColumn().getTableAlias() != null && "proxy".equals(filter.getParticipantColumn().getTableAlias())) {
-                if (queryConditions.containsKey("proxy")) {
-                    queryCondition = queryConditions.get("proxy");
+                    filter.getParticipantColumn().getTableAlias() != null && ElasticSearchUtil.PROXY.equals(filter.getParticipantColumn().getTableAlias())) {
+                if (queryConditions.containsKey(ElasticSearchUtil.PROXY)) {
+                    queryCondition = queryConditions.get(ElasticSearchUtil.PROXY);
                 }
-                queryConditions.put("proxy", queryCondition.concat(Filter.getQueryStringForFiltering(filter, null)));
+                queryConditions.put(ElasticSearchUtil.PROXY, queryCondition.concat(Filter.getQueryStringForFiltering(filter, null)));
 
             }
             else {
-                if (queryConditions.containsKey("ES")) {
-                    queryCondition = queryConditions.get("ES");
+                if (queryConditions.containsKey(ElasticSearchUtil.ES)) {
+                    queryCondition = queryConditions.get(ElasticSearchUtil.ES);
                 }
-                queryConditions.put("ES", queryCondition.concat(Filter.getQueryStringForFiltering(filter, null)));
+                queryConditions.put(ElasticSearchUtil.ES, queryCondition.concat(Filter.getQueryStringForFiltering(filter, null)));
             }
         }
     }

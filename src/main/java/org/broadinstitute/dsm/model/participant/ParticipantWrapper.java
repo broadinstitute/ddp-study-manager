@@ -16,6 +16,7 @@ import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchable;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.at.DefaultValues;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,8 +117,8 @@ public class ParticipantWrapper {
                     abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(ddpInstance.getName(), filters.get(source));
                     participantIdsToFetch = new ArrayList<>(abstractionActivities.keySet());
                 }
-                else if ("proxy".equals(source)) {
-                    ElasticSearch proxyData = elasticSearchable.getProxiesByFilter(ddpInstance.getUsersIndexES(), filters.get(source).replaceAll("proxy", "profile"));
+                else if (ElasticSearchUtil.PROXY.equals(source)) {
+                    ElasticSearch proxyData = elasticSearchable.getProxiesByFilter(ddpInstance.getUsersIndexES(), filters.get(source).replaceAll(ElasticSearchUtil.PROXY, ElasticSearchUtil.PROFILE));
                     participantIdsToFetch = getGovernedUserIdsFromElasticList(proxyData.getEsParticipants());
                 }
                 else { //source is not of any study-manager table so it must be ES
@@ -173,9 +174,9 @@ public class ParticipantWrapper {
         List<String> participantGovernedUserIds = new ArrayList<>();
 
         proxyData.stream()
-                .filter(esGovernedUserData -> esGovernedUserData.getGovernedUsers().orElse(Collections.emptyList()).size() > 0)
+                .filter(esGovernedUserData -> !esGovernedUserData.getGovernedUsers().isEmpty())
                 .forEach(esGovernedUserData ->
-                        participantGovernedUserIds.addAll(esGovernedUserData.getGovernedUsers().get()));
+                        participantGovernedUserIds.addAll(esGovernedUserData.getGovernedUsers()));
         return participantGovernedUserIds;
     }
 

@@ -18,6 +18,6 @@ public interface ElasticSearchable {
 
     ElasticSearch getAllParticipantsDataByInstanceIndex(String esParticipantsIndex);
 
-    ElasticSearch getProxiesByFilter(String esParticipantsIndex, String filter);
+    ElasticSearch getProxiesByFilter(String esUsersIndex, String filter);
 
 }
