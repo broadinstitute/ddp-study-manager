@@ -4,8 +4,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
+import org.broadinstitute.dsm.db.structure.DbDateConversion;
 import org.broadinstitute.dsm.db.structure.TableName;
-import org.broadinstitute.dsm.db.ViewFilter;
 import org.broadinstitute.dsm.model.KitRequest;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
@@ -13,7 +13,10 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class PatchUtil {
 
@@ -104,7 +107,8 @@ public class PatchUtil {
                     if (StringUtils.isNotBlank(columnPrefix)) {
                         fieldKey = columnPrefix.concat("_").concat(field.getName());
                     }
-                    columnNameMap.put(fieldKey, new DBElement(tableName, tableAlias, primaryKey, column.value()));
+
+                    columnNameMap.put(fieldKey, new DBElement(tableName, tableAlias, primaryKey, column.value(), field.getAnnotation(DbDateConversion.class)));
                     dataBaseMap.put(nameKey, field.getName());
                 }
             }
