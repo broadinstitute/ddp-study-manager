@@ -1,11 +1,5 @@
 package org.broadinstitute.dsm.model.filter.participant;
 
-import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-
 import com.google.gson.Gson;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -24,6 +18,12 @@ import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 public abstract class BaseFilterParticipantList extends BaseFilter implements Filterable<ParticipantWrapper> {
 
@@ -69,7 +69,7 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
                     } else if (filter.getFilter2() != null && StringUtils.isNotBlank(filter.getFilter2().getName())) {
                         tmpName = filter.getFilter2().getName();
                     }
-                    if (filter.getParticipantColumn() != null && PARTICIPANT_DATA.equals(filter.getParticipantColumn().tableAlias)) {
+                    if (filter.getParticipantColumn() != null && (PARTICIPANT_DATA.equals(filter.getParticipantColumn().tableAlias) || BaseFilter.PARENT_PARTICIPANT_LIST.equals(filter.getParentName()))) {
                         if (allParticipantData == null) {
                             allParticipantData = participantDataDao
                                     .getParticipantDataByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
@@ -226,7 +226,7 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
     }
 
     private boolean isInDateRange(String fieldName, Map<String, String> dataMap, Object rangeValue1, Object rangeValue2) {
-        return (dataMap.get(fieldName) != null)
+        return (StringUtils.isNotBlank(dataMap.get(fieldName)))
                 && rangeValue1 instanceof String && rangeValue2 instanceof String
                 && DATE_PATTERN.matcher((String) rangeValue1).matches() && DATE_PATTERN.matcher((String) rangeValue2).matches()
                 && LocalDate.parse(dataMap.get(fieldName)).compareTo(LocalDate.parse((String) rangeValue1)) >= 0
