@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -139,7 +140,7 @@ public class Filter {
                     condition2 = SMALLER_EQUALS + (int) Double.parseDouble(String.valueOf(filter.getFilter2().getValue()));
                 }
                 finalQuery = query + condition + query2 + condition2 + notNullQuery;
-                if (StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())) && !StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue()))) {
+                if (isNotEmpty(filter.getFilter1()) || isNotEmpty(filter.getFilter2())) {
                     finalQuery = finalQuery + notNullQuery;
                 }
             }
@@ -270,6 +271,14 @@ public class Filter {
     }
 
     /**
+     * Check if filter value is not null and is not blank
+     * @return boolean is true if a filter is not null and not blank
+     */
+    private static boolean isNotEmpty(NameValue filter) {
+        return filter != null && StringUtils.isNotBlank(String.valueOf(filter.getValue()));
+    }
+
+    /**
      * Uses the appropriate date converter (if given) to write SQL that can
      * compare either exact dates or "in the day" dates.
      */
@@ -278,7 +287,13 @@ public class Filter {
         SqlDateConverter dateConverter = null;
         if (dbElement != null) {
             dateConverter = dbElement.getDateConverter();
-            Instant instant = LocalDate.parse(arg.toString(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay().toInstant(ZoneOffset.UTC);
+            Instant instant = null;
+            try {
+                instant = LocalDate.parse(arg.toString(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay().toInstant(ZoneOffset.UTC);
+            } catch (DateTimeParseException e) {
+                // might be an epoch time in an older saved filter
+                instant = Instant.ofEpochMilli(Long.valueOf(arg.toString()));
+            }
 
             if (dateConverter != null) {
                 if (EQUALS.equals(comparison)) {
