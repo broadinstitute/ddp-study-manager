@@ -39,7 +39,6 @@ import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.Strings;
-import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -112,7 +111,7 @@ public class ElasticSearchUtil {
     // These clients are expensive. They internally have thread pools and other resources. Let's
     // create one instance and reuse it as much as possible. Client is thread-safe per the docs.
     private static RestHighLevelClient client;
-    private static ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> fieldMappings;
+    private static Map<String, MappingMetaData> fieldMappings;
 
     static {
         initClient();
