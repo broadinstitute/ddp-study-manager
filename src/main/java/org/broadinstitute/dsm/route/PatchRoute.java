@@ -523,8 +523,8 @@ public class PatchRoute extends RequestHandler {
             }
         }
         else if (patch.getNameValue().getName().equals("oD.unableToObtain") && (boolean) patch.getNameValue().getValue()) {
-            nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getId(), PARTICIPANT_ID,
-                    null, patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "unableToObtain"));
+//            nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getId(), PARTICIPANT_ID,
+//                    null, patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "unableToObtain"));
         }
         else if (patch.getNameValue().getName().equals("oD.unableToObtain") && !(boolean) patch.getNameValue().getValue()) {
             Boolean hasReceivedDate = OncHistoryDetail.hasReceivedDate(patch);

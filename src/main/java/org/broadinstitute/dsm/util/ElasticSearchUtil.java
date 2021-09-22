@@ -26,6 +26,7 @@ import org.broadinstitute.dsm.model.gbf.Address;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -36,7 +37,9 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.index.query.*;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -85,6 +88,7 @@ public class ElasticSearchUtil {
     public static final String AND = " AND (";
     public static final String ES = "ES";
     public static final String CLOSING_PARENTHESIS = ")";
+    public static final String DOT_SEPARATOR = "\\.";
     public static final String BY_LEGACY_ALTPIDS = " OR profile.legacyAltPid = ";
     public static final String BY_LEGACY_SHORTID = " AND profile.legacyShortId = ";
     public static final String END_OF_DAY = " 23:59:59";
@@ -97,10 +101,23 @@ public class ElasticSearchUtil {
     public static final String PROFILE_LEGACYALTPID = "profile.legacyAltPid";
     public static final String WORKFLOWS = "workflows";
     public static final String EMAIL_FIELD = "email";
+    public static final String PARTICIPANTS_STRUCTURED_ANY = "participants_structured.*";
+    public static final String TYPE = "type";
+    public static final String TEXT = "text";
+    public static final String KEYWORD = ".keyword";
+    public static final String PROPERTIES = "properties";
+    public static final byte OUTER_FIELD_INDEX = 0;
+    public static final byte INNER_FIELD_INDEX = 1;
 
     // These clients are expensive. They internally have thread pools and other resources. Let's
     // create one instance and reuse it as much as possible. Client is thread-safe per the docs.
     private static RestHighLevelClient client;
+    private static ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> fieldMappings;
+
+    static {
+        initClient();
+        fetchFieldMappings();
+    }
 
     public static synchronized void initClient() {
         if (client == null) {
@@ -110,8 +127,21 @@ public class ElasticSearchUtil {
                         TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME),
                         TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD));
             } catch (MalformedURLException e) {
-                throw new RuntimeException("Error while initialize ES client", e);
+                throw new RuntimeException("Error while initializing ES client", e);
             }
+        }
+    }
+
+    private static void fetchFieldMappings() {
+        GetMappingsRequest request = new GetMappingsRequest();
+        request.indices(PARTICIPANTS_STRUCTURED_ANY);
+        try {
+            logger.info("Getting ES data field mapping");
+            fieldMappings = getClientInstance().indices()
+                    .getMapping(request, RequestOptions.DEFAULT)
+                    .mappings();
+        } catch (IOException e) {
+            throw new RuntimeException("Error while fetching field mappings from ES", e);
         }
     }
 
@@ -133,9 +163,9 @@ public class ElasticSearchUtil {
     }
 
     public static RestHighLevelClient getClientForElasticsearchCloudCF(@NonNull String baseUrl,
-                                                                     @NonNull String userName,
-                                                                     @NonNull String password,
-                                                                     String proxy) throws MalformedURLException {
+                                                                      @NonNull String userName,
+                                                                      @NonNull String password,
+                                                                      String proxy) throws MalformedURLException {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(userName, password));
 
@@ -171,8 +201,8 @@ public class ElasticSearchUtil {
     }
 
     public static Map<String, Map<String, Object>> getSingleParticipantFromES(@NonNull String realm,
-                                                                            @NonNull String index,
-                                                                            RestHighLevelClient client,
+                                                                              @NonNull String index,
+                                                                              RestHighLevelClient client,
                                                                               String participantHruid) {
         Map<String, Map<String, Object>> esData = new HashMap<>();
         if (StringUtils.isNotBlank(index)) {
@@ -287,7 +317,7 @@ public class ElasticSearchUtil {
     public static Map<String, Map<String, Object>> getDDPParticipantsFromES(@NonNull String realm, @NonNull String index) {
         Map<String, Map<String, Object>> esData = new HashMap<>();
         if (StringUtils.isNotBlank(index)) {
-            logger.info("Collecting ES data from index: " +  index);
+            logger.info("Collecting ES data from index: " + index);
             try {
                 esData = getDDPParticipantsFromES(realm, index, client);
             }
@@ -349,7 +379,7 @@ public class ElasticSearchUtil {
         BoolQueryBuilder qb = QueryBuilders.boolQuery();
         qb.must(QueryBuilders.termsQuery("profile.guid", participantGuids));
 
-        searchSourceBuilder.fetchSource(new String[] {PROFILE, ADDRESS}, null);
+        searchSourceBuilder.fetchSource(new String[]{PROFILE, ADDRESS}, null);
         searchSourceBuilder.query(qb).sort(PROFILE_CREATED_AT, SortOrder.ASC).docValueField(ADDRESS).docValueField(PROFILE);
         while (pageNumber == 0 || hitNumber < totalHits) {
             searchSourceBuilder.size(scrollSize);
@@ -634,7 +664,7 @@ public class ElasticSearchUtil {
             boolean updated = false;
             for (Map<String, Object> object : objectList) {
                 if (id.toString().equals(object.get(idName).toString())) {
-                    for (Map.Entry<String, Object> entry: nameValues.entrySet()) {
+                    for (Map.Entry<String, Object> entry : nameValues.entrySet()) {
                         if (!entry.getKey().equals(idName) && !entry.getKey().equals(ESObjectConstants.DDP_PARTICIPANT_ID)) {
                             object.put(entry.getKey(), entry.getValue());
                         }
@@ -702,7 +732,7 @@ public class ElasticSearchUtil {
     public static void createAndAddNewObjectMap(@NonNull Object id, List<Map<String, Object>> objectList, String idName, @NonNull Map<String, Object> nameValues) {
         Map<String, Object> newObjectMap = new HashMap<>();
         newObjectMap.put(idName, id);
-        for (Map.Entry<String, Object> entry: nameValues.entrySet()) {
+        for (Map.Entry<String, Object> entry : nameValues.entrySet()) {
             if (!entry.getKey().equals(idName) && !entry.getKey().equals(ESObjectConstants.DDP_PARTICIPANT_ID)) {
                 newObjectMap.put(entry.getKey(), entry.getValue());
             }
@@ -741,7 +771,7 @@ public class ElasticSearchUtil {
     }
 
     public static Map<String, Object> getObjectsMap(RestHighLevelClient client, String index, String id, String object) throws Exception {
-        String[] includes = new String[] {object};
+        String[] includes = new String[]{object};
         String[] excludes = Strings.EMPTY_ARRAY;
         FetchSourceContext fetchSourceContext = new FetchSourceContext(true, includes, excludes);
         GetRequest getRequest = new GetRequest()
@@ -770,7 +800,7 @@ public class ElasticSearchUtil {
                 if (address != null && !address.isEmpty() && profile != null && !profile.isEmpty()) {
                     String firstName = "";
                     String lastName = "";
-                    if(StringUtils.isNotBlank((String) profile.get("firstName")) && StringUtils.isNotBlank((String)profile.get("lastName"))){
+                    if (StringUtils.isNotBlank((String) profile.get("firstName")) && StringUtils.isNotBlank((String) profile.get("lastName"))) {
                         firstName = (String) profile.get("firstName");
                         lastName = (String) profile.get("lastName");
                     }else{
@@ -1107,8 +1137,7 @@ public class ElasticSearchUtil {
                     String name = builder.getName();
                     if (fieldName.equals(name)) {
                         tmpBuilder = builder;
-                    }
-                    else if (builder instanceof BoolQueryBuilder && ((BoolQueryBuilder) builder).should() != null) {
+                    } else if (builder instanceof BoolQueryBuilder && ((BoolQueryBuilder) builder).should() != null) {
                         List<QueryBuilder> shouldQueries = ((BoolQueryBuilder) builder).should();
                         for (QueryBuilder should : shouldQueries) {
                             if (should instanceof MatchQueryBuilder) {
@@ -1411,12 +1440,42 @@ public class ElasticSearchUtil {
         }
         else {
             if (must) {
-                finalQuery.must(QueryBuilders.matchQuery(name, query));
+                String fieldType = getFieldTypeByFieldName(name);
+                String finalFieldName = getFinalFieldName(name, fieldType);
+                finalQuery.must(QueryBuilders.termQuery(finalFieldName, query));
             }
             else {
                 finalQuery.should(QueryBuilders.matchQuery(name, query));
             }
         }
+    }
+
+    private static String getFinalFieldName(String fieldName, String fieldType) {
+        return fieldType.equals(TEXT) ? new StringBuilder(fieldName).append(KEYWORD).toString() : fieldName;
+    }
+
+    private static String getFieldsAsString(String anyStudy) {
+        return fieldMappings.get(anyStudy).source().string();
+    }
+
+    private static String getAnyStudy() {
+        return fieldMappings.keySet().stream().findAny().orElseThrow(() -> new RuntimeException("Error while getting study mapping from ES"));
+    }
+
+
+    private static String getFieldTypeByFieldName(String name) {
+        String anyStudy = getAnyStudy();
+        String fields = getFieldsAsString(anyStudy);
+        String[] fieldsArray = name.split(DOT_SEPARATOR);
+        String outerField = fieldsArray[OUTER_FIELD_INDEX];
+        String innerField = fieldsArray[INNER_FIELD_INDEX];
+        Gson gson = new Gson();
+        HashMap fieldsMap = gson.fromJson(fields, HashMap.class);
+        HashMap propertiesMap = gson.fromJson(String.valueOf(fieldsMap.get(PROPERTIES)), HashMap.class);
+        HashMap outerFieldsMap = gson.fromJson(String.valueOf(propertiesMap.get(outerField)), HashMap.class);
+        HashMap outerFieldPropertiesMap = gson.fromJson(String.valueOf(outerFieldsMap.get(PROPERTIES)), HashMap.class);
+        HashMap innerFieldMap = gson.fromJson(String.valueOf(outerFieldPropertiesMap.get(innerField)), HashMap.class);
+        return (String) innerFieldMap.get(TYPE);
     }
 
     private static void rangeQueryBuilder(@NonNull BoolQueryBuilder finalQuery, @NonNull String name, long start, long end, boolean must) {
