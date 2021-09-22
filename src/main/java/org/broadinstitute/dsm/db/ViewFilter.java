@@ -262,8 +262,7 @@ public class ViewFilter {
         }
         else {
             String queryCondition = "";
-            if (filter != null && filter.getParentName() != null &&
-                    filter.getParticipantColumn().getTableAlias() != null && ElasticSearchUtil.PROXY.equals(filter.getParticipantColumn().getTableAlias())) {
+            if (isFilterForProxyInformation(filter)) {
                 if (queryConditions.containsKey(ElasticSearchUtil.PROXY)) {
                     queryCondition = queryConditions.get(ElasticSearchUtil.PROXY);
                 }
@@ -277,6 +276,14 @@ public class ViewFilter {
                 queryConditions.put(ElasticSearchUtil.ES, queryCondition.concat(Filter.getQueryStringForFiltering(filter, null)));
             }
         }
+    }
+
+    private static boolean isFilterForProxyInformation(Filter filter) {
+        if (filter != null && filter.getParentName() != null &&
+                filter.getParticipantColumn().getTableAlias() != null && ElasticSearchUtil.PROXY.equals(filter.getParticipantColumn().getTableAlias())) {
+            return true;
+        }
+        return false;
     }
 
     public static List<ViewFilter> getAllFilters(@NonNull String userId,
