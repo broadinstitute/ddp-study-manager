@@ -81,30 +81,30 @@ public class ParticipantWrapper {
 
     //TODO could be better, good place for refactoring for future
     private void fetchAndPrepareDataByFilters(DDPInstance ddpInstance, Map<String, String> filters) {
-        List<String> participantIdsToFetch = Collections.emptyList();
+        List<String> participantIdsToFetch = new ArrayList<>();
         for (String source : filters.keySet()) {
             if (StringUtils.isNotBlank(filters.get(source))) {
                 if (DBConstants.DDP_PARTICIPANT_ALIAS.equals(source)) {
                     Map<String, Participant> participants =
                             Participant.getParticipants(ddpInstance.getName(), filters.get(source));
                     this.participants = new ArrayList<>(participants.values());
-                    participantIdsToFetch = new ArrayList<>(participants.keySet());
+                    participantIdsToFetch = combineListWithMatchingParticipantIds(participantIdsToFetch, participants.keySet());
                 }
                 else if (DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(source)) {
                     medicalRecords = MedicalRecord.getMedicalRecords(ddpInstance.getName(), filters.get(source));
-                    participantIdsToFetch = new ArrayList<>(medicalRecords.keySet());
+                    participantIdsToFetch = combineListWithMatchingParticipantIds(participantIdsToFetch, medicalRecords.keySet());
                 }
                 else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(source)) {
                     oncHistoryDetails = OncHistoryDetail.getOncHistoryDetails(ddpInstance.getName(), filters.get(source));
-                    participantIdsToFetch = new ArrayList<>(oncHistoryDetails.keySet());
+                    participantIdsToFetch = combineListWithMatchingParticipantIds(participantIdsToFetch, oncHistoryDetails.keySet());
                 }
                 else if (DBConstants.DDP_KIT_REQUEST_ALIAS.equals(source)) {
                     kitRequests = KitRequestShipping.getKitRequests(ddpInstance, filters.get(source));
-                    participantIdsToFetch = new ArrayList<>(kitRequests.keySet());
+                    participantIdsToFetch = combineListWithMatchingParticipantIds(participantIdsToFetch, kitRequests.keySet());
                 }
                 else if (DBConstants.DDP_PARTICIPANT_DATA_ALIAS.equals(source)) {
                     participantData = new ParticipantDataDao().getParticipantDataByInstanceIdAndFilterQuery(Integer.parseInt(ddpInstance.getDdpInstanceId()), filters.get(source));
-                    participantIdsToFetch = new ArrayList<>(participantData.keySet());
+                    participantIdsToFetch = combineListWithMatchingParticipantIds(participantIdsToFetch, participantData.keySet());
 
                     //if study is AT TODO
                     if ("atcp".equals(ddpInstance.getName())) {
@@ -115,18 +115,18 @@ public class ParticipantWrapper {
                 }
                 else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
                     abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(ddpInstance.getName(), filters.get(source));
-                    participantIdsToFetch = new ArrayList<>(abstractionActivities.keySet());
+                    participantIdsToFetch = combineListWithMatchingParticipantIds(participantIdsToFetch, abstractionActivities.keySet());
                 }
                 else if (ElasticSearchUtil.PROXY.equals(source)) {
                     ElasticSearch proxyData = elasticSearchable.getProxiesByFilter(ddpInstance.getUsersIndexES(), filters.get(source).replaceAll(ElasticSearchUtil.PROXY, ElasticSearchUtil.PROFILE));
-                    participantIdsToFetch = getGovernedUserIdsFromElasticList(proxyData.getEsParticipants());
+                    participantIdsToFetch = combineListWithMatchingParticipantIds(participantIdsToFetch, new HashSet<>(getGovernedUserIdsFromElasticList(proxyData.getEsParticipants())));
                 }
                 else { //source is not of any study-manager table so it must be ES
                     esData = elasticSearchable.getParticipantsByRangeAndFilter(ddpInstance.getParticipantIndexES(), participantWrapperPayload.getFrom(),
                             participantWrapperPayload.getTo(), filters.get(source));
-                    participantIdsToFetch = esData.getEsParticipants().stream().map(ElasticSearchParticipantDto::getParticipantId)
-                            .collect(
-                            Collectors.toList());
+                    List temp = esData.getEsParticipants().stream().map(ElasticSearchParticipantDto::getParticipantId)
+                            .collect(Collectors.toList());
+                    participantIdsToFetch = combineListWithMatchingParticipantIds(participantIdsToFetch, new HashSet<>(temp));
                 }
             }
         }
@@ -170,7 +170,7 @@ public class ParticipantWrapper {
         }
     }
 
-    List<String> getGovernedUserIdsFromElasticList(List<ElasticSearchParticipantDto> proxyData) {
+    private List<String> getGovernedUserIdsFromElasticList(List<ElasticSearchParticipantDto> proxyData) {
         List<String> participantGovernedUserIds = new ArrayList<>();
 
         proxyData.stream()
@@ -178,6 +178,15 @@ public class ParticipantWrapper {
                 .forEach(esGovernedUserData ->
                         participantGovernedUserIds.addAll(esGovernedUserData.getGovernedUsers()));
         return participantGovernedUserIds;
+    }
+
+    private List<String> combineListWithMatchingParticipantIds(List<String> participantIdsToFetch, Set<String> list) {
+        if (participantIdsToFetch.isEmpty()) {
+            return new ArrayList<>(list);
+        }
+        else {
+            return participantIdsToFetch.stream().filter(new HashSet<>(list)::contains).collect(Collectors.toList());
+        }
     }
 
     private void fetchAndPrepareData(DDPInstance ddpInstance) {
