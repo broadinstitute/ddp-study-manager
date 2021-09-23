@@ -298,14 +298,10 @@ public class Filter {
             Instant instant = null;
             try {
                 LocalDate date = LocalDate.parse(arg.toString(), DateTimeFormatter.ISO_LOCAL_DATE);
-                if (useEndOfday) {
-                    instant = date.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
-                } else {
-                    instant = date.atStartOfDay().toInstant(ZoneOffset.UTC);
-                }
+                instant = useEndOfday ? date.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC) : date.atStartOfDay().toInstant(ZoneOffset.UTC);
             } catch (DateTimeParseException e) {
                 // might be an epoch time in an older saved filter
-                instant = Instant.ofEpochMilli(Long.valueOf(arg.toString()));
+                instant = Instant.ofEpochMilli(Long.parseLong(arg.toString()));
             }
 
             if (dateConverter != null) {
