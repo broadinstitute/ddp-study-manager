@@ -179,6 +179,12 @@
             <artifactId>jnanoid</artifactId>
             <version>2.0.0</version>
         </dependency>
+             
+        <!--
+            With JDK11 including Xerces 2.12.0 as the reference JAXP implementation, this dependency is no longer needed.
+            Removing the dependency could impact TestBoston, however, so wait to remove the dependency until TestBoston
+            wraps up, and the team has more time to validate the change.
+        -->
         <dependency>
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
