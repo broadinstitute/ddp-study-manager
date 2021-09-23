@@ -60,8 +60,9 @@ appengine/deploy/vault.conf
 config/ellkay.conf
 liquibase.properties
 
-# Block ALL conf files
+# Block ALL potential secret-containing files
 *.conf
+*.json
 
 src/test/resources/output
 target/
