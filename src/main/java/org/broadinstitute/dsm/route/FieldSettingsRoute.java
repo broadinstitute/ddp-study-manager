@@ -21,7 +21,9 @@ import java.util.Map;
 
 public class FieldSettingsRoute extends RequestHandler {
 
+    private static final String NO_RIGHTS_OF_CHANGES = "You don't have the right to modify settings";
     private static final Logger logger = LoggerFactory.getLogger(FieldSettingsRoute.class);
+    private static final String NO_RIGHTS_OF_ACCESS = "You don't have the right to access the page";
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
@@ -34,7 +36,7 @@ public class FieldSettingsRoute extends RequestHandler {
                 }
                 else {
                     response.status(500);
-                    return new Result(500, UserErrorMessages.NO_RIGHTS);
+                    return new Result(500, NO_RIGHTS_OF_ACCESS);
                 }
             }
             if (RoutePath.RequestMethod.PATCH.toString().equals(request.requestMethod())) {
@@ -55,7 +57,7 @@ public class FieldSettingsRoute extends RequestHandler {
                 }
                 else {
                     response.status(500);
-                    return new Result(500, UserErrorMessages.NO_RIGHTS);
+                    return new Result(500, NO_RIGHTS_OF_CHANGES);
                 }
             }
         }

@@ -11,8 +11,10 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 @Getter
 public class Filter {
@@ -161,7 +163,7 @@ public class Filter {
                 if (filter.getFilter1() != null) {
                     query = AND + filter.getColumnName(dbElement);
                     if (String.valueOf(filter.getFilter1().getValue()).length() == 10) {
-                        finalQuery = generateDateComparisonSql(filter, dbElement,EQUALS,filter.getFilter1().getValue());
+                        finalQuery = generateDateComparisonSql(filter, dbElement,EQUALS,filter.getFilter1().getValue(), false);
                     }
                     else {
                         if (filter.isEmpty()) {
@@ -181,12 +183,12 @@ public class Filter {
                 String notNullQuery = AND + filter.getColumnName(dbElement) + IS_NOT_NULL;
                 String query1 = "";
                 if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue()))) {
-                    query1 = generateDateComparisonSql(filter,dbElement, LARGER_EQUALS, filter.getFilter1().getValue());
+                    query1 = generateDateComparisonSql(filter,dbElement, LARGER_EQUALS, filter.getFilter1().getValue(), false);
                 }
                 String query2 = "";
                 String condition2 = "";
                 if (filter.getFilter2() != null && filter.getFilter2() != null && filter.getFilter2().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue()))) {
-                    query2 = generateDateComparisonSql(filter,dbElement, SMALLER_EQUALS,filter.getFilter2().getValue());
+                    query2 = generateDateComparisonSql(filter,dbElement, SMALLER_EQUALS,filter.getFilter2().getValue(), true);
                 }
                 finalQuery = query1 + query2 + notNullQuery;
             }
@@ -280,13 +282,27 @@ public class Filter {
     /**
      * Uses the appropriate date converter (if given) to write SQL that can
      * compare either exact dates or "in the day" dates.
+     * @param filter
+     * @param dbElement
+     * @param comparison how the values will be compared to one another
+     * @param arg the user-input field to compare
+     * @param useEndOfday if false, when parsing a date, the first millis of the day
+     *                    will be used.  if true, the last millis of the day will
+     *                    be used.
      */
-    private static String generateDateComparisonSql(Filter filter, DBElement dbElement, String comparison, Object arg) {
+    private static String generateDateComparisonSql(Filter filter, DBElement dbElement, String comparison, Object arg, boolean useEndOfday) {
         String column = filter.getColumnName(dbElement);
         SqlDateConverter dateConverter = null;
         if (dbElement != null) {
             dateConverter = dbElement.getDateConverter();
-            Instant instant = LocalDate.parse(arg.toString(), DateTimeFormatter.ISO_LOCAL_DATE).atStartOfDay().toInstant(ZoneOffset.UTC);
+            Instant instant = null;
+            try {
+                LocalDate date = LocalDate.parse(arg.toString(), DateTimeFormatter.ISO_LOCAL_DATE);
+                instant = useEndOfday ? date.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC) : date.atStartOfDay().toInstant(ZoneOffset.UTC);
+            } catch (DateTimeParseException e) {
+                // might be an epoch time in an older saved filter
+                instant = Instant.ofEpochMilli(Long.parseLong(arg.toString()));
+            }
 
             if (dateConverter != null) {
                 if (EQUALS.equals(comparison)) {
