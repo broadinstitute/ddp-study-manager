@@ -14,6 +14,7 @@ public class ElasticSearchParticipantDto {
     private List<Object> medicalProviders;
     private List<Object> invitations;
     private List<ESActivities> activities;
+    private ESComputed computed;
     private Long statusTimestamp;
     private ESProfile profile;
     private List<Object> files;
@@ -67,6 +68,10 @@ public class ElasticSearchParticipantDto {
         return Optional.ofNullable(dsm);
     }
 
+    public Optional<ESComputed> getComputed() {
+        return Optional.ofNullable(computed);
+    }
+
     public String getParticipantId() {
         return getProfile().map(esProfile -> StringUtils.isNotBlank(esProfile.getParticipantGuid())
                 ? esProfile.getParticipantGuid()
@@ -86,12 +91,14 @@ public class ElasticSearchParticipantDto {
         this.workflows = builder.workflows;
         this.status = builder.status;
         this.dsm = builder.dsm;
+        this.computed = builder.computed;
     }
 
     public static class Builder {
         private ESAddress address;
         private List<Object> medicalProviders;
         private List<Object> invitations;
+        private ESComputed computed;
         private List<ESActivities> activities;
         private Long statusTimeStamp;
         private ESProfile profile;
@@ -155,6 +162,11 @@ public class ElasticSearchParticipantDto {
 
         public Builder withDsm(ESDsm dsm) {
             this.dsm = dsm;
+            return this;
+        }
+
+        public Builder withComputed(ESComputed computed) {
+            this.computed = computed;
             return this;
         }
 
