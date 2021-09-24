@@ -26,7 +26,6 @@ import org.broadinstitute.dsm.model.gbf.Address;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
-import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -37,6 +36,7 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.index.query.*;
@@ -74,6 +74,7 @@ public class ElasticSearchUtil {
     public static final String ACTIVITY_VERSION = "activityVersion";
     public static final String ADDRESS = "address";
     public static final String INVITATIONS = "invitations";
+    public static final String PROXY = "proxy";
     public static final String PDFS = "pdfs";
     public static final String GUID = "guid";
     public static final String LEGACY_ALT_PID = "legacyAltPid";
@@ -361,6 +362,28 @@ public class ElasticSearchUtil {
             return esData;
         }
         return null;
+    }
+
+    public static Map<String, Map<String, Object>> getProxiesByFilter(String filter, DDPInstance instance) {
+        SearchResponse response;
+        Map<String, Map<String, Object>> esData = new HashMap<>();
+        try {
+            SearchRequest searchRequest = new SearchRequest(Objects.requireNonNull(instance.getUsersIndexES()));
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            AbstractQueryBuilder<? extends AbstractQueryBuilder<?>> esQuery = ElasticSearchUtil.createESQuery(filter);
+            ((BoolQueryBuilder)esQuery).must(QueryBuilders.regexpQuery("governedUsers",".+"));
+            searchSourceBuilder.query(esQuery).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+            searchSourceBuilder.from(0);
+            searchSourceBuilder.size(1000);
+            searchRequest.source(searchSourceBuilder);
+            response = ElasticSearchUtil.getClientInstance().search(searchRequest, RequestOptions.DEFAULT);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Couldn't get participants from ES for instance " + instance.getUsersIndexES(), e);
+        }
+        addingParticipantStructuredHits(response, esData, instance.getName(), instance.getUsersIndexES());
+        logger.info("Got " + esData.size() + " users from ES for instance " + instance.getUsersIndexES());
+        return esData;
     }
 
     public static Map<String, Address> getParticipantAddresses(RestHighLevelClient client, String indexName, Set<String> participantGuids) {

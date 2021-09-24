@@ -9,8 +9,8 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
-import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.at.DefaultValues;
+import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
@@ -162,10 +162,10 @@ public class ParticipantWrapper {
                         abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(instance.getName(), filters.get(source));
                         baseList = getCommonEntries(baseList, new ArrayList<>(abstractionActivities.keySet()));
                     }
-                    //                else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
-                    //                    abstractionSummary = AbstractionFinal.getAbstractionFinal(instance.getName(), filters.get(source));
-                    //                    baseList = getCommonEntries(baseList, new ArrayList<>(abstractionSummary.keySet()));
-                    //                }
+                    else if (ElasticSearchUtil.PROXY.equals(source)) {
+                        Map<String, Map<String, Object>> proxyMap = ElasticSearchUtil.getProxiesByFilter(filters.get(source).replaceAll(ElasticSearchUtil.PROXY, ElasticSearchUtil.PROFILE), instance);
+                        baseList = getCommonEntries(baseList, new ArrayList<>(proxyMap.keySet()));
+                    }
                     else { //source is not of any study-manager table so it must be ES
                         participantESData = getParticipantESDataConsideringNumberOfParameters(instance, filters, source);
                         baseList = getCommonEntries(baseList, new ArrayList<>(participantESData.keySet()));
