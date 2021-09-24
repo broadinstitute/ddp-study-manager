@@ -24,6 +24,7 @@ public class ElasticSearch {
     private Optional<List<Map<String, String>>> workflows;
     private Optional<String> status;
     private Optional<Map<String, Object>> dsm;
+    private Optional<ESComputed> computed;
 
     private ElasticSearch(Builder builder) {
         this.address = builder.address;
@@ -36,6 +37,7 @@ public class ElasticSearch {
         this.workflows = builder.workflows;
         this.status = builder.status;
         this.dsm = builder.dsm;
+        this.computed = builder.computed;
     }
 
     public static Optional<ElasticSearch> parseSourceMap(Map<String, Object> sourceMap) {
@@ -76,6 +78,8 @@ public class ElasticSearch {
                 case "dsm":
                     builder.withDsm(GSON.fromJson(GSON.toJson(entry.getValue()), new TypeToken<Map<String, Object>>() {}.getType()));
                     break;
+                case "computed":
+                    builder.withComputed(GSON.fromJson(GSON.toJson(entry.getValue()), ESComputed.class));
                 default:
                     break;
             }
@@ -95,6 +99,8 @@ public class ElasticSearch {
         private Optional<List<Map<String, String>>> workflows = Optional.empty();
         private Optional<String> status = Optional.empty();
         private Optional<Map<String, Object>> dsm = Optional.empty();
+        private Optional<ESComputed> computed = Optional.empty();
+
 
         public Builder() {}
 
@@ -150,6 +156,11 @@ public class ElasticSearch {
 
         public Builder withDsm(Map<String, Object> dsm) {
             this.dsm = Optional.ofNullable(dsm);
+            return this;
+        }
+
+        public Builder withComputed(ESComputed computed) {
+            this.computed = Optional.ofNullable(computed);
             return this;
         }
 

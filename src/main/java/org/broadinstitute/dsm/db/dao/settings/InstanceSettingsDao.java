@@ -18,6 +18,8 @@ import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dto.settings.InstanceSettingsDto;
 import org.broadinstitute.dsm.model.Value;
 
+import static org.broadinstitute.dsm.statics.DBConstants.HAS_COMPUTED_OBJECT;
+
 public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
 
 
@@ -37,7 +39,9 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
             "study_specific_statuses, " +
             "default_columns, " +
             "has_invitations, " +
-            "GBF_SHIPPED_DSS_DELIVERED " +
+            "GBF_SHIPPED_DSS_DELIVERED, " +
+            "has_address_tab, " +
+            "has_computed_object " +
             "FROM instance_settings " +
             "WHERE ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE instance_name = ?)";
 
@@ -52,6 +56,7 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
     public static final String DEFAULT_COLUMNS = "default_columns";
     public static final String HAS_INVITATIONS = "has_invitations";
     public static final String GBF_SHIPPED_DSS_DELIVERED = "GBF_SHIPPED_DSS_DELIVERED";
+    public static final String HAS_ADDRESS_TAB = "has_address_tab";
 
 
     @Override
@@ -130,6 +135,8 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
                         .withDefaultColumns(getValuesFromJson(rs.getString(DEFAULT_COLUMNS)))
                         .withHasInvitations(rs.getBoolean(HAS_INVITATIONS))
                         .withGbfShippedTriggerDssDelivered(rs.getBoolean(GBF_SHIPPED_DSS_DELIVERED))
+                        .withHasAddressTab(rs.getBoolean(HAS_ADDRESS_TAB))
+                        .withHasComputedObject(rs.getBoolean(HAS_COMPUTED_OBJECT))
                         .build();
                 }
             }
