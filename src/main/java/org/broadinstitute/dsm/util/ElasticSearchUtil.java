@@ -1518,8 +1518,28 @@ public class ElasticSearchUtil {
         String outerField = fieldsArray[OUTER_FIELD_INDEX];
         Gson gson = new Gson();
         HashMap fieldsMap = gson.fromJson(fields, HashMap.class);
-        HashMap propertiesMap = gson.fromJson(String.valueOf(fieldsMap.get(PROPERTIES)), HashMap.class);
-        return getFieldTypeByArrayLength(fieldsArray, outerField, gson, propertiesMap);
+        HashMap propertiesMap = getField(gson, fieldsMap, PROPERTIES);
+        HashMap finalField = getField(gson, propertiesMap, outerField);
+        for (String field : Arrays.copyOfRange(fieldsArray, INNER_FIELD_INDEX, fieldsArray.length)) {
+            finalField = getFinalFieldDynamically(gson, finalField, field);
+        }
+        return (String) finalField.get(TYPE);
+    }
+
+    private static HashMap getFinalFieldDynamically(Gson gson, HashMap finalField, String field) {
+        return finalField.containsKey(PROPERTIES)
+                ? getPropertiesAndThenField(gson, finalField, field)
+                : getField(gson, finalField, field);
+    }
+
+    private static HashMap getField(Gson gson, HashMap finalField, String field) {
+        return gson.fromJson(String.valueOf(finalField.get(field)), HashMap.class);
+    }
+
+    private static HashMap getPropertiesAndThenField(Gson gson, HashMap finalField, String field) {
+        finalField = gson.fromJson(String.valueOf(finalField.get(PROPERTIES)), HashMap.class);
+        finalField = gson.fromJson(String.valueOf(finalField.get(field)), HashMap.class);
+        return finalField;
     }
 
     private static String getFieldTypeByArrayLength(String[] fieldsArray, String outerField, Gson gson, HashMap propertiesMap) {
