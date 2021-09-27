@@ -1516,14 +1516,25 @@ public class ElasticSearchUtil {
         String fields = getFieldsAsString(anyStudy);
         String[] fieldsArray = name.split(DOT_SEPARATOR);
         String outerField = fieldsArray[OUTER_FIELD_INDEX];
-        String innerField = fieldsArray[INNER_FIELD_INDEX];
         Gson gson = new Gson();
         HashMap fieldsMap = gson.fromJson(fields, HashMap.class);
         HashMap propertiesMap = gson.fromJson(String.valueOf(fieldsMap.get(PROPERTIES)), HashMap.class);
-        HashMap outerFieldsMap = gson.fromJson(String.valueOf(propertiesMap.get(outerField)), HashMap.class);
-        HashMap outerFieldPropertiesMap = gson.fromJson(String.valueOf(outerFieldsMap.get(PROPERTIES)), HashMap.class);
-        HashMap innerFieldMap = gson.fromJson(String.valueOf(outerFieldPropertiesMap.get(innerField)), HashMap.class);
-        return (String) innerFieldMap.get(TYPE);
+        return getFieldTypeByArrayLength(fieldsArray, outerField, gson, propertiesMap);
+    }
+
+    private static String getFieldTypeByArrayLength(String[] fieldsArray, String outerField, Gson gson, HashMap propertiesMap) {
+        if (fieldIsNested(fieldsArray)) {
+            String innerField = fieldsArray[INNER_FIELD_INDEX];
+            HashMap outerFieldsMap = gson.fromJson(String.valueOf(propertiesMap.get(outerField)), HashMap.class);
+            HashMap outerFieldsPropertiesMap = gson.fromJson(String.valueOf(outerFieldsMap.get(PROPERTIES)), HashMap.class);
+            return (String) gson.fromJson(String.valueOf(outerFieldsPropertiesMap.get(innerField)), HashMap.class).get(TYPE);
+        } else {
+            return (String) gson.fromJson(String.valueOf(propertiesMap.get(outerField)), HashMap.class).get(TYPE);
+        }
+    }
+
+    private static boolean fieldIsNested(String[] fieldsArray) {
+        return fieldsArray.length > 1;
     }
 
     private static void rangeQueryBuilder(@NonNull BoolQueryBuilder finalQuery, @NonNull String name, long start, long end, boolean must) {
