@@ -1520,10 +1520,16 @@ public class ElasticSearchUtil {
         HashMap fieldsMap = gson.fromJson(fields, HashMap.class);
         HashMap propertiesMap = getField(gson, fieldsMap, PROPERTIES);
         HashMap finalField = getField(gson, propertiesMap, outerField);
+        return fieldIsNested(fieldsArray)
+                ? (String) getFinalField(fieldsArray, gson, finalField).get(TYPE)
+                : (String) finalField.get(TYPE);
+    }
+
+    private static HashMap getFinalField(String[] fieldsArray, Gson gson, HashMap finalField) {
         for (String field : Arrays.copyOfRange(fieldsArray, INNER_FIELD_INDEX, fieldsArray.length)) {
             finalField = getFinalFieldDynamically(gson, finalField, field);
         }
-        return (String) finalField.get(TYPE);
+        return finalField;
     }
 
     private static HashMap getFinalFieldDynamically(Gson gson, HashMap finalField, String field) {
@@ -1540,17 +1546,6 @@ public class ElasticSearchUtil {
         finalField = gson.fromJson(String.valueOf(finalField.get(PROPERTIES)), HashMap.class);
         finalField = gson.fromJson(String.valueOf(finalField.get(field)), HashMap.class);
         return finalField;
-    }
-
-    private static String getFieldTypeByArrayLength(String[] fieldsArray, String outerField, Gson gson, HashMap propertiesMap) {
-        if (fieldIsNested(fieldsArray)) {
-            String innerField = fieldsArray[INNER_FIELD_INDEX];
-            HashMap outerFieldsMap = gson.fromJson(String.valueOf(propertiesMap.get(outerField)), HashMap.class);
-            HashMap outerFieldsPropertiesMap = gson.fromJson(String.valueOf(outerFieldsMap.get(PROPERTIES)), HashMap.class);
-            return (String) gson.fromJson(String.valueOf(outerFieldsPropertiesMap.get(innerField)), HashMap.class).get(TYPE);
-        } else {
-            return (String) gson.fromJson(String.valueOf(propertiesMap.get(outerField)), HashMap.class).get(TYPE);
-        }
     }
 
     private static boolean fieldIsNested(String[] fieldsArray) {
