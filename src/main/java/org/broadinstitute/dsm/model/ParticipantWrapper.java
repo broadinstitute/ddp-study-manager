@@ -164,7 +164,8 @@ public class ParticipantWrapper {
                     }
                     else if (ElasticSearchUtil.PROXY.equals(source)) {
                         Map<String, Map<String, Object>> proxyMap = ElasticSearchUtil.getProxiesByFilter(filters.get(source).replaceAll(ElasticSearchUtil.PROXY, ElasticSearchUtil.PROFILE), instance);
-                        baseList = getCommonEntries(baseList, new ArrayList<>(proxyMap.keySet()));
+                        List<String> governedUserIds = getGovernedUsersFromProxyMap(proxyMap);
+                        baseList = getCommonEntries(baseList, governedUserIds);
                     }
                     else { //source is not of any study-manager table so it must be ES
                         participantESData = getParticipantESDataConsideringNumberOfParameters(instance, filters, source);
@@ -252,6 +253,12 @@ public class ParticipantWrapper {
             logger.info("Getting all participant information took {} secs ({})", elapsed.getSeconds(), elapsed.toString());
             return r;
         }
+    }
+
+    private static List<String> getGovernedUsersFromProxyMap(Map<String, Map<String, Object>> proxyMap) {
+        List<String> governedUserIds = new ArrayList<>();
+        proxyMap.forEach((key, value) -> governedUserIds.addAll((ArrayList<String>) value.get("governedUsers")));
+        return governedUserIds;
     }
 
     public static Map<String, Map<String, Object>> getParticipantESDataConsideringNumberOfParameters(@NonNull DDPInstance instance, Map<String, String> filters, String source) {
