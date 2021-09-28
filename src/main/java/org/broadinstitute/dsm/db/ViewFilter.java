@@ -15,6 +15,7 @@ import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.ParticipantColumn;
 import org.broadinstitute.dsm.model.TissueList;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.PatchUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.slf4j.Logger;
@@ -261,14 +262,32 @@ public class ViewFilter {
         }
         else {
             String queryCondition = "";
-            if (queryConditions.containsKey("ES")) {
-                queryCondition = queryConditions.get("ES");
+            if (isFilterForProxyInformation(filter)) {
+                if (queryConditions.containsKey(ElasticSearchUtil.PROXY)) {
+                    queryCondition = queryConditions.get(ElasticSearchUtil.PROXY);
+                }
+                queryConditions.put(ElasticSearchUtil.PROXY, queryCondition.concat(Filter.getQueryStringForFiltering(filter, null)));
+
             }
-            queryConditions.put("ES", queryCondition.concat(Filter.getQueryStringForFiltering(filter, null)));
+            else {
+                if (queryConditions.containsKey(ElasticSearchUtil.ES)) {
+                    queryCondition = queryConditions.get(ElasticSearchUtil.ES);
+                }
+                queryConditions.put(ElasticSearchUtil.ES, queryCondition.concat(Filter.getQueryStringForFiltering(filter, null)));
+            }
         }
     }
 
-    public static List<ViewFilter> getAllFilters(@NonNull String userId,
+        private static boolean isFilterForProxyInformation(Filter filter) {
+            if (filter != null && filter.getParentName() != null &&
+                    filter.getParticipantColumn().getTableAlias() != null && ElasticSearchUtil.PROXY.equals(filter.getParticipantColumn().getTableAlias())) {
+                return true;
+            }
+            return false;
+        }
+
+
+        public static List<ViewFilter> getAllFilters(@NonNull String userId,
                                                  @NonNull Map<String, DBElement> columnNameMap,
                                                  String parent, @NonNull String ddpGroupId, String realm) {
         List<ViewFilter> viewFilterList = new ArrayList<>();
