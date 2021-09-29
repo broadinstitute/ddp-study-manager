@@ -108,6 +108,8 @@ public class ElasticSearchUtil {
     public static final String PROPERTIES = "properties";
     public static final byte OUTER_FIELD_INDEX = 0;
     public static final byte INNER_FIELD_INDEX = 1;
+    public static final String AND_WITH_SPACES = " AND ";
+    public static final String AND_WITHOUT_SPACES = "AND";
 
     // These clients are expensive. They internally have thread pools and other resources. Let's
     // create one instance and reuse it as much as possible. Client is thread-safe per the docs.

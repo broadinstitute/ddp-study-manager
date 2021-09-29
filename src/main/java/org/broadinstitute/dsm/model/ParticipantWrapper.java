@@ -31,6 +31,7 @@ public class ParticipantWrapper {
 
     public static final String BY_DDP_PARTICIPANT_ID_IN = " AND request.ddp_participant_id IN (\"";
     public static final String ORDER_AND_LIMIT = " ORDER BY request.dsm_kit_request_id desc LIMIT 5000";
+    public static final int INDEX_AFTER_PROXY = 6;
 
     private Map<String, Object> data;
     private Participant participant;
@@ -163,7 +164,11 @@ public class ParticipantWrapper {
                         baseList = getCommonEntries(baseList, new ArrayList<>(abstractionActivities.keySet()));
                     }
                     else if (ElasticSearchUtil.PROXY.equals(source)) {
-                        Map<String, Map<String, Object>> proxyMap = ElasticSearchUtil.getProxiesByFilter(filters.get(source).replaceAll(ElasticSearchUtil.PROXY, ElasticSearchUtil.PROFILE), instance);
+                        String[] splittedFilter = filters.get(source).split(ElasticSearchUtil.AND_WITHOUT_SPACES);
+                        String finalFilter = valueContainsProxy(splittedFilter)
+                            ? updateFilter(splittedFilter)
+                            : filters.get(source).replaceAll(ElasticSearchUtil.PROXY, ElasticSearchUtil.PROFILE);
+                        Map<String, Map<String, Object>> proxyMap = ElasticSearchUtil.getProxiesByFilter(finalFilter, instance);
                         List<String> governedUserIds = getGovernedUsersFromProxyMap(proxyMap);
                         baseList = getCommonEntries(baseList, governedUserIds);
                     }
@@ -253,6 +258,18 @@ public class ParticipantWrapper {
             logger.info("Getting all participant information took {} secs ({})", elapsed.getSeconds(), elapsed.toString());
             return r;
         }
+    }
+
+    private static String updateFilter(String[] splittedFilter) {
+        String finalFilter;
+        StringBuilder updatedFilterSB = new StringBuilder().append(ElasticSearchUtil.AND_WITH_SPACES);
+        Arrays.stream(Arrays.copyOfRange(splittedFilter, 1, splittedFilter.length)).forEach(filter -> updatedFilterSB.append(ElasticSearchUtil.PROFILE).append(filter.substring(INDEX_AFTER_PROXY)).append(ElasticSearchUtil.AND_WITH_SPACES));
+        finalFilter = updatedFilterSB.toString();
+        return finalFilter.substring(0, finalFilter.length() - ElasticSearchUtil.AND_WITH_SPACES.length());
+    }
+
+    private static boolean valueContainsProxy(String[] splittedFilter) {
+        return Arrays.stream(Arrays.copyOfRange(splittedFilter, 1, splittedFilter.length)).anyMatch(filter -> StringUtils.countMatches(filter, ElasticSearchUtil.PROXY) > 1);
     }
 
     private static List<String> getGovernedUsersFromProxyMap(Map<String, Map<String, Object>> proxyMap) {
