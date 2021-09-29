@@ -1520,7 +1520,7 @@ public class ElasticSearchUtil {
         HashMap fieldsMap = gson.fromJson(fields, HashMap.class);
         HashMap propertiesMap = getField(gson, fieldsMap, PROPERTIES);
         HashMap finalField = getField(gson, propertiesMap, outerField);
-        return fieldIsNested(fieldsArray)
+        return isFieldNested(fieldsArray)
                 ? (String) getFinalField(fieldsArray, gson, finalField).get(TYPE)
                 : (String) finalField.get(TYPE);
     }
@@ -1548,7 +1548,7 @@ public class ElasticSearchUtil {
         return finalField;
     }
 
-    private static boolean fieldIsNested(String[] fieldsArray) {
+    private static boolean isFieldNested(String[] fieldsArray) {
         return fieldsArray.length > 1;
     }
 
