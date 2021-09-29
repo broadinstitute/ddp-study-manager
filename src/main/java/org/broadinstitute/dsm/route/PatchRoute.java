@@ -93,31 +93,8 @@ public class PatchRoute extends RequestHandler {
                                 if (!Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement)) {
                                     return new RuntimeException("An error occurred while attempting to patch ");
                                 }
-                                if (nameValue.getName().indexOf("question") > -1) {
-                                    UserDto userDto = new UserDao().getUserByEmail(patch.getUser()).orElseThrow();
-                                    JSONObject jsonObject = new JSONObject(nameValue.getValue().toString());
-                                    JSONArray questionArray = new JSONArray(jsonObject.get("questions").toString());
-                                    boolean writeBack = false;
-                                    for (int i = 0; i < questionArray.length(); i++) {
-                                        JSONObject question = questionArray.getJSONObject(i);
-                                        if (question.optString(STATUS) != null && question.optString(STATUS).equals("sent")) {
-                                            if (question.optString("email") != null && question.optString("question") != null) {
-                                                notificationUtil.sentAbstractionExpertQuestion(userDto.getEmail().orElse(""), userDto.getName().orElse(""), question.optString("email"),
-                                                        patch.getFieldName(), question.optString("question"), notificationUtil.getTemplate("DSM_ABSTRACTION_EXPERT_QUESTION"));
-                                            }
-                                            question.put(STATUS, "done");
-                                            writeBack = true;
-                                        }
-                                    }
-                                    if (writeBack) {
-                                        jsonObject.put("questions", questionArray);
-                                        String str = jsonObject.toString();
-                                        nameValue.setValue(str);
-                                        if (!Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement)) {
-                                            return new RuntimeException("An error occurred while attempting to patch ");
-                                        }
-                                        nameValues.add(nameValue);
-                                    }
+                                if (hasQuestion(nameValue)) {
+                                    sendNotificationEmailAndUpdateStatus(patch, nameValues, nameValue, dbElement);
                                 }
                                 controlWorkflowByEmail(patch, nameValue, ddpInstance, profile);
                                 if (patch.getActions() != null) {
@@ -331,6 +308,41 @@ public class PatchRoute extends RequestHandler {
             response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
         }
+    }
+
+    private boolean hasQuestion(NameValue nameValue) {
+        return nameValue.getName().contains("question");
+    }
+
+    private void sendNotificationEmailAndUpdateStatus(Patch patch, List<NameValue> nameValues, NameValue nameValue, DBElement dbElement) {
+        UserDto userDto = new UserDao().getUserByEmail(patch.getUser()).orElseThrow();
+        JSONObject jsonObject = new JSONObject(nameValue.getValue().toString());
+        JSONArray questionArray = new JSONArray(jsonObject.get("questions").toString());
+        boolean writeBack = false;
+        for (int i = 0; i < questionArray.length(); i++) {
+            JSONObject question = questionArray.getJSONObject(i);
+            if (isSent(question)) {
+                if (question.optString("email") != null && question.optString("question") != null) {
+                    notificationUtil.sentAbstractionExpertQuestion(userDto.getEmail().orElse(""), userDto.getName().orElse(""), question.optString("email"),
+                            patch.getFieldName(), question.optString("question"), notificationUtil.getTemplate("DSM_ABSTRACTION_EXPERT_QUESTION"));
+                }
+                question.put(STATUS, "done");
+                writeBack = true;
+            }
+        }
+        if (writeBack) {
+            jsonObject.put("questions", questionArray);
+            String str = jsonObject.toString();
+            nameValue.setValue(str);
+            if (!Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement)) {
+                throw new RuntimeException("An error occurred while attempting to patch ");
+            }
+            nameValues.add(nameValue);
+        }
+    }
+
+    private boolean isSent(JSONObject question) {
+        return question.optString(STATUS) != null && question.optString(STATUS).equals("sent");
     }
 
     private void controlWorkflowByEmail(Patch patch, NameValue nameValue, DDPInstance ddpInstance, ESProfile profile) {
