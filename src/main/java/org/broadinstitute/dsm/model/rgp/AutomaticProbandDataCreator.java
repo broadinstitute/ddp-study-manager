@@ -17,7 +17,6 @@ import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
 import org.broadinstitute.dsm.model.defaultvalues.Defaultable;
 import org.broadinstitute.dsm.model.elasticsearch.ESActivities;
-import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
@@ -72,7 +71,7 @@ public class AutomaticProbandDataCreator implements Defaultable {
                     participantData.setData(
                             participantId,
                             Integer.parseInt(instance.getDdpInstanceId()),
-                            instance.getName().toUpperCase() + ParticipantData.FIELD_TYPE,
+                            instance.getName().toUpperCase() + ParticipantData.FIELD_TYPE_PARTICIPANTS,
                             probandDataMap
                     );
                     participantData.addDefaultOptionsValueToData(columnsWithDefaultOptions);

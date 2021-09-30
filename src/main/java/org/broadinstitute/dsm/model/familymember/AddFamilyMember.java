@@ -60,7 +60,7 @@ public class AddFamilyMember {
 
     protected void prepareFamilyMemberData() {
         FamilyMemberDetails familyMemberDetails = addFamilyMemberPayload.getData().orElseThrow();
-        String fieldTypeId =  studyGuid + ParticipantData.FIELD_TYPE;
+        String fieldTypeId =  studyGuid + ParticipantData.FIELD_TYPE_PARTICIPANTS;
         participantData.setDdpParticipantId(ddpParticipantId);
         participantData.setDdpInstanceId(ddpInstanceId);
         participantData.setFieldTypeId(fieldTypeId);

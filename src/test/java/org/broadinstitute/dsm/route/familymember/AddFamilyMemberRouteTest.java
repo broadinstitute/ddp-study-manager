@@ -80,7 +80,7 @@ public class AddFamilyMemberRouteTest {
                 new ParticipantDataDto.Builder()
                     .withDdpParticipantId(participantId)
                     .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())
-                    .withFieldTypeId(ParticipantData.FIELD_TYPE)
+                    .withFieldTypeId(ParticipantData.FIELD_TYPE_PARTICIPANTS)
                     .withData(gson.toJson(probandData))
                     .withLastChanged(System.currentTimeMillis())
                     .withChangedBy(userDto.getEmail().orElse("SYSTEM"))
@@ -155,7 +155,7 @@ public class AddFamilyMemberRouteTest {
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
         ParticipantData participantData = new ParticipantData(participantDataDao);
         participantData.setData(addFamilyMemberPayload.getParticipantId().get(), ddpInstanceDto.getDdpInstanceId(),
-                ddpInstanceDto.getInstanceName() + ParticipantData.FIELD_TYPE, probandData);
+                ddpInstanceDto.getInstanceName() + ParticipantData.FIELD_TYPE_PARTICIPANTS, probandData);
         Assert.assertTrue(participantData.isRelationshipIdExists());
     }
 
@@ -169,7 +169,7 @@ public class AddFamilyMemberRouteTest {
                     new ParticipantDataDto.Builder()
                         .withDdpParticipantId(addFamilyMemberPayload.getParticipantId().get())
                         .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())
-                        .withFieldTypeId(ddpInstanceDto.getInstanceName() + ParticipantData.FIELD_TYPE)
+                        .withFieldTypeId(ddpInstanceDto.getInstanceName() + ParticipantData.FIELD_TYPE_PARTICIPANTS)
                         .withData(gson.toJson(addFamilyMemberPayload.getData().get()))
                         .withLastChanged(System.currentTimeMillis())
                         .withChangedBy(userDto.getEmail().orElse("SYSTEM"))

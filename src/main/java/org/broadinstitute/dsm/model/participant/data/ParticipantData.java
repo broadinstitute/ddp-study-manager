@@ -27,7 +27,7 @@ public class ParticipantData {
 
     private static final Logger logger = LoggerFactory.getLogger(ParticipantData.class);
 
-    public static final String FIELD_TYPE = "_PARTICIPANTS";
+    public static final String FIELD_TYPE_PARTICIPANTS = "_PARTICIPANTS";
     public static final Gson GSON = new Gson();
 
     private long dataId;
