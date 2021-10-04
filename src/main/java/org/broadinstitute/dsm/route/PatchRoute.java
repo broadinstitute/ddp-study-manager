@@ -87,6 +87,8 @@ public class PatchRoute extends RequestHandler {
                         if (profile == null) {
                             logger.error("Unable to find ES profile for participant with guid/altpid: {}, continuing w/ patch", patch.getParentId());
                         }
+                        // List<NameValue> nameValues = processMultipleNameValues()
+                        // declared nameValues above will be removed
                         for (NameValue nameValue : patch.getNameValues()) {
                             DBElement dbElement = PatchUtil.getColumnNameMap().get(nameValue.getName());
                             if (dbElement != null) {
