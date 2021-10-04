@@ -90,8 +90,9 @@ public class PatchRoute extends RequestHandler {
                         for (NameValue nameValue : patch.getNameValues()) {
                             DBElement dbElement = PatchUtil.getColumnNameMap().get(nameValue.getName());
                             if (dbElement != null) {
+                                // basePatch.processMultipleNameValues(patch.getNameValues())
                                 if (!Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement)) {
-                                    return new RuntimeException("An error occurred while attempting to patch ");
+                                    throw new RuntimeException("An error occurred while attempting to patch ");
                                 }
                                 if (hasQuestion(nameValue)) {
                                     sendNotificationEmailAndUpdateStatus(patch, nameValues, nameValue, dbElement);
