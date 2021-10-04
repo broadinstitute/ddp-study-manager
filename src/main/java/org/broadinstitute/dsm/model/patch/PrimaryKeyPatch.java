@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import lombok.NonNull;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.settings.EventTypeDao;
@@ -17,6 +18,7 @@ import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.settings.field.FieldSettings;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.NotificationUtil;
@@ -40,36 +42,17 @@ public class PrimaryKeyPatch extends BasePatch {
     @Override
     public Object doPatch() {
         if (isNameValuePairs()) {
-            List<NameValue> nameValues = new ArrayList<>();
             ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
                     .orElse(null);
             if (profile == null) {
                 logger.error("Unable to find ES profile for participant with guid/altpid: {}, continuing w/ patch", patch.getParentId());
             }
-            // List<NameValue> nameValues = processMultipleNameValues()
-            // declared nameValues above will be removed
-            for (NameValue nameValue : patch.getNameValues()) {
-                DBElement dbElement = PatchUtil.getColumnNameMap().get(nameValue.getName());
-                if (dbElement != null) {
-                    // basePatch.processMultipleNameValues(patch.getNameValues())
-                    if (!Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement)) {
-                        throw new RuntimeException("An error occurred while attempting to patch ");
-                    }
-                    if (hasQuestion(nameValue)) {
-                        sendNotificationEmailAndUpdateStatus(patch, nameValue, dbElement);
-                    }
-                    controlWorkflowByEmail(patch, nameValue, ddpInstance, profile);
-                    if (patch.getActions() != null) {
-                        writeESWorkflowElseTriggerParticipantEvent(patch, ddpInstance, profile, nameValue);
-                    }
-                }
-                else {
-                    throw new RuntimeException("DBElement not found in ColumnNameMap: " + nameValue.getName());
-                }
-            }
-            return new Result(200, GSON.toJson(nameValues));
+            List<NameValue> updatedNameValues = processMultipleNameValues(patch.getNameValues());
+            return new Result(200, GSON.toJson(updatedNameValues));
         }
         else {
+            Optional<Object> maybeNameValue = processSingleNameValue();
+            return maybeNameValue.orElse();
             // mr changes
             DBElement dbElement = PatchUtil.getColumnNameMap().get(patch.getNameValue().getName());
             if (dbElement != null) {
@@ -106,8 +89,53 @@ public class PrimaryKeyPatch extends BasePatch {
     }
 
     @Override
-    Optional<Object> handleSingleNameValue() {
-        return null;
+    Object handleSingleNameValue(DBElement dbElement) {
+        List<NameValue> nameValues = new ArrayList<>();
+        if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
+            nameValues.addAll(setWorkflowRelatedFields(patch));
+            writeDSMRecordsToES();
+            //return nameValues with nulls
+            return nameValues;
+        }
+        return nameValues;
+    }
+
+    private void writeDSMRecordsToES() {
+        NameValue nameValue = patch.getNameValue();
+        String name = nameValue.getName().substring(nameValue.getName().lastIndexOf('.') + 1);
+        String type = getTypeFrom(nameValue);
+        if (type == null) return;
+        String value = nameValue.getValue().toString();
+        Map<String, Object> nameValueMap = new HashMap<>();
+        nameValueMap.put(name, value);
+        if (isMedicalRecord(name, type)) {
+            ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getDdpParticipantId(),
+                    ESObjectConstants.MEDICAL_RECORDS, ESObjectConstants.MEDICAL_RECORDS_ID, nameValueMap);
+        }
+        else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(type)) {
+            // TODO relationship between DDP_ONC_HISTORY_DETAIL_ALIAS and TISSUE_RECORDS_FIELD_NAMES
+            if (ESObjectConstants.TISSUE_RECORDS_FIELD_NAMES.contains(name)) {
+                if (PARTICIPANT_ID.equals(patch.getParent())) {
+                    ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getDdpParticipantId(),
+                            ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, nameValueMap);
+                }
+            }
+        }
+    }
+
+    private String getTypeFrom(NameValue nameValue) {
+        String type = null;
+        if (nameValue.getName().indexOf('.') != -1) {
+            type = nameValue.getName().substring(0, nameValue.getName().indexOf('.'));
+        }
+        else {
+            return null;
+        }
+        return type;
+    }
+
+    private boolean isMedicalRecord(String name, String type) {
+        return DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(type) && ESObjectConstants.MEDICAL_RECORDS_FIELD_NAMES.contains(name);
     }
 
     private Optional<NameValue> sendNotificationEmailAndUpdateStatus(Patch patch, NameValue nameValue, DBElement dbElement) {

@@ -25,7 +25,7 @@ public class PatchUtil {
     private static Map<String, String> dataBaseMap;
     private static Set<String> tableAliases = new HashSet<>();
 
-    public PatchUtil() {
+    static {
         columnNameMap = new HashMap<>();
         dataBaseMap = new HashMap<>();
         getColumnNames(Participant.class);
@@ -42,6 +42,9 @@ public class PatchUtil {
         getColumnNames(Drug.class);
         getColumnNames(ParticipantData.class);
         logger.info("Loaded patch utils");
+    }
+    
+    public PatchUtil() {
     }
 
     public static Map<String, DBElement> getColumnNameMap() {
@@ -65,7 +68,7 @@ public class PatchUtil {
         return null;
     }
 
-    private void getColumnNames(Class<?> obj) {
+    private static void getColumnNames(Class<?> obj) {
         String tableName = null;
         String tableAlias = null;
         String primaryKey = null;

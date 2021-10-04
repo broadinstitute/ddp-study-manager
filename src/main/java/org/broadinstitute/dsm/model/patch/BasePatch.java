@@ -12,8 +12,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.queue.EventDao;
 import org.broadinstitute.dsm.db.dao.settings.EventTypeDao;
@@ -60,7 +60,7 @@ public abstract class BasePatch {
 
     abstract Optional<NameValue> processEachNameValue(NameValue nameValue, DBElement dbElement);
 
-    abstract Object processEachNameValue();
+    abstract Object handleSingleNameValue(DBElement dbElement);
 
     private void prepareNecessaryData() {
         ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
@@ -68,16 +68,16 @@ public abstract class BasePatch {
                 .orElse(null);
     }
 
-    Optional<Object> handleSingleNameValue() {
-        Optional<Object> object;
+    Optional<Object> processSingleNameValue() {
+        Optional<Object> result;
         DBElement dbElement = PatchUtil.getColumnNameMap().get(patch.getNameValue().getName());
         if (dbElement != null) {
-           object = Optional.of(processEachNameValue());
+           result = Optional.of(handleSingleNameValue(dbElement));
         }
         else {
             throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
         }
-        return object;
+        return result;
     }
 
     List<NameValue> processMultipleNameValues(List<NameValue> nameValues) {
@@ -161,6 +161,87 @@ public abstract class BasePatch {
     protected boolean isNameValuePairs() {
         //TODO -> could be changed later after clarification
         return patch.getNameValues() != null && !patch.getNameValues().isEmpty();
+    }
+
+    protected List<NameValue> setWorkflowRelatedFields(@NonNull Patch patch) {
+        List<NameValue> nameValues = new ArrayList<>();
+        //mr request workflow
+        if (patch.getNameValue().getName().equals("m.faxSent")) {
+            nameValues.add(setAdditionalValue("m.faxSentBy", patch, patch.getUser()));
+            nameValues.add(setAdditionalValue("m.faxConfirmed", patch, patch.getNameValue().getValue()));
+        }
+        else if (patch.getNameValue().getName().equals("m.faxSent2")) {
+            nameValues.add(setAdditionalValue("m.faxSent2By", patch, patch.getUser()));
+            nameValues.add(setAdditionalValue("m.faxConfirmed2", patch, patch.getNameValue().getValue()));
+        }
+        else if (patch.getNameValue().getName().equals("m.faxSent3")) {
+            nameValues.add(setAdditionalValue("m.faxSent3By", patch, patch.getUser()));
+            nameValues.add(setAdditionalValue("m.faxConfirmed3", patch, patch.getNameValue().getValue()));
+        }
+        //tissue request workflow
+        else if (patch.getNameValue().getName().equals("oD.tFaxSent")) {
+            nameValues.add(setAdditionalValue("oD.tFaxSentBy", patch, patch.getUser()));
+            nameValues.add(setAdditionalValue("oD.tFaxConfirmed", patch, patch.getNameValue().getValue()));
+            nameValues.add(setAdditionalValue("oD.request", patch, "sent"));
+        }
+        else if (patch.getNameValue().getName().equals("oD.tFaxSent2")) {
+            nameValues.add(setAdditionalValue("oD.tFaxSent2By", patch, patch.getUser()));
+            nameValues.add(setAdditionalValue("oD.tFaxConfirmed2", patch, patch.getNameValue().getValue()));
+            nameValues.add(setAdditionalValue("oD.request", patch, "sent"));
+        }
+        else if (patch.getNameValue().getName().equals("oD.tFaxSent3")) {
+            nameValues.add(setAdditionalValue("oD.tFaxSent3By", patch, patch.getUser()));
+            nameValues.add(setAdditionalValue("oD.tFaxConfirmed3", patch, patch.getNameValue().getValue()));
+            nameValues.add(setAdditionalValue("oD.request", patch, "sent"));
+        }
+        else if (patch.getNameValue().getName().equals("oD.tissueReceived")) {
+            nameValues.add(setAdditionalValue("oD.request", patch, "received"));
+        }
+        else if (patch.getNameValue().getName().equals("t.tissueReturnDate")) {
+            if (StringUtils.isNotBlank(patch.getNameValue().getValue().toString())) {
+                nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getParentId(), PARTICIPANT_ID,
+                        null, patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "returned"));
+            }
+            else {
+                Boolean hasReceivedDate = OncHistoryDetail.hasReceivedDate(patch);
+
+                if (hasReceivedDate) {
+                    nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getParentId(), PARTICIPANT_ID,
+                            null, patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "received"));
+                }
+                else {
+                    nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getParentId(), PARTICIPANT_ID,
+                            null, patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "sent"));
+                }
+            }
+        }
+        else if (patch.getNameValue().getName().equals("oD.unableToObtain") && (boolean) patch.getNameValue().getValue()) {
+        }
+        else if (patch.getNameValue().getName().equals("oD.unableToObtain") && !(boolean) patch.getNameValue().getValue()) {
+            Boolean hasReceivedDate = OncHistoryDetail.hasReceivedDate(patch);
+
+            if (hasReceivedDate) {
+                nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getId(), PARTICIPANT_ID,
+                        patch.getParentId(), patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "received"));
+            }
+            else {
+                nameValues.add(setAdditionalValue("oD.request", new Patch(patch.getId(), PARTICIPANT_ID,
+                        patch.getParentId(), patch.getUser(), patch.getNameValue(), patch.getNameValues(), patch.getDdpParticipantId()), "sent"));
+            }
+        }
+        return nameValues;
+    }
+
+    private NameValue setAdditionalValue(String additionalValue, @NonNull Patch patch, @NonNull Object value) {
+        DBElement dbElement = PatchUtil.getColumnNameMap().get(additionalValue);
+        if (dbElement != null) {
+            NameValue nameValue = new NameValue(additionalValue, value);
+            Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement);
+            return nameValue;
+        }
+        else {
+            throw new RuntimeException("DBElement not found in ColumnNameMap: " + additionalValue);
+        }
     }
 
 }
