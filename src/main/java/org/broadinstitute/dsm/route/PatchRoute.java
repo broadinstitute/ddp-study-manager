@@ -77,7 +77,7 @@ public class PatchRoute extends RequestHandler {
             try {
                 String requestBody = request.body();
                 Patch patch = gson.fromJson(requestBody, Patch.class);
-                if (StringUtils.isNotBlank(patch.getId())) {
+                if (hasPrimaryKey(patch)) {
                     //multiple values are changing
                     DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
                     if (isNameValuePairs(patch)) {
@@ -125,7 +125,7 @@ public class PatchRoute extends RequestHandler {
                 }
                 else if (StringUtils.isNotBlank(patch.getParent()) && StringUtils.isNotBlank(patch.getParentId())) {
                     if (Patch.PARTICIPANT_ID.equals(patch.getParent())) { //Abstraction, Medical Record, Onc history related tables changes
-                        if (StringUtils.isNotBlank(patch.getFieldId())) {
+                        if (StringUtils.isNotBlank(patch.getFieldId())) { // medical record abstraction field id
                             //abstraction related change
                             //multiple value
                             if (isNameValuePairs(patch)) {
@@ -137,7 +137,7 @@ public class PatchRoute extends RequestHandler {
                                             primaryKeyId = AbstractionWrapper.createNewAbstractionFieldValue(patch.getParentId(), patch.getFieldId(), patch.getUser(), nameValue, dbElement);
                                         }
                                         if (!Patch.patch(primaryKeyId, patch.getUser(), nameValue, dbElement)) {
-                                            return new RuntimeException("An error occurred while attempting to patch ");
+                                            throw new RuntimeException("An error occurred while attempting to patch ");
                                         }
                                     }
                                     else {
@@ -303,6 +303,10 @@ public class PatchRoute extends RequestHandler {
             response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
         }
+    }
+
+    private boolean hasPrimaryKey(Patch patch) {
+        return StringUtils.isNotBlank(patch.getId());
     }
 
     private boolean isNameValuePairs(Patch patch) {
