@@ -12,6 +12,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.queue.EventDao;
@@ -27,14 +28,13 @@ import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.EventUtil;
-import org.broadinstitute.dsm.util.NotificationUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.broadinstitute.dsm.util.PatchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public abstract class BasePatch implements Patchable {
+public abstract class BasePatch {
 
     static final Logger logger = LoggerFactory.getLogger(BasePatch.class);
 
@@ -43,7 +43,6 @@ public abstract class BasePatch implements Patchable {
     protected static final String NAME_VALUE = "NameValue";
     protected static final String STATUS = "status";
     protected static final Gson GSON = new GsonBuilder().serializeNulls().create();
-
 
     protected Patch patch;
     protected ESProfile profile;
@@ -57,20 +56,36 @@ public abstract class BasePatch implements Patchable {
         prepareNecessaryData();
     }
 
+    public abstract Object doPatch();
+
+    abstract Optional<NameValue> processEachNameValue(NameValue nameValue, DBElement dbElement);
+
+    abstract Object processEachNameValue();
+
     private void prepareNecessaryData() {
         ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
         profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
-                .orElse(new ESProfile());
+                .orElse(null);
     }
 
-    abstract Optional<NameValue> processSingleNameValue(NameValue nameValue, DBElement dbElement);
+    Optional<Object> handleSingleNameValue() {
+        Optional<Object> object;
+        DBElement dbElement = PatchUtil.getColumnNameMap().get(patch.getNameValue().getName());
+        if (dbElement != null) {
+           object = Optional.of(processEachNameValue());
+        }
+        else {
+            throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
+        }
+        return object;
+    }
 
     List<NameValue> processMultipleNameValues(List<NameValue> nameValues) {
         List<NameValue> updatedNameValues = new ArrayList<>();
         for (NameValue nameValue : patch.getNameValues()) {
             DBElement dbElement = PatchUtil.getColumnNameMap().get(nameValue.getName());
             if (dbElement != null) {
-                processSingleNameValue(nameValue, dbElement).ifPresent(updatedNameValues::add);
+                processEachNameValue(nameValue, dbElement).ifPresent(updatedNameValues::add);
             }
             else {
                 throw new RuntimeException("DBElement not found in ColumnNameMap: " + nameValue.getName());
@@ -142,4 +157,10 @@ public abstract class BasePatch implements Patchable {
             }
         });
     }
+
+    protected boolean isNameValuePairs() {
+        //TODO -> could be changed later after clarification
+        return patch.getNameValues() != null && !patch.getNameValues().isEmpty();
+    }
+
 }

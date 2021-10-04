@@ -1,12 +1,10 @@
 package org.broadinstitute.dsm.model.patch;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.settings.EventTypeDao;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
@@ -22,6 +20,7 @@ import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.NotificationUtil;
+import org.broadinstitute.dsm.util.PatchUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -39,7 +38,58 @@ public class PrimaryKeyPatch extends BasePatch {
     }
 
     @Override
-    Optional<NameValue> processSingleNameValue(NameValue nameValue, DBElement dbElement) {
+    public Object doPatch() {
+        if (isNameValuePairs()) {
+            List<NameValue> nameValues = new ArrayList<>();
+            ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
+                    .orElse(null);
+            if (profile == null) {
+                logger.error("Unable to find ES profile for participant with guid/altpid: {}, continuing w/ patch", patch.getParentId());
+            }
+            // List<NameValue> nameValues = processMultipleNameValues()
+            // declared nameValues above will be removed
+            for (NameValue nameValue : patch.getNameValues()) {
+                DBElement dbElement = PatchUtil.getColumnNameMap().get(nameValue.getName());
+                if (dbElement != null) {
+                    // basePatch.processMultipleNameValues(patch.getNameValues())
+                    if (!Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement)) {
+                        throw new RuntimeException("An error occurred while attempting to patch ");
+                    }
+                    if (hasQuestion(nameValue)) {
+                        sendNotificationEmailAndUpdateStatus(patch, nameValue, dbElement);
+                    }
+                    controlWorkflowByEmail(patch, nameValue, ddpInstance, profile);
+                    if (patch.getActions() != null) {
+                        writeESWorkflowElseTriggerParticipantEvent(patch, ddpInstance, profile, nameValue);
+                    }
+                }
+                else {
+                    throw new RuntimeException("DBElement not found in ColumnNameMap: " + nameValue.getName());
+                }
+            }
+            return new Result(200, GSON.toJson(nameValues));
+        }
+        else {
+            // mr changes
+            DBElement dbElement = PatchUtil.getColumnNameMap().get(patch.getNameValue().getName());
+            if (dbElement != null) {
+                if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
+                    List<NameValue> nameValues = setWorkflowRelatedFields(patch);
+                    writeDSMRecordsToES(patch, ddpInstance);
+                    //return nameValues with nulls
+                    return new Result(200, gson.toJson(nameValues));
+                }
+            }
+            else {
+                throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    Optional<NameValue> processEachNameValue(NameValue nameValue, DBElement dbElement) {
         Optional<NameValue> maybeUpdatedNameValue = Optional.empty();
         if (!Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement)) {
             throw new RuntimeException("An error occurred while attempting to patch ");
@@ -53,6 +103,11 @@ public class PrimaryKeyPatch extends BasePatch {
         }
 
         return maybeUpdatedNameValue;
+    }
+
+    @Override
+    Optional<Object> handleSingleNameValue() {
+        return null;
     }
 
     private Optional<NameValue> sendNotificationEmailAndUpdateStatus(Patch patch, NameValue nameValue, DBElement dbElement) {
