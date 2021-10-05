@@ -80,61 +80,61 @@ public class PatchRoute extends RequestHandler {
             try {
                 String requestBody = request.body();
                 Patch patch = gson.fromJson(requestBody, Patch.class);
-                BasePatch patcher = PatchFactory.makePatch(patch);
+                BasePatch patcher = PatchFactory.makePatch(patch, notificationUtil);
                 patcher.doPatch();
 
-                if (hasPrimaryKey(patch)) {
-                    //multiple values are changing
-                    DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
-                    if (isNameValuePairs(patch)) {
-                        List<NameValue> nameValues = new ArrayList<>();
-                        ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
-                                .orElse(null);
-                        if (profile == null) {
-                            logger.error("Unable to find ES profile for participant with guid/altpid: {}, continuing w/ patch", patch.getParentId());
-                        }
-                        // List<NameValue> nameValues = processMultipleNameValues()
-                        // declared nameValues above will be removed
-                        for (NameValue nameValue : patch.getNameValues()) {
-                            DBElement dbElement = PatchUtil.getColumnNameMap().get(nameValue.getName());
-                            if (dbElement != null) {
-                                // basePatch.processMultipleNameValues(patch.getNameValues())
-                                if (!Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement)) {
-                                    throw new RuntimeException("An error occurred while attempting to patch ");
-                                }
-                                if (hasQuestion(nameValue)) {
-                                    sendNotificationEmailAndUpdateStatus(patch, nameValues, nameValue, dbElement);
-                                }
-                                controlWorkflowByEmail(patch, nameValue, ddpInstance, profile);
-                                if (patch.getActions() != null) {
-                                    writeESWorkflowElseTriggerParticipantEvent(patch, ddpInstance, profile, nameValue);
-                                }
-                            }
-                            else {
-                                throw new RuntimeException("DBElement not found in ColumnNameMap: " + nameValue.getName());
-                            }
-                        }
-                        return new Result(200, gson.toJson(nameValues));
-                    }
-                    else {
-                        // mr changes
-                        DBElement dbElement = PatchUtil.getColumnNameMap().get(patch.getNameValue().getName());
-                        if (dbElement != null) {
-                            if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
-                                List<NameValue> nameValues = setWorkflowRelatedFields(patch);
-                                writeDSMRecordsToES(patch, ddpInstance);
-                                //return nameValues with nulls
-                                return new Result(200, gson.toJson(nameValues));
-                            }
-                        }
-                        else {
-                            throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
-                        }
-                    }
-                }
-                else if (StringUtils.isNotBlank(patch.getParent()) && StringUtils.isNotBlank(patch.getParentId())) {
-                    if (Patch.PARTICIPANT_ID.equals(patch.getParent())) { //Abstraction, Medical Record, Onc history related tables changes
-                        if (StringUtils.isNotBlank(patch.getFieldId())) { // medical record abstraction field id
+//                if (hasPrimaryKey(patch)) {
+//                    //multiple values are changing
+//                    DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+//                    if (isNameValuePairs(patch)) {
+//                        List<NameValue> nameValues = new ArrayList<>();
+//                        ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
+//                                .orElse(null);
+//                        if (profile == null) {
+//                            logger.error("Unable to find ES profile for participant with guid/altpid: {}, continuing w/ patch", patch.getParentId());
+//                        }
+//                        // List<NameValue> nameValues = processMultipleNameValues()
+//                        // declared nameValues above will be removed
+//                        for (NameValue nameValue : patch.getNameValues()) {
+//                            DBElement dbElement = PatchUtil.getColumnNameMap().get(nameValue.getName());
+//                            if (dbElement != null) {
+//                                // basePatch.processMultipleNameValues(patch.getNameValues())
+//                                if (!Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement)) {
+//                                    throw new RuntimeException("An error occurred while attempting to patch ");
+//                                }
+//                                if (hasQuestion(nameValue)) {
+//                                    sendNotificationEmailAndUpdateStatus(patch, nameValues, nameValue, dbElement);
+//                                }
+//                                controlWorkflowByEmail(patch, nameValue, ddpInstance, profile);
+//                                if (patch.getActions() != null) {
+//                                    writeESWorkflowElseTriggerParticipantEvent(patch, ddpInstance, profile, nameValue);
+//                                }
+//                            }
+//                            else {
+//                                throw new RuntimeException("DBElement not found in ColumnNameMap: " + nameValue.getName());
+//                            }
+//                        }
+//                        return new Result(200, gson.toJson(nameValues));
+//                    }
+//                    else {
+//                        // mr changes
+//                        DBElement dbElement = PatchUtil.getColumnNameMap().get(patch.getNameValue().getName());
+//                        if (dbElement != null) {
+//                            if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
+//                                List<NameValue> nameValues = setWorkflowRelatedFields(patch);
+//                                writeDSMRecordsToES(patch, ddpInstance);
+//                                //return nameValues with nulls
+//                                return new Result(200, gson.toJson(nameValues));
+//                            }
+//                        }
+//                        else {
+//                            throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
+//                        }
+//                    }
+//                }
+                if (isParentWithPrimaryKey(patch)) {
+                    if (isParentParticipantId(patch)) { //Abstraction, Medical Record, Onc history related tables changes
+                        if (isMedicalRecordAbstractionFieldId(patch)) { // medical record abstraction field id
                             //abstraction related change
                             //multiple value
                             if (isNameValuePairs(patch)) {
@@ -312,6 +312,19 @@ public class PatchRoute extends RequestHandler {
             response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
         }
+    }
+
+    private boolean isMedicalRecordAbstractionFieldId(Patch patch) {
+        // only medical_record_abstraction_field_id or another field as well
+        return StringUtils.isNotBlank(patch.getFieldId());
+    }
+
+    private boolean isParentParticipantId(Patch patch) {
+        return Patch.PARTICIPANT_ID.equals(patch.getParent());
+    }
+
+    private boolean isParentWithPrimaryKey(Patch patch) {
+        return StringUtils.isNotBlank(patch.getParent()) && StringUtils.isNotBlank(patch.getParentId());
     }
 
     private boolean hasPrimaryKey(Patch patch) {

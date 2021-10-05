@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public abstract class BasePatch {
+public abstract class BasePatch<T> {
 
     static final Logger logger = LoggerFactory.getLogger(BasePatch.class);
 
@@ -56,11 +56,10 @@ public abstract class BasePatch {
         prepareNecessaryData();
     }
 
-    public abstract Object doPatch();
+    public abstract T doPatch();
 
-    abstract Optional<NameValue> processEachNameValue(NameValue nameValue, DBElement dbElement);
 
-    abstract Object handleSingleNameValue(DBElement dbElement);
+    abstract T handleSingleNameValue(DBElement dbElement);
 
     private void prepareNecessaryData() {
         ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
@@ -68,8 +67,8 @@ public abstract class BasePatch {
                 .orElse(null);
     }
 
-    Optional<Object> processSingleNameValue() {
-        Optional<Object> result;
+    Optional<T> processSingleNameValue() {
+        Optional<T> result;
         DBElement dbElement = PatchUtil.getColumnNameMap().get(patch.getNameValue().getName());
         if (dbElement != null) {
            result = Optional.of(handleSingleNameValue(dbElement));
@@ -80,8 +79,8 @@ public abstract class BasePatch {
         return result;
     }
 
-    List<NameValue> processMultipleNameValues(List<NameValue> nameValues) {
-        List<NameValue> updatedNameValues = new ArrayList<>();
+    T processMultipleNameValues() {
+        List<T> updatedNameValues = new ArrayList<>();
         for (NameValue nameValue : patch.getNameValues()) {
             DBElement dbElement = PatchUtil.getColumnNameMap().get(nameValue.getName());
             if (dbElement != null) {
@@ -94,10 +93,11 @@ public abstract class BasePatch {
         return updatedNameValues;
     }
 
+    abstract Optional<T> processEachNameValue(NameValue nameValue, DBElement dbElement);
+
     protected boolean hasQuestion(NameValue nameValue) {
         return nameValue.getName().contains("question");
     }
-
 
     protected boolean hasProfileAndESWorkflowType(ESProfile profile, Value action) {
         return ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType()) && profile != null;

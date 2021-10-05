@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import lombok.NonNull;
 import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.settings.EventTypeDao;
@@ -22,7 +21,6 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.NotificationUtil;
-import org.broadinstitute.dsm.util.PatchUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -32,7 +30,7 @@ public class PrimaryKeyPatch extends BasePatch {
 
     private static final Logger logger = LoggerFactory.getLogger(PrimaryKeyPatch.class);
 
-    private NotificationUtil notificationUtil;
+    private final NotificationUtil notificationUtil;
 
     public PrimaryKeyPatch(Patch patch, NotificationUtil notificationUtil) {
         super(patch);
@@ -52,23 +50,8 @@ public class PrimaryKeyPatch extends BasePatch {
         }
         else {
             Optional<Object> maybeNameValue = processSingleNameValue();
-            return maybeNameValue.orElse();
-            // mr changes
-            DBElement dbElement = PatchUtil.getColumnNameMap().get(patch.getNameValue().getName());
-            if (dbElement != null) {
-                if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
-                    List<NameValue> nameValues = setWorkflowRelatedFields(patch);
-                    writeDSMRecordsToES(patch, ddpInstance);
-                    //return nameValues with nulls
-                    return new Result(200, gson.toJson(nameValues));
-                }
-            }
-            else {
-                throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
-            }
+            return maybeNameValue.orElse(null);
         }
-
-        return null;
     }
 
     @Override
@@ -84,58 +67,7 @@ public class PrimaryKeyPatch extends BasePatch {
         if (patch.getActions() != null) {
             writeESWorkflowElseTriggerParticipantEvent(patch, ddpInstance, profile, nameValue);
         }
-
         return maybeUpdatedNameValue;
-    }
-
-    @Override
-    Object handleSingleNameValue(DBElement dbElement) {
-        List<NameValue> nameValues = new ArrayList<>();
-        if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
-            nameValues.addAll(setWorkflowRelatedFields(patch));
-            writeDSMRecordsToES();
-            //return nameValues with nulls
-            return nameValues;
-        }
-        return nameValues;
-    }
-
-    private void writeDSMRecordsToES() {
-        NameValue nameValue = patch.getNameValue();
-        String name = nameValue.getName().substring(nameValue.getName().lastIndexOf('.') + 1);
-        String type = getTypeFrom(nameValue);
-        if (type == null) return;
-        String value = nameValue.getValue().toString();
-        Map<String, Object> nameValueMap = new HashMap<>();
-        nameValueMap.put(name, value);
-        if (isMedicalRecord(name, type)) {
-            ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getDdpParticipantId(),
-                    ESObjectConstants.MEDICAL_RECORDS, ESObjectConstants.MEDICAL_RECORDS_ID, nameValueMap);
-        }
-        else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(type)) {
-            // TODO relationship between DDP_ONC_HISTORY_DETAIL_ALIAS and TISSUE_RECORDS_FIELD_NAMES
-            if (ESObjectConstants.TISSUE_RECORDS_FIELD_NAMES.contains(name)) {
-                if (PARTICIPANT_ID.equals(patch.getParent())) {
-                    ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getDdpParticipantId(),
-                            ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, nameValueMap);
-                }
-            }
-        }
-    }
-
-    private String getTypeFrom(NameValue nameValue) {
-        String type = null;
-        if (nameValue.getName().indexOf('.') != -1) {
-            type = nameValue.getName().substring(0, nameValue.getName().indexOf('.'));
-        }
-        else {
-            return null;
-        }
-        return type;
-    }
-
-    private boolean isMedicalRecord(String name, String type) {
-        return DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(type) && ESObjectConstants.MEDICAL_RECORDS_FIELD_NAMES.contains(name);
     }
 
     private Optional<NameValue> sendNotificationEmailAndUpdateStatus(Patch patch, NameValue nameValue, DBElement dbElement) {
@@ -165,6 +97,10 @@ public class PrimaryKeyPatch extends BasePatch {
             maybeUpdatedNameValue = Optional.of(nameValue);
         }
         return maybeUpdatedNameValue;
+    }
+
+    private boolean isSent(JSONObject question) {
+        return question.optString(STATUS) != null && question.optString(STATUS).equals("sent");
     }
 
     private void controlWorkflowByEmail(Patch patch, NameValue nameValue, DDPInstance ddpInstance, ESProfile profile) {
@@ -239,8 +175,54 @@ public class PrimaryKeyPatch extends BasePatch {
         }
     }
 
-    private boolean isSent(JSONObject question) {
-        return question.optString(STATUS) != null && question.optString(STATUS).equals("sent");
+    @Override
+    Object handleSingleNameValue(DBElement dbElement) {
+        List<NameValue> nameValues = new ArrayList<>();
+        if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
+            nameValues.addAll(setWorkflowRelatedFields(patch));
+            writeDSMRecordsToES();
+            //return nameValues with nulls
+            return nameValues;
+        }
+        return nameValues;
+    }
+
+    private void writeDSMRecordsToES() {
+        NameValue nameValue = patch.getNameValue();
+        String name = nameValue.getName().substring(nameValue.getName().lastIndexOf('.') + 1);
+        String type = getTypeFrom(nameValue);
+        if (type == null) return;
+        String value = nameValue.getValue().toString();
+        Map<String, Object> nameValueMap = new HashMap<>();
+        nameValueMap.put(name, value);
+        if (isMedicalRecord(name, type)) {
+            ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getDdpParticipantId(),
+                    ESObjectConstants.MEDICAL_RECORDS, ESObjectConstants.MEDICAL_RECORDS_ID, nameValueMap);
+        }
+        else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(type)) {
+            // TODO relationship between DDP_ONC_HISTORY_DETAIL_ALIAS and TISSUE_RECORDS_FIELD_NAMES
+            if (ESObjectConstants.TISSUE_RECORDS_FIELD_NAMES.contains(name)) {
+                if (PARTICIPANT_ID.equals(patch.getParent())) {
+                    ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getDdpParticipantId(),
+                            ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, nameValueMap);
+                }
+            }
+        }
+    }
+
+    private String getTypeFrom(NameValue nameValue) {
+        String type = null;
+        if (nameValue.getName().indexOf('.') != -1) {
+            type = nameValue.getName().substring(0, nameValue.getName().indexOf('.'));
+        }
+        else {
+            return null;
+        }
+        return type;
+    }
+
+    private boolean isMedicalRecord(String name, String type) {
+        return DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(type) && ESObjectConstants.MEDICAL_RECORDS_FIELD_NAMES.contains(name);
     }
 
 }

@@ -19,6 +19,11 @@ public class NullPatch extends BasePatch {
     }
 
     @Override
+    Object handleSingleNameValue(DBElement dbElement) {
+        return new Object();
+    }
+
+    @Override
     List<NameValue> processMultipleNameValues(List<NameValue> nameValues) {
         return List.of();
     }
