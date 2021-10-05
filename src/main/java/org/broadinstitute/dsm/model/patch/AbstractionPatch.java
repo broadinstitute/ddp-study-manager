@@ -1,6 +1,5 @@
 package org.broadinstitute.dsm.model.patch;
 
-import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.AbstractionWrapper;
 import org.broadinstitute.dsm.model.NameValue;
@@ -8,22 +7,35 @@ import org.broadinstitute.dsm.model.Patch;
 import spark.utils.StringUtils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public class AbstractionPatch extends BasePatch {
 
     String primaryKeyId;
+    public static final int FIRST_PRIMARY_KEY_ID = 0;
+    private static final Map<String, Object> NULL_KEY;
+
+    static {
+        NULL_KEY = new HashMap<>();
+        NULL_KEY.put(PRIMARY_KEY_ID, null);
+    }
+
+    public AbstractionPatch(Patch patch) {
+        super(patch);
+    }
 
     @Override
     protected Object patchNameValuePairs() {
-        return null;
+        List<Object> firstPrimaryKey = processMultipleNameValues();
+        return firstPrimaryKey.isEmpty() ? NULL_KEY : firstPrimaryKey.get(FIRST_PRIMARY_KEY_ID);
     }
 
     @Override
     public Object patchNameValuePair() {
-        return null;
-
+        Optional<Object> maybeMap = processSingleNameValue();
+        return maybeMap.orElse(NULL_KEY);
     }
 
     @Override

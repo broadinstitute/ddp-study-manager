@@ -10,17 +10,30 @@ public class PatchFactory {
         BasePatch patcher = new NullPatch();
         if (hasPrimaryKey(patch)) {
             patcher = new PrimaryKeyPatch(patch, notificationUtil);
+        } else if (isParentWithPrimaryKey(patch)) {
+            if (isParentParticipantId(patch)) {
+                if (isMedicalRecordAbstractionFieldId(patch)) {
+                    patcher = new AbstractionPatch(patch);
+                }
+            }
         }
-        // switch cases here
-        return patcher;
+            // switch cases here
+            return patcher;
     }
 
     private static boolean hasPrimaryKey(Patch patch) {
         return StringUtils.isNotBlank(patch.getId());
     }
 
+    private static boolean isParentWithPrimaryKey(Patch patch) {
+        return StringUtils.isNotBlank(patch.getParent()) && StringUtils.isNotBlank(patch.getParentId());
+    }
 
+    private static boolean isParentParticipantId(Patch patch) {
+        return Patch.PARTICIPANT_ID.equals(patch.getParent());
+    }
 
-
-
+    private static boolean isMedicalRecordAbstractionFieldId(Patch patch) {
+        return StringUtils.isNotBlank(patch.getFieldId());
+    }
 }

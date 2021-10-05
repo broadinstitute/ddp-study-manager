@@ -9,6 +9,11 @@ import org.broadinstitute.dsm.model.NameValue;
 public class NullPatch extends BasePatch {
 
     @Override
+    protected Object patchNameValuePairs() {
+        return new Object();
+    }
+
+    @Override
     public Object patchNameValuePair() {
         return new Object();
     }

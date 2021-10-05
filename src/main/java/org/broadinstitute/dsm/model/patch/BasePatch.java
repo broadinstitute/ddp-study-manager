@@ -84,7 +84,7 @@ public abstract class BasePatch {
         return result;
     }
 
-    Object processMultipleNameValues() {
+    List<Object> processMultipleNameValues() {
         List<Object> updatedNameValues = new ArrayList<>();
         for (NameValue nameValue : patch.getNameValues()) {
             DBElement dbElement = PatchUtil.getColumnNameMap().get(nameValue.getName());
