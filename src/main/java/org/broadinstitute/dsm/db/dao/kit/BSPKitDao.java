@@ -33,6 +33,7 @@ public class BSPKitDao implements Dao<BSPKitDto> {
             "        kt.kit_type_name, " +
             "        kt.bsp_material_type, " +
             "        kt.bsp_receptacle_type, " +
+            "        kt.sample_type, " +
             "        (select count(role.name) " +
             "            from ddp_instance realm2, " +
             "            ddp_instance_role inRol, " +
@@ -109,7 +110,8 @@ public class BSPKitDao implements Dao<BSPKitDto> {
                                     rs.getBoolean(DBConstants.HAS_ROLE),
                                     rs.getString(PARTICIPANT_EXIT),
                                     rs.getString(DBConstants.DSM_DEACTIVATED_DATE),
-                                    rs.getString(DBConstants.NOTIFICATION_RECIPIENT)
+                                    rs.getString(DBConstants.NOTIFICATION_RECIPIENT),
+                                    rs.getString(DBConstants.SAMPLE_TYPE)
                             );
                         }
                         if (numRows > 1) {

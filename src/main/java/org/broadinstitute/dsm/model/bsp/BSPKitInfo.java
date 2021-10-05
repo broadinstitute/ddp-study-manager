@@ -9,7 +9,7 @@ public class BSPKitInfo {
 
     private static final Logger logger = LoggerFactory.getLogger(BSPKitInfo.class);
 
-    private final String collaboratorParticipantId, collaboratorSampleId, sampleCollectionBarcode, gender, materialInfo, receptacleName;
+    private String collaboratorParticipantId, collaboratorSampleId, sampleCollectionBarcode, gender, materialInfo, receptacleName, sampleType, accessionNumber, clinicalKitGender;
     private final int organismClassificationId;
 
     public BSPKitInfo (String sampleCollectionBarcode,
@@ -18,7 +18,8 @@ public class BSPKitInfo {
                        String bspParticipantId,
                        String bspSampleId,
                        String materialInfo,
-                       String receptacleName) {
+                       String receptacleName,
+                       String sampleType) {
         this.sampleCollectionBarcode = sampleCollectionBarcode;
         // note that organism is bsp's internal organismClassificationId, as per Damien
         this.organismClassificationId = organismClassificationId;
@@ -27,5 +28,6 @@ public class BSPKitInfo {
         this.collaboratorSampleId = bspSampleId;
         this.materialInfo = materialInfo;
         this.receptacleName = receptacleName;
+        this.sampleType = sampleType;
     }
 }

@@ -26,6 +26,16 @@ public class ClinicalKitDto {
 
     @SerializedName ("date_of_birth")
     String dateOfBirth;
+
+    @SerializedName("sample_type")
+    String sampleType;
+
+    @SerializedName("gender")
+    String gender;
+
+    @SerializedName("accession_number")
+    String accessionNumber;
+
     public ClinicalKitDto(){}
 
 }
