@@ -38,25 +38,24 @@ public class PrimaryKeyPatch extends BasePatch {
     }
 
     @Override
-    public Object doPatch() {
-        if (isNameValuePairs()) {
-            ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
-                    .orElse(null);
-            if (profile == null) {
-                logger.error("Unable to find ES profile for participant with guid/altpid: {}, continuing w/ patch", patch.getParentId());
-            }
-            List<NameValue> updatedNameValues = processMultipleNameValues(patch.getNameValues());
-            return new Result(200, GSON.toJson(updatedNameValues));
+    public Object patchNameValuePairs() {
+        ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
+                .orElse(null);
+        if (profile == null) {
+            logger.error("Unable to find ES profile for participant with guid/altpid: {}, continuing w/ patch", patch.getParentId());
         }
-        else {
-            Optional<Object> maybeNameValue = processSingleNameValue();
-            return maybeNameValue.orElse(null);
-        }
+        return processMultipleNameValues();
     }
 
     @Override
-    Optional<NameValue> processEachNameValue(NameValue nameValue, DBElement dbElement) {
-        Optional<NameValue> maybeUpdatedNameValue = Optional.empty();
+    public Object patchNameValuePair() {
+        Optional<Object> maybeNameValue = processSingleNameValue();
+        return maybeNameValue.orElse(null);
+    }
+
+    @Override
+    Optional<Object> processEachNameValue(NameValue nameValue, DBElement dbElement) {
+        Optional<Object> maybeUpdatedNameValue = Optional.empty();
         if (!Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement)) {
             throw new RuntimeException("An error occurred while attempting to patch ");
         }
@@ -70,8 +69,8 @@ public class PrimaryKeyPatch extends BasePatch {
         return maybeUpdatedNameValue;
     }
 
-    private Optional<NameValue> sendNotificationEmailAndUpdateStatus(Patch patch, NameValue nameValue, DBElement dbElement) {
-        Optional<NameValue> maybeUpdatedNameValue = Optional.empty();
+    private Optional<Object> sendNotificationEmailAndUpdateStatus(Patch patch, NameValue nameValue, DBElement dbElement) {
+        Optional<Object> maybeUpdatedNameValue = Optional.empty();
         UserDto userDto = new UserDao().getUserByEmail(patch.getUser()).orElseThrow();
         JSONObject jsonObject = new JSONObject(nameValue.getValue().toString());
         JSONArray questionArray = new JSONArray(jsonObject.get("questions").toString());

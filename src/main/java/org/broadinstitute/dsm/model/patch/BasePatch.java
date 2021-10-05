@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public abstract class BasePatch<T> {
+public abstract class BasePatch {
 
     static final Logger logger = LoggerFactory.getLogger(BasePatch.class);
 
@@ -56,10 +56,15 @@ public abstract class BasePatch<T> {
         prepareNecessaryData();
     }
 
-    public abstract T doPatch();
+    public Object doPatch() {
+        return isNameValuePairs() ? patchNameValuePairs() : patchNameValuePair();
+    }
 
+    protected abstract Object patchNameValuePairs();
 
-    abstract T handleSingleNameValue(DBElement dbElement);
+    protected abstract Object patchNameValuePair();
+
+    abstract Object handleSingleNameValue(DBElement dbElement);
 
     private void prepareNecessaryData() {
         ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
@@ -67,8 +72,8 @@ public abstract class BasePatch<T> {
                 .orElse(null);
     }
 
-    Optional<T> processSingleNameValue() {
-        Optional<T> result;
+    Optional<Object> processSingleNameValue() {
+        Optional<Object> result;
         DBElement dbElement = PatchUtil.getColumnNameMap().get(patch.getNameValue().getName());
         if (dbElement != null) {
            result = Optional.of(handleSingleNameValue(dbElement));
@@ -79,8 +84,8 @@ public abstract class BasePatch<T> {
         return result;
     }
 
-    T processMultipleNameValues() {
-        List<T> updatedNameValues = new ArrayList<>();
+    Object processMultipleNameValues() {
+        List<Object> updatedNameValues = new ArrayList<>();
         for (NameValue nameValue : patch.getNameValues()) {
             DBElement dbElement = PatchUtil.getColumnNameMap().get(nameValue.getName());
             if (dbElement != null) {
@@ -93,7 +98,7 @@ public abstract class BasePatch<T> {
         return updatedNameValues;
     }
 
-    abstract Optional<T> processEachNameValue(NameValue nameValue, DBElement dbElement);
+    abstract Optional<Object> processEachNameValue(NameValue nameValue, DBElement dbElement);
 
     protected boolean hasQuestion(NameValue nameValue) {
         return nameValue.getName().contains("question");

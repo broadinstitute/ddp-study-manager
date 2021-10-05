@@ -9,22 +9,17 @@ import org.broadinstitute.dsm.model.NameValue;
 public class NullPatch extends BasePatch {
 
     @Override
-    public Object doPatch() {
+    public Object patchNameValuePair() {
         return new Object();
     }
 
     @Override
-    Optional<NameValue> processEachNameValue(NameValue nameValue, DBElement dbElement) {
+    Optional<Object> processEachNameValue(NameValue nameValue, DBElement dbElement) {
         return Optional.empty();
     }
 
     @Override
     Object handleSingleNameValue(DBElement dbElement) {
         return new Object();
-    }
-
-    @Override
-    List<NameValue> processMultipleNameValues(List<NameValue> nameValues) {
-        return List.of();
     }
 }

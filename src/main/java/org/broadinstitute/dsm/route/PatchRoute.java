@@ -28,7 +28,6 @@ import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.patch.BasePatch;
 import org.broadinstitute.dsm.model.patch.PatchFactory;
-import org.broadinstitute.dsm.model.patch.Patchable;
 import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
