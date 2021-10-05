@@ -961,7 +961,6 @@ public class ViewFilter {
                 filter.setExactMatch(exact);
                 filter.setRange(range);
                 filter.setNotEmpty(notEmpty);
-                filter.setParentName(viewFilter.getParent());
                 filter.setEmpty(empty);
                 filter.setParticipantColumn(new ParticipantColumn(columnName, tableName));
                 if (StringUtils.isNotBlank(type) && type.equals(Filter.JSON_ARRAY) && StringUtils.isNotBlank(path)) {
