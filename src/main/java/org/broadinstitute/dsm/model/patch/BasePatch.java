@@ -62,6 +62,8 @@ public abstract class BasePatch {
         return isNameValuePairs() ? patchNameValuePairs() : patchNameValuePair();
     }
 
+
+
     protected abstract Object patchNameValuePairs();
 
     protected abstract Object patchNameValuePair();

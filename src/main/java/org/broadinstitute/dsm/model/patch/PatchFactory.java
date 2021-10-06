@@ -14,11 +14,13 @@ public class PatchFactory {
             if (isParentParticipantId(patch)) {
                 if (isMedicalRecordAbstractionFieldId(patch)) {
                     patcher = new AbstractionPatch(patch);
+                } else {
+                    patcher = new MedicalRecordPatch(patch);
                 }
             }
         }
-            // switch cases here
-            return patcher;
+        // switch cases here
+        return patcher;
     }
 
     private static boolean hasPrimaryKey(Patch patch) {
