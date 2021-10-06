@@ -45,8 +45,7 @@ public class PatchRoute extends RequestHandler {
                 String requestBody = request.body();
                 Patch patch = GSON.fromJson(requestBody, Patch.class);
                 BasePatch patcher = PatchFactory.makePatch(patch, notificationUtil);
-                patcher.doPatch();
-                throw new RuntimeException("Id and parentId was null");
+                return patcher.doPatch();
             }
             catch (DuplicateException e) {
                 return new Result(500, "Duplicate value");
