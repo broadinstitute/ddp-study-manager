@@ -26,6 +26,11 @@ public class AbstractionPatch extends BasePatch {
     }
 
     @Override
+    public Object doPatch() {
+        return isNameValuePairs() ? patchNameValuePairs() : patchNameValuePair();
+    }
+
+    @Override
     protected Object patchNameValuePairs() {
         List<Object> firstPrimaryKey = processMultipleNameValues();
         return firstPrimaryKey.isEmpty() ? NULL_KEY : firstPrimaryKey.get(FIRST_PRIMARY_KEY_ID);

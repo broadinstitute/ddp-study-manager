@@ -38,4 +38,8 @@ public class PatchFactory {
     private static boolean isMedicalRecordAbstractionFieldId(Patch patch) {
         return StringUtils.isNotBlank(patch.getFieldId());
     }
+
+    private static boolean isTissueRelatedOncHistoryId(Patch patch) {
+        return Patch.ONC_HISTORY_ID.equals(patch.getParent());
+    }
 }

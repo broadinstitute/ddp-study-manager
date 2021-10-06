@@ -37,6 +37,11 @@ public class PrimaryKeyPatch extends BasePatch {
     }
 
     @Override
+    public Object doPatch() {
+        return isNameValuePairs() ? patchNameValuePairs() : patchNameValuePair();
+    }
+
+    @Override
     public Object patchNameValuePairs() {
         ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
                 .orElse(null);

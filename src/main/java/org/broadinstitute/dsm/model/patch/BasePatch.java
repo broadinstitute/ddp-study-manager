@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.model.patch;
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,25 +46,29 @@ public abstract class BasePatch {
     protected static final Gson GSON = new GsonBuilder().serializeNulls().create();
     protected static Map<String, Object> NULL_KEY;
 
+    Map<String, Object> resultMap;
+    List<NameValue> nameValues;
+
 
     protected Patch patch;
     protected ESProfile profile;
     protected DDPInstance ddpInstance;
 
-    public BasePatch() {
+    {
+        resultMap = new HashMap<>();
+        nameValues = new ArrayList<>();
     }
 
-    public BasePatch(Patch patch) {
+    protected BasePatch() {
+    }
+
+    protected BasePatch(Patch patch) {
         this.patch = patch;
         prepareCommonData();
     }
 
-    public Object doPatch() {
-        return isNameValuePairs() ? patchNameValuePairs() : patchNameValuePair();
-    }
-
-
-
+    public abstract Object doPatch();
+    
     protected abstract Object patchNameValuePairs();
 
     protected abstract Object patchNameValuePair();

@@ -22,8 +22,6 @@ public class MedicalRecordPatch extends BasePatch {
 
     private Number mrID;
     private String oncHistoryDetailId;
-    Map<String, Object> resultMap;
-    List<NameValue> nameValues;
 
     static final Logger logger = LoggerFactory.getLogger(MedicalRecordPatch.class);
 
@@ -32,9 +30,12 @@ public class MedicalRecordPatch extends BasePatch {
         super(patch);
     }
 
+    @Override
+    public Object doPatch() {
+        return isNameValuePairs() ? patchNameValuePairs() : patchNameValuePair();
+    }
+
     {
-        resultMap = new HashMap<>();
-        nameValues = new ArrayList<>();
         nameValues.add(new NameValue("request", OncHistoryDetail.STATUS_REVIEW));
         resultMap.put(NAME_VALUE, GSON.toJson(nameValues));
     }
