@@ -191,7 +191,7 @@ public class PatchRoute extends RequestHandler {
                                         DBElement dbElement = patchUtil.getColumnNameMap().get(nameValue.getName());
                                         if (dbElement != null) {
                                             if (!Patch.patch(oncHistoryDetailId, patch.getUser(), nameValue, dbElement)) {
-                                                return new RuntimeException("An error occurred while attempting to patch ");
+                                                throw new RuntimeException("An error occurred while attempting to patch ");
                                             }
                                         }
                                         else {

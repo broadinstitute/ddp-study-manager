@@ -15,7 +15,6 @@ public class AbstractionPatch extends BasePatch {
 
     String primaryKeyId;
     public static final int FIRST_PRIMARY_KEY_ID = 0;
-    private static final Map<String, Object> NULL_KEY;
 
     static {
         NULL_KEY = new HashMap<>();

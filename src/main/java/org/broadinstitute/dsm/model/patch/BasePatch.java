@@ -43,6 +43,8 @@ public abstract class BasePatch {
     protected static final String NAME_VALUE = "NameValue";
     protected static final String STATUS = "status";
     protected static final Gson GSON = new GsonBuilder().serializeNulls().create();
+    protected static Map<String, Object> NULL_KEY;
+
 
     protected Patch patch;
     protected ESProfile profile;
