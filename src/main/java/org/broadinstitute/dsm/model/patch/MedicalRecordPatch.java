@@ -44,7 +44,7 @@ public class MedicalRecordPatch extends BasePatch {
         NULL_KEY.put(NAME_VALUE, null);
     }
 
-    private void checkBeforePatch() {
+    private void prepare() {
         mrID = MedicalRecordUtil.isInstitutionTypeInDB(patch.getParentId());
         if (mrID == null) {
             // mr of that type doesn't exist yet, so create an institution and mr
@@ -59,7 +59,7 @@ public class MedicalRecordPatch extends BasePatch {
 
     @Override
     protected Object patchNameValuePairs() {
-        checkBeforePatch();
+        prepare();
         if (mrID == null) {
             logger.error("No medical record id for oncHistoryDetails ");
             return NULL_KEY;
@@ -70,7 +70,7 @@ public class MedicalRecordPatch extends BasePatch {
 
     @Override
     protected Object patchNameValuePair() {
-        checkBeforePatch();
+        prepare();
         Optional<Object> maybeSingleNameValue = processSingleNameValue();
         return maybeSingleNameValue.orElse(resultMap);
     }
@@ -98,4 +98,5 @@ public class MedicalRecordPatch extends BasePatch {
         }
         return Optional.empty();
     }
+
 }

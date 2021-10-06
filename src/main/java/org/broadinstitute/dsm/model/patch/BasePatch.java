@@ -55,7 +55,7 @@ public abstract class BasePatch {
 
     public BasePatch(Patch patch) {
         this.patch = patch;
-        prepareNecessaryData();
+        prepareCommonData();
     }
 
     public Object doPatch() {
@@ -70,7 +70,7 @@ public abstract class BasePatch {
 
     abstract Object handleSingleNameValue(DBElement dbElement);
 
-    private void prepareNecessaryData() {
+    private void prepareCommonData() {
         ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
         profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
                 .orElse(null);
