@@ -1,6 +1,5 @@
 package org.broadinstitute.dsm.model.patch;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.broadinstitute.dsm.db.structure.DBElement;

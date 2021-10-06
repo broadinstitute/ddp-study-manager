@@ -1,11 +1,7 @@
 package org.broadinstitute.dsm.model.patch;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
-import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.Tissue;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;

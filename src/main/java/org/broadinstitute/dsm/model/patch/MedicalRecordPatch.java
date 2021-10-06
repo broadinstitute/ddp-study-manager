@@ -1,5 +1,8 @@
 package org.broadinstitute.dsm.model.patch;
 
+import java.util.HashMap;
+import java.util.Optional;
+
 import org.broadinstitute.dsm.db.OncHistory;
 import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.db.structure.DBElement;
@@ -9,12 +12,6 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.MedicalRecordUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 public class MedicalRecordPatch extends BasePatch {
 

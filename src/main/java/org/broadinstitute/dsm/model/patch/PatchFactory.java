@@ -21,9 +21,10 @@ public class PatchFactory {
                 patcher = new TissuePatch(patch);
             } else if (isParentParticipandDataId(patch)) {
                 patcher = new ParticipantDataPatch(patch);
+            } else if (isParticipantIdForRecord(patch)) {
+                patcher = new ParticipantRecordPatch(patch);
             }
         }
-        // switch cases here
         return patcher;
     }
 
@@ -49,5 +50,9 @@ public class PatchFactory {
 
     private static boolean isParentParticipandDataId(Patch patch) {
         return Patch.PARTICIPANT_DATA_ID.equals(patch.getParent());
+    }
+
+    private static boolean isParticipantIdForRecord(Patch patch) {
+        return Patch.DDP_PARTICIPANT_ID.equals(patch.getParent());
     }
 }
