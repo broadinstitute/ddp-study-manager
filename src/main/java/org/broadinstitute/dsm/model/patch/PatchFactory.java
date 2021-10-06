@@ -17,6 +17,10 @@ public class PatchFactory {
                 } else {
                     patcher = new MedicalRecordPatch(patch);
                 }
+            } else if (isTissueRelatedOncHistoryId(patch)) {
+                patcher = new TissuePatch(patch);
+            } else if (isParentParticipandDataId(patch)) {
+                patcher = new ParticipantDataPatch(patch);
             }
         }
         // switch cases here
@@ -41,5 +45,9 @@ public class PatchFactory {
 
     private static boolean isTissueRelatedOncHistoryId(Patch patch) {
         return Patch.ONC_HISTORY_ID.equals(patch.getParent());
+    }
+
+    private static boolean isParentParticipandDataId(Patch patch) {
+        return Patch.PARTICIPANT_DATA_ID.equals(patch.getParent());
     }
 }

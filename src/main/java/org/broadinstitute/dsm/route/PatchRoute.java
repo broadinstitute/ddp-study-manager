@@ -133,156 +133,156 @@ public class PatchRoute extends RequestHandler {
 //                }
                 if (isParentWithPrimaryKey(patch)) {
                     if (isParentParticipantId(patch)) { //Abstraction, Medical Record, Onc history related tables changes
-                        if (isMedicalRecordAbstractionFieldId(patch)) { // medical record abstraction field id
-                            //abstraction related change
-                            //multiple value
-                            if (isNameValuePairs(patch)) {
-                                String primaryKeyId = null;
-                                for (NameValue nameValue : patch.getNameValues()) {
-                                    DBElement dbElement = PatchUtil.getColumnNameMap().get(nameValue.getName());
-                                    if (dbElement != null) {
-                                        if (primaryKeyId == null) {
-                                            primaryKeyId = AbstractionWrapper.createNewAbstractionFieldValue(patch.getParentId(), patch.getFieldId(), patch.getUser(), nameValue, dbElement);
-                                        }
-                                        if (!Patch.patch(primaryKeyId, patch.getUser(), nameValue, dbElement)) {
-                                            throw new RuntimeException("An error occurred while attempting to patch ");
-                                        }
-                                    }
-                                    else {
-                                        throw new RuntimeException("DBElement not found in ColumnNameMap: " + nameValue.getName());
-                                    }
-                                }
-                                Map<String, String> map = new HashMap<>();
-                                map.put(PRIMARY_KEY_ID, primaryKeyId);
-                                //return map with nulls
-                                return new Result(200, gson.toJson(map));
-                            }
-                            else {
-                                //single value
-                                DBElement dbElement = PatchUtil.getColumnNameMap().get(patch.getNameValue().getName());
-                                if (dbElement != null) {
-                                    String primaryKeyId = AbstractionWrapper.createNewAbstractionFieldValue(patch.getParentId(), patch.getFieldId(), patch.getUser(), patch.getNameValue(), dbElement);
-                                    Map<String, String> map = new HashMap<>();
-                                    map.put(PRIMARY_KEY_ID, primaryKeyId);
-                                    //return map with nulls
-                                    return new Result(200, gson.toJson(map));
-                                }
-                                else {
-                                    throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
-                                }
-                            }
-                        }
-                        else {
-                            //medical record tracking related change
-                            Number mrID = MedicalRecordUtil.isInstitutionTypeInDB(patch.getParentId());
-                            if (mrID == null) {
-                                // mr of that type doesn't exist yet, so create an institution and mr
-                                MedicalRecordUtil.writeInstitutionIntoDb(patch.getParentId(), MedicalRecordUtil.NOT_SPECIFIED);
-                                mrID = MedicalRecordUtil.isInstitutionTypeInDB(patch.getParentId());
-                            }
-                            if (mrID != null) {
-                                // a mr of that type already exits, add oncHistoryDetails to it
-                                String oncHistoryDetailId = OncHistoryDetail.createNewOncHistoryDetail(mrID.toString(), patch.getUser());
-                                List<NameValue> nameValues = null;
-                                Map<String, String> map = new HashMap<>();
-                                //facility was added
-                                if (isNameValuePairs(patch)) {
-                                    for (NameValue nameValue : patch.getNameValues()) {
-                                        DBElement dbElement = patchUtil.getColumnNameMap().get(nameValue.getName());
-                                        if (dbElement != null) {
-                                            if (!Patch.patch(oncHistoryDetailId, patch.getUser(), nameValue, dbElement)) {
-                                                throw new RuntimeException("An error occurred while attempting to patch ");
-                                            }
-                                        }
-                                        else {
-                                            throw new RuntimeException("DBElement not found in ColumnNameMap: " + nameValue.getName());
-                                        }
-                                    }
-                                }
-                                else {
-                                    DBElement dbElement = patchUtil.getColumnNameMap().get(patch.getNameValue().getName());
-                                    if (dbElement != null) {
-                                        if (Patch.patch(oncHistoryDetailId, patch.getUser(), patch.getNameValue(), dbElement)) {
-                                            nameValues = setWorkflowRelatedFields(patch);
-                                            //set oncHistoryDetails created if it is a oncHistoryDetails value without a ID, otherwise created should already be set
-                                            if (dbElement.getTableName().equals(DBConstants.DDP_ONC_HISTORY_DETAIL)) {
-                                                NameValue oncHistoryCreated = OncHistory.setOncHistoryCreated(patch.getParentId(), patch.getUser());
-                                                if (oncHistoryCreated != null && oncHistoryCreated.getValue() != null) {
-                                                    nameValues.add(oncHistoryCreated);
-                                                }
-                                            }
-                                        }
-                                    }
-                                    else {
-                                        throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
-                                    }
-                                }
-
-                                // add oncHistoryId and NameValues of objects changed by workflow to json and sent it back to UI
-                                map.put("oncHistoryDetailId", oncHistoryDetailId);
-                                nameValues.add(new NameValue("request", OncHistoryDetail.STATUS_REVIEW));
-                                map.put(NAME_VALUE, gson.toJson(nameValues));
-                                //return map with nulls
-                                return new Result(200, gson.toJson(map));
-                            }
-                            else {
-                                logger.error("No medical record id for oncHistoryDetails ");
-                            }
-                        }
+//                        if (isMedicalRecordAbstractionFieldId(patch)) { // medical record abstraction field id
+//                            //abstraction related change
+//                            //multiple value
+//                            if (isNameValuePairs(patch)) {
+//                                String primaryKeyId = null;
+//                                for (NameValue nameValue : patch.getNameValues()) {
+//                                    DBElement dbElement = PatchUtil.getColumnNameMap().get(nameValue.getName());
+//                                    if (dbElement != null) {
+//                                        if (primaryKeyId == null) {
+//                                            primaryKeyId = AbstractionWrapper.createNewAbstractionFieldValue(patch.getParentId(), patch.getFieldId(), patch.getUser(), nameValue, dbElement);
+//                                        }
+//                                        if (!Patch.patch(primaryKeyId, patch.getUser(), nameValue, dbElement)) {
+//                                            throw new RuntimeException("An error occurred while attempting to patch ");
+//                                        }
+//                                    }
+//                                    else {
+//                                        throw new RuntimeException("DBElement not found in ColumnNameMap: " + nameValue.getName());
+//                                    }
+//                                }
+//                                Map<String, String> map = new HashMap<>();
+//                                map.put(PRIMARY_KEY_ID, primaryKeyId);
+//                                //return map with nulls
+//                                return new Result(200, gson.toJson(map));
+//                            }
+//                            else {
+//                                //single value
+//                                DBElement dbElement = PatchUtil.getColumnNameMap().get(patch.getNameValue().getName());
+//                                if (dbElement != null) {
+//                                    String primaryKeyId = AbstractionWrapper.createNewAbstractionFieldValue(patch.getParentId(), patch.getFieldId(), patch.getUser(), patch.getNameValue(), dbElement);
+//                                    Map<String, String> map = new HashMap<>();
+//                                    map.put(PRIMARY_KEY_ID, primaryKeyId);
+//                                    //return map with nulls
+//                                    return new Result(200, gson.toJson(map));
+//                                }
+//                                else {
+//                                    throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
+//                                }
+//                            }
+//                        }
+//                        else {
+//                            //medical record tracking related change
+//                            Number mrID = MedicalRecordUtil.isInstitutionTypeInDB(patch.getParentId());
+//                            if (mrID == null) {
+//                                // mr of that type doesn't exist yet, so create an institution and mr
+//                                MedicalRecordUtil.writeInstitutionIntoDb(patch.getParentId(), MedicalRecordUtil.NOT_SPECIFIED);
+//                                mrID = MedicalRecordUtil.isInstitutionTypeInDB(patch.getParentId());
+//                            }
+//                            if (mrID != null) {
+//                                // a mr of that type already exits, add oncHistoryDetails to it
+//                                String oncHistoryDetailId = OncHistoryDetail.createNewOncHistoryDetail(mrID.toString(), patch.getUser());
+//                                List<NameValue> nameValues = null;
+//                                Map<String, String> map = new HashMap<>();
+//                                //facility was added
+//                                if (isNameValuePairs(patch)) {
+//                                    for (NameValue nameValue : patch.getNameValues()) {
+//                                        DBElement dbElement = patchUtil.getColumnNameMap().get(nameValue.getName());
+//                                        if (dbElement != null) {
+//                                            if (!Patch.patch(oncHistoryDetailId, patch.getUser(), nameValue, dbElement)) {
+//                                                throw new RuntimeException("An error occurred while attempting to patch ");
+//                                            }
+//                                        }
+//                                        else {
+//                                            throw new RuntimeException("DBElement not found in ColumnNameMap: " + nameValue.getName());
+//                                        }
+//                                    }
+//                                }
+//                                else {
+//                                    DBElement dbElement = patchUtil.getColumnNameMap().get(patch.getNameValue().getName());
+//                                    if (dbElement != null) {
+//                                        if (Patch.patch(oncHistoryDetailId, patch.getUser(), patch.getNameValue(), dbElement)) {
+//                                            nameValues = setWorkflowRelatedFields(patch);
+//                                            //set oncHistoryDetails created if it is a oncHistoryDetails value without a ID, otherwise created should already be set
+//                                            if (dbElement.getTableName().equals(DBConstants.DDP_ONC_HISTORY_DETAIL)) {
+//                                                NameValue oncHistoryCreated = OncHistory.setOncHistoryCreated(patch.getParentId(), patch.getUser());
+//                                                if (oncHistoryCreated != null && oncHistoryCreated.getValue() != null) {
+//                                                    nameValues.add(oncHistoryCreated);
+//                                                }
+//                                            }
+//                                        }
+//                                    }
+//                                    else {
+//                                        throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
+//                                    }
+//                                }
+//
+//                                // add oncHistoryId and NameValues of objects changed by workflow to json and sent it back to UI
+//                                map.put("oncHistoryDetailId", oncHistoryDetailId);
+//                                nameValues.add(new NameValue("request", OncHistoryDetail.STATUS_REVIEW));
+//                                map.put(NAME_VALUE, gson.toJson(nameValues));
+//                                //return map with nulls
+//                                return new Result(200, gson.toJson(map));
+//                            }
+//                            else {
+//                                logger.error("No medical record id for oncHistoryDetails ");
+//                            }
+//                        }
+//                    }
+//                    else if (isTissueRelatedOncHistoryId(patch)) {
+//                        // ddp_tissue table related change
+//                        String tissueId = Tissue.createNewTissue(patch.getParentId(), patch.getUser());
+//                        DBElement dbElement = PatchUtil.getColumnNameMap().get(patch.getNameValue().getName());
+//                        if (dbElement != null) {
+//                            if (Patch.patch(tissueId, patch.getUser(), patch.getNameValue(), dbElement)) {
+//                                List<NameValue> nameValues = setWorkflowRelatedFields(patch);
+//                                Map<String, String> map = new HashMap<>();
+//                                map.put("tissueId", tissueId);
+//                                if (!nameValues.isEmpty()) {
+//                                    map.put(NAME_VALUE, gson.toJson(nameValues));
+//                                    return new Result(200, gson.toJson(map));
+//                                }
+//                                else {
+//                                    return new Result(200, gson.toJson(map));
+//                                }
+//                            }
+//                        }
+//                        else {
+//                            throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
+//                        }
                     }
-                    else if (isTissueRelatedOncHistoryId(patch)) {
-                        // ddp_tissue table related change
-                        String tissueId = Tissue.createNewTissue(patch.getParentId(), patch.getUser());
-                        DBElement dbElement = PatchUtil.getColumnNameMap().get(patch.getNameValue().getName());
-                        if (dbElement != null) {
-                            if (Patch.patch(tissueId, patch.getUser(), patch.getNameValue(), dbElement)) {
-                                List<NameValue> nameValues = setWorkflowRelatedFields(patch);
-                                Map<String, String> map = new HashMap<>();
-                                map.put("tissueId", tissueId);
-                                if (!nameValues.isEmpty()) {
-                                    map.put(NAME_VALUE, gson.toJson(nameValues));
-                                    return new Result(200, gson.toJson(map));
-                                }
-                                else {
-                                    return new Result(200, gson.toJson(map));
-                                }
-                            }
-                        }
-                        else {
-                            throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
-                        }
-                    }
-                    else if (Patch.PARTICIPANT_DATA_ID.equals(patch.getParent())) {
-                        //ddp_participant_data table
-                        String participantDataId = null;
-                        Map<String, String> map = new HashMap<>();
-                        DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
-                        for (NameValue nameValue : patch.getNameValues()) {
-                            DBElement dbElement = patchUtil.getColumnNameMap().get(nameValue.getName());
-                            if (dbElement != null) {
-                                if (participantDataId == null) {
-                                    participantDataId = ParticipantData.createNewParticipantData(patch.getParentId(), ddpInstance.getDdpInstanceId(), patch.getFieldId(), String.valueOf(nameValue.getValue()), patch.getUser());
-                                    map.put(ESObjectConstants.PARTICIPANT_DATA_ID, participantDataId);
-                                }
-                                else if (participantDataId != null) {
-                                    Patch.patch(participantDataId, patch.getUser(), nameValue, dbElement);
-                                }
-                                if (patch.getActions() != null) {
-                                    ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getParentId())
-                                            .orElseThrow(() -> new RuntimeException("Unable to find ES profile for participant: " + patch.getParentId()));
-                                    for (Value action : patch.getActions()) {
-                                        if (hasProfileAndESWorkflowType(profile, action)) {
-                                            writeESWorkflow(patch, nameValue, action, ddpInstance, profile.getParticipantGuid());
-                                        }
-                                        else if (EventTypeDao.EVENT.equals(action.getType())) {
-                                            triggerParticipantEvent(ddpInstance, patch, action);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        return new Result(200, gson.toJson(map));
-                    }
+//                    else if (isParentParticipandDataId(patch)) {
+//                        //ddp_participant_data table
+//                        String participantDataId = null;
+//                        Map<String, String> map = new HashMap<>();
+//                        DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
+//                        for (NameValue nameValue : patch.getNameValues()) {
+//                            DBElement dbElement = patchUtil.getColumnNameMap().get(nameValue.getName());
+//                            if (dbElement != null) {
+//                                if (participantDataId == null) {
+//                                    participantDataId = ParticipantData.createNewParticipantData(patch.getParentId(), ddpInstance.getDdpInstanceId(), patch.getFieldId(), String.valueOf(nameValue.getValue()), patch.getUser());
+//                                    map.put(ESObjectConstants.PARTICIPANT_DATA_ID, participantDataId);
+//                                }
+//                                else if (participantDataId != null) {
+//                                    Patch.patch(participantDataId, patch.getUser(), nameValue, dbElement);
+//                                }
+//                                if (patch.getActions() != null) {
+//                                    ESProfile profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getParentId())
+//                                            .orElseThrow(() -> new RuntimeException("Unable to find ES profile for participant: " + patch.getParentId()));
+//                                    for (Value action : patch.getActions()) {
+//                                        if (hasProfileAndESWorkflowType(profile, action)) {
+//                                            writeESWorkflow(patch, nameValue, action, ddpInstance, profile.getParticipantGuid());
+//                                        }
+//                                        else if (EventTypeDao.EVENT.equals(action.getType())) {
+//                                            triggerParticipantEvent(ddpInstance, patch, action);
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                        }
+//                        return new Result(200, gson.toJson(map));
+//                    }
                     else if (Patch.DDP_PARTICIPANT_ID.equals(patch.getParent())) {
                         //new additional value for pt which is not in ddp_participant and ddp_participant_record table yet
                         DDPInstance ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
@@ -311,6 +311,10 @@ public class PatchRoute extends RequestHandler {
             response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
         }
+    }
+
+    private boolean isParentParticipandDataId(Patch patch) {
+        return Patch.PARTICIPANT_DATA_ID.equals(patch.getParent());
     }
 
     private boolean isTissueRelatedOncHistoryId(Patch patch) {
