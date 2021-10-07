@@ -447,6 +447,8 @@ public class DBConstants {
     public static final String STUDY_SPECIFIC_STATUSES = "study_specific_statuses";
     public static final String DEFAULT_COLUMNS = "default_columns";
     public static final String HAS_INVITATIONS = "has_invitations";
+    public static final String HAS_ADDRESS_TAB = "has_address_tab";
+    public static final String HAS_COMPUTED_OBJECT = "has_computed_object";
 
     public static final String KIT_TEST_RESULT = "test_result";
 

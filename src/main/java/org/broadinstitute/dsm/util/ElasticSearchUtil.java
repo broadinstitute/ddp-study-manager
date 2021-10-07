@@ -1517,14 +1517,40 @@ public class ElasticSearchUtil {
         String fields = getFieldsAsString(anyStudy);
         String[] fieldsArray = name.split(DOT_SEPARATOR);
         String outerField = fieldsArray[OUTER_FIELD_INDEX];
-        String innerField = fieldsArray[INNER_FIELD_INDEX];
         Gson gson = new Gson();
         HashMap fieldsMap = gson.fromJson(fields, HashMap.class);
-        HashMap propertiesMap = gson.fromJson(String.valueOf(fieldsMap.get(PROPERTIES)), HashMap.class);
-        HashMap outerFieldsMap = gson.fromJson(String.valueOf(propertiesMap.get(outerField)), HashMap.class);
-        HashMap outerFieldPropertiesMap = gson.fromJson(String.valueOf(outerFieldsMap.get(PROPERTIES)), HashMap.class);
-        HashMap innerFieldMap = gson.fromJson(String.valueOf(outerFieldPropertiesMap.get(innerField)), HashMap.class);
-        return (String) innerFieldMap.get(TYPE);
+        HashMap propertiesMap = getField(gson, fieldsMap, PROPERTIES);
+        HashMap finalField = getField(gson, propertiesMap, outerField);
+        return isFieldNested(fieldsArray)
+                ? (String) getFinalField(fieldsArray, gson, finalField).get(TYPE)
+                : (String) finalField.get(TYPE);
+    }
+
+    private static HashMap getFinalField(String[] fieldsArray, Gson gson, HashMap finalField) {
+        for (String field : Arrays.copyOfRange(fieldsArray, INNER_FIELD_INDEX, fieldsArray.length)) {
+            finalField = getFinalFieldDynamically(gson, finalField, field);
+        }
+        return finalField;
+    }
+
+    private static HashMap getFinalFieldDynamically(Gson gson, HashMap finalField, String field) {
+        return finalField.containsKey(PROPERTIES)
+                ? getPropertiesAndThenField(gson, finalField, field)
+                : getField(gson, finalField, field);
+    }
+
+    private static HashMap getField(Gson gson, HashMap finalField, String field) {
+        return gson.fromJson(String.valueOf(finalField.get(field)), HashMap.class);
+    }
+
+    private static HashMap getPropertiesAndThenField(Gson gson, HashMap finalField, String field) {
+        finalField = gson.fromJson(String.valueOf(finalField.get(PROPERTIES)), HashMap.class);
+        finalField = gson.fromJson(String.valueOf(finalField.get(field)), HashMap.class);
+        return finalField;
+    }
+
+    private static boolean isFieldNested(String[] fieldsArray) {
+        return fieldsArray.length > 1;
     }
 
     private static void rangeQueryBuilder(@NonNull BoolQueryBuilder finalQuery, @NonNull String name, long start, long end, boolean must) {

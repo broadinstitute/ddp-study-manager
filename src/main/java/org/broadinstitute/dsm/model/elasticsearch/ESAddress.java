@@ -30,6 +30,9 @@ public class ESAddress {
     @SerializedName("mailToName")
     private String recipient;
 
+    @SerializedName("valid")
+    private boolean valid;
+
     public String getStreet1() {
         return street1;
     }
@@ -61,4 +64,6 @@ public class ESAddress {
     public String getRecipient() {
         return recipient;
     }
+
+    public boolean isValid() { return valid; }
 }

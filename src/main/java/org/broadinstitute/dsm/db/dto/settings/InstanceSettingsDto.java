@@ -18,6 +18,8 @@ public class InstanceSettingsDto {
     private List<Value> defaultColumns;
     private boolean hasInvitations;
     private boolean gbfShippedTriggerDSSDelivered;
+    private boolean hasAddressTab;
+    private boolean hasComputedObject;
 
     public Optional<Integer> getInstanceSettingsId() {
         return Optional.of(instanceSettingsId);
@@ -63,6 +65,13 @@ public class InstanceSettingsDto {
         return Optional.of(gbfShippedTriggerDSSDelivered);
     }
 
+    public Optional<Boolean> hasAddressTab() {
+        return Optional.of(hasAddressTab);
+    }
+
+    public Optional<Boolean> hasComputedObject() {
+        return Optional.of(hasComputedObject);
+    }
 
 
     private InstanceSettingsDto(Builder builder) {
@@ -77,6 +86,8 @@ public class InstanceSettingsDto {
         this.defaultColumns = builder.defaultColumns;
         this.hasInvitations = builder.hasInvitations;
         this.gbfShippedTriggerDSSDelivered = builder.gbfShippedTriggerDSSDelivered;
+        this.hasAddressTab = builder.hasAddressTab;
+        this.hasComputedObject = builder.hasComputedObject;
     }
 
 
@@ -92,6 +103,8 @@ public class InstanceSettingsDto {
         public List<Value> defaultColumns;
         public boolean hasInvitations;
         public boolean gbfShippedTriggerDSSDelivered;
+        public boolean hasAddressTab;
+        public boolean hasComputedObject;
 
         public Builder withInstanceSettingsId(int instanceSettingsId) {
             this.instanceSettingsId = instanceSettingsId;
@@ -145,6 +158,16 @@ public class InstanceSettingsDto {
 
         public Builder withGbfShippedTriggerDssDelivered(boolean gbfShippedTriggerDSSDelivered) {
             this.gbfShippedTriggerDSSDelivered = gbfShippedTriggerDSSDelivered;
+            return this;
+        }
+
+        public Builder withHasAddressTab(boolean hasAddressTab) {
+            this.hasAddressTab = hasAddressTab;
+            return this;
+        }
+
+        public Builder withHasComputedObject(boolean hasComputedObject) {
+            this.hasComputedObject = hasComputedObject;
             return this;
         }
 

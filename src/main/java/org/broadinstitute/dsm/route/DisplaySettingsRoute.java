@@ -65,6 +65,7 @@ public class DisplaySettingsRoute extends RequestHandler {
             if (StringUtils.isNotBlank(realm) && instance != null && StringUtils.isNotBlank(userIdRequest)
                     && StringUtils.isNotBlank(parent) && StringUtils.isNotBlank(ddpGroupId)) {
                 Map<String, Object> displaySettings = new HashMap<>();
+                InstanceSettings instanceSettings = new InstanceSettings();
                 displaySettings.put("assignees", Assignee.getAssignees(realm));
                 displaySettings.put("fieldSettings", FieldSettings.getFieldSettings(realm));
                 displaySettings.put("drugs", Drug.getDrugList());
@@ -72,7 +73,6 @@ public class DisplaySettingsRoute extends RequestHandler {
                 displaySettings.put("activityDefinitions", ElasticSearchUtil.getActivityDefinitions(instance));
                 displaySettings.put("filters", ViewFilter.getAllFilters(userIdRequest, patchUtil.getColumnNameMap(), parent, ddpGroupId, instance.getDdpInstanceId()));
                 displaySettings.put("abstractionFields", AbstractionUtil.getFormControls(realm));
-                InstanceSettings instanceSettings = new InstanceSettings();
                 InstanceSettingsDto instanceSettingsDto = instanceSettings.getInstanceSettings(realm);
                 displaySettings.putAll(instanceSettings.getInstanceSettingsAsMap(instanceSettingsDto));
                 if (!instance.isHasRole()) {
