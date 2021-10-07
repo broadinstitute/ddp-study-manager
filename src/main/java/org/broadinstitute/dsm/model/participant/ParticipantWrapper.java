@@ -181,12 +181,8 @@ public class ParticipantWrapper {
     }
 
     private List<String> combineListWithMatchingParticipantIds(List<String> participantIdsToFetch, Set<String> list) {
-        if (participantIdsToFetch.isEmpty()) {
-            return new ArrayList<>(list);
-        }
-        else {
-            return participantIdsToFetch.stream().filter(new HashSet<>(list)::contains).collect(Collectors.toList());
-        }
+        return participantIdsToFetch.isEmpty() ?
+                new ArrayList<>(list): participantIdsToFetch.stream().filter(list::contains).collect(Collectors.toList());
     }
 
     private void fetchAndPrepareData(DDPInstance ddpInstance) {
