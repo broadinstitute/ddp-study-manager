@@ -36,7 +36,8 @@ public class PatchRoute extends RequestHandler {
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         if (PatchUtil.getColumnNameMap() == null) {
-            return new RuntimeException("ColumnNameMap is null!");
+            response.status(500);
+            throw new RuntimeException("ColumnNameMap is null!");
         }
         String userIdRequest = UserUtil.getUserId(request);
         if (UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW, userIdRequest) || UserUtil.checkUserAccess(null, userId, DBConstants.MR_ABSTRACTER, userIdRequest)
@@ -48,15 +49,17 @@ public class PatchRoute extends RequestHandler {
                 return patcher.doPatch();
             }
             catch (DuplicateException e) {
-                return new Result(500, "Duplicate value");
+                response.status(500);
+                throw new RuntimeException("Duplicate value", e);
             }
             catch (Exception e) {
+                response.status(500);
                 throw new RuntimeException("An error occurred while attempting to patch ", e);
             }
         }
         else {
-            response.status(500);
-            return new Result(500, UserErrorMessages.NO_RIGHTS);
+            response.status(403);
+            return UserErrorMessages.NO_RIGHTS;
         }
     }
 }
