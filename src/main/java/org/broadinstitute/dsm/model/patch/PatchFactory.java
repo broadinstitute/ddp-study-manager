@@ -8,9 +8,9 @@ public class PatchFactory {
 
     public static BasePatch makePatch(Patch patch, NotificationUtil notificationUtil) {
         BasePatch patcher = new NullPatch();
-        if (hasPrimaryKey(patch)) {
-            patcher = new PrimaryKeyPatch(patch, notificationUtil);
-        } else if (isParentWithPrimaryKey(patch)) {
+        if (isExistingRecord(patch)) {
+            patcher = new ExistingRecordPatch(patch, notificationUtil);
+        } else if (isParentWithExistingKey(patch)) {
             if (isParentParticipantId(patch)) {
                 if (isMedicalRecordAbstractionFieldId(patch)) {
                     patcher = new AbstractionPatch(patch);
@@ -31,11 +31,11 @@ public class PatchFactory {
         return patcher;
     }
 
-    private static boolean hasPrimaryKey(Patch patch) {
+    private static boolean isExistingRecord(Patch patch) {
         return StringUtils.isNotBlank(patch.getId());
     }
 
-    private static boolean isParentWithPrimaryKey(Patch patch) {
+    private static boolean isParentWithExistingKey(Patch patch) {
         return StringUtils.isNotBlank(patch.getParent()) && StringUtils.isNotBlank(patch.getParentId());
     }
 
