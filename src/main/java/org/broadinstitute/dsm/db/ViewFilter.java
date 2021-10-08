@@ -545,6 +545,7 @@ public class ViewFilter {
                             if (word.equals(Filter.EQUALS_TRIMMED)) { // exact match selected in the frontend
                                 exact = true;
                                 range = false;
+                                f1 = true;
                                 state = 3;
                                 break;
                             }
