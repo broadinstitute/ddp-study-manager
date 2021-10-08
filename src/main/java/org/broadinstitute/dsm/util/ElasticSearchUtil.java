@@ -985,7 +985,7 @@ public class ElasticSearchUtil {
                             if (tmpBuilder != null) {
                                 ((RangeQueryBuilder) tmpBuilder).lte(userEntered);
                             } else {
-                                finalQuery.must(QueryBuilders.rangeQuery(nameValue[0]).lte(userEntered));
+                                finalQuery.must(QueryBuilders.rangeQuery(nameValue[0].trim()).lte(userEntered));
                             }
                         } else if (nameValue[0].startsWith(DATA)) {
                             String[] dataParam = nameValue[0].split("\\.");
