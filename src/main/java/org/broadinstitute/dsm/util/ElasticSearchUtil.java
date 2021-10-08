@@ -957,7 +957,13 @@ public class ElasticSearchUtil {
                                 }
                             } else if (StringUtils.isNumeric(userEntered)) { // separately process expressions with numbers
                                 NestedQueryBuilder query = addRangeLimitForNumber(
-                                        Filter.LARGER_EQUALS, surveyParam[1].trim(), userEntered, finalQuery, queryPartsMap);
+                                        Filter.LARGER_EQUALS, surveyParam[1].trim(), userEntered, finalQuery, queryPartsMap, ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
+                                if (query != null) {
+                                    parentNestedOfRangeBuilderOfNumbers = query;
+                                }
+                            } else if (userEntered.trim().matches("\\d{4}-\\d{1,2}-\\d{1,2}")) { // separately process expressions with numbers
+                                NestedQueryBuilder query = addRangeLimitForNumber(
+                                        Filter.LARGER_EQUALS, surveyParam[1].trim(), userEntered, finalQuery, queryPartsMap, ACTIVITIES_QUESTIONS_ANSWER_DATE);
                                 if (query != null) {
                                     parentNestedOfRangeBuilderOfNumbers = query;
                                 }
@@ -1035,7 +1041,13 @@ public class ElasticSearchUtil {
                                 }
                             } else if (StringUtils.isNumeric(userEntered)) { // separately process expressions with numbers
                                 NestedQueryBuilder query = addRangeLimitForNumber(
-                                        Filter.SMALLER_EQUALS, surveyParam[1].trim(), userEntered, finalQuery, queryPartsMap);
+                                        Filter.SMALLER_EQUALS, surveyParam[1].trim(), userEntered, finalQuery, queryPartsMap, ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
+                                if (query != null) {
+                                    parentNestedOfRangeBuilderOfNumbers = query;
+                                }
+                            } else if (userEntered.trim().matches("\\d{4}-\\d{1,2}-\\d{1,2}")) { // separately process expressions with numbers
+                                NestedQueryBuilder query = addRangeLimitForNumber(
+                                        Filter.SMALLER_EQUALS, surveyParam[1].trim(), userEntered, finalQuery, queryPartsMap, ACTIVITIES_QUESTIONS_ANSWER_DATE);
                                 if (query != null) {
                                     parentNestedOfRangeBuilderOfNumbers = query;
                                 }
@@ -1188,12 +1200,13 @@ public class ElasticSearchUtil {
      *                         a same fieldName (for example related tp `SELF_CURRENT_AGE`)
      * @return NestedQueryBuilder - built query containing the numeric Range
      */
-    private static NestedQueryBuilder addRangeLimitForNumber(
+    private static NestedQueryBuilder addRangeLimitForNumber (
             String operatorType,
             String fieldName,
             String userEnteredValue,
             BoolQueryBuilder finalQuery,
-            Map<String, String> queryPartsMap) {
+            Map<String, String> queryPartsMap,
+            String questionAnswerType) {
 
         QueryBuilder tmpBuilder = findQueryBuilderForFieldName(finalQuery, fieldName, queryPartsMap);
         if (tmpBuilder != null) {
@@ -1204,7 +1217,7 @@ public class ElasticSearchUtil {
             }
         } else {
             tmpBuilder = new BoolQueryBuilder();
-            RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
+            RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(questionAnswerType);
             if (operatorType.equals(Filter.LARGER_EQUALS)) {
                 ((BoolQueryBuilder) tmpBuilder).must(rangeQueryBuilder.gte(userEnteredValue));
             } else {
@@ -1212,7 +1225,7 @@ public class ElasticSearchUtil {
             }
             NestedQueryBuilder nestedQueryBuilder = QueryBuilders.nestedQuery(ACTIVITIES, tmpBuilder, ScoreMode.Avg);
             finalQuery.must(nestedQueryBuilder);
-            queryPartsMap.put(ACTIVITIES_QUESTIONS_ANSWER_ANSWER, fieldName);
+            queryPartsMap.put(questionAnswerType, fieldName);
             return nestedQueryBuilder;
         }
         return null;
@@ -1344,7 +1357,7 @@ public class ElasticSearchUtil {
                         //set endDate to midnight of that date
                         String endDate = userEntered + END_OF_DAY;
                         long end = SystemUtil.getLongFromDetailDateString(endDate);
-                        rangeQueryBuilder(finalQuery, nameValue[0], start, end, must);
+                        rangeQueryBuilder(finalQuery, nameValue[0].trim(), start, end, must);
                     } catch (ParseException e) {
                         valueQueryBuilder(finalQuery, nameValue[0].trim(), userEntered, wildCard, must);
                     }
@@ -1358,7 +1371,7 @@ public class ElasticSearchUtil {
                     //set endDate to midnight of that date
                     String endDate = userEntered + END_OF_DAY;
                     long end = SystemUtil.getLongFromDetailDateString(endDate);
-                    rangeQueryBuilder(finalQuery, dataParam[1], start, end, must);
+                    rangeQueryBuilder(finalQuery, dataParam[1].trim(), start, end, must);
                 } catch (ParseException e) {
                     //was no date string so go for normal text
                     mustOrSearch(finalQuery, dataParam[1].trim(), userEntered, wildCard, must);
@@ -1375,7 +1388,7 @@ public class ElasticSearchUtil {
                     //set endDate to midnight of that date
                     String endDate = userEntered + END_OF_DAY;
                     long end = SystemUtil.getLongFromDetailDateString(endDate);
-                    rangeQueryBuilder(queryBuilder, INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1], start, end, must);
+                    rangeQueryBuilder(queryBuilder, INVITATIONS + DBConstants.ALIAS_DELIMITER + invitationParam[1].trim(), start, end, must);
                 } catch (Exception e) {
                     if (wildCard) {
                         if (must) {
@@ -1401,19 +1414,19 @@ public class ElasticSearchUtil {
                 BoolQueryBuilder queryBuilder = new BoolQueryBuilder();
 
                 boolean alreadyAdded = false;
-                if (CREATED_AT.equals(surveyParam[1]) || COMPLETED_AT.equals(surveyParam[1]) || LAST_UPDATED.equals(surveyParam[1])) {
+                if (CREATED_AT.equals(surveyParam[1].trim()) || COMPLETED_AT.equals(surveyParam[1].trim()) || LAST_UPDATED.equals(surveyParam[1].trim())) {
                     try {
                         //activity dates
                         long start = SystemUtil.getLongFromString(userEntered);
                         //set endDate to midnight of that date
                         String endDate = userEntered + END_OF_DAY;
                         long end = SystemUtil.getLongFromDetailDateString(endDate);
-                        rangeQueryBuilder(queryBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1], start, end, must);
+                        rangeQueryBuilder(queryBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), start, end, must);
                     } catch (ParseException e) {
                         //activity status
                         valueQueryBuilder(queryBuilder, ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered, wildCard, must);
                     }
-                } else if (STATUS.equals(surveyParam[1])) {
+                } else if (STATUS.equals(surveyParam[1].trim())) {
                     if (wildCard) {
                         if (must) {
                             queryBuilder.must(QueryBuilders.wildcardQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + surveyParam[1].trim(), userEntered + "*"));
@@ -1430,7 +1443,7 @@ public class ElasticSearchUtil {
                     }
                 } else {
                     //activity user entered
-                    activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID, surveyParam[1]));
+                    activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_STABLE_ID, surveyParam[1].trim()));
                     try {
                         SystemUtil.getLongFromString(userEntered);
                         activityAnswer.must(QueryBuilders.matchQuery(ACTIVITIES_QUESTIONS_ANSWER_DATE, userEntered));
@@ -1466,7 +1479,7 @@ public class ElasticSearchUtil {
                     }
                 }
                 if (!alreadyAdded) {
-                    queryBuilder.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + ACTIVITY_CODE, surveyParam[0]).operator(Operator.AND));
+                    queryBuilder.must(QueryBuilders.matchQuery(ACTIVITIES + DBConstants.ALIAS_DELIMITER + ACTIVITY_CODE, surveyParam[0].trim()).operator(Operator.AND));
                     NestedQueryBuilder query = QueryBuilders.nestedQuery(ACTIVITIES, queryBuilder, ScoreMode.Avg);
                     finalQuery.must(query);
                 }
