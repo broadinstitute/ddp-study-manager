@@ -25,13 +25,13 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PrimaryKeyPatch extends BasePatch {
+public class ExistingRecordPatch extends BasePatch {
 
-    private static final Logger logger = LoggerFactory.getLogger(PrimaryKeyPatch.class);
+    private static final Logger logger = LoggerFactory.getLogger(ExistingRecordPatch.class);
 
     private final NotificationUtil notificationUtil;
 
-    public PrimaryKeyPatch(Patch patch, NotificationUtil notificationUtil) {
+    public ExistingRecordPatch(Patch patch, NotificationUtil notificationUtil) {
         super(patch);
         this.notificationUtil = notificationUtil;
     }
