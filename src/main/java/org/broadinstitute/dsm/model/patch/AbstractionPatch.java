@@ -3,7 +3,6 @@ package org.broadinstitute.dsm.model.patch;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.AbstractionWrapper;
 import org.broadinstitute.dsm.model.NameValue;
-import org.broadinstitute.dsm.model.Patch;
 import spark.utils.StringUtils;
 
 import java.util.HashMap;

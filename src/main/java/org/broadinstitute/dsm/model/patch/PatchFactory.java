@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.model.patch;
 
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.model.Patch;
 import org.broadinstitute.dsm.util.NotificationUtil;
 
 public class PatchFactory {

@@ -9,7 +9,6 @@ import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantRecordDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
-import org.broadinstitute.dsm.model.Patch;
 
 public class ParticipantRecordPatch extends BasePatch {
 

@@ -8,6 +8,7 @@ import org.broadinstitute.dsm.db.AbstractionActivity;
 import org.broadinstitute.dsm.db.AbstractionFinal;
 import org.broadinstitute.dsm.db.AbstractionGroup;
 import org.broadinstitute.dsm.db.structure.DBElement;
+import org.broadinstitute.dsm.model.patch.Patch;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.AbstractionUtil;
 import org.slf4j.Logger;

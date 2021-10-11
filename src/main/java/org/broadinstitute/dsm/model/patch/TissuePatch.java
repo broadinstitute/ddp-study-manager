@@ -5,7 +5,6 @@ import java.util.Optional;
 import org.broadinstitute.dsm.db.Tissue;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
-import org.broadinstitute.dsm.model.Patch;
 
 public class TissuePatch extends BasePatch {
 
