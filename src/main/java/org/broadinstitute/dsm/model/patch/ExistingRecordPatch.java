@@ -60,9 +60,7 @@ public class ExistingRecordPatch extends BasePatch {
     @Override
     Optional<Object> processEachNameValue(NameValue nameValue, DBElement dbElement) {
         Optional<Object> maybeUpdatedNameValue = Optional.empty();
-        if (!Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement)) {
-            throw new RuntimeException("An error occurred while attempting to patch ");
-        }
+        Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement);
         if (hasQuestion(nameValue)) {
             maybeUpdatedNameValue = sendNotificationEmailAndUpdateStatus(patch, nameValue, dbElement);
         }
@@ -94,9 +92,7 @@ public class ExistingRecordPatch extends BasePatch {
             jsonObject.put("questions", questionArray);
             String str = jsonObject.toString();
             nameValue.setValue(str);
-            if (!Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement)) {
-                throw new RuntimeException("An error occurred while attempting to patch ");
-            }
+            Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement);
             maybeUpdatedNameValue = Optional.of(nameValue);
         }
         return maybeUpdatedNameValue;

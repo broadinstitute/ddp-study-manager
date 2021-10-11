@@ -151,7 +151,7 @@ public class Patch {
         return true;
     }
 
-    public static Boolean isValueUnique(@NonNull DBElement dbElement){
+        public static Boolean isValueUnique(@NonNull DBElement dbElement){
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_CHECK_UNIQUE.

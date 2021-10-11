@@ -13,17 +13,17 @@ import org.broadinstitute.dsm.util.MedicalRecordUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MedicalRecordPatch extends BasePatch {
+public class OncHistoryDetailPatch extends BasePatch {
 
     private static final String ONC_HISTORY_DETAIL_ID = "oncHistoryDetailId";
 
     private Number mrID;
     private String oncHistoryDetailId;
 
-    static final Logger logger = LoggerFactory.getLogger(MedicalRecordPatch.class);
+    static final Logger logger = LoggerFactory.getLogger(OncHistoryDetailPatch.class);
 
 
-    public MedicalRecordPatch(Patch patch) {
+    public OncHistoryDetailPatch(Patch patch) {
         super(patch);
     }
 
@@ -91,9 +91,7 @@ public class MedicalRecordPatch extends BasePatch {
 
     @Override
     Optional<Object> processEachNameValue(NameValue nameValue, DBElement dbElement) {
-        if (!Patch.patch(oncHistoryDetailId, patch.getUser(), nameValue, dbElement)) {
-            throw new RuntimeException("An error occurred while attempting to patch ");
-        }
+        Patch.patch(oncHistoryDetailId, patch.getUser(), nameValue, dbElement);
         return Optional.empty();
     }
 

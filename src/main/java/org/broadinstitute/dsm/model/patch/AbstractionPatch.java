@@ -53,9 +53,7 @@ public class AbstractionPatch extends BasePatch {
         if (StringUtils.isBlank(primaryKeyId)) {
             primaryKeyId = AbstractionWrapper.createNewAbstractionFieldValue(patch.getParentId(), patch.getFieldId(), patch.getUser(), nameValue, dbElement);
         }
-        if (!Patch.patch(primaryKeyId, patch.getUser(), nameValue, dbElement)) {
-            throw new RuntimeException("An error occurred while attempting to patch ");
-        }
+        Patch.patch(primaryKeyId, patch.getUser(), nameValue, dbElement);
         return Optional.ofNullable(primaryKeyId);
     }
 }

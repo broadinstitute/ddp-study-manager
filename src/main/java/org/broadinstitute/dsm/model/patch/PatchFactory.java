@@ -15,7 +15,7 @@ public class PatchFactory {
                 if (isMedicalRecordAbstractionFieldId(patch)) {
                     patcher = new AbstractionPatch(patch);
                 } else {
-                    patcher = new MedicalRecordPatch(patch);
+                    patcher = new OncHistoryDetailPatch(patch);
                 }
             } else if (isTissueRelatedOncHistoryId(patch)) {
                 patcher = new TissuePatch(patch);
