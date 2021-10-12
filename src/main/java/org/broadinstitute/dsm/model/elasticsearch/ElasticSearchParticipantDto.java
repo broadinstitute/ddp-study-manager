@@ -1,11 +1,11 @@
 package org.broadinstitute.dsm.model.elasticsearch;
 
+import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
 
 @Setter
 public class ElasticSearchParticipantDto {
@@ -92,6 +92,14 @@ public class ElasticSearchParticipantDto {
         this.status = builder.status;
         this.dsm = builder.dsm;
         this.computed = builder.computed;
+    }
+
+    public void getActivityQuestionAnswer(String stableId) {
+        for (ESActivities activities: this.activities){
+            for(Map<String, Object> map: activities.getQuestionsAnswers()){
+                if(map.containsKey(stableId)){}
+            }
+        }
     }
 
     public static class Builder {

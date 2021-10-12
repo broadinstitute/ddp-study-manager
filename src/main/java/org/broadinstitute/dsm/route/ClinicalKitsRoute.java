@@ -104,6 +104,8 @@ public class ClinicalKitsRoute implements Route {
     }
 
     private String getParticipantGender(ElasticSearchParticipantDto participantByShortId) {
-        return "";
+        String gender="";
+//       if (participantByShortId.getActivityQuestionAnswer("stableId"))
+        return gender;
     }
 }
