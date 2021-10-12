@@ -80,24 +80,30 @@ public class ClinicalKitsRoute implements Route {
             }
             ElasticSearchParticipantDto participantByShortId =
                     new ElasticSearch().getParticipantByShortId(ddpInstance.getParticipantIndexES(), hruid);
-            setNecessaryDataToClinicalKit(clinicalKit, participantByShortId);
+            setNecessaryParticipantDataToClinicalKit(clinicalKit, participantByShortId);
         });
         maybeKitInfo.orElseThrow();
         return clinicalKit;
 
     }
 
-    private void setNecessaryDataToClinicalKit(ClinicalKitDto clinicalKit,
-                                                ElasticSearchParticipantDto participantByShortId) {
+    private void setNecessaryParticipantDataToClinicalKit(ClinicalKitDto clinicalKit,
+                                                          ElasticSearchParticipantDto participantByShortId) {
         try {
             clinicalKit.setDateOfBirth(Objects.requireNonNull(participantByShortId).getDsm().map(ESDsm::getDateOfBirth).orElse(""));
             String firstName = participantByShortId.getProfile().map(ESProfile::getFirstName).orElse("");
             String lastName = participantByShortId.getProfile().map(ESProfile::getLastName).orElse("");
             String mailToName = firstName + " " + lastName;
             clinicalKit.setMailToName(mailToName);
-//            String gender = participantByShortId.getProfile().map(ESProfile::getHruid);
+            clinicalKit.setFirstName(firstName);
+            clinicalKit.setLastName(lastName);
+            String gender = getParticipantGender(participantByShortId);
         } catch (Exception e) {
             throw new RuntimeException("Participant doesn't exist / is not valid for kit ");
         }
+    }
+
+    private String getParticipantGender(ElasticSearchParticipantDto participantByShortId) {
+        return "";
     }
 }

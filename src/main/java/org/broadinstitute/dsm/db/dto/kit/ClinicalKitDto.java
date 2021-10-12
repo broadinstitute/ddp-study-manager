@@ -24,6 +24,12 @@ public class ClinicalKitDto {
     @SerializedName ("mail_to_name")
     String mailToName;
 
+    @SerializedName ("first_name")
+    String firstName;
+
+    @SerializedName ("last_name")
+    String lastName;
+
     @SerializedName ("date_of_birth")
     String dateOfBirth;
 
