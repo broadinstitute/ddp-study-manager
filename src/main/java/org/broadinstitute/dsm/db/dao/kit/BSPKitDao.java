@@ -111,7 +111,7 @@ public class BSPKitDao implements Dao<BSPKitDto> {
                                     rs.getString(PARTICIPANT_EXIT),
                                     rs.getString(DBConstants.DSM_DEACTIVATED_DATE),
                                     rs.getString(DBConstants.NOTIFICATION_RECIPIENT),
-                                    rs.getString(DBConstants.SAMPLE_TYPE)
+                                    rs.getString("kt."+DBConstants.KIT_TYPE_NAME)
                             );
                         }
                         if (numRows > 1) {

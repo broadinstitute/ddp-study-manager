@@ -116,7 +116,6 @@ public class BSPKit {
         String bspSampleId = maybeBspKitQueryResult.getBspSampleId();
         String bspMaterialType = maybeBspKitQueryResult.getBspMaterialType();
         String bspReceptacleType = maybeBspKitQueryResult.getBspReceptacleType();
-        String sampleType = maybeBspKitQueryResult.getSampleType();
         int bspOrganism;
         try {
             bspOrganism = Integer.parseInt(maybeBspKitQueryResult.getBspOrganism());
@@ -134,7 +133,8 @@ public class BSPKit {
                 bspSampleId,
                 bspMaterialType,
                 bspReceptacleType,
-                sampleType));
+                ddpInstance.getName(),
+                maybeBspKitQueryResult.getKitTypeName()));
 
     }
 

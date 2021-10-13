@@ -6,6 +6,10 @@ import lombok.Data;
 @Data
 public class ClinicalKitDto {
 
+    private final String NORMAL = "Normal";
+    private final String TUMOR = "Tumor";
+    private final String NA = "NA";
+
     @SerializedName ("participant_id")
     String collaboratorParticipantId;
 
@@ -42,6 +46,23 @@ public class ClinicalKitDto {
     @SerializedName("accession_number")
     String accessionNumber;
 
+    String instanceName;
+
     public ClinicalKitDto(){}
+
+    public void setSampleType(String kitType){
+        switch (kitType.toLowerCase()){
+            case "saliva":
+                this.sampleType = NORMAL;
+                break;
+            case "blood":
+                this.sampleType = NA;
+                break;
+            default: //tissue
+                this.sampleType = TUMOR;
+                break;
+        }
+
+    }
 
 }

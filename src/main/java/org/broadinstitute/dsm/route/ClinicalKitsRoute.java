@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.route;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.db.dao.kit.BSPKitDao;
 import org.broadinstitute.dsm.db.dto.kit.BSPKitDto;
 import org.broadinstitute.dsm.db.dto.kit.ClinicalKitDto;
@@ -21,8 +22,7 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public class ClinicalKitsRoute implements Route {
     private String FIRSTNAME = "firstName";
@@ -52,7 +52,6 @@ public class ClinicalKitsRoute implements Route {
             }
             return result.get();
         }
-
         return getClinicalKit(kitLabel);
     }
 
@@ -69,7 +68,8 @@ public class ClinicalKitsRoute implements Route {
             clinicalKit.setSampleId(kitInfo.getCollaboratorSampleId());
             clinicalKit.setMaterialType(kitInfo.getMaterialInfo());
             clinicalKit.setVesselType(kitInfo.getReceptacleName());
-            clinicalKit.setSampleType(kitInfo.getSampleType());
+            clinicalKit.setSampleType(kitInfo.getKitType());
+            clinicalKit.setInstanceName(kitInfo.getRealm());
             Optional<BSPKitDto> bspKitQueryResult = bspKitDao.getBSPKitQueryResult(kitLabel);
             bspKitQueryResult.orElseThrow(() -> {throw new RuntimeException("kit label was not found "+kitLabel);});
             BSPKitDto maybeBspKitQueryResult = bspKitQueryResult.get();
@@ -97,15 +97,25 @@ public class ClinicalKitsRoute implements Route {
             clinicalKit.setMailToName(mailToName);
             clinicalKit.setFirstName(firstName);
             clinicalKit.setLastName(lastName);
-            String gender = getParticipantGender(participantByShortId);
+            String gender = getParticipantGender(participantByShortId, clinicalKit.getInstanceName());
         } catch (Exception e) {
             throw new RuntimeException("Participant doesn't exist / is not valid for kit ");
         }
     }
 
-    private String getParticipantGender(ElasticSearchParticipantDto participantByShortId) {
+    private String getParticipantGender(ElasticSearchParticipantDto participantByShortId, String realm) {
         String gender="";
 //       if (participantByShortId.getActivityQuestionAnswer("stableId"))
+        List<String> list = new ArrayList();
+        list.add(participantByShortId.getParticipantId());
+        Map<String, List<OncHistoryDetail>> oncHistoryDetails = OncHistoryDetail.getOncHistoryDetailsByParticipantIds(realm, list);
+        if(!oncHistoryDetails.isEmpty()){
+            Optional<OncHistoryDetail> oncHistoryWithGender = oncHistoryDetails.get(participantByShortId.getParticipantId()).stream().filter(o -> StringUtils.isNotBlank(o.getGender())).findFirst();
+            if(oncHistoryWithGender.isPresent()){
+                gender = oncHistoryWithGender.get().getGender();
+                return gender;
+            }
+        }
         return gender;
     }
 }
