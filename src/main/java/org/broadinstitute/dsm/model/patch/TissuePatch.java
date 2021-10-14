@@ -37,7 +37,7 @@ public class TissuePatch extends BasePatch {
     }
 
     @Override
-    Object handleSingleNameValue(DBElement dbElement) {
+    Object handleSingleNameValue() {
         if (Patch.patch(tissueId, patch.getUser(), patch.getNameValue(), dbElement)) {
             nameValues = setWorkflowRelatedFields(patch);
             resultMap.put(TISSUE_ID, tissueId);
@@ -49,7 +49,7 @@ public class TissuePatch extends BasePatch {
     }
 
     @Override
-    Optional<Object> processEachNameValue(NameValue nameValue, DBElement dbElement) {
+    Optional<Object> processEachNameValue(NameValue nameValue) {
         return Optional.empty();
     }
 }

@@ -35,12 +35,12 @@ public class ParticipantDataPatch extends BasePatch {
     }
 
     @Override
-    Object handleSingleNameValue(DBElement dbElement) {
+    Object handleSingleNameValue() {
         return null;
     }
 
     @Override
-    Optional<Object> processEachNameValue(NameValue nameValue, DBElement dbElement) {
+    Optional<Object> processEachNameValue(NameValue nameValue) {
         if (participantDataId == null) {
             participantDataId = ParticipantData.createNewParticipantData(patch.getParentId(), ddpInstance.getDdpInstanceId(), patch.getFieldId(), String.valueOf(nameValue.getValue()), patch.getUser());
             resultMap.put(ESObjectConstants.PARTICIPANT_DATA_ID, participantDataId);

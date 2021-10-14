@@ -23,12 +23,12 @@ public class NullPatch extends BasePatch {
     }
 
     @Override
-    Optional<Object> processEachNameValue(NameValue nameValue, DBElement dbElement) {
+    Optional<Object> processEachNameValue(NameValue nameValue) {
         return Optional.empty();
     }
 
     @Override
-    Object handleSingleNameValue(DBElement dbElement) {
+    Object handleSingleNameValue() {
         return new Object();
     }
 }

@@ -63,14 +63,14 @@ public class ParticipantRecordPatch extends BasePatch {
     }
 
     @Override
-    Object handleSingleNameValue(DBElement dbElement) {
+    Object handleSingleNameValue() {
         Patch.patch(String.valueOf(participantId), patch.getUser(), patch.getNameValue(), dbElement);
         resultMap.put(PARTICIPANT_ID, String.valueOf(participantId));
         return resultMap;
     }
 
     @Override
-    Optional<Object> processEachNameValue(NameValue nameValue, DBElement dbElement) {
+    Optional<Object> processEachNameValue(NameValue nameValue) {
         return Optional.empty();
     }
 }

@@ -48,10 +48,10 @@ public abstract class BasePatch {
     Map<String, Object> resultMap;
     List<NameValue> nameValues;
 
-
     protected Patch patch;
     protected ESProfile profile;
     protected DDPInstance ddpInstance;
+    protected DBElement dbElement;
 
     {
         resultMap = new HashMap<>();
@@ -72,7 +72,7 @@ public abstract class BasePatch {
 
     protected abstract Object patchNameValuePair();
 
-    abstract Object handleSingleNameValue(DBElement dbElement);
+    abstract Object handleSingleNameValue();
 
     private void prepareCommonData() {
         ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
@@ -82,9 +82,9 @@ public abstract class BasePatch {
 
     Optional<Object> processSingleNameValue() {
         Optional<Object> result;
-        DBElement dbElement = PatchUtil.getColumnNameMap().get(patch.getNameValue().getName());
+        dbElement = PatchUtil.getColumnNameMap().get(patch.getNameValue().getName());
         if (dbElement != null) {
-           result = Optional.of(handleSingleNameValue(dbElement));
+           result = Optional.of(handleSingleNameValue());
         }
         else {
             throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
@@ -95,9 +95,9 @@ public abstract class BasePatch {
     List<Object> processMultipleNameValues() {
         List<Object> updatedNameValues = new ArrayList<>();
         for (NameValue nameValue : patch.getNameValues()) {
-            DBElement dbElement = PatchUtil.getColumnNameMap().get(nameValue.getName());
+            dbElement = PatchUtil.getColumnNameMap().get(nameValue.getName());
             if (dbElement != null) {
-                processEachNameValue(nameValue, dbElement).ifPresent(updatedNameValues::add);
+                processEachNameValue(nameValue).ifPresent(updatedNameValues::add);
             }
             else {
                 throw new RuntimeException("DBElement not found in ColumnNameMap: " + nameValue.getName());
@@ -106,7 +106,7 @@ public abstract class BasePatch {
         return updatedNameValues;
     }
 
-    abstract Optional<Object> processEachNameValue(NameValue nameValue, DBElement dbElement);
+    abstract Optional<Object> processEachNameValue(NameValue nameValue);
 
     protected boolean hasQuestion(NameValue nameValue) {
         return nameValue.getName().contains("question");

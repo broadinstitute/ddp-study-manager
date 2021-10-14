@@ -13,6 +13,7 @@ import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
+import org.broadinstitute.dsm.model.elastic.export.Assembler;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -24,7 +25,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ExistingRecordPatch extends BasePatch {
+public class ExistingRecordPatch extends BasePatch implements Assembler {
 
     private static final Logger logger = LoggerFactory.getLogger(ExistingRecordPatch.class);
 
@@ -57,7 +58,7 @@ public class ExistingRecordPatch extends BasePatch {
     }
 
     @Override
-    Optional<Object> processEachNameValue(NameValue nameValue, DBElement dbElement) {
+    Optional<Object> processEachNameValue(NameValue nameValue) {
         Optional<Object> maybeUpdatedNameValue = Optional.empty();
         Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement);
         if (hasQuestion(nameValue)) {
@@ -174,7 +175,7 @@ public class ExistingRecordPatch extends BasePatch {
     }
 
     @Override
-    Object handleSingleNameValue(DBElement dbElement) {
+    Object handleSingleNameValue() {
         List<NameValue> nameValues = new ArrayList<>();
         if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
             nameValues.addAll(setWorkflowRelatedFields(patch));
@@ -223,4 +224,8 @@ public class ExistingRecordPatch extends BasePatch {
         return DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(type) && ESObjectConstants.MEDICAL_RECORDS_FIELD_NAMES.contains(name);
     }
 
+    @Override
+    public Map<String, Object> generateSource(NameValue nameValue) {
+        return null;
+    }
 }
