@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.elasticsearch;
+package org.broadinstitute.dsm.model.elastic.search;
 
 import java.io.IOException;
 import java.util.ArrayList;

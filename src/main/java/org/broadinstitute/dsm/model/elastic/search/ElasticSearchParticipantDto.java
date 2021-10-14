@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.elasticsearch;
+package org.broadinstitute.dsm.model.elastic.search;
 
 import java.util.List;
 import java.util.Map;
@@ -6,6 +6,11 @@ import java.util.Optional;
 
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.model.elastic.ESActivities;
+import org.broadinstitute.dsm.model.elastic.ESAddress;
+import org.broadinstitute.dsm.model.elastic.ESComputed;
+import org.broadinstitute.dsm.model.elastic.ESDsm;
+import org.broadinstitute.dsm.model.elastic.ESProfile;
 
 @Setter
 public class ElasticSearchParticipantDto {

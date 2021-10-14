@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.elasticsearch;
+package org.broadinstitute.dsm.model.elastic;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;

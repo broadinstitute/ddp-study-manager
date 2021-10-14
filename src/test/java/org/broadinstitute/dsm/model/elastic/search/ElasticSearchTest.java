@@ -1,15 +1,14 @@
-package org.broadinstitute.dsm.model.elasticsearch;
+package org.broadinstitute.dsm.model.elastic.search;
 
 
 import java.util.Map;
 import java.util.Optional;
 
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
-import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
+import org.broadinstitute.dsm.model.elastic.ESAddress;
+import org.broadinstitute.dsm.model.elastic.ESProfile;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperTest;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class ElasticSearchTest {

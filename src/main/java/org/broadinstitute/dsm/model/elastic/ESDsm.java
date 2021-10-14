@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.elasticsearch;
+package org.broadinstitute.dsm.model.elastic;
 
 import java.util.List;
 import java.util.Map;
