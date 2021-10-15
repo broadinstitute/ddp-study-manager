@@ -10,6 +10,10 @@ public class RoutePath {
         GET, PATCH, POST, PUT
     }
 
+    public static final class GAE {
+        public static final String STOP_ENDPOINT = "/_ah/stop";
+    }
+
     public static final String REALM = "realm";
     public static final String KIT_TYPE = "kitType";
     public static final String UPLOAD_REASONS = "uploadReasons";

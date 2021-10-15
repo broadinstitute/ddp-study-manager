@@ -116,8 +116,8 @@ public class ElasticSearchUtil {
     private static Map<String, MappingMetaData> fieldMappings;
 
     static {
-        initClient();
-        fetchFieldMappings();
+            initClient();
+            fetchFieldMappings();
     }
 
     public static synchronized void initClient() {

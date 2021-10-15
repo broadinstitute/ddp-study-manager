@@ -31,6 +31,7 @@ import org.broadinstitute.ddp.security.CookieUtil;
 import org.broadinstitute.ddp.util.BasicTriggerListener;
 import org.broadinstitute.ddp.util.JsonTransformer;
 import org.broadinstitute.ddp.util.Utility;
+import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetricsTracker;
 import org.broadinstitute.dsm.careevolve.Provider;
 import org.broadinstitute.dsm.jetty.JettyConfig;
 import org.broadinstitute.dsm.jobs.*;
@@ -167,7 +168,7 @@ public class DSMServer extends BasicServer {
         logger.info("Using port {}", port);
         port(port);
 
-        registerAppEngineStartupCallback(bootTimeoutSeconds);
+        registerAppEngineStartupCallback(bootTimeoutSeconds, config);
 
         setupDB(config);
 
@@ -834,13 +835,24 @@ public class DSMServer extends BasicServer {
         return true;
     }
 
-    private static void registerAppEngineStartupCallback(long bootTimeoutSeconds) {
+    private static void registerAppEngineStartupCallback(long bootTimeoutSeconds, Config cfg) {
+        GoogleAnalyticsMetricsTracker.setConfig(cfg);
         // Block until isReady is available, with an optional timeout to prevent
         // instance for sitting around too long in a nonresponsive state.  There is a
         // judgement call to be made here to allow for lengthy liquibase migrations during boot.
         logger.info("Will wait for at most {} seconds for boot before GAE termination", bootTimeoutSeconds);
         get("/_ah/start", new ReadinessRoute(bootTimeoutSeconds));
+
+        get(RoutePath.GAE.STOP_ENDPOINT, (request, response) -> {
+            logger.info("Received GAE stop request [{}]", RoutePath.GAE.STOP_ENDPOINT);
+            //flush out any pending GA events
+            GoogleAnalyticsMetricsTracker.getInstance().flushOutMetrics();
+
+            response.status(HttpStatus.SC_OK);
+            return "";
+        });
     }
+
 
     private static class ReadinessRoute implements Route {
 
