@@ -24,6 +24,7 @@ import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
+import org.broadinstitute.dsm.model.elastic.export.Exportable;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -52,6 +53,8 @@ public abstract class BasePatch {
     protected ESProfile profile;
     protected DDPInstance ddpInstance;
     protected DBElement dbElement;
+    protected Exportable exportable;
+    
 
     {
         resultMap = new HashMap<>();
@@ -255,6 +258,10 @@ public abstract class BasePatch {
         else {
             throw new RuntimeException("DBElement not found in ColumnNameMap: " + additionalValue);
         }
+    }
+
+    public void setExportable(Exportable exportable) {
+        this.exportable = exportable;
     }
 
 }

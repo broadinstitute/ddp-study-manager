@@ -63,6 +63,8 @@ public class ExistingRecordPatch extends BasePatch implements Assembler {
         Optional<Object> maybeUpdatedNameValue = Optional.empty();
         Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement);
         Map<String, Object> elasticMapToExport = generateSource(nameValue);
+        RameClass export = ImplementorRameClass();
+        export.export(updateRequestPayload);
         if (hasQuestion(nameValue)) {
             maybeUpdatedNameValue = sendNotificationEmailAndUpdateStatus(patch, nameValue, dbElement);
         }

@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.patch;
 
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.model.elastic.export.ElasticExportAdapter;
 import org.broadinstitute.dsm.util.NotificationUtil;
 
 public class PatchFactory {
@@ -24,6 +25,7 @@ public class PatchFactory {
                 patcher = new ParticipantRecordPatch(patch);
             }
         }
+        patcher.setExportable(new ElasticExportAdapter());
         if (patcher instanceof NullPatch) {
             throw new RuntimeException("Id and parentId was null");
         }

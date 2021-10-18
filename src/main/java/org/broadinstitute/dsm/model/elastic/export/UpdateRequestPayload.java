@@ -1,13 +1,16 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
+import org.elasticsearch.action.update.UpdateRequest;
+
 import java.util.Map;
 
 public class UpdateRequestPayload {
 
+    private static final String DOC = "_doc";
+
     private String index;
     private String type;
     private String id;
-    private Map<String, Object> doc;
     private boolean docAsUpsert;
     private int retryOnConflict;
 
@@ -15,24 +18,31 @@ public class UpdateRequestPayload {
         this.index = builder.index;
         this.type = builder.type;
         this.id = builder.id;
-        this.doc = builder.doc;
         this.docAsUpsert = builder.docAsUpsert;
         this.retryOnConflict = builder.retryOnConflict;
     }
 
-    private static class Builder {
-        public String index;
-        public String type;
-        public String id;
-        public Map<String, Object> doc;
-        public boolean docAsUpsert;
-        public int retryOnConflict;
+    public UpdateRequest getUpdateRequest(Map<String, Object> data) {
+        return new UpdateRequest()
+                .index(index)
+                .type(DOC)
+                .id(id)
+                .doc(data)
+                .docAsUpsert(docAsUpsert)
+                .retryOnConflict(retryOnConflict);
+    }
 
-        public Builder(String index, String type, String id, Map<String, Object> doc) {
+    private static class Builder {
+        private String index;
+        private String type;
+        private String id;
+        private boolean docAsUpsert = true;
+        private int retryOnConflict;
+
+        public Builder(String index, String type, String id) {
             this.index = index;
             this.type = type;
             this.id = id;
-            this.doc = doc;
         }
 
         public Builder withIndex(String index) {
@@ -47,11 +57,6 @@ public class UpdateRequestPayload {
         
         public Builder withId(String id) {
             this.id = id;
-            return this;
-        }
-
-        public Builder withDoc(Map<String, Object> docToUpsert) {
-            this.doc = docToUpsert;
             return this;
         }
 
