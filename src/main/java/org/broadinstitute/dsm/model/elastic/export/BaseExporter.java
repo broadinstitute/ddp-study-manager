@@ -4,7 +4,7 @@ public abstract class BaseExporter implements Exportable {
 
     protected UpdateRequestPayload updateRequestPayload;
 
-    protected void setUpdateRequestPayload(UpdateRequestPayload updateRequestPayload) {
+    public void setUpdateRequestPayload(UpdateRequestPayload updateRequestPayload) {
         this.updateRequestPayload = updateRequestPayload;
     }
 }

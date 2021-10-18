@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
-public class ElasticExportAdapter extends BaseExporter  {
+public class ElasticExportAdapter extends BaseExporter {
 
     @Override
     public void export(Map<String, Object> data) {

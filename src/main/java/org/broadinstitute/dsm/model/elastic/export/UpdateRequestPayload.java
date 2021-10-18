@@ -32,16 +32,15 @@ public class UpdateRequestPayload {
                 .retryOnConflict(retryOnConflict);
     }
 
-    private static class Builder {
+    public static class Builder {
         private String index;
         private String type;
         private String id;
         private boolean docAsUpsert = true;
         private int retryOnConflict;
 
-        public Builder(String index, String type, String id) {
+        public Builder(String index, String id) {
             this.index = index;
-            this.type = type;
             this.id = id;
         }
 

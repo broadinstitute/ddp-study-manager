@@ -20,13 +20,12 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.NotificationUtil;
-import org.broadinstitute.dsm.util.PatchUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ExistingRecordPatch extends BasePatch implements Assembler {
+public class ExistingRecordPatch extends BasePatch {
 
     private static final Logger logger = LoggerFactory.getLogger(ExistingRecordPatch.class);
 
@@ -62,9 +61,7 @@ public class ExistingRecordPatch extends BasePatch implements Assembler {
     Optional<Object> processEachNameValue(NameValue nameValue) {
         Optional<Object> maybeUpdatedNameValue = Optional.empty();
         Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement);
-        Map<String, Object> elasticMapToExport = generateSource(nameValue);
-        RameClass export = ImplementorRameClass();
-        export.export(updateRequestPayload);
+        exportToES(nameValue);
         if (hasQuestion(nameValue)) {
             maybeUpdatedNameValue = sendNotificationEmailAndUpdateStatus(patch, nameValue, dbElement);
         }
@@ -184,6 +181,7 @@ public class ExistingRecordPatch extends BasePatch implements Assembler {
         if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
             nameValues.addAll(setWorkflowRelatedFields(patch));
             writeDSMRecordsToES();
+            exportToES(patch.getNameValue());
             //return nameValues with nulls
             return nameValues;
         }

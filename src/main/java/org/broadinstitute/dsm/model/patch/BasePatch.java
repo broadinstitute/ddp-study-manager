@@ -24,7 +24,10 @@ import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
+import org.broadinstitute.dsm.model.elastic.export.Assembler;
+import org.broadinstitute.dsm.model.elastic.export.BaseExporter;
 import org.broadinstitute.dsm.model.elastic.export.Exportable;
+import org.broadinstitute.dsm.model.elastic.export.UpdateRequestPayload;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -35,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public abstract class BasePatch {
+public abstract class BasePatch implements Assembler {
 
     static final Logger logger = LoggerFactory.getLogger(BasePatch.class);
 
@@ -53,7 +56,7 @@ public abstract class BasePatch {
     protected ESProfile profile;
     protected DDPInstance ddpInstance;
     protected DBElement dbElement;
-    protected Exportable exportable;
+    protected BaseExporter exportable;
     
 
     {
@@ -67,6 +70,16 @@ public abstract class BasePatch {
     protected BasePatch(Patch patch) {
         this.patch = patch;
         prepareCommonData();
+    }
+
+    protected void exportToES(NameValue nameValue) {
+        Map<String, Object> elasticMapToExport = generateSource(nameValue);
+        UpdateRequestPayload updateRequestPayload = new UpdateRequestPayload.Builder(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
+                .withDocAsUpsert(true)
+                .withRetryOnConflict(5)
+                .build();
+        exportable.setUpdateRequestPayload(updateRequestPayload);
+        exportable.export(elasticMapToExport);
     }
 
     public abstract Object doPatch();
@@ -260,8 +273,12 @@ public abstract class BasePatch {
         }
     }
 
-    public void setExportable(Exportable exportable) {
+    public void setExportable(BaseExporter exportable) {
         this.exportable = exportable;
     }
 
+    @Override
+    public Map<String, Object> generateSource(NameValue nameValue) {
+        return Map.of();
+    }
 }
