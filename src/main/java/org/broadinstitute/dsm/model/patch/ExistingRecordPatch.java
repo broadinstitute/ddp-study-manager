@@ -20,6 +20,7 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.NotificationUtil;
+import org.broadinstitute.dsm.util.PatchUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -61,6 +62,7 @@ public class ExistingRecordPatch extends BasePatch implements Assembler {
     Optional<Object> processEachNameValue(NameValue nameValue) {
         Optional<Object> maybeUpdatedNameValue = Optional.empty();
         Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement);
+        Map<String, Object> elasticMapToExport = generateSource(nameValue);
         if (hasQuestion(nameValue)) {
             maybeUpdatedNameValue = sendNotificationEmailAndUpdateStatus(patch, nameValue, dbElement);
         }

@@ -1,6 +1,8 @@
 package org.broadinstitute.dsm.model.patch;
 
+import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
+import org.broadinstitute.dsm.util.NotificationUtil;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -33,10 +35,25 @@ public class ExistingRecordPatchTest {
 
     @Test
     public void generateSource() {
-        ExistingRecordPatch existingRecordPatch = new ExistingRecordPatch(patch, null);
+        ExistingRecordPatch existingRecordPatch = new TestExistingRecordPatch(patch, null);
         Map<String, Object> obj = existingRecordPatch.generateSource(patch.getNameValue());
-        Assert.assertEquals("value",obj.get("field"));
+        Assert.assertEquals("value", obj.get("field"));
+        existingRecordPatch.dbElement = new DBElement("tableName", "tbA", "key", "data");
+        obj = existingRecordPatch.generateSource(patch.getNameValue());
+        Assert.assertEquals("value", ((Map<String, Object>)obj.get("data")).get("field"));
     }
 
+    private static class TestExistingRecordPatch extends ExistingRecordPatch {
+
+        public TestExistingRecordPatch(Patch patch, NotificationUtil notificationUtil) {
+            super(patch, notificationUtil);
+            dbElement = new DBElement("tableName", "tbA", "key", "field");
+        }
+
+        @Override
+        protected void prepareCommonData() {
+
+        }
+    }
 
 }

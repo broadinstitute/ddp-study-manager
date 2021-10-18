@@ -74,7 +74,7 @@ public abstract class BasePatch {
 
     abstract Object handleSingleNameValue();
 
-    private void prepareCommonData() {
+    protected void prepareCommonData() {
         ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
         profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
                 .orElse(null);
