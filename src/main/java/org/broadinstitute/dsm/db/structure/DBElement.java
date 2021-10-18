@@ -4,11 +4,14 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import lombok.Data;
 
 @Data
 public class DBElement {
+
+    public static final List<String> JSON_TYPE_COLUMNS = List.of("data", "something", "another thing");
 
     public String tableName;
     public String tableAlias;

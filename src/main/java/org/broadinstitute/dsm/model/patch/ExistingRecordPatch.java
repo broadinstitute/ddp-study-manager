@@ -226,6 +226,13 @@ public class ExistingRecordPatch extends BasePatch implements Assembler {
 
     @Override
     public Map<String, Object> generateSource(NameValue nameValue) {
-        return null;
+        Map<String, Object> result = new HashMap<>();
+        if (DBElement.JSON_TYPE_COLUMNS.contains(dbElement.getColumnName())) {
+            Map<String, Object> nestedMap = Map.of(nameValue.getName(), nameValue.getValue());
+            result.put(dbElement.getColumnName(), nestedMap);
+        } else {
+            result.put(dbElement.getColumnName(), nameValue.getValue());
+        }
+        return result;
     }
 }
