@@ -10,13 +10,15 @@ import org.junit.Assert;
 
 public class SourceGeneratorTest {
 
+    public static final String MEDICAL_RECORD_COLUMN = "medical_record_column";
+
     @Test
     public void generate() {
         Generator generator = new TestSourceGenerator();
-        NameValue nameValue = new NameValue("medical_record_column", "value");
+        NameValue nameValue = new NameValue(MEDICAL_RECORD_COLUMN, "value");
         Map<String, Object> objectMap = generator.generate(nameValue);
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), SourceGenerator.DSM_OBJECT);
-        String value = (String)((Map)((Map)objectMap.get(SourceGenerator.DSM_OBJECT)).get("medicalRecords")).get("medical_record_column");
+        String value = (String)((Map)((Map)objectMap.get(SourceGenerator.DSM_OBJECT)).get("medicalRecords")).get(MEDICAL_RECORD_COLUMN);
         Assert.assertEquals("value", value);
     }
 
@@ -31,8 +33,8 @@ public class SourceGeneratorTest {
     private static class TestPatchUtil extends PatchUtil {
 
         public static Map<String, DBElement> getColumnNameMap() {
-            DBElement dbElement = new DBElement("ddp_medical_record", "m", "pr", "medical_record_column");
-            return Map.of("medical_record_column", dbElement);
+            DBElement dbElement = new DBElement("ddp_medical_record", "m", "pr", MEDICAL_RECORD_COLUMN);
+            return Map.of(MEDICAL_RECORD_COLUMN, dbElement);
         }
 
     }
