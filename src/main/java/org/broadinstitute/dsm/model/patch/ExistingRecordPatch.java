@@ -57,7 +57,7 @@ public class ExistingRecordPatch extends BasePatch {
     }
 
     @Override
-Optional<Object> processEachNameValue(NameValue nameValue) {
+    Optional<Object> processEachNameValue(NameValue nameValue) {
         Optional<Object> maybeUpdatedNameValue = Optional.empty();
         Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement);
         exportToES(nameValue);
