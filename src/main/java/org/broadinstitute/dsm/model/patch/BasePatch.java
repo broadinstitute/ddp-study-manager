@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public abstract class BasePatch implements Generator {
+public abstract class BasePatch {
 
     static final Logger logger = LoggerFactory.getLogger(BasePatch.class);
 
@@ -56,7 +56,8 @@ public abstract class BasePatch implements Generator {
     protected DDPInstance ddpInstance;
     protected DBElement dbElement;
     protected BaseExporter exportable;
-    
+    protected Generator generator;
+
 
     {
         resultMap = new HashMap<>();
@@ -72,7 +73,7 @@ public abstract class BasePatch implements Generator {
     }
 
     protected void exportToES(NameValue nameValue) {
-        Map<String, Object> elasticMapToExport = generate(nameValue);
+        Map<String, Object> elasticMapToExport = generator.generate(nameValue);
         UpdateRequestPayload updateRequestPayload = new UpdateRequestPayload.Builder(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
                 .withDocAsUpsert(true)
                 .withRetryOnConflict(5)
@@ -276,8 +277,7 @@ public abstract class BasePatch implements Generator {
         this.exportable = exportable;
     }
 
-    @Override
-    public Map<String, Object> generate(NameValue nameValue) {
-        return Map.of();
-    }
+    public void setGenerator(Generator generator) {
+        this.generator = generator; }
+
 }

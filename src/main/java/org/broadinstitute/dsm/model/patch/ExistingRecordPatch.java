@@ -224,16 +224,4 @@ Optional<Object> processEachNameValue(NameValue nameValue) {
     private boolean isMedicalRecord(String name, String type) {
         return DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(type) && ESObjectConstants.MEDICAL_RECORDS_FIELD_NAMES.contains(name);
     }
-
-    @Override
-    public Map<String, Object> generate(NameValue nameValue) {
-        Map<String, Object> result = new HashMap<>();
-        if (DBElement.JSON_TYPE_COLUMNS.contains(dbElement.getColumnName())) {
-            Map<String, Object> nestedMap = Map.of(nameValue.getName(), nameValue.getValue());
-            result.put(dbElement.getColumnName(), nestedMap);
-        } else {
-            result.put(dbElement.getColumnName(), nameValue.getValue());
-        }
-        return result;
-    }
 }
