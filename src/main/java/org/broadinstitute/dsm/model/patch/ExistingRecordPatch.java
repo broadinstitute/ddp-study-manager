@@ -13,7 +13,6 @@ import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
-import org.broadinstitute.dsm.model.elastic.export.Assembler;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -58,7 +57,7 @@ public class ExistingRecordPatch extends BasePatch {
     }
 
     @Override
-    Optional<Object> processEachNameValue(NameValue nameValue) {
+Optional<Object> processEachNameValue(NameValue nameValue) {
         Optional<Object> maybeUpdatedNameValue = Optional.empty();
         Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement);
         exportToES(nameValue);
@@ -180,7 +179,7 @@ public class ExistingRecordPatch extends BasePatch {
         List<NameValue> nameValues = new ArrayList<>();
         if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
             nameValues.addAll(setWorkflowRelatedFields(patch));
-            writeDSMRecordsToES();
+//            writeDSMRecordsToES();
             exportToES(patch.getNameValue());
             //return nameValues with nulls
             return nameValues;
@@ -227,7 +226,7 @@ public class ExistingRecordPatch extends BasePatch {
     }
 
     @Override
-    public Map<String, Object> generateSource(NameValue nameValue) {
+    public Map<String, Object> generate(NameValue nameValue) {
         Map<String, Object> result = new HashMap<>();
         if (DBElement.JSON_TYPE_COLUMNS.contains(dbElement.getColumnName())) {
             Map<String, Object> nestedMap = Map.of(nameValue.getName(), nameValue.getValue());

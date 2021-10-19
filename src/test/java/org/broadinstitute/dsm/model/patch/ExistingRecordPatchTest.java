@@ -36,10 +36,10 @@ public class ExistingRecordPatchTest {
     @Test
     public void generateSource() {
         ExistingRecordPatch existingRecordPatch = new TestExistingRecordPatch(patch, null);
-        Map<String, Object> obj = existingRecordPatch.generateSource(patch.getNameValue());
+        Map<String, Object> obj = existingRecordPatch.generate(patch.getNameValue());
         Assert.assertEquals("value", obj.get("field"));
         existingRecordPatch.dbElement = new DBElement("tableName", "tbA", "key", "data");
-        obj = existingRecordPatch.generateSource(patch.getNameValue());
+        obj = existingRecordPatch.generate(patch.getNameValue());
         Assert.assertEquals("value", ((Map<String, Object>)obj.get("data")).get("field"));
     }
 
