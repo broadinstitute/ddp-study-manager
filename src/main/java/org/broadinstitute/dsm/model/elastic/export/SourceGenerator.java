@@ -17,12 +17,6 @@ public class SourceGenerator implements Generator {
             "oD", "oncHistoryDetailRecords"
     );
 
-    private PatchUtil patchUtil;
-
-    public SourceGenerator(PatchUtil patchUtil) {
-        this.patchUtil = patchUtil;
-    }
-
     /*
            "r", "unknown",
             "p", "unknown"
@@ -30,7 +24,7 @@ public class SourceGenerator implements Generator {
 
     @Override
     public Map<String, Object> generate(NameValue nameValue) {
-        DBElement dbElement = patchUtil.getColumnNameMap().get(Objects.requireNonNull(nameValue).getName());
+        DBElement dbElement = getDBElement(nameValue);
 
         Map<String, Object> result = new HashMap<>();
         String objectKey = TABLE_ALIAS_MAPPINGS.get(dbElement.getTableAlias());
@@ -43,5 +37,9 @@ public class SourceGenerator implements Generator {
         }
 
         return Map.of(DSM_OBJECT, result);
+    }
+
+    protected DBElement getDBElement(NameValue nameValue) {
+        return PatchUtil.getColumnNameMap().get(Objects.requireNonNull(nameValue).getName());
     }
 }

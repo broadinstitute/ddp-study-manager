@@ -12,7 +12,7 @@ public class SourceGeneratorTest {
 
     @Test
     public void generate() {
-        Generator generator = new SourceGenerator(new TestPatchUtil());
+        Generator generator = new TestSourceGenerator();
         NameValue nameValue = new NameValue("medical_record_column", "value");
         Map<String, Object> objectMap = generator.generate(nameValue);
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), SourceGenerator.DSM_OBJECT);
@@ -20,6 +20,12 @@ public class SourceGeneratorTest {
         Assert.assertEquals("value", value);
     }
 
+    private static class TestSourceGenerator extends SourceGenerator {
 
+        @Override
+        protected DBElement getDBElement(NameValue nameValue) {
+            return TestPatchUtil.getColumnNameMap().get(nameValue.getName());
+        }
+    }
 }
 
