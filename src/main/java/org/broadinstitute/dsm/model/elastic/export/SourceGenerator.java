@@ -26,7 +26,7 @@ public class SourceGenerator implements Generator {
 
     @Override
     public Map<String, Object> generate(NameValue nameValue) {
-        initializeNecessaryFields(nameValue);
+        initializeNecessaryFields(Objects.requireNonNull(nameValue));
         Map<String, Object> mapToExport = collectExportData();
         return Map.of(DSM_OBJECT, mapToExport);
     }
