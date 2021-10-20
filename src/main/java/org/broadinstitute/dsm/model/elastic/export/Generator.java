@@ -4,6 +4,6 @@ import java.util.Map;
 
 import org.broadinstitute.dsm.model.NameValue;
 
-public interface ValueGenerator {
+public interface Generator {
     Map<String, Object> generate(NameValue nameValue);
 }
