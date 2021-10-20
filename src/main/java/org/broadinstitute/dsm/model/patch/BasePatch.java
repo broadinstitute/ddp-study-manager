@@ -24,9 +24,7 @@ import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
-import org.broadinstitute.dsm.model.elastic.export.Generator;
-import org.broadinstitute.dsm.model.elastic.export.BaseExporter;
-import org.broadinstitute.dsm.model.elastic.export.UpsertDataRequestPayload;
+import org.broadinstitute.dsm.model.elastic.export.*;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -78,6 +76,9 @@ public abstract class BasePatch {
                 .withDocAsUpsert(true)
                 .withRetryOnConflict(5)
                 .build();
+        UpsertMappingRequestPayload upsertMappingRequestPayload = new UpsertMappingRequestPayload(ddpInstance.getParticipantIndexES());
+        exportable.setUpsertMappingRequestPayload(upsertMappingRequestPayload);
+        exportable.exportMapping();
         exportable.setUpdateRequestPayload(upsertDataRequestPayload);
         exportable.exportData(elasticMapToExport);
     }

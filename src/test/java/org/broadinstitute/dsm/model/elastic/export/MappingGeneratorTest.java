@@ -4,15 +4,22 @@ package org.broadinstitute.dsm.model.elastic.export;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Map;
 
 public class MappingGeneratorTest {
 
+    static Generator generator;
+
+    @BeforeClass
+    public static void setUp() {
+        generator = new TestMappingGenerator(new TypeParser());
+    }
+
     @Test
     public void generateTextType() {
-        Generator generator = new TestMappingGenerator();
         NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "value");
         Map<String, Object> objectMap = generator.generate(nameValue);
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
@@ -22,7 +29,6 @@ public class MappingGeneratorTest {
 
     @Test
     public void generateBooleanType() {
-        Generator generator = new TestMappingGenerator();
         NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "true");
         Map<String, Object> objectMap = generator.generate(nameValue);
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
@@ -32,7 +38,6 @@ public class MappingGeneratorTest {
 
     @Test
     public void generateIntegerType() {
-        Generator generator = new TestMappingGenerator();
         NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "45");
         Map<String, Object> objectMap = generator.generate(nameValue);
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
@@ -42,7 +47,6 @@ public class MappingGeneratorTest {
 
     @Test
     public void generateDateType() {
-        Generator generator = new TestMappingGenerator();
         NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "2021-10-30");
         Map<String, Object> objectMap = generator.generate(nameValue);
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
@@ -68,6 +72,10 @@ public class MappingGeneratorTest {
     }
 
     private static class TestMappingGenerator extends MappingGenerator {
+
+        public TestMappingGenerator(Parser typeParser) {
+            super(typeParser);
+        }
 
         @Override
         protected DBElement getDBElement() {
