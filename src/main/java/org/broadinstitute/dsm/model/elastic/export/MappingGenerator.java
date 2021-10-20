@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -26,7 +25,7 @@ public class MappingGenerator extends BaseGenerator {
             type = "integer";
         } else if (isBoolean(value)) {
             type = "boolean";
-        } else if (isDateTime(value)) {
+        } else if (isDateOrTimeOrDateTime(value)) {
             type = "date";
         }
 
@@ -38,11 +37,31 @@ public class MappingGenerator extends BaseGenerator {
         return Map.of(PROPERTIES, dsmLevel);
     }
 
+    private boolean isDateOrTimeOrDateTime(String value) {
+        return isDate(value) || isTime(value) || isDateTime(value);
+    }
+
     private boolean isDateTime(String value) {
         try {
-            LocalDate.parse(value);
-            LocalTime.parse(value);
             LocalDateTime.parse(value);
+        } catch (DateTimeParseException dtpe) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isTime(String value) {
+        try {
+            LocalTime.parse(value);
+        } catch (DateTimeParseException dtpe) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isDate(String value) {
+        try {
+            LocalDate.parse(value);
         } catch (DateTimeParseException dtpe) {
             return false;
         }

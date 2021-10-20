@@ -11,16 +11,60 @@ import java.util.Map;
 public class MappingGeneratorTest {
 
     @Test
-    public void generate() {
+    public void generateTextType() {
         Generator generator = new TestMappingGenerator();
         NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "value");
         Map<String, Object> objectMap = generator.generate(nameValue);
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
-        ((Map) ((Map)((Map) ((Map)((Map) objectMap.get(BaseGenerator.PROPERTIES)).get(BaseGenerator.DSM_OBJECT)).get(BaseGenerator.PROPERTIES)).get("medicalRecords")).get(BaseGenerator.PROPERTIES)).get();
-        String value = (String)((Map)((Map)objectMap.get(SourceGenerator.DSM_OBJECT)).get("medicalRecords")).get(TestPatchUtil.MEDICAL_RECORD_COLUMN);
-        Assert.assertEquals("value", value);
+        String type = extractDeepestLeveleValue(objectMap);
+        Assert.assertEquals("text", type);
+    }
 
+    @Test
+    public void generateBooleanType() {
+        Generator generator = new TestMappingGenerator();
+        NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "true");
+        Map<String, Object> objectMap = generator.generate(nameValue);
+        Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
+        String type = extractDeepestLeveleValue(objectMap);
+        Assert.assertEquals("boolean", type);
+    }
 
+    @Test
+    public void generateIntegerType() {
+        Generator generator = new TestMappingGenerator();
+        NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "45");
+        Map<String, Object> objectMap = generator.generate(nameValue);
+        Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
+        String type = extractDeepestLeveleValue(objectMap);
+        Assert.assertEquals("integer", type);
+    }
+
+    @Test
+    public void generateDateType() {
+        Generator generator = new TestMappingGenerator();
+        NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "2021-10-30");
+        Map<String, Object> objectMap = generator.generate(nameValue);
+        Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
+        String type = extractDeepestLeveleValue(objectMap);
+        Assert.assertEquals("date", type);
+    }
+
+    private String extractDeepestLeveleValue(Map<String, Object> objectMap) {
+        return (String)
+                ((Map)
+                ((Map)
+                ((Map)
+                ((Map)
+                ((Map)
+                ((Map) objectMap
+                        .get(BaseGenerator.PROPERTIES))
+                        .get(BaseGenerator.DSM_OBJECT))
+                        .get(BaseGenerator.PROPERTIES))
+                        .get("medicalRecords"))
+                        .get(BaseGenerator.PROPERTIES))
+                        .get("medical_record_column"))
+                        .get("type");
     }
 
     private static class TestMappingGenerator extends MappingGenerator {
