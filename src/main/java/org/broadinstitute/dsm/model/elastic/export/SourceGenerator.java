@@ -1,7 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.util.PatchUtil;
@@ -21,25 +21,35 @@ public class SourceGenerator implements Generator {
             "p", "participant",
             "d", "participant"
     );
+    protected NameValue nameValue;
+    protected DBElement dbElement;
 
     @Override
     public Map<String, Object> generate(NameValue nameValue) {
-        DBElement dbElement = getDBElement(nameValue);
-
-        Map<String, Object> result = new HashMap<>();
-        String objectKey = TABLE_ALIAS_MAPPINGS.get(dbElement.getTableAlias());
-        result.put(objectKey, Map.of(dbElement.getColumnName(), nameValue.getValue()));
-        Map map = new Gson().fromJson((String) nameValue.getValue(), Map.class);
-//        if (DBElement.JSON_TYPE_COLUMNS.contains(dbElement.getColumnName())) {
-//            Map<String, Object> nestedMap = Map.of(nameValue.getName(), nameValue.getValue());
-//            result.put(objectKey, Map.of(dbElement.getColumnName(), nestedMap));
-//        } else {
-//        }
-
-        return Map.of(DSM_OBJECT, result);
+        initializeNecessaryFields(nameValue);
+        Map<String, Object> mapToExport = collectExportData();
+        return Map.of(DSM_OBJECT, mapToExport);
     }
 
-    protected DBElement getDBElement(NameValue nameValue) {
+    protected void initializeNecessaryFields(NameValue nameValue) {
+        this.nameValue = nameValue;
+        dbElement = getDBElement();
+    }
+
+    protected Map<String, Object> collectExportData() {
+        Map<String, Object> result = new HashMap<>();
+        String objectKey = TABLE_ALIAS_MAPPINGS.get(dbElement.getTableAlias());
+        Map dynamicFieldValues;
+        try {
+            dynamicFieldValues = new Gson().fromJson((String) nameValue.getValue(), Map.class);
+            result.put(objectKey, dynamicFieldValues);
+        } catch (JsonSyntaxException jse) {
+            result.put(objectKey, Map.of(dbElement.getColumnName(), nameValue.getValue()));
+        }
+        return result;
+    }
+
+    protected DBElement getDBElement() {
         return PatchUtil.getColumnNameMap().get(Objects.requireNonNull(nameValue).getName());
     }
 }

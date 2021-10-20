@@ -25,7 +25,7 @@ public class SourceGeneratorTest {
     private static class TestSourceGenerator extends SourceGenerator {
 
         @Override
-        protected DBElement getDBElement(NameValue nameValue) {
+        protected DBElement getDBElement() {
             return TestPatchUtil.getColumnNameMap().get(nameValue.getName());
         }
     }
