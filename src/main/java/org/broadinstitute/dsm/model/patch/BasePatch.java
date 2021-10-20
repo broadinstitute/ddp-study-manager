@@ -53,8 +53,6 @@ public abstract class BasePatch {
     protected ESProfile profile;
     protected DDPInstance ddpInstance;
     protected DBElement dbElement;
-    protected BaseExporter exportable;
-    protected Generator generator;
 
 
     {
@@ -71,16 +69,10 @@ public abstract class BasePatch {
     }
 
     protected void exportToES(NameValue nameValue) {
-        Map<String, Object> elasticMapToExport = generator.generate(nameValue);
-        UpsertDataRequestPayload upsertDataRequestPayload = new UpsertDataRequestPayload.Builder(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
-                .withDocAsUpsert(true)
-                .withRetryOnConflict(5)
-                .build();
-        UpsertMappingRequestPayload upsertMappingRequestPayload = new UpsertMappingRequestPayload(ddpInstance.getParticipantIndexES());
-        exportable.setUpsertMappingRequestPayload(upsertMappingRequestPayload);
-        exportable.exportMapping();
-        exportable.setUpdateRequestPayload(upsertDataRequestPayload);
-        exportable.exportData(elasticMapToExport);
+        ExportFacadePayload exportFacadePayload =
+                new ExportFacadePayload(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId(), nameValue);
+        ExportFacade exportFacade = new ExportFacade(exportFacadePayload);
+        exportFacade.export();
     }
 
     public abstract Object doPatch();
@@ -273,12 +265,5 @@ public abstract class BasePatch {
             throw new RuntimeException("DBElement not found in ColumnNameMap: " + additionalValue);
         }
     }
-
-    public void setExportable(BaseExporter exportable) {
-        this.exportable = exportable;
-    }
-
-    public void setGenerator(Generator generator) {
-        this.generator = generator; }
 
 }

@@ -28,7 +28,6 @@ public class PatchFactory {
                 patcher = new ParticipantRecordPatch(patch);
             }
         }
-        patcher.setExportable(new ElasticExportAdapter());
         if (patcher instanceof NullPatch) {
             throw new RuntimeException("Id and parentId was null");
         }
