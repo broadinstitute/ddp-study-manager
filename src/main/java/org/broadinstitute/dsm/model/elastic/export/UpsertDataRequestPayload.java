@@ -4,7 +4,7 @@ import org.elasticsearch.action.update.UpdateRequest;
 
 import java.util.Map;
 
-public class UpdateRequestPayload {
+public class UpsertDataRequestPayload {
 
     private static final String DOC = "_doc";
 
@@ -14,7 +14,7 @@ public class UpdateRequestPayload {
     private boolean docAsUpsert;
     private int retryOnConflict;
 
-    private UpdateRequestPayload(Builder builder) {
+    private UpsertDataRequestPayload(Builder builder) {
         this.index = builder.index;
         this.type = builder.type;
         this.id = builder.id;
@@ -69,8 +69,8 @@ public class UpdateRequestPayload {
             return this;
         }
 
-        public UpdateRequestPayload build() {
-            return new UpdateRequestPayload(this);
+        public UpsertDataRequestPayload build() {
+            return new UpsertDataRequestPayload(this);
         }
 
 

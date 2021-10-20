@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class SourceGenerator implements Generator {
+public class SourceGenerator implements ValueGenerator {
 
     public static final String DSM_OBJECT = "dsm";
     public static final Map<String, String> TABLE_ALIAS_MAPPINGS = Map.of(

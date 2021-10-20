@@ -24,9 +24,9 @@ import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
-import org.broadinstitute.dsm.model.elastic.export.Generator;
+import org.broadinstitute.dsm.model.elastic.export.ValueGenerator;
 import org.broadinstitute.dsm.model.elastic.export.BaseExporter;
-import org.broadinstitute.dsm.model.elastic.export.UpdateRequestPayload;
+import org.broadinstitute.dsm.model.elastic.export.UpsertDataRequestPayload;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -56,7 +56,7 @@ public abstract class BasePatch {
     protected DDPInstance ddpInstance;
     protected DBElement dbElement;
     protected BaseExporter exportable;
-    protected Generator generator;
+    protected ValueGenerator generator;
 
 
     {
@@ -74,12 +74,12 @@ public abstract class BasePatch {
 
     protected void exportToES(NameValue nameValue) {
         Map<String, Object> elasticMapToExport = generator.generate(nameValue);
-        UpdateRequestPayload updateRequestPayload = new UpdateRequestPayload.Builder(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
+        UpsertDataRequestPayload upsertDataRequestPayload = new UpsertDataRequestPayload.Builder(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
                 .withDocAsUpsert(true)
                 .withRetryOnConflict(5)
                 .build();
-        exportable.setUpdateRequestPayload(updateRequestPayload);
-        exportable.export(elasticMapToExport);
+        exportable.setUpdateRequestPayload(upsertDataRequestPayload);
+        exportable.exportData(elasticMapToExport);
     }
 
     public abstract Object doPatch();
@@ -277,7 +277,7 @@ public abstract class BasePatch {
         this.exportable = exportable;
     }
 
-    public void setGenerator(Generator generator) {
+    public void setGenerator(ValueGenerator generator) {
         this.generator = generator; }
 
 }

@@ -1,10 +1,15 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.elasticsearch.client.RestHighLevelClient;
+
 public abstract class BaseExporter implements Exportable {
 
-    protected UpdateRequestPayload updateRequestPayload;
+    protected RestHighLevelClient clientInstance = ElasticSearchUtil.getClientInstance();
 
-    public void setUpdateRequestPayload(UpdateRequestPayload updateRequestPayload) {
-        this.updateRequestPayload = updateRequestPayload;
+    protected UpsertDataRequestPayload upsertDataRequestPayload;
+
+    public void setUpdateRequestPayload(UpsertDataRequestPayload upsertDataRequestPayload) {
+        this.upsertDataRequestPayload = upsertDataRequestPayload;
     }
 }

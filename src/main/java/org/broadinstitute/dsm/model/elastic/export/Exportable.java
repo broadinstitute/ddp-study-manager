@@ -4,6 +4,7 @@ import java.util.Map;
 
 public interface Exportable {
 
-    void export(Map<String, Object> data);
+    void exportData(Map<String, Object> data);
 
+    void exportMapping(Map<String, Object> mapping);
 }

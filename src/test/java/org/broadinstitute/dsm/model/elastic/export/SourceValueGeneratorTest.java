@@ -8,13 +8,13 @@ import org.broadinstitute.dsm.util.PatchUtil;
 import org.junit.Test;
 import org.junit.Assert;
 
-public class SourceGeneratorTest {
+public class SourceValueGeneratorTest {
 
     public static final String MEDICAL_RECORD_COLUMN = "medical_record_column";
 
     @Test
     public void generate() {
-        Generator generator = new TestSourceGenerator();
+        ValueGenerator generator = new TestSourceGenerator();
         NameValue nameValue = new NameValue(MEDICAL_RECORD_COLUMN, "value");
         Map<String, Object> objectMap = generator.generate(nameValue);
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), SourceGenerator.DSM_OBJECT);
