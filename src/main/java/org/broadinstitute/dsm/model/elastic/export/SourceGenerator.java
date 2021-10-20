@@ -2,38 +2,19 @@ package org.broadinstitute.dsm.model.elastic.export;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
-import org.broadinstitute.dsm.util.PatchUtil;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class SourceGenerator implements Generator {
-
-    public static final String DSM_OBJECT = "dsm";
-    public static final Map<String, String> TABLE_ALIAS_MAPPINGS = Map.of(
-            "m", "medicalRecords",
-            "t", "tissueRecords",
-            "oD", "oncHistoryDetailRecords",
-            "r", "participant",
-            "p", "participant",
-            "d", "participant"
-    );
-    protected NameValue nameValue;
-    protected DBElement dbElement;
+public class SourceGenerator extends BaseGenerator {
 
     @Override
     public Map<String, Object> generate(NameValue nameValue) {
         initializeNecessaryFields(Objects.requireNonNull(nameValue));
         Map<String, Object> mapToExport = collectExportData();
         return Map.of(DSM_OBJECT, mapToExport);
-    }
-
-    protected void initializeNecessaryFields(NameValue nameValue) {
-        this.nameValue = nameValue;
-        dbElement = getDBElement();
     }
 
     protected Map<String, Object> collectExportData() {
@@ -49,7 +30,4 @@ public class SourceGenerator implements Generator {
         return result;
     }
 
-    protected DBElement getDBElement() {
-        return PatchUtil.getColumnNameMap().get(Objects.requireNonNull(nameValue).getName());
-    }
 }

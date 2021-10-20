@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.model.patch;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.elastic.export.ElasticExportAdapter;
+import org.broadinstitute.dsm.model.elastic.export.MappingGenerator;
 import org.broadinstitute.dsm.model.elastic.export.SourceGenerator;
 import org.broadinstitute.dsm.util.NotificationUtil;
 
@@ -28,6 +29,7 @@ public class PatchFactory {
         }
         patcher.setExportable(new ElasticExportAdapter());
         patcher.setGenerator(new SourceGenerator());
+        patcher.setGenerator(new MappingGenerator());
         if (patcher instanceof NullPatch) {
             throw new RuntimeException("Id and parentId was null");
         }
