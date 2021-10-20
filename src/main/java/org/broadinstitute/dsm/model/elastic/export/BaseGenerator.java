@@ -11,6 +11,7 @@ public abstract class BaseGenerator implements Generator {
 
 
     public static final String DSM_OBJECT = "dsm";
+    public static final String PROPERTIES = "properties";
     public static final Map<String, String> TABLE_ALIAS_MAPPINGS = Map.of(
             "m", "medicalRecords",
             "t", "tissueRecords",

@@ -7,7 +7,6 @@ import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Predicate;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.NameValue;
@@ -31,17 +30,12 @@ public class MappingGenerator extends BaseGenerator {
             type = "date";
         }
 
-        //properties.dsm.properties.medicalRecords -> {"type": "boolean"}
-        Map<String, Object> jsonMap = new HashMap<>();
-        Map<String, Object> message = new HashMap<>();
-        message.put("type", type);
-        Map<String, Object> properties = new HashMap<>();
-        properties.put("message", message);
-        jsonMap.put("properties", properties);
-        // Date, time, datetime
-
-
-        return null;
+        Map<String, Object> fieldType = Map.of("type", type);
+        Map<String, Map<String, Map<String, Object>>> mappedField = Map.of(PROPERTIES, Map.of(dbElement.getColumnName(), fieldType));
+        Map<String, Map<String, Map<String, Map<String, Object>>>> dsmLevelProperty = Map.of(property, mappedField);
+        Map<String, Object> dsmLevelProperties = Map.of(PROPERTIES, dsmLevelProperty);
+        Map<String, Map<String, Object>> dsmLevel = Map.of(DSM_OBJECT, dsmLevelProperties);
+        return Map.of(PROPERTIES, dsmLevel);
     }
 
     private boolean isDateTime(String value) {
