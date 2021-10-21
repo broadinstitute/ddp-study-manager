@@ -19,6 +19,16 @@ public class SourceGeneratorTest {
         Assert.assertEquals("value", value);
     }
 
+    @Test
+    public void generateNumeric() {
+        Generator generator = new TestSourceGenerator(new ValueParser());
+        NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "1");
+        Map<String, Object> objectMap = generator.generate(nameValue);
+        Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), SourceGenerator.DSM_OBJECT);
+        Object value = ((Map)((Map)objectMap.get(SourceGenerator.DSM_OBJECT)).get("medicalRecords")).get(TestPatchUtil.MEDICAL_RECORD_COLUMN);
+        Assert.assertEquals(1L, value);
+    }
+
     private static class TestSourceGenerator extends SourceGenerator {
 
         public TestSourceGenerator(Parser parser) {

@@ -26,16 +26,15 @@ public class SourceGenerator extends BaseGenerator {
     protected Map<String, Object> collectExportData() {
         Map<String, Object> result = new HashMap<>();
         String objectKey = TABLE_ALIAS_MAPPINGS.get(dbElement.getTableAlias());
-        Map<String, Object> dynamicFieldValues;
         try {
-            dynamicFieldValues = new Gson().fromJson((String) nameValue.getValue(), Map.class);
+            Map<String, Object> dynamicFieldValues = new Gson().fromJson((String) nameValue.getValue(), Map.class);
             Map<String, Object> transformedMap = new HashMap<>();
             for (Map.Entry<String, Object> entry: dynamicFieldValues.entrySet()) {
                 transformedMap.put(entry.getKey(), parser.parse((String) entry.getValue()));
             }
-            result.put(objectKey, dynamicFieldValues);
+            result.put(objectKey, transformedMap);
         } catch (JsonSyntaxException jse) {
-            result.put(objectKey, Map.of(dbElement.getColumnName(), nameValue.getValue()));
+            result.put(objectKey, Map.of(dbElement.getColumnName(), parser.parse((String) nameValue.getValue())));
         }
         return result;
     }
