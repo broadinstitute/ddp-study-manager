@@ -10,6 +10,7 @@ public class MappingGenerator extends BaseGenerator {
 
 
     public static final String TYPE = "type";
+    public static final String NESTED = "nested";
 
     public MappingGenerator(Parser parser) {
         super(parser);
@@ -17,15 +18,28 @@ public class MappingGenerator extends BaseGenerator {
 
 
     @Override
-    public Map<String, Object> generate(NameValue nameValue) {
+    public Map<String, Object> generate() {
         initializeNecessaryFields(Objects.requireNonNull(nameValue));
-        String property = getOuterPropertyByAlias();
-        Map<String, Object> field = collect();
-        Map<String, Object> mappedField = Map.of(PROPERTIES, field);
-        Map<String, Object> dsmLevelProperty = Map.of(property, mappedField);
+        PropertyInfo propertyInfo = getOuterPropertyByAlias();
+        String propertyName = propertyInfo.getPropertyName();
+        Map<String, Object> mappedField = buildMappedField();
+        Map<String, Object> dsmLevelProperty = Map.of(propertyName, mappedField);
         Map<String, Object> dsmLevelProperties = Map.of(PROPERTIES, dsmLevelProperty);
         Map<String, Map<String, Object>> dsmLevel = Map.of(DSM_OBJECT, dsmLevelProperties);
         return Map.of(PROPERTIES, dsmLevel);
+    }
+
+    private Map<String, Object> buildMappedField() {
+        PropertyInfo propertyInfo = getOuterPropertyByAlias();
+        boolean isPropertyCollection = propertyInfo.isCollection();
+        Map<String, Object> field = collect();
+        Map<String, Object> mappedField;
+        if (isPropertyCollection) {
+            mappedField = Map.of(TYPE, NESTED, PROPERTIES, field);
+        } else {
+            mappedField = Map.of(PROPERTIES, field);
+        }
+        return mappedField;
     }
 
     @Override
