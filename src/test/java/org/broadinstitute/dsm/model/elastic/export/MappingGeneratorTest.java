@@ -42,7 +42,7 @@ public class MappingGeneratorTest {
         Map<String, Object> objectMap = generator.generate(nameValue);
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
         String type = extractDeepestLeveleValue(objectMap);
-        Assert.assertEquals("integer", type);
+        Assert.assertEquals("long", type);
     }
 
     @Test
