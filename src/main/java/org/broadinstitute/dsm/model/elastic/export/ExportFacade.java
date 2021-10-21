@@ -20,6 +20,7 @@ public class ExportFacade {
     }
 
     private void upsertMapping() {
+        generator = new MappingGenerator(new TypeParser());
         Map<String, Object> mappingToUpsert = generator.generate(exportFacadePayload.getNameValue());
         UpsertMappingRequestPayload upsertMappingRequestPayload = new UpsertMappingRequestPayload(exportFacadePayload.getIndex());
         exportable.setUpsertMappingRequestPayload(upsertMappingRequestPayload);
@@ -27,7 +28,7 @@ public class ExportFacade {
     }
 
     private void upsertData() {
-        generator = new SourceGenerator();
+        generator = new SourceGenerator(new ValueParser());
         Map<String, Object> elasticDataToExport = generator.generate(exportFacadePayload.getNameValue());
         UpsertDataRequestPayload upsertDataRequestPayload = new UpsertDataRequestPayload.Builder(exportFacadePayload.getIndex(),
                 exportFacadePayload.getId())

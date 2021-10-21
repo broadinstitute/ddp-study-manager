@@ -11,7 +11,7 @@ public class SourceGeneratorTest {
 
     @Test
     public void generate() {
-        Generator generator = new TestSourceGenerator();
+        Generator generator = new TestSourceGenerator(new ValueParser());
         NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "value");
         Map<String, Object> objectMap = generator.generate(nameValue);
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), SourceGenerator.DSM_OBJECT);
@@ -20,6 +20,10 @@ public class SourceGeneratorTest {
     }
 
     private static class TestSourceGenerator extends SourceGenerator {
+
+        public TestSourceGenerator(Parser parser) {
+            super(parser);
+        }
 
         @Override
         protected DBElement getDBElement() {
