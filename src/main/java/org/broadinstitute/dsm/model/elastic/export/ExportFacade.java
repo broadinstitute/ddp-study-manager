@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.model.elastic.export;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -44,20 +45,19 @@ public class ExportFacade {
         ElasticSearchParticipantDto participantById = searchable.getParticipantById(exportFacadePayload.getIndex(), exportFacadePayload.getDocId());
         DBElement dbElement = PatchUtil.getColumnNameMap().get(exportFacadePayload.getGeneratorPayload().getNameValue().getName());
         BaseGenerator.PropertyInfo propertyInfo = Util.TABLE_ALIAS_MAPPINGS.get(dbElement.getTableAlias());
+
         Field field =
                 Arrays.stream(ESDsm.class.getDeclaredFields()).filter(f -> propertyInfo.propertyName.equals(f.getName())).findFirst().get();
         participantById.getDsm().map(esDsm -> {
-                    Object o = null;
+                    List<Map<String, Object>> o = null;
                     try {
-                        o = field.get(esDsm);
+                        o = (List<Map<String, Object>>) field.get(esDsm);
                     } catch (IllegalAccessException e) {
                         e.printStackTrace();
                     }
                     return o;
-                })
-                .ifPresent(medicalRecords -> {
-                    medicalRecords.stream().map()
                 });
+
     }
 
     private void upsertData() {
