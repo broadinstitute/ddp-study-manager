@@ -526,6 +526,7 @@ public class ViewFilter {
                             if (word.equals(Filter.EQUALS_TRIMMED)) { // exact match selected in the frontend
                                 exact = true;
                                 range = false;
+                                f1 = true;
                                 state = 3;
                                 break;
                             }
@@ -975,10 +976,6 @@ public class ViewFilter {
                     }
                     if (path != null && !f2) {//additional field
                         filter.setFilter2(new NameValue(path, ""));
-                    }
-                    if (f1 && !f2 && Filter.DATE.equals(filter.type) && filter.isRange()) {
-                        // set max date to very far in the future
-                        filter.setFilter2(new NameValue(filter.getFilter1().getName(), LocalDateTime.now().plusYears(10).format(DateTimeFormatter.ISO_LOCAL_DATE)));
                     }
                     if (f2) {// maximum set in a range filter
                         if (filter.getFilter1() == null) {
