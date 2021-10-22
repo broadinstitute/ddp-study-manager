@@ -4,7 +4,6 @@ package org.broadinstitute.dsm.model.elastic.export;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Map;
@@ -68,6 +67,19 @@ public class MappingGeneratorTest {
         );
         Map<String, Object> objectMap = TestMappingGenerator.of(generatorPayload).generate();
         Assert.assertEquals(MappingGenerator.NESTED, getMedicalRecordProperty(objectMap).get(MappingGenerator.TYPE));
+    }
+
+    @Test
+    public void getFieldWithTypeCollectionTrue() {
+        GeneratorPayload generatorPayload = new GeneratorPayload(
+                new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "2021-10-30"),
+                100L
+        );
+        TestMappingGenerator generator = TestMappingGenerator.of(generatorPayload);
+        generator.getOuterPropertyByAlias().isCollection = true;
+        Object type = generator.parser.parse((String) generator.getNameValue().getValue());
+        Map<String, Object> fieldWithType = generator.getFieldWithType(type);
+        Assert.assertTrue(fieldWithType.containsKey(BaseGenerator.ID));
     }
 
     private String extractDeepestLeveleValue(Map<String, Object> objectMap) {

@@ -2,15 +2,13 @@ package org.broadinstitute.dsm.model.elastic.export;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
-
-import org.broadinstitute.dsm.model.NameValue;
 
 public class MappingGenerator extends BaseGenerator {
 
 
     public static final String TYPE = "type";
     public static final String NESTED = "nested";
+    public static final String TYPE_KEYWORD = "keyword";
 
     public MappingGenerator(Parser parser, GeneratorPayload generatorPayload) {
         super(parser, generatorPayload);
@@ -55,8 +53,16 @@ public class MappingGenerator extends BaseGenerator {
     @Override
     protected Map<String, Object> parseSingleElement() {
         Object type = parser.parse((String) getNameValue().getValue());
-        Map<String, Object> columnWithType = Map.of(getDBElement().getColumnName(), Map.of(MappingGenerator.TYPE, type));
-        return columnWithType;
+        return getFieldWithType(type);
+    }
+
+    protected Map<String, Object> getFieldWithType(Object type) {
+        return getOuterPropertyByAlias().isCollection()
+                ? Map.of(
+                    ID, Map.of(TYPE, TYPE_KEYWORD),
+                    getDBElement().getColumnName(), Map.of(MappingGenerator.TYPE, type)
+                )
+                : Map.of(getDBElement().getColumnName(), Map.of(MappingGenerator.TYPE, type));
     }
 
 }

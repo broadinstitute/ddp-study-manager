@@ -37,10 +37,10 @@ public class ExportFacade {
 
     private void fetchData() {
         ElasticSearchParticipantDto participantById = searchable.getParticipantById(exportFacadePayload.getIndex(), exportFacadePayload.getDocId());
-        participantById.getDsm().map(ESDsm::getMedicalRecords)
-                .ifPresent(medicalRecords -> {
-                    medicalRecords.stream().map(eachRecord -> eachRecor)
-                });
+//        participantById.getDsm().map(ESDsm::getMedicalRecords)
+//                .ifPresent(medicalRecords -> {
+//                    medicalRecords.stream().map(eachRecord -> eachRecor)
+//                });
     }
 
     private void upsertData() {

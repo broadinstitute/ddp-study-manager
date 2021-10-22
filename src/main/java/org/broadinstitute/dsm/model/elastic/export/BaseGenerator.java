@@ -22,6 +22,7 @@ public abstract class BaseGenerator implements Generator {
             "p", new PropertyInfo("participant", false),
             "d", new PropertyInfo("participant", false)
     );
+    public static final String ID = "id";
     protected static final Gson GSON = new Gson();
     protected final Parser parser;
     protected GeneratorPayload generatorPayload;
