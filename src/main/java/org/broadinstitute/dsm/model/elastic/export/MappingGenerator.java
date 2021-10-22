@@ -52,8 +52,20 @@ public class MappingGenerator extends BaseGenerator {
 
     @Override
     protected Map<String, Object> parseSingleElement() {
-        Object type = parser.parse((String) getNameValue().getValue());
-        return getFieldWithType(type);
+        return getFieldWithElement();
+    }
+
+    @Override
+    protected Map<String, Object> getElementWithId(Object type) {
+        return Map.of(
+                ID, Map.of(TYPE, TYPE_KEYWORD),
+                getDBElement().getColumnName(), Map.of(MappingGenerator.TYPE, type)
+        );
+    }
+
+    @Override
+    protected Map<String, Object> getElement(Object type) {
+        return Map.of(getDBElement().getColumnName(), Map.of(MappingGenerator.TYPE, type));
     }
 
     protected Map<String, Object> getFieldWithType(Object type) {

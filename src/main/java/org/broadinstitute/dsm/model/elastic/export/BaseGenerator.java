@@ -39,7 +39,11 @@ public abstract class BaseGenerator implements Generator {
     protected NameValue getNameValue() {
         return generatorPayload.getNameValue();
     }
-
+    
+    protected PropertyInfo getOuterPropertyByAlias() {
+        return TABLE_ALIAS_MAPPINGS.get(getDBElement().getTableAlias());
+    }
+    
     protected Map<String, Object> collect() {
         Map<String, Object> sourceToUpsert;
         try {
@@ -50,13 +54,24 @@ public abstract class BaseGenerator implements Generator {
         return sourceToUpsert;
     }
 
-    protected PropertyInfo getOuterPropertyByAlias() {
-        return TABLE_ALIAS_MAPPINGS.get(getDBElement().getTableAlias());
-    }
-
     protected abstract Map<String, Object> parseJson();
     
     protected abstract Map<String, Object> parseSingleElement();
+
+    protected Map<String, Object> getFieldWithElement() {
+        Map<String, Object> fieldElementMap;
+        Object element = parser.parse((String) getNameValue().getValue());
+        if (getOuterPropertyByAlias().isCollection) {
+            fieldElementMap = getElementWithId(element);
+        } else {
+            fieldElementMap = getElement(element);
+        }
+        return fieldElementMap;
+    }
+
+    protected abstract Map<String, Object> getElementWithId(Object element);
+
+    protected abstract Map<String, Object> getElement(Object element);
 
     public static class PropertyInfo {
 

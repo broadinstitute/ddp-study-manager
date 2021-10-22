@@ -32,16 +32,23 @@ public class SourceGenerator extends BaseGenerator {
 
     @Override
     protected Map<String, Object> parseSingleElement() {
-        boolean isCollection = getOuterPropertyByAlias().isCollection();
-        Map<String, Object> propertyWithFieldValuePair = null;
-        if (isCollection) {
-                propertyWithFieldValuePair = Map.of(
-                        getOuterPropertyByAlias().getPropertyName(), Map.of(getDBElement().getColumnName(),
-                                parser.parse((String) getNameValue().getValue())),
-                        ID, generatorPayload.getRecordId()
-                        );
-        }
-        return propertyWithFieldValuePair;
+        return getFieldWithElement();
     }
+
+    @Override
+    protected Map<String, Object> getElementWithId(Object element) {
+        return Map.of(
+                getOuterPropertyByAlias().getPropertyName(), Map.of(getDBElement().getColumnName(),
+                        element),
+                ID, generatorPayload.getRecordId());
+    }
+
+    @Override
+    protected Map<String, Object> getElement(Object element) {
+        return Map.of(
+                getOuterPropertyByAlias().getPropertyName(), Map.of(getDBElement().getColumnName(),
+                        element));
+    }
+
 
 }

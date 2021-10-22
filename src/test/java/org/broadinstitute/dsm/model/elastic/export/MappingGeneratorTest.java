@@ -77,8 +77,7 @@ public class MappingGeneratorTest {
         );
         TestMappingGenerator generator = TestMappingGenerator.of(generatorPayload);
         generator.getOuterPropertyByAlias().isCollection = true;
-        Object type = generator.parser.parse((String) generator.getNameValue().getValue());
-        Map<String, Object> fieldWithType = generator.getFieldWithType(type);
+        Map<String, Object> fieldWithType = generator.getFieldWithElement();
         Assert.assertTrue(fieldWithType.containsKey(BaseGenerator.ID));
     }
 
