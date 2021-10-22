@@ -1,12 +1,17 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 
+import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.elastic.ESDsm;
+import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
+import org.broadinstitute.dsm.util.PatchUtil;
 
 public class ExportFacade {
 
@@ -37,7 +42,19 @@ public class ExportFacade {
 
     private void fetchData() {
         ElasticSearchParticipantDto participantById = searchable.getParticipantById(exportFacadePayload.getIndex(), exportFacadePayload.getDocId());
-        participantById.getDsm().map(ESDsm::getMedicalRecords)
+        DBElement dbElement = PatchUtil.getColumnNameMap().get(exportFacadePayload.getGeneratorPayload().getNameValue().getName());
+        BaseGenerator.PropertyInfo propertyInfo = Util.TABLE_ALIAS_MAPPINGS.get(dbElement.getTableAlias());
+        Field field =
+                Arrays.stream(ESDsm.class.getDeclaredFields()).filter(f -> propertyInfo.propertyName.equals(f.getName())).findFirst().get();
+        participantById.getDsm().map(esDsm -> {
+                    Object o = null;
+                    try {
+                        o = field.get(esDsm);
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                    return o;
+                })
                 .ifPresent(medicalRecords -> {
                     medicalRecords.stream().map()
                 });

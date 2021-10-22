@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
-import org.broadinstitute.dsm.util.PatchUtil;
+import org.broadinstitute.dsm.model.elastic.Util;
 
 import java.util.Map;
 import java.util.Objects;
@@ -14,14 +14,6 @@ public abstract class BaseGenerator implements Generator {
 
     public static final String DSM_OBJECT = "dsm";
     public static final String PROPERTIES = "properties";
-    public static final Map<String, PropertyInfo> TABLE_ALIAS_MAPPINGS = Map.of(
-            "m", new PropertyInfo("medicalRecords", true),
-            "t", new PropertyInfo("tissueRecords", true),
-            "oD", new PropertyInfo("oncHistoryDetailRecords", true),
-            "r", new PropertyInfo("participant", false),
-            "p", new PropertyInfo("participant", false),
-            "d", new PropertyInfo("participant", false)
-    );
     public static final String ID = "id";
     protected static final Gson GSON = new Gson();
     protected final Parser parser;
@@ -32,16 +24,17 @@ public abstract class BaseGenerator implements Generator {
         this.generatorPayload = Objects.requireNonNull(generatorPayload);
     }
 
-    protected DBElement getDBElement() {
-        return PatchUtil.getColumnNameMap().get(Objects.requireNonNull(getNameValue()).getName());
-    }
-
     protected NameValue getNameValue() {
         return generatorPayload.getNameValue();
     }
-    
+
+    //wrap Util.getDBElement in protected method so that we can override it in testing class for tests
+    protected DBElement getDBElement() {
+        return Util.getDBElement(getNameValue().getName());
+    }
+
     protected PropertyInfo getOuterPropertyByAlias() {
-        return TABLE_ALIAS_MAPPINGS.get(getDBElement().getTableAlias());
+        return Util.TABLE_ALIAS_MAPPINGS.get(getDBElement().getTableAlias());
     }
     
     protected Map<String, Object> collect() {

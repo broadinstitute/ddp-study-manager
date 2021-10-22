@@ -1,10 +1,9 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
-import org.broadinstitute.dsm.model.NameValue;
+import org.broadinstitute.dsm.model.elastic.Util;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class SourceGenerator extends BaseGenerator {
 

@@ -3,6 +3,8 @@ package org.broadinstitute.dsm.model.elastic.export;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.broadinstitute.dsm.model.elastic.Util;
+
 public class MappingGenerator extends BaseGenerator {
 
 
@@ -66,15 +68,6 @@ public class MappingGenerator extends BaseGenerator {
     @Override
     protected Map<String, Object> getElement(Object type) {
         return Map.of(getDBElement().getColumnName(), Map.of(MappingGenerator.TYPE, type));
-    }
-
-    protected Map<String, Object> getFieldWithType(Object type) {
-        return getOuterPropertyByAlias().isCollection()
-                ? Map.of(
-                    ID, Map.of(TYPE, TYPE_KEYWORD),
-                    getDBElement().getColumnName(), Map.of(MappingGenerator.TYPE, type)
-                )
-                : Map.of(getDBElement().getColumnName(), Map.of(MappingGenerator.TYPE, type));
     }
 
 }

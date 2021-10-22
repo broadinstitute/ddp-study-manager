@@ -62,4 +62,5 @@ public class ESObjectConstants {
     public static final String DIAGNOSIS_MONTH = "diagnosisMonth";
     public static final String HAS_CONSENTED_TO_TISSUE_SAMPLE = "hasConsentedToTissueSample";
     public static final String DIAGNOSIS_YEAR = "diagnosisYear";
+    public static final String ONC_HISTORY_DETAIL_RECORDS = "oncHistoryDetailRecords";
 }
