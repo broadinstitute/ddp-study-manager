@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import com.google.gson.Gson;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.elasticsearch.action.search.SearchRequest;
@@ -193,14 +194,9 @@ public class ElasticSearch implements ElasticSearchable {
     }
 
     @Override
-    public ElasticSearchParticipantDto getParticipantByShortId(String esParticipantsIndex, String shortId) {
-        String type = "";
+    public ElasticSearchParticipantDto getParticipantById(String esParticipantsIndex, String shortId) {
+        String type = Util.getQueryTypeFromId(shortId);
         String id = Objects.requireNonNull(shortId);
-        if (ParticipantUtil.isHruid(shortId)) {
-            type = "profile.hruid";
-        } else {
-            type = "profile.legacyShortId";
-        }
         SearchRequest searchRequest = new SearchRequest(Objects.requireNonNull(esParticipantsIndex));
         TermQueryBuilder shortIdQuery = QueryBuilders.termQuery(type, id);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();

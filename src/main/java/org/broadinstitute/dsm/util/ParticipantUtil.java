@@ -27,6 +27,10 @@ public class ParticipantUtil {
         return participantId.length() == 20;
     }
 
+    public static boolean isLegacyAltPid(@NonNull String participantId) {
+        return participantId.length() > 20;
+    }
+
     public static boolean matchesApplicantEmail(ESProfile applicantProfile,
                                                 Map<String, String> applicantDataMap,
                                                 Map<String, String> participantDataMap) {

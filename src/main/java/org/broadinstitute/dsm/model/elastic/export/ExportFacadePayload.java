@@ -6,24 +6,24 @@ import org.broadinstitute.dsm.model.NameValue;
 
 public class ExportFacadePayload {
     private String index;
-    private String id;
-    private NameValue nameValue;
+    private String docId;
+    private GeneratorPayload generatorPayload;
 
-    public ExportFacadePayload(String index, String id, NameValue nameValue) {
+    public ExportFacadePayload(String index, String docId, GeneratorPayload generatorPayload) {
         this.index = Objects.requireNonNull(index);
-        this.id = Objects.requireNonNull(id);
-        this.nameValue = Objects.requireNonNull(nameValue);
+        this.docId = Objects.requireNonNull(docId);
+        this.generatorPayload = Objects.requireNonNull(generatorPayload);
     }
 
     public String getIndex() {
         return index;
     }
 
-    public String getId() {
-        return id;
+    public String getDocId() {
+        return docId;
     }
 
-    public NameValue getNameValue() {
-        return nameValue;
+    public GeneratorPayload getGeneratorPayload() {
+        return generatorPayload;
     }
 }

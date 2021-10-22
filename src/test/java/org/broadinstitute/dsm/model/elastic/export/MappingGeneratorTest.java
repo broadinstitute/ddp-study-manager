@@ -11,17 +11,14 @@ import java.util.Map;
 
 public class MappingGeneratorTest {
 
-    static Generator generator;
-
-    @BeforeClass
-    public static void setUp() {
-        generator = new TestMappingGenerator(new TypeParser());
-    }
 
     @Test
     public void generateTextType() {
-        NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "value");
-        Map<String, Object> objectMap = generator.generate(nameValue);
+        GeneratorPayload generatorPayload = new GeneratorPayload(
+            new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "value"),
+            0L
+        );
+        Map<String, Object> objectMap = TestMappingGenerator.of(generatorPayload).generate();
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
         String type = extractDeepestLeveleValue(objectMap);
         Assert.assertEquals("text", type);
@@ -29,8 +26,11 @@ public class MappingGeneratorTest {
 
     @Test
     public void generateBooleanType() {
-        NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "true");
-        Map<String, Object> objectMap = generator.generate(nameValue);
+        GeneratorPayload generatorPayload = new GeneratorPayload(
+                new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "true"),
+                0L
+        );
+        Map<String, Object> objectMap = TestMappingGenerator.of(generatorPayload).generate();
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
         String type = extractDeepestLeveleValue(objectMap);
         Assert.assertEquals("boolean", type);
@@ -38,8 +38,11 @@ public class MappingGeneratorTest {
 
     @Test
     public void generateIntegerType() {
-        NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "45");
-        Map<String, Object> objectMap = generator.generate(nameValue);
+        GeneratorPayload generatorPayload = new GeneratorPayload(
+                new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "45"),
+                0L
+        );
+        Map<String, Object> objectMap = TestMappingGenerator.of(generatorPayload).generate();
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
         String type = extractDeepestLeveleValue(objectMap);
         Assert.assertEquals("long", type);
@@ -47,39 +50,60 @@ public class MappingGeneratorTest {
 
     @Test
     public void generateDateType() {
-        NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "2021-10-30");
-        Map<String, Object> objectMap = generator.generate(nameValue);
+        GeneratorPayload generatorPayload = new GeneratorPayload(
+                new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "2021-10-30"),
+                0L
+        );
+        Map<String, Object> objectMap = TestMappingGenerator.of(generatorPayload).generate();
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
         String type = extractDeepestLeveleValue(objectMap);
         Assert.assertEquals("date", type);
+    }
+
+    @Test
+    public void generateNestedType() {
+        GeneratorPayload generatorPayload = new GeneratorPayload(
+                new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "2021-10-30"),
+                100L
+        );
+        Map<String, Object> objectMap = TestMappingGenerator.of(generatorPayload).generate();
+        Assert.assertEquals(MappingGenerator.NESTED, getMedicalRecordProperty(objectMap).get(MappingGenerator.TYPE));
     }
 
     private String extractDeepestLeveleValue(Map<String, Object> objectMap) {
         return (String)
                 ((Map)
                 ((Map)
-                ((Map)
+                getMedicalRecordProperty(objectMap)
+                        .get(BaseGenerator.PROPERTIES))
+                        .get("medical_record_column"))
+                        .get("type");
+    }
+
+    private Map getMedicalRecordProperty(Map<String, Object> objectMap) {
+        return (Map)
                 ((Map)
                 ((Map)
                 ((Map) objectMap
                         .get(BaseGenerator.PROPERTIES))
                         .get(BaseGenerator.DSM_OBJECT))
                         .get(BaseGenerator.PROPERTIES))
-                        .get("medicalRecords"))
-                        .get(BaseGenerator.PROPERTIES))
-                        .get("medical_record_column"))
-                        .get("type");
+                        .get("medicalRecords");
     }
 
     private static class TestMappingGenerator extends MappingGenerator {
 
-        public TestMappingGenerator(Parser typeParser) {
-            super(typeParser);
+        public TestMappingGenerator(Parser typeParser, GeneratorPayload generatorPayload) {
+            super(typeParser, generatorPayload);
         }
 
         @Override
         protected DBElement getDBElement() {
-            return TestPatchUtil.getColumnNameMap().get(nameValue.getName());
+            return TestPatchUtil.getColumnNameMap().get(getNameValue().getName());
+        }
+
+        public static TestMappingGenerator of(GeneratorPayload generatorPayload) {
+            return new TestMappingGenerator(new TypeParser(), generatorPayload);
         }
     }
 }

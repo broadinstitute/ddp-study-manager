@@ -69,8 +69,9 @@ public abstract class BasePatch {
     }
 
     protected void exportToES(NameValue nameValue) {
+        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, Integer.parseInt(patch.getId()));
         ExportFacadePayload exportFacadePayload =
-                new ExportFacadePayload(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId(), nameValue);
+                new ExportFacadePayload(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId(), generatorPayload);
         ExportFacade exportFacade = new ExportFacade(exportFacadePayload);
         exportFacade.export();
     }

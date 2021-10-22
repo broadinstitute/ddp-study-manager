@@ -1,37 +1,41 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
 import java.util.Map;
+import java.util.Objects;
+
+import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
 
 public class ExportFacade {
 
     BaseExporter exportable;
     Generator generator;
+    ElasticSearchable searchable;
     private ExportFacadePayload exportFacadePayload;
 
     public ExportFacade(ExportFacadePayload exportFacadePayload) {
-        this.exportFacadePayload = exportFacadePayload;
+        this.exportFacadePayload = Objects.requireNonNull(exportFacadePayload);
         exportable = new ElasticExportAdapter();
-        generator = new MappingGenerator(new TypeParser());
     }
 
     public void export() {
         upsertMapping();
+        fetchData();
         upsertData();
     }
 
     private void upsertMapping() {
-        generator = new MappingGenerator(new TypeParser());
-        Map<String, Object> mappingToUpsert = generator.generate(exportFacadePayload.getNameValue());
+        generator = new MappingGenerator(new TypeParser(), exportFacadePayload.getGeneratorPayload());
+        Map<String, Object> mappingToUpsert = generator.generate();
         UpsertMappingRequestPayload upsertMappingRequestPayload = new UpsertMappingRequestPayload(exportFacadePayload.getIndex());
         exportable.setUpsertMappingRequestPayload(upsertMappingRequestPayload);
         exportable.exportMapping(mappingToUpsert);
     }
 
     private void upsertData() {
-        generator = new SourceGenerator(new ValueParser());
-        Map<String, Object> elasticDataToExport = generator.generate(exportFacadePayload.getNameValue());
+        generator = new SourceGenerator(new ValueParser(), exportFacadePayload.getGeneratorPayload());
+        Map<String, Object> elasticDataToExport = generator.generate();
         UpsertDataRequestPayload upsertDataRequestPayload = new UpsertDataRequestPayload.Builder(exportFacadePayload.getIndex(),
-                exportFacadePayload.getId())
+                exportFacadePayload.getDocId())
                 .withDocAsUpsert(true)
                 .withRetryOnConflict(5)
                 .build();

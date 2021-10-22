@@ -11,9 +11,10 @@ public class SourceGeneratorTest {
 
     @Test
     public void generate() {
-        Generator generator = new TestSourceGenerator(new ValueParser());
         NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "value");
-        Map<String, Object> objectMap = generator.generate(nameValue);
+        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 0L);
+        Generator generator = new TestSourceGenerator(new ValueParser(), generatorPayload);
+        Map<String, Object> objectMap = generator.generate();
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), SourceGenerator.DSM_OBJECT);
         String value = (String)((Map)((Map)objectMap.get(SourceGenerator.DSM_OBJECT)).get("medicalRecords")).get(TestPatchUtil.MEDICAL_RECORD_COLUMN);
         Assert.assertEquals("value", value);
@@ -21,23 +22,39 @@ public class SourceGeneratorTest {
 
     @Test
     public void generateNumeric() {
-        Generator generator = new TestSourceGenerator(new ValueParser());
         NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "1");
-        Map<String, Object> objectMap = generator.generate(nameValue);
+        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 0L);
+        Generator generator = new TestSourceGenerator(new ValueParser(), generatorPayload);
+        Map<String, Object> objectMap = generator.generate();
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), SourceGenerator.DSM_OBJECT);
         Object value = ((Map)((Map)objectMap.get(SourceGenerator.DSM_OBJECT)).get("medicalRecords")).get(TestPatchUtil.MEDICAL_RECORD_COLUMN);
         Assert.assertEquals(1L, value);
     }
 
+    @Test
+    public void generateFromJson() {
+        NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "{\"DDP_INSTANCE\": \"TEST\"}");
+        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 0L);
+        Generator generator = new TestSourceGenerator(new ValueParser(), generatorPayload);
+        Map<String, Object> objectMap = generator.generate();
+        Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), SourceGenerator.DSM_OBJECT);
+        Object value =
+                ((Map)((Map)objectMap
+                        .get(SourceGenerator.DSM_OBJECT))
+                        .get("medicalRecords"))
+                        .get("DDP_INSTANCE");
+        Assert.assertEquals("TEST", value);
+    }
+
     private static class TestSourceGenerator extends SourceGenerator {
 
-        public TestSourceGenerator(Parser parser) {
-            super(parser);
+        public TestSourceGenerator(Parser parser, GeneratorPayload generatorPayload) {
+            super(parser,generatorPayload);
         }
 
         @Override
         protected DBElement getDBElement() {
-            return TestPatchUtil.getColumnNameMap().get(nameValue.getName());
+            return TestPatchUtil.getColumnNameMap().get(getNameValue().getName());
         }
     }
 

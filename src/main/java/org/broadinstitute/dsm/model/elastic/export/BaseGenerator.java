@@ -24,22 +24,19 @@ public abstract class BaseGenerator implements Generator {
     );
     protected static final Gson GSON = new Gson();
     protected final Parser parser;
-
-    protected NameValue nameValue;
-    protected DBElement dbElement;
     protected GeneratorPayload generatorPayload;
 
-    public BaseGenerator(Parser parser) {
-        this.parser = parser;
-    }
-
-    protected void initializeNecessaryFields() {
-        this.nameValue = generatorPayload.getNameValue();
-        dbElement = getDBElement();
+    public BaseGenerator(Parser parser, GeneratorPayload generatorPayload) {
+        this.parser = Objects.requireNonNull(parser);
+        this.generatorPayload = Objects.requireNonNull(generatorPayload);
     }
 
     protected DBElement getDBElement() {
-        return PatchUtil.getColumnNameMap().get(Objects.requireNonNull(nameValue).getName());
+        return PatchUtil.getColumnNameMap().get(Objects.requireNonNull(getNameValue()).getName());
+    }
+
+    protected NameValue getNameValue() {
+        return generatorPayload.getNameValue();
     }
 
     protected Map<String, Object> collect() {
@@ -53,7 +50,7 @@ public abstract class BaseGenerator implements Generator {
     }
 
     protected PropertyInfo getOuterPropertyByAlias() {
-        return TABLE_ALIAS_MAPPINGS.get(dbElement.getTableAlias());
+        return TABLE_ALIAS_MAPPINGS.get(getDBElement().getTableAlias());
     }
 
     protected abstract Map<String, Object> parseJson();

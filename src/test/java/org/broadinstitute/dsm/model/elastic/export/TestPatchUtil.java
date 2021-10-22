@@ -11,7 +11,9 @@ class TestPatchUtil extends PatchUtil {
 
     public static Map<String, DBElement> getColumnNameMap() {
         DBElement dbElement = new DBElement("ddp_medical_record", "m", "pr", MEDICAL_RECORD_COLUMN);
-        return Map.of(MEDICAL_RECORD_COLUMN, dbElement);
+        return Map.of(
+                MEDICAL_RECORD_COLUMN, dbElement
+        );
     }
 
 }

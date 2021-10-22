@@ -78,7 +78,7 @@ public class ClinicalKitsRoute implements Route {
                 hruid = maybeBspKitQueryResult.getBspParticipantId().substring(maybeBspKitQueryResult.getBspParticipantId().lastIndexOf('_') + 1);
             }
             ElasticSearchParticipantDto participantByShortId =
-                    new ElasticSearch().getParticipantByShortId(ddpInstance.getParticipantIndexES(), hruid);
+                    new ElasticSearch().getParticipantById(ddpInstance.getParticipantIndexES(), hruid);
             setNeccessaryDataToClinicalKit(clinicalKit, participantByShortId);
         });
         maybeKitInfo.orElseThrow();

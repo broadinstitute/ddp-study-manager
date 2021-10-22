@@ -131,7 +131,7 @@ public class ParticipantWrapperTest {
         }
 
         @Override
-        public ElasticSearchParticipantDto getParticipantByShortId(String esParticipantsIndex, String shortId) {
+        public ElasticSearchParticipantDto getParticipantById(String esParticipantsIndex, String id) {
             return null;
         }
 

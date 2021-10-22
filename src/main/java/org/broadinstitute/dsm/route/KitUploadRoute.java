@@ -216,7 +216,7 @@ public class KitUploadRoute extends RequestHandler {
                 //if kit has ddpParticipantId use that (RGP!)
                 if (StringUtils.isBlank(kit.getParticipantId())) {
                     ElasticSearchParticipantDto participantByShortId =
-                            elasticSearch.getParticipantByShortId(ddpInstance.getParticipantIndexES(), kit.getShortId());
+                            elasticSearch.getParticipantById(ddpInstance.getParticipantIndexES(), kit.getShortId());
                     participantGuid = participantByShortId.getProfile().map(ESProfile::getParticipantGuid).orElse("");
                     participantLegacyAltPid = participantByShortId.getProfile().map(ESProfile::getParticipantLegacyAltPid).orElse("");
                     kit.setParticipantId(!participantGuid.isEmpty() ? participantGuid : participantLegacyAltPid);
@@ -334,8 +334,8 @@ public class KitUploadRoute extends RequestHandler {
             }
         }
         else {
-            String participantGuid = elasticSearch.getParticipantByShortId(ddpInstance.getParticipantIndexES(), kit.getShortId()).getProfile().map(ESProfile::getParticipantGuid).orElse("");
-            String participantLegacyAltPid = elasticSearch.getParticipantByShortId(ddpInstance.getParticipantIndexES(), kit.getShortId()).getProfile().map(ESProfile::getParticipantLegacyAltPid).orElse("");
+            String participantGuid = elasticSearch.getParticipantById(ddpInstance.getParticipantIndexES(), kit.getShortId()).getProfile().map(ESProfile::getParticipantGuid).orElse("");
+            String participantLegacyAltPid = elasticSearch.getParticipantById(ddpInstance.getParticipantIndexES(), kit.getShortId()).getProfile().map(ESProfile::getParticipantLegacyAltPid).orElse("");
             if (checkAndSetParticipantIdIfKitExists(ddpInstance, conn, kit, participantGuid, participantLegacyAltPid, kitType.getKitTypeId()) && !uploadAnyway) {
                 duplicateKitList.add(kit);
             }
@@ -504,7 +504,7 @@ public class KitUploadRoute extends RequestHandler {
 
         ElasticSearchParticipantDto participantByShortId;
         try {
-            participantByShortId = elasticSearch.getParticipantByShortId(ddpInstanceByRealm.getParticipantIndexES(), participantIdFromDoc);
+            participantByShortId = elasticSearch.getParticipantById(ddpInstanceByRealm.getParticipantIndexES(), participantIdFromDoc);
         } catch (Exception e) {
             throw new RuntimeException("Participant " + participantIdFromDoc + " does not belong to this study", e);
         }
