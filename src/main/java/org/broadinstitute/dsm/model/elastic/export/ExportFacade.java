@@ -1,7 +1,5 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -26,13 +24,11 @@ public class ExportFacade {
         this.exportFacadePayload = Objects.requireNonNull(exportFacadePayload);
         exportable = new ElasticExportAdapter();
         searchable = new ElasticSearch();
-
     }
 
     public void export() {
         upsertMapping();
-        fetchData();
-        upsertData();
+        upsertData(processData(fetchData()));
     }
 
     private void upsertMapping() {
@@ -43,19 +39,29 @@ public class ExportFacade {
         exportable.exportMapping(mappingToUpsert);
     }
 
-    private void fetchData() {
+    private ESDsm fetchData() {
         ElasticSearchParticipantDto participantById = searchable.getParticipantById(exportFacadePayload.getIndex(), exportFacadePayload.getDocId());
-        DBElement dbElement = PatchUtil.getColumnNameMap().get(exportFacadePayload.getGeneratorPayload().getNameValue().getName());
-        BaseGenerator.PropertyInfo propertyInfo = Util.TABLE_ALIAS_MAPPINGS.get(dbElement.getTableAlias());
-        ESDsm esDsm = participantById.getDsm().orElseThrow();
-        processor = new CollectionProcessor(esDsm, propertyInfo.getPropertyName(), exportFacadePayload.getGeneratorPayload());
-        List<Map<String, Object>> processedData = processor.process();
-
+        return participantById.getDsm().orElseThrow();
     }
 
-    private void upsertData() {
-        generator = new SourceGenerator(new ValueParser(), exportFacadePayload.getGeneratorPayload());
-        Map<String, Object> elasticDataToExport = generator.generate();
+    private Map<String, Object> processData(ESDsm esDsm) {
+        BaseGenerator.PropertyInfo propertyInfo = getPropertyInfo();
+        processor = new CollectionProcessor(esDsm, propertyInfo.getPropertyName(), exportFacadePayload.getGeneratorPayload());
+        List<Map<String, Object>> processedData = processor.process();
+        Map<String, Object> dataToReturn = Map.of(propertyInfo.getPropertyName(), processedData);
+        if (processedData.isEmpty()) {
+            generator = new SourceGenerator(new ValueParser(), exportFacadePayload.getGeneratorPayload());
+            dataToReturn = generator.generate();
+        }
+        return dataToReturn;
+    }
+
+    private BaseGenerator.PropertyInfo getPropertyInfo() {
+        DBElement dbElement = PatchUtil.getColumnNameMap().get(exportFacadePayload.getGeneratorPayload().getNameValue().getName());
+        return Util.TABLE_ALIAS_MAPPINGS.get(dbElement.getTableAlias());
+    }
+
+    private void upsertData(Map<String, Object> elasticDataToExport) {
         UpsertDataRequestPayload upsertDataRequestPayload = new UpsertDataRequestPayload.Builder(exportFacadePayload.getIndex(),
                 exportFacadePayload.getDocId())
                 .withDocAsUpsert(true)

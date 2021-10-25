@@ -41,7 +41,7 @@ public class CollectionProcessorTest {
     public void testProcessOnEmpty() throws IOException {
         String propertyName = "medicalRecords";
         int recordId = 5;
-        String json = "";
+        String json = "{}";
 
         ObjectMapper objectMapper = new ObjectMapper();
 
@@ -54,10 +54,7 @@ public class CollectionProcessorTest {
 
         List<Map<String, Object>> updatedList = collectionProcessor.process();
 
-        Map<String, Object> updatedObject = updatedList.get(0);
-        Map<String, Object> oldObject = ((Map) ((List) objectMapper.readValue(json, Map.class).get(propertyName)).get(0));
-
-        Assert.assertNotEquals(oldObject, updatedObject);
+        Assert.assertTrue(updatedList.isEmpty());
 
     }
 }
