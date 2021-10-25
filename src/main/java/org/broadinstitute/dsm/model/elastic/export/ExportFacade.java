@@ -20,11 +20,13 @@ public class ExportFacade {
     Generator generator;
     ElasticSearchable searchable;
     private ExportFacadePayload exportFacadePayload;
+    Processor processor;
 
     public ExportFacade(ExportFacadePayload exportFacadePayload) {
         this.exportFacadePayload = Objects.requireNonNull(exportFacadePayload);
         exportable = new ElasticExportAdapter();
         searchable = new ElasticSearch();
+
     }
 
     public void export() {

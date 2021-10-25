@@ -15,7 +15,7 @@ public class MappingGeneratorTest {
     public void generateTextType() {
         GeneratorPayload generatorPayload = new GeneratorPayload(
             new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "value"),
-            0L
+            0
         );
         Map<String, Object> objectMap = TestMappingGenerator.of(generatorPayload).generate();
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
@@ -27,7 +27,7 @@ public class MappingGeneratorTest {
     public void generateBooleanType() {
         GeneratorPayload generatorPayload = new GeneratorPayload(
                 new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "true"),
-                0L
+                0
         );
         Map<String, Object> objectMap = TestMappingGenerator.of(generatorPayload).generate();
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
@@ -39,7 +39,7 @@ public class MappingGeneratorTest {
     public void generateIntegerType() {
         GeneratorPayload generatorPayload = new GeneratorPayload(
                 new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "45"),
-                0L
+                0
         );
         Map<String, Object> objectMap = TestMappingGenerator.of(generatorPayload).generate();
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
@@ -51,7 +51,7 @@ public class MappingGeneratorTest {
     public void generateDateType() {
         GeneratorPayload generatorPayload = new GeneratorPayload(
                 new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "2021-10-30"),
-                0L
+                0
         );
         Map<String, Object> objectMap = TestMappingGenerator.of(generatorPayload).generate();
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
@@ -63,7 +63,7 @@ public class MappingGeneratorTest {
     public void generateNestedType() {
         GeneratorPayload generatorPayload = new GeneratorPayload(
                 new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "2021-10-30"),
-                100L
+                100
         );
         Map<String, Object> objectMap = TestMappingGenerator.of(generatorPayload).generate();
         Assert.assertEquals(MappingGenerator.NESTED, getMedicalRecordProperty(objectMap).get(MappingGenerator.TYPE));
@@ -73,7 +73,7 @@ public class MappingGeneratorTest {
     public void getFieldWithTypeCollectionTrue() {
         GeneratorPayload generatorPayload = new GeneratorPayload(
                 new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "2021-10-30"),
-                100L
+                100
         );
         TestMappingGenerator generator = TestMappingGenerator.of(generatorPayload);
         generator.getOuterPropertyByAlias().isCollection = true;

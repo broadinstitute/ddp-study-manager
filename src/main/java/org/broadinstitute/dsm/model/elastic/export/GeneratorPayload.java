@@ -5,9 +5,9 @@ import org.broadinstitute.dsm.model.NameValue;
 public class GeneratorPayload {
 
     NameValue nameValue;
-    long recordId;
+    int recordId;
 
-    public GeneratorPayload(NameValue nameValue, long recordId) {
+    public GeneratorPayload(NameValue nameValue, int recordId) {
         this.nameValue = nameValue;
         this.recordId = recordId;
     }
@@ -16,7 +16,7 @@ public class GeneratorPayload {
         return nameValue;
     }
 
-    public long getRecordId() {
+    public int getRecordId() {
         return recordId;
     }
 }
