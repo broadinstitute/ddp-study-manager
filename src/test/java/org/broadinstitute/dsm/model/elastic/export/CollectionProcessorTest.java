@@ -36,5 +36,29 @@ public class CollectionProcessorTest {
         Assert.assertNotEquals(oldObject, updatedObject);
 
     }
+
+    @Test
+    public void testProcessOnEmpty() throws IOException {
+        String propertyName = "medicalRecords";
+        int recordId = 5;
+        String json = "";
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        ESDsm esDsm = objectMapper.readValue(json, ESDsm.class);
+
+        NameValue nameValue = new NameValue("mr", "mr_updated");
+        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, recordId);
+
+        CollectionProcessor collectionProcessor = new CollectionProcessor(esDsm, propertyName, generatorPayload);
+
+        List<Map<String, Object>> updatedList = collectionProcessor.process();
+
+        Map<String, Object> updatedObject = updatedList.get(0);
+        Map<String, Object> oldObject = ((Map) ((List) objectMapper.readValue(json, Map.class).get(propertyName)).get(0));
+
+        Assert.assertNotEquals(oldObject, updatedObject);
+
+    }
 }
 

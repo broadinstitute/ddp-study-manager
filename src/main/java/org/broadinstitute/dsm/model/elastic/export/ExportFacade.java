@@ -47,18 +47,9 @@ public class ExportFacade {
         ElasticSearchParticipantDto participantById = searchable.getParticipantById(exportFacadePayload.getIndex(), exportFacadePayload.getDocId());
         DBElement dbElement = PatchUtil.getColumnNameMap().get(exportFacadePayload.getGeneratorPayload().getNameValue().getName());
         BaseGenerator.PropertyInfo propertyInfo = Util.TABLE_ALIAS_MAPPINGS.get(dbElement.getTableAlias());
-
-        Field field =
-                Arrays.stream(ESDsm.class.getDeclaredFields()).filter(f -> propertyInfo.propertyName.equals(f.getName())).findFirst().get();
-        participantById.getDsm().map(esDsm -> {
-                    List<Map<String, Object>> o = null;
-                    try {
-                        o = (List<Map<String, Object>>) field.get(esDsm);
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    }
-                    return o;
-                });
+        ESDsm esDsm = participantById.getDsm().orElseThrow();
+        processor = new CollectionProcessor(esDsm, propertyInfo.getPropertyName(), exportFacadePayload.getGeneratorPayload());
+        List<Map<String, Object>> processedData = processor.process();
 
     }
 
