@@ -22,23 +22,11 @@ public class CollectionProcessor implements Processor {
 
     @Override
     public List<Map<String, Object>> process() {
-        // medicalRecords:
-        // {
-        //  id: 1
-        //  name: a
-        // }
-        // {
-        //  id: 2
-        //  name: a (SSADASD)
-        // }
-        // {
-        //  id: 3
-        //  name: b
-        // }
         Field[] declaredFields = esDsm.getClass().getDeclaredFields();
         Field field = Arrays.stream(declaredFields).filter(isFieldMatchProperty)
                 .findFirst()
                 .orElseThrow();
+        field.setAccessible(true);
         List<Map<String, Object>> data = Collections.emptyList();
         try {
             data = (List<Map<String, Object>>) field.get(esDsm);
@@ -48,14 +36,12 @@ public class CollectionProcessor implements Processor {
 
         long recordId = generatorPayload.getRecordId();
 
-
         for (Map<String, Object> datum : data) {
-            //damekarge premier? me mesmis sheni me ki kai wamo aq gavtishot xma da
             if ((long) datum.get(BaseGenerator.ID) == recordId) {
-                datum.put(propertyName, generatorPayload.getNameValue().getValue());
+                datum.put(generatorPayload.getNameValue().getName(), generatorPayload.getNameValue().getValue());
             }
         }
 
-        return null;
+        return data;
     }
 }
