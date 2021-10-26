@@ -49,7 +49,7 @@ public class ExportFacade {
         processor = new CollectionProcessor(esDsm, propertyInfo.getPropertyName(), exportFacadePayload.getGeneratorPayload());
         List<Map<String, Object>> processedData = processor.process();
         Map<String, Object> dataToReturn = Map.of(propertyInfo.getPropertyName(), processedData);
-        if (processedData.isEmpty()) {
+        if (propertyInfo.isCollection() && processedData.isEmpty()) {
             generator = new SourceGenerator(new ValueParser(), exportFacadePayload.getGeneratorPayload());
             dataToReturn = generator.generate();
         }

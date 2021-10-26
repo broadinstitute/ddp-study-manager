@@ -29,20 +29,22 @@ public class CollectionProcessor implements Processor {
 
     private List<Map<String, Object>> extractDataByReflection() {
         Field[] declaredFields = esDsm.getClass().getDeclaredFields();
-        Field field = Arrays.stream(declaredFields).filter(isFieldMatchProperty)
+        List<Map<String, Object>> fetchedRecords = Arrays.stream(declaredFields).filter(isFieldMatchProperty)
                 .findFirst()
-                .orElseThrow();
-        field.setAccessible(true);
-        List<Map<String, Object>> fetchedRecords;
+                .map(field -> {
+                    field.setAccessible(true);
+                    return getRecordsByField(field);
+                })
+                .orElse(Collections.emptyList());
+        return fetchedRecords;
+    }
+
+    private List<Map<String, Object>> getRecordsByField(Field field) {
         try {
-            fetchedRecords = (List<Map<String, Object>>) field.get(esDsm);
+            return (List<Map<String, Object>>) field.get(esDsm);
         } catch (IllegalAccessException iae) {
             throw new RuntimeException("error occurred while attempting to get data from ESDsm", iae);
         }
-        if (fetchedRecords == null) {
-            fetchedRecords = Collections.emptyList();
-        }
-        return fetchedRecords;
     }
 
     private List<Map<String, Object>> updateIfExists(List<Map<String, Object>> fetchedRecords) {

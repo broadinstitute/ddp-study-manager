@@ -38,8 +38,7 @@ public class SourceGenerator extends BaseGenerator {
     protected Map<String, Object> getElementWithId(Object element) {
         return Map.of(
                 getOuterPropertyByAlias().getPropertyName(), Map.of(getDBElement().getColumnName(),
-                        element),
-                ID, generatorPayload.getRecordId());
+                        element, ID, generatorPayload.getRecordId()));
     }
 
     @Override
