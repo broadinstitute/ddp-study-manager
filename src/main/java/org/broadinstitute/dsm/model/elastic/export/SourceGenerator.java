@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.model.elastic.export;
 import org.broadinstitute.dsm.model.elastic.Util;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class SourceGenerator extends BaseGenerator {
@@ -37,8 +38,8 @@ public class SourceGenerator extends BaseGenerator {
     @Override
     protected Map<String, Object> getElementWithId(Object element) {
         return Map.of(
-                getOuterPropertyByAlias().getPropertyName(), Map.of(getDBElement().getColumnName(),
-                        element, ID, generatorPayload.getRecordId()));
+                getOuterPropertyByAlias().getPropertyName(), List.of(Map.of(getDBElement().getColumnName(),
+                        element, ID, generatorPayload.getRecordId())));
     }
 
     @Override

@@ -4,8 +4,8 @@ import org.broadinstitute.dsm.model.elastic.ESDsm;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class CollectionProcessor implements Processor {
 
@@ -24,7 +24,7 @@ public class CollectionProcessor implements Processor {
     @Override
     public List<Map<String, Object>> process() {
         List<Map<String, Object>> fetchedRecords = extractDataByReflection();
-        return updateIfExists(fetchedRecords);
+        return updateIfExistsOrPut(fetchedRecords);
     }
 
     private List<Map<String, Object>> extractDataByReflection() {
@@ -35,7 +35,7 @@ public class CollectionProcessor implements Processor {
                     field.setAccessible(true);
                     return getRecordsByField(field);
                 })
-                .orElse(Collections.emptyList());
+                .orElse(new ArrayList<>());
         return fetchedRecords;
     }
 
@@ -47,19 +47,26 @@ public class CollectionProcessor implements Processor {
         }
     }
 
-    private List<Map<String, Object>> updateIfExists(List<Map<String, Object>> fetchedRecords) {
-        return fetchedRecords.stream()
+    private List<Map<String, Object>> updateIfExistsOrPut(List<Map<String, Object>> fetchedRecords) {
+        fetchedRecords.stream()
                 .filter(this::isExistingRecord)
-                .map(this::updateExistingRecord)
-                .collect(Collectors.toList());
+                .findFirst()
+                .ifPresentOrElse(this::updateExistingRecord, () -> addNewRecordTo(fetchedRecords));
+        return fetchedRecords;
+    }
+
+    private void addNewRecordTo(List<Map<String, Object>> fetchedRecords) {
+        fetchedRecords.add(Map.of(
+                MappingGenerator.ID, generatorPayload.getRecordId(),
+                generatorPayload.getNameValue().getName(), generatorPayload.getNameValue().getValue()
+        ));
     }
 
     private boolean isExistingRecord(Map<String, Object> eachRecord) {
-        return (int) eachRecord.get(BaseGenerator.ID) == generatorPayload.getRecordId();
+        return (double) eachRecord.get(BaseGenerator.ID) == (double) generatorPayload.getRecordId();
     }
 
-    private Map<String, Object> updateExistingRecord(Map<String, Object> eachRecord) {
+    private void updateExistingRecord(Map<String, Object> eachRecord) {
         eachRecord.put(generatorPayload.getNameValue().getName(), generatorPayload.getNameValue().getValue());
-        return eachRecord;
     }
 }

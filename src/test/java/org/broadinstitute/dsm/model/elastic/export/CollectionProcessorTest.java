@@ -15,7 +15,7 @@ public class CollectionProcessorTest {
     @Test
     public void testProcess() throws IOException {
         String propertyName = "medicalRecords";
-        int recordId = 5;
+        double recordId = 5;
         String oldValue = "mr_old";
         String json = String.format("{\"%s\":[{\"id\":%s,\"mr\":\"%s\"}]}", propertyName, recordId, oldValue);
 
@@ -24,7 +24,7 @@ public class CollectionProcessorTest {
         ESDsm esDsm = objectMapper.readValue(json, ESDsm.class);
 
         NameValue nameValue = new NameValue("mr", "mr_updated");
-        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, recordId);
+        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, (int)recordId);
 
         CollectionProcessor collectionProcessor = new CollectionProcessor(esDsm, propertyName, generatorPayload);
 
@@ -38,23 +38,23 @@ public class CollectionProcessorTest {
     }
 
     @Test
-    public void testProcessOnEmpty() throws IOException {
+    public void updateIfExistsOrPut() throws IOException {
         String propertyName = "medicalRecords";
-        int recordId = 5;
-        String json = "{}";
+        double recordId = 5;
+        String json = String.format("{\"%s\":[{\"id\":%s,\"mr\":\"%s\"}]}", propertyName, recordId, "value");;
 
         ObjectMapper objectMapper = new ObjectMapper();
 
         ESDsm esDsm = objectMapper.readValue(json, ESDsm.class);
 
         NameValue nameValue = new NameValue("mr", "mr_updated");
-        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, recordId);
+        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 10);
 
         CollectionProcessor collectionProcessor = new CollectionProcessor(esDsm, propertyName, generatorPayload);
 
         List<Map<String, Object>> updatedList = collectionProcessor.process();
 
-        Assert.assertTrue(updatedList.isEmpty());
+        Assert.assertEquals(2, updatedList.size());
 
     }
 }

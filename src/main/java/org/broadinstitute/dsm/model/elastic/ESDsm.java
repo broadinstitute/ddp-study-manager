@@ -40,4 +40,7 @@ public class ESDsm {
     @SerializedName(ESObjectConstants.MEDICAL_RECORDS)
     List<Map<String, Object>> medicalRecords;
 
+    @SerializedName(ESObjectConstants.ONC_HISTORY_DETAIL_RECORDS)
+    List<Map<String, Object>> oncHistoryDetailRecords;
+
 }

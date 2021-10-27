@@ -81,6 +81,25 @@ public class MappingGeneratorTest {
         Assert.assertTrue(fieldWithType.containsKey(BaseGenerator.ID));
     }
 
+    @Test
+    public void generateMapping() {
+        GeneratorPayload generatorPayload = new GeneratorPayload(
+                new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "2021-10-30"),
+                100
+        );
+        MappingGenerator generator = new TestMappingGenerator(new TypeParser(), generatorPayload);
+        Map<String, Object> resultMap = generator.generate();
+        Map<String, Object> dsmLevelProperty = Map.of(generator.getOuterPropertyByAlias().getPropertyName(), Map.of(
+                MappingGenerator.TYPE, MappingGenerator.NESTED,
+                MappingGenerator.PROPERTIES, Map.of(TestPatchUtil.MEDICAL_RECORD_COLUMN, Map.of(MappingGenerator.TYPE, "date"),
+                        MappingGenerator.ID, Map.of(MappingGenerator.TYPE, MappingGenerator.TYPE_KEYWORD)
+                        )));
+        Map<String, Object> dsmLevelProperties = Map.of(MappingGenerator.PROPERTIES, dsmLevelProperty);
+        Map<String, Object> dsmLevel = Map.of(MappingGenerator.DSM_OBJECT, dsmLevelProperties);
+        Map<String, Object> topLevel = Map.of(MappingGenerator.PROPERTIES, dsmLevel);
+        Assert.assertTrue(topLevel.equals(resultMap));
+    }
+
     private String extractDeepestLeveleValue(Map<String, Object> objectMap) {
         return (String)
                 ((Map)
