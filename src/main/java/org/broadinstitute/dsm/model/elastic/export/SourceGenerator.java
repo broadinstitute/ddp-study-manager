@@ -25,7 +25,7 @@ public class SourceGenerator extends BaseGenerator {
         Map<String, Object> dynamicFieldValues = parseJsonToMapFromValue();
         Map<String, Object> transformedMap = new HashMap<>();
         for (Map.Entry<String, Object> entry : dynamicFieldValues.entrySet()) {
-            transformedMap.put(entry.getKey(), parser.parse((String) entry.getValue()));
+            transformedMap.put(entry.getKey(), parser.parse(String.valueOf(entry.getValue())));
         }
         return Map.of(getOuterPropertyByAlias().getPropertyName(), transformedMap);
     }
