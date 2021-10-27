@@ -22,7 +22,7 @@ public class SourceGenerator extends BaseGenerator {
 
     @Override
     protected Map<String, Object> parseJson() {
-        Map<String, Object> dynamicFieldValues = GSON.fromJson((String) getNameValue().getValue(), Map.class);
+        Map<String, Object> dynamicFieldValues = parseJsonToMapFromValue();
         Map<String, Object> transformedMap = new HashMap<>();
         for (Map.Entry<String, Object> entry : dynamicFieldValues.entrySet()) {
             transformedMap.put(entry.getKey(), parser.parse((String) entry.getValue()));

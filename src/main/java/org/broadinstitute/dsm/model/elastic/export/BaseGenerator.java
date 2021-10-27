@@ -48,12 +48,16 @@ public abstract class BaseGenerator implements Generator {
     }
 
     protected abstract Map<String, Object> parseJson();
-    
+
+    protected Map parseJsonToMapFromValue() {
+        return GSON.fromJson(String.valueOf(getNameValue().getValue()), Map.class);
+    }
+
     protected abstract Map<String, Object> parseSingleElement();
 
     protected Map<String, Object> getFieldWithElement() {
         Map<String, Object> fieldElementMap;
-        Object element = parser.parse((String) getNameValue().getValue());
+        Object element = parser.parse(String.valueOf(getNameValue().getValue()));
         if (getOuterPropertyByAlias().isCollection) {
             fieldElementMap = getElementWithId(element);
         } else {

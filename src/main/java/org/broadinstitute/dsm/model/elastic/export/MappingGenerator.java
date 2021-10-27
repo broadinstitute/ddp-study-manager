@@ -44,7 +44,7 @@ public class MappingGenerator extends BaseGenerator {
     @Override
     protected Map<String, Object> parseJson() {
         Map<String, Object> resultMap = new HashMap<>();
-        Map<String, Object> fieldsByValues = GSON.fromJson((String) getNameValue().getValue(), Map.class);
+        Map<String, Object> fieldsByValues = parseJsonToMapFromValue();
         for (Map.Entry<String, Object> entry: fieldsByValues.entrySet()) {
             Object eachType = parser.parse((String) entry.getValue());
             resultMap.put(entry.getKey(), Map.of(MappingGenerator.TYPE, eachType));

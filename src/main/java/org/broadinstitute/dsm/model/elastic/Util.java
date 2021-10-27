@@ -15,6 +15,7 @@ public class Util {
             "m", new BaseGenerator.PropertyInfo(ESObjectConstants.MEDICAL_RECORDS, true),
             "t", new BaseGenerator.PropertyInfo(ESObjectConstants.TISSUE_RECORDS, true),
             "oD", new BaseGenerator.PropertyInfo(ESObjectConstants.ONC_HISTORY_DETAIL_RECORDS, true),
+            "o", new BaseGenerator.PropertyInfo(ESObjectConstants.ONC_HISTORY_DETAIL_RECORDS, true),
             "r", new BaseGenerator.PropertyInfo("participant", false),
             "p", new BaseGenerator.PropertyInfo("participant", false),
             "d", new BaseGenerator.PropertyInfo("participant", false)
