@@ -16,8 +16,7 @@ public class Util {
             "t", new BaseGenerator.PropertyInfo(ESObjectConstants.TISSUE_RECORDS, true),
             "oD", new BaseGenerator.PropertyInfo(ESObjectConstants.ONC_HISTORY_DETAIL_RECORDS, true),
             "r", new BaseGenerator.PropertyInfo("participant", false),
-            "p", new BaseGenerator.PropertyInfo("participant", false),
-            "d", new BaseGenerator.PropertyInfo("participant", false)
+            "p", new BaseGenerator.PropertyInfo("participant", false)
     );
 
     public static String getQueryTypeFromId(String id) {
