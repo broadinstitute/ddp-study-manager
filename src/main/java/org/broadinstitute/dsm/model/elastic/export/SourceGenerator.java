@@ -1,7 +1,5 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
-import org.broadinstitute.dsm.model.elastic.Util;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

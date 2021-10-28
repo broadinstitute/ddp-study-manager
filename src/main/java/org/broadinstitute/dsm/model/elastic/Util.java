@@ -3,9 +3,11 @@ package org.broadinstitute.dsm.model.elastic;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.elastic.export.BaseGenerator;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.broadinstitute.dsm.util.PatchUtil;
 
@@ -37,5 +39,10 @@ public class Util {
 
     public static DBElement getDBElement(String fieldName) {
         return PatchUtil.getColumnNameMap().get(Objects.requireNonNull(fieldName));
+    }
+
+    public static String parseDotValue(String value) {
+        String[] split = Objects.requireNonNull(value).split(ElasticSearchUtil.DOT_SEPARATOR);
+        return split.length > 1 ? split[1] : split[0];
     }
 }
