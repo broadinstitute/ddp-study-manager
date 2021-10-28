@@ -83,7 +83,6 @@ public class GoogleAnalyticsMetricsTracker {
     }
 
     public String getAnalyticsToken(@NonNull Config config) {
-        //todo pegah add to conf and read from there
         if (config.hasPath(GA_TOKEN_PATH)) {
             return config.getString(GA_TOKEN_PATH);
         }
