@@ -40,9 +40,4 @@ public class Util {
     public static DBElement getDBElement(String fieldName) {
         return PatchUtil.getColumnNameMap().get(Objects.requireNonNull(fieldName));
     }
-
-    public static String parseDotValue(String value) {
-        String[] split = Objects.requireNonNull(value).split(ElasticSearchUtil.DOT_SEPARATOR);
-        return split.length > 1 ? split[1] : split[0];
-    }
 }

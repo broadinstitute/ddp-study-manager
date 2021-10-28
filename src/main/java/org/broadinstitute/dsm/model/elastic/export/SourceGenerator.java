@@ -29,15 +29,14 @@ public class SourceGenerator extends BaseGenerator {
     }
 
     @Override
-    protected Map<String, Object> parseSingleElement() {
+    protected Object parseSingleElement() {
         return getFieldWithElement();
     }
 
     @Override
-    protected Map<String, Object> getElementWithId(Object element) {
-        return Map.of(
-                getOuterPropertyByAlias().getPropertyName(), List.of(Map.of(getDBElement().getColumnName(),
-                        element, ID, generatorPayload.getRecordId())));
+    protected Object getElementWithId(Object element) {
+        return List.of(Map.of(getDBElement().getColumnName(),element,
+                ID, generatorPayload.getRecordId()));
     }
 
     @Override

@@ -19,11 +19,8 @@ public class MappingGenerator extends BaseGenerator {
 
     @Override
     public Map<String, Object> generate() {
-        PropertyInfo propertyInfo = getOuterPropertyByAlias();
-        String propertyName = propertyInfo.getPropertyName();
         Map<String, Object> mappedField = buildMappedField();
-        Map<String, Object> dsmLevelProperty = Map.of(propertyName, mappedField);
-        Map<String, Object> dsmLevelProperties = Map.of(PROPERTIES, dsmLevelProperty);
+        Map<String, Object> dsmLevelProperties = Map.of(PROPERTIES, mappedField);
         Map<String, Map<String, Object>> dsmLevel = Map.of(DSM_OBJECT, dsmLevelProperties);
         return Map.of(PROPERTIES, dsmLevel);
     }
@@ -53,7 +50,7 @@ public class MappingGenerator extends BaseGenerator {
     }
 
     @Override
-    protected Map<String, Object> parseSingleElement() {
+    protected Object parseSingleElement() {
         return getFieldWithElement();
     }
 

@@ -77,8 +77,8 @@ public class MappingGeneratorTest {
         );
         TestMappingGenerator generator = TestMappingGenerator.of(generatorPayload);
         generator.getOuterPropertyByAlias().isCollection = true;
-        Map<String, Object> fieldWithType = generator.getFieldWithElement();
-        Assert.assertTrue(fieldWithType.containsKey(BaseGenerator.ID));
+        Object fieldWithType = generator.getFieldWithElement();
+        Assert.assertTrue(((Map<String, Object>) fieldWithType).containsKey(BaseGenerator.ID));
     }
 
     @Test
@@ -114,9 +114,11 @@ public class MappingGeneratorTest {
         return (Map)
                 ((Map)
                 ((Map)
+                ((Map)
                 ((Map) objectMap
                         .get(BaseGenerator.PROPERTIES))
                         .get(BaseGenerator.DSM_OBJECT))
+                        .get(BaseGenerator.PROPERTIES))
                         .get(BaseGenerator.PROPERTIES))
                         .get("medicalRecords");
     }

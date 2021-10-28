@@ -4,7 +4,6 @@ import org.broadinstitute.dsm.model.elastic.ESDsm;
 
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class CollectionProcessor implements Processor {
@@ -24,6 +23,7 @@ public class CollectionProcessor implements Processor {
     @Override
     public List<Map<String, Object>> process() {
         List<Map<String, Object>> fetchedRecords = extractDataByReflection();
+        Map.of(propertyName, fetchedRecords);
         return updateIfExistsOrPut(fetchedRecords);
     }
 

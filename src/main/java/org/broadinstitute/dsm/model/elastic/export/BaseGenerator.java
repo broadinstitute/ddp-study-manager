@@ -38,13 +38,13 @@ public abstract class BaseGenerator implements Generator {
     }
     
     protected Map<String, Object> collect() {
-        Map<String, Object> sourceToUpsert;
+        Object sourceToUpsert;
         try {
             sourceToUpsert = parseJson();
         } catch (JsonSyntaxException jse) {
             sourceToUpsert = parseSingleElement();
         }
-        return sourceToUpsert;
+        return Map.of(getOuterPropertyByAlias().getPropertyName(), sourceToUpsert);
     }
 
     protected abstract Map<String, Object> parseJson();
@@ -53,10 +53,10 @@ public abstract class BaseGenerator implements Generator {
         return GSON.fromJson(String.valueOf(getNameValue().getValue()), Map.class);
     }
 
-    protected abstract Map<String, Object> parseSingleElement();
+    protected abstract Object parseSingleElement();
 
-    protected Map<String, Object> getFieldWithElement() {
-        Map<String, Object> fieldElementMap;
+    protected Object getFieldWithElement() {
+        Object fieldElementMap;
         Object element = parser.parse(String.valueOf(getNameValue().getValue()));
         if (getOuterPropertyByAlias().isCollection) {
             fieldElementMap = getElementWithId(element);
@@ -66,7 +66,7 @@ public abstract class BaseGenerator implements Generator {
         return fieldElementMap;
     }
 
-    protected abstract Map<String, Object> getElementWithId(Object element);
+    protected abstract Object getElementWithId(Object element);
 
     protected abstract Map<String, Object> getElement(Object element);
 
