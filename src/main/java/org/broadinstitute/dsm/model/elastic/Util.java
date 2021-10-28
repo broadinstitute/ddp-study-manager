@@ -15,10 +15,11 @@ public class Util {
             "m", new BaseGenerator.PropertyInfo(ESObjectConstants.MEDICAL_RECORDS, true),
             "t", new BaseGenerator.PropertyInfo(ESObjectConstants.TISSUE_RECORDS, true),
             "oD", new BaseGenerator.PropertyInfo(ESObjectConstants.ONC_HISTORY_DETAIL_RECORDS, true),
-            "o", new BaseGenerator.PropertyInfo(ESObjectConstants.ONC_HISTORY_DETAIL_RECORDS, true),
-            "r", new BaseGenerator.PropertyInfo("participant", false),
-            "p", new BaseGenerator.PropertyInfo("participant", false)
-    );
+            "d", new BaseGenerator.PropertyInfo(ESObjectConstants.PARTICIPANT_DATA, true),
+            "r", new BaseGenerator.PropertyInfo(ESObjectConstants.PARTICIPANT_RECORD, false),
+            "p", new BaseGenerator.PropertyInfo(ESObjectConstants.PARTICIPANT, false),
+            "o", new BaseGenerator.PropertyInfo(ESObjectConstants.ONC_HISTORY, false)
+            );
 
     public static String getQueryTypeFromId(String id) {
         String type;
