@@ -37,23 +37,23 @@ public abstract class BaseGenerator implements Generator {
         return Util.TABLE_ALIAS_MAPPINGS.get(getDBElement().getTableAlias());
     }
     
-    protected Map<String, Object> collect() {
+    protected Object collect() {
         Object sourceToUpsert;
         try {
             sourceToUpsert = parseJson();
         } catch (JsonSyntaxException jse) {
             sourceToUpsert = parseSingleElement();
         }
-        return Map.of(getOuterPropertyByAlias().getPropertyName(), sourceToUpsert);
+        return sourceToUpsert;
     }
 
-    protected abstract Map<String, Object> parseJson();
+    protected abstract <T> T parseJson();
 
-    protected Map parseJsonToMapFromValue() {
+    protected Map<String, Object> parseJsonToMapFromValue() {
         return GSON.fromJson(String.valueOf(getNameValue().getValue()), Map.class);
     }
 
-    protected abstract Object parseSingleElement();
+    protected abstract <T> T parseSingleElement();
 
     protected Object getFieldWithElement() {
         Object fieldElementMap;

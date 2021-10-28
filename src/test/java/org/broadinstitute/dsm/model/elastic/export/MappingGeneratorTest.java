@@ -114,11 +114,9 @@ public class MappingGeneratorTest {
         return (Map)
                 ((Map)
                 ((Map)
-                ((Map)
                 ((Map) objectMap
                         .get(BaseGenerator.PROPERTIES))
                         .get(BaseGenerator.DSM_OBJECT))
-                        .get(BaseGenerator.PROPERTIES))
                         .get(BaseGenerator.PROPERTIES))
                         .get("medicalRecords");
     }

@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jcodings.util.Hash;
+
 public class SourceGenerator extends BaseGenerator {
 
 
@@ -14,18 +16,26 @@ public class SourceGenerator extends BaseGenerator {
 
     @Override
     public Map<String, Object> generate() {
-        Map<String, Object> dataToExport = collect();
-        return Map.of(DSM_OBJECT, dataToExport);
+        Object dataToExport = collect();
+        Map<String, Object> objectLevel = Map.of(getOuterPropertyByAlias().getPropertyName(), dataToExport);
+        return Map.of(DSM_OBJECT, objectLevel);
     }
 
     @Override
-    protected Map<String, Object> parseJson() {
+    protected Object parseJson() {
         Map<String, Object> dynamicFieldValues = parseJsonToMapFromValue();
         Map<String, Object> transformedMap = new HashMap<>();
         for (Map.Entry<String, Object> entry : dynamicFieldValues.entrySet()) {
             transformedMap.put(entry.getKey(), parser.parse(String.valueOf(entry.getValue())));
         }
-        return Map.of(getOuterPropertyByAlias().getPropertyName(), transformedMap);
+        if (getOuterPropertyByAlias().isCollection()) {
+            Map<Object, Object> collectionMap = new HashMap<>();
+            collectionMap.put(ID, generatorPayload.getRecordId());
+            collectionMap.putAll(transformedMap);
+            return List.of(collectionMap);
+        } else {
+            return transformedMap;
+        }
     }
 
     @Override
