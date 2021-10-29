@@ -68,7 +68,7 @@ public abstract class BasePatch {
         prepareCommonData();
     }
 
-    protected void exportToES(NameValue nameValue) {
+    private void exportToES(NameValue nameValue) {
         GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, Integer.parseInt(patch.getId()));
         ExportFacadePayload exportFacadePayload =
                 new ExportFacadePayload(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId(), generatorPayload);
@@ -114,6 +114,11 @@ public abstract class BasePatch {
             }
         }
         return updatedNameValues;
+    }
+
+    protected void exportToESWithId(String id) {
+        patch.setId(id);
+        exportToES(patch.getNameValue());
     }
 
     abstract Optional<Object> processEachNameValue(NameValue nameValue);

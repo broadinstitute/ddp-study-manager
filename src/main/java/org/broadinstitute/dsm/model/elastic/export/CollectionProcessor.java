@@ -5,6 +5,7 @@ import org.broadinstitute.dsm.model.elastic.ESDsm;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class CollectionProcessor extends SourceGenerator implements Processor {
 
@@ -48,10 +49,14 @@ public class CollectionProcessor extends SourceGenerator implements Processor {
     }
 
     private List<Map<String, Object>> updateIfExistsOrPut(List<Map<String, Object>> fetchedRecords) {
-        fetchedRecords.stream()
+        List<Map<String, Object>> existingRecords = fetchedRecords.stream()
                 .filter(this::isExistingRecord)
-                .findFirst()
-                .ifPresentOrElse(this::updateExistingRecord, () -> addNewRecordTo(fetchedRecords));
+                .collect(Collectors.toList());
+        if (existingRecords.isEmpty()) {
+            addNewRecordTo(fetchedRecords);
+        } else {
+            existingRecords.forEach(this::updateExistingRecord);
+        }
         return fetchedRecords;
     }
 
@@ -72,6 +77,14 @@ public class CollectionProcessor extends SourceGenerator implements Processor {
     }
 
     private void updateExistingRecord(Map<String, Object> eachRecord) {
-        eachRecord.put(generatorPayload.getNameValue().getName(), generatorPayload.getNameValue().getValue());
+        Object collectedData = collect();
+        if (collectedData instanceof Map) {
+            Map<String, Object> recordMap = (Map<String, Object>) collectedData;
+            recordMap.put(MappingGenerator.ID, generatorPayload.getRecordId());
+            eachRecord.putAll(recordMap);
+        } else {
+            List<Map<String, Object>> records = (List<Map<String, Object>>) collectedData;
+            records.forEach(eachRecord::putAll);
+        }
     }
 }

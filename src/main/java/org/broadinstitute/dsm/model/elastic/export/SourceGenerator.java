@@ -51,9 +51,7 @@ public class SourceGenerator extends BaseGenerator {
 
     @Override
     protected Map<String, Object> getElement(Object element) {
-        return Map.of(
-                getOuterPropertyByAlias().getPropertyName(), Map.of(getDBElement().getColumnName(),
-                        element));
+        return Map.of(getDBElement().getColumnName(), element);
     }
 
 

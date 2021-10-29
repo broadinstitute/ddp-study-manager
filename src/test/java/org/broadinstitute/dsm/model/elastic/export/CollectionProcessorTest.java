@@ -10,6 +10,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class CollectionProcessorTest {
 
@@ -58,6 +59,34 @@ public class CollectionProcessorTest {
 
         Assert.assertEquals(2, updatedList.size());
 
+    }
+
+    @Test
+    public void updateIfExists() throws IOException {
+        String propertyName = "medicalRecords";
+        double recordId = 5;
+        String json = String.format("{\"%s\":[{\"id\":%s,\"TEST1\":\"%s\", \"TEST2\":\"TEST_VAL2\"}]}", propertyName, recordId, "value");;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        ESDsm esDsm = objectMapper.readValue(json, ESDsm.class);
+
+        NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "{\"TEST1\":\"TEST_VAL\", \"TEST2\":\"TEST_VAL3\"}");
+        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 5);
+
+        CollectionProcessor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, new ValueParser(), generatorPayload);
+
+        List<Map<String, Object>> updatedList = collectionProcessor.process();
+
+        updatedList.stream()
+                .filter(i -> i.containsKey("TEST1"))
+                .findFirst()
+                .ifPresentOrElse(m -> m.get("TEST1").equals("TEST_VAL"), Assert::fail);
+
+        updatedList.stream()
+                .filter(i -> i.containsKey("TEST2"))
+                .findFirst()
+                .ifPresentOrElse(m -> m.get("TEST2").equals("TEST_VAL3"), Assert::fail);
     }
 
     private static class TestCollectionProcessor extends CollectionProcessor {
