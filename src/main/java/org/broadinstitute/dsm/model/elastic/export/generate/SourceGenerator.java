@@ -1,10 +1,10 @@
-package org.broadinstitute.dsm.model.elastic.export;
+package org.broadinstitute.dsm.model.elastic.export.generate;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jcodings.util.Hash;
+import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 
 public class SourceGenerator extends BaseGenerator {
 

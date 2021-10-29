@@ -5,7 +5,7 @@ import org.broadinstitute.dsm.util.PatchUtil;
 
 import java.util.Map;
 
-class TestPatchUtil extends PatchUtil {
+public class TestPatchUtil extends PatchUtil {
 
     public static final String MEDICAL_RECORD_COLUMN = "medical_record_column";
     public static final String TISSUE_RECORD_COLUMN = "tissue_record_column";

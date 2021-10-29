@@ -1,16 +1,20 @@
-package org.broadinstitute.dsm.model.elastic.export;
+package org.broadinstitute.dsm.model.elastic.export.process;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.elastic.ESDsm;
+import org.broadinstitute.dsm.model.elastic.export.TestPatchUtil;
+import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
+import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
+import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
+import org.broadinstitute.dsm.model.elastic.export.process.CollectionProcessor;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class CollectionProcessorTest {
 
@@ -25,11 +29,11 @@ public class CollectionProcessorTest {
 
         ESDsm esDsm = objectMapper.readValue(json, ESDsm.class);
 
-        NameValue nameValue = new NameValue("mr", "mr_updated");
+        NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "mr_updated");
         GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, (int)recordId);
 
         ValueParser valueParser = new ValueParser();
-        CollectionProcessor collectionProcessor = new CollectionProcessor(esDsm, propertyName, generatorPayload, valueParser);
+        CollectionProcessor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, valueParser, generatorPayload);
 
         List<Map<String, Object>> updatedList = collectionProcessor.process();
 
@@ -91,7 +95,7 @@ public class CollectionProcessorTest {
 
     private static class TestCollectionProcessor extends CollectionProcessor {
 
-        public TestCollectionProcessor(ESDsm esDsm,String propertyName, Parser parser, GeneratorPayload generatorPayload) {
+        public TestCollectionProcessor(ESDsm esDsm, String propertyName, Parser parser, GeneratorPayload generatorPayload) {
             super(esDsm, propertyName, generatorPayload, parser);
         }
 

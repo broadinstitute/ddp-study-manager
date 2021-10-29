@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.elastic.export;
+package org.broadinstitute.dsm.model.elastic.export.parse;
 
 public class ValueParser extends BaseParser {
 

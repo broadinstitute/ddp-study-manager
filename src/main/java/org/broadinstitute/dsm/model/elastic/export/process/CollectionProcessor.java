@@ -1,6 +1,11 @@
-package org.broadinstitute.dsm.model.elastic.export;
+package org.broadinstitute.dsm.model.elastic.export.process;
 
 import org.broadinstitute.dsm.model.elastic.ESDsm;
+import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
+import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
+import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
+import org.broadinstitute.dsm.model.elastic.export.generate.SourceGenerator;
+import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 
 import java.lang.reflect.Field;
 import java.util.*;

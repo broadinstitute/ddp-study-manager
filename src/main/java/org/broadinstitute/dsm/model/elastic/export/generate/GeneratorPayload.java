@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.elastic.export;
+package org.broadinstitute.dsm.model.elastic.export.generate;
 
 import org.broadinstitute.dsm.model.NameValue;
 

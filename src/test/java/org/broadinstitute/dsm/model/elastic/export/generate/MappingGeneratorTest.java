@@ -1,8 +1,11 @@
-package org.broadinstitute.dsm.model.elastic.export;
+package org.broadinstitute.dsm.model.elastic.export.generate;
 
 
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
+import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
+import org.broadinstitute.dsm.model.elastic.export.TestPatchUtil;
+import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.junit.Assert;
 import org.junit.Test;
 

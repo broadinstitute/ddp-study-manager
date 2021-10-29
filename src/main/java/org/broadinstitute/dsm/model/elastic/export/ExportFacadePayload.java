@@ -2,7 +2,7 @@ package org.broadinstitute.dsm.model.elastic.export;
 
 import java.util.Objects;
 
-import org.broadinstitute.dsm.model.NameValue;
+import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 
 public class ExportFacadePayload {
     private String index;

@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.elastic.export;
+package org.broadinstitute.dsm.model.elastic.export.parse;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

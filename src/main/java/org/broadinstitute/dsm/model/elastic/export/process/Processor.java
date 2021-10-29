@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.elastic.export;
+package org.broadinstitute.dsm.model.elastic.export.process;
 
 import java.util.List;
 import java.util.Map;
