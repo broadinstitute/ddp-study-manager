@@ -71,6 +71,20 @@ public abstract class BaseGenerator implements Generator {
 
     protected abstract Map<String, Object> getElement(Object element);
 
+    protected Object constructByPropertyType() {
+        Object constructedObject;
+        if(getOuterPropertyByAlias().isCollection()) {
+            constructedObject = constructCollection();
+        } else {
+            constructedObject = constructSingleElement();
+        }
+        return constructedObject;
+    }
+
+    protected abstract Object constructSingleElement();
+
+    protected abstract Object constructCollection();
+
     public static class PropertyInfo {
 
         String propertyName;

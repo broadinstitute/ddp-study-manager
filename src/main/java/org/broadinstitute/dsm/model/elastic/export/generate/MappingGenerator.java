@@ -7,7 +7,6 @@ import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 
 public class MappingGenerator extends BaseGenerator {
 
-
     public static final String TYPE = "type";
     public static final String NESTED = "nested";
     public static final String TYPE_KEYWORD = "keyword";
@@ -28,16 +27,7 @@ public class MappingGenerator extends BaseGenerator {
     }
 
     private Map<String, Object> buildMappedField() {
-        PropertyInfo propertyInfo = getOuterPropertyByAlias();
-        boolean isPropertyCollection = propertyInfo.isCollection();
-        Object field = collect();
-        Map<String, Object> mappedField;
-        if (isPropertyCollection) {
-            mappedField = Map.of(TYPE, NESTED, PROPERTIES, field);
-        } else {
-            mappedField = Map.of(PROPERTIES, field);
-        }
-        return mappedField;
+        return (Map<String, Object>) constructByPropertyType();
     }
 
     @Override
@@ -67,6 +57,16 @@ public class MappingGenerator extends BaseGenerator {
     @Override
     protected Map<String, Object> getElement(Object type) {
         return Map.of(getDBElement().getColumnName(), Map.of(MappingGenerator.TYPE, type));
+    }
+
+    @Override
+    protected Object constructSingleElement() {
+        return Map.of(PROPERTIES, collect());
+    }
+
+    @Override
+    protected Object constructCollection() {
+        return Map.of(TYPE, NESTED, PROPERTIES, collect());
     }
 
 }

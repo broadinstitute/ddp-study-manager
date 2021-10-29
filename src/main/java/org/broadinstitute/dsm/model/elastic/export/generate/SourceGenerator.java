@@ -23,19 +23,16 @@ public class SourceGenerator extends BaseGenerator {
 
     @Override
     protected Object parseJson() {
+        return constructByPropertyType();
+    }
+
+    private Map<String, Object> parseJsonValuesToObject() {
         Map<String, Object> dynamicFieldValues = parseJsonToMapFromValue();
         Map<String, Object> transformedMap = new HashMap<>();
         for (Map.Entry<String, Object> entry : dynamicFieldValues.entrySet()) {
             transformedMap.put(entry.getKey(), parser.parse(String.valueOf(entry.getValue())));
         }
-        if (getOuterPropertyByAlias().isCollection()) {
-            Map<Object, Object> collectionMap = new HashMap<>();
-            collectionMap.put(ID, generatorPayload.getRecordId());
-            collectionMap.putAll(transformedMap);
-            return List.of(collectionMap);
-        } else {
-            return transformedMap;
-        }
+        return transformedMap;
     }
 
     @Override
@@ -52,6 +49,20 @@ public class SourceGenerator extends BaseGenerator {
     @Override
     protected Map<String, Object> getElement(Object element) {
         return Map.of(getDBElement().getColumnName(), element);
+    }
+
+    @Override
+    protected Object constructSingleElement() {
+        return parseJsonValuesToObject();
+    }
+
+    @Override
+    protected Object constructCollection() {
+        Map<Object, Object> collectionMap = new HashMap<>();
+        collectionMap.put(ID, generatorPayload.getRecordId());
+        Map<String, Object> mapWithParsedObjects = parseJsonValuesToObject();
+        collectionMap.putAll(mapWithParsedObjects);
+        return List.of(collectionMap);
     }
 
 
