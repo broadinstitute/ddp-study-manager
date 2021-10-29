@@ -60,7 +60,7 @@ public class ExistingRecordPatch extends BasePatch {
     Optional<Object> processEachNameValue(NameValue nameValue) {
         Optional<Object> maybeUpdatedNameValue = Optional.empty();
         Patch.patch(patch.getId(), patch.getUser(), nameValue, dbElement);
-        exportToESWithId(patch.getId());
+        exportToESWithId(patch.getId(), nameValue);
         if (hasQuestion(nameValue)) {
             maybeUpdatedNameValue = sendNotificationEmailAndUpdateStatus(patch, nameValue, dbElement);
         }
@@ -179,7 +179,7 @@ public class ExistingRecordPatch extends BasePatch {
         List<NameValue> nameValues = new ArrayList<>();
         if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
             nameValues.addAll(setWorkflowRelatedFields(patch));
-            exportToESWithId(patch.getId());
+            exportToESWithId(patch.getId(), patch.getNameValue());
             return nameValues;
         }
         return nameValues;

@@ -2,11 +2,7 @@ package org.broadinstitute.dsm.model.patch;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -116,9 +112,9 @@ public abstract class BasePatch {
         return updatedNameValues;
     }
 
-    protected void exportToESWithId(String id) {
-        patch.setId(id);
-        exportToES(patch.getNameValue());
+    protected void exportToESWithId(String id, NameValue nameValue) {
+        patch.setId(Objects.requireNonNull(id));
+        exportToES(Objects.requireNonNull(nameValue));
     }
 
     abstract Optional<Object> processEachNameValue(NameValue nameValue);

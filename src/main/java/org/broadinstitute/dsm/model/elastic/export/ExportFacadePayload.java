@@ -26,4 +26,8 @@ public class ExportFacadePayload {
     public GeneratorPayload getGeneratorPayload() {
         return generatorPayload;
     }
+
+    public void setDocId(String docId) {
+        this.docId = docId;
+    }
 }

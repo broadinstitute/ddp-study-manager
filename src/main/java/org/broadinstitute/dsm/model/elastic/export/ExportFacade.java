@@ -41,6 +41,8 @@ public class ExportFacade {
 
     private ESDsm fetchData() {
         ElasticSearchParticipantDto participantById = searchable.getParticipantById(exportFacadePayload.getIndex(), exportFacadePayload.getDocId());
+        // Ensure that participant data will be stored by participant guid
+        exportFacadePayload.setDocId(participantById.getParticipantId());
         return participantById.getDsm().orElseThrow();
     }
 

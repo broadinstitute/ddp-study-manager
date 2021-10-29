@@ -194,11 +194,11 @@ public class ElasticSearch implements ElasticSearchable {
     }
 
     @Override
-    public ElasticSearchParticipantDto getParticipantById(String esParticipantsIndex, String shortId) {
-        String type = Util.getQueryTypeFromId(shortId);
-        String id = Objects.requireNonNull(shortId);
+    public ElasticSearchParticipantDto getParticipantById(String esParticipantsIndex, String id) {
+        String type = Util.getQueryTypeFromId(id);
+        String participantId = Objects.requireNonNull(id);
         SearchRequest searchRequest = new SearchRequest(Objects.requireNonNull(esParticipantsIndex));
-        TermQueryBuilder shortIdQuery = QueryBuilders.termQuery(type, id);
+        TermQueryBuilder shortIdQuery = QueryBuilders.termQuery(type, participantId);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
         searchSourceBuilder.query(shortIdQuery);
         searchRequest.source(searchSourceBuilder);
@@ -209,7 +209,7 @@ public class ElasticSearch implements ElasticSearchable {
             searchResponse = ElasticSearchUtil.getClientInstance().search(searchRequest, RequestOptions.DEFAULT);
             sourceAsMap = searchResponse.getHits().getHits()[0].getSourceAsMap();
         } catch (Exception e) {
-            throw new RuntimeException("Couldn't get participant from ES for instance " + esParticipantsIndex + " by short id: " + shortId, e);
+            throw new RuntimeException("Couldn't get participant from ES for instance " + esParticipantsIndex + " by short id: " + participantId, e);
         }
         return parseSourceMap(sourceAsMap).orElseThrow();
     }

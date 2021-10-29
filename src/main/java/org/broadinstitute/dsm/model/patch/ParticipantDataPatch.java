@@ -47,7 +47,7 @@ public class ParticipantDataPatch extends BasePatch {
         }
         else if (participantDataId != null) {
             Patch.patch(participantDataId, patch.getUser(), nameValue, dbElement);
-            exportToESWithId(participantDataId);
+            exportToESWithId(participantDataId, nameValue);
         }
         if (patch.getActions() != null) {
             profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getParentId())

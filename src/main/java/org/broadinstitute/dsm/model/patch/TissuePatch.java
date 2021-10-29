@@ -44,7 +44,7 @@ public class TissuePatch extends BasePatch {
             if (!nameValues.isEmpty()) {
                 resultMap.put(NAME_VALUE, GSON.toJson(nameValues));
             }
-            exportToESWithId(tissueId);
+            exportToESWithId(tissueId, patch.getNameValue());
         }
         return resultMap;
     }

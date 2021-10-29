@@ -65,7 +65,7 @@ public class ParticipantRecordPatch extends BasePatch {
     @Override
     Object handleSingleNameValue() {
         Patch.patch(String.valueOf(participantId), patch.getUser(), patch.getNameValue(), dbElement);
-        exportToESWithId(String.valueOf(participantId));
+        exportToESWithId(String.valueOf(participantId), patch.getNameValue());
         resultMap.put(PARTICIPANT_ID, String.valueOf(participantId));
         return resultMap;
     }
