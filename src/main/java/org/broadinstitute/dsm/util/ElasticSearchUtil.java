@@ -934,17 +934,9 @@ public class ElasticSearchUtil {
                                     logger.error("range was not date. user entered: " + userEntered);
                                 }
                             } else if (StringUtils.isNumeric(userEntered)) { // separately process expressions with numbers
-                                NestedQueryBuilder query = addRangeLimitForNumber(
-                                        Filter.LARGER_EQUALS, surveyParam[1].trim(), userEntered, finalQuery, queryPartsMap, ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
-                                if (query != null) {
-                                    parentNestedOfRangeBuilderOfNumbers = query;
-                                }
+                                parentNestedOfRangeBuilderOfNumbers = getNestedQueryBuilder(parentNestedOfRangeBuilderOfNumbers, finalQuery, queryPartsMap, userEntered, surveyParam, Filter.LARGER_EQUALS, ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
                             } else if (isUserEnteredDateString(userEntered)) {
-                                NestedQueryBuilder query = addRangeLimitForNumber(
-                                        Filter.LARGER_EQUALS, surveyParam[1].trim(), userEntered, finalQuery, queryPartsMap, ACTIVITIES_QUESTIONS_ANSWER_DATE);
-                                if (query != null) {
-                                    parentNestedOfRangeBuilderOfNumbers = query;
-                                }
+                                parentNestedOfRangeBuilderOfNumbers = getNestedQueryBuilder(parentNestedOfRangeBuilderOfNumbers, finalQuery, queryPartsMap, userEntered, surveyParam, Filter.LARGER_EQUALS, ACTIVITIES_QUESTIONS_ANSWER_DATE);
                             }
                         }
                     } else {
@@ -1018,17 +1010,9 @@ public class ElasticSearchUtil {
                                     logger.error("range was not date. user entered: " + userEntered);
                                 }
                             } else if (StringUtils.isNumeric(userEntered)) { // separately process expressions with numbers
-                                NestedQueryBuilder query = addRangeLimitForNumber(
-                                        Filter.SMALLER_EQUALS, surveyParam[1].trim(), userEntered, finalQuery, queryPartsMap, ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
-                                if (query != null) {
-                                    parentNestedOfRangeBuilderOfNumbers = query;
-                                }
+                                parentNestedOfRangeBuilderOfNumbers = getNestedQueryBuilder(parentNestedOfRangeBuilderOfNumbers, finalQuery, queryPartsMap, userEntered, surveyParam, Filter.SMALLER_EQUALS, ACTIVITIES_QUESTIONS_ANSWER_ANSWER);
                             } else if (isUserEnteredDateString(userEntered)) {
-                                NestedQueryBuilder query = addRangeLimitForNumber(
-                                        Filter.SMALLER_EQUALS, surveyParam[1].trim(), userEntered, finalQuery, queryPartsMap, ACTIVITIES_QUESTIONS_ANSWER_DATE);
-                                if (query != null) {
-                                    parentNestedOfRangeBuilderOfNumbers = query;
-                                }
+                                parentNestedOfRangeBuilderOfNumbers = getNestedQueryBuilder(parentNestedOfRangeBuilderOfNumbers, finalQuery, queryPartsMap, userEntered, surveyParam, Filter.SMALLER_EQUALS, ACTIVITIES_QUESTIONS_ANSWER_DATE);
                             }
                         }
                     } else {
@@ -1092,6 +1076,15 @@ public class ElasticSearchUtil {
             return finalQuery;
         }
         return null;
+    }
+
+    private static NestedQueryBuilder getNestedQueryBuilder(NestedQueryBuilder parentNestedOfRangeBuilderOfNumbers, BoolQueryBuilder finalQuery, Map<String, String> queryPartsMap, String userEntered, String[] surveyParam, String smallerEquals, String activitiesQuestionsAnswerDate) {
+        NestedQueryBuilder query = addRangeLimitForNumber(
+                smallerEquals, surveyParam[1].trim(), userEntered, finalQuery, queryPartsMap, activitiesQuestionsAnswerDate);
+        if (query != null) {
+            parentNestedOfRangeBuilderOfNumbers = query;
+        }
+        return parentNestedOfRangeBuilderOfNumbers;
     }
 
     private static QueryBuilder findQueryBuilderForFieldName(BoolQueryBuilder finalQuery, String fieldName) {
