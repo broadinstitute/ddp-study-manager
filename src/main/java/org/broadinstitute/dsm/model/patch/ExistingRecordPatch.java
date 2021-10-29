@@ -179,49 +179,9 @@ public class ExistingRecordPatch extends BasePatch {
         List<NameValue> nameValues = new ArrayList<>();
         if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
             nameValues.addAll(setWorkflowRelatedFields(patch));
-            writeDSMRecordsToES();
             exportToESWithId(patch.getId());
-            //return nameValues with nulls
             return nameValues;
         }
         return nameValues;
-    }
-
-    private void writeDSMRecordsToES() {
-        NameValue nameValue = patch.getNameValue();
-        String name = nameValue.getName().substring(nameValue.getName().lastIndexOf('.') + 1);
-        String type = getTypeFrom(nameValue);
-        if (type == null) return;
-        String value = nameValue.getValue().toString();
-        Map<String, Object> nameValueMap = new HashMap<>();
-        nameValueMap.put(name, value);
-        if (isMedicalRecord(name, type)) {
-            ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getDdpParticipantId(),
-                    ESObjectConstants.MEDICAL_RECORDS, ESObjectConstants.MEDICAL_RECORDS_ID, nameValueMap);
-        }
-        else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(type)) {
-            // TODO relationship between DDP_ONC_HISTORY_DETAIL_ALIAS and TISSUE_RECORDS_FIELD_NAMES
-            if (ESObjectConstants.TISSUE_RECORDS_FIELD_NAMES.contains(name)) {
-                if (PARTICIPANT_ID.equals(patch.getParent())) {
-                    ElasticSearchUtil.writeDsmRecord(ddpInstance, Integer.parseInt(patch.getId()), patch.getDdpParticipantId(),
-                            ESObjectConstants.TISSUE_RECORDS, ESObjectConstants.TISSUE_RECORDS_ID, nameValueMap);
-                }
-            }
-        }
-    }
-
-    private String getTypeFrom(NameValue nameValue) {
-        String type = null;
-        if (nameValue.getName().indexOf('.') != -1) {
-            type = nameValue.getName().substring(0, nameValue.getName().indexOf('.'));
-        }
-        else {
-            return null;
-        }
-        return type;
-    }
-
-    private boolean isMedicalRecord(String name, String type) {
-        return DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(type) && ESObjectConstants.MEDICAL_RECORDS_FIELD_NAMES.contains(name);
     }
 }
