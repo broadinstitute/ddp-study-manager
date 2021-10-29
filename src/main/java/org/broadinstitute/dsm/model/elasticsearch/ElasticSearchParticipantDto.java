@@ -94,14 +94,6 @@ public class ElasticSearchParticipantDto {
         this.computed = builder.computed;
     }
 
-    public void getActivityQuestionAnswer(String stableId) {
-        for (ESActivities activities: this.activities){
-            for(Map<String, Object> map: activities.getQuestionsAnswers()){
-                if(map.containsKey(stableId)){}
-            }
-        }
-    }
-
     public static class Builder {
         private ESAddress address;
         private List<Object> medicalProviders;

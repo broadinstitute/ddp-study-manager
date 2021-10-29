@@ -6,10 +6,6 @@ import lombok.Data;
 @Data
 public class ClinicalKitDto {
 
-    private final String NORMAL = "Normal";
-    private final String TUMOR = "Tumor";
-    private final String NA = "NA";
-
     @SerializedName ("participant_id")
     String collaboratorParticipantId;
 
@@ -24,9 +20,6 @@ public class ClinicalKitDto {
 
     @SerializedName ("vessel_type")
     String vesselType;
-
-    @SerializedName ("mail_to_name")
-    String mailToName;
 
     @SerializedName ("first_name")
     String firstName;
@@ -46,23 +39,40 @@ public class ClinicalKitDto {
     @SerializedName("accession_number")
     String accessionNumber;
 
-    String instanceName;
+    @SerializedName("collection_date")
+    String collectionDate;
+
+    @SerializedName("kit_label")
+    String mfBarcode;
 
     public ClinicalKitDto(){}
 
     public void setSampleType(String kitType){
         switch (kitType.toLowerCase()){
             case "saliva":
-                this.sampleType = NORMAL;
+                this.sampleType = "Normal";
                 break;
             case "blood":
-                this.sampleType = NA;
+                this.sampleType = "N/A";
                 break;
             default: //tissue
-                this.sampleType = TUMOR;
+                this.sampleType = "Tumor";
                 break;
         }
+    }
 
+    public void setGender(String genderString){
+        switch (genderString.toLowerCase()){
+            case "male":
+                this.gender = "M";
+                break;
+            case "female":
+                this.gender = "F";
+                break;
+            default: //intersex or prefer_not_answer
+                this.gender = "U";
+                break;
+        }
     }
 
 }
