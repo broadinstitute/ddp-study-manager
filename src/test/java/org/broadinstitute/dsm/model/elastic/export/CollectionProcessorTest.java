@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.junit.Assert;
@@ -26,7 +27,8 @@ public class CollectionProcessorTest {
         NameValue nameValue = new NameValue("mr", "mr_updated");
         GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, (int)recordId);
 
-        CollectionProcessor collectionProcessor = new CollectionProcessor(esDsm, propertyName, generatorPayload);
+        ValueParser valueParser = new ValueParser();
+        CollectionProcessor collectionProcessor = new CollectionProcessor(esDsm, propertyName, generatorPayload, valueParser);
 
         List<Map<String, Object>> updatedList = collectionProcessor.process();
 
@@ -47,15 +49,28 @@ public class CollectionProcessorTest {
 
         ESDsm esDsm = objectMapper.readValue(json, ESDsm.class);
 
-        NameValue nameValue = new NameValue("mr", "mr_updated");
+        NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "val");
         GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 10);
 
-        CollectionProcessor collectionProcessor = new CollectionProcessor(esDsm, propertyName, generatorPayload);
+        CollectionProcessor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, new ValueParser(), generatorPayload);
 
         List<Map<String, Object>> updatedList = collectionProcessor.process();
 
         Assert.assertEquals(2, updatedList.size());
 
     }
+
+    private static class TestCollectionProcessor extends CollectionProcessor {
+
+        public TestCollectionProcessor(ESDsm esDsm,String propertyName, Parser parser, GeneratorPayload generatorPayload) {
+            super(esDsm, propertyName, generatorPayload, parser);
+        }
+
+        @Override
+        protected DBElement getDBElement() {
+            return TestPatchUtil.getColumnNameMap().get(getNameValue().getName());
+        }
+    }
+
 }
 

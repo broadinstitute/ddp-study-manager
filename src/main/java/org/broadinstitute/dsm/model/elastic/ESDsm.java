@@ -43,4 +43,7 @@ public class ESDsm {
     @SerializedName(ESObjectConstants.ONC_HISTORY_DETAIL_RECORDS)
     List<Map<String, Object>> oncHistoryDetailRecords;
 
+    @SerializedName(ESObjectConstants.PARTICIPANT_DATA)
+    List<Map<String, Object>> participantData;
+
 }

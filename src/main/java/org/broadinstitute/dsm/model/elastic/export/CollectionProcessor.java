@@ -6,7 +6,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Predicate;
 
-public class CollectionProcessor implements Processor {
+public class CollectionProcessor extends SourceGenerator implements Processor {
 
     private ESDsm esDsm;
     private String propertyName;
@@ -14,7 +14,8 @@ public class CollectionProcessor implements Processor {
 
     private final Predicate<Field> isFieldMatchProperty = field -> propertyName.equals(field.getName());
 
-    public CollectionProcessor(ESDsm esDsm, String propertyName, GeneratorPayload generatorPayload) {
+    public CollectionProcessor(ESDsm esDsm, String propertyName, GeneratorPayload generatorPayload, Parser parser) {
+        super (parser, generatorPayload);
         this.esDsm = Objects.requireNonNull(esDsm);
         this.propertyName = Objects.requireNonNull(propertyName);
         this.generatorPayload = Objects.requireNonNull(generatorPayload);
@@ -23,7 +24,6 @@ public class CollectionProcessor implements Processor {
     @Override
     public List<Map<String, Object>> process() {
         List<Map<String, Object>> fetchedRecords = extractDataByReflection();
-        Map.of(propertyName, fetchedRecords);
         return updateIfExistsOrPut(fetchedRecords);
     }
 
@@ -56,10 +56,15 @@ public class CollectionProcessor implements Processor {
     }
 
     private void addNewRecordTo(List<Map<String, Object>> fetchedRecords) {
-        fetchedRecords.add(Map.of(
-                MappingGenerator.ID, generatorPayload.getRecordId(),
-                generatorPayload.getNameValue().getName(), generatorPayload.getNameValue().getValue()
-        ));
+        Object collectedData = collect();
+        if (collectedData instanceof Map) {
+            Map<String, Object> recordMap = (Map<String, Object>) collectedData;
+            recordMap.put(MappingGenerator.ID, generatorPayload.getRecordId());
+            fetchedRecords.add(recordMap);
+        } else {
+            List<Map<String, Object>> recordList = (List<Map<String, Object>>) collectedData;
+            fetchedRecords.addAll(recordList);
+        }
     }
 
     private boolean isExistingRecord(Map<String, Object> eachRecord) {

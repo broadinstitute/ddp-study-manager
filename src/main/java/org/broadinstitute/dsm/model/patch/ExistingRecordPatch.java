@@ -179,7 +179,7 @@ public class ExistingRecordPatch extends BasePatch {
         List<NameValue> nameValues = new ArrayList<>();
         if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
             nameValues.addAll(setWorkflowRelatedFields(patch));
-//            writeDSMRecordsToES();
+            writeDSMRecordsToES();
             exportToES(patch.getNameValue());
             //return nameValues with nulls
             return nameValues;
