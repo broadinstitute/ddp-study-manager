@@ -27,7 +27,7 @@ public abstract class BaseGenerator implements Generator, Collector {
         dbElement = Util.getDBElement(getNameValue().getName());
     }
 
-    //setter method to set dbElement for testing
+    //setter method to set dbElement for testing only!!!
     public void setDBElement(DBElement dbElement) {
         this.dbElement = dbElement;
     }

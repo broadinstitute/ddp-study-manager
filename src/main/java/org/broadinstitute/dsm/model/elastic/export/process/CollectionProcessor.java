@@ -29,10 +29,6 @@ public class CollectionProcessor implements Processor {
         this.collector = collector;
     }
 
-    protected CollectionProcessor() {
-
-    }
-
     @Override
     public List<Map<String, Object>> process() {
         List<Map<String, Object>> fetchedRecords = extractDataByReflection();

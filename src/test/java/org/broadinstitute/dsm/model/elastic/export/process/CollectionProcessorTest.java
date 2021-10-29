@@ -6,6 +6,7 @@ import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.export.TestPatchUtil;
 import org.broadinstitute.dsm.model.elastic.export.generate.Collector;
+import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.SourceGenerator;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
@@ -34,8 +35,8 @@ public class CollectionProcessorTest {
         NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "mr_updated");
         GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, (int)recordId);
 
-        ValueParser valueParser = new ValueParser();
-        CollectionProcessor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, valueParser, generatorPayload);
+        Processor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, generatorPayload, instance(generatorPayload,
+                nameValue));
 
         List<Map<String, Object>> updatedList = collectionProcessor.process();
 
@@ -59,7 +60,8 @@ public class CollectionProcessorTest {
         NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "val");
         GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 10);
 
-        CollectionProcessor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, new ValueParser(), generatorPayload);
+        CollectionProcessor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, generatorPayload,
+                instance(generatorPayload, nameValue));
 
         List<Map<String, Object>> updatedList = collectionProcessor.process();
 
@@ -80,7 +82,8 @@ public class CollectionProcessorTest {
         NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "{\"TEST1\":\"TEST_VAL\", \"TEST2\":\"TEST_VAL3\"}");
         GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 5);
 
-        CollectionProcessor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, new ValueParser(), generatorPayload);
+        CollectionProcessor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, generatorPayload,
+                instance(generatorPayload, nameValue));
 
         List<Map<String, Object>> updatedList = collectionProcessor.process();
 
@@ -95,23 +98,19 @@ public class CollectionProcessorTest {
                 .ifPresentOrElse(m -> m.get("TEST2").equals("TEST_VAL3"), Assert::fail);
     }
 
+    private Collector instance(GeneratorPayload generatorPayload, NameValue nameValue) {
+        SourceGenerator sourceGenerator = new SourceGenerator(new ValueParser(), generatorPayload);
+        sourceGenerator.setDBElement(TestPatchUtil.getColumnNameMap().get(nameValue.getName()));
+        return sourceGenerator;
+    }
+
     private static class TestCollectionProcessor extends CollectionProcessor {
 
-        public TestCollectionProcessor(ESDsm esDsm, String propertyName, Parser parser, GeneratorPayload generatorPayload) {
-            SourceGenerator sourceGenerator = new SourceGenerator(parser, generatorPayload);
-            sourceGenerator.setDBElement(TestPatchUtil.getColumnNameMap().get(getNameValue().getName()));
-            this(esDsm, propertyName, generatorPayload, sourceGenerator);
-        }
 
-        private TestCollectionProcessor(ESDsm esDsm, String propertyName, GeneratorPayload generatorPayload,
-                                        Collector collector) {
+        public TestCollectionProcessor(ESDsm esDsm, String propertyName, GeneratorPayload generatorPayload, Collector collector) {
             super(esDsm, propertyName, generatorPayload, collector);
         }
 
-//        @Override
-//        protected DBElement getDBElement() {
-//            return TestPatchUtil.getColumnNameMap().get(getNameValue().getName());
-//        }
     }
 
 }
