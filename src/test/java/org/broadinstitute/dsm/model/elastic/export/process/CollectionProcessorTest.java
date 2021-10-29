@@ -5,7 +5,9 @@ import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.export.TestPatchUtil;
+import org.broadinstitute.dsm.model.elastic.export.generate.Collector;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
+import org.broadinstitute.dsm.model.elastic.export.generate.SourceGenerator;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
 import org.broadinstitute.dsm.model.elastic.export.process.CollectionProcessor;
@@ -96,13 +98,20 @@ public class CollectionProcessorTest {
     private static class TestCollectionProcessor extends CollectionProcessor {
 
         public TestCollectionProcessor(ESDsm esDsm, String propertyName, Parser parser, GeneratorPayload generatorPayload) {
-            super(esDsm, propertyName, generatorPayload, parser);
+            SourceGenerator sourceGenerator = new SourceGenerator(parser, generatorPayload);
+            sourceGenerator.setDBElement(TestPatchUtil.getColumnNameMap().get(getNameValue().getName()));
+            this(esDsm, propertyName, generatorPayload, sourceGenerator);
         }
 
-        @Override
-        protected DBElement getDBElement() {
-            return TestPatchUtil.getColumnNameMap().get(getNameValue().getName());
+        private TestCollectionProcessor(ESDsm esDsm, String propertyName, GeneratorPayload generatorPayload,
+                                        Collector collector) {
+            super(esDsm, propertyName, generatorPayload, collector);
         }
+
+//        @Override
+//        protected DBElement getDBElement() {
+//            return TestPatchUtil.getColumnNameMap().get(getNameValue().getName());
+//        }
     }
 
 }

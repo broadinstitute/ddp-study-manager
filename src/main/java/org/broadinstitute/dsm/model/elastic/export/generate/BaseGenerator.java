@@ -10,7 +10,7 @@ import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import java.util.Map;
 import java.util.Objects;
 
-public abstract class BaseGenerator implements Generator {
+public abstract class BaseGenerator implements Generator, Collector {
 
 
     public static final String DSM_OBJECT = "dsm";
@@ -19,10 +19,17 @@ public abstract class BaseGenerator implements Generator {
     protected static final Gson GSON = new Gson();
     protected final Parser parser;
     protected GeneratorPayload generatorPayload;
+    private DBElement dbElement;
 
     public BaseGenerator(Parser parser, GeneratorPayload generatorPayload) {
         this.parser = Objects.requireNonNull(parser);
         this.generatorPayload = Objects.requireNonNull(generatorPayload);
+        dbElement = Util.getDBElement(getNameValue().getName());
+    }
+
+    //setter method to set dbElement for testing
+    public void setDBElement(DBElement dbElement) {
+        this.dbElement = dbElement;
     }
 
     protected NameValue getNameValue() {
@@ -31,14 +38,15 @@ public abstract class BaseGenerator implements Generator {
 
     //wrap Util.getDBElement in protected method so that we can override it in testing class for tests
     protected DBElement getDBElement() {
-        return Util.getDBElement(getNameValue().getName());
+        return dbElement;
     }
 
     protected PropertyInfo getOuterPropertyByAlias() {
         return Util.TABLE_ALIAS_MAPPINGS.get(getDBElement().getTableAlias());
     }
-    
-    protected Object collect() {
+
+    @Override
+    public Object collect() {
         Object sourceToUpsert;
         try {
             sourceToUpsert = parseJson();
@@ -59,7 +67,7 @@ public abstract class BaseGenerator implements Generator {
     protected Object getFieldWithElement() {
         Object fieldElementMap;
         Object element = parser.parse(String.valueOf(getNameValue().getValue()));
-        if (getOuterPropertyByAlias().isCollection) {
+        if (getOuterPropertyByAlias().isCollection()) {
             fieldElementMap = getElementWithId(element);
         } else {
             fieldElementMap = getElement(element);
@@ -87,11 +95,15 @@ public abstract class BaseGenerator implements Generator {
 
     public static class PropertyInfo {
 
-        String propertyName;
-        boolean isCollection;
+        private String propertyName;
+        private boolean isCollection;
 
         public PropertyInfo(String propertyName, boolean isCollection) {
             this.propertyName = Objects.requireNonNull(propertyName);
+            this.isCollection = isCollection;
+        }
+
+        public void setIsCollection(boolean isCollection) {
             this.isCollection = isCollection;
         }
 

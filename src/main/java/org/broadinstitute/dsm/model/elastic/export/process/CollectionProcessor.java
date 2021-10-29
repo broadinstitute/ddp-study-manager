@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.export.process;
 
 import org.broadinstitute.dsm.model.elastic.ESDsm;
+import org.broadinstitute.dsm.model.elastic.export.generate.Collector;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
@@ -12,19 +13,24 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class CollectionProcessor extends SourceGenerator implements Processor {
+public class CollectionProcessor implements Processor {
 
     private ESDsm esDsm;
     private String propertyName;
     private GeneratorPayload generatorPayload;
+    private Collector collector;
 
     private final Predicate<Field> isFieldMatchProperty = field -> propertyName.equals(field.getName());
 
-    public CollectionProcessor(ESDsm esDsm, String propertyName, GeneratorPayload generatorPayload, Parser parser) {
-        super (parser, generatorPayload);
+    public CollectionProcessor(ESDsm esDsm, String propertyName, GeneratorPayload generatorPayload, Collector collector) {
         this.esDsm = Objects.requireNonNull(esDsm);
         this.propertyName = Objects.requireNonNull(propertyName);
         this.generatorPayload = Objects.requireNonNull(generatorPayload);
+        this.collector = collector;
+    }
+
+    protected CollectionProcessor() {
+
     }
 
     @Override
@@ -66,7 +72,7 @@ public class CollectionProcessor extends SourceGenerator implements Processor {
     }
 
     private void addNewRecordTo(List<Map<String, Object>> fetchedRecords) {
-        Object collectedData = collect();
+        Object collectedData = collector.collect();
         if (collectedData instanceof Map) {
             Map<String, Object> recordMap = (Map<String, Object>) collectedData;
             recordMap.put(MappingGenerator.ID, generatorPayload.getRecordId());
@@ -82,7 +88,7 @@ public class CollectionProcessor extends SourceGenerator implements Processor {
     }
 
     private void updateExistingRecord(Map<String, Object> eachRecord) {
-        Object collectedData = collect();
+        Object collectedData = collector.collect();
         if (collectedData instanceof Map) {
             Map<String, Object> recordMap = (Map<String, Object>) collectedData;
             recordMap.put(MappingGenerator.ID, generatorPayload.getRecordId());

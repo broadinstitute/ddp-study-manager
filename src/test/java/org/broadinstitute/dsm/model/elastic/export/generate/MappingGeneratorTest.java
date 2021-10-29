@@ -79,7 +79,7 @@ public class MappingGeneratorTest {
                 100
         );
         TestMappingGenerator generator = TestMappingGenerator.of(generatorPayload);
-        generator.getOuterPropertyByAlias().isCollection = true;
+        generator.getOuterPropertyByAlias().setIsCollection(true);
         Object fieldWithType = generator.getFieldWithElement();
         Assert.assertTrue(((Map<String, Object>) fieldWithType).containsKey(BaseGenerator.ID));
     }
