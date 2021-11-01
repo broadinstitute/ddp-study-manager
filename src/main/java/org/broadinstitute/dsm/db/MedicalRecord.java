@@ -9,6 +9,8 @@ import org.broadinstitute.ddp.handlers.util.InstitutionDetail;
 import org.broadinstitute.ddp.handlers.util.MedicalInfo;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.structure.ColumnName;
+import org.broadinstitute.dsm.db.structure.DbDateConversion;
+import org.broadinstitute.dsm.db.structure.SqlDateConverter;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.model.FollowUp;
 import org.broadinstitute.dsm.statics.*;
@@ -94,6 +96,7 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.FAX_SENT)
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
     private String faxSent;
 
     @TableName (
@@ -110,6 +113,7 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.FAX_CONFIRMED)
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
     private String faxConfirmed;
 
     @TableName (
@@ -118,6 +122,7 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.FAX_SENT_2)
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
     private String faxSent2;
 
     @TableName (
@@ -134,6 +139,7 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.FAX_CONFIRMED_2)
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
     private String faxConfirmed2;
 
     @TableName (
@@ -142,6 +148,7 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.FAX_SENT_3)
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
     private String faxSent3;
 
     @TableName (
@@ -158,6 +165,7 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.FAX_CONFIRMED_3)
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
     private String faxConfirmed3;
 
     @TableName (
@@ -166,6 +174,7 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.MR_RECEIVED)
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
     private String mrReceived;
 
     @TableName (

@@ -1,9 +1,17 @@
 package org.broadinstitute.dsm.model;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+
 import lombok.Getter;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.structure.DBElement;
+import org.broadinstitute.dsm.db.structure.SqlDateConverter;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +65,8 @@ public class Filter {
     public static String CHECKBOX = "CHECKBOX";
     public static String COMPOSITE = "COMPOSITE";//ES type
     public static String JSON_ARRAY = "JSONARRAY";//Sample result
+    public static String AGREEMENT = "AGREEMENT";
+
 
     private boolean range = false;
     private boolean exactMatch = false;
@@ -131,7 +141,7 @@ public class Filter {
                     condition2 = SMALLER_EQUALS + (int) Double.parseDouble(String.valueOf(filter.getFilter2().getValue()));
                 }
                 finalQuery = query + condition + query2 + condition2 + notNullQuery;
-                if (StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())) && !StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue()))) {
+                if (isNotEmpty(filter.getFilter1()) || isNotEmpty(filter.getFilter2())) {
                     finalQuery = finalQuery + notNullQuery;
                 }
             }
@@ -154,8 +164,7 @@ public class Filter {
                 if (filter.getFilter1() != null) {
                     query = AND + filter.getColumnName(dbElement);
                     if (String.valueOf(filter.getFilter1().getValue()).length() == 10) {
-                        condition = EQUALS + "'" + filter.getFilter1().getValue() + "'";
-                        finalQuery = query + condition;
+                        finalQuery = generateDateComparisonSql(filter, dbElement,EQUALS,filter.getFilter1().getValue(), false);
                     }
                     else {
                         if (filter.isEmpty()) {
@@ -165,8 +174,7 @@ public class Filter {
                             finalQuery = query + IS_NOT_NULL + " ";
                         }
                         else {
-                            condition = LIKE + " '%" + filter.getFilter1().getValue() + "%'";
-                            finalQuery = query + condition;
+                            throw new RuntimeException("Cannot compare to unknown date format " + filter.getFilter1().getValue());
                         }
                     }
                 }
@@ -174,20 +182,15 @@ public class Filter {
             else {
                 filter = convertFilterDateValues(filter);
                 String notNullQuery = AND + filter.getColumnName(dbElement) + IS_NOT_NULL;
+                String query1 = "";
                 if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue()))) {
-                    query = AND + filter.getColumnName(dbElement);
-                    condition = LARGER_EQUALS + "'" + filter.getFilter1().getValue() + "'";
+                    query1 = generateDateComparisonSql(filter,dbElement, LARGER_EQUALS, filter.getFilter1().getValue(), false);
                 }
                 String query2 = "";
-                String condition2 = "";
                 if (filter.getFilter2() != null && filter.getFilter2() != null && filter.getFilter2().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue()))) {
-                    query2 = AND + filter.getColumnName(dbElement);
-                    condition2 = SMALLER_EQUALS + "'" + filter.getFilter2().getValue() + "'";
+                    query2 = generateDateComparisonSql(filter,dbElement, SMALLER_EQUALS,filter.getFilter2().getValue(), true);
                 }
-                finalQuery = query + condition + query2 + condition2;
-                if (filter.getFilter1().getValue() != null && filter.getFilter2() != null && filter.getFilter2().getValue() != null && !filter.getFilter1().getValue().equals("") && !filter.getFilter2().getValue().equals("")) {
-                    finalQuery = finalQuery + notNullQuery;
-                }
+                finalQuery = query1 + query2 + notNullQuery;
             }
         }
         else if (ADDITIONAL_VALUES.equals(filter.getType())) {
@@ -254,7 +257,7 @@ public class Filter {
             //                finalQuery = notNullQuery + query;
             finalQuery = query;
         }
-        else if (BOOLEAN.equals(filter.getType())) { //true/false
+        else if (BOOLEAN.equals(filter.getType()) || AGREEMENT.equals(filter.getType())) { //true/false
             if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())) && TRUE.equals(filter.getFilter1().getValue())) {
                 query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + filter.getFilter1().getName() + EQUALS + filter.getFilter1().getValue();
             }
@@ -266,6 +269,51 @@ public class Filter {
 
         //        logger.info(finalQuery);
         return finalQuery;
+    }
+
+    /**
+     * Check if filter value is not null and is not blank
+     * @return boolean is true if a filter is not null and not blank
+     */
+    private static boolean isNotEmpty(NameValue filter) {
+        return filter != null && StringUtils.isNotBlank(String.valueOf(filter.getValue()));
+    }
+
+    /**
+     * Uses the appropriate date converter (if given) to write SQL that can
+     * compare either exact dates or "in the day" dates.
+     * @param filter
+     * @param dbElement
+     * @param comparison how the values will be compared to one another
+     * @param arg the user-input field to compare
+     * @param useEndOfday if false, when parsing a date, the first millis of the day
+     *                    will be used.  if true, the last millis of the day will
+     *                    be used.
+     */
+    private static String generateDateComparisonSql(Filter filter, DBElement dbElement, String comparison, Object arg, boolean useEndOfday) {
+        String column = filter.getColumnName(dbElement);
+        SqlDateConverter dateConverter = null;
+        if (dbElement != null) {
+            dateConverter = dbElement.getDateConverter();
+            Instant instant = null;
+            try {
+                LocalDate date = LocalDate.parse(arg.toString(), DateTimeFormatter.ISO_LOCAL_DATE);
+                instant = useEndOfday ? date.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC) : date.atStartOfDay().toInstant(ZoneOffset.UTC);
+            } catch (DateTimeParseException e) {
+                // might be an epoch time in an older saved filter
+                instant = Instant.ofEpochMilli(Long.parseLong(arg.toString()));
+            }
+
+            if (dateConverter != null) {
+                if (EQUALS.equals(comparison)) {
+                    return AND + dateConverter.convertColumnForSqlDay(column) + " " + comparison + dateConverter.convertArgToSqlDay(instant);
+                } else {
+                    return AND + column + " " + comparison + dateConverter.convertArgToSql(instant);
+                }
+            }
+        }
+        String stringArg = "'" + arg + "'";
+        return AND + column + " " + comparison + stringArg;
     }
 
     private static Filter convertFilterDateValues(Filter filter) {
