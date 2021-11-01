@@ -67,6 +67,15 @@ public class CollectionProcessor implements Processor {
         return fetchedRecords;
     }
 
+    protected void templateMethod(List<Map<String, Object>> records) {
+        Object collectedData = collector.collect();
+        if (collectedData instanceof Map) {
+            processMap(records);
+        } else {
+            processList(records);
+        }
+    }
+
     private void addNewRecordTo(List<Map<String, Object>> fetchedRecords) {
         Object collectedData = collector.collect();
         if (collectedData instanceof Map) {
@@ -76,6 +85,22 @@ public class CollectionProcessor implements Processor {
         } else {
             List<Map<String, Object>> recordList = (List<Map<String, Object>>) collectedData;
             fetchedRecords.addAll(recordList);
+        }
+    }
+
+    private void upsertRecord(List<Map<String, Object>> fetchedRecords) {
+        Object collectedData = collector.collect();
+        if (collectedData instanceof Map) {
+            Map<String, Object> recordMap = (Map<String, Object>) collectedData;
+            recordMap.put(MappingGenerator.ID, generatorPayload.getRecordId());
+            fetchedRecords.add(recordMap);
+            eachRecord.putAll(recordMap);
+        } else {
+            for (Map<String, Object> entry: fetchedRecords) {
+
+            }
+            List<Map<String, Object>> records = (List<Map<String, Object>>) collectedData;
+            records.forEach(eachRecord::putAll); //eachRecord.putAll(Map)
         }
     }
 
@@ -91,7 +116,9 @@ public class CollectionProcessor implements Processor {
             eachRecord.putAll(recordMap);
         } else {
             List<Map<String, Object>> records = (List<Map<String, Object>>) collectedData;
-            records.forEach(eachRecord::putAll);
+            records.forEach(eachRecord::putAll); //eachRecord.putAll(Map)
         }
     }
+
+
 }
