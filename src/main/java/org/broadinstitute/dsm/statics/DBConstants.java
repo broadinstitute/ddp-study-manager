@@ -59,6 +59,7 @@ public class DBConstants {
     public static final String UPS_RETURN_STATUS = "ups_return_status";
     public static final String UPS_TRACKING_DATE = "ups_tracking_date";
     public static final String UPS_RETURN_DATE = "ups_return_date";
+    public static final String SAMPLE_TYPE = "sample_type";
     public static final String DDP_KIT_REQUEST_TABLE_ABBR = "req.";
 
 

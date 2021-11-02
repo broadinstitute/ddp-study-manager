@@ -1,11 +1,11 @@
 package org.broadinstitute.dsm.model.elasticsearch;
 
+import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
 
 @Setter
 public class ElasticSearchParticipantDto {
