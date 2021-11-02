@@ -1,15 +1,24 @@
 package org.broadinstitute.dsm.model.elastic.export.process;
 
-import org.broadinstitute.dsm.model.elastic.ESDsm;
-import org.broadinstitute.dsm.model.elastic.export.generate.Collector;
-import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
-import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
-
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 
+import org.broadinstitute.dsm.model.elastic.ESDsm;
+import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
+import org.broadinstitute.dsm.model.elastic.export.generate.Collector;
+import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class CollectionProcessor implements Processor {
+
+    private static final Logger logger = LoggerFactory.getLogger(CollectionProcessor.class);
 
     private ESDsm esDsm;
     private String propertyName;
@@ -32,6 +41,7 @@ public class CollectionProcessor implements Processor {
     }
 
     private List<Map<String, Object>> extractDataByReflection() {
+        logger.info("Extracting data by field from fetched ES data");
         Field[] declaredFields = esDsm.getClass().getDeclaredFields();
         List<Map<String, Object>> fetchedRecords = Arrays.stream(declaredFields).filter(isFieldMatchProperty)
                 .findFirst()
@@ -60,6 +70,7 @@ public class CollectionProcessor implements Processor {
     }
 
     private void addNewRecordTo(List<Map<String, Object>> fetchedRecords) {
+        logger.info("Adding new record");
         collectEndResult().ifPresent(fetchedRecords::add);
     }
 
@@ -68,6 +79,7 @@ public class CollectionProcessor implements Processor {
     }
 
     private void updateExistingRecord(Map<String, Object> eachRecord) {
+        logger.info("Updating existing record");
         collectEndResult().ifPresent(eachRecord::putAll);
     }
 

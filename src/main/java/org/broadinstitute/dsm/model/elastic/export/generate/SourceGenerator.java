@@ -19,10 +19,13 @@ public class SourceGenerator extends BaseGenerator {
 
     @Override
     public Map<String, Object> generate() {
-        logger.info("");
         Object dataToExport = collect();
-        Map<String, Object> objectLevel = Map.of(getOuterPropertyByAlias().getPropertyName(), dataToExport);
-        return Map.of(DSM_OBJECT, objectLevel);
+        logger.info("Generating final source");
+        return Map.of(DSM_OBJECT, buildPropertyLevelWithData(dataToExport));
+    }
+
+    private Map<String, Object> buildPropertyLevelWithData(Object dataToExport) {
+        return Map.of(getOuterPropertyByAlias().getPropertyName(), dataToExport);
     }
 
     @Override
@@ -31,6 +34,7 @@ public class SourceGenerator extends BaseGenerator {
     }
 
     private Map<String, Object> parseJsonValuesToObject() {
+        logger.info("Converting JSON values to Map");
         Map<String, Object> dynamicFieldValues = parseJsonToMapFromValue();
         Map<String, Object> transformedMap = new HashMap<>();
         for (Map.Entry<String, Object> entry : dynamicFieldValues.entrySet()) {
@@ -46,12 +50,21 @@ public class SourceGenerator extends BaseGenerator {
 
     @Override
     protected Object getElementWithId(Object element) {
-        return List.of(Map.of(getDBElement().getColumnName(),element,
+        return buildCollectionWithId(element);
+    }
+
+    private List<Map<String, Object>> buildCollectionWithId(Object element) {
+        return List.of(Map.of(getDBElement().getColumnName(), element,
                 ID, generatorPayload.getRecordId()));
     }
 
     @Override
     protected Map<String, Object> getElement(Object element) {
+        return buildSingleFieldWithValue(element);
+    }
+
+    private Map<String, Object> buildSingleFieldWithValue(Object element) {
+        logger.info("Constructing single field with value");
         return Map.of(getDBElement().getColumnName(), element);
     }
 
@@ -62,6 +75,7 @@ public class SourceGenerator extends BaseGenerator {
 
     @Override
     protected Object constructCollection() {
+        logger.info("Constructing nested data");
         Map<Object, Object> collectionMap = new HashMap<>();
         collectionMap.put(ID, generatorPayload.getRecordId());
         Map<String, Object> mapWithParsedObjects = parseJsonValuesToObject();

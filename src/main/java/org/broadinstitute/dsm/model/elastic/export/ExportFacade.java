@@ -64,7 +64,7 @@ public class ExportFacade {
         SourceGenerator sourceGenerator = new SourceGenerator(valueParser, exportFacadePayload.getGeneratorPayload());
         this.generator = sourceGenerator;
         Map<String, Object> dataToReturn = generator.generate();
-        logger.info("processing ES participant data");
+        logger.info("Processing ES participant data");
         if (propertyInfo.isCollection()) {
             processor = new CollectionProcessor(esDsm, propertyInfo.getPropertyName(), exportFacadePayload.getGeneratorPayload(),
                     sourceGenerator);
@@ -73,6 +73,7 @@ public class ExportFacade {
                 dataToReturn = Map.of(MappingGenerator.DSM_OBJECT, Map.of(propertyInfo.getPropertyName(), processedData));
             }
         }
+        logger.info("Returning processed ES participant data");
         return dataToReturn;
     }
 
@@ -87,6 +88,7 @@ public class ExportFacade {
                 .withDocAsUpsert(true)
                 .withRetryOnConflict(5)
                 .build();
+        logger.info("Built upsert data request payload");
         exportable.setUpdateRequestPayload(upsertDataRequestPayload);
         exportable.exportData(elasticDataToExport);
     }

@@ -16,12 +16,14 @@ public class ElasticExportAdapter extends BaseExporter {
 
     @Override
     public void exportData(Map<String, Object> data) {
+        logger.info("initialize exporting data to ES");
         UpdateRequest updateRequest = upsertDataRequestPayload.getUpdateRequest(data);
         try {
             clientInstance.update(updateRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
             throw new RuntimeException("Error occurred while exporting data to ES", e);
         }
+        logger.info("successfully exported data to ES");
     }
 
     @Override

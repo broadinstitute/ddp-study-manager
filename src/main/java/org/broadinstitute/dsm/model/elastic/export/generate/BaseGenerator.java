@@ -1,17 +1,20 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
+import java.util.Map;
+import java.util.Objects;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
-
-import java.util.Map;
-import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class BaseGenerator implements Generator, Collector {
 
+    private static final Logger logger = LoggerFactory.getLogger(BaseGenerator.class);
 
     public static final String DSM_OBJECT = "dsm";
     public static final String PROPERTIES = "properties";
@@ -81,7 +84,7 @@ public abstract class BaseGenerator implements Generator, Collector {
 
     protected Object constructByPropertyType() {
         Object constructedObject;
-        if(getOuterPropertyByAlias().isCollection()) {
+        if (getOuterPropertyByAlias().isCollection()) {
             constructedObject = constructCollection();
         } else {
             constructedObject = constructSingleElement();
