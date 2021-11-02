@@ -3,16 +3,17 @@ package org.broadinstitute.dsm.analytics;
 import com.brsanthu.googleanalytics.GoogleAnalytics;
 import com.brsanthu.googleanalytics.GoogleAnalyticsConfig;
 import com.brsanthu.googleanalytics.request.EventHit;
+import com.brsanthu.googleanalytics.request.GoogleAnalyticsResponse;
 import com.typesafe.config.Config;
 import lombok.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GoogleAnalyticsMetricsTracker {
-    private static final Logger LOG = LoggerFactory.getLogger(GoogleAnalyticsMetricsTracker.class);
+    private static final Logger logger = LoggerFactory.getLogger(GoogleAnalyticsMetricsTracker.class);
     private static final Integer DEFAULT_BATCH_SIZE = 10;
     private static final String GA_TOKEN_PATH = "GoogleAnalytics.trackingId";//todo pegah add to SM
-    private static GoogleAnalytics studyAnalyticsTrackers;
+    private static GoogleAnalytics googleAnalyticsTrackers;
     private static volatile GoogleAnalyticsMetricsTracker instance;
     private static Object lockGA = new Object();
     private static Config CONFIG;
@@ -37,31 +38,34 @@ public class GoogleAnalyticsMetricsTracker {
     }
 
     private GoogleAnalytics getMetricTracker() {
-        if (studyAnalyticsTrackers == null) {
+        if (googleAnalyticsTrackers == null) {
 
             initStudyMetricTracker();
         }
-        return studyAnalyticsTrackers;
+        return googleAnalyticsTrackers;
     }
 
     private synchronized void initStudyMetricTracker() {
         GoogleAnalytics metricTracker = GoogleAnalytics.builder()
-                .withConfig(new GoogleAnalyticsConfig().setBatchingEnabled(true).setBatchSize(DEFAULT_BATCH_SIZE))
+                .withConfig(new GoogleAnalyticsConfig().setBatchingEnabled(true).setBatchSize(DEFAULT_BATCH_SIZE).setGatherStats(true))
                 .withTrackingId(getAnalyticsToken(CONFIG))
                 .build();
-        studyAnalyticsTrackers = metricTracker;
-        LOG.info("Initialized GA Metrics Tracker for DSM ");
+        googleAnalyticsTrackers = metricTracker;
+        logger.info("Initialized GA Metrics Tracker for DSM ");
     }
 
 
     private void sendEventMetrics(EventHit eventHit) {
         GoogleAnalytics metricTracker = getMetricTracker();
         if (metricTracker != null) {
-            metricTracker.event().eventCategory(eventHit.eventCategory())
+            GoogleAnalyticsResponse response = metricTracker.event().eventCategory(eventHit.eventCategory())
                     .eventAction(eventHit.eventAction())
                     .eventLabel(eventHit.eventLabel())
                     .eventValue(eventHit.eventValue())
-                    .sendAsync();
+                    .send();
+            logger.info(response.getStatusCode()+"");
+            logger.info(metricTracker.getStats().getEventHits()+"");
+
         }
     }
 
@@ -74,12 +78,14 @@ public class GoogleAnalyticsMetricsTracker {
         }
         EventHit eventHit = new EventHit(category, action, gaEventLabel, value);
         sendEventMetrics(eventHit);
+
     }
 
     public void flushOutMetrics() {
         //lookup all Metrics Trackers and flush out any pending events
-        LOG.info("Flushing out all pending GA events");
-        studyAnalyticsTrackers.flush();
+        logger.info("Flushing out all pending GA events");
+        googleAnalyticsTrackers.flush();
+        googleAnalyticsTrackers.resetStats();
     }
 
     public String getAnalyticsToken(@NonNull Config config) {
