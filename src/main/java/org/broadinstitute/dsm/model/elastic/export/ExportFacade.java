@@ -19,8 +19,12 @@ import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
 import org.broadinstitute.dsm.util.PatchUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ExportFacade {
+
+    private static final Logger logger = LoggerFactory.getLogger(ExportFacade.class);
 
     BaseExporter exportable;
     Generator generator;
@@ -59,7 +63,8 @@ public class ExportFacade {
         ValueParser valueParser = new ValueParser();
         SourceGenerator sourceGenerator = new SourceGenerator(valueParser, exportFacadePayload.getGeneratorPayload());
         this.generator = sourceGenerator;
-        Map<String, Object> dataToReturn = this.generator.generate();
+        Map<String, Object> dataToReturn = generator.generate();
+        logger.info("processing ES participant data");
         if (propertyInfo.isCollection()) {
             processor = new CollectionProcessor(esDsm, propertyInfo.getPropertyName(), exportFacadePayload.getGeneratorPayload(),
                     sourceGenerator);

@@ -1,11 +1,15 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
+import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
-
 public class MappingGenerator extends BaseGenerator {
+
+    private static final Logger logger = LoggerFactory.getLogger(MappingGenerator.class);
 
     public static final String TYPE = "type";
     public static final String NESTED = "nested";
@@ -18,6 +22,7 @@ public class MappingGenerator extends BaseGenerator {
 
     @Override
     public Map<String, Object> generate() {
+        logger.info("preparing mapping to upsert");
         String propertyName = getOuterPropertyByAlias().getPropertyName();
         Map<String, Object> mappedField = buildMappedField();
         Map<String, Object> objectLevel = Map.of(propertyName, mappedField);
@@ -36,7 +41,7 @@ public class MappingGenerator extends BaseGenerator {
         Map<String, Object> fieldsByValues = parseJsonToMapFromValue();
         for (Map.Entry<String, Object> entry: fieldsByValues.entrySet()) {
             Object eachType = parser.parse(String.valueOf(entry.getValue()));
-            resultMap.put(entry.getKey(), Map.of(MappingGenerator.TYPE, eachType));
+            resultMap.put(entry.getKey(), eachType);
         }
         return resultMap;
     }
@@ -50,13 +55,13 @@ public class MappingGenerator extends BaseGenerator {
     protected Map<String, Object> getElementWithId(Object type) {
         return Map.of(
                 ID, Map.of(TYPE, TYPE_KEYWORD),
-                getDBElement().getColumnName(), Map.of(MappingGenerator.TYPE, type)
+                getDBElement().getColumnName(), type
         );
     }
 
     @Override
     protected Map<String, Object> getElement(Object type) {
-        return Map.of(getDBElement().getColumnName(), Map.of(MappingGenerator.TYPE, type));
+        return Map.of(getDBElement().getColumnName(), type);
     }
 
     @Override

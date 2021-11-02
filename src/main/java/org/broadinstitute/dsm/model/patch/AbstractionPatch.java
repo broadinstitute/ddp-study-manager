@@ -1,6 +1,5 @@
 package org.broadinstitute.dsm.model.patch;
 
-import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.AbstractionWrapper;
 import org.broadinstitute.dsm.model.NameValue;
 import spark.utils.StringUtils;

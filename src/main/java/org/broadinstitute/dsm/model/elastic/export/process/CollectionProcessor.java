@@ -4,14 +4,10 @@ import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.export.generate.Collector;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
-import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
-import org.broadinstitute.dsm.model.elastic.export.generate.SourceGenerator;
-import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class CollectionProcessor implements Processor {
 
@@ -56,52 +52,15 @@ public class CollectionProcessor implements Processor {
     }
 
     private List<Map<String, Object>> updateIfExistsOrPut(List<Map<String, Object>> fetchedRecords) {
-        List<Map<String, Object>> existingRecords = fetchedRecords.stream()
+        fetchedRecords.stream()
                 .filter(this::isExistingRecord)
-                .collect(Collectors.toList());
-        if (existingRecords.isEmpty()) {
-            addNewRecordTo(fetchedRecords);
-        } else {
-            existingRecords.forEach(this::updateExistingRecord);
-        }
+                .findFirst()
+                .ifPresentOrElse(this::updateExistingRecord, () -> addNewRecordTo(fetchedRecords));
         return fetchedRecords;
     }
 
-    protected void templateMethod(List<Map<String, Object>> records) {
-        Object collectedData = collector.collect();
-        if (collectedData instanceof Map) {
-            processMap(records);
-        } else {
-            processList(records);
-        }
-    }
-
     private void addNewRecordTo(List<Map<String, Object>> fetchedRecords) {
-        Object collectedData = collector.collect();
-        if (collectedData instanceof Map) {
-            Map<String, Object> recordMap = (Map<String, Object>) collectedData;
-            recordMap.put(MappingGenerator.ID, generatorPayload.getRecordId());
-            fetchedRecords.add(recordMap);
-        } else {
-            List<Map<String, Object>> recordList = (List<Map<String, Object>>) collectedData;
-            fetchedRecords.addAll(recordList);
-        }
-    }
-
-    private void upsertRecord(List<Map<String, Object>> fetchedRecords) {
-        Object collectedData = collector.collect();
-        if (collectedData instanceof Map) {
-            Map<String, Object> recordMap = (Map<String, Object>) collectedData;
-            recordMap.put(MappingGenerator.ID, generatorPayload.getRecordId());
-            fetchedRecords.add(recordMap);
-            eachRecord.putAll(recordMap);
-        } else {
-            for (Map<String, Object> entry: fetchedRecords) {
-
-            }
-            List<Map<String, Object>> records = (List<Map<String, Object>>) collectedData;
-            records.forEach(eachRecord::putAll); //eachRecord.putAll(Map)
-        }
+        collectEndResult().ifPresent(fetchedRecords::add);
     }
 
     private boolean isExistingRecord(Map<String, Object> eachRecord) {
@@ -109,16 +68,12 @@ public class CollectionProcessor implements Processor {
     }
 
     private void updateExistingRecord(Map<String, Object> eachRecord) {
-        Object collectedData = collector.collect();
-        if (collectedData instanceof Map) {
-            Map<String, Object> recordMap = (Map<String, Object>) collectedData;
-            recordMap.put(MappingGenerator.ID, generatorPayload.getRecordId());
-            eachRecord.putAll(recordMap);
-        } else {
-            List<Map<String, Object>> records = (List<Map<String, Object>>) collectedData;
-            records.forEach(eachRecord::putAll); //eachRecord.putAll(Map)
-        }
+        collectEndResult().ifPresent(eachRecord::putAll);
     }
 
-
+    private Optional<Map<String, Object>> collectEndResult() {
+        return ((List<Map<String, Object>>) collector.collect())
+                .stream()
+                .findFirst();
+    }
 }

@@ -27,6 +27,18 @@ public class MappingGeneratorTest {
     }
 
     @Test
+    public void generateTextTypeWithFields() {
+        GeneratorPayload generatorPayload = new GeneratorPayload(
+            new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "value"),
+            0
+        );
+        Map<String, Object> objectMap = TestMappingGenerator.of(generatorPayload).generate();
+        Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
+        String type = extractKeywordType(objectMap);
+        Assert.assertEquals("keyword", type);
+    }
+
+    @Test
     public void generateBooleanType() {
         GeneratorPayload generatorPayload = new GeneratorPayload(
                 new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "true"),
@@ -36,18 +48,6 @@ public class MappingGeneratorTest {
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
         String type = extractDeepestLeveleValue(objectMap);
         Assert.assertEquals("boolean", type);
-    }
-
-    @Test
-    public void generateIntegerType() {
-        GeneratorPayload generatorPayload = new GeneratorPayload(
-                new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "45"),
-                0
-        );
-        Map<String, Object> objectMap = TestMappingGenerator.of(generatorPayload).generate();
-        Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
-        String type = extractDeepestLeveleValue(objectMap);
-        Assert.assertEquals("long", type);
     }
 
     @Test
@@ -113,6 +113,20 @@ public class MappingGeneratorTest {
                         .get("type");
     }
 
+    private String extractKeywordType(Map<String, Object> objectMap) {
+        return (String)
+                ((Map)
+                ((Map)
+                ((Map)
+                ((Map)
+                getMedicalRecordProperty(objectMap)
+                        .get(BaseGenerator.PROPERTIES))
+                        .get("medical_record_column"))
+                        .get("fields"))
+                        .get("keyword"))
+                        .get("type");
+    }
+
     private Map getMedicalRecordProperty(Map<String, Object> objectMap) {
         return (Map)
                 ((Map)
@@ -123,6 +137,7 @@ public class MappingGeneratorTest {
                         .get(BaseGenerator.PROPERTIES))
                         .get("medicalRecords");
     }
+
 
     private static class TestMappingGenerator extends MappingGenerator {
 

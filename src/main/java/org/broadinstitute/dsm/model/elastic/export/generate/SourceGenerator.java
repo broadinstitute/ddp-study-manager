@@ -1,13 +1,16 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
+import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
-
 public class SourceGenerator extends BaseGenerator {
 
+    private static final Logger logger = LoggerFactory.getLogger(SourceGenerator.class);
 
     public SourceGenerator(Parser parser, GeneratorPayload generatorPayload) {
         super(parser, generatorPayload);
@@ -16,6 +19,7 @@ public class SourceGenerator extends BaseGenerator {
 
     @Override
     public Map<String, Object> generate() {
+        logger.info("");
         Object dataToExport = collect();
         Map<String, Object> objectLevel = Map.of(getOuterPropertyByAlias().getPropertyName(), dataToExport);
         return Map.of(DSM_OBJECT, objectLevel);
