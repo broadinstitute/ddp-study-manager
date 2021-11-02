@@ -11,8 +11,6 @@ import lombok.Data;
 @Data
 public class DBElement {
 
-    public static final List<String> JSON_TYPE_COLUMNS = List.of("data", "something", "another thing");
-
     public String tableName;
     public String tableAlias;
     public String primaryKey;

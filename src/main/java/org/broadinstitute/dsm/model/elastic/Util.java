@@ -24,18 +24,26 @@ public class Util {
     public static String getQueryTypeFromId(String id) {
         String type;
         if (ParticipantUtil.isHruid(id)) {
-            type = "profile.hruid";
+            type = Constants.PROFILE_HRUID;
         } else if (ParticipantUtil.isGuid(id)){
-            type = "profile.guid";
+            type = Constants.PROFILE_GUID;
         } else if (ParticipantUtil.isLegacyAltPid(id)) {
-            type = "profile.legacyAltPid";
+            type = Constants.PROFILE_LEGACYALTPID;
         } else {
-            type = "profile.legacyShortId";
+            type = Constants.PROFILE_LEGACYSHORTID;
         }
         return type;
     }
 
     public static DBElement getDBElement(String fieldName) {
         return PatchUtil.getColumnNameMap().get(Objects.requireNonNull(fieldName));
+    }
+
+    public static class Constants {
+        public static final String PROFILE = "profile";
+        public static final String PROFILE_HRUID = PROFILE + ".hruid";
+        public static final String PROFILE_GUID = PROFILE + ".guid";
+        public static final String PROFILE_LEGACYALTPID = PROFILE + ".legacyAltPid";
+        public static final String PROFILE_LEGACYSHORTID = PROFILE + ".legacyShortId";
     }
 }
