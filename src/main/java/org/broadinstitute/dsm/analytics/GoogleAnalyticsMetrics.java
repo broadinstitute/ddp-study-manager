@@ -10,7 +10,7 @@ public class GoogleAnalyticsMetrics {
     public static final String EVENT_ACTION_USER_LOGIN = "user-logged-in";
     public static final String EVENT_LABEL_USER_LOGIN = "login"; //studyGuid appended
 
-    public static final String EVENT_CATEGORY_PARTICIPANT_LIST = "participant-list";
+    public static final String  EVENT_CATEGORY_PARTICIPANT_LIST = "participant-list";
     public static final String EVENT_ACTION_PARTICIPANT_LIST = "participant-list-loaded";
     public static final String EVENT_LABEL_PARTICIPANT_LIST = "participant-list-loaded";//studyGuid appended
 

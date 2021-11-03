@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
 
 public class GoogleAnalyticsMetricsTracker {
     private static final Logger logger = LoggerFactory.getLogger(GoogleAnalyticsMetricsTracker.class);
-    private static final Integer DEFAULT_BATCH_SIZE = 10;
-    private static final String GA_TOKEN_PATH = "GoogleAnalytics.trackingId";//todo pegah add to SM
+    private static final Integer DEFAULT_BATCH_SIZE = 1;
+    private static final String GA_TOKEN_PATH = "GoogleAnalytics.trackingId";
     private static GoogleAnalytics googleAnalyticsTrackers;
     private static volatile GoogleAnalyticsMetricsTracker instance;
     private static Object lockGA = new Object();
@@ -62,7 +62,10 @@ public class GoogleAnalyticsMetricsTracker {
                     .eventAction(eventHit.eventAction())
                     .eventLabel(eventHit.eventLabel())
                     .eventValue(eventHit.eventValue())
+                    .trackingId(getAnalyticsToken(CONFIG))
                     .send();
+
+            logger.info(response.toString());
             logger.info(response.getStatusCode()+"");
             logger.info(metricTracker.getStats().getEventHits()+"");
 
@@ -71,12 +74,13 @@ public class GoogleAnalyticsMetricsTracker {
 
     public void sendAnalyticsMetrics(String studyGuid, String category, String action, String label,
                                      String labelContent, int value) {
-        String gaEventLabel = String.join(":", label,
-                studyGuid);
-        if (labelContent != null) {
-            gaEventLabel = String.join(":", gaEventLabel, labelContent);
-        }
-        EventHit eventHit = new EventHit(category, action, gaEventLabel, value);
+//        String gaEventLabel = String.join(":", label,
+//                studyGuid);
+//        if (labelContent != null) {
+//            gaEventLabel = String.join(":", gaEventLabel, labelContent);
+//        }
+        EventHit eventHit = new EventHit(category, action, label, value);
+        logger.info(eventHit.toString());
         sendEventMetrics(eventHit);
 
     }
