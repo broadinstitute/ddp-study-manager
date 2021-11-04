@@ -13,7 +13,9 @@ public class TypeParser extends BaseParser {
     private static final String TYPE = "type";
     public static final Map<String, Object> TEXT_KEYWORD_MAPPING = Map.of(TYPE, TEXT, FIELDS, Map.of(KEYWORD, Map.of(TYPE, KEYWORD)));
     private static final String BOOLEAN = "boolean";
+    public static final Map<String, String> BOOLEAN_MAPPING = Map.of(MappingGenerator.TYPE, BOOLEAN);
     private static final String DATE = "date";
+    public static final Map<String, String> DATE_MAPPING = Map.of(MappingGenerator.TYPE, DATE);
 
     @Override
     protected Object forNumeric(String value) {
@@ -22,12 +24,12 @@ public class TypeParser extends BaseParser {
 
     @Override
     protected Object forBoolean(String value) {
-        return Map.of(MappingGenerator.TYPE, BOOLEAN);
+        return BOOLEAN_MAPPING;
     }
 
     @Override
     protected Object forDate(String value) {
-        return Map.of(MappingGenerator.TYPE, DATE);
+        return DATE_MAPPING;
     }
 
     @Override
