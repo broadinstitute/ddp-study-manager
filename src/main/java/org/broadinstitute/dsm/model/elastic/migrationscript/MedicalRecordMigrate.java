@@ -3,11 +3,7 @@ package org.broadinstitute.dsm.model.elastic.migrationscript;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -21,8 +17,8 @@ import static org.broadinstitute.dsm.model.elastic.export.parse.TypeParser.*;
 public class MedicalRecordMigrate {
 
 
-    private static final Map<String, Object> medicalRecordMapping = Map.of(
-        "ddpParticipantId", TEXT_KEYWORD_MAPPING,
+    private static final Map<String, Object> medicalRecordMapping1 = Map.of (
+            "ddpParticipantId", TEXT_KEYWORD_MAPPING,
             "ddpInstanceId", TEXT_KEYWORD_MAPPING,
             "institutionId", TEXT_KEYWORD_MAPPING,
             "ddpInstitutionId", TEXT_KEYWORD_MAPPING,
@@ -30,7 +26,9 @@ public class MedicalRecordMigrate {
             "participantId", TEXT_KEYWORD_MAPPING,
             "medicalRecordId", TEXT_KEYWORD_MAPPING,
             "name", TEXT_KEYWORD_MAPPING,
-            "contact", TEXT_KEYWORD_MAPPING,
+            "contact", TEXT_KEYWORD_MAPPING );
+
+    private static final Map<String, Object> medicalRecordMapping2 = Map.of (
             "phone", TEXT_KEYWORD_MAPPING,
             "fax", TEXT_KEYWORD_MAPPING,
             "faxSent", DATE_MAPPING, //DATE?
@@ -40,7 +38,9 @@ public class MedicalRecordMigrate {
             "faxSent2By", TEXT_KEYWORD_MAPPING,
             "faxConfirmed2", DATE_MAPPING, //DATE?
             "faxSent3", DATE_MAPPING, //DATE?
-            "faxSent3By", TEXT_KEYWORD_MAPPING,
+            "faxSent3By", TEXT_KEYWORD_MAPPING);
+
+    private static final Map<String, Object> medicalRecordMapping3 = Map.of (
             "faxConfirmed3", DATE_MAPPING, //DATE?
             "mrReceived", DATE_MAPPING, //DATE?
             "followUps", TEXT_KEYWORD_MAPPING,
@@ -48,10 +48,29 @@ public class MedicalRecordMigrate {
             "mrDocumentFileName", TEXT_KEYWORD_MAPPING,
             "mrProblem", BOOLEAN_MAPPING,
             "mrProblemText", TEXT_KEYWORD_MAPPING,
-            "", TEXT_KEYWORD_MAPPING,
-    )
+            "unableObtain", BOOLEAN_MAPPING,
+            "unableObtainText", TEXT_KEYWORD_MAPPING,
+            "duplicate", BOOLEAN_MAPPING);
 
+    private static final Map<String, Object> medicalRecordMapping4 = Map.of (
+            "followUpRequired", BOOLEAN_MAPPING,
+            "followUpRequiredText", TEXT_KEYWORD_MAPPING,
+            "international", BOOLEAN_MAPPING,
+            "crRequired", BOOLEAN_MAPPING,
+            "pathologyPresent", TEXT_KEYWORD_MAPPING,
+            "notes", TEXT_KEYWORD_MAPPING,
+            "additionalValuesJson", TEXT_KEYWORD_MAPPING,
+            "reviewMedicalRecord", TEXT_KEYWORD_MAPPING
+    );
 
+    private static final Map<String, Object> medicalRecordMappingMerged = new HashMap<>();
+
+    static {
+        medicalRecordMappingMerged.putAll(medicalRecordMapping1);
+        medicalRecordMappingMerged.putAll(medicalRecordMapping2);
+        medicalRecordMappingMerged.putAll(medicalRecordMapping3);
+        medicalRecordMappingMerged.putAll(medicalRecordMapping4);
+    }
 
     protected List<String> collectMedicalRecordColumns() {
         Class<MedicalRecord> medicalRecordClass = MedicalRecord.class;
