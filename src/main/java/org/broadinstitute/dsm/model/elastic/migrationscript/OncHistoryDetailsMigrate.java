@@ -10,35 +10,36 @@ public class OncHistoryDetailsMigrate {
 
     private static final Map<String, Object> oncHistoryDetails1 = Map.of (
             "ddpParticipantId", TEXT_KEYWORD_MAPPING,
-            "ddpInstanceId", TEXT_KEYWORD_MAPPING,
-            "institutionId", TEXT_KEYWORD_MAPPING,
-            "ddpInstitutionId", TEXT_KEYWORD_MAPPING,
-            "type", TEXT_KEYWORD_MAPPING,
-            "participantId", TEXT_KEYWORD_MAPPING,
+            "oncHistoryDetailId", TEXT_KEYWORD_MAPPING,
+            "request", TEXT_KEYWORD_MAPPING,
+            "deleted", BOOLEAN_MAPPING,
+            "faxSent", DATE_MAPPING, //DATE?
+            "tissueReceived", TEXT_KEYWORD_MAPPING,
             "medicalRecordId", TEXT_KEYWORD_MAPPING,
-            "name", TEXT_KEYWORD_MAPPING,
-            "contact", TEXT_KEYWORD_MAPPING );
+            "datePx", DATE_MAPPING, //DATE?
+            "typePx", TEXT_KEYWORD_MAPPING,
+            "locationPx", TEXT_KEYWORD_MAPPING );
 
     private static final Map<String, Object> oncHistoryDetails2 = Map.of (
+            "histology", TEXT_KEYWORD_MAPPING,
+            "accessionNumber", TEXT_KEYWORD_MAPPING,
+            "facility", TEXT_KEYWORD_MAPPING, //DATE?
             "phone", TEXT_KEYWORD_MAPPING,
-            "fax", TEXT_KEYWORD_MAPPING,
-            "faxSent", DATE_MAPPING, //DATE?
-            "faxSentBy", TEXT_KEYWORD_MAPPING,
+            "fax", TEXT_KEYWORD_MAPPING, //DATE?
+            "notes", TEXT_KEYWORD_MAPPING, //DATE?
+            "additionalValuesJson", TEXT_KEYWORD_MAPPING,
+            "faxSentBy", TEXT_KEYWORD_MAPPING, //DATE?
             "faxConfirmed", DATE_MAPPING, //DATE?
-            "faxSent2", DATE_MAPPING, //DATE?
-            "faxSent2By", TEXT_KEYWORD_MAPPING,
-            "faxConfirmed2", DATE_MAPPING, //DATE?
-            "faxSent3", DATE_MAPPING, //DATE?
-            "faxSent3By", TEXT_KEYWORD_MAPPING);
+            "faxSent2", DATE_MAPPING ); //DATE?
 
     private static final Map<String, Object> oncHistoryDetails3 = Map.of (
-            "faxConfirmed3", DATE_MAPPING, //DATE?
-            "mrReceived", DATE_MAPPING, //DATE?
-            "followUps", TEXT_KEYWORD_MAPPING,
-            "mrDocument", TEXT_KEYWORD_MAPPING,
-            "mrDocumentFileName", TEXT_KEYWORD_MAPPING,
-            "mrProblem", BOOLEAN_MAPPING,
-            "mrProblemText", TEXT_KEYWORD_MAPPING,
+            "faxSent2By", TEXT_KEYWORD_MAPPING, //DATE?
+            "faxConfirmed2", DATE_MAPPING, //DATE?
+            "faxSent3", DATE_MAPPING,
+            "faxSent3By", TEXT_KEYWORD_MAPPING,
+            "faxConfirmed3", DATE_MAPPING,
+            "tissueReceived", TEXT_KEYWORD_MAPPING,
+            "tissueProblemOption", TEXT_KEYWORD_MAPPING, //HERE
             "unableObtain", BOOLEAN_MAPPING,
             "unableObtainText", TEXT_KEYWORD_MAPPING,
             "duplicate", BOOLEAN_MAPPING);

@@ -63,14 +63,10 @@ public class MedicalRecordMigrate {
             "reviewMedicalRecord", TEXT_KEYWORD_MAPPING
     );
 
-    private static final Map<String, Object> medicalRecordMappingMerged = new HashMap<>();
+    protected static final Map<String, Object> medicalRecordMappingMerged = MapAdapter.of(medicalRecordMapping1, medicalRecordMapping2,
+            medicalRecordMapping3,
+            medicalRecordMapping4);;
 
-    static {
-        medicalRecordMappingMerged.putAll(medicalRecordMapping1);
-        medicalRecordMappingMerged.putAll(medicalRecordMapping2);
-        medicalRecordMappingMerged.putAll(medicalRecordMapping3);
-        medicalRecordMappingMerged.putAll(medicalRecordMapping4);
-    }
 
     protected List<String> collectMedicalRecordColumns() {
         Class<MedicalRecord> medicalRecordClass = MedicalRecord.class;
