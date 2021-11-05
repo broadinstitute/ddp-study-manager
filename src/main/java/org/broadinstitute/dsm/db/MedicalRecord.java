@@ -45,9 +45,36 @@ public class MedicalRecord {
             "LEFT JOIN ddp_medical_record as m on (m.institution_id = inst.institution_id) WHERE p.participant_id = ?";
     public static final String SQL_ORDER_BY = " ORDER BY p.ddp_participant_id, inst.ddp_institution_id ASC";
 
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
+    @ColumnName (DBConstants.MEDICAL_RECORD_ID)
     private final String medicalRecordId;
+
+    @TableName (
+            name = DBConstants.DDP_INSTITUTION,
+            alias = DBConstants.DDP_INSTITUTION_ALIAS,
+            primaryKey = DBConstants.INSTITUTION_ID,
+            columnPrefix = "")
+    @ColumnName (DBConstants.INSTITUTION_ID)
     private String institutionId;
+
+    @TableName (
+            name = DBConstants.DDP_INSTITUTION,
+            alias = DBConstants.DDP_INSTITUTION_ALIAS,
+            primaryKey = DBConstants.DDP_INSTITUTION_ID,
+            columnPrefix = "")
+    @ColumnName (DBConstants.DDP_INSTITUTION_ID)
     private String ddpInstitutionId;
+
+    @TableName (
+            name = DBConstants.DDP_PARTICIPANT,
+            alias = DBConstants.DDP_PARTICIPANT_ALIAS,
+            primaryKey = DBConstants.DDP_PARTICIPANT_ID,
+            columnPrefix = "")
+    @ColumnName (DBConstants.DDP_PARTICIPANT_ID)
     private String ddpParticipantId;
 
     @TableName (

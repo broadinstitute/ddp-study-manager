@@ -46,4 +46,15 @@ public class MedicalRecordMigrateTest {
         Assert.assertEquals("3", stringObjectMap.get("ddpInstitutionId"));
         Assert.assertEquals("TYPE", stringObjectMap.get("type"));
     }
+
+    @Test
+    public void generateSource() {
+        List<MedicalRecord> medicalRecords = Arrays.asList(new MedicalRecord("1", "2", "3", "TYPE"));
+        List<Map<String, Object>> listOfMaps = MedicalRecordMigrate.transformMedicalRecordToMap(medicalRecords);
+        Map<String, Object> resultMap = MedicalRecordMigrate.generateSource(listOfMaps);
+        Map<String, Object> dsm = (Map)resultMap.get("dsm");
+        List<Map<String, Object>> medicalRecords1 = (List<Map<String, Object>>) dsm.get("medicalRecords");
+        Object medicalRecordsId = medicalRecords1.get(0).get("medicalRecordId");
+        assertEquals("1", medicalRecordsId);
+    }
 }

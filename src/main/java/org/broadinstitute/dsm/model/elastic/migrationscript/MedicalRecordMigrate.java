@@ -91,45 +91,38 @@ public class MedicalRecordMigrate {
             String participantGuid = participantById.getParticipantId();
             indexRequest.id(participantGuid);
             List<Map<String, Object>> transformedList = transformMedicalRecordToMap(medicalRecordList);
-
-            /*
-                dsm {
-                    medicalRecords {
-                         id: 10,
-                         medicalRecordId: 10
-                    }
-                }
-//             */
-//            Map<String, Object>
-//
-//            indexRequest.source
+            indexRequest.source(generateSource(transformedList));
+            request.add(indexRequest);
         }
-
     }
 
+    public static Map generateSource(List<Map<String, Object>> transformedList) {
+        return Map.of("dsm", Map.of("medicalRecords", transformedList));
+    }
+
+
     static List<Map<String, Object>> transformMedicalRecordToMap(List<MedicalRecord> medicalRecordList) {
-        List<String> columnNames = collectMedicalRecordColumns();
         List<Map<String, Object>> result = new ArrayList<>();
+        Class<? extends MedicalRecord> aClass = MedicalRecord.class;
+        Field[] declaredFields = aClass.getDeclaredFields();
         for (MedicalRecord medicalRecord: medicalRecordList) {
             Map<String, Object> map = new HashMap<>();
-            Class<? extends MedicalRecord> aClass = medicalRecord.getClass();
-            Field[] declaredFields = aClass.getDeclaredFields();
             for (Field declaredField : declaredFields) {
                 ColumnName annotation = declaredField.getAnnotation(ColumnName.class);
-                if (annotation != null) {
-                    try {
-                        declaredField.setAccessible(true);
-                        Object o = declaredField.get(medicalRecord);
-                        String key = Util.underscoresToCamelCase(annotation.value());
-                        map.put(key, o);
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    }
+                if (annotation == null) continue;
+                try {
+                    declaredField.setAccessible(true);
+                    Object fieldValue = declaredField.get(medicalRecord);
+                    if (Objects.isNull(fieldValue)) continue;
+                    String key = Util.underscoresToCamelCase(annotation.value());
+                    map.put(key, fieldValue);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
                 }
             }
             result.add(map);
         }
-        return null;
+        return result;
     }
 
     protected static List<String> collectMedicalRecordColumns() {
