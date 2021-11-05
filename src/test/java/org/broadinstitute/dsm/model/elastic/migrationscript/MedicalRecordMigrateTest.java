@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.junit.Test;
@@ -32,5 +33,12 @@ public class MedicalRecordMigrateTest {
         Map<String, Object> medicalRecordMappingMerged =
                 MedicalRecordMigrate.medicalRecordMappingMerged;
         assertEquals(37, medicalRecordMappingMerged.size());
+    }
+
+    @Test
+    public void transformMedicalRecordToMap() {
+        List<MedicalRecord> medicalRecords = Arrays.asList(new MedicalRecord("1", "2", "3", "TYPE"));
+        List<Map<String, Object>> listOfMaps = MedicalRecordMigrate.transformMedicalRecordToMap(medicalRecords);
+
     }
 }

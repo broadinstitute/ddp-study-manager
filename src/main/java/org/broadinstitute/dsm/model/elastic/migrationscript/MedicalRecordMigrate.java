@@ -12,6 +12,8 @@ import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
+import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
+import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.index.IndexRequest;
 
@@ -83,12 +85,31 @@ public class MedicalRecordMigrate {
             List<MedicalRecord> medicalRecordList = entry.getValue();
 
             IndexRequest indexRequest = new IndexRequest("participants_structured.cmi.cmi-brain");
-            // dsm { properties {
+            ElasticSearch elasticSearch = new ElasticSearch();
+            ElasticSearchParticipantDto participantById =
+                    elasticSearch.getParticipantById("participants_structured.cmi.cmi-brain", participantId);
+            String participantGuid = participantById.getParticipantId();
+            indexRequest.id(participantGuid);
+            List<Map<String, Object>> transformedList = transformMedicalRecordToMap(medicalRecordList);
+
+            /*
+                dsm {
+                    medicalRecords {
+                         id: 10,
+                         medicalRecordId: 10
+                    }
+                }
+             */
             Map<String, Object>
 
             indexRequest.source
         }
 
+    }
+
+    static List<Map<String, Object>> transformMedicalRecordToMap(List<MedicalRecord> medicalRecordList) {
+
+        return null;
     }
 
     protected List<String> collectMedicalRecordColumns() {
