@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 public class GoogleAnalyticsMetricsTracker {
     private static final Logger logger = LoggerFactory.getLogger(GoogleAnalyticsMetricsTracker.class);
-    private static final Integer DEFAULT_BATCH_SIZE = 1;
     private static final String GA_TOKEN_PATH = "GoogleAnalytics.trackingId";
     private static GoogleAnalytics googleAnalyticsTrackers;
     private static volatile GoogleAnalyticsMetricsTracker instance;
@@ -47,7 +46,7 @@ public class GoogleAnalyticsMetricsTracker {
 
     private synchronized void initStudyMetricTracker() {
         GoogleAnalytics metricTracker = GoogleAnalytics.builder()
-                .withConfig(new GoogleAnalyticsConfig().setBatchingEnabled(true).setBatchSize(DEFAULT_BATCH_SIZE).setGatherStats(true))
+                .withConfig(new GoogleAnalyticsConfig().setGatherStats(true).setUserAgent("Custom User Agent"))
                 .withTrackingId(getAnalyticsToken(CONFIG))
                 .build();
         googleAnalyticsTrackers = metricTracker;
@@ -72,14 +71,10 @@ public class GoogleAnalyticsMetricsTracker {
         }
     }
 
-    public void sendAnalyticsMetrics(String studyGuid, String category, String action, String label,
-                                     String labelContent, int value) {
-//        String gaEventLabel = String.join(":", label,
-//                studyGuid);
-//        if (labelContent != null) {
-//            gaEventLabel = String.join(":", gaEventLabel, labelContent);
-//        }
-        EventHit eventHit = new EventHit(category, action, label, value);
+    public void sendAnalyticsMetrics(String studyGuid, String category, String action, String label, int value) {
+        String gaEventLabel = String.join(":", label,
+                studyGuid);
+        EventHit eventHit = new EventHit(category, action, gaEventLabel, value);
         logger.info(eventHit.toString());
         sendEventMetrics(eventHit);
 

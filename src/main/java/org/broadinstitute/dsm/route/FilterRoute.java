@@ -1,8 +1,6 @@
 package org.broadinstitute.dsm.route;
 
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetrics;
-import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetricsTracker;
 import org.broadinstitute.dsm.model.filter.FilterFactory;
 import org.broadinstitute.dsm.model.filter.Filterable;
 import org.broadinstitute.dsm.security.RequestHandler;
@@ -18,8 +16,6 @@ public class FilterRoute extends RequestHandler {
 
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
-        GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics("", GoogleAnalyticsMetrics.EVENT_CATEGORY_PARTICIPANT_LIST,
-                GoogleAnalyticsMetrics.EVENT_ACTION_PARTICIPANT_LIST, GoogleAnalyticsMetrics.EVENT_LABEL_PARTICIPANT_LIST, "Filter", 1);
         QueryParamsMap queryParams = request.queryMap();
         String parent = queryParams.get(DBConstants.FILTER_PARENT).value();
         if (StringUtils.isBlank(parent)) throw new IllegalArgumentException("parent cannot be empty");
