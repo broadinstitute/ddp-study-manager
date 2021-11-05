@@ -9,6 +9,7 @@ import java.util.Map;
 import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class MedicalRecordMigrateTest {
@@ -39,6 +40,10 @@ public class MedicalRecordMigrateTest {
     public void transformMedicalRecordToMap() {
         List<MedicalRecord> medicalRecords = Arrays.asList(new MedicalRecord("1", "2", "3", "TYPE"));
         List<Map<String, Object>> listOfMaps = MedicalRecordMigrate.transformMedicalRecordToMap(medicalRecords);
-
+        Map<String, Object> stringObjectMap = listOfMaps.get(0);
+        Assert.assertEquals("1", stringObjectMap.get("medicalRecordId"));
+        Assert.assertEquals("2", stringObjectMap.get("institutionId"));
+        Assert.assertEquals("3", stringObjectMap.get("ddpInstitutionId"));
+        Assert.assertEquals("TYPE", stringObjectMap.get("type"));
     }
 }

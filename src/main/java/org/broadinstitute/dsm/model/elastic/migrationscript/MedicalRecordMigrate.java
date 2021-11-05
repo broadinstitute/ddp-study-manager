@@ -99,26 +99,46 @@ public class MedicalRecordMigrate {
                          medicalRecordId: 10
                     }
                 }
-             */
-            Map<String, Object>
-
-            indexRequest.source
+//             */
+//            Map<String, Object>
+//
+//            indexRequest.source
         }
 
     }
 
     static List<Map<String, Object>> transformMedicalRecordToMap(List<MedicalRecord> medicalRecordList) {
-
+        List<String> columnNames = collectMedicalRecordColumns();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (MedicalRecord medicalRecord: medicalRecordList) {
+            Map<String, Object> map = new HashMap<>();
+            Class<? extends MedicalRecord> aClass = medicalRecord.getClass();
+            Field[] declaredFields = aClass.getDeclaredFields();
+            for (Field declaredField : declaredFields) {
+                ColumnName annotation = declaredField.getAnnotation(ColumnName.class);
+                if (annotation != null) {
+                    try {
+                        declaredField.setAccessible(true);
+                        Object o = declaredField.get(medicalRecord);
+                        String key = Util.underscoresToCamelCase(annotation.value());
+                        map.put(key, o);
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            result.add(map);
+        }
         return null;
     }
 
-    protected List<String> collectMedicalRecordColumns() {
+    protected static List<String> collectMedicalRecordColumns() {
         Class<MedicalRecord> medicalRecordClass = MedicalRecord.class;
         Field[] fields = medicalRecordClass.getDeclaredFields();
 
         List<String> columnNames = Arrays.stream(fields)
                 .map(AccessibleObject::getAnnotations)
-                .map(annotations -> Arrays.stream(annotations).filter(this::isColumnNameType).findFirst())
+                .map(annotations -> Arrays.stream(annotations).filter(MedicalRecordMigrate::isColumnNameType).findFirst())
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .map(annotation -> ((ColumnName) annotation).value())
@@ -132,7 +152,7 @@ public class MedicalRecordMigrate {
                 .collect(Collectors.toList());
     }
 
-    private boolean isColumnNameType(Annotation annotation) {
+    private static boolean isColumnNameType(Annotation annotation) {
         return annotation instanceof ColumnName;
     }
 }
