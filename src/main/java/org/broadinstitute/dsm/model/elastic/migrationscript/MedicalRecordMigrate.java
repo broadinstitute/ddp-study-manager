@@ -10,15 +10,15 @@ import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.Exportable;
+import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.util.ParticipantUtil;
-import org.elasticsearch.action.update.UpdateRequest;
 import spark.utils.StringUtils;
 
 import static org.broadinstitute.dsm.model.elastic.export.parse.TypeParser.*;
 
-public class MedicalRecordMigrate implements Exportable {
+public class MedicalRecordMigrate implements Generator, Exportable {
 
 
     public static final ElasticSearch elasticSearch = new ElasticSearch();
@@ -72,25 +72,35 @@ public class MedicalRecordMigrate implements Exportable {
     protected static final Map<String, Object> medicalRecordMappingMerged = MapAdapter.of(medicalRecordMapping1, medicalRecordMapping2,
             medicalRecordMapping3,
             medicalRecordMapping4);
-    private final BulkExportFacade bulkExportFacade;
 
-    public MedicalRecordMigrate(String index) {
+    private final BulkExportFacade bulkExportFacade;
+    private final String realm;
+
+    public MedicalRecordMigrate(String index, String realm) {
         bulkExportFacade = new BulkExportFacade(index);
+        this.realm = realm;
     }
 
+    @Override
+    public Map<String, Object> generate() {
+        Map<String, List<Object>> medicalRecords = (Map) MedicalRecord.getMedicalRecords(realm);
+        Map<String, List<Map<String, Object>>> medicalRecordsToMap = transformParticipantRecordsToMap(medicalRecords);
+        return (Map<String, Object>) medicalRecordsToMap;
+    }
 
     @Override
     public void export(Map<String, Object> source) {
 
+        //            bulkExportFacade.addDataToRequest(generateSource(transformedList), participantId);
+
     }
 
     public void exportMedicalRecordsToES() {
-        Map<String, List<Object>> medicalRecords = (Map) MedicalRecord.getMedicalRecords("brain");
-        fillBulkRequest(medicalRecords);
         bulkExportFacade.executeBulkUpsert();
     }
 
-    private static void fillBulkRequest(Map<String, List<Object>> participantRecords) {
+    private Map<String, List<Map<String, Object>>> transformParticipantRecordsToMap(Map<String, List<Object>> participantRecords) {
+        Map<String, List<Map<String, Object>>> transformedMap = new HashMap<>();
         for (Map.Entry<String, List<Object>> entry: participantRecords.entrySet()) {
             String participantId = entry.getKey();
             List<Object> medicalRecordList = entry.getValue();
@@ -98,8 +108,9 @@ public class MedicalRecordMigrate implements Exportable {
             if (StringUtils.isBlank(participantId)) continue;
             List<Map<String, Object>> transformedList = Util.transformObjectCollectionToCollectionMap(medicalRecordList, MedicalRecord.class);
             setPrimaryId(transformedList);
-            bulkExportFacade.addDataToRequest(generateSource(transformedList), participantId);
+            transformedMap.put(participantId, transformedList);
         }
+        return transformedMap;
     }
 
     private static void setPrimaryId(List<Map<String, Object>> transformedList) {
@@ -145,5 +156,6 @@ public class MedicalRecordMigrate implements Exportable {
     private static boolean isColumnNameType(Annotation annotation) {
         return annotation instanceof ColumnName;
     }
+
 
 }
