@@ -1,26 +1,33 @@
 package org.broadinstitute.dsm.model.elastic.migrationscript;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.model.elastic.Util;
-import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import spark.utils.StringUtils;
 
 import static org.broadinstitute.dsm.model.elastic.export.parse.TypeParser.*;
 
 public class MedicalRecordMigrate {
 
+
+    public static final ElasticSearch elasticSearch = new ElasticSearch();
 
     private static final Map<String, Object> medicalRecordMapping1 = Map.of (
             "ddpParticipantId", TEXT_KEYWORD_MAPPING,
@@ -74,56 +81,57 @@ public class MedicalRecordMigrate {
 
 
     public static void exportMedicalRecordsToES() {
+        Map<String, List<Object>> medicalRecords = (Map) MedicalRecord.getMedicalRecords("brain");
+        BulkExportFacade bulkExportFacade = new BulkExportFacade("participants_structured.cmi.cmi-brain");
+        bulkExportFacade.addDataToRequest();
+        BulkRequest request = buildAndFillBulkRequest(medicalRecords);
+        RestHighLevelClient client = ElasticSearchUtil.getClientInstance();
+        try {
+            client.bulk(request, RequestOptions.DEFAULT);
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+    }
 
-        // pt id -> List<mr>
-        Map<String, List<MedicalRecord>> medicalRecords = MedicalRecord.getMedicalRecords("brain");
-
-        BulkRequest request = new BulkRequest();
-
-        for (Map.Entry<String, List<MedicalRecord>> entry: medicalRecords.entrySet()) {
+    private static BulkRequest buildAndFillBulkRequest(Map<String, List<Object>> participantRecords) {
+        for (Map.Entry<String, List<Object>> entry: participantRecords.entrySet()) {
             String participantId = entry.getKey();
-            List<MedicalRecord> medicalRecordList = entry.getValue();
+            List<Object> medicalRecordList = entry.getValue();
+            participantId = getParticipantGuid(participantId);
+            if (StringUtils.isBlank(participantId)) continue;
+            List<Map<String, Object>> transformedList = Util.transformObjectCollectionToCollectionMap(medicalRecordList, MedicalRecord.class);
+            setPrimaryId(transformedList);
+        }
 
-            IndexRequest indexRequest = new IndexRequest("participants_structured.cmi.cmi-brain");
-            ElasticSearch elasticSearch = new ElasticSearch();
+        return null;
+    }
+
+    private static UpdateRequest buildUpdateRequest(String participantId, List<Map<String, Object>> transformedList) {
+        UpdateRequest updateRequest = new UpdateRequest("participants_structured.cmi.cmi-brain", "_doc", participantId);
+        updateRequest.docAsUpsert(true);
+        updateRequest.doc(generateSource(transformedList));
+        return updateRequest;
+    }
+
+    private static void setPrimaryId(List<Map<String, Object>> transformedList) {
+        for(Map<String, Object> map: transformedList) {
+            map.put("id", map.get("medicalRecordId"));
+        }
+    }
+
+    private static String getParticipantGuid(String participantId) {
+        if (!(ParticipantUtil.isGuid(participantId))) {
             ElasticSearchParticipantDto participantById =
                     elasticSearch.getParticipantById("participants_structured.cmi.cmi-brain", participantId);
-            String participantGuid = participantById.getParticipantId();
-            indexRequest.id(participantGuid);
-            List<Map<String, Object>> transformedList = transformMedicalRecordToMap(medicalRecordList);
-            indexRequest.source(generateSource(transformedList));
-            request.add(indexRequest);
+            participantId = participantById.getParticipantId();
         }
+        return participantId;
     }
 
     public static Map generateSource(List<Map<String, Object>> transformedList) {
         return Map.of("dsm", Map.of("medicalRecords", transformedList));
     }
 
-
-    static List<Map<String, Object>> transformMedicalRecordToMap(List<MedicalRecord> medicalRecordList) {
-        List<Map<String, Object>> result = new ArrayList<>();
-        Class<? extends MedicalRecord> aClass = MedicalRecord.class;
-        Field[] declaredFields = aClass.getDeclaredFields();
-        for (MedicalRecord medicalRecord: medicalRecordList) {
-            Map<String, Object> map = new HashMap<>();
-            for (Field declaredField : declaredFields) {
-                ColumnName annotation = declaredField.getAnnotation(ColumnName.class);
-                if (annotation == null) continue;
-                try {
-                    declaredField.setAccessible(true);
-                    Object fieldValue = declaredField.get(medicalRecord);
-                    if (Objects.isNull(fieldValue)) continue;
-                    String key = Util.underscoresToCamelCase(annotation.value());
-                    map.put(key, fieldValue);
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            result.add(map);
-        }
-        return result;
-    }
 
     protected static List<String> collectMedicalRecordColumns() {
         Class<MedicalRecord> medicalRecordClass = MedicalRecord.class;

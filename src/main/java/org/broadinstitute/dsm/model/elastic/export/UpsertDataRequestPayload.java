@@ -1,12 +1,11 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
+import org.broadinstitute.dsm.model.elastic.Util;
 import org.elasticsearch.action.update.UpdateRequest;
 
 import java.util.Map;
 
 public class UpsertDataRequestPayload {
-
-    private static final String DOC = "_doc";
 
     private String index;
     private String type;
@@ -25,7 +24,7 @@ public class UpsertDataRequestPayload {
     public UpdateRequest getUpdateRequest(Map<String, Object> data) {
         return new UpdateRequest()
                 .index(index)
-                .type(DOC)
+                .type(Util.DOC)
                 .id(id)
                 .doc(data)
                 .docAsUpsert(docAsUpsert)

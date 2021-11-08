@@ -1,11 +1,11 @@
 package org.broadinstitute.dsm.model.elastic;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.lang.reflect.Field;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import com.google.gson.Gson;
+import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -25,6 +25,7 @@ public class Util {
             );
     public static final int FIRST_ELEMENT_INDEX = 0;
     public static final String UNDERSCORE_SEPARATOR = "_";
+    public static final String DOC = "_doc";
 
     public static String getQueryTypeFromId(String id) {
         String type;
@@ -55,6 +56,32 @@ public class Util {
             }
         }
         return String.join("", words);
+    }
+
+    public static List<Map<String, Object>> transformObjectCollectionToCollectionMap(List<Object> values, Class aClass) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        Field[] declaredFields = aClass.getDeclaredFields();
+        for (Object obj: values) {
+            Map<String, Object> map = new HashMap<>();
+            for (Field declaredField : declaredFields) {
+                ColumnName annotation = declaredField.getAnnotation(ColumnName.class);
+                if (annotation == null) continue;
+                try {
+                    declaredField.setAccessible(true);
+                    Object fieldValue = declaredField.get(obj);
+                    if (Objects.isNull(fieldValue)) continue;
+                    String key = underscoresToCamelCase(annotation.value());
+                    if (key.equals("followUps")) {
+                        fieldValue = new Gson().toJson(fieldValue);
+                    }
+                    map.put(key, fieldValue);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            result.add(map);
+        }
+        return result;
     }
 
     public static class Constants {
