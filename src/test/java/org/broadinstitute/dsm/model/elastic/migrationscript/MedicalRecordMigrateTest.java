@@ -59,7 +59,7 @@ public class MedicalRecordMigrateTest {
     public void generateSource() {
         List<Object> medicalRecords = Arrays.asList(new MedicalRecord("1", "2", "3", "TYPE"));
         List<Map<String, Object>> listOfMaps = Util.transformObjectCollectionToCollectionMap(medicalRecords, MedicalRecord.class);
-        Map<String, Object> resultMap = MedicalRecordMigrate.generateSource(listOfMaps);
+        Map<String, Object> resultMap = BaseMigrator.generateSource(listOfMaps);
         Map<String, Object> dsm = (Map)resultMap.get("dsm");
         List<Map<String, Object>> medicalRecords1 = (List<Map<String, Object>>) dsm.get("medicalRecords");
         Object medicalRecordsId = medicalRecords1.get(0).get("medicalRecordId");

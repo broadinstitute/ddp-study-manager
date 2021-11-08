@@ -1,27 +1,13 @@
 package org.broadinstitute.dsm.model.elastic.migrationscript;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.Field;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.broadinstitute.dsm.db.MedicalRecord;
-import org.broadinstitute.dsm.db.structure.ColumnName;
-import org.broadinstitute.dsm.model.elastic.Util;
-import org.broadinstitute.dsm.model.elastic.export.Exportable;
-import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
-import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
-import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
-import org.broadinstitute.dsm.util.ParticipantUtil;
-import spark.utils.StringUtils;
 
 import static org.broadinstitute.dsm.model.elastic.export.parse.TypeParser.*;
 
-public class MedicalRecordMigrate implements Generator, Exportable {
+public class MedicalRecordMigrate extends BaseMigrator {
 
-
-    public static final ElasticSearch elasticSearch = new ElasticSearch();
 
     private static final Map<String, Object> medicalRecordMapping1 = Map.of (
             "ddpParticipantId", TEXT_KEYWORD_MAPPING,
@@ -73,88 +59,19 @@ public class MedicalRecordMigrate implements Generator, Exportable {
             medicalRecordMapping3,
             medicalRecordMapping4);
 
-    private final BulkExportFacade bulkExportFacade;
-    private final String realm;
+    private String OBJECT = "medicalRecords";
 
     public MedicalRecordMigrate(String index, String realm) {
-        bulkExportFacade = new BulkExportFacade(index);
-        this.realm = realm;
+        super(index, realm);
     }
 
+
+
     @Override
-    public Map<String, Object> generate() {
+    public void export() {
         Map<String, List<Object>> medicalRecords = (Map) MedicalRecord.getMedicalRecords(realm);
-        Map<String, List<Map<String, Object>>> medicalRecordsToMap = transformParticipantRecordsToMap(medicalRecords);
-        return (Map<String, Object>) medicalRecordsToMap;
-    }
-
-    @Override
-    public void export(Map<String, Object> source) {
-
-        //            bulkExportFacade.addDataToRequest(generateSource(transformedList), participantId);
-
-    }
-
-    public void exportMedicalRecordsToES() {
+        fillBulkRequestWithTransformedMap(medicalRecords);
         bulkExportFacade.executeBulkUpsert();
-    }
-
-    private Map<String, List<Map<String, Object>>> transformParticipantRecordsToMap(Map<String, List<Object>> participantRecords) {
-        Map<String, List<Map<String, Object>>> transformedMap = new HashMap<>();
-        for (Map.Entry<String, List<Object>> entry: participantRecords.entrySet()) {
-            String participantId = entry.getKey();
-            List<Object> medicalRecordList = entry.getValue();
-            participantId = getParticipantGuid(participantId);
-            if (StringUtils.isBlank(participantId)) continue;
-            List<Map<String, Object>> transformedList = Util.transformObjectCollectionToCollectionMap(medicalRecordList, MedicalRecord.class);
-            setPrimaryId(transformedList);
-            transformedMap.put(participantId, transformedList);
-        }
-        return transformedMap;
-    }
-
-    private static void setPrimaryId(List<Map<String, Object>> transformedList) {
-        for(Map<String, Object> map: transformedList) {
-            map.put("id", map.get("medicalRecordId"));
-        }
-    }
-
-    private static String getParticipantGuid(String participantId) {
-        if (!(ParticipantUtil.isGuid(participantId))) {
-            ElasticSearchParticipantDto participantById =
-                    elasticSearch.getParticipantById("participants_structured.cmi.cmi-brain", participantId);
-            participantId = participantById.getParticipantId();
-        }
-        return participantId;
-    }
-
-    public static Map generateSource(List<Map<String, Object>> transformedList) {
-        return Map.of("dsm", Map.of("medicalRecords", transformedList));
-    }
-
-
-    protected static List<String> collectMedicalRecordColumns() {
-        Class<MedicalRecord> medicalRecordClass = MedicalRecord.class;
-        Field[] fields = medicalRecordClass.getDeclaredFields();
-
-        List<String> columnNames = Arrays.stream(fields)
-                .map(AccessibleObject::getAnnotations)
-                .map(annotations -> Arrays.stream(annotations).filter(MedicalRecordMigrate::isColumnNameType).findFirst())
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .map(annotation -> ((ColumnName) annotation).value())
-                .collect(Collectors.toList());
-        return columnNames;
-    }
-
-    protected List<String> swapToCamelCases(List<String> columnNames) {
-        return columnNames.stream()
-                .map(Util::underscoresToCamelCase)
-                .collect(Collectors.toList());
-    }
-
-    private static boolean isColumnNameType(Annotation annotation) {
-        return annotation instanceof ColumnName;
     }
 
 
