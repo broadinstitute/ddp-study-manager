@@ -1,6 +1,5 @@
 package org.broadinstitute.dsm.model.elastic.migrationscript;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
@@ -10,21 +9,16 @@ import java.util.stream.Collectors;
 import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.model.elastic.Util;
+import org.broadinstitute.dsm.model.elastic.export.Exportable;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
-import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
 import spark.utils.StringUtils;
 
 import static org.broadinstitute.dsm.model.elastic.export.parse.TypeParser.*;
 
-public class MedicalRecordMigrate {
+public class MedicalRecordMigrate implements Exportable {
 
 
     public static final ElasticSearch elasticSearch = new ElasticSearch();
@@ -78,22 +72,25 @@ public class MedicalRecordMigrate {
     protected static final Map<String, Object> medicalRecordMappingMerged = MapAdapter.of(medicalRecordMapping1, medicalRecordMapping2,
             medicalRecordMapping3,
             medicalRecordMapping4);
+    private final BulkExportFacade bulkExportFacade;
 
-
-    public static void exportMedicalRecordsToES() {
-        Map<String, List<Object>> medicalRecords = (Map) MedicalRecord.getMedicalRecords("brain");
-        BulkExportFacade bulkExportFacade = new BulkExportFacade("participants_structured.cmi.cmi-brain");
-        bulkExportFacade.addDataToRequest();
-        BulkRequest request = buildAndFillBulkRequest(medicalRecords);
-        RestHighLevelClient client = ElasticSearchUtil.getClientInstance();
-        try {
-            client.bulk(request, RequestOptions.DEFAULT);
-        } catch (IOException e) {
-            throw new RuntimeException();
-        }
+    public MedicalRecordMigrate(String index) {
+        bulkExportFacade = new BulkExportFacade(index);
     }
 
-    private static BulkRequest buildAndFillBulkRequest(Map<String, List<Object>> participantRecords) {
+
+    @Override
+    public void export(Map<String, Object> source) {
+
+    }
+
+    public void exportMedicalRecordsToES() {
+        Map<String, List<Object>> medicalRecords = (Map) MedicalRecord.getMedicalRecords("brain");
+        fillBulkRequest(medicalRecords);
+        bulkExportFacade.executeBulkUpsert();
+    }
+
+    private static void fillBulkRequest(Map<String, List<Object>> participantRecords) {
         for (Map.Entry<String, List<Object>> entry: participantRecords.entrySet()) {
             String participantId = entry.getKey();
             List<Object> medicalRecordList = entry.getValue();
@@ -101,16 +98,8 @@ public class MedicalRecordMigrate {
             if (StringUtils.isBlank(participantId)) continue;
             List<Map<String, Object>> transformedList = Util.transformObjectCollectionToCollectionMap(medicalRecordList, MedicalRecord.class);
             setPrimaryId(transformedList);
+            bulkExportFacade.addDataToRequest(generateSource(transformedList), participantId);
         }
-
-        return null;
-    }
-
-    private static UpdateRequest buildUpdateRequest(String participantId, List<Map<String, Object>> transformedList) {
-        UpdateRequest updateRequest = new UpdateRequest("participants_structured.cmi.cmi-brain", "_doc", participantId);
-        updateRequest.docAsUpsert(true);
-        updateRequest.doc(generateSource(transformedList));
-        return updateRequest;
     }
 
     private static void setPrimaryId(List<Map<String, Object>> transformedList) {
@@ -156,4 +145,5 @@ public class MedicalRecordMigrate {
     private static boolean isColumnNameType(Annotation annotation) {
         return annotation instanceof ColumnName;
     }
+
 }

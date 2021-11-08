@@ -34,7 +34,6 @@ public class ExportFacade {
 
     public ExportFacade(ExportFacadePayload exportFacadePayload) {
         this.exportFacadePayload = Objects.requireNonNull(exportFacadePayload);
-        exportable = new ElasticExportAdapter();
         searchable = new ElasticSearch();
     }
 
@@ -47,8 +46,8 @@ public class ExportFacade {
         generator = new MappingGenerator(new TypeParser(), exportFacadePayload.getGeneratorPayload());
         Map<String, Object> mappingToUpsert = generator.generate();
         UpsertMappingRequestPayload upsertMappingRequestPayload = new UpsertMappingRequestPayload(exportFacadePayload.getIndex());
-        exportable.setUpsertMappingRequestPayload(upsertMappingRequestPayload);
-        exportable.exportMapping(mappingToUpsert);
+        exportable = new ElasticMappingExportAdapter(upsertMappingRequestPayload);
+        exportable.export(mappingToUpsert);
     }
 
     private ESDsm fetchData() {
@@ -89,8 +88,8 @@ public class ExportFacade {
                 .withRetryOnConflict(5)
                 .build();
         logger.info("Built upsert data request payload");
-        exportable.setUpdateRequestPayload(upsertDataRequestPayload);
-        exportable.exportData(elasticDataToExport);
+        exportable = new ElasticDataExportAdapter(upsertDataRequestPayload);
+        exportable.export(elasticDataToExport);
     }
 
 
