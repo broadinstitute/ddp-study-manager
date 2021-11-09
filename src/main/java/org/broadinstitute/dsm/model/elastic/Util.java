@@ -1,10 +1,13 @@
 package org.broadinstitute.dsm.model.elastic;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
@@ -22,7 +25,7 @@ public class Util {
             "r", new BaseGenerator.PropertyInfo(ESObjectConstants.PARTICIPANT_RECORD, false),
             "p", new BaseGenerator.PropertyInfo(ESObjectConstants.PARTICIPANT, false),
             "o", new BaseGenerator.PropertyInfo(ESObjectConstants.ONC_HISTORY, false)
-            );
+    );
     public static final int FIRST_ELEMENT_INDEX = 0;
     public static final String UNDERSCORE_SEPARATOR = "_";
     public static final String DOC = "_doc";
@@ -32,7 +35,7 @@ public class Util {
         String type;
         if (ParticipantUtil.isHruid(id)) {
             type = Constants.PROFILE_HRUID;
-        } else if (ParticipantUtil.isGuid(id)){
+        } else if (ParticipantUtil.isGuid(id)) {
             type = Constants.PROFILE_GUID;
         } else if (ParticipantUtil.isLegacyAltPid(id)) {
             type = Constants.PROFILE_LEGACYALTPID;
@@ -61,7 +64,7 @@ public class Util {
 
     public static List<Map<String, Object>> transformObjectCollectionToCollectionMap(List<Object> values, Class aClass) {
         List<Map<String, Object>> result = new ArrayList<>();
-        for (Object obj: values) {
+        for (Object obj : values) {
             result.add(transformObjectToMap(aClass, obj));
         }
         return result;
@@ -72,11 +75,16 @@ public class Util {
         Field[] declaredFields = aClass.getDeclaredFields();
         for (Field declaredField : declaredFields) {
             ColumnName annotation = declaredField.getAnnotation(ColumnName.class);
-            if (annotation == null) continue;
+            if (annotation == null) {
+                continue;
+            }
             try {
                 declaredField.setAccessible(true);
                 Object fieldValue = declaredField.get(obj);
-                if (Objects.isNull(fieldValue)) continue;
+                if (Objects.isNull(fieldValue)) {
+                    continue;
+                }
+                dynamicFieldsSpecialCase(fieldValue);
                 String key = underscoresToCamelCase(annotation.value());
                 if (key.equals("followUps")) {
                     fieldValue = new Gson().toJson(fieldValue);
@@ -87,6 +95,42 @@ public class Util {
             }
         }
         return map;
+    }
+
+    private static Map<String, Object> dynamicFieldsSpecialCase(Object fieldValue) {
+        Map<String, Object> dynamicMap = Map.of();
+        if (isJsonInString(fieldValue)) {
+            String strValue = (String) fieldValue;
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                dynamicMap = objectMapper.readValue(strValue, Map.class);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return dynamicMap;
+    }
+
+    private static boolean isJsonInString(Object fieldValue) {
+        return fieldValue instanceof String && StringUtils.isNotBlank((String) fieldValue) && isJson((String) fieldValue);
+    }
+
+    private static boolean isJson(String str) {
+        return getFirstChar(str) == '{' && getLastChar(str) == '}';
+    }
+
+    private static char getLastChar(String strValue) {
+        if (Objects.isNull(strValue) || strValue.length() == 0) {
+            throw new IllegalArgumentException();
+        }
+        return strValue.charAt(strValue.length() - 1);
+    }
+
+    private static char getFirstChar(String strValue) {
+        if (Objects.isNull(strValue) || strValue.length() == 0) {
+            throw new IllegalArgumentException();
+        }
+        return strValue.charAt(0);
     }
 
     public static class Constants {

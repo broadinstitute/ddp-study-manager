@@ -1,17 +1,20 @@
 package org.broadinstitute.dsm.model.elastic.migrationscript;
 
 
-import org.broadinstitute.dsm.db.OncHistoryDetail;
-import org.broadinstitute.dsm.db.ParticipantData;
-import org.broadinstitute.dsm.statics.ESObjectConstants;
-
 import java.util.List;
 import java.util.Map;
 
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
+
 public class ParticipantDataMigrate extends BaseMigrator {
 
+    private ParticipantDataDao participantDataDao;
+
     public ParticipantDataMigrate(String index, String realm) {
-        super(index, realm, ESObjectConstants.PARTICIPANT_DATA, "participantDataId", ParticipantData.class);
+        super(index, realm, ESObjectConstants.PARTICIPANT_DATA, "participantDataId", ParticipantDataDto.class);
+        participantDataDao = new ParticipantDataDao();
     }
 
     @Override

@@ -29,13 +29,10 @@ public class ParticipantDataDto {
     @ColumnName(ParticipantDataDao.FIELD_TYPE_ID)
     private String fieldTypeId;
 
-    @ColumnName(ParticipantDataDao.DATA)
     private String data;
 
-    @ColumnName(ParticipantDataDao.LAST_CHANGED)
     private long lastChanged;
 
-    @ColumnName(ParticipantDataDao.CHANGED_BY)
     private String changedBy;
 
     // We cache the json data map to avoid deserializing it multiple times.
