@@ -9,7 +9,6 @@ import java.util.Map;
 import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.model.elastic.Util;
-import org.broadinstitute.dsm.statics.DBConstants;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -37,7 +36,7 @@ public class MedicalRecordMigrateTest {
         List<Object> medicalRecords = Arrays.asList(new MedicalRecord("1", "2", "3", "TYPE"));
         List<Map<String, Object>> listOfMaps = Util.transformObjectCollectionToCollectionMap(medicalRecords, MedicalRecord.class);
         MedicalRecordMigrate migrator = new MedicalRecordMigrate("", "");
-        Map<String, Object> resultMap = migrator.generateSource(listOfMaps);
+        Map<String, Object> resultMap = migrator.generate();
         Map<String, Object> dsm = (Map)resultMap.get("dsm");
         List<Map<String, Object>> medicalRecords1 = (List<Map<String, Object>>) dsm.get("medicalRecords");
         Object medicalRecordsId = medicalRecords1.get(0).get("medicalRecordId");

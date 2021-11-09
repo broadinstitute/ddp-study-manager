@@ -3,17 +3,15 @@ package org.broadinstitute.dsm.model.elastic.migrationscript;
 import java.util.List;
 import java.util.Map;
 
-import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.Exportable;
+import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
-import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
-import org.broadinstitute.dsm.util.ParticipantUtil;
 import spark.utils.StringUtils;
 
-public abstract class BaseMigrator implements Exportable {
+public abstract class BaseMigrator implements Exportable, Generator {
 
     private final ElasticSearchable elasticSearch;
     protected String object;
@@ -22,6 +20,7 @@ public abstract class BaseMigrator implements Exportable {
     protected final String realm;
     protected final String index;
     private Class aClass;
+    private List<Map<String, Object>> transformedList;
 
     public BaseMigrator(String index, String realm, String object, String primaryId, Class aClass) {
         bulkExportFacade = new BulkExportFacade(index);
@@ -33,22 +32,14 @@ public abstract class BaseMigrator implements Exportable {
         this.aClass = aClass;
     }
 
-    private void setPrimaryId(List<Map<String, Object>> transformedList) {
+    private void setPrimaryId() {
         for(Map<String, Object> map: transformedList) {
             map.put(Util.ID, map.get(primaryId));
         }
     }
 
-    private String getParticipantGuid(String participantId) {
-        if (!(ParticipantUtil.isGuid(participantId))) {
-            ElasticSearchParticipantDto participantById =
-                    elasticSearch.getParticipantById(index, participantId);
-            participantId = participantById.getParticipantId();
-        }
-        return participantId;
-    }
-
-    public Map generateSource(List<Map<String, Object>> transformedList) {
+    @Override
+    public Map<String, Object> generate() {
         return Map.of(ESObjectConstants.DSM, Map.of(object, transformedList));
     }
 
@@ -56,11 +47,11 @@ public abstract class BaseMigrator implements Exportable {
         for (Map.Entry<String, List<Object>> entry: participantRecords.entrySet()) {
             String participantId = entry.getKey();
             List<Object> recordList = entry.getValue();
-            participantId = getParticipantGuid(participantId);
+            participantId = getParticipantGuid(participantId, index);
             if (StringUtils.isBlank(participantId)) continue;
-            List<Map<String, Object>> transformedList = Util.transformObjectCollectionToCollectionMap(recordList, this.aClass);
-            setPrimaryId(transformedList);
-            bulkExportFacade.addDataToRequest(generateSource(transformedList), participantId);
+            transformedList = Util.transformObjectCollectionToCollectionMap(recordList, this.aClass);
+            setPrimaryId();
+            bulkExportFacade.addDataToRequest(generate(), participantId);
             System.err.println(participantId); //FOR TESTING
         }
     }

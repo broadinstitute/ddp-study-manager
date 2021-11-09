@@ -34,7 +34,10 @@ public class Participant {
             "LEFT JOIN ddp_participant_exit ex on (p.ddp_participant_id = ex.ddp_participant_id AND p.ddp_instance_id = ex.ddp_instance_id) " +
             "WHERE realm.instance_name = ? ";
 
+    @ColumnName(DBConstants.PARTICIPANT_ID)
     private final String participantId;
+
+    @ColumnName(DBConstants.DDP_PARTICIPANT_ID)
     private final String ddpParticipantId;
 
     @TableName (
