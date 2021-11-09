@@ -1,21 +1,21 @@
 package org.broadinstitute.dsm.model.elastic.migrationscript;
 
-import static org.broadinstitute.dsm.model.elastic.export.parse.TypeParser.BOOLEAN_MAPPING;
-import static org.broadinstitute.dsm.model.elastic.export.parse.TypeParser.TEXT_KEYWORD_MAPPING;
 
+import org.broadinstitute.dsm.db.OncHistoryDetail;
+import org.broadinstitute.dsm.db.ParticipantData;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
+
+import java.util.List;
 import java.util.Map;
 
-public class ParticipantDataMigrate {
+public class ParticipantDataMigrate extends BaseMigrator {
 
+    public ParticipantDataMigrate(String index, String realm) {
+        super(index, realm, ESObjectConstants.PARTICIPANT_DATA, "participantDataId", ParticipantData.class);
+    }
 
-    private static final Map<String, Object> participantDataMigrate1 = Map.of (
-            "participantDataId", TEXT_KEYWORD_MAPPING,
-            "ddpParticipantId", TEXT_KEYWORD_MAPPING,
-            "ddpInstanceId", TEXT_KEYWORD_MAPPING,
-            "fieldTypeId", TEXT_KEYWORD_MAPPING
-    );
-
-
-
-
+    @Override
+    protected Map<String, List<Object>> getDataByRealm() {
+        return null;
+    }
 }

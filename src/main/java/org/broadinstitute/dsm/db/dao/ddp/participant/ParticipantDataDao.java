@@ -61,18 +61,23 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
             "last_changed = ?," +
             "changed_by = ?";
 
+    public static final String SQL_SELECT_PARTICIPANTS_BY_REALM = "SELECT d.participant_data_id, d.ddp_participant_id, d.field_type_id, d.data " +
+            "FROM ddp_participant_data d " +
+            "LEFT JOIN ddp_instance realm on (d.ddp_instance_id = realm.ddp_instance_id) " +
+            "WHERE realm.instance_name = ? ";
+
     private static final String SQL_UPDATE_DATA_TO_PARTICIPANT_DATA = "UPDATE ddp_participant_data SET data = ?, " +
             "last_changed = ?, changed_by = ? WHERE participant_data_id = ?";
 
     private static final String SQL_GET_PARTICIPANT_DATA_BY_PARTICIPANT_IDS = SQL_ALL_PARTICIPANT_DATA + "WHERE ddp_participant_id IN (?)";
 
-    private static final String PARTICIPANT_DATA_ID = "participant_data_id";
-    private static final String DDP_PARTICIPANT_ID = "ddp_participant_id";
-    private static final String DDP_INSTANCE_ID = "ddp_instance_id";
-    private static final String FIELD_TYPE_ID = "field_type_id";
-    private static final String DATA = "data";
-    private static final String LAST_CHANGED = "last_changed";
-    private static final String CHANGED_BY = "changed_by";
+    public static final String PARTICIPANT_DATA_ID = "participant_data_id";
+    public static final String DDP_PARTICIPANT_ID = "ddp_participant_id";
+    public static final String DDP_INSTANCE_ID = "ddp_instance_id";
+    public static final String FIELD_TYPE_ID = "field_type_id";
+    public static final String DATA = "data";
+    public static final String LAST_CHANGED = "last_changed";
+    public static final String CHANGED_BY = "changed_by";
 
 
     @Override
@@ -253,7 +258,42 @@ public class ParticipantDataDao implements Dao<ParticipantDataDto> {
         return participantDatasByParticipantIds;
     }
 
+    public Map<String, List<ParticipantDataDto>> getParticipantDataByRealm(String realm) {
+        Map<String, List<ParticipantDataDto>> participantDataByRealm = new HashMap<>();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_PARTICIPANTS_BY_REALM)) {
+                stmt.setString(1, realm);
+                try(ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        ArrayList<ParticipantDataDto> value = new ArrayList<>(
+                                List.of(new ParticipantDataDto.Builder()
+                                        .withParticipantDataId(rs.getInt(PARTICIPANT_DATA_ID))
+                                        .withDdpParticipantId(rs.getString(DDP_PARTICIPANT_ID))
+                                        .withDdpInstanceId(rs.getInt(DDP_INSTANCE_ID))
+                                        .withFieldTypeId(rs.getString(FIELD_TYPE_ID))
+                                        .withData(rs.getString(DATA))
+                                        .build()
+                                )
+                        );
+                        participantDataByRealm.merge(rs.getString(DDP_PARTICIPANT_ID), value, (preValue, currentValue) -> {
+                            preValue.addAll(currentValue);
+                            return preValue;
+                        });
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                execResult.resultException = ex;
+            }
+            return execResult;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting participants data with ", results.resultException);
+        }
+        return participantDataByRealm;
 
+    }
 
     public Map<String, List<ParticipantDataDto>> getParticipantDataByInstanceIdAndFilterQuery(int ddpInstanceId, String filterQuery) {
         Map<String, List<ParticipantDataDto>> participantDatasByParticipantIds = new HashMap<>();

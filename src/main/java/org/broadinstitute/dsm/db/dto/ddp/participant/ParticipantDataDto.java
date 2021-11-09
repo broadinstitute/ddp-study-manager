@@ -9,18 +9,33 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
+import org.broadinstitute.dsm.db.structure.ColumnName;
 
 @Setter
 public class ParticipantDataDto {
 
     private static final Gson gson = new Gson();
 
+    @ColumnName(ParticipantDataDao.PARTICIPANT_DATA_ID)
     private int participantDataId;
+
+    @ColumnName(ParticipantDataDao.DDP_PARTICIPANT_ID)
     private String ddpParticipantId;
+
+    @ColumnName(ParticipantDataDao.DDP_INSTANCE_ID)
     private int ddpInstanceId;
+
+    @ColumnName(ParticipantDataDao.FIELD_TYPE_ID)
     private String fieldTypeId;
+
+    @ColumnName(ParticipantDataDao.DATA)
     private String data;
+
+    @ColumnName(ParticipantDataDao.LAST_CHANGED)
     private long lastChanged;
+
+    @ColumnName(ParticipantDataDao.CHANGED_BY)
     private String changedBy;
 
     // We cache the json data map to avoid deserializing it multiple times.
