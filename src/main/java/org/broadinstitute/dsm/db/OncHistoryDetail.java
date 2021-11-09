@@ -76,7 +76,10 @@ public class OncHistoryDetail {
     public static final String PROBLEM_OTHER = "other";
     public static final String PROBLEM_OTHER_OLD = "Other";
 
+    @ColumnName(DBConstants.ONC_HISTORY_DETAIL_ID)
     private String oncHistoryDetailId;
+
+    @ColumnName(DBConstants.MEDICAL_RECORD_ID)
     private final String medicalRecordId;
 
     @ColumnName (DBConstants.DATE_PX)

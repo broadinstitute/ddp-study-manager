@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.migrationscript;
 
+import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 import java.util.HashMap;
@@ -13,12 +14,12 @@ public class OncHistoryDetailsMigrate extends BaseMigrator {
 
 
     public OncHistoryDetailsMigrate(String index, String realm) {
-        super(index, realm, ESObjectConstants.ONC_HISTORY_DETAIL_RECORDS);
+        super(index, realm, ESObjectConstants.ONC_HISTORY_DETAIL_RECORDS, "");
     }
 
     @Override
     protected Map<String, List<Object>> getDataByRealm() {
-        return null;
+        return (Map) OncHistoryDetail.getOncHistoryDetails(realm);
     }
 
 }

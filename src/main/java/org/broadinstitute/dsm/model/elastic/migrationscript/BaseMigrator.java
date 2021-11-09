@@ -18,11 +18,13 @@ public abstract class BaseMigrator implements Exportable {
     private final ElasticSearchable elasticSearch;
     protected String object;
     protected final BulkExportFacade bulkExportFacade;
+    private String primaryId;
     protected final String realm;
     protected final String index;
 
-    public BaseMigrator(String index, String realm, String object) {
+    public BaseMigrator(String index, String realm, String object, String primaryId) {
         bulkExportFacade = new BulkExportFacade(index);
+        this.primaryId = primaryId;
         this.elasticSearch = new ElasticSearch();
         this.realm = realm;
         this.index = index;
@@ -31,7 +33,7 @@ public abstract class BaseMigrator implements Exportable {
 
     private void setPrimaryId(List<Map<String, Object>> transformedList) {
         for(Map<String, Object> map: transformedList) {
-            map.put(Util.ID, map.get(object));
+            map.put(Util.ID, map.get(primaryId));
         }
     }
 
@@ -54,9 +56,10 @@ public abstract class BaseMigrator implements Exportable {
             List<Object> recordList = entry.getValue();
             participantId = getParticipantGuid(participantId);
             if (StringUtils.isBlank(participantId)) continue;
-            List<Map<String, Object>> transformedList = Util.transformObjectCollectionToCollectionMap(recordList, MedicalRecord.class);
+            List<Map<String, Object>> transformedList = Util.transformObjectCollectionToCollectionMap(recordList, this.getClass());
             setPrimaryId(transformedList);
             bulkExportFacade.addDataToRequest(generateSource(transformedList), participantId);
+            System.err.println(participantId); //FOR TESTING
         }
     }
 
