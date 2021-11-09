@@ -18,7 +18,6 @@ public abstract class BaseGenerator implements Generator, Collector {
 
     public static final String DSM_OBJECT = "dsm";
     public static final String PROPERTIES = "properties";
-    public static final String ID = "id";
     protected static final Gson GSON = new Gson();
     protected final Parser parser;
     protected GeneratorPayload generatorPayload;

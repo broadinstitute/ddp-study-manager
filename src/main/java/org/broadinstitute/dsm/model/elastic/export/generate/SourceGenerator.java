@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
+import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +56,7 @@ public class SourceGenerator extends BaseGenerator {
 
     private List<Map<String, Object>> buildCollectionWithId(Object element) {
         return List.of(Map.of(getDBElement().getColumnName(), element,
-                ID, generatorPayload.getRecordId()));
+                Util.ID, generatorPayload.getRecordId()));
     }
 
     @Override
@@ -77,7 +78,7 @@ public class SourceGenerator extends BaseGenerator {
     protected Object constructCollection() {
         logger.info("Constructing nested data");
         Map<Object, Object> collectionMap = new HashMap<>();
-        collectionMap.put(ID, generatorPayload.getRecordId());
+        collectionMap.put(Util.ID, generatorPayload.getRecordId());
         Map<String, Object> mapWithParsedObjects = parseJsonValuesToObject();
         collectionMap.putAll(mapWithParsedObjects);
         return List.of(collectionMap);

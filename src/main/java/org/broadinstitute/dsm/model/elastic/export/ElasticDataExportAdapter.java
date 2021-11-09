@@ -13,14 +13,16 @@ public class ElasticDataExportAdapter extends BaseExporter {
     private static final Logger logger = LoggerFactory.getLogger(ElasticDataExportAdapter.class);
 
     private UpsertDataRequestPayload upsertDataRequestPayload;
+    private Map<String, Object> data;
 
-    public ElasticDataExportAdapter(UpsertDataRequestPayload upsertDataRequestPayload) {
+    public ElasticDataExportAdapter(UpsertDataRequestPayload upsertDataRequestPayload, Map<String, Object> data) {
         this.upsertDataRequestPayload = upsertDataRequestPayload;
+        this.data = data;
     }
 
 
     @Override
-    public void export(Map<String, Object> data) {
+    public void export() {
         logger.info("initialize exporting data to ES");
         UpdateRequest updateRequest = upsertDataRequestPayload.getUpdateRequest(data);
         try {

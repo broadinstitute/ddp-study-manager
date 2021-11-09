@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 import org.broadinstitute.dsm.model.elastic.ESDsm;
-import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
+import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.generate.Collector;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.slf4j.Logger;
@@ -75,7 +75,7 @@ public class CollectionProcessor implements Processor {
     }
 
     private boolean isExistingRecord(Map<String, Object> eachRecord) {
-        return (double) eachRecord.get(BaseGenerator.ID) == (double) generatorPayload.getRecordId();
+        return (double) eachRecord.get(Util.ID) == (double) generatorPayload.getRecordId();
     }
 
     private void updateExistingRecord(Map<String, Object> eachRecord) {

@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
+import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +55,7 @@ public class MappingGenerator extends BaseGenerator {
     @Override
     protected Map<String, Object> getElementWithId(Object type) {
         return Map.of(
-                ID, Map.of(TYPE, TYPE_KEYWORD),
+                Util.ID, Map.of(TYPE, TYPE_KEYWORD),
                 getDBElement().getColumnName(), type
         );
     }

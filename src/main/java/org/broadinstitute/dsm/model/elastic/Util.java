@@ -26,6 +26,7 @@ public class Util {
     public static final int FIRST_ELEMENT_INDEX = 0;
     public static final String UNDERSCORE_SEPARATOR = "_";
     public static final String DOC = "_doc";
+    public static final String ID = "id";
 
     public static String getQueryTypeFromId(String id) {
         String type;

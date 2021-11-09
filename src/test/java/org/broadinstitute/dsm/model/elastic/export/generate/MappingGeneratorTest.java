@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.model.elastic.export.generate;
 
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
+import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.broadinstitute.dsm.model.elastic.export.TestPatchUtil;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
@@ -81,7 +82,7 @@ public class MappingGeneratorTest {
         TestMappingGenerator generator = TestMappingGenerator.of(generatorPayload);
         generator.getOuterPropertyByAlias().setIsCollection(true);
         Object fieldWithType = generator.getFieldWithElement();
-        Assert.assertTrue(((Map<String, Object>) fieldWithType).containsKey(BaseGenerator.ID));
+        Assert.assertTrue(((Map<String, Object>) fieldWithType).containsKey(Util.ID));
     }
 
     @Test
@@ -95,7 +96,7 @@ public class MappingGeneratorTest {
         Map<String, Object> dsmLevelProperty = Map.of(generator.getOuterPropertyByAlias().getPropertyName(), Map.of(
                 MappingGenerator.TYPE, MappingGenerator.NESTED,
                 MappingGenerator.PROPERTIES, Map.of(TestPatchUtil.MEDICAL_RECORD_COLUMN, Map.of(MappingGenerator.TYPE, "date"),
-                        MappingGenerator.ID, Map.of(MappingGenerator.TYPE, MappingGenerator.TYPE_KEYWORD)
+                        Util.ID, Map.of(MappingGenerator.TYPE, MappingGenerator.TYPE_KEYWORD)
                         )));
         Map<String, Object> dsmLevelProperties = Map.of(MappingGenerator.PROPERTIES, dsmLevelProperty);
         Map<String, Object> dsmLevel = Map.of(MappingGenerator.DSM_OBJECT, dsmLevelProperties);

@@ -16,32 +16,9 @@ import org.junit.Test;
 
 public class MedicalRecordMigrateTest {
 
-
     @BeforeClass
     public static void setUp() {
         TestHelper.setupDB();
-    }
-
-    @Test
-    public void collectMedicalRecordColumns() {
-        MedicalRecordMigrate medicalRecordMigrate = new MedicalRecordMigrate();
-        List<String> columnNames = medicalRecordMigrate.collectMedicalRecordColumns();
-        assertTrue(columnNames.contains(DBConstants.MR_RECEIVED));
-    }
-
-    @Test
-    public void swapToCamelCases() {
-        MedicalRecordMigrate medicalRecordMigrate = new MedicalRecordMigrate();
-        List<String> columnNames = medicalRecordMigrate.collectMedicalRecordColumns();
-        List<String> camelCaseColumns = medicalRecordMigrate.swapToCamelCases(columnNames);
-        assertEquals("mrReceived", camelCaseColumns.stream().filter("mrReceived"::equals).findFirst().get());
-    }
-
-    @Test
-    public void medicalRecordMappingMerged() {
-        Map<String, Object> medicalRecordMappingMerged =
-                MedicalRecordMigrate.medicalRecordMappingMerged;
-        assertEquals(37, medicalRecordMappingMerged.size());
     }
 
     @Test
@@ -59,7 +36,8 @@ public class MedicalRecordMigrateTest {
     public void generateSource() {
         List<Object> medicalRecords = Arrays.asList(new MedicalRecord("1", "2", "3", "TYPE"));
         List<Map<String, Object>> listOfMaps = Util.transformObjectCollectionToCollectionMap(medicalRecords, MedicalRecord.class);
-        Map<String, Object> resultMap = BaseMigrator.generateSource(listOfMaps);
+        MedicalRecordMigrate migrator = new MedicalRecordMigrate("", "");
+        Map<String, Object> resultMap = migrator.generateSource(listOfMaps);
         Map<String, Object> dsm = (Map)resultMap.get("dsm");
         List<Map<String, Object>> medicalRecords1 = (List<Map<String, Object>>) dsm.get("medicalRecords");
         Object medicalRecordsId = medicalRecords1.get(0).get("medicalRecordId");
@@ -67,8 +45,9 @@ public class MedicalRecordMigrateTest {
     }
 
     @Test
-    public void exportMedicalRecordsToES() {
-        MedicalRecordMigrate.exportMedicalRecordsToES();
+    public void export() {
+        BaseMigrator migrator = new MedicalRecordMigrate("participants_structured.cmi.cmi-brain","brain");
+        migrator.export();
     }
 
 }
