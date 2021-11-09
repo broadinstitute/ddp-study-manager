@@ -8,7 +8,7 @@ import org.broadinstitute.dsm.statics.ESObjectConstants;
 public class MedicalRecordMigrate extends BaseMigrator {
 
     public MedicalRecordMigrate(String index, String realm) {
-        super(index, realm, ESObjectConstants.MEDICAL_RECORDS, "medicalRecordId");
+        super(index, realm, ESObjectConstants.MEDICAL_RECORDS, "medicalRecordId", MedicalRecord.class);
     }
 
     @Override
