@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.util.Map;
 
 import org.broadinstitute.dsm.db.Participant;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.junit.Test;
 
 public class UtilTest {
@@ -33,7 +34,7 @@ public class UtilTest {
                 "2020-10-28", "2020-10-28", "2020-10-28",
                 "ptNotes", true, true,
                 "additionalValuesJson", 1934283746283L);
-        Map<String, Object> transformedObject = Util.transformObjectToMap(Participant.class, participant);
+        Map<String, Object> transformedObject = Util.transformObjectToMap(participant);
         assertEquals("1", transformedObject.get("participantId"));
         assertEquals("QWERTY", transformedObject.get("ddpParticipantId"));
         assertEquals("2020-10-28", transformedObject.get("created"));
@@ -41,4 +42,20 @@ public class UtilTest {
         assertEquals(1934283746283L, transformedObject.get("exitDate"));
     }
 
+    @Test
+    public void transformJsonToMap() {
+        String json = "{\"DDP_INSTANCE\": \"TEST\", \"DDP_VALUE\": \"VALUE\"}";
+
+        ParticipantDataDto participantDataDto = new ParticipantDataDto.Builder()
+                .withParticipantDataId(10)
+                .withDdpParticipantId("123")
+                .withDdpInstanceId(55)
+                .withFieldTypeId("f")
+                .withData(json)
+                .build();
+
+        Map<String, Object> result = Util.transformObjectToMap(participantDataDto);
+        assertEquals("TEST", result.get("ddpInstance"));
+        assertEquals("VALUE", result.get("ddpValue"));
+    }
 }

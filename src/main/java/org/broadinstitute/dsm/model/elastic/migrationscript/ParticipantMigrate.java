@@ -29,9 +29,10 @@ public class ParticipantMigrate implements Exportable, Generator {
         for (Map.Entry<String, Participant> entry: participants.entrySet()) {
             Participant participant = entry.getValue();
             String participantId = entry.getKey();
-            transformedObject = Util.transformObjectToMap(Participant.class, participant);
+            transformedObject = Util.transformObjectToMap(participant);
             bulkExportFacade.addDataToRequest(generate(), getParticipantGuid(participantId, index));
         }
+
         bulkExportFacade.executeBulkUpsert();
     }
 

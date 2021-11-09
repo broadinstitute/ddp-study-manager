@@ -62,17 +62,17 @@ public class Util {
         return String.join("", words);
     }
 
-    public static List<Map<String, Object>> transformObjectCollectionToCollectionMap(List<Object> values, Class aClass) {
+    public static List<Map<String, Object>> transformObjectCollectionToCollectionMap(List<Object> values) {
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object obj : values) {
-            result.add(transformObjectToMap(aClass, obj));
+            result.add(transformObjectToMap(obj));
         }
         return result;
     }
 
-    public static Map<String, Object> transformObjectToMap(Class aClass, Object obj) {
+    public static Map<String, Object> transformObjectToMap(Object obj) {
         Map<String, Object> map = new HashMap<>();
-        Field[] declaredFields = aClass.getDeclaredFields();
+        Field[] declaredFields = obj.getClass().getDeclaredFields();
         for (Field declaredField : declaredFields) {
             ColumnName annotation = declaredField.getAnnotation(ColumnName.class);
             if (annotation == null) {
@@ -84,17 +84,36 @@ public class Util {
                 if (Objects.isNull(fieldValue)) {
                     continue;
                 }
-                dynamicFieldsSpecialCase(fieldValue);
-                String key = underscoresToCamelCase(annotation.value());
-                if (key.equals("followUps")) {
-                    fieldValue = new Gson().toJson(fieldValue);
-                }
-                map.put(key, fieldValue);
+                map.putAll(convertToMap(annotation.value(), fieldValue));
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
         }
         return map;
+    }
+
+    private static Map<String, Object> convertToMap(String fieldName, Object fieldValue) {
+        Map<String, Object> finalResult;
+        switch (fieldName) {
+            case "followUps":
+                finalResult = Map.of(underscoresToCamelCase(fieldName), new Gson().toJson(fieldValue));
+                break;
+            case "data":
+                Map<String, Object> objectMap = dynamicFieldsSpecialCase(fieldValue);
+                Map<String, Object> transformedMap = new HashMap<>();
+                for (Map.Entry object: objectMap.entrySet()) {
+                    String field = (String) object.getKey();
+                    Object value = object.getValue();
+                    String camelCaseField = underscoresToCamelCase(field);
+                    transformedMap.put(camelCaseField, value);
+                }
+                finalResult = transformedMap;
+                break;
+            default:
+                finalResult = Map.of(underscoresToCamelCase(fieldName), fieldValue);
+                break;
+        }
+        return finalResult;
     }
 
     private static Map<String, Object> dynamicFieldsSpecialCase(Object fieldValue) {

@@ -29,6 +29,7 @@ public class ParticipantDataDto {
     @ColumnName(ParticipantDataDao.FIELD_TYPE_ID)
     private String fieldTypeId;
 
+    @ColumnName(ParticipantDataDao.DATA)
     private String data;
 
     private long lastChanged;

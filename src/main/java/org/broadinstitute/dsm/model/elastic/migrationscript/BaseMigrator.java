@@ -49,7 +49,7 @@ public abstract class BaseMigrator implements Exportable, Generator {
             List<Object> recordList = entry.getValue();
             participantId = getParticipantGuid(participantId, index);
             if (StringUtils.isBlank(participantId)) continue;
-            transformedList = Util.transformObjectCollectionToCollectionMap(recordList, this.aClass);
+            transformedList = Util.transformObjectCollectionToCollectionMap(recordList);
             setPrimaryId();
             bulkExportFacade.addDataToRequest(generate(), participantId);
             System.err.println(participantId); //FOR TESTING
