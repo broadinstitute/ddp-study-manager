@@ -27,7 +27,6 @@ public class ParticipantDataMigrate extends BaseMigrator {
 
     @Override
     protected Map<String, List<Object>> getDataByRealm() {
-
         Map<String, List<ParticipantDataDto>> participantDataByRealm = participantDataDao.getParticipantDataByRealm(realm);
         return (Map) participantDataByRealm;
     }
@@ -39,11 +38,9 @@ public class ParticipantDataMigrate extends BaseMigrator {
     }
 
     private void exportMapping() {
-
         Map<String, Object> mapping = new HashMap<>();
         Map<String, List<Object>> dataByRealm = getDataByRealm();
         BaseParser typeParser = new TypeParser();
-
         try {
             Field dataField = ParticipantDataDto.class.getDeclaredField(ParticipantDataDao.DATA);
             dataField.setAccessible(true);
@@ -59,7 +56,6 @@ public class ParticipantDataMigrate extends BaseMigrator {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-
         ElasticMappingExportAdapter mappingExporter = new ElasticMappingExportAdapter(new UpsertMappingRequestPayload(
                 index), mapping);
         mappingExporter.export();

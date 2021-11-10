@@ -83,7 +83,9 @@ public class Util {
 
     public static Map<String, Object> transformObjectToMap(Object obj) {
         Map<String, Object> map = new HashMap<>();
-        Field[] declaredFields = obj.getClass().getDeclaredFields();
+        List<Field> declaredFields = new ArrayList(List.of(obj.getClass().getDeclaredFields()));
+        List<Field> declaredFieldsSuper = new ArrayList(List.of(obj.getClass().getSuperclass().getDeclaredFields()));
+        declaredFields.addAll(declaredFieldsSuper);
         for (Field declaredField : declaredFields) {
             ColumnName annotation = declaredField.getAnnotation(ColumnName.class);
             if (annotation == null) {

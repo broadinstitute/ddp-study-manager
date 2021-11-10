@@ -32,6 +32,9 @@ public class ESObjectConstants {
     public static final String RECEIVED = "received";
     public static final String KIT_REQUEST_ID = "kitRequestId";
 
+    // kit
+    public static final String KIT_REQUEST_SHIPPING = "kitRequestShipping";
+
     //common
     public static final String DDP_PARTICIPANT_ID = "ddpParticipantId";
 

@@ -119,6 +119,8 @@ public class KitRequestShipping extends KitRequest {
     public static final String DEACTIVATION_REASON = "Generated Express";
 
     private static final String QUEUE = "queue";
+
+    @ColumnName(DBConstants.ERROR)
     private static final String ERROR = "error";
     private static final String SENT = "sent";
     private static final String RECEIVED = "received";
@@ -139,8 +141,13 @@ public class KitRequestShipping extends KitRequest {
     private static final String SEARCH_TRACKING_NUMBER = "TRACKING_NUMBER";
     private static final String SEARCH_MF_BAR = "MF_BAR";
 
+    @ColumnName(DBConstants.DSM_KIT_ID)
     private final String dsmKitId;
+
+    @ColumnName(DBConstants.LABEL_URL_TO)
     private final String labelUrlTo;
+
+    @ColumnName(DBConstants.LABEL_URL_RETURN)
     private final String labelUrlReturn;
 
     @ColumnName (DBConstants.DSM_TRACKING_TO)
@@ -157,11 +164,14 @@ public class KitRequestShipping extends KitRequest {
 
     @ColumnName (DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID)
     private final String bspCollaboratorSampleId;
+
     private final String easypostAddressId;
     private final String realm;
 
     @ColumnName (DBConstants.KIT_TYPE_NAME)
     private final String kitType;
+
+    @ColumnName (DBConstants.DEACTIVATION_REASON)
     private final String deactivationReason;
 
     @ColumnName (DBConstants.KIT_LABEL)
@@ -181,19 +191,29 @@ public class KitRequestShipping extends KitRequest {
     @ColumnName (DBConstants.DSM_DEACTIVATED_DATE)
     @DbDateConversion(SqlDateConverter.EPOCH)
     private final long deactivatedDate;
+
+    @ColumnName (DBConstants.EXPRESS)
     private final boolean express;
+
+    @ColumnName (DBConstants.EASYPOST_TO_ID)
     private final String easypostToId;
     private final long labelTriggeredDate;
+
+    @ColumnName (DBConstants.NO_RETURN)
     private final boolean noReturn;
 
     @ColumnName (DBConstants.ERROR)
     private boolean error;
+
+    @ColumnName(DBConstants.MESSAGE)
     private String message;
 
+    @ColumnName (DBConstants.EASYPOST_SHIPMENT_STATUS)
     private String easypostShipmentStatus;
 
     private String nameLabel;
 
+    @ColumnName (DBConstants.CREATED_BY)
     private String createdBy;
     private String preferredLanguage;
     private String hruid;

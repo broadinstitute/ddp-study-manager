@@ -51,6 +51,7 @@ public class DBConstants {
     public static final String DSM_KIT_ID = "dsm_kit_id";
     public static final String KIT_TYPE_NAME = "kit_type_name";
     public static final String DSM_LABEL = "ddp_label";
+    public static final String LABEL_URL_TO = "label_url_to";
     public static final String KIT_TYPE_ID = "kit_type_id";
     public static final String LAST_KIT = "last_kit";
     public static final String DSM_KIT_REQUEST_ID = "dsm_kit_request_id";
@@ -482,5 +483,5 @@ public class DBConstants {
     public static final String PHONE_NUMBER = "phone_number";
 
 
-
+    public static final String LABEL_URL_RETURN = "label_url_return";
 }

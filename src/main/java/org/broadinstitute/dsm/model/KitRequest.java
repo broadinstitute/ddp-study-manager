@@ -16,11 +16,14 @@ import org.broadinstitute.dsm.statics.DBConstants;
         columnPrefix = "")
 public class KitRequest {
 
+    @ColumnName(DBConstants.DSM_KIT_REQUEST_ID)
     private String dsmKitRequestId;
     private String participantId;
     private String shortId;
     private String shippingId;
     private DDPParticipant participant;
+
+    @ColumnName(DBConstants.EXTERNAL_ORDER_STATUS)
     private String externalOrderStatus;
     private String externalKitName;
 
