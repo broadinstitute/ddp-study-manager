@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MappingGenerator extends BaseGenerator {
+public class MappingGenerator extends BaseGenerator implements Merger {
 
     private static final Logger logger = LoggerFactory.getLogger(MappingGenerator.class);
 
@@ -42,7 +42,7 @@ public class MappingGenerator extends BaseGenerator {
         Map<String, Object> fieldsByValues = parseJsonToMapFromValue();
         for (Map.Entry<String, Object> entry: fieldsByValues.entrySet()) {
             Object eachType = parser.parse(String.valueOf(entry.getValue()));
-            resultMap.put(entry.getKey(), eachType);
+            resultMap.put(Util.underscoresToCamelCase(entry.getKey()), eachType);
         }
         return resultMap;
     }
@@ -56,23 +56,39 @@ public class MappingGenerator extends BaseGenerator {
     protected Map<String, Object> getElementWithId(Object type) {
         return Map.of(
                 Util.ID, Map.of(TYPE, TYPE_KEYWORD),
-                getDBElement().getColumnName(), type
+                Util.underscoresToCamelCase(getDBElement().getColumnName()), type
         );
     }
 
     @Override
     protected Map<String, Object> getElement(Object type) {
-        return Map.of(getDBElement().getColumnName(), type);
+        return Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), type);
     }
 
     @Override
     protected Object constructSingleElement() {
-        return Map.of(PROPERTIES, collect());
+        return new HashMap<>(Map.of(PROPERTIES, collect()));
     }
 
     @Override
     protected Object constructCollection() {
-        return Map.of(TYPE, NESTED, PROPERTIES, collect());
+        return new HashMap<>(Map.of(TYPE, NESTED, PROPERTIES, collect()));
+    }
+
+    @Override
+    public Map<String, Object> merge(Map<String, Object> base, Map<String, Object> toMerge) {
+        base.putIfAbsent(PROPERTIES, toMerge.get(PROPERTIES));
+        getFieldLevel(base).putAll(getFieldLevel(toMerge));
+        return base;
+    }
+
+    private Map<String, Object> getFieldLevel(Map<String, Object> topLevel) {
+        String propertyName = getOuterPropertyByAlias().getPropertyName();
+        return ((Map)((Map)((Map)((Map)((Map)topLevel.get(PROPERTIES))
+                .get(DSM_OBJECT))
+                .get(PROPERTIES))
+                .get(propertyName))
+                .get(PROPERTIES));
     }
 
 }

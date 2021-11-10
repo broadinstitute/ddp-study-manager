@@ -39,7 +39,7 @@ public class SourceGenerator extends BaseGenerator {
         Map<String, Object> dynamicFieldValues = parseJsonToMapFromValue();
         Map<String, Object> transformedMap = new HashMap<>();
         for (Map.Entry<String, Object> entry : dynamicFieldValues.entrySet()) {
-            transformedMap.put(entry.getKey(), parser.parse(String.valueOf(entry.getValue())));
+            transformedMap.put(Util.underscoresToCamelCase(entry.getKey()), parser.parse(String.valueOf(entry.getValue())));
         }
         return transformedMap;
     }
@@ -55,7 +55,7 @@ public class SourceGenerator extends BaseGenerator {
     }
 
     private List<Map<String, Object>> buildCollectionWithId(Object element) {
-        return List.of(Map.of(getDBElement().getColumnName(), element,
+        return List.of(Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), element,
                 Util.ID, generatorPayload.getRecordId()));
     }
 
@@ -66,7 +66,7 @@ public class SourceGenerator extends BaseGenerator {
 
     private Map<String, Object> buildSingleFieldWithValue(Object element) {
         logger.info("Constructing single field with value");
-        return Map.of(getDBElement().getColumnName(), element);
+        return Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), element);
     }
 
     @Override

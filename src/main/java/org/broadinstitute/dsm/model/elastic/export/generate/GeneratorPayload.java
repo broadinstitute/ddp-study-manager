@@ -12,6 +12,10 @@ public class GeneratorPayload {
         this.recordId = recordId;
     }
 
+    public GeneratorPayload(NameValue nameValue) {
+        this.nameValue = nameValue;
+    }
+
     public NameValue getNameValue() {
         return nameValue;
     }

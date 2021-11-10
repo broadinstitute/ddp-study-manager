@@ -30,6 +30,7 @@ public class Util {
     public static final String UNDERSCORE_SEPARATOR = "_";
     public static final String DOC = "_doc";
     public static final String ID = "id";
+    public static final String CAMEL_CASE_REGEX = "(([a-z])+([A-z]))*";
 
     public static String getQueryTypeFromId(String id) {
         String type;
@@ -50,7 +51,9 @@ public class Util {
     }
 
     public static String underscoresToCamelCase(String fieldName) {
-        List<StringBuilder> words = Arrays.stream(fieldName.split(UNDERSCORE_SEPARATOR))
+        String[] splittedWords = fieldName.split(UNDERSCORE_SEPARATOR);
+        if (hasNoUnderscores(splittedWords)) return handleAllUppercase(fieldName);
+        List<StringBuilder> words = Arrays.stream(splittedWords)
                 .map(word -> new StringBuilder(word.toLowerCase()))
                 .collect(Collectors.toList());
         for (int i = FIRST_ELEMENT_INDEX; i < words.size(); i++) {
@@ -60,6 +63,14 @@ public class Util {
             }
         }
         return String.join("", words);
+    }
+
+    private static String handleAllUppercase(String word) {
+        return word.matches(CAMEL_CASE_REGEX) ? word : word.toLowerCase();
+    }
+
+    private static boolean hasNoUnderscores(String[] splittedWords) {
+        return splittedWords.length < 2;
     }
 
     public static List<Map<String, Object>> transformObjectCollectionToCollectionMap(List<Object> values) {
