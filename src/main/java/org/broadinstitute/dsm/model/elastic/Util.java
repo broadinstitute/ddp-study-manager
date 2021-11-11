@@ -108,7 +108,7 @@ public class Util {
     private static Map<String, Object> convertToMap(String fieldName, Object fieldValue) {
         Map<String, Object> finalResult;
         switch (fieldName) {
-            case "followUps":
+            case "follow_ups":
                 finalResult = Map.of(underscoresToCamelCase(fieldName), new Gson().toJson(fieldValue));
                 break;
             case "data":

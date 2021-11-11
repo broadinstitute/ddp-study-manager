@@ -34,7 +34,9 @@ public class BulkExportFacade {
     public void executeBulkUpsert() {
         RestHighLevelClient client = ElasticSearchUtil.getClientInstance();
         try {
-            client.bulk(bulkRequest, RequestOptions.DEFAULT);
+            if (bulkRequest.requests().size() > 0) {
+                client.bulk(bulkRequest, RequestOptions.DEFAULT);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

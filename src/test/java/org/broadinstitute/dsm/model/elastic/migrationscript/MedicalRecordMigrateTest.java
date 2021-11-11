@@ -45,7 +45,7 @@ public class MedicalRecordMigrateTest {
 
     @Test
     public void export() {
-        BaseMigrator migrator = new MedicalRecordMigrate("participants_structured.cmi.cmi-brain","brain");
+        BaseMigrator migrator = new MedicalRecordMigrate("participants_structured.atcp.atcp","atcp");
         migrator.export();
     }
 

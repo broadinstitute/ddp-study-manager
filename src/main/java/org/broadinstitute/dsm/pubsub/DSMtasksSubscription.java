@@ -103,14 +103,12 @@ public class DSMtasksSubscription {
                 new DDPInstanceDao().getDDPInstanceByInstanceName(study);
         maybeDdpInstanceByInstanceName.ifPresent(ddpInstanceDto -> {
             String index = ddpInstanceDto.getEsParticipantIndex();
-            Exportable medicalRecordMigrate = new MedicalRecordMigrate(index, study);
-            medicalRecordMigrate.export();
-//            List<? extends Exportable> exportables = Arrays.asList(new MedicalRecordMigrate(index, study),
-//                    new OncHistoryDetailsMigrate(index, study),
-//                    new ParticipantDataMigrate(index, study),
-//                    new ParticipantMigrate(index, study),
-//                    new KitRequestShippingMigrate(index, study));
-//            exportables.forEach(Exportable::export);
+            List<? extends Exportable> exportables = Arrays.asList(new MedicalRecordMigrate(index, study),
+                    new OncHistoryDetailsMigrate(index, study),
+                    new ParticipantDataMigrate(index, study),
+                    new ParticipantMigrate(index, study),
+                    new KitRequestShippingMigrate(index, study));
+            exportables.forEach(Exportable::export);
         });
     }
 
