@@ -44,13 +44,13 @@ public class ExportToES {
 
     public static class ExportPayload {
         private String study;
-        private boolean isNewExport;
+        private boolean isMigration;
 
         public String getStudy() {
             return study;
         }
-        public boolean isNewExport() {
-            return isNewExport;
+        public boolean isMigration() {
+            return isMigration;
         }
     }
 }

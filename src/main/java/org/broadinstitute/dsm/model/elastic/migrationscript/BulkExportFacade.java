@@ -23,8 +23,6 @@ public class BulkExportFacade {
 
     public void addDataToRequest(Map mapToUpsert, String docId) {
         bulkRequest.add(createRequest(mapToUpsert, docId));
-
-
     }
 
     private UpdateRequest createRequest(Map mapToUpsert, String docId) {

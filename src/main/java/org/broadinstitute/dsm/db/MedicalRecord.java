@@ -441,6 +441,7 @@ public class MedicalRecord {
                     while (rs.next()) {
                         String ddpParticipantId = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
                         List<MedicalRecord> medicalRecordList = new ArrayList<>();
+                        if (medicalRecords.keySet().size() > 15) break;
                         if (medicalRecords.containsKey(ddpParticipantId)) {
                             medicalRecordList = medicalRecords.get(ddpParticipantId);
                         }

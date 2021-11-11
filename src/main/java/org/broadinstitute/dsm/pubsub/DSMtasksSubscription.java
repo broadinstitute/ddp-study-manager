@@ -16,11 +16,7 @@ import org.broadinstitute.dsm.model.Study;
 import org.broadinstitute.dsm.model.defaultvalues.Defaultable;
 import org.broadinstitute.dsm.model.defaultvalues.DefaultableMaker;
 import org.broadinstitute.dsm.model.elastic.export.Exportable;
-import org.broadinstitute.dsm.model.elastic.migrationscript.KitRequestShippingMigrate;
-import org.broadinstitute.dsm.model.elastic.migrationscript.MedicalRecordMigrate;
-import org.broadinstitute.dsm.model.elastic.migrationscript.OncHistoryDetailsMigrate;
-import org.broadinstitute.dsm.model.elastic.migrationscript.ParticipantDataMigrate;
-import org.broadinstitute.dsm.model.elastic.migrationscript.ParticipantMigrate;
+import org.broadinstitute.dsm.model.elastic.migrationscript.*;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,19 +62,8 @@ public class DSMtasksSubscription {
                             case ELASTIC_EXPORT:
                                 consumer.ack();
                                 ExportToES.ExportPayload exportPayload = new Gson().fromJson(data, ExportToES.ExportPayload.class);
-                                if (exportPayload.isNewExport()) {
-                                    String study = exportPayload.getStudy();
-                                    Optional<DDPInstanceDto> maybeDdpInstanceByInstanceName =
-                                            new DDPInstanceDao().getDDPInstanceByInstanceName(study);
-                                    maybeDdpInstanceByInstanceName.ifPresent(ddpInstanceDto -> {
-                                        String index = ddpInstanceDto.getEsParticipantIndex();
-                                        List<? extends Exportable> exportables = Arrays.asList(new MedicalRecordMigrate(index, study),
-                                                new OncHistoryDetailsMigrate(index, study),
-                                                new ParticipantDataMigrate(index, study),
-                                                new ParticipantMigrate(index, study),
-                                                new KitRequestShippingMigrate(index, study));
-                                        exportables.forEach(Exportable::export);
-                                    });
+                                if (exportPayload.isMigration()) {
+                                    migrateToES(exportPayload);
                                 } else {
                                     boolean clearBeforeUpdate = attributesMap.containsKey(CLEAR_BEFORE_UPDATE)
                                             && Boolean.parseBoolean(attributesMap.get(CLEAR_BEFORE_UPDATE));
@@ -110,6 +95,23 @@ public class DSMtasksSubscription {
         } catch (TimeoutException e) {
             throw new RuntimeException("Timed out while starting pubsub subscription for DSM tasks", e);
         }
+    }
+
+    private static void migrateToES(ExportToES.ExportPayload exportPayload) {
+        String study = exportPayload.getStudy();
+        Optional<DDPInstanceDto> maybeDdpInstanceByInstanceName =
+                new DDPInstanceDao().getDDPInstanceByInstanceName(study);
+        maybeDdpInstanceByInstanceName.ifPresent(ddpInstanceDto -> {
+            String index = ddpInstanceDto.getEsParticipantIndex();
+            Exportable medicalRecordMigrate = new MedicalRecordMigrate(index, study);
+            medicalRecordMigrate.export();
+//            List<? extends Exportable> exportables = Arrays.asList(new MedicalRecordMigrate(index, study),
+//                    new OncHistoryDetailsMigrate(index, study),
+//                    new ParticipantDataMigrate(index, study),
+//                    new ParticipantMigrate(index, study),
+//                    new KitRequestShippingMigrate(index, study));
+//            exportables.forEach(Exportable::export);
+        });
     }
 
     private static void generateStudyDefaultValues(AckReplyConsumer consumer, Map<String, String> attributesMap) {
