@@ -5,19 +5,30 @@ import com.google.api.gax.core.InstantiatingExecutorProvider;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Subscriber;
+import com.google.gson.Gson;
 import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.PubsubMessage;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.export.ExportToES;
 import org.broadinstitute.dsm.model.Study;
 import org.broadinstitute.dsm.model.defaultvalues.Defaultable;
 import org.broadinstitute.dsm.model.defaultvalues.DefaultableMaker;
+import org.broadinstitute.dsm.model.elastic.export.Exportable;
+import org.broadinstitute.dsm.model.elastic.migrationscript.KitRequestShippingMigrate;
+import org.broadinstitute.dsm.model.elastic.migrationscript.MedicalRecordMigrate;
+import org.broadinstitute.dsm.model.elastic.migrationscript.OncHistoryDetailsMigrate;
+import org.broadinstitute.dsm.model.elastic.migrationscript.ParticipantDataMigrate;
+import org.broadinstitute.dsm.model.elastic.migrationscript.ParticipantMigrate;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -54,9 +65,25 @@ public class DSMtasksSubscription {
                                 break;
                             case ELASTIC_EXPORT:
                                 consumer.ack();
-                                boolean clearBeforeUpdate = attributesMap.containsKey(CLEAR_BEFORE_UPDATE)
-                                        && Boolean.parseBoolean(attributesMap.get(CLEAR_BEFORE_UPDATE));
-                                new ExportToES().exportObjectsToES(data, clearBeforeUpdate);
+                                ExportToES.ExportPayload exportPayload = new Gson().fromJson(data, ExportToES.ExportPayload.class);
+                                if (exportPayload.isNewExport()) {
+                                    String study = exportPayload.getStudy();
+                                    Optional<DDPInstanceDto> maybeDdpInstanceByInstanceName =
+                                            new DDPInstanceDao().getDDPInstanceByInstanceName(study);
+                                    maybeDdpInstanceByInstanceName.ifPresent(ddpInstanceDto -> {
+                                        String index = ddpInstanceDto.getEsParticipantIndex();
+                                        List<? extends Exportable> exportables = Arrays.asList(new MedicalRecordMigrate(index, study),
+                                                new OncHistoryDetailsMigrate(index, study),
+                                                new ParticipantDataMigrate(index, study),
+                                                new ParticipantMigrate(index, study),
+                                                new KitRequestShippingMigrate(index, study));
+                                        exportables.forEach(Exportable::export);
+                                    });
+                                } else {
+                                    boolean clearBeforeUpdate = attributesMap.containsKey(CLEAR_BEFORE_UPDATE)
+                                            && Boolean.parseBoolean(attributesMap.get(CLEAR_BEFORE_UPDATE));
+                                    new ExportToES().exportObjectsToES(data, clearBeforeUpdate);
+                                }
                                 break;
                             case PARTICIPANT_REGISTERED:
                                 generateStudyDefaultValues(consumer, attributesMap);
