@@ -1,14 +1,9 @@
 package org.broadinstitute.dsm.model.elastic.migrationscript;
 
-import java.util.List;
 import java.util.Map;
 
-import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.Exportable;
 import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
-import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
-import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
-import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.utils.StringUtils;
@@ -17,28 +12,16 @@ public abstract class BaseMigrator implements Exportable, Generator {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseMigrator.class);
 
-    private final ElasticSearchable elasticSearch;
     protected String object;
     protected final BulkExportFacade bulkExportFacade;
-    protected String primaryId;
     protected final String realm;
     protected final String index;
-    private Class aClass;
-    protected List<Map<String, Object>> transformedList;
 
-    public BaseMigrator(String index, String realm, String object, String primaryId, Class aClass) {
+    public BaseMigrator(String index, String realm, String object) {
         bulkExportFacade = new BulkExportFacade(index);
-        this.primaryId = primaryId;
-        this.elasticSearch = new ElasticSearch();
         this.realm = realm;
         this.index = index;
         this.object = object;
-        this.aClass = aClass;
-    }
-
-    @Override
-    public Map<String, Object> generate() {
-        return Map.of(ESObjectConstants.DSM, Map.of(object, transformedList));
     }
 
     protected void fillBulkRequestWithTransformedMap(Map<String, Object> participantRecords) {

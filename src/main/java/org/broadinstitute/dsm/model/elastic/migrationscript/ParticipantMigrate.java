@@ -1,16 +1,12 @@
 package org.broadinstitute.dsm.model.elastic.migrationscript;
 
+import java.util.Map;
+
 import org.broadinstitute.dsm.db.Participant;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.Exportable;
 import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
-import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
-import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
-import spark.utils.StringUtils;
-
-import java.util.List;
-import java.util.Map;
 
 public class ParticipantMigrate extends BaseMigrator implements Exportable, Generator {
 
@@ -20,7 +16,7 @@ public class ParticipantMigrate extends BaseMigrator implements Exportable, Gene
     private Map<String, Object> transformedObject;
 
     public ParticipantMigrate(String index, String realm) {
-        super(index, realm, "participant", "participantId", Participant.class);
+        super(index, realm, "participant");
         this.index = index;
         this.realm = realm;
         this.bulkExportFacade = new BulkExportFacade(index);
@@ -33,7 +29,7 @@ public class ParticipantMigrate extends BaseMigrator implements Exportable, Gene
 
     @Override
     protected void transformObject(Object object) {
-        transformedObject = Util.transformObjectToMap(object); //
+        transformedObject = Util.transformObjectToMap(object);
     }
 
     @Override

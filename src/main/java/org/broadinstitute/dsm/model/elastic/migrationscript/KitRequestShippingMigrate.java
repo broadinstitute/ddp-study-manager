@@ -9,7 +9,7 @@ import java.util.Map;
 public class KitRequestShippingMigrate extends BaseCollectionMigrator {
 
     public KitRequestShippingMigrate(String index, String realm) {
-        super(index, realm, ESObjectConstants.KIT_REQUEST_SHIPPING, "dsmKitRequestId", KitRequestShipping.class);
+        super(index, realm, ESObjectConstants.KIT_REQUEST_SHIPPING, "dsmKitRequestId");
     }
 
     @Override

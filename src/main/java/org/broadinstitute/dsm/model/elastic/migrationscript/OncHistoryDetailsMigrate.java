@@ -10,7 +10,7 @@ public class OncHistoryDetailsMigrate extends BaseCollectionMigrator {
 
 
     public OncHistoryDetailsMigrate(String index, String realm) {
-        super(index, realm, ESObjectConstants.ONC_HISTORY_DETAIL_RECORDS, "oncHistoryDetailId", OncHistoryDetail.class);
+        super(index, realm, ESObjectConstants.ONC_HISTORY_DETAIL_RECORDS, "oncHistoryDetailId");
     }
 
     @Override

@@ -21,7 +21,7 @@ public class ParticipantDataMigrate extends BaseCollectionMigrator {
     private ParticipantDataDao participantDataDao;
 
     public ParticipantDataMigrate(String index, String realm) {
-        super(index, realm, ESObjectConstants.PARTICIPANT_DATA, "participantDataId", ParticipantDataDto.class);
+        super(index, realm, ESObjectConstants.PARTICIPANT_DATA, "participantDataId");
         participantDataDao = new ParticipantDataDao();
     }
 
@@ -39,13 +39,13 @@ public class ParticipantDataMigrate extends BaseCollectionMigrator {
 
     private void exportMapping() {
         Map<String, Object> mapping = new HashMap<>();
-        Map<String, List<Object>> dataByRealm = getDataByRealm();
+        Map<String, Object> dataByRealm = getDataByRealm();
         BaseParser typeParser = new TypeParser();
         try {
             Field dataField = ParticipantDataDto.class.getDeclaredField(ParticipantDataDao.DATA);
             dataField.setAccessible(true);
-            for (Map.Entry<String, List<Object>> entry : dataByRealm.entrySet()) {
-                List<Object> participantDatas = entry.getValue();
+            for (Map.Entry<String, Object> entry : dataByRealm.entrySet()) {
+                List<Object> participantDatas = (List) entry.getValue();
                 for (Object jsonData : participantDatas) {
                     NameValue nameValue = new NameValue(DATA_WITH_ALIAS, dataField.get(jsonData));
                     GeneratorPayload generatorPayload = new GeneratorPayload(nameValue);
