@@ -1,31 +1,23 @@
 package org.broadinstitute.dsm.model.elastic.migrationscript;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveAction;
 
-import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.Exportable;
 import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
-import org.broadinstitute.dsm.pubsub.DSMtasksSubscription;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.utils.StringUtils;
 
-public abstract class BaseMigrator extends RecursiveAction implements Exportable, Generator {
+public abstract class BaseMigrator implements Exportable, Generator {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseMigrator.class);
 
     private final ElasticSearchable elasticSearch;
-    public Map<String, List<Object>> dataByRealm;
     protected String object;
     protected final BulkExportFacade bulkExportFacade;
     private String primaryId;
@@ -44,35 +36,6 @@ public abstract class BaseMigrator extends RecursiveAction implements Exportable
         this.aClass = aClass;
     }
 
-    @Override
-    protected void compute() {
-        if (dataByRealm.size() > 15) {
-            ForkJoinTask.invokeAll(createSubtasks());
-        } else {
-            processing(dataByRealm);
-        }
-    }
-
-    private void processing(Map<String, List<Object>> data) {
-
-
-    }
-
-    private List<BaseMigrator> createSubtasks() {
-        List<BaseMigrator> subtasks = new ArrayList<>();
-
-        int low = 0;
-
-        for (int i = 0; i < ; i++) {
-
-        }
-        subtasks.add(new CustomRecursiveAction(partOne));
-        subtasks.add(new CustomRecursiveAction(partTwo));
-
-
-        return subtasks;
-    }
-
     private void setPrimaryId() {
         for(Map<String, Object> map: transformedList) {
             map.put(Util.ID, map.get(primaryId));
@@ -84,48 +47,24 @@ public abstract class BaseMigrator extends RecursiveAction implements Exportable
         return Map.of(ESObjectConstants.DSM, Map.of(object, transformedList));
     }
 
-    protected void fillBulkRequestWithTransformedMap() {
-
-        if (participantRecords.size() < 15) {
-            for (Map.Entry<String, List<Object>> entry: participantRecords.entrySet()) {
-                String participantId = entry.getKey();
-                List<Object> recordList = entry.getValue();
-                participantId = getParticipantGuid(participantId, index);
-                if (StringUtils.isBlank(participantId)) continue;
-                transformedList = Util.transformObjectCollectionToCollectionMap(recordList);
-                setPrimaryId();
-                bulkExportFacade.addDataToRequest(generate(), participantId);
-                System.err.println(participantId); //FOR TESTING
-            }
-        } else {
-            ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
-
-
-            executorService.execute(() -> {
-                for (Map.Entry<String, List<Object>> entry: participantRecords.entrySet()) {
-                    String participantId = entry.getKey();
-                    List<Object> recordList = entry.getValue();
-                    participantId = getParticipantGuid(participantId, index);
-                    if (StringUtils.isBlank(participantId)) continue;
-                    transformedList = Util.transformObjectCollectionToCollectionMap(recordList);
-                    setPrimaryId();
-                    bulkExportFacade.addDataToRequest(generate(), participantId);
-                    System.err.println(participantId); //FOR TESTING
-                }
-            });
+    protected void fillBulkRequestWithTransformedMap(Map<String, List<Object>> participantRecords) {
+        for (Map.Entry<String, List<Object>> entry: participantRecords.entrySet()) {
+            String participantId = entry.getKey();
+            List<Object> recordList = entry.getValue();
+            participantId = getParticipantGuid(participantId, index);
+            if (StringUtils.isBlank(participantId)) continue;
+            transformedList = Util.transformObjectCollectionToCollectionMap(recordList);
+            setPrimaryId();
+            bulkExportFacade.addDataToRequest(generate(), participantId);
+            System.err.println(participantId); //FOR TESTING
         }
-
     }
 
     protected abstract Map<String, List<Object>> getDataByRealm();
 
     @Override
     public void export() {
-        dataByRealm = getDataByRealm();
-
-        fillBulkRequestWithTransformedMap();
-
-
+        fillBulkRequestWithTransformedMap(getDataByRealm());
         bulkExportFacade.executeBulkUpsert();
         logger.info("finished migrating data to ES.");
     }
