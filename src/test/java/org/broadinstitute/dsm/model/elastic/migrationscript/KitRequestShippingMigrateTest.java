@@ -13,7 +13,7 @@ public class KitRequestShippingMigrateTest {
 
     @Test
     public void export() {
-        KitRequestShippingMigrate kitRequestShippingMigrate = new KitRequestShippingMigrate("participants_structured.cmi.cmi-brain", "brain");
+        KitRequestShippingMigrate kitRequestShippingMigrate = new KitRequestShippingMigrate("participants_structured.rgp.rgp", "rgp");
         kitRequestShippingMigrate.export();
     }
 

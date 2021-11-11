@@ -15,7 +15,7 @@ public class ParticipantMigrateTest {
 
     @Test
     public void export() {
-        ParticipantMigrate participantMigrate = new ParticipantMigrate("participants_structured.cmi.cmi-brain", "brain");
+        ParticipantMigrate participantMigrate = new ParticipantMigrate("participants_structured.rgp.rgp", "rgp");
         participantMigrate.export();
     }
 }

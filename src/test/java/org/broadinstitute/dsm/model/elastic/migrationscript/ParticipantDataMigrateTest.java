@@ -13,7 +13,7 @@ public class ParticipantDataMigrateTest {
 
     @Test
     public void export() {
-        BaseMigrator participantMigrator = new ParticipantDataMigrate("participants_structured.atcp.atcp", "atcp");
+        BaseMigrator participantMigrator = new ParticipantDataMigrate("participants_structured.rgp.rgp", "rgp");
         participantMigrator.export();
     }
 }

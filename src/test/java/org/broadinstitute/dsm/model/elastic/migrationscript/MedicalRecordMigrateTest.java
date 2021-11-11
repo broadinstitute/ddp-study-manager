@@ -45,7 +45,7 @@ public class MedicalRecordMigrateTest {
 
     @Test
     public void export() {
-        BaseMigrator migrator = new MedicalRecordMigrate("participants_structured.atcp.atcp","atcp");
+        BaseMigrator migrator = new MedicalRecordMigrate("participants_structured.rgp.rgp","rgp");
         migrator.export();
     }
 

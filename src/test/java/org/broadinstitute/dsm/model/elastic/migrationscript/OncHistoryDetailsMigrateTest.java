@@ -15,7 +15,7 @@ public class OncHistoryDetailsMigrateTest {
 
     @Test
     public void export() {
-        OncHistoryDetailsMigrate oncHistoryDetailsMigrate = new OncHistoryDetailsMigrate("participants_structured.cmi.cmi-brain","brain");
+        OncHistoryDetailsMigrate oncHistoryDetailsMigrate = new OncHistoryDetailsMigrate("participants_structured.rgp.rgp","rgp");
         oncHistoryDetailsMigrate.export();
     }
 }

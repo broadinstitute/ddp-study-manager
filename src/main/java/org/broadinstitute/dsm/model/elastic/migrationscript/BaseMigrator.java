@@ -20,11 +20,11 @@ public abstract class BaseMigrator implements Exportable, Generator {
     private final ElasticSearchable elasticSearch;
     protected String object;
     protected final BulkExportFacade bulkExportFacade;
-    private String primaryId;
+    protected String primaryId;
     protected final String realm;
     protected final String index;
     private Class aClass;
-    private List<Map<String, Object>> transformedList;
+    protected List<Map<String, Object>> transformedList;
 
     public BaseMigrator(String index, String realm, String object, String primaryId, Class aClass) {
         bulkExportFacade = new BulkExportFacade(index);
@@ -36,31 +36,24 @@ public abstract class BaseMigrator implements Exportable, Generator {
         this.aClass = aClass;
     }
 
-    private void setPrimaryId() {
-        for(Map<String, Object> map: transformedList) {
-            map.put(Util.ID, map.get(primaryId));
-        }
-    }
-
     @Override
     public Map<String, Object> generate() {
         return Map.of(ESObjectConstants.DSM, Map.of(object, transformedList));
     }
 
-    protected void fillBulkRequestWithTransformedMap(Map<String, List<Object>> participantRecords) {
-        for (Map.Entry<String, List<Object>> entry: participantRecords.entrySet()) {
+    protected void fillBulkRequestWithTransformedMap(Map<String, Object> participantRecords) {
+        for (Map.Entry<String, Object> entry: participantRecords.entrySet()) {
             String participantId = entry.getKey();
-            List<Object> recordList = entry.getValue();
             participantId = getParticipantGuid(participantId, index);
             if (StringUtils.isBlank(participantId)) continue;
-            transformedList = Util.transformObjectCollectionToCollectionMap(recordList);
-            setPrimaryId();
+            transformObject(entry.getValue());
             bulkExportFacade.addDataToRequest(generate(), participantId);
-            System.err.println(participantId); //FOR TESTING
         }
     }
 
-    protected abstract Map<String, List<Object>> getDataByRealm();
+    protected abstract void transformObject(Object object);
+
+    protected abstract Map<String, Object> getDataByRealm();
 
     @Override
     public void export() {

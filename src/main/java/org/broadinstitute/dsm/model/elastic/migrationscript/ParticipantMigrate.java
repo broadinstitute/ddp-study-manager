@@ -7,10 +7,12 @@ import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
+import spark.utils.StringUtils;
 
+import java.util.List;
 import java.util.Map;
 
-public class ParticipantMigrate implements Exportable, Generator {
+public class ParticipantMigrate extends BaseMigrator implements Exportable, Generator {
 
     private String index;
     private String realm;
@@ -18,26 +20,25 @@ public class ParticipantMigrate implements Exportable, Generator {
     private Map<String, Object> transformedObject;
 
     public ParticipantMigrate(String index, String realm) {
+        super(index, realm, "participant", "participantId", Participant.class);
         this.index = index;
         this.realm = realm;
         this.bulkExportFacade = new BulkExportFacade(index);
     }
 
     @Override
-    public void export() {
-        Map<String, Participant> participants = Participant.getParticipants(realm);
-        for (Map.Entry<String, Participant> entry: participants.entrySet()) {
-            Participant participant = entry.getValue();
-            String participantId = entry.getKey();
-            transformedObject = Util.transformObjectToMap(participant);
-            bulkExportFacade.addDataToRequest(generate(), getParticipantGuid(participantId, index));
-        }
-
-        bulkExportFacade.executeBulkUpsert();
+    public Map<String, Object> generate() {
+        return Map.of(ESObjectConstants.DSM, Map.of("participant", transformedObject));
     }
 
     @Override
-    public Map<String, Object> generate() {
-        return Map.of(ESObjectConstants.DSM, Map.of("participant", transformedObject));
+    protected void transformObject(Object object) {
+        transformedObject = Util.transformObjectToMap(object); //
+    }
+
+    @Override
+    protected Map<String, Object> getDataByRealm() {
+        return (Map) Participant.getParticipants(realm);
+
     }
 }

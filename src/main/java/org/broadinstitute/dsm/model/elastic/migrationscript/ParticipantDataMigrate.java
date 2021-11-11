@@ -15,7 +15,7 @@ import org.broadinstitute.dsm.model.elastic.export.parse.BaseParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
-public class ParticipantDataMigrate extends BaseMigrator {
+public class ParticipantDataMigrate extends BaseCollectionMigrator {
 
     public static final String DATA_WITH_ALIAS = "d.data";
     private ParticipantDataDao participantDataDao;
@@ -26,7 +26,7 @@ public class ParticipantDataMigrate extends BaseMigrator {
     }
 
     @Override
-    protected Map<String, List<Object>> getDataByRealm() {
+    protected Map<String, Object> getDataByRealm() {
         Map<String, List<ParticipantDataDto>> participantDataByRealm = participantDataDao.getParticipantDataByRealm(realm);
         return (Map) participantDataByRealm;
     }
