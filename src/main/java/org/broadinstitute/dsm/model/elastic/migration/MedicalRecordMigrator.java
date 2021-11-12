@@ -1,13 +1,13 @@
-package org.broadinstitute.dsm.model.elastic.migrationscript;
+package org.broadinstitute.dsm.model.elastic.migration;
 
-import java.util.*;
+import java.util.Map;
 
 import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
-public class MedicalRecordMigrate extends BaseCollectionMigrator {
+public class MedicalRecordMigrator extends BaseCollectionMigrator {
 
-    public MedicalRecordMigrate(String index, String realm) {
+    public MedicalRecordMigrator(String index, String realm) {
         super(index, realm, ESObjectConstants.MEDICAL_RECORDS, "medicalRecordId");
     }
 

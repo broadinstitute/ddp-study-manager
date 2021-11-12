@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.elastic.migrationscript;
+package org.broadinstitute.dsm.model.elastic.migration;
 
 import java.util.Map;
 
@@ -25,13 +25,17 @@ public abstract class BaseMigrator implements Exportable, Generator {
     }
 
     protected void fillBulkRequestWithTransformedMap(Map<String, Object> participantRecords) {
+        logger.info("filling bulk request with participants and their details");
         for (Map.Entry<String, Object> entry: participantRecords.entrySet()) {
             String participantId = entry.getKey();
             participantId = getParticipantGuid(participantId, index);
             if (StringUtils.isBlank(participantId)) continue;
-            transformObject(entry.getValue());
-            bulkExportFacade.addDataToRequest(generate(), participantId);
+            Object participantDetails = entry.getValue();
+            transformObject(participantDetails);
+            Map<String, Object> finalMapToUpsert = generate();
+            bulkExportFacade.addDataToRequest(finalMapToUpsert, participantId);
         }
+        logger.info("successfully filled bulk request with participants and their details");
     }
 
     protected abstract void transformObject(Object object);

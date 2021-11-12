@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.elastic.migrationscript;
+package org.broadinstitute.dsm.model.elastic.migration;
 
 import java.util.Map;
 
@@ -8,23 +8,21 @@ import org.broadinstitute.dsm.model.elastic.export.Exportable;
 import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
-public class ParticipantMigrate extends BaseMigrator implements Exportable, Generator {
+public class ParticipantMigrator extends BaseMigrator implements Exportable, Generator {
 
-    private String index;
     private String realm;
     protected final BulkExportFacade bulkExportFacade;
     private Map<String, Object> transformedObject;
 
-    public ParticipantMigrate(String index, String realm) {
-        super(index, realm, "participant");
-        this.index = index;
+    public ParticipantMigrator(String index, String realm) {
+        super(index, realm, ESObjectConstants.PARTICIPANT);
         this.realm = realm;
         this.bulkExportFacade = new BulkExportFacade(index);
     }
 
     @Override
     public Map<String, Object> generate() {
-        return Map.of(ESObjectConstants.DSM, Map.of("participant", transformedObject));
+        return Map.of(ESObjectConstants.DSM, Map.of(object, transformedObject));
     }
 
     @Override

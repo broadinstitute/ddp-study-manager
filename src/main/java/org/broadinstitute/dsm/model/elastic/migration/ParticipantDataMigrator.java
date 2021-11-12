@@ -1,8 +1,10 @@
-package org.broadinstitute.dsm.model.elastic.migrationscript;
+package org.broadinstitute.dsm.model.elastic.migration;
 
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
@@ -15,12 +17,12 @@ import org.broadinstitute.dsm.model.elastic.export.parse.BaseParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
-public class ParticipantDataMigrate extends BaseCollectionMigrator {
+public class ParticipantDataMigrator extends BaseCollectionMigrator {
 
     public static final String DATA_WITH_ALIAS = "d.data";
     private ParticipantDataDao participantDataDao;
 
-    public ParticipantDataMigrate(String index, String realm) {
+    public ParticipantDataMigrator(String index, String realm) {
         super(index, realm, ESObjectConstants.PARTICIPANT_DATA, "participantDataId");
         participantDataDao = new ParticipantDataDao();
     }

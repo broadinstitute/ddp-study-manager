@@ -1,14 +1,14 @@
-package org.broadinstitute.dsm.model.elastic.migrationscript;
-
-import org.broadinstitute.dsm.db.KitRequestShipping;
-import org.broadinstitute.dsm.statics.ESObjectConstants;
+package org.broadinstitute.dsm.model.elastic.migration;
 
 import java.util.List;
 import java.util.Map;
 
-public class KitRequestShippingMigrate extends BaseCollectionMigrator {
+import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 
-    public KitRequestShippingMigrate(String index, String realm) {
+public class KitRequestShippingMigrator extends BaseCollectionMigrator {
+
+    public KitRequestShippingMigrator(String index, String realm) {
         super(index, realm, ESObjectConstants.KIT_REQUEST_SHIPPING, "dsmKitRequestId");
     }
 

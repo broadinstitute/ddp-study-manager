@@ -1,15 +1,15 @@
-package org.broadinstitute.dsm.model.elastic.migrationscript;
+package org.broadinstitute.dsm.model.elastic.migration;
+
+import java.util.Map;
 
 import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
-import java.util.Map;
+
+public class OncHistoryDetailsMigrator extends BaseCollectionMigrator {
 
 
-public class OncHistoryDetailsMigrate extends BaseCollectionMigrator {
-
-
-    public OncHistoryDetailsMigrate(String index, String realm) {
+    public OncHistoryDetailsMigrator(String index, String realm) {
         super(index, realm, ESObjectConstants.ONC_HISTORY_DETAIL_RECORDS, "oncHistoryDetailId");
     }
 

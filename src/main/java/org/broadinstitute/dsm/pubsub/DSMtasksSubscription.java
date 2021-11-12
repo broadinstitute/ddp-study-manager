@@ -16,7 +16,7 @@ import org.broadinstitute.dsm.model.Study;
 import org.broadinstitute.dsm.model.defaultvalues.Defaultable;
 import org.broadinstitute.dsm.model.defaultvalues.DefaultableMaker;
 import org.broadinstitute.dsm.model.elastic.export.Exportable;
-import org.broadinstitute.dsm.model.elastic.migrationscript.*;
+import org.broadinstitute.dsm.model.elastic.migration.*;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,11 +103,11 @@ public class DSMtasksSubscription {
                 new DDPInstanceDao().getDDPInstanceByInstanceName(study);
         maybeDdpInstanceByInstanceName.ifPresent(ddpInstanceDto -> {
             String index = ddpInstanceDto.getEsParticipantIndex();
-            List<? extends Exportable> exportables = Arrays.asList(new MedicalRecordMigrate(index, study),
-                    new OncHistoryDetailsMigrate(index, study),
-                    new ParticipantDataMigrate(index, study),
-                    new ParticipantMigrate(index, study),
-                    new KitRequestShippingMigrate(index, study));
+            List<? extends Exportable> exportables = Arrays.asList(new MedicalRecordMigrator(index, study),
+                    new OncHistoryDetailsMigrator(index, study),
+                    new ParticipantDataMigrator(index, study),
+                    new ParticipantMigrator(index, study),
+                    new KitRequestShippingMigrator(index, study));
             exportables.forEach(Exportable::export);
         });
     }
