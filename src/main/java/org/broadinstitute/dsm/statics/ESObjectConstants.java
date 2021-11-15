@@ -49,4 +49,17 @@ public class ESObjectConstants {
     public static final String GUID = "guid";
     public static final String HRUID = "hruid";
     public static final String LEGACY_ALTPID = "legacyAltPid";
+    public static final String LEGACY_SHORTID = "legacyShortId";
+    public static final String PREFERED_LANGUAGE = "preferredLanguage";
+    public static final String DO_NOT_CONTACT = "doNotContact";
+    public static final String CREATED_AT = "createdAt";
+
+    //dsm
+    public static final String DATE_OF_MAJORITY = "dateOfMajority";
+    public static final String HAS_CONSENTED_TO_BLOODD_RAW = "hasConsentedToBloodDraw";
+    public static final String PDFS = "pdfs";
+    public static final String DATE_OF_BIRTH = "dateOfBirth";
+    public static final String DIAGNOSIS_MONTH = "diagnosisMonth";
+    public static final String HAS_CONSENTED_TO_TISSUE_SAMPLE = "hasConsentedToTissueSample";
+    public static final String DIAGNOSIS_YEAR = "diagnosisYear";
 }

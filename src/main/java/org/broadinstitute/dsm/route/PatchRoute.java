@@ -11,9 +11,12 @@ import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantRecordDao;
+import org.broadinstitute.dsm.db.dao.queue.EventDao;
+import org.broadinstitute.dsm.db.dao.settings.EventTypeDao;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantRecordDto;
+import org.broadinstitute.dsm.db.dto.settings.EventTypeDto;
 import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.exception.DuplicateException;
@@ -23,8 +26,8 @@ import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Patch;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
-import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
+import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -37,18 +40,17 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 //Class needs to be refactored as soon as possible!!!
 public class PatchRoute extends RequestHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(PatchRoute.class);
     private static final ParticipantDataDao participantDataDao = new ParticipantDataDao();
+    private static final EventDao eventDao = new EventDao();
+    private static final EventTypeDao eventTypeDao = new EventTypeDao();
     private static final Gson gson = new GsonBuilder().serializeNulls().create();
 
     private static final String PARTICIPANT_ID = "participantId";
@@ -69,8 +71,9 @@ public class PatchRoute extends RequestHandler {
         if (patchUtil.getColumnNameMap() == null) {
             return new RuntimeException("ColumnNameMap is null!");
         }
-        if (UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW) || UserUtil.checkUserAccess(null, userId, DBConstants.MR_ABSTRACTER)
-                || UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW) || UserUtil.checkUserAccess(null, userId, DBConstants.PT_LIST_VIEW)) {
+        String userIdRequest = UserUtil.getUserId(request);
+        if (UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW, userIdRequest) || UserUtil.checkUserAccess(null, userId, DBConstants.MR_ABSTRACTER, userIdRequest)
+                || UserUtil.checkUserAccess(null, userId, DBConstants.MR_VIEW, userIdRequest) || UserUtil.checkUserAccess(null, userId, DBConstants.PT_LIST_VIEW, userIdRequest)) {
             try {
                 String requestBody = request.body();
                 Patch patch = gson.fromJson(requestBody, Patch.class);
@@ -121,6 +124,9 @@ public class PatchRoute extends RequestHandler {
                                     for (Value action : patch.getActions()) {
                                         if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType()) && profile != null) {
                                             writeESWorkflow(patch, nameValue, action, ddpInstance, profile.getParticipantGuid());
+                                        }
+                                        else if (EventTypeDao.EVENT.equals(action.getType())) {
+                                            triggerParticipantEvent(ddpInstance, patch, action);
                                         }
                                     }
                                 }
@@ -288,6 +294,9 @@ public class PatchRoute extends RequestHandler {
                                         if (ESObjectConstants.ELASTIC_EXPORT_WORKFLOWS.equals(action.getType())) {
                                             writeESWorkflow(patch, nameValue, action, ddpInstance, profile.getParticipantGuid());
                                         }
+                                        else if (EventTypeDao.EVENT.equals(action.getType())) {
+                                            triggerParticipantEvent(ddpInstance, patch, action);
+                                        }
                                     }
                                 }
                             }
@@ -354,7 +363,7 @@ public class PatchRoute extends RequestHandler {
                 Map<String, Object> esMap = ElasticSearchUtil
                         .getObjectsMap(ddpInstance.getParticipantIndexES(), profile.getParticipantGuid(),
                                 ESObjectConstants.WORKFLOWS);
-                if (Objects.isNull(esMap)) return;
+                if (Objects.isNull(esMap) || esMap.isEmpty()) return;
                 CopyOnWriteArrayList<Map<String, Object>> workflowsList = new CopyOnWriteArrayList<>((List<Map<String, Object>>)esMap.get(ESObjectConstants.WORKFLOWS));
                 int startingSize = workflowsList.size();
                 workflowsList.forEach(workflow -> {
@@ -539,5 +548,21 @@ public class PatchRoute extends RequestHandler {
         else {
             throw new RuntimeException("DBElement not found in ColumnNameMap: " + additionalValue);
         }
+    }
+
+    private void triggerParticipantEvent(DDPInstance ddpInstance, Patch patch, Value action){
+        Optional<EventTypeDto> eventType = eventTypeDao.getEventTypeByEventTypeAndInstanceId(action.getName(), ddpInstance.getDdpInstanceId());
+        eventType.ifPresent(eventTypeDto -> {
+            boolean participantHasTriggeredEventByEventType = eventDao.hasTriggeredEventByEventTypeAndDdpParticipantId(action.getName(), patch.getParentId()).orElse(false);
+            if (!participantHasTriggeredEventByEventType) {
+                inTransaction((conn) -> {
+                    EventUtil.triggerDDP(conn, eventType, patch.getParentId());
+                    return null;
+                });
+            }
+            else {
+                logger.info("Participant " + patch.getParentId() + " was already triggered for event type " + action.getName());
+            }
+        });
     }
 }

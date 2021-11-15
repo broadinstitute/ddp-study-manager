@@ -1,16 +1,20 @@
 package org.broadinstitute.dsm.route;
 
+import com.google.gson.Gson;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.handlers.util.Result;
-import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.KitType;
+import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.model.*;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.*;
 import org.broadinstitute.dsm.util.AbstractionUtil;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.KitUtil;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.broadinstitute.dsm.util.UserUtil;
@@ -46,15 +50,40 @@ public class DashboardRoute extends RequestHandler {
         this.kitUtil = kitUtil;
     }
 
+    public static List<ParticipantWrapperDto> addAllData(List<String> baseList, Map<String, Map<String, Object>> esDataMap,
+                                                         Map<String, Participant> participantMap, Map<String, List<MedicalRecord>> medicalRecordMap,
+                                                         Map<String, List<OncHistoryDetail>> oncHistoryMap, Map<String, List<KitRequestShipping>> kitRequestMap,
+                                                         Map<String, List<AbstractionActivity>> abstractionActivityMap, Map<String, List<AbstractionGroup>> abstractionSummary,
+                                                         Map<String, Map<String, Object>> proxyData, Map<String, List<ParticipantData>> participantData) {
+        Gson gson = new Gson();
+        List<ParticipantWrapperDto> participantList = new ArrayList<>();
+        for (String ddpParticipantId : baseList) {
+            Participant participant = participantMap != null ? participantMap.get(ddpParticipantId) : null;
+            Map<String, Object> participantESData = esDataMap.get(ddpParticipantId);
+            if (participantESData != null) {
+                String participantEsDataAsJson = gson.toJson(participantESData);
+                ElasticSearchParticipantDto elasticSearchParticipantDto =
+                        gson.fromJson(participantEsDataAsJson, ElasticSearchParticipantDto.class);
+                participantList.add(new ParticipantWrapperDto(elasticSearchParticipantDto, participant,
+                        medicalRecordMap != null ? medicalRecordMap.get(ddpParticipantId) : null,
+                        oncHistoryMap != null ? oncHistoryMap.get(ddpParticipantId) : null,
+                        kitRequestMap != null ? kitRequestMap.get(ddpParticipantId) : null,
+                        abstractionActivityMap != null ? abstractionActivityMap.get(ddpParticipantId) : null,
+                        abstractionSummary != null ? abstractionSummary.get(ddpParticipantId) : null,
+                        null,
+                null));
+            }
+        }
+        logger.info("Returning list w/ " + participantList.size() + " pts now");
+        return participantList;
+    }
+
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         try {
-            if (UserUtil.checkUserAccess(null, userId, "kit_shipping") || UserUtil.checkUserAccess(null, userId, "kit_shipping_view")
-                    || UserUtil.checkUserAccess(null, userId, "mr_view")|| UserUtil.checkUserAccess(null, userId, "pt_list_view")) {
-                String userIdRequest = UserUtil.getUserId(request);
-                if (!userId.equals(userIdRequest)) {
-                    throw new RuntimeException("User id was not equal. User Id in token " + userId + " user Id in request " + userIdRequest);
-                }
+            String userIdRequest = UserUtil.getUserId(request);
+            if (UserUtil.checkUserAccess(null, userId, "kit_shipping", userIdRequest) || UserUtil.checkUserAccess(null, userId, "kit_shipping_view", userIdRequest)
+                    || UserUtil.checkUserAccess(null, userId, "mr_view", userIdRequest)|| UserUtil.checkUserAccess(null, userId, "pt_list_view", userIdRequest)) {
                 String startDate = request.params(RequestParameter.START);
                 if (StringUtils.isNotBlank(startDate)) {
                     String endDate = request.params(RequestParameter.END);
@@ -209,7 +238,7 @@ public class DashboardRoute extends RequestHandler {
     public DashboardInformation getMedicalRecordDashboard(@NonNull long start, @NonNull long end, @NonNull String realm) {
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.MEDICAL_RECORD_ACTIVATED);
 
-        Map<String, Map<String, Object>> participantESData = ParticipantWrapper.getESData(ddpInstance);
+        Map<String, Map<String, Object>> participantESData = ElasticSearchUtil.getESData(ddpInstance);
         Map<String, Participant> participants = Participant.getParticipants(realm);
         Map<String, List<MedicalRecord>> medicalRecords = MedicalRecord.getMedicalRecords(realm);
         Map<String, List<OncHistoryDetail>> oncHistoryDetails = OncHistoryDetail.getOncHistoryDetails(realm);
@@ -217,7 +246,7 @@ public class DashboardRoute extends RequestHandler {
         Map<String, List<AbstractionActivity>> abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(realm);
         Map<String, List<AbstractionGroup>> abstractionSummary = AbstractionFinal.getAbstractionFinal(realm);
 
-        List<ParticipantWrapper> participantWrapperList = ParticipantWrapper.addAllData(new ArrayList<>(participantESData.keySet()), participantESData,
+        List<ParticipantWrapperDto> participantWrapperList = addAllData(new ArrayList<>(participantESData.keySet()), participantESData,
                 participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, null, null);
 
         Map<String, Integer> dashboardValues = new HashMap(); //counts only pt
@@ -226,9 +255,9 @@ public class DashboardRoute extends RequestHandler {
         Map<String, Integer> dashboardValuesPeriodDetailed = new HashMap(); //counts number of institutions in total per period
         //number of pts in ES
         dashboardValues.put("all", participantWrapperList.size());
-        for (ParticipantWrapper wrapper : participantWrapperList) {
+        for (ParticipantWrapperDto wrapper : participantWrapperList) {
             //es data information
-            Map<String, Object> esData = wrapper.getData();
+            Map<String, Object> esData = wrapper.getEsDataAsMap();
             //count pt enrollment status
             String enrollmentStatus = (String) esData.get("status");
             countParameter(dashboardValues, "status." + enrollmentStatus, esData, "status", false);
@@ -546,12 +575,24 @@ public class DashboardRoute extends RequestHandler {
                                 @NonNull Map<String, Object> map, @NonNull String key, boolean date) {
         if (map.get(key) != null) {
             if (date) {
-                if ((Long) map.get(key) == 0) {
+                long epochMillis = getEpochMillis(map, key);
+                if (epochMillis == 0) {
                     return;
                 }
             }
             incrementCounter(dashboardValues, dashboardValueName);
         }
+    }
+
+    private long getEpochMillis(Map<String, Object> map, String key) {
+        Object val = map.get(key);
+        long epochMillis = 0;
+        if (val instanceof Integer) {
+            epochMillis = (int) val;
+        } else if (val instanceof Long) {
+            epochMillis = (long) val;
+        }
+        return epochMillis;
     }
 
     private void countBooleanParameter(@NonNull Map<String, Integer> dashboardValues, @NonNull String dashboardValueName,
@@ -567,7 +608,7 @@ public class DashboardRoute extends RequestHandler {
     private void countParameterPeriod(@NonNull Map<String, Integer> dashboardValues, @NonNull String dashboardValueName,
                                       @NonNull Map<String, Object> map, @NonNull String key, long start, long end) {
         if (map.get(key) != null) {
-            Long date = (Long) map.get(key);
+            long date = getEpochMillis(map, key);
             if (date != 0) {
                 incrementCounterPeriod(dashboardValues, dashboardValueName, date, start, end);
             }

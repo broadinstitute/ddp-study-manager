@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.db.dao.settings;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
+import static org.broadinstitute.dsm.statics.DBConstants.HAS_COMPUTED_OBJECT;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -26,7 +27,7 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
             "FROM instance_settings " +
             "WHERE ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE study_guid = ?)";
 
-    private static final String SQL_GET_BY_STUDY_GUID = "SELECT " +
+    private static final String SQL_GET_BY_INSTANCE_NAME = "SELECT " +
             "instance_settings_id, " +
             "ddp_instance_id, " +
             "mr_cover_pdf, " +
@@ -37,10 +38,12 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
             "study_specific_statuses, " +
             "default_columns, " +
             "has_invitations, " +
+            "has_address_tab, " +
+            "has_computed_object, " +
             "GBF_SHIPPED_DSS_DELIVERED " +
             "FROM instance_settings " +
-            "WHERE ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE study_guid = ?)";
-
+            "WHERE ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE instance_name = ?)";
+  
     public static final String HIDE_SAMPLES_TAB = "hide_samples_tab";
     public static final String INSTANCE_SETTINGS_ID = "instance_settings_id";
     public static final String DDP_INSTANCE_ID = "ddp_instance_id";
@@ -52,6 +55,7 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
     public static final String DEFAULT_COLUMNS = "default_columns";
     public static final String HAS_INVITATIONS = "has_invitations";
     public static final String GBF_SHIPPED_DSS_DELIVERED = "GBF_SHIPPED_DSS_DELIVERED";
+    public static final String HAS_ADDRESS_TAB = "has_address_tab";
 
 
     @Override
@@ -69,6 +73,7 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
         return Optional.empty();
     }
 
+    //TODO -> since value type is boolean it is better to return true/false instead of optional
     public Optional<Boolean> getHideSamplesTabByStudyGuid(String studyGuid) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult execResult = new SimpleResult();
@@ -92,30 +97,30 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
         return Optional.ofNullable((Boolean) results.resultValue);
     }
 
-    public Optional<InstanceSettingsDto> getByStudyGuid(String studyGuid) {
-        SimpleResult results = inTransaction((conn) -> getInstanceSettingsByStudyGuid(studyGuid, conn));
+    public Optional<InstanceSettingsDto> getByInstanceName(String instanceName) {
+        SimpleResult results = inTransaction((conn) -> getInstanceSettingsByInstanceName(instanceName, conn));
         if (results.resultException != null) {
             throw new RuntimeException("Error getting instance settings for study guid: "
-                    + studyGuid, results.resultException);
+                    + instanceName, results.resultException);
         }
         return Optional.ofNullable((InstanceSettingsDto) results.resultValue);
     }
 
     //used ONLY for google cloud function
-    public Optional<InstanceSettingsDto> getByStudyGuid(Connection conn, String studyGuid) {
-        SimpleResult results = getInstanceSettingsByStudyGuid(studyGuid, conn);
+    public Optional<InstanceSettingsDto> getByInstanceName(Connection conn, String instanceName) {
+        SimpleResult results = getInstanceSettingsByInstanceName(instanceName, conn);
         if (results.resultException != null) {
             throw new RuntimeException("Error getting instance settings for study guid: "
-                    + studyGuid, results.resultException);
+                    + instanceName, results.resultException);
         }
         return Optional.ofNullable((InstanceSettingsDto) results.resultValue);
     }
 
 
-    private SimpleResult getInstanceSettingsByStudyGuid(String studyGuid, Connection conn) {
+    private SimpleResult getInstanceSettingsByInstanceName(String instanceName, Connection conn) {
         SimpleResult execResult = new SimpleResult();
-        try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_BY_STUDY_GUID)) {
-            stmt.setString(1, studyGuid);
+        try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_BY_INSTANCE_NAME)) {
+            stmt.setString(1, instanceName);
             try(ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     execResult.resultValue = new InstanceSettingsDto.Builder()
@@ -130,6 +135,8 @@ public class InstanceSettingsDao implements Dao<InstanceSettingsDto> {
                         .withDefaultColumns(getValuesFromJson(rs.getString(DEFAULT_COLUMNS)))
                         .withHasInvitations(rs.getBoolean(HAS_INVITATIONS))
                         .withGbfShippedTriggerDssDelivered(rs.getBoolean(GBF_SHIPPED_DSS_DELIVERED))
+                        .withHasAddressTab(rs.getBoolean(HAS_ADDRESS_TAB))
+                        .withHasComputedObject(rs.getBoolean(HAS_COMPUTED_OBJECT))
                         .build();
                 }
             }

@@ -9,6 +9,9 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.structure.ColumnName;
+import org.broadinstitute.dsm.db.structure.DBElement;
+import org.broadinstitute.dsm.db.structure.DbDateConversion;
+import org.broadinstitute.dsm.db.structure.SqlDateConverter;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.model.KitType;
 import org.broadinstitute.dsm.model.*;
@@ -168,12 +171,15 @@ public class KitRequestShipping extends KitRequest {
     private String testResult;
 
     @ColumnName (DBConstants.DSM_SCAN_DATE)
+    @DbDateConversion(SqlDateConverter.EPOCH)
     private final long scanDate;
 
     @ColumnName (DBConstants.DSM_RECEIVE_DATE)
+    @DbDateConversion(SqlDateConverter.EPOCH)
     private final long receiveDate;
 
     @ColumnName (DBConstants.DSM_DEACTIVATED_DATE)
+    @DbDateConversion(SqlDateConverter.EPOCH)
     private final long deactivatedDate;
     private final boolean express;
     private final String easypostToId;
@@ -205,7 +211,6 @@ public class KitRequestShipping extends KitRequest {
 
     @ColumnName (DBConstants.UPLOAD_REASON)
     private String uploadReason;
-
     public KitRequestShipping(String collaboratorParticipantId, String kitType, String dsmKitRequestId, long scanDate, boolean error, long receiveDate, long deactivatedDate, String testResult,
                               String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus, String externalOrderNumber, long externalOrderDate, boolean careEvolve, String uploadReason) {
         this(null, collaboratorParticipantId, null, null, null, kitType, dsmKitRequestId, null, null, null,
@@ -334,6 +339,11 @@ public class KitRequestShipping extends KitRequest {
 
     public static Map<String, List<KitRequestShipping>> getKitRequests(@NonNull DDPInstance instance) {
         return getKitRequests(instance, null);
+    }
+
+    public static Map<String, List<KitRequestShipping>> getKitRequestsByParticipantIds(@NonNull DDPInstance instance, List<String> participantIds) {
+        String queryAddition = " AND request.ddp_participant_id IN (?)".replace("?", DBUtil.participantIdsInClause(participantIds));
+        return getKitRequests(instance, queryAddition);
     }
 
     public static Map<String, List<KitRequestShipping>> getKitRequests(@NonNull DDPInstance instance, String queryAddition) {
@@ -1486,6 +1496,21 @@ public class KitRequestShipping extends KitRequest {
         }
         catch (SQLException e) {
             throw new RuntimeException("Could not set order transmission date for " + kitExternalOrderId, e);
+        }
+    }
+
+    public static String getCollaboratorSampleId(int kitTypeId, String participantCollaboratorId, String kitType) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            String collaboratorSampleId = generateBspSampleID(conn, participantCollaboratorId, kitType, kitTypeId);
+            dbVals.resultValue = collaboratorSampleId;
+            return dbVals;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting Collaborator Sample Id for  " + participantCollaboratorId, results.resultException);
+        }
+        else {
+            return (String) results.resultValue;
         }
     }
 }

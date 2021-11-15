@@ -44,6 +44,19 @@ public class SystemUtil {
         return instant.toString();
     }
 
+    /**
+     * Detects current time and converts it to String "yyyy-MM-dd".<br>
+     * This format is equivalent to ElasticSearch 'strict_year_month_day' format.<br>
+     * From the ES documentation:
+     * <pre>
+     * year_month_day or strict_year_month_day
+     * A formatter for a four digit year, two digit month of year, and two digit day of month: yyyy-MM-dd
+     * </pre>
+     */
+    public static String getStrictYearMonthDay() {
+        return new SimpleDateFormat(DATE_FORMAT).format(Date.from(Instant.now()));
+    }
+
     public static final DateTimeFormatter USUAL_DATE = new DateTimeFormatterBuilder()
             .appendPattern(DATE_FORMAT)
             .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)

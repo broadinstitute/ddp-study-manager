@@ -41,11 +41,11 @@ public class InstanceSettings {
 
     private static final String SQL_SELECT_INSTANCE_SETTINGS =
             "SELECT mr_cover_pdf, kit_behavior_change, special_format, hide_ES_fields, study_specific_statuses, default_columns, has_invitations, " +
-                    "GBF_SHIPPED_DSS_DELIVERED " +
+                    "GBF_SHIPPED_DSS_DELIVERED, has_address_tab, has_computed_object " +
                     "FROM instance_settings settings, ddp_instance realm " +
                     "WHERE realm.ddp_instance_id = settings.ddp_instance_id AND realm.instance_name = ?";
     private static final String SQL_SELECT_INSTANCE_SETTINGS_BY_ID =
-            "SELECT mr_cover_pdf, kit_behavior_change, special_format, hide_ES_fields, study_specific_statuses, default_columns, has_invitations, GBF_SHIPPED_DSS_DELIVERED " +
+            "SELECT mr_cover_pdf, kit_behavior_change, special_format, hide_ES_fields, study_specific_statuses, default_columns, has_invitations, GBF_SHIPPED_DSS_DELIVERED, has_address_tab, has_computed_object " +
             "FROM instance_settings settings " +
             "WHERE settings.ddp_instance_id = ?";
 
@@ -89,13 +89,13 @@ public class InstanceSettings {
     }
 
     public InstanceSettingsDto getInstanceSettings(String realm) {
-        return instanceSettingsDao.getByStudyGuid(Objects.requireNonNull(realm))
+        return instanceSettingsDao.getByInstanceName(Objects.requireNonNull(realm))
                 .orElse(new InstanceSettingsDto.Builder().build());
     }
 
     //used ONLY for google cloud function
     public InstanceSettingsDto getInstanceSettings(Connection conn, String realm) {
-        return instanceSettingsDao.getByStudyGuid(Objects.requireNonNull(conn), Objects.requireNonNull(realm))
+        return instanceSettingsDao.getByInstanceName(Objects.requireNonNull(conn), Objects.requireNonNull(realm))
                 .orElse(new InstanceSettingsDto.Builder().build());
     }
 
@@ -242,7 +242,7 @@ public class InstanceSettings {
                 .map(Field::getName)
                 .collect(Collectors.toList());
         List<Method> methods = Arrays.stream(clazz.getMethods())
-                .filter(method -> method.getName().startsWith("get") || method.getName().startsWith("is"))
+                .filter(method -> method.getName().startsWith("get") || method.getName().startsWith("is") || method.getName().startsWith("has"))
                 .collect(Collectors.toList());
         fieldNames.forEach(fieldName -> {
             Optional<Method> methodByFieldName = methods.stream()

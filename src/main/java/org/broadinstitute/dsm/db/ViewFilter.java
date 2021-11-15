@@ -578,14 +578,22 @@ public class ViewFilter {
                             break;
 
                         case 3: // exact matching value
-                            if (word.equals(Filter.TODAY)) {
-                                value = getDate();
+                            if (word.equals(Filter.TODAY) || word.matches("'\\d{4}-\\d{1,2}-\\d{1,2}'")) {
+                                if (word.equals(Filter.TODAY)) {
+                                    value = getDate();
+                                } else {
+                                    value = word.replace("'","");
+                                }
                                 state = 22;
                                 break;
                             }
                             else if (word.equals(Filter.TRUE) || word.equals(Filter.FALSE)) {
                                 value = word;
                                 type = Filter.BOOLEAN;
+                                state = 40;
+                            } else if (StringUtils.isNumeric(word)) {
+                                value = word;
+                                type = Filter.NUMBER;
                                 state = 40;
                             }
                             else {
@@ -625,6 +633,8 @@ public class ViewFilter {
                             value = trimValue(word);
                             if (isValidDate(value, false)) {
                                 type = Filter.DATE;
+                            } else if (StringUtils.isNumeric(word)) {
+                                type = Filter.NUMBER;
                             }
                             state = 11;
                             break;
@@ -932,6 +942,7 @@ public class ViewFilter {
                 filter.setExactMatch(exact);
                 filter.setRange(range);
                 filter.setNotEmpty(notEmpty);
+                filter.setParentName(viewFilter.getParent());
                 filter.setEmpty(empty);
                 filter.setParticipantColumn(new ParticipantColumn(columnName, tableName));
                 if (StringUtils.isNotBlank(type) && type.equals(Filter.JSON_ARRAY) && StringUtils.isNotBlank(path)) {
@@ -941,7 +952,7 @@ public class ViewFilter {
                 filter.setSelectedOptions(selectedOptions.toArray(b));
                 filter.setType(type == null ? Filter.TEXT : type);
                 if (isValidDate(value, false)) {
-                    type = Filter.DATE;
+                    filter.setType(Filter.DATE);
                 }
                 if (Filter.JSON_ARRAY.equals(filter.type)) {
                     filter.setFilter1(new NameValue(columnName, value));
@@ -950,8 +961,13 @@ public class ViewFilter {
                 if (Filter.ADDITIONAL_VALUES.equals(filter.type)) {
                     filter.setParticipantColumn(new ParticipantColumn(path, tableName));
                 }
-                else if (Filter.TEXT.equals(filter.type) || Filter.BOOLEAN.equals(filter.type)) {
-                    filter.setFilter1(new NameValue(columnName, value));
+                else if (Filter.TEXT.equals(filter.type) || Filter.BOOLEAN.equals(filter.type) || Filter.NUMBER.equals(filter.type)) {
+                    if (Filter.NUMBER.equals(filter.type)
+                            && condition.contains(Filter.SMALLER_EQUALS_TRIMMED) && !arrayContains(conditions, Filter.LARGER_EQUALS_TRIMMED)) {
+                        filter.setFilter2(new NameValue(columnName, value));
+                    } else {
+                        filter.setFilter1(new NameValue(columnName, value));
+                    }
                 }
                 else if (!Filter.CHECKBOX.equals(filter.type)) {
                     if (f1) {// first in range
@@ -959,6 +975,10 @@ public class ViewFilter {
                     }
                     if (path != null && !f2) {//additional field
                         filter.setFilter2(new NameValue(path, ""));
+                    }
+                    if (f1 && !f2 && Filter.DATE.equals(filter.type) && filter.isRange()) {
+                        // set max date to very far in the future
+                        filter.setFilter2(new NameValue(filter.getFilter1().getName(), LocalDateTime.now().plusYears(10).format(DateTimeFormatter.ISO_LOCAL_DATE)));
                     }
                     if (f2) {// maximum set in a range filter
                         if (filter.getFilter1() == null) {
@@ -990,6 +1010,15 @@ public class ViewFilter {
                 viewFilter.userId, filters.values().toArray(a), viewFilter.parent,
                 viewFilter.icon, viewFilter.quickFilterName, newQuery, null, viewFilter.realmId);
         return result;
+    }
+
+    private static boolean arrayContains(String[] arr, String str) {
+        for (String s : arr) {
+            if (s.contains(str)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String[] getColumnTableNames(String word) {

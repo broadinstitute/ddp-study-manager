@@ -80,7 +80,7 @@ public class FieldSettingsTest {
 
     @Test
     public void isColumnExportable() {
-        instanceId = ddpInstanceDao.create(DDPInstanceDto.of(false, false, false));
+        instanceId = ddpInstanceDao.create(new DDPInstanceDto.Builder().build());
         FieldSettingsDto fieldSettingsDto = new FieldSettingsDto.Builder(instanceId)
                 .withActions(actions)
                 .withColumnName(REGISTRATION_STATUS)

@@ -62,7 +62,17 @@
     <include file="liquibase/DDP-6006_RGP-form.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/tab_grouped-column-display-fix.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/DDP-6489-family-notes-field.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/DDP-6238_users-phoneNumbers.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/DDP-6504_hide-samples-tab.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/rgp/DDP-6504_hide-sample-information-tab.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/DDP-6586.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/CMI/DDP-6586_update_has_address_tab_to_true_for_pancan.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/DDP-6574_update_event_queue.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/circadia/DDP-6577_circadia-form.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/circadia/DDP-6574_email-events.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/circadia/DDP-6574_dynamic-form-action.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/circadia/DDP-6688_DLMO-form.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/circadia/DDP-6796_add-instance-setting-for-computed-object.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/circadia/DDP-6797_set-has-computed-object-for-circadia-to-true.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/DDP-6034_SMIDS.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
