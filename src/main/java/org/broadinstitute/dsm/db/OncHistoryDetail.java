@@ -83,13 +83,13 @@ public class OncHistoryDetail {
     private final String medicalRecordId;
 
     @ColumnName (DBConstants.DATE_PX)
-    private String datePX;
+    private String datePx;
 
     @ColumnName (DBConstants.TYPE_PX)
-    private String typePX;
+    private String typePx;
 
     @ColumnName (DBConstants.LOCATION_PX)
-    private String locationPX;
+    private String locationPx;
 
     @ColumnName (DBConstants.HISTOLOGY)
     private String histology;
@@ -101,49 +101,49 @@ public class OncHistoryDetail {
     private String facility;
 
     @ColumnName (DBConstants.PHONE)
-    private String fPhone;
+    private String phone;
 
     @ColumnName (DBConstants.FAX)
-    private String fFax;
+    private String fax;
 
     @ColumnName (DBConstants.NOTES)
-    private String oncHisNotes;
+    private String notes;
 
     @ColumnName (DBConstants.REQUEST)
     private String request;
 
     @ColumnName (DBConstants.FAX_SENT)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private String tFaxSent;
+    private String faxSent;
 
     @ColumnName (DBConstants.FAX_SENT_BY)
-    private String tFaxSentBy;
+    private String faxSentBy;
 
     @ColumnName (DBConstants.FAX_CONFIRMED)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private String tFaxConfirmed;
+    private String faxConfirmed;
 
     @ColumnName (DBConstants.FAX_SENT_2)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private String tFaxSent2;
+    private String faxSent2;
 
     @ColumnName (DBConstants.FAX_SENT_2_BY)
-    private String tFaxSent2By;
+    private String faxSent2By;
 
     @ColumnName (DBConstants.FAX_CONFIRMED_2)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private String tFaxConfirmed2;
+    private String faxConfirmed2;
 
     @ColumnName (DBConstants.FAX_SENT_3)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private String tFaxSent3;
+    private String faxSent3;
 
     @ColumnName (DBConstants.FAX_SENT_3_BY)
-    private String tFaxSent3By;
+    private String faxSent3By;
 
     @ColumnName (DBConstants.FAX_CONFIRMED_3)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private String tFaxConfirmed3;
+    private String faxConfirmed3;
 
     @ColumnName (DBConstants.TISSUE_RECEIVED)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
@@ -156,7 +156,7 @@ public class OncHistoryDetail {
     private String gender;
 
     @ColumnName (DBConstants.ADDITIONAL_VALUES)
-    private String additionalValues;
+    private String additionalValuesJson;
 
     @ColumnName (DBConstants.DESTRUCTION_POLICY)
     private String destructionPolicy;
@@ -167,87 +167,87 @@ public class OncHistoryDetail {
     private boolean deleted;
 
     @ColumnName (DBConstants.UNABLE_OBTAIN_TISSUE)
-    private boolean unableToObtain;
+    private boolean unableObtainTissue;
 
     private String participantId;
 
 
     private List<Tissue> tissues;
 
-    public OncHistoryDetail(String oncHistoryDetailId, String medicalRecordId, String datePX, String typePX,
-                            String locationPX, String histology, String accessionNumber, String facility, String fPhone,
-                            String fFax, String oncHisNotes, String request, String tFaxSent,
-                            String tFaxSentBy, String tFaxConfirmed,
-                            String tFaxSent2, String tFaxSent2By, String tFaxConfirmed2,
-                            String tFaxSent3, String tFaxSent3By, String tFaxConfirmed3,
-                            String tissueReceived, String gender, String additionalValues,
-                            String tissueProblemOption, String destructionPolicy, boolean unableToObtain) {
+    public OncHistoryDetail(String oncHistoryDetailId, String medicalRecordId, String datePx, String typePx,
+                            String locationPx, String histology, String accessionNumber, String facility, String phone,
+                            String fax, String notes, String request, String faxSent,
+                            String faxSentBy, String faxConfirmed,
+                            String faxSent2, String faxSent2By, String faxConfirmed2,
+                            String faxSent3, String faxSent3By, String faxConfirmed3,
+                            String tissueReceived, String gender, String additionalValuesJson,
+                            String tissueProblemOption, String destructionPolicy, boolean unableObtainTissue) {
         this.oncHistoryDetailId = oncHistoryDetailId;
         this.medicalRecordId = medicalRecordId;
-        this.datePX = datePX;
-        this.typePX = typePX;
-        this.locationPX = locationPX;
+        this.datePx = datePx;
+        this.typePx = typePx;
+        this.locationPx = locationPx;
         this.histology = histology;
         this.accessionNumber = accessionNumber;
         this.facility = facility;
-        this.fPhone = fPhone;
-        this.fFax = fFax;
-        this.oncHisNotes = oncHisNotes;
+        this.phone = phone;
+        this.fax = fax;
+        this.notes = notes;
         this.request = request;
-        this.tFaxSent = tFaxSent;
-        this.tFaxSentBy = tFaxSentBy;
-        this.tFaxConfirmed = tFaxConfirmed;
-        this.tFaxSent2 = tFaxSent2;
-        this.tFaxSent2By = tFaxSent2By;
-        this.tFaxConfirmed2 = tFaxConfirmed2;
-        this.tFaxSent3 = tFaxSent3;
-        this.tFaxSent3By = tFaxSent3By;
-        this.tFaxConfirmed3 = tFaxConfirmed3;
+        this.faxSent = faxSent;
+        this.faxSentBy = faxSentBy;
+        this.faxConfirmed = faxConfirmed;
+        this.faxSent2 = faxSent2;
+        this.faxSent2By = faxSent2By;
+        this.faxConfirmed2 = faxConfirmed2;
+        this.faxSent3 = faxSent3;
+        this.faxSent3By = faxSent3By;
+        this.faxConfirmed3 = faxConfirmed3;
         this.tissueReceived = tissueReceived;
         this.gender = gender;
-        this.additionalValues = additionalValues;
+        this.additionalValuesJson = additionalValuesJson;
         this.tissues = new ArrayList<>();
         this.tissueProblemOption = tissueProblemOption;
         this.destructionPolicy = destructionPolicy;
-        this.unableToObtain = unableToObtain;
+        this.unableObtainTissue = unableObtainTissue;
     }
 
-    public OncHistoryDetail(String oncHistoryDetailId, String medicalRecordId, String datePX, String typePX,
-                            String locationPX, String histology, String accessionNumber, String facility, String fPhone,
-                            String fFax, String oncHisNotes, String request, String tFaxSent,
-                            String tFaxSentBy, String tFaxConfirmed,
-                            String tFaxSent2, String tFaxSent2By, String tFaxConfirmed2,
-                            String tFaxSent3, String tFaxSent3By, String tFaxConfirmed3,
-                            String tissueReceived, String gender, String additionalValues, List<Tissue> tissues,
-                            String tissueProblemOption, String destructionPolicy, boolean unableToObtain) {
+    public OncHistoryDetail(String oncHistoryDetailId, String medicalRecordId, String datePx, String typePx,
+                            String locationPx, String histology, String accessionNumber, String facility, String phone,
+                            String fax, String notes, String request, String faxSent,
+                            String faxSentBy, String faxConfirmed,
+                            String faxSent2, String faxSent2By, String faxConfirmed2,
+                            String faxSent3, String faxSent3By, String faxConfirmed3,
+                            String tissueReceived, String gender, String additionalValuesJson, List<Tissue> tissues,
+                            String tissueProblemOption, String destructionPolicy, boolean unableObtainTissue) {
         this.oncHistoryDetailId = oncHistoryDetailId;
         this.medicalRecordId = medicalRecordId;
-        this.datePX = datePX;
-        this.typePX = typePX;
-        this.locationPX = locationPX;
+        this.datePx = datePx;
+        this.typePx = typePx;
+        this.locationPx = locationPx;
         this.histology = histology;
         this.accessionNumber = accessionNumber;
         this.facility = facility;
-        this.fPhone = fPhone;
-        this.fFax = fFax;
-        this.oncHisNotes = oncHisNotes;
+        this.phone = phone;
+        this.fax = fax;
+        this.notes = notes;
         this.request = request;
-        this.tFaxSent = tFaxSent;
-        this.tFaxSentBy = tFaxSentBy;
-        this.tFaxConfirmed = tFaxConfirmed;
-        this.tFaxSent2 = tFaxSent2;
-        this.tFaxSent2By = tFaxSent2By;
-        this.tFaxConfirmed2 = tFaxConfirmed2;
-        this.tFaxSent3 = tFaxSent3;
-        this.tFaxSent3By = tFaxSent3By;
-        this.tFaxConfirmed3 = tFaxConfirmed3;
+        this.faxSent = faxSent;
+        this.faxSentBy = faxSentBy;
+        this.faxConfirmed = faxConfirmed;
+        this.faxSent2 = faxSent2;
+        this.faxSent2By = faxSent2By;
+        this.faxConfirmed2 = faxConfirmed2;
+        this.faxSent3 = faxSent3;
+        this.faxSent3By = faxSent3By;
+        this.faxConfirmed3 = faxConfirmed3;
         this.tissueReceived = tissueReceived;
         this.gender = gender;
-        this.additionalValues = additionalValues;
+        this.additionalValuesJson = additionalValuesJson;
         this.tissues = tissues;
         this.tissueProblemOption = tissueProblemOption;
         this.destructionPolicy = destructionPolicy;
-        this.unableToObtain = unableToObtain;
+        this.unableObtainTissue = unableObtainTissue;
     }
 
     public static OncHistoryDetail getOncHistoryDetail(@NonNull ResultSet rs) throws SQLException {

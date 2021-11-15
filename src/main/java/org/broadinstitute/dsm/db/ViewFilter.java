@@ -366,7 +366,7 @@ public class ViewFilter {
         loop:
         for (TissueList tissueList : views) {
             if (tissueList.getOncHistoryDetails() != null) {
-                String dateString = tissueList.getOncHistoryDetails().getDatePX();
+                String dateString = tissueList.getOncHistoryDetails().getDatePx();
                 int len = dateString.length();
                 int destructionPolicy = 1000;
                 if (!tissueList.getOncHistoryDetails().getDestructionPolicy().equals("indefinitely")) {

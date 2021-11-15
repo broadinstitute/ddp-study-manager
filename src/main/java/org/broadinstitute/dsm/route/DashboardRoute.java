@@ -412,7 +412,7 @@ public class DashboardRoute extends RequestHandler {
                                      long start, long end) {
 
         for (OncHistoryDetail oncHistoryDetail : oncHistoryDetailList) {
-            if (oncHistoryDetail.isUnableToObtain()) {
+            if (oncHistoryDetail.isUnableObtainTissue()) {
                 incrementCounter(dashboardValuesDetailed, "unableToObtainTissue");
                 foundAtPT.add("unableToObtainTissue");
             }
@@ -445,7 +445,7 @@ public class DashboardRoute extends RequestHandler {
                     incrementCounter(dashboardValuesDetailed, "request.request");
                     foundAtPT.add("request.request");
                     //count where tissue request is set to request but fax is not sent out yet
-                    if (StringUtils.isBlank(oncHistoryDetail.getTFaxSent())) {
+                    if (StringUtils.isBlank(oncHistoryDetail.getFaxSent())) {
                         incrementCounter(dashboardValuesDetailed, "tFaxNotSent");
                         foundAtPT.add("tFaxNotSent");
                     }
@@ -488,8 +488,8 @@ public class DashboardRoute extends RequestHandler {
                     foundAtPT.add("tissueProblemOption.other");
                 }
             }
-            countRequestsReceive(dashboardValuesDetailed, dashboardValuesPeriodDetailed, foundAtPT, foundAtPtPeriod, oncHistoryDetail.getTFaxSent3(),
-                    oncHistoryDetail.getTFaxSent2(), oncHistoryDetail.getTFaxSent(), oncHistoryDetail.getTissueReceived(),
+            countRequestsReceive(dashboardValuesDetailed, dashboardValuesPeriodDetailed, foundAtPT, foundAtPtPeriod, oncHistoryDetail.getFaxSent3(),
+                    oncHistoryDetail.getFaxSent2(), oncHistoryDetail.getFaxSent(), oncHistoryDetail.getTissueReceived(),
                     start, end, null, "tFaxSent", "tissueReceived", false);
         }
     }
