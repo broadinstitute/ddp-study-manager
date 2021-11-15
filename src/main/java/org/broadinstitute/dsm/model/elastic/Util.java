@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.model.elastic;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,7 +31,7 @@ public class Util {
     public static final String UNDERSCORE_SEPARATOR = "_";
     public static final String DOC = "_doc";
     public static final String ID = "id";
-    public static final String CAMEL_CASE_REGEX = "(([a-z])+([A-z]))*";
+    private static final Pattern CAMEL_CASE_REGEX = Pattern.compile("(([a-z])+([A-z]))*");
 
     public static String getQueryTypeFromId(String id) {
         String type;
@@ -66,7 +67,7 @@ public class Util {
     }
 
     private static String handleAllUppercase(String word) {
-        return word.matches(CAMEL_CASE_REGEX) ? word : word.toLowerCase();
+        return CAMEL_CASE_REGEX.matcher(word).matches() ? word : word.toLowerCase();
     }
 
     private static boolean hasNoUnderscores(String[] splittedWords) {
