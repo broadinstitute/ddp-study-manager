@@ -1,5 +1,10 @@
 package org.broadinstitute.dsm;
 
+import com.brsanthu.googleanalytics.GoogleAnalytics;
+import com.brsanthu.googleanalytics.GoogleAnalyticsConfig;
+import com.brsanthu.googleanalytics.request.DefaultRequest;
+import com.brsanthu.googleanalytics.request.EventHit;
+import com.brsanthu.googleanalytics.request.GoogleAnalyticsResponse;
 import com.google.gson.JsonObject;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -7,10 +12,10 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.util.GoogleBucket;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dto.settings.InstanceSettingsDto;
-import org.broadinstitute.dsm.model.NDIUploadObject;
 import org.broadinstitute.dsm.exception.FileColumnMissing;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitType;
+import org.broadinstitute.dsm.model.NDIUploadObject;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.gbf.LineItem;
 import org.broadinstitute.dsm.model.gbf.Orders;
@@ -49,6 +54,42 @@ public class DirectMethodTest extends TestHelper {
     @Before
     public void beforeTest() {
         DBTestUtil.deleteAllFieldSettings(TEST_DDP);
+    }
+
+    @Test
+    public void testGA(){
+        String realUa = "UA-12345678-1";// dummy value
+        GoogleAnalytics ga = GoogleAnalytics.builder()
+                .withConfig(new GoogleAnalyticsConfig().setGatherStats(true).setUserAgent("Custom User Agent"))
+                .withDefaultRequest(new DefaultRequest().userIp("127.0.0.1").trackingId(realUa))
+                .withTrackingId(realUa)
+                .build();
+        ga.resetStats();
+        EventHit eventHit = new EventHit("test-dsm", "action-test-dsm", "label-test-dsm", 1);
+        if (ga != null) {
+            eventHit = ga.event().eventCategory(eventHit.eventCategory())
+                    .eventAction(eventHit.eventAction())
+                    .eventLabel(eventHit.eventLabel())
+                    .eventValue(eventHit.eventValue())
+                    .trackingId(realUa);
+            Assert.assertEquals(eventHit.hitType(), "event");
+            GoogleAnalyticsResponse response = ga.event().eventCategory(eventHit.eventCategory())
+                    .eventAction(eventHit.eventAction())
+                    .eventLabel(eventHit.eventLabel())
+                    .eventValue(eventHit.eventValue())
+                    .trackingId(realUa)
+                    .send();
+
+            System.out.println(response.getRequestParams());
+            System.out.println(response.getStatusCode());
+            Assert.assertEquals(response.getStatusCode(), 200);
+            Assert.assertNotEquals(ga.getStats().getEventHits(), 0);
+            Assert.assertEquals(ga.getStats().getEventHits(), 1);
+
+
+        }
+
+
     }
 
     @Test

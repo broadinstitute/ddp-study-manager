@@ -1,11 +1,8 @@
 package org.broadinstitute.dsm.model.filter.tissue;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetrics;
+import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetricsTracker;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ViewFilter;
 import org.broadinstitute.dsm.model.TissueList;
@@ -16,6 +13,11 @@ import org.broadinstitute.dsm.util.PatchUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.QueryParamsMap;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 
 //reloadWithDefault/Manual/Empty filtering
 public class ManualFilterTissueList extends BaseFilterTissueList {
@@ -28,6 +30,7 @@ public class ManualFilterTissueList extends BaseFilterTissueList {
 
     @Override
     public List<TissueListWrapper> filter(QueryParamsMap queryParamsMap) {
+        Long timer = System.currentTimeMillis();
         List<TissueListWrapper> wrapperList = new ArrayList<>();
         if (Objects.isNull(queryParamsMap)) return wrapperList;
         prepareNeccesaryData(queryParamsMap);
@@ -52,6 +55,8 @@ public class ManualFilterTissueList extends BaseFilterTissueList {
             wrapperList = filterTissueList(filters, PatchUtil.getColumnNameMap(), quickFilterName, ddpInstance, filterQuery);
         }
         logger.info("Found " + wrapperList.size() + " tissues for Tissue View");
+        GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_TISSUE_LIST,
+                GoogleAnalyticsMetrics.EVENT_ACTION_TISSUE_LIST, GoogleAnalyticsMetrics.EVENT_LABEL_TISSUE_LIST,  Math.toIntExact((System.currentTimeMillis() - timer)/1000));
         return wrapperList;
     }
 }

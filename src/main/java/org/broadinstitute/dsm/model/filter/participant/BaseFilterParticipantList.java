@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetrics;
+import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetricsTracker;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ViewFilter;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
@@ -51,6 +53,7 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
 
 
     protected List<ParticipantWrapper> filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap, @NonNull DDPInstance instance) {
+        Long timer = System.currentTimeMillis();
         Map<String, String> queryConditions = new HashMap<>();
         List<ParticipantDataDto> allParticipantData = null;
         if (filters != null && columnNameMap != null && !columnNameMap.isEmpty()) {
@@ -106,9 +109,13 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
             }
 
             logger.info("Found query conditions for " + mergeConditions.size() + " tables");
+            GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_PARTICIPANT_LIST,
+                    GoogleAnalyticsMetrics.EVENT_ACTION_PARTICIPANT_LIST, GoogleAnalyticsMetrics.EVENT_LABEL_PARTICIPANT_LIST,  Math.toIntExact((System.currentTimeMillis() - timer)/1000));
             //search bar ptL
             return ParticipantWrapper.getFilteredList(instance, mergeConditions);
         } else {
+            GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_PARTICIPANT_LIST,
+                    GoogleAnalyticsMetrics.EVENT_ACTION_PARTICIPANT_LIST, GoogleAnalyticsMetrics.EVENT_LABEL_PARTICIPANT_LIST,  Math.toIntExact((System.currentTimeMillis() - timer)/1000));
             return ParticipantWrapper.getFilteredList(instance, null);
         }
     }
