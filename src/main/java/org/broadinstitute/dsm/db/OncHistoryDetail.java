@@ -171,6 +171,7 @@ public class OncHistoryDetail {
 
     private String participantId;
 
+    @ColumnName("tissues")
     private List<Tissue> tissues;
 
     public OncHistoryDetail(String oncHistoryDetailId, String medicalRecordId, String datePx, String typePx,

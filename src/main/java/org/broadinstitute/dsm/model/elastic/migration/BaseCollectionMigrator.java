@@ -47,9 +47,9 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
                         Object o = field.get(rame);
                         Optional first = ((List) o).stream().findFirst();
                         first.ifPresent(f -> {
-                            TableName tableName = o.getClass().getAnnotation(TableName.class);
+                            TableName tableName = f.getClass().getAnnotation(TableName.class);
                             if (tableName != null && StringUtils.isNotBlank(tableName.primaryKey())) {
-                                primaryKeys.add(tableName.primaryKey());
+                                primaryKeys.add(Util.underscoresToCamelCase(tableName.primaryKey()));
                             }
                         });
                     } catch (IllegalAccessException e) {
@@ -69,7 +69,7 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
 
             List<String> collect = map.entrySet().stream()
                     .filter(entry -> entry.getValue() instanceof List)
-                    .map(Map.Entry::getKey)
+                    .map(entry -> ((List)entry.getValue()))
                     .collect(Collectors.toList());
 
             for (String key : collect) {

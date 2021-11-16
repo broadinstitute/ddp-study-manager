@@ -130,6 +130,7 @@ public class Util {
                     for(Object obj: fieldValues) {
                         Class<?> inside = obj.getClass();
                         Field[] declaredFields = inside.getDeclaredFields();
+                        Map<String, Object> mainMap = new HashMap<>();
                         for (Field declaredField : declaredFields) {
                             declaredField.setAccessible(true);
                             ColumnName annotation = declaredField.getAnnotation(ColumnName.class);
@@ -137,12 +138,13 @@ public class Util {
                                 String innerFieldName = underscoresToCamelCase(annotation.value());
                                 try {
                                     if (declaredField.get(obj) != null )
-                                        transformedFieldValues.add(Map.of(innerFieldName, declaredField.get(obj)));
+                                        mainMap.put(innerFieldName, declaredField.get(obj));
                                 } catch (IllegalAccessException e) {
                                     e.printStackTrace();
                                 }
                             }
                         }
+                        transformedFieldValues.add(mainMap);
                     }
                     fieldValue = transformedFieldValues;
                 }

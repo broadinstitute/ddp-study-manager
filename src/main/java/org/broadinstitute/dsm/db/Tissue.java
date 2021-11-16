@@ -42,6 +42,7 @@ public class Tissue {
             alias = DBConstants.DDP_TISSUE_ALIAS,
             primaryKey = DBConstants.TISSUE_ID,
             columnPrefix = "")
+    @ColumnName(DBConstants.TISSUE_ID)
     private String tissueId;
 
     private final String oncHistoryDetailId;
