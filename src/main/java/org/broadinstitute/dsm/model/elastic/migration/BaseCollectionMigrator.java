@@ -28,32 +28,37 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
 
     @Override
     protected void transformObject(Object object) {
+        Optional maybeObject = ((List) object).stream().findFirst();
+        maybeObject.ifPresent((obj) -> {
+            Class<?> clazz = obj.getClass();
+            TableName annotation = clazz.getAnnotation(TableName.class);
+            if (annotation != null) {
+                this.primaryKeys.add(Util.underscoresToCamelCase(annotation.primaryKey()));
+            }
 
-        Class<?> clazz = object.getClass();
-        TableName annotation = clazz.getAnnotation(TableName.class);
-        if (annotation != null) {
-            this.primaryKeys.add(annotation.primaryKey());
-        }
+            List<Field> listFields = Arrays.stream(clazz.getDeclaredFields())
+                    .filter(field -> List.class.isAssignableFrom(field.getType()))
+                    .collect(Collectors.toList());
 
-        List<Field> listFields = Arrays.stream(clazz.getDeclaredFields())
-                .filter(field -> List.class.isAssignableFrom(field.getType()))
-                .collect(Collectors.toList());
-
-        for (Field field : listFields) {
-            try {
-                List list = (List) field.get(object);
-                for (Object o : list) {
-                    TableName tableName = o.getClass().getAnnotation(TableName.class);
-                    if (tableName != null && StringUtils.isNotBlank(tableName.primaryKey())) {
-                        primaryKeys.add(tableName.primaryKey());
-                        break;
+            for (Field field : listFields) {
+                for (Object rame: (List) object) {
+                    try {
+                        field.setAccessible(true);
+                        Object o = field.get(rame);
+                        Optional first = ((List) o).stream().findFirst();
+                        first.ifPresent(f -> {
+                            TableName tableName = o.getClass().getAnnotation(TableName.class);
+                            if (tableName != null && StringUtils.isNotBlank(tableName.primaryKey())) {
+                                primaryKeys.add(tableName.primaryKey());
+                            }
+                        });
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
                     }
                 }
-
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
             }
-        }
+        });
+
 
         transformedList = Util.transformObjectCollectionToCollectionMap((List) object);
         setPrimaryId();
