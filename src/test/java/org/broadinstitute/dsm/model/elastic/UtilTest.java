@@ -2,9 +2,13 @@ package org.broadinstitute.dsm.model.elastic;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
+import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.db.Participant;
+import org.broadinstitute.dsm.db.Tissue;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.junit.Test;
 
@@ -61,5 +65,19 @@ public class UtilTest {
         Map<String, Object> result = Util.transformObjectToMap(participantDataDto);
         assertEquals("TEST", result.get("ddpInstance"));
         assertEquals("VALUE", result.get("ddpValue"));
+    }
+
+    @Test
+    public void convertToMap() {
+        String fieldName = "tissue";
+        List<Object> fieldValue = List.of(new Tissue("11", "22",
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null));
+
+        Map<String, Object> stringObjectMap = Util.convertToMap(fieldName, fieldValue);
+
+        System.out.println();
+        System.out.println();
     }
 }

@@ -171,7 +171,6 @@ public class OncHistoryDetail {
 
     private String participantId;
 
-
     private List<Tissue> tissues;
 
     public OncHistoryDetail(String oncHistoryDetailId, String medicalRecordId, String datePx, String typePx,

@@ -106,7 +106,7 @@ public class Util {
         return map;
     }
 
-    private static Map<String, Object> convertToMap(String fieldName, Object fieldValue) {
+    static Map<String, Object> convertToMap(String fieldName, Object fieldValue) {
         Map<String, Object> finalResult;
         switch (fieldName) {
             case "follow_ups":
@@ -124,6 +124,28 @@ public class Util {
                 finalResult = transformedMap;
                 break;
             default:
+                if (fieldValue instanceof List) {
+                    List<Object> fieldValues = (List) fieldValue;
+                    List<Map<String, Object>> transformedFieldValues = new ArrayList<>();
+                    for(Object obj: fieldValues) {
+                        Class<?> inside = obj.getClass();
+                        Field[] declaredFields = inside.getDeclaredFields();
+                        for (Field declaredField : declaredFields) {
+                            declaredField.setAccessible(true);
+                            ColumnName annotation = declaredField.getAnnotation(ColumnName.class);
+                            if (annotation != null) {
+                                String innerFieldName = underscoresToCamelCase(annotation.value());
+                                try {
+                                    if (declaredField.get(obj) != null )
+                                        transformedFieldValues.add(Map.of(innerFieldName, declaredField.get(obj)));
+                                } catch (IllegalAccessException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                    fieldValue = transformedFieldValues;
+                }
                 finalResult = Map.of(underscoresToCamelCase(fieldName), fieldValue);
                 break;
         }

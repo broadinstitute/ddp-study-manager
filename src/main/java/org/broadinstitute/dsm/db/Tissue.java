@@ -37,7 +37,13 @@ public class Tissue {
             "LEFT JOIN ddp_medical_record as m on (m.institution_id = inst.institution_id AND NOT m.deleted <=> 1) LEFT JOIN ddp_onc_history_detail as oD on (m.medical_record_id = oD.medical_record_id) " +
             "LEFT JOIN ddp_tissue as t on (t.onc_history_detail_id = oD.onc_history_detail_id) WHERE p.participant_id = ?";
 
+    @TableName (
+            name = DBConstants.DDP_TISSUE,
+            alias = DBConstants.DDP_TISSUE_ALIAS,
+            primaryKey = DBConstants.TISSUE_ID,
+            columnPrefix = "")
     private String tissueId;
+
     private final String oncHistoryDetailId;
 
     @ColumnName (DBConstants.NOTES)
