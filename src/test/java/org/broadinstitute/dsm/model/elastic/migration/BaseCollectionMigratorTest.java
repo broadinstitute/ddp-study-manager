@@ -24,8 +24,11 @@ public class BaseCollectionMigratorTest {
 
     private List something() {
         List<Tissue> fieldValue = new ArrayList<>(List.of(new Tissue("11", "22",
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, "awdwadawdawdawd", null, null, null, null, null, null,
+                null, null, "Awdawd", null, null, null, null, null, null, null,
+                null, null, null, null, null), new Tissue("555", "777",
+                null, null, null, null, null, null, null, "awdawd", null, null,
+                null, null, "awdawddwa", null, null, null, null, null, null, null,
                 null, null, null, null, null)));
         OncHistoryDetail oncHistoryDetail =
                 new OncHistoryDetail(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,

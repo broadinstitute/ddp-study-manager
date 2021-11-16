@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.model.elastic.migration;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.structure.TableName;
@@ -67,18 +68,33 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
     private void setPrimaryId() {
         for(Map<String, Object> map: transformedList) {
 
+//            List<String> collect = map.entrySet().stream()
+//                    .filter(entry -> entry.getValue() instanceof List)
+//                    .flatMap(entry -> ((List<Map<String, Object>>) entry.getValue()).stream())
+//                    .flatMap(entry -> entry.keySet().stream())
+//                    .collect(Collectors.toList());
+
             List<String> collect = map.entrySet().stream()
                     .filter(entry -> entry.getValue() instanceof List)
-                    .map(entry -> ((List)entry.getValue()))
+                    .map(entry -> entry.getKey())
                     .collect(Collectors.toList());
 
             for (String key : collect) {
-                if (primaryKeys.contains(key)) {
+                List<Map<String, Object>> o = (List<Map<String, Object>>) map.get(key);
+
+                Optional<String> maybePrimary = o.stream()
+                        .flatMap(mapObj -> mapObj.keySet().stream())
+                        .filter(k -> primaryKeys.contains(k))
+                        .findFirst();
+
+                maybePrimary.ifPresent(prKey -> {
                     List<Map<String, Object>> list =(List<Map<String, Object>>) map.get(key);
                     for (Map<String, Object> stringObjectMap : list) {
-                        stringObjectMap.put(Util.ID, stringObjectMap.get(key));
+                        stringObjectMap.put(Util.ID, stringObjectMap.get(prKey));
                     }
-                }
+                });
+
+
             }
 
             map.put(Util.ID, map.get(primaryId));
