@@ -9,7 +9,7 @@ import org.broadinstitute.dsm.statics.ESObjectConstants;
 public class KitRequestShippingMigrator extends BaseCollectionMigrator {
 
     public KitRequestShippingMigrator(String index, String realm) {
-        super(index, realm, ESObjectConstants.KIT_REQUEST_SHIPPING, "dsmKitRequestId");
+        super(index, realm, ESObjectConstants.KIT_REQUEST_SHIPPING);
     }
 
     @Override

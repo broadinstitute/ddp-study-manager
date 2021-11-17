@@ -11,13 +11,11 @@ import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 public abstract class BaseCollectionMigrator extends BaseMigrator {
 
-    protected String primaryId;
     protected List<Map<String, Object>> transformedList;
     protected Set<String> primaryKeys;
 
-    public BaseCollectionMigrator(String index, String realm, String object, String primaryId) {
+    public BaseCollectionMigrator(String index, String realm, String object) {
         super(index, realm, object);
-        this.primaryId = primaryId;
         this.primaryKeys = new HashSet<>();
     }
 
@@ -75,36 +73,31 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
             List<String> listValueKeys = getListValueKeys(map);
             for (String key : listValueKeys) {
                 List<Map<String, Object>> listValue = (List<Map<String, Object>>) map.get(key);
-                Optional<String> maybePrimary = getPrimaryKey(listValue);
+                Optional<String> maybePrimary = getPrimaryKeyFromList(listValue);
                 maybePrimary.ifPresent(prKey -> {
                     for (Map<String, Object> stringObjectMap : listValue) {
-                        stringObjectMap.put(Util.ID, stringObjectMap.get(prKey));
+                        putPrimaryId(stringObjectMap, prKey);
                     }
                 });
             }
-            Optional<String> maybeOuterKey = map.keySet().stream()
-                    .filter(outerKey -> primaryKeys.contains(outerKey))
-                    .findFirst();
-            maybeOuterKey.ifPresent(outerKey -> {
-                map.put(Util.ID, map.get(outerKey));
-            });
+            getPrimaryKey(map)
+                    .ifPresent(outerKey -> putPrimaryId(map, outerKey));
         }
     }
 
-    private Optional<String> getPrimaryKey(List<Map<String, Object>> listValue) {
+    private void putPrimaryId(Map<String, Object> map, String outerKey) {
+        map.put(Util.ID, map.get(outerKey));
+    }
 
+    private Optional<String> getPrimaryKeyFromList(List<Map<String, Object>> listValue) {
         for(Map<String, Object> eachValue: listValue) {
-            
+            Optional<String> maybePrimaryKey = getPrimaryKey(eachValue);
+            if (maybePrimaryKey.isPresent()) return maybePrimaryKey;
         }
-
-
-        return listValue.stream()
-                .flatMap(mapObj -> mapObj.keySet().stream())
-                .filter(k -> primaryKeys.contains(k))
-                .findFirst();
+        return Optional.empty();
     }
 
-    private Optional<String> method(Map<String, Object> map) {
+    private Optional<String> getPrimaryKey(Map<String, Object> map) {
         return map.keySet().stream()
                 .filter(outerKey -> primaryKeys.contains(outerKey))
                 .findFirst();

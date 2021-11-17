@@ -23,7 +23,7 @@ public class ParticipantDataMigrator extends BaseCollectionMigrator {
     private ParticipantDataDao participantDataDao;
 
     public ParticipantDataMigrator(String index, String realm) {
-        super(index, realm, ESObjectConstants.PARTICIPANT_DATA, "participantDataId");
+        super(index, realm, ESObjectConstants.PARTICIPANT_DATA);
         participantDataDao = new ParticipantDataDao();
     }
 
