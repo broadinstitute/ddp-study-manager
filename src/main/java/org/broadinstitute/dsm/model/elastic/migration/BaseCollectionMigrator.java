@@ -29,40 +29,53 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
 
     @Override
     protected void transformObject(Object object) {
-        Optional maybeObject = ((List) object).stream().findFirst();
-        maybeObject.ifPresent((obj) -> {
-            Class<?> clazz = obj.getClass();
-            TableName annotation = clazz.getAnnotation(TableName.class);
-            if (annotation != null) {
-                this.primaryKeys.add(Util.underscoresToCamelCase(annotation.primaryKey()));
-            }
-
-            List<Field> listFields = Arrays.stream(clazz.getDeclaredFields())
-                    .filter(field -> List.class.isAssignableFrom(field.getType()))
-                    .collect(Collectors.toList());
-
-            for (Field field : listFields) {
-                for (Object rame: (List) object) {
-                    try {
-                        field.setAccessible(true);
-                        Object o = field.get(rame);
-                        Optional first = ((List) o).stream().findFirst();
-                        first.ifPresent(f -> {
-                            TableName tableName = f.getClass().getAnnotation(TableName.class);
-                            if (tableName != null && StringUtils.isNotBlank(tableName.primaryKey())) {
-                                primaryKeys.add(Util.underscoresToCamelCase(tableName.primaryKey()));
-                            }
-                        });
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-
-
+        List<Object> objects = (List<Object>) object;
+        Optional<Object> maybeObject = objects.stream().findFirst();
+        maybeObject.ifPresent((obj) -> collectPrimaryKeys(objects, obj));
         transformedList = Util.transformObjectCollectionToCollectionMap((List) object);
         setPrimaryId();
+    }
+
+    private void collectPrimaryKeys(List<Object> objects, Object obj) {
+        Class<?> clazz = obj.getClass();
+        TableName upperTable = clazz.getAnnotation(TableName.class);
+        if (hasPrimaryKey(upperTable)) {
+            this.primaryKeys.add(Util.underscoresToCamelCase(upperTable.primaryKey()));
+        }
+
+        List<Field> listFields = Arrays.stream(clazz.getDeclaredFields())
+                .filter(this::isListType)
+                .collect(Collectors.toList());
+
+        for (Field field : listFields) {
+            // listfields = Tissue, ragaca
+
+            field.getGenericType(); 
+
+            for (Object eachObject: objects) {
+                try {
+                    field.setAccessible(true);
+                    List<Object> fieldValue = (List<Object>) field.get(eachObject);
+                    Optional<Object> first = fieldValue.stream().findFirst();
+                    first.ifPresent(instance -> {
+                        TableName innerTable = instance.getClass().getAnnotation(TableName.class);
+                        if (hasPrimaryKey(innerTable)) {
+                            primaryKeys.add(Util.underscoresToCamelCase(innerTable.primaryKey()));
+                        }
+                    });
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+
+    private boolean hasPrimaryKey(TableName table) {
+        return table != null && StringUtils.isNotBlank(table.primaryKey());
+    }
+
+    private boolean isListType(Field field) {
+        return List.class.isAssignableFrom(field.getType());
     }
 
     private void setPrimaryId() {
