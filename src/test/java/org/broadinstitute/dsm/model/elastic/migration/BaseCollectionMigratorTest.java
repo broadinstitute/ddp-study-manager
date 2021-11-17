@@ -1,28 +1,31 @@
 package org.broadinstitute.dsm.model.elastic.migration;
 
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.db.Tissue;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class BaseCollectionMigratorTest {
 
     @Test
     public void transformObject() {
-        BaseCollectionMigrator baseCollectionMigrator = new MockBaseCollectionMigrator("index", "realm", "object", "primaryId");
-        baseCollectionMigrator.transformObject(something());
-        System.out.println();
+        BaseCollectionMigrator baseCollectionMigrator = new MockBaseCollectionMigrator("index", "realm", "object", "oncHistoryDetailId");
+        baseCollectionMigrator.transformObject(mockData());
+        Map<String, Object> objectMap = baseCollectionMigrator.transformedList.get(0);
+        Object primaryId = objectMap.get("id");
+        Assert.assertEquals("23", primaryId);
+        Map<String, Object> tissue = (Map<String, Object>) ((List) objectMap.get("tissues")).get(0);
+        Object tissuePrimaryId = tissue.get("id");
+        Assert.assertEquals("11", tissuePrimaryId);
+        Assert.assertEquals(tissuePrimaryId, tissue.get("tissueId"));
     }
 
-    private List something() {
+    private List mockData() {
         List<Tissue> fieldValue = new ArrayList<>(List.of(new Tissue("11", "22",
                 null, null, null, "awdwadawdawdawd", null, null, null, null, null, null,
                 null, null, "Awdawd", null, null, null, null, null, null, null,
@@ -31,7 +34,7 @@ public class BaseCollectionMigratorTest {
                 null, null, "awdawddwa", null, null, null, null, null, null, null,
                 null, null, null, null, null)));
         OncHistoryDetail oncHistoryDetail =
-                new OncHistoryDetail(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                new OncHistoryDetail("23", null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                         null, null, null, null, null, null, null, null, null, fieldValue, null, null, false);
         return Collections.singletonList(oncHistoryDetail);
     }

@@ -68,33 +68,24 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
     private void setPrimaryId() {
         for(Map<String, Object> map: transformedList) {
 
-//            List<String> collect = map.entrySet().stream()
-//                    .filter(entry -> entry.getValue() instanceof List)
-//                    .flatMap(entry -> ((List<Map<String, Object>>) entry.getValue()).stream())
-//                    .flatMap(entry -> entry.keySet().stream())
-//                    .collect(Collectors.toList());
-
-            List<String> collect = map.entrySet().stream()
+            List<String> listValueKeys = map.entrySet().stream()
                     .filter(entry -> entry.getValue() instanceof List)
-                    .map(entry -> entry.getKey())
+                    .map(Map.Entry::getKey)
                     .collect(Collectors.toList());
 
-            for (String key : collect) {
-                List<Map<String, Object>> o = (List<Map<String, Object>>) map.get(key);
+            for (String key : listValueKeys) {
+                List<Map<String, Object>> listValue = (List<Map<String, Object>>) map.get(key);
 
-                Optional<String> maybePrimary = o.stream()
+                Optional<String> maybePrimary = listValue.stream()
                         .flatMap(mapObj -> mapObj.keySet().stream())
                         .filter(k -> primaryKeys.contains(k))
                         .findFirst();
 
                 maybePrimary.ifPresent(prKey -> {
-                    List<Map<String, Object>> list =(List<Map<String, Object>>) map.get(key);
-                    for (Map<String, Object> stringObjectMap : list) {
+                    for (Map<String, Object> stringObjectMap : listValue) {
                         stringObjectMap.put(Util.ID, stringObjectMap.get(prKey));
                     }
                 });
-
-
             }
 
             map.put(Util.ID, map.get(primaryId));
