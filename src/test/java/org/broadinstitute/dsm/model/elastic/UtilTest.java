@@ -2,6 +2,8 @@ package org.broadinstitute.dsm.model.elastic;
 
 import static org.junit.Assert.*;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -79,5 +81,15 @@ public class UtilTest {
 
         System.out.println();
         System.out.println();
+    }
+
+    @Test
+    public void getParameterizedType() throws NoSuchFieldException {
+        class MockClass {
+            List<Object> listField;
+        }
+        Field listField = MockClass.class.getDeclaredField("listField");
+        Class<?> clazz = Util.getParameterizedType(listField.getGenericType());
+        assertEquals(Object.class, clazz);
     }
 }

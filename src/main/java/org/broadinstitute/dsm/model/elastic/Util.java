@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.model.elastic;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -188,6 +189,17 @@ public class Util {
             throw new IllegalArgumentException();
         }
         return strValue.charAt(0);
+    }
+
+    public static Class<?> getParameterizedType(Type genericType) {
+        String typeAsString = genericType.toString();
+        String[] types = typeAsString.split("<");
+        class NullClass {}
+        if (types.length < 2) {
+            return NullClass.class;
+        }
+        String s = types[1];
+        return null;
     }
 
     public static class Constants {
