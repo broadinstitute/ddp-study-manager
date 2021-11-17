@@ -212,7 +212,6 @@ public class DBConstants {
     public static final String TISSUE_RECEIVED = "tissue_received";
     public static final String TISSUE_PROBLEM_OPTION = "tissue_problem_option" ;
     public static final String GENDER = "gender";
-    public static final String TDELETED = "tDeleted";
     public static final String DESTRUCTION_POLICY = "destruction_policy";
     public static final String UNABLE_OBTAIN_TISSUE = "unable_obtain_tissue";
 

@@ -48,7 +48,7 @@ public class Tissue {
     private final String oncHistoryDetailId;
 
     @ColumnName (DBConstants.NOTES)
-    private final String tNotes;
+    private final String notes;
 
     @ColumnName (DBConstants.COUNT_RECEIVED)
     private final Integer countReceived;
@@ -93,18 +93,18 @@ public class Tissue {
 
     private String changedBy;
 
-    @ColumnName (DBConstants.TDELETED)
-    private boolean tDeleted;
+    @ColumnName (DBConstants.DELETED)
+    private boolean deleted;
 
     @ColumnName (DBConstants.FIRST_SM_ID)
     private String firstSmId;
 
     @ColumnName (DBConstants.ADDITIONAL_TISSUE_VALUES)
-    private String additionalValues;
+    private String additionalTissueValueJson;
 
     @ColumnName (DBConstants.TISSUE_RETURN_DATE)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private String tissueReturnDate;
+    private String returnDate;
     //
     @ColumnName (DBConstants.RETURN_FEDEX_ID)
     private String returnFedexId;
@@ -116,7 +116,7 @@ public class Tissue {
     private String tumorPercentage;
 
     @ColumnName (DBConstants.TISSUE_SEQUENCE)
-    private String sequenceResults;
+    private String tissueSequence;
 
     @ColumnName (DBConstants.SCROLLS_COUNT)
     private Integer scrollsCount;
@@ -132,15 +132,15 @@ public class Tissue {
 
 
 
-    public Tissue(String tissueId, String oncHistoryDetailId, String tNotes, Integer countReceived, String tissueType,
+    public Tissue(String tissueId, String oncHistoryDetailId, String notes, Integer countReceived, String tissueType,
                   String tissueSite, String tumorType, String hE, String pathologyReport, String collaboratorSampleId,
                   String blockSent, String scrollsReceived, String skId, String smId, String sentGp, String firstSmId,
-                  String additionalValues, String expectedReturn, String tissueReturnDate,
-                  String returnFedexId, String shlWorkNumber, String tumorPercentage, String sequenceResults, Integer scrollsCount,
+                  String additionalTissueValueJson, String expectedReturn, String returnDate,
+                  String returnFedexId, String shlWorkNumber, String tumorPercentage, String tissueSequence, Integer scrollsCount,
                   Integer ussCount, Integer blocksCount, Integer hECount) {
         this.tissueId = tissueId;
         this.oncHistoryDetailId = oncHistoryDetailId;
-        this.tNotes = tNotes;
+        this.notes = notes;
         this.countReceived = countReceived;
         this.tissueType = tissueType;
         this.tissueSite = tissueSite;
@@ -154,13 +154,13 @@ public class Tissue {
         this.smId = smId;
         this.sentGp = sentGp;
         this.firstSmId = firstSmId;
-        this.additionalValues = additionalValues;
+        this.additionalTissueValueJson = additionalTissueValueJson;
         this.expectedReturn = expectedReturn;
-        this.tissueReturnDate = tissueReturnDate;
+        this.returnDate = returnDate;
         this.returnFedexId = returnFedexId;
         this.shlWorkNumber = shlWorkNumber;
         this.tumorPercentage = tumorPercentage;
-        this.sequenceResults = sequenceResults;
+        this.tissueSequence = tissueSequence;
         this.scrollsCount = scrollsCount;
         this.hECount = hECount;
         this.blocksCount = blocksCount;

@@ -47,12 +47,6 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
         }
     }
 
-    private List<Field> getListTypeFields(Class<?> clazz) {
-        return Arrays.stream(clazz.getDeclaredFields())
-                .filter(this::isFieldListType)
-                .collect(Collectors.toList());
-    }
-
     private void extractAndCollectPrimaryKey(Class<?> clazz) {
         TableName upperTable = clazz.getAnnotation(TableName.class);
         if (hasPrimaryKey(upperTable)) {
@@ -62,6 +56,12 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
 
     private boolean hasPrimaryKey(TableName table) {
         return table != null && StringUtils.isNotBlank(table.primaryKey());
+    }
+
+    private List<Field> getListTypeFields(Class<?> clazz) {
+        return Arrays.stream(clazz.getDeclaredFields())
+                .filter(this::isFieldListType)
+                .collect(Collectors.toList());
     }
 
     private boolean isFieldListType(Field field) {
@@ -85,8 +85,15 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
         }
     }
 
-    private void putPrimaryId(Map<String, Object> map, String outerKey) {
-        map.put(Util.ID, map.get(outerKey));
+    private List<String> getListValueKeys(Map<String, Object> map) {
+        return map.entrySet().stream()
+                .filter(this::isMapValueListType)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+    }
+
+    private boolean isMapValueListType(Map.Entry<String, Object> entry) {
+        return entry.getValue() instanceof List;
     }
 
     private Optional<String> getPrimaryKeyFromList(List<Map<String, Object>> listValue) {
@@ -103,15 +110,7 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
                 .findFirst();
     }
 
-
-    private List<String> getListValueKeys(Map<String, Object> map) {
-        return map.entrySet().stream()
-                .filter(this::isMapValueListType)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-    }
-
-    private boolean isMapValueListType(Map.Entry<String, Object> entry) {
-        return entry.getValue() instanceof List;
+    private void putPrimaryId(Map<String, Object> map, String outerKey) {
+        map.put(Util.ID, map.get(outerKey));
     }
 }

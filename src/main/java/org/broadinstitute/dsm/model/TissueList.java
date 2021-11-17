@@ -64,7 +64,7 @@ public class TissueList {
                         Tissue tissue = Tissue.getTissue(rs);
                         TissueList tissueList = new TissueList(oncHistory, null, ptId);
 
-                        if (!tissue.isTDeleted() && StringUtils.isNotBlank(tissue.getTissueId())) {
+                        if (!tissue.isDeleted() && StringUtils.isNotBlank(tissue.getTissueId())) {
                             tissueList.setTissue(tissue);
                         }
                         results.add(tissueList);
