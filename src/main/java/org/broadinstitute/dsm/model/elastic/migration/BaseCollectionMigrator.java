@@ -73,31 +73,47 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
     private void setPrimaryId() {
         for(Map<String, Object> map: transformedList) {
             List<String> listValueKeys = getListValueKeys(map);
-
             for (String key : listValueKeys) {
-                // Tissue, Details -> 1 to many
                 List<Map<String, Object>> listValue = (List<Map<String, Object>>) map.get(key);
-
-                Optional<String> maybePrimary = listValue.stream()
-                        .flatMap(mapObj -> mapObj.keySet().stream())
-                        .filter(k -> primaryKeys.contains(k))
-                        .findFirst();
-
+                Optional<String> maybePrimary = getPrimaryKey(listValue);
                 maybePrimary.ifPresent(prKey -> {
                     for (Map<String, Object> stringObjectMap : listValue) {
                         stringObjectMap.put(Util.ID, stringObjectMap.get(prKey));
                     }
                 });
             }
-
-            map.put(Util.ID, map.get(primaryId));
+            Optional<String> maybeOuterKey = map.keySet().stream()
+                    .filter(outerKey -> primaryKeys.contains(outerKey))
+                    .findFirst();
+            maybeOuterKey.ifPresent(outerKey -> {
+                map.put(Util.ID, map.get(outerKey));
+            });
         }
     }
+
+    private Optional<String> getPrimaryKey(List<Map<String, Object>> listValue) {
+
+        for(Map<String, Object> eachValue: listValue) {
+            
+        }
+
+
+        return listValue.stream()
+                .flatMap(mapObj -> mapObj.keySet().stream())
+                .filter(k -> primaryKeys.contains(k))
+                .findFirst();
+    }
+
+    private Optional<String> method(Map<String, Object> map) {
+        return map.keySet().stream()
+                .filter(outerKey -> primaryKeys.contains(outerKey))
+                .findFirst();
+    }
+
 
     private List<String> getListValueKeys(Map<String, Object> map) {
         return map.entrySet().stream()
                 .filter(this::isMapValueListType)
-                .filter(entry -> primaryKeys.contains(entry.getKey()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
     }
