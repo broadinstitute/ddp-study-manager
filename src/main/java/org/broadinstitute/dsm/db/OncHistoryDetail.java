@@ -328,11 +328,13 @@ public class OncHistoryDetail {
                         OncHistoryDetail oncHistoryDetail = null;
                         if (oncHistoryMap.containsKey(oncHistoryDetailId)) {
                             oncHistoryDetail = oncHistoryMap.get(oncHistoryDetailId);
-                            oncHistoryDetail.addTissue(tissue);
+                            if (tissue != null)
+                                oncHistoryDetail.addTissue(tissue);
                         }
                         else {
                             oncHistoryDetail = getOncHistoryDetail(rs);
-                            oncHistoryDetail.addTissue(tissue);
+                            if (tissue != null)
+                                oncHistoryDetail.addTissue(tissue);
                             oncHistoryDataList.add(oncHistoryDetail);
                         }
                         oncHistoryMap.put(oncHistoryDetailId, oncHistoryDetail);

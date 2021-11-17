@@ -14,7 +14,7 @@ public class BaseCollectionMigratorTest {
 
     @Test
     public void transformObject() {
-        BaseCollectionMigrator baseCollectionMigrator = new MockBaseCollectionMigrator("index", "realm", "object", "oncHistoryDetailId");
+        BaseCollectionMigrator baseCollectionMigrator = new MockBaseCollectionMigrator("index", "realm", "object");
         baseCollectionMigrator.transformObject(mockData());
         Map<String, Object> objectMap = baseCollectionMigrator.transformedList.get(0);
         Object primaryId = objectMap.get("id");
@@ -41,8 +41,8 @@ public class BaseCollectionMigratorTest {
 
     static class MockBaseCollectionMigrator extends BaseCollectionMigrator {
 
-        public MockBaseCollectionMigrator(String index, String realm, String object, String primaryId) {
-            super(index, realm, object, primaryId);
+        public MockBaseCollectionMigrator(String index, String realm, String object) {
+            super(index, realm, object);
         }
 
         @Override

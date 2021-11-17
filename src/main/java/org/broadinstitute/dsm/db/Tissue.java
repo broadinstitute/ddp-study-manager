@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.db;
 
 import lombok.Data;
 import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
@@ -168,6 +169,9 @@ public class Tissue {
     }
 
     public static Tissue getTissue(@NonNull ResultSet rs) throws SQLException {
+        String tissueId = rs.getString(DBConstants.TISSUE_ID);
+        if (StringUtils.isBlank(tissueId))
+            return null;
         Tissue tissue = new Tissue(
                 rs.getString(DBConstants.TISSUE_ID),
                 rs.getString(DBConstants.ONC_HISTORY_DETAIL_ID),
