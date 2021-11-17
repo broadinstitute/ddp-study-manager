@@ -12,6 +12,7 @@ import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.db.Participant;
 import org.broadinstitute.dsm.db.Tissue;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class UtilTest {
@@ -89,7 +90,12 @@ public class UtilTest {
             List<Object> listField;
         }
         Field listField = MockClass.class.getDeclaredField("listField");
-        Class<?> clazz = Util.getParameterizedType(listField.getGenericType());
+        Class<?> clazz = null;
+        try {
+            clazz = Util.getParameterizedType(listField.getGenericType());
+        } catch (ClassNotFoundException e) {
+            Assert.fail();
+        }
         assertEquals(Object.class, clazz);
     }
 }

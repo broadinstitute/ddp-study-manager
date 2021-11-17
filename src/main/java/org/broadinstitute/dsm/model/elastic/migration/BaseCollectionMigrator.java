@@ -3,7 +3,6 @@ package org.broadinstitute.dsm.model.elastic.migration;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.structure.TableName;
@@ -31,42 +30,35 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
     protected void transformObject(Object object) {
         List<Object> objects = (List<Object>) object;
         Optional<Object> maybeObject = objects.stream().findFirst();
-        maybeObject.ifPresent((obj) -> collectPrimaryKeys(objects, obj));
+        maybeObject.ifPresent(this::collectPrimaryKeys);
         transformedList = Util.transformObjectCollectionToCollectionMap((List) object);
         setPrimaryId();
     }
 
-    private void collectPrimaryKeys(List<Object> objects, Object obj) {
+    private void collectPrimaryKeys(Object obj) {
         Class<?> clazz = obj.getClass();
+        extractAndCollectPrimaryKey(clazz);
+        List<Field> listFields = getListTypeFields(clazz);
+        for (Field field : listFields) {
+            try {
+                Class<?> parameterizedType = Util.getParameterizedType(field.getGenericType());
+                extractAndCollectPrimaryKey(parameterizedType);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private List<Field> getListTypeFields(Class<?> clazz) {
+        return Arrays.stream(clazz.getDeclaredFields())
+                .filter(this::isFieldListType)
+                .collect(Collectors.toList());
+    }
+
+    private void extractAndCollectPrimaryKey(Class<?> clazz) {
         TableName upperTable = clazz.getAnnotation(TableName.class);
         if (hasPrimaryKey(upperTable)) {
             this.primaryKeys.add(Util.underscoresToCamelCase(upperTable.primaryKey()));
-        }
-
-        List<Field> listFields = Arrays.stream(clazz.getDeclaredFields())
-                .filter(this::isListType)
-                .collect(Collectors.toList());
-
-        for (Field field : listFields) {
-            // listfields = Tissue, ragaca
-
-            field.getGenericType(); 
-
-            for (Object eachObject: objects) {
-                try {
-                    field.setAccessible(true);
-                    List<Object> fieldValue = (List<Object>) field.get(eachObject);
-                    Optional<Object> first = fieldValue.stream().findFirst();
-                    first.ifPresent(instance -> {
-                        TableName innerTable = instance.getClass().getAnnotation(TableName.class);
-                        if (hasPrimaryKey(innerTable)) {
-                            primaryKeys.add(Util.underscoresToCamelCase(innerTable.primaryKey()));
-                        }
-                    });
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
-            }
         }
     }
 
@@ -74,19 +66,16 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
         return table != null && StringUtils.isNotBlank(table.primaryKey());
     }
 
-    private boolean isListType(Field field) {
+    private boolean isFieldListType(Field field) {
         return List.class.isAssignableFrom(field.getType());
     }
 
     private void setPrimaryId() {
         for(Map<String, Object> map: transformedList) {
-
-            List<String> listValueKeys = map.entrySet().stream()
-                    .filter(entry -> entry.getValue() instanceof List)
-                    .map(Map.Entry::getKey)
-                    .collect(Collectors.toList());
+            List<String> listValueKeys = getListValueKeys(map);
 
             for (String key : listValueKeys) {
+                // Tissue, Details -> 1 to many
                 List<Map<String, Object>> listValue = (List<Map<String, Object>>) map.get(key);
 
                 Optional<String> maybePrimary = listValue.stream()
@@ -103,5 +92,17 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
 
             map.put(Util.ID, map.get(primaryId));
         }
+    }
+
+    private List<String> getListValueKeys(Map<String, Object> map) {
+        return map.entrySet().stream()
+                .filter(this::isMapValueListType)
+                .filter(entry -> primaryKeys.contains(entry.getKey()))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+    }
+
+    private boolean isMapValueListType(Map.Entry<String, Object> entry) {
+        return entry.getValue() instanceof List;
     }
 }

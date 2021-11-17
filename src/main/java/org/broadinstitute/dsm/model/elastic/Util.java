@@ -191,15 +191,16 @@ public class Util {
         return strValue.charAt(0);
     }
 
-    public static Class<?> getParameterizedType(Type genericType) {
+    public static Class<?> getParameterizedType(Type genericType) throws ClassNotFoundException {
         String typeAsString = genericType.toString();
         String[] types = typeAsString.split("<");
-        class NullClass {}
         if (types.length < 2) {
+            class NullClass {}
             return NullClass.class;
         }
-        String s = types[1];
-        return null;
+        String parameterizedType = types[1];
+        parameterizedType = parameterizedType.replace(">", "");
+        return Class.forName(parameterizedType);
     }
 
     public static class Constants {
