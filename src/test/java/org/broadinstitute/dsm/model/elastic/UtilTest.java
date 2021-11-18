@@ -12,6 +12,7 @@ import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.db.Participant;
 import org.broadinstitute.dsm.db.Tissue;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.model.FollowUp;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -88,14 +89,19 @@ public class UtilTest {
     public void getParameterizedType() throws NoSuchFieldException {
         class MockClass {
             List<Object> listField;
+            FollowUp[] followUps;
         }
         Field listField = MockClass.class.getDeclaredField("listField");
+        Field followUps = MockClass.class.getDeclaredField("followUps");
+
         Class<?> clazz = null;
         try {
             clazz = Util.getParameterizedType(listField.getGenericType());
+            assertEquals(Object.class, clazz);
+            clazz = Util.getParameterizedType(followUps.getGenericType());
+            assertEquals(FollowUp.class, clazz);
         } catch (ClassNotFoundException e) {
             Assert.fail();
         }
-        assertEquals(Object.class, clazz);
     }
 }

@@ -306,7 +306,7 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.FOLLOW_UP_REQUESTS)
-    private FollowUp[] followUps;
+    private List<FollowUp> followUps;
 
     @TableName (
             name = DBConstants.DDP_MEDICAL_RECORD,
@@ -341,7 +341,7 @@ public class MedicalRecord {
                          String mrReceived, String mrDocument, String mrDocumentFileNames, boolean mrProblem,
                          String mrProblemText, boolean unableObtain, boolean duplicate, boolean international, boolean crRequired,
                          String pathologyPresent, String mrNotes, boolean reviewMedicalRecord,
-                         FollowUp[] followUps, boolean followUpRequired, String followUpRequiredText, String additionalValues,
+                         List<FollowUp> followUps, boolean followUpRequired, String followUpRequiredText, String additionalValues,
                          String mrUnableToObtainText, String ddpParticipantId) {
         this.medicalRecordId = medicalRecordId;
         this.institutionId = institutionId;
@@ -411,7 +411,7 @@ public class MedicalRecord {
                 rs.getString(DBConstants.PATHOLOGY_PRESENT),
                 rs.getString(DBConstants.NOTES),
                 rs.getBoolean(DBConstants.REVIEW_MEDICAL_RECORD),
-                new Gson().fromJson(rs.getString(DBConstants.FOLLOW_UP_REQUESTS), FollowUp[].class),
+                new Gson().fromJson(rs.getString(DBConstants.FOLLOW_UP_REQUESTS), List.class),
                 rs.getBoolean(DBConstants.FOLLOWUP_REQUIRED),
                 rs.getString(DBConstants.FOLLOWUP_REQUIRED_TEXT),
                 rs.getString(DBConstants.ADDITIONAL_VALUES),

@@ -193,13 +193,14 @@ public class Util {
 
     public static Class<?> getParameterizedType(Type genericType) throws ClassNotFoundException {
         String typeAsString = genericType.toString();
-        String[] types = typeAsString.split("<");
+        String[] types = typeAsString.contains("<") ? typeAsString.split("<") : typeAsString.split("\\[L");
         if (types.length < 2) {
             class NullClass {}
             return NullClass.class;
         }
         String parameterizedType = types[1];
         parameterizedType = parameterizedType.replace(">", "");
+        parameterizedType = parameterizedType.replace(";", "");
         return Class.forName(parameterizedType);
     }
 

@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.model.elastic.migration;
 import static org.broadinstitute.dsm.model.elastic.Util.DOC;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
