@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.db;
 import com.google.gson.Gson;
 import lombok.Data;
 import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
@@ -14,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
@@ -32,7 +32,7 @@ public class Tissue {
     private static final String SQL_SELECT_TISSUE = "SELECT tissue_id, onc_history_detail_id, notes, count_received, tissue_type, tissue_site, tumor_type, h_e, " +
             "pathology_report, collaborator_sample_id, block_sent, expected_return, return_date, return_fedex_id, scrolls_received, sk_id, sm_id, " +
             "scrolls_count, uss_count, blocks_count, h_e_count, first_sm_id, sent_gp, last_changed, changed_by, additional_tissue_value_json, shl_work_number, " +
-            "tumor_percentage, tissue_sequence, uss_sm_ids, scrolls_sm_ids FROM ddp_tissue t WHERE NOT (deleted <=> 1) AND onc_history_detail_id = ?";
+            "tumor_percentage, tissue_sequence, uss_sm_ids, scrolls_sm_ids, he_sm_ids FROM ddp_tissue t WHERE NOT (deleted <=> 1) AND onc_history_detail_id = ?";
     private static final String SQL_INSERT_TISSUE = "INSERT INTO ddp_tissue SET onc_history_detail_id = ?, last_changed = ?, changed_by = ?";
     public static final String SQL_SELECT_TISSUE_LAST_CHANGED = "SELECT t.last_changed FROM ddp_institution inst " +
             "LEFT JOIN ddp_participant as p on (p.participant_id = inst.participant_id) LEFT JOIN ddp_instance as ddp on (ddp.ddp_instance_id = p.ddp_instance_id) " +
@@ -126,10 +126,13 @@ public class Tissue {
     private Integer hECount;
 
     @ColumnName(DBConstants.USS_SMIDS)
-    private List<String> ussSMIDs;
+    private String[] ussSMID;
 
     @ColumnName(DBConstants.SCROLL_SMIDS)
-    private List<String> scrollSMIDs;
+    private String[] scrollSMID;
+
+    @ColumnName(DBConstants.HE_SMIDS)
+    private String[] heSMID;
 
 
 
@@ -138,7 +141,7 @@ public class Tissue {
                   String blockSent, String scrollsReceived, String skId, String smId, String sentGp, String firstSmId,
                   String additionalValues, String expectedReturn, String tissueReturnDate,
                   String returnFedexId, String shlWorkNumber, String tumorPercentage, String sequenceResults, Integer scrollsCount,
-                  Integer ussCount, Integer blocksCount, Integer hECount, List<String> ussSMIDs, List<String> scrollSMIDs) {
+                  Integer ussCount, Integer blocksCount, Integer hECount, String[] ussSMIDs, String[] scrollSMIDs, String[] heSMID) {
         this.tissueId = tissueId;
         this.oncHistoryDetailId = oncHistoryDetailId;
         this.tNotes = tNotes;
@@ -166,15 +169,27 @@ public class Tissue {
         this.hECount = hECount;
         this.blocksCount = blocksCount;
         this.ussCount = ussCount;
-        this.scrollSMIDs = scrollSMIDs;
-        this.ussSMIDs = ussSMIDs;
+        this.scrollSMID = scrollSMIDs;
+        this.ussSMID = ussSMIDs;
+        this.heSMID = heSMID;
     }
 
     public static Tissue getTissue(@NonNull ResultSet rs) throws SQLException {
         Gson gson = new Gson();
-        List<String> ussSMIds = Arrays.asList(gson.fromJson(rs.getString(DBConstants.USS_SMIDS), String[].class));
+        String[] ussSMIds =  new String[0];
+        String[] scrollSMIds =  new String[0];
+        String[] heSMIds =  new String[0];
+        if(StringUtils.isNotBlank(rs.getString(DBConstants.USS_SMIDS))) {
+//            ussSMIds = gson.fromJson(rs.getString(DBConstants.USS_SMIDS), String[].class);
+            ussSMIds = rs.getString(DBConstants.USS_SMIDS).split(",");
+        }
+        if(StringUtils.isNotBlank(rs.getString(DBConstants.SCROLL_SMIDS))) {
+            scrollSMIds = gson.fromJson(rs.getString(DBConstants.SCROLL_SMIDS), String[].class);
+        }
+        if(StringUtils.isNotBlank(rs.getString(DBConstants.HE_SMIDS))) {
+            heSMIds = gson.fromJson(rs.getString(DBConstants.HE_SMIDS), String[].class);
+        }
         Tissue tissue = new Tissue(
-
                 rs.getString(DBConstants.TISSUE_ID),
                 rs.getString(DBConstants.ONC_HISTORY_DETAIL_ID),
                 rs.getString(DBConstants.DDP_TISSUE_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.NOTES),
@@ -202,9 +217,9 @@ public class Tissue {
                 rs.getInt(DBConstants.USS_COUNT),
                 rs.getInt(DBConstants.BLOCKS_COUNT),
                 rs.getInt(DBConstants.H_E_COUNT),
-                Arrays.asList(new Gson().fromJson(rs.getString(DBConstants.USS_SMIDS), String[].class)),
-                Arrays.asList(new Gson().fromJson(rs.getString(DBConstants.SCROLL_SMIDS), String[].class))
-                );
+                ussSMIds,
+                scrollSMIds,
+                heSMIds);
         return tissue;
     }
 

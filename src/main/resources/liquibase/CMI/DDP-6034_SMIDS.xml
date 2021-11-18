@@ -12,6 +12,9 @@
         <addColumn tableName="ddp_tissue">
             <column name="scrolls_sm_ids" type="VARCHAR(1000)"></column>
         </addColumn>
+        <addColumn tableName="ddp_tissue">
+            <column name="he_sm_ids" type="VARCHAR(1000)"></column>
+        </addColumn>
     </changeSet>
 
 </databaseChangeLog>
