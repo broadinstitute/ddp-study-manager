@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.db;
 
+import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import lombok.Data;
 import lombok.NonNull;
@@ -411,7 +412,7 @@ public class MedicalRecord {
                 rs.getString(DBConstants.PATHOLOGY_PRESENT),
                 rs.getString(DBConstants.NOTES),
                 rs.getBoolean(DBConstants.REVIEW_MEDICAL_RECORD),
-                new Gson().fromJson(rs.getString(DBConstants.FOLLOW_UP_REQUESTS), List.class),
+                new Gson().fromJson(rs.getString(DBConstants.FOLLOW_UP_REQUESTS), new TypeToken<List<FollowUp>>(){}.getType()),
                 rs.getBoolean(DBConstants.FOLLOWUP_REQUIRED),
                 rs.getString(DBConstants.FOLLOWUP_REQUIRED_TEXT),
                 rs.getString(DBConstants.ADDITIONAL_VALUES),
