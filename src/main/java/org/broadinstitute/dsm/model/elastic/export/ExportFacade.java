@@ -43,11 +43,14 @@ public class ExportFacade {
     }
 
     private void upsertMapping() {
-        generator = new MappingGenerator(new TypeParser(), exportFacadePayload.getGeneratorPayload());
-        Map<String, Object> mappingToUpsert = generator.generate();
-        UpsertMappingRequestPayload upsertMappingRequestPayload = new UpsertMappingRequestPayload(exportFacadePayload.getIndex());
-        exportable = new ElasticMappingExportAdapter(upsertMappingRequestPayload, mappingToUpsert);
-        exportable.export();
+        boolean dynamic = exportFacadePayload.getGeneratorPayload().getNameValue().getName().contains("data");
+        if (dynamic) {
+            generator = new MappingGenerator(new TypeParser(), exportFacadePayload.getGeneratorPayload());
+            Map<String, Object> mappingToUpsert = generator.generate();
+            UpsertMappingRequestPayload upsertMappingRequestPayload = new UpsertMappingRequestPayload(exportFacadePayload.getIndex());
+            exportable = new ElasticMappingExportAdapter(upsertMappingRequestPayload, mappingToUpsert);
+            exportable.export();
+        }
     }
 
     private ESDsm fetchData() {
