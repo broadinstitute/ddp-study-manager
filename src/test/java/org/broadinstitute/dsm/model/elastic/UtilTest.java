@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elastic;
 
+import static org.broadinstitute.dsm.model.participant.data.ParticipantData.GSON;
 import static org.junit.Assert.*;
 
 import java.lang.reflect.Field;
@@ -8,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.db.Participant;
 import org.broadinstitute.dsm.db.Tissue;
@@ -103,5 +105,16 @@ public class UtilTest {
         } catch (ClassNotFoundException e) {
             Assert.fail();
         }
+    }
+
+    @Test
+    public void go() {
+
+            String s = "{followUps: \"[{\"fReceived\":\"2021-11-18\",\"fRequest1\":\"2021-11-18\"},{\"fReceived\":\"2021-11-18\",\"fRequest1\":\"2021-11-18\"}]\"}";
+
+        MedicalRecord medicalRecord = GSON.fromJson(s, MedicalRecord.class);
+
+        System.out.println();
+
     }
 }

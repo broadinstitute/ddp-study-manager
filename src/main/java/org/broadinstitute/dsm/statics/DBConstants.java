@@ -132,6 +132,9 @@ public class DBConstants {
     public static final String CARE_EVOLVE = "CE_order";
     public static final String DDP_KIT_TABLE_ABBR = "kit.";
 
+    public static final String ONC_HISTORY_ID = "onc_history_id";
+
+
     //carrier service
     public static final String CARRIER = "carrier";
 
@@ -483,4 +486,5 @@ public class DBConstants {
 
 
     public static final String LABEL_URL_RETURN = "label_url_return";
+
 }

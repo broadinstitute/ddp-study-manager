@@ -17,7 +17,7 @@ import org.broadinstitute.dsm.statics.DBConstants;
 public class OncHistoryDao implements Dao<OncHistoryDto> {
 
     private static final String SQL_SELECT_ONC_HISTORIES_BY_STUDY = "SELECT p.participant_id, p.ddp_participant_id, " +
-            "o.onc_history_id, o.created, o.reviewed, " +
+            "o.onc_history_id, o.created, o.reviewed " +
             "FROM ddp_participant p " +
             "LEFT JOIN ddp_instance realm on (p.ddp_instance_id = realm.ddp_instance_id) " +
             "LEFT JOIN ddp_onc_history o on (o.participant_id = p.participant_id) " +

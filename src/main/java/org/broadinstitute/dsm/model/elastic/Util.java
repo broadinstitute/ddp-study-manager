@@ -8,6 +8,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.json.Json;
+import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.structure.ColumnName;
@@ -111,7 +113,9 @@ public class Util {
         Map<String, Object> finalResult;
         switch (fieldName) {
             case "follow_ups":
-                finalResult = Map.of(underscoresToCamelCase(fieldName), new Gson().toJson(fieldValue));
+                String str = new Gson().toJson(fieldValue);
+                List<Map<String, Object>> map = new Gson().fromJson(str, new TypeToken<List<Map<String, Object>>>(){}.getType());
+                finalResult = Map.of(underscoresToCamelCase(fieldName), map);
                 break;
             case "data":
                 Map<String, Object> objectMap = dynamicFieldsSpecialCase(fieldValue);
