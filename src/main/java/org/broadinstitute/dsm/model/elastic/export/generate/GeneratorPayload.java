@@ -20,6 +20,8 @@ public class GeneratorPayload {
         return nameValue;
     }
 
+    public Object getValue() { return nameValue.getValue(); }
+
     public int getRecordId() {
         return recordId;
     }

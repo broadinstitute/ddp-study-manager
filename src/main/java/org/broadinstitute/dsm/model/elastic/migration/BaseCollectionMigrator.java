@@ -64,7 +64,7 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
                 .collect(Collectors.toList());
     }
 
-    private boolean isFieldListType(Field field) {
+    public boolean isFieldListType(Field field) {
         return List.class.isAssignableFrom(field.getType());
     }
 

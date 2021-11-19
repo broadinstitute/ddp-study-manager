@@ -20,7 +20,6 @@ public class MappingGenerator extends BaseGenerator implements Merger {
         super(parser, generatorPayload);
     }
 
-
     @Override
     public Map<String, Object> generate() {
         logger.info("preparing mapping to upsert");
