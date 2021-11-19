@@ -21,9 +21,4 @@ public class ValueParser extends BaseParser {
     protected Object forString(String value) {
         return value;
     }
-
-    @Override
-    protected Object forCollection(String value) {
-        return null;
-    }
 }
