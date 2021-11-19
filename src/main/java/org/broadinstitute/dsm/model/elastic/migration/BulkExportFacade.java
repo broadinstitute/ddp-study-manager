@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;

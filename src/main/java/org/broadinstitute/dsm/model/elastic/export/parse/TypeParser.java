@@ -1,7 +1,10 @@
 package org.broadinstitute.dsm.model.elastic.export.parse;
 
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
 
+import java.util.List;
 import java.util.Map;
 
 public class TypeParser extends BaseParser {
@@ -36,4 +39,16 @@ public class TypeParser extends BaseParser {
     protected Object forString(String value) {
         return TEXT_KEYWORD_MAPPING;
     }
+
+    @Override
+    protected Object forCollection(String value) {
+        return null;
+    }
+
+    private Object getNestedType(String value) {
+        List<Map<String, Object>> list = new Gson().fromJson(value, new TypeToken<List<Map<String, Object>>>() {}.getType());
+
+        return null;
+    }
+
 }

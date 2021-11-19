@@ -110,9 +110,6 @@ public class Util {
     static Map<String, Object> convertToMap(String fieldName, Object fieldValue) {
         Map<String, Object> finalResult;
         switch (fieldName) {
-//            case "follow_ups":
-//                finalResult = Map.of(underscoresToCamelCase(fieldName), new Gson().toJson(fieldValue));
-//                break;
             case "data":
                 Map<String, Object> objectMap = dynamicFieldsSpecialCase(fieldValue);
                 Map<String, Object> transformedMap = new HashMap<>();

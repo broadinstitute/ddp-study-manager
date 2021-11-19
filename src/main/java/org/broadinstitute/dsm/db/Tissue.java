@@ -46,6 +46,7 @@ public class Tissue {
     @ColumnName(DBConstants.TISSUE_ID)
     private String tissueId;
 
+    @ColumnName(DBConstants.ONC_HISTORY_DETAIL_ID)
     private final String oncHistoryDetailId;
 
     @ColumnName (DBConstants.NOTES)

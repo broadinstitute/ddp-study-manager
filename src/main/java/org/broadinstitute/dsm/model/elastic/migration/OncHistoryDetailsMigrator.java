@@ -1,12 +1,8 @@
 package org.broadinstitute.dsm.model.elastic.migration;
 
-import java.lang.reflect.Field;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.OncHistoryDetail;
-import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 
