@@ -17,7 +17,7 @@ public class TissueMigratorTest {
 
     @Test
     public void getDataByRealm() {
-        TissueMigrator tissueMigrator = new TissueMigrator("participants_structured.cmi.angio", "angio", "tissues");
+        TissueMigrator tissueMigrator = new TissueMigrator("participants_structured.cmi.angio", "angio");
         tissueMigrator.export();
     }
 }

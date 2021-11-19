@@ -23,8 +23,6 @@ public abstract class BaseParser implements Parser {
             result = forBoolean(value);
         } else if (isDateOrTimeOrDateTime(value)) {
             result = forDate(value);
-        } else if (isCollection(value)) {
-            result = forCollection(value);
         }
         return result;
     }
@@ -36,8 +34,6 @@ public abstract class BaseParser implements Parser {
     protected abstract Object forDate(String value);
 
     protected abstract Object forString(String value);
-
-    protected abstract Object forCollection(String value);
 
     boolean isDateOrTimeOrDateTime(String value) {
         return isDate(value) || isTime(value) || isDateTime(value);
@@ -72,16 +68,5 @@ public abstract class BaseParser implements Parser {
 
     boolean isBoolean(String value) {
         return value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false");
-    }
-
-    boolean isCollection(String value) {
-        List<Map<String, Object>> collection;
-        try {
-            collection = new Gson().fromJson(value, new TypeToken<List<Map<String, Object>>>() {
-            }.getType());
-        } catch (JsonSyntaxException jse) {
-            collection = null;
-        }
-        return collection != null;
     }
 }

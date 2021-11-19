@@ -107,7 +107,8 @@ public class DSMtasksSubscription {
                     new OncHistoryDetailsMigrator(index, study),
                     new ParticipantDataMigrator(index, study),
                     new ParticipantMigrator(index, study),
-                    new KitRequestShippingMigrator(index, study));
+                    new KitRequestShippingMigrator(index, study),
+                    new TissueMigrator(index, study));
             exportables.forEach(Exportable::export);
         });
     }

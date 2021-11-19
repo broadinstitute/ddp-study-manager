@@ -40,15 +40,4 @@ public class TypeParser extends BaseParser {
         return TEXT_KEYWORD_MAPPING;
     }
 
-    @Override
-    protected Object forCollection(String value) {
-        return null;
-    }
-
-    private Object getNestedType(String value) {
-        List<Map<String, Object>> list = new Gson().fromJson(value, new TypeToken<List<Map<String, Object>>>() {}.getType());
-
-        return null;
-    }
-
 }
