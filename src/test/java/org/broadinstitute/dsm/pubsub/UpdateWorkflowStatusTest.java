@@ -10,6 +10,7 @@ import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.route.EditParticipantPublisherRoute;
 import org.broadinstitute.dsm.util.DBTestUtil;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -70,6 +71,21 @@ public class UpdateWorkflowStatusTest {
         String data = participantDataDao.get(participantDataId).orElseThrow().getData().orElse("");
         JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
         Assert.assertEquals(status, dataJsonObject.get(workflow).getAsString());
+    }
+
+    @Test
+    public void testUpdateCustomWorkflow() {
+        String messageData = "{\"participantGuid\":\"RBMJW6ZIXVXBMXUX6M3Q\",\"instanceName\":\"RGP\",\"data\":{\"workflow\":\"MEMBER_TYPE\",\"status\":\"COMPLETED\"}}";
+        JsonObject messageJsonObject = new Gson().fromJson(messageData, JsonObject.class);
+        String dataString = messageJsonObject.get("data").getAsJsonObject().toString();
+        Map<String, String> attributeMap = EditParticipantPublisherRoute.getStringStringMap("TEST", messageJsonObject);
+        WorkflowStatusUpdate.updateCustomWorkflow(attributeMap, dataString);
+        String data = participantDataDao.get(participantDataId).orElseThrow().getData().orElse("");
+        JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
+        //checking that value was updated
+        Assert.assertEquals("COMPLETED", dataJsonObject.get("MEMBER_TYPE").getAsString());
+        //checking that updated value did not remove other fields
+        Assert.assertEquals("REGISTERED", dataJsonObject.get("REGISTRATION_STATUS").getAsString());
     }
 
     @Test
