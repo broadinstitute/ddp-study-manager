@@ -4,8 +4,8 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
-
-    <changeSet id="smIdColumns" author="pegah" >
+    <!--TODO Pegah remove -->
+    <changeSet id="smIdColumns" author="pegah">
         <addColumn tableName="ddp_tissue">
             <column name="uss_sm_ids" type="VARCHAR(1000)"></column>
         </addColumn>
@@ -14,6 +14,56 @@
         </addColumn>
         <addColumn tableName="ddp_tissue">
             <column name="he_sm_ids" type="VARCHAR(1000)"></column>
+        </addColumn>
+    </changeSet>
+    <changeSet id="sm_id_type_table" author="pegah">
+        <createTable tableName="sm_id_type">
+            <column name="sm_id_type_id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true"></constraints>
+            </column>
+            <column name="sm_id_type" type="VARCHAR(100)"></column>
+        </createTable>
+    </changeSet>
+    <changeSet id="sm_id_table" author="pegah">
+        <createTable tableName="sm_id">
+            <column name="sm_id_id" autoIncrement="true" type="INT">
+                <constraints primaryKey="true" nullable="false"></constraints>
+            </column>
+            <column name="sm_id_type_id" type="INT">
+                <constraints nullable="false" foreignKeyName="sm_id_type_id_fk"
+                             referencedTableName="sm_id_type" referencedColumnNames="sm_id_type_id"></constraints>
+            </column>
+            <column name="tissue_id" type="INT">
+                <constraints nullable="false" foreignKeyName="sm_id_tissue_id_fk"
+                             referencedTableName="ddp_tissue" referencedColumnNames="tissue_id"></constraints>
+            </column>
+            <column name="sm_id_value" type="VARCHAR(100)">
+                <constraints nullable="true" unique="true"></constraints>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="insert_smids" author="pegah">
+        <insert tableName="sm_id_type">
+            <column name="sm_id_type" value="scrolls"></column>
+        </insert>
+        <insert tableName="sm_id_type">
+            <column name="sm_id_type" value="he"></column>
+        </insert>
+        <insert tableName="sm_id_type">
+            <column name="sm_id_type" value="uss"></column>
+        </insert>
+    </changeSet>
+    <changeSet id="sm_id_table_changes" author="pegah">
+        <addColumn tableName="sm_id">
+            <column name="changed_by" type="VARCHAR(100)"></column>
+        </addColumn>
+        <addColumn tableName="sm_id">
+            <column name="last_changed" type="BIGINT"></column>
+        </addColumn>
+    </changeSet>
+    <changeSet id="sm_id_table_deleted" author="pegah">
+        <addColumn tableName="sm_id">
+            <column name="deleted" type="TINYINT(1)"></column>
         </addColumn>
     </changeSet>
 

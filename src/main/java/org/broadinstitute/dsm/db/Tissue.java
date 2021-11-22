@@ -3,7 +3,6 @@ package org.broadinstitute.dsm.db;
 import com.google.gson.Gson;
 import lombok.Data;
 import lombok.NonNull;
-import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
@@ -126,13 +125,13 @@ public class Tissue {
     private Integer hECount;
 
     @ColumnName(DBConstants.USS_SMIDS)
-    private String[] ussSMID;
+    private TissueSmId[] ussSMID;
 
     @ColumnName(DBConstants.SCROLL_SMIDS)
-    private String[] scrollSMID;
+    private TissueSmId[] scrollSMID;
 
     @ColumnName(DBConstants.HE_SMIDS)
-    private String[] heSMID;
+    private TissueSmId[] heSMID;
 
 
 
@@ -141,7 +140,7 @@ public class Tissue {
                   String blockSent, String scrollsReceived, String skId, String smId, String sentGp, String firstSmId,
                   String additionalValues, String expectedReturn, String tissueReturnDate,
                   String returnFedexId, String shlWorkNumber, String tumorPercentage, String sequenceResults, Integer scrollsCount,
-                  Integer ussCount, Integer blocksCount, Integer hECount, String[] ussSMIDs, String[] scrollSMIDs, String[] heSMID) {
+                  Integer ussCount, Integer blocksCount, Integer hECount, TissueSmId[] ussSMIDs, TissueSmId[] scrollSMIDs, TissueSmId[] heSMID) {
         this.tissueId = tissueId;
         this.oncHistoryDetailId = oncHistoryDetailId;
         this.tNotes = tNotes;
@@ -176,19 +175,6 @@ public class Tissue {
 
     public static Tissue getTissue(@NonNull ResultSet rs) throws SQLException {
         Gson gson = new Gson();
-        String[] ussSMIds =  new String[0];
-        String[] scrollSMIds =  new String[0];
-        String[] heSMIds =  new String[0];
-        if(StringUtils.isNotBlank(rs.getString(DBConstants.USS_SMIDS))) {
-//            ussSMIds = gson.fromJson(rs.getString(DBConstants.USS_SMIDS), String[].class);
-            ussSMIds = rs.getString(DBConstants.USS_SMIDS).split(",");
-        }
-        if(StringUtils.isNotBlank(rs.getString(DBConstants.SCROLL_SMIDS))) {
-            scrollSMIds = gson.fromJson(rs.getString(DBConstants.SCROLL_SMIDS), String[].class);
-        }
-        if(StringUtils.isNotBlank(rs.getString(DBConstants.HE_SMIDS))) {
-            heSMIds = gson.fromJson(rs.getString(DBConstants.HE_SMIDS), String[].class);
-        }
         Tissue tissue = new Tissue(
                 rs.getString(DBConstants.TISSUE_ID),
                 rs.getString(DBConstants.ONC_HISTORY_DETAIL_ID),
@@ -217,10 +203,32 @@ public class Tissue {
                 rs.getInt(DBConstants.USS_COUNT),
                 rs.getInt(DBConstants.BLOCKS_COUNT),
                 rs.getInt(DBConstants.H_E_COUNT),
-                ussSMIds,
-                scrollSMIds,
-                heSMIds);
+                null,
+                null,
+                null);
+        tissue.setSMIds();
         return tissue;
+    }
+
+    private void setSMIds() {
+        if (this.hECount>0){
+           this.heSMID = TissueSmId.getSMIdsForTissueId(this.tissueId, TissueSmId.HE);
+        } else{
+            this.heSMID = new TissueSmId[0];
+        }
+        if (this.ussCount>0){
+            this.ussSMID = TissueSmId.getSMIdsForTissueId(this.tissueId, TissueSmId.USS);
+        }
+        else{
+            this.ussSMID = new TissueSmId[0];
+        }
+        if (this.scrollsCount>0){
+            this.scrollSMID = TissueSmId.getSMIdsForTissueId(this.tissueId, TissueSmId.SCROLLS);
+        }
+        else{
+            this.scrollSMID = new TissueSmId[0];
+        }
+
     }
 
     public static List<Tissue> getTissue(@NonNull Connection conn, @NonNull String oncHistoryDetailId) {
