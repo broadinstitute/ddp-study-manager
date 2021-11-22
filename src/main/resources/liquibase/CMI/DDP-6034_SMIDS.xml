@@ -28,6 +28,9 @@
             <column name="sm_id_value" type="VARCHAR(100)">
                 <constraints nullable="true" unique="true"></constraints>
             </column>
+            <column name="deleted" type="TINYINT(1)"></column>
+            <column name="changed_by" type="VARCHAR(100)"></column>
+            <column name="last_changed" type="BIGINT"></column>
         </createTable>
     </changeSet>
     <changeSet id="insert_smids" author="pegah">
@@ -41,18 +44,6 @@
             <column name="sm_id_type" value="uss"></column>
         </insert>
     </changeSet>
-    <changeSet id="sm_id_table_changes" author="pegah">
-        <addColumn tableName="sm_id">
-            <column name="changed_by" type="VARCHAR(100)"></column>
-        </addColumn>
-        <addColumn tableName="sm_id">
-            <column name="last_changed" type="BIGINT"></column>
-        </addColumn>
-    </changeSet>
-    <changeSet id="sm_id_table_deleted" author="pegah">
-        <addColumn tableName="sm_id">
-            <column name="deleted" type="TINYINT(1)"></column>
-        </addColumn>
-    </changeSet>
+
 
 </databaseChangeLog>
