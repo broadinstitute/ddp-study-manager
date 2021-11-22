@@ -55,7 +55,7 @@ public class CollectionProcessor implements Processor {
 
     private List<Map<String, Object>> getRecordsByField(Field field) {
         try {
-            return (List<Map<String, Object>>) field.get(esDsm);
+            return Util.convertObjectListToMapList(field.get(esDsm));
         } catch (IllegalAccessException iae) {
             throw new RuntimeException("error occurred while attempting to get data from ESDsm", iae);
         }
@@ -75,6 +75,7 @@ public class CollectionProcessor implements Processor {
     }
 
     private boolean isExistingRecord(Map<String, Object> eachRecord) {
+        if (!eachRecord.containsKey(Util.ID)) return false;
         return (double) eachRecord.get(Util.ID) == (double) generatorPayload.getRecordId();
     }
 

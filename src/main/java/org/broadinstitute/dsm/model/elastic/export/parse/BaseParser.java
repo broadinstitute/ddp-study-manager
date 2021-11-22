@@ -23,6 +23,8 @@ public abstract class BaseParser implements Parser {
             result = forBoolean(value);
         } else if (isDateOrTimeOrDateTime(value)) {
             result = forDate(value);
+        } else if (isCollection(value)) {
+            result = Map.of("type", "nested");
         }
         return result;
     }
@@ -68,5 +70,15 @@ public abstract class BaseParser implements Parser {
 
     boolean isBoolean(String value) {
         return value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false");
+    }
+
+    boolean isCollection(String value) {
+        boolean isCollection = false;
+        try {
+            new Gson().fromJson(value, List.class);
+            isCollection = true;
+        } catch (JsonSyntaxException ignored) {
+        }
+        return isCollection;
     }
 }

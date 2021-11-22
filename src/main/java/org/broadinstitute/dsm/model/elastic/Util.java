@@ -35,6 +35,7 @@ public class Util {
     public static final String DOC = "_doc";
     public static final String ID = "id";
     private static final Pattern CAMEL_CASE_REGEX = Pattern.compile("(([a-z])+([A-z]))*");
+    public static final Gson GSON = new Gson();
 
     public static String getQueryTypeFromId(String id) {
         String type;
@@ -113,9 +114,8 @@ public class Util {
         Map<String, Object> finalResult;
         switch (fieldName) {
             case "follow_ups":
-                String str = new Gson().toJson(fieldValue);
-                List<Map<String, Object>> map = new Gson().fromJson(str, new TypeToken<List<Map<String, Object>>>(){}.getType());
-                finalResult = Map.of(underscoresToCamelCase(fieldName), map);
+                List<Map<String, Object>> followUps = convertObjectListToMapList(fieldValue);
+                finalResult = Map.of(underscoresToCamelCase(fieldName), followUps);
                 break;
             case "data":
                 Map<String, Object> objectMap = dynamicFieldsSpecialCase(fieldValue);
@@ -133,6 +133,10 @@ public class Util {
                 break;
         }
         return finalResult;
+    }
+
+    public static List<Map<String, Object>> convertObjectListToMapList(Object fieldValue) {
+        return GSON.fromJson(GSON.toJson(fieldValue), new TypeToken<List<Map<String, Object>>>(){}.getType());
     }
 
     private static Map<String, Object> dynamicFieldsSpecialCase(Object fieldValue) {
