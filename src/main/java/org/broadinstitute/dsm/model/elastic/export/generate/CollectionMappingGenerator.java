@@ -13,7 +13,7 @@ public class CollectionMappingGenerator extends MappingGenerator {
     }
 
     @Override
-    protected Object getElement() {
+    protected Map<String, Object> getElement(Object type) {
         return Map.of(
                 Util.ID, Map.of(TYPE, TYPE_KEYWORD),
                 Util.underscoresToCamelCase(getDBElement().getColumnName()), type
@@ -21,7 +21,7 @@ public class CollectionMappingGenerator extends MappingGenerator {
     }
 
     @Override
-    protected Object construct() {
+    protected Map<String, Object> construct() {
         return new HashMap<>(Map.of(TYPE, NESTED, PROPERTIES, collect()));
     }
 

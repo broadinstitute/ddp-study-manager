@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
+import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 
 import java.util.HashMap;
@@ -12,12 +13,12 @@ public class SingleMappingGenerator extends MappingGenerator {
     }
 
     @Override
-    protected Object getElement() {
-        return null;
+    protected Map<String, Object> getElement(Object type) {
+        return Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), type);
     }
 
     @Override
-    protected Object construct() {
+    protected Map<String, Object> construct() {
         return new HashMap<>(Map.of(PROPERTIES, collect()));
     }
 }

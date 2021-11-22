@@ -24,16 +24,12 @@ abstract public class MappingGenerator extends BaseGenerator implements Merger {
     public Map<String, Object> generate() {
         logger.info("preparing mapping to upsert");
         String propertyName = getOuterPropertyByAlias().getPropertyName();
-        Map<String, Object> mappedField = buildMappedField();
-        Map<String, Object> objectLevel = Map.of(propertyName, mappedField);
+        Map<String, Object> objectLevel = Map.of(propertyName, construct());
         Map<String, Object> dsmLevelProperties = Map.of(PROPERTIES, objectLevel);
         Map<String, Map<String, Object>> dsmLevel = Map.of(DSM_OBJECT, dsmLevelProperties);
         return Map.of(PROPERTIES, dsmLevel);
     }
 
-    private Map<String, Object> buildMappedField() {
-        return (Map<String, Object>) construct();
-    }
 
     @Override
     protected Map<String, Object> parseJson() {
@@ -45,34 +41,6 @@ abstract public class MappingGenerator extends BaseGenerator implements Merger {
         }
         return resultMap;
     }
-
-    @Override
-    protected Object parseSingleElement() {
-        return getElement();
-    }
-//
-//    @Override
-//    protected Map<String, Object> getElementWithId(Object type) {
-//        return Map.of(
-//                Util.ID, Map.of(TYPE, TYPE_KEYWORD),
-//                Util.underscoresToCamelCase(getDBElement().getColumnName()), type
-//        );
-//    }
-
-    @Override
-    protected Map<String, Object> getElement(Object type) {
-        return Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), type);
-    }
-
-//    @Override
-//    protected Object constructSingleElement() {
-//        return new HashMap<>(Map.of(PROPERTIES, collect()));
-//    }
-
-//    @Override
-//    protected Object constructCollection() {
-//        return new HashMap<>(Map.of(TYPE, NESTED, PROPERTIES, collect()));
-//    }
 
     @Override
     public Map<String, Object> merge(Map<String, Object> base, Map<String, Object> toMerge) {

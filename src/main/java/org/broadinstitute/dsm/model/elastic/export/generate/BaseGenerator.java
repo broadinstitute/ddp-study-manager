@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
@@ -64,42 +65,14 @@ public abstract class BaseGenerator implements Generator, Collector {
         return GSON.fromJson(String.valueOf(getNameValue().getValue()), Map.class);
     }
 
-    protected abstract <T> T parseSingleElement();
-
-    protected Object getFieldWithElement() {
-        Object fieldElementMap;
+    protected Object parseSingleElement() {
         Object element = parser.parse(String.valueOf(getNameValue().getValue()));
-        if (getOuterPropertyByAlias().isCollection()) {
-            fieldElementMap = getElementWithId(element);
-        } else {
-            fieldElementMap = getElement(element);
-        }
-        return fieldElementMap;
-    }
+        return getElement(element);
+    };
 
     protected abstract Object getElement(Object type);
 
-    protected abstract Object getElementWithId(Object element);
-
-    protected abstract Map<String, Object> getElement(Object element);
-
-//    protected Object constructByPropertyType() {
-//        Object constructedObject;
-//        if (getOuterPropertyByAlias().isCollection()) {
-//            constructedObject = constructCollection();
-//        } else {
-//            constructedObject = constructSingleElement();
-//        }
-//        return constructedObject;
-//
-//        // construct();
-//    }
-
-//    protected abstract Object constructSingleElement();
-
-//    protected abstract Object constructCollection();
-
-    protected abstract Object construct();
+    protected abstract Map<String, Object> construct();
 
     public static class PropertyInfo {
 

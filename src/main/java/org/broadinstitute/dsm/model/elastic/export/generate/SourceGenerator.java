@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SourceGenerator extends BaseGenerator {
+abstract public class SourceGenerator extends BaseGenerator {
 
     private static final Logger logger = LoggerFactory.getLogger(SourceGenerator.class);
 
@@ -49,19 +49,10 @@ public class SourceGenerator extends BaseGenerator {
         return getFieldWithElement();
     }
 
-    @Override
-    protected Object getElementWithId(Object element) {
-        return buildCollectionWithId(element);
-    }
 
     private List<Map<String, Object>> buildCollectionWithId(Object element) {
         return List.of(Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), element,
                 Util.ID, generatorPayload.getRecordId()));
-    }
-
-    @Override
-    protected Map<String, Object> getElement(Object element) {
-        return buildSingleFieldWithValue(element);
     }
 
     private Map<String, Object> buildSingleFieldWithValue(Object element) {
