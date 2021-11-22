@@ -489,7 +489,7 @@ public class DBConstants {
     //sm_id table
     public static final String SM_ID_TABLE = "sm_id";
     public static final String SM_ID_TABLE_ALIAS = "sm";
-    public static final String SM_ID_ID = "sm_id_id";
+    public static final String SM_ID_PK = "sm_id_pk";
     public static final String SM_ID_TYPE_ID = "sm_id_type_id";
     public static final String SM_ID_VALUE = "sm_id_value";
     public static final String SM_ID_TISSUE_ID = "tissue_id";

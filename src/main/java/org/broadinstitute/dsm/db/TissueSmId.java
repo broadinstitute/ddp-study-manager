@@ -12,7 +12,7 @@ import java.util.List;
 @TableName (
         name = DBConstants.SM_ID_TABLE,
         alias = DBConstants.SM_ID_TABLE_ALIAS,
-        primaryKey = DBConstants.SM_ID_ID,
+        primaryKey = DBConstants.SM_ID_PK,
         columnPrefix = "")
 public class TissueSmId {
 
@@ -25,8 +25,8 @@ public class TissueSmId {
     @ColumnName(DBConstants.SM_ID_TISSUE_ID)
     private String tissueId;
 
-    @ColumnName(DBConstants.SM_ID_ID)
-    private String smIdId;
+    @ColumnName(DBConstants.SM_ID_PK)
+    private String smIdPk;
 
     @ColumnName(DBConstants.DELETED)
     private boolean deleted;
@@ -36,8 +36,8 @@ public class TissueSmId {
     public static String SCROLLS = "scrolls";
     public TissueSmId(){}
 
-    public TissueSmId(String smIdId, String smIdType, String smIdValue, String tissueId){
-        this.smIdId = smIdId;
+    public TissueSmId(String smIdPk, String smIdType, String smIdValue, String tissueId){
+        this.smIdPk = smIdPk;
         this.smIdType = smIdType;
         this.smIdValue = smIdValue;
         this.tissueId = tissueId;
