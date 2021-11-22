@@ -72,7 +72,7 @@ public abstract class BaseGenerator implements Generator, Collector {
 
     protected abstract Object getElement(Object type);
 
-    protected abstract Map<String, Object> construct();
+    protected abstract Object construct();
 
     public static class PropertyInfo {
 

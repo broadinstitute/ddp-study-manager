@@ -31,10 +31,10 @@ abstract public class SourceGenerator extends BaseGenerator {
 
     @Override
     protected Object parseJson() {
-        return constructByPropertyType();
+        return construct();
     }
 
-    private Map<String, Object> parseJsonValuesToObject() {
+    protected Map<String, Object> parseJsonValuesToObject() {
         logger.info("Converting JSON values to Map");
         Map<String, Object> dynamicFieldValues = parseJsonToMapFromValue();
         Map<String, Object> transformedMap = new HashMap<>();
@@ -43,37 +43,5 @@ abstract public class SourceGenerator extends BaseGenerator {
         }
         return transformedMap;
     }
-
-    @Override
-    protected Object parseSingleElement() {
-        return getFieldWithElement();
-    }
-
-
-    private List<Map<String, Object>> buildCollectionWithId(Object element) {
-        return List.of(Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), element,
-                Util.ID, generatorPayload.getRecordId()));
-    }
-
-    private Map<String, Object> buildSingleFieldWithValue(Object element) {
-        logger.info("Constructing single field with value");
-        return Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), element);
-    }
-
-    @Override
-    protected Object constructSingleElement() {
-        return parseJsonValuesToObject();
-    }
-
-    @Override
-    protected Object constructCollection() {
-        logger.info("Constructing nested data");
-        Map<Object, Object> collectionMap = new HashMap<>();
-        collectionMap.put(Util.ID, generatorPayload.getRecordId());
-        Map<String, Object> mapWithParsedObjects = parseJsonValuesToObject();
-        collectionMap.putAll(mapWithParsedObjects);
-        return List.of(collectionMap);
-    }
-
 
 }

@@ -164,6 +164,23 @@ public class MappingGeneratorTest {
     }
 
 
+    private static class TestSingleMappingGenerator extends SingleMappingGenerator {
+
+        public TestSingleMappingGenerator(Parser parser, GeneratorPayload generatorPayload) {
+            super(parser, generatorPayload);
+        }
+
+        @Override
+        protected DBElement getDBElement() {
+            return TestPatchUtil.getColumnNameMap().get(getNameValue().getName());
+        }
+
+        public static TestSingleMappingGenerator of(GeneratorPayload generatorPayload) {
+            return new TestSingleMappingGenerator(new TypeParser(), generatorPayload);
+        }
+
+    }
+
     private static class TestMappingGenerator extends MappingGenerator {
 
         public TestMappingGenerator(Parser typeParser, GeneratorPayload generatorPayload) {
