@@ -275,9 +275,9 @@ public class PatchRoute extends RequestHandler {
                         }
                     }
                     else if (Patch.TISSUEID.equals(patch.getParent())) {
-                        String smIdId = new TissueSmId().createNewSmId(patch.getParentId(), patch.getUser(), (String) patch.getNameValue().getValue());
+                        String smIdPk = new TissueSmId().createNewSmId(patch.getParentId(), patch.getUser(), (String) patch.getNameValue().getValue());
                         Map<String, String> map = new HashMap<>();
-                        map.put("smId", smIdId);
+                        map.put("smId", smIdPk);
                         return new Result(200, gson.toJson(map));
                     }
                     else if (Patch.PARTICIPANT_DATA_ID.equals(patch.getParent())) {
