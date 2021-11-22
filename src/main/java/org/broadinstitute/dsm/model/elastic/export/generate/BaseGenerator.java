@@ -77,23 +77,29 @@ public abstract class BaseGenerator implements Generator, Collector {
         return fieldElementMap;
     }
 
+    protected abstract Object getElement(Object type);
+
     protected abstract Object getElementWithId(Object element);
 
     protected abstract Map<String, Object> getElement(Object element);
 
-    protected Object constructByPropertyType() {
-        Object constructedObject;
-        if (getOuterPropertyByAlias().isCollection()) {
-            constructedObject = constructCollection();
-        } else {
-            constructedObject = constructSingleElement();
-        }
-        return constructedObject;
-    }
+//    protected Object constructByPropertyType() {
+//        Object constructedObject;
+//        if (getOuterPropertyByAlias().isCollection()) {
+//            constructedObject = constructCollection();
+//        } else {
+//            constructedObject = constructSingleElement();
+//        }
+//        return constructedObject;
+//
+//        // construct();
+//    }
 
-    protected abstract Object constructSingleElement();
+//    protected abstract Object constructSingleElement();
 
-    protected abstract Object constructCollection();
+//    protected abstract Object constructCollection();
+
+    protected abstract Object construct();
 
     public static class PropertyInfo {
 

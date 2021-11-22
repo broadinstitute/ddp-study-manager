@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MappingGenerator extends BaseGenerator implements Merger {
+abstract public class MappingGenerator extends BaseGenerator implements Merger {
 
     private static final Logger logger = LoggerFactory.getLogger(MappingGenerator.class);
 
@@ -32,7 +32,7 @@ public class MappingGenerator extends BaseGenerator implements Merger {
     }
 
     private Map<String, Object> buildMappedField() {
-        return (Map<String, Object>) constructByPropertyType();
+        return (Map<String, Object>) construct();
     }
 
     @Override
@@ -48,31 +48,31 @@ public class MappingGenerator extends BaseGenerator implements Merger {
 
     @Override
     protected Object parseSingleElement() {
-        return getFieldWithElement();
+        return getElement();
     }
-
-    @Override
-    protected Map<String, Object> getElementWithId(Object type) {
-        return Map.of(
-                Util.ID, Map.of(TYPE, TYPE_KEYWORD),
-                Util.underscoresToCamelCase(getDBElement().getColumnName()), type
-        );
-    }
+//
+//    @Override
+//    protected Map<String, Object> getElementWithId(Object type) {
+//        return Map.of(
+//                Util.ID, Map.of(TYPE, TYPE_KEYWORD),
+//                Util.underscoresToCamelCase(getDBElement().getColumnName()), type
+//        );
+//    }
 
     @Override
     protected Map<String, Object> getElement(Object type) {
         return Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), type);
     }
 
-    @Override
-    protected Object constructSingleElement() {
-        return new HashMap<>(Map.of(PROPERTIES, collect()));
-    }
+//    @Override
+//    protected Object constructSingleElement() {
+//        return new HashMap<>(Map.of(PROPERTIES, collect()));
+//    }
 
-    @Override
-    protected Object constructCollection() {
-        return new HashMap<>(Map.of(TYPE, NESTED, PROPERTIES, collect()));
-    }
+//    @Override
+//    protected Object constructCollection() {
+//        return new HashMap<>(Map.of(TYPE, NESTED, PROPERTIES, collect()));
+//    }
 
     @Override
     public Map<String, Object> merge(Map<String, Object> base, Map<String, Object> toMerge) {
