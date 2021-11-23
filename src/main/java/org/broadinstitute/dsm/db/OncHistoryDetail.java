@@ -285,23 +285,6 @@ public class OncHistoryDetail {
         return oncHistoryDetail;
     }
 
-    public static OncHistoryDetail getOncHistoryDetailByTissueId(String tissueId, DDPInstance ddpInstance) {
-        List<String> list = new ArrayList();
-        list.add(tissueId);
-        Map<String, List<OncHistoryDetail>> oncHistoryDetailMap = getOncHistoryDetails(ddpInstance.getName(), " and t.tissue_id = ? ", list);
-        if (oncHistoryDetailMap.size() == 0) {
-            throw new RuntimeException("Onc History for tissue id " + tissueId + " was not found");
-        }
-        if (oncHistoryDetailMap.size() > 1) {
-            throw new RuntimeException("multiple participants for tissue id " + tissueId + " was  found");
-        }
-        String key = oncHistoryDetailMap.keySet().iterator().next();
-        if(oncHistoryDetailMap.get(key).size() != 1)
-            throw new RuntimeException("wrong number of onc histories for " + tissueId + " was  found ");
-        return oncHistoryDetailMap.get(key).get(0);
-
-    }
-
     public void addTissue(Tissue tissue) {
         if (tissues != null) {
             tissues.add(tissue);

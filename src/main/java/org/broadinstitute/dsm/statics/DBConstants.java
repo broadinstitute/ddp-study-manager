@@ -47,6 +47,7 @@ public class DBConstants {
     public static final String CARRIER_PASSWORD= "carrier_password";
     public static final String CARRIER_ACCESSKEY = "carrier_accesskey";
     public static final String BSP_COLLECTION = "bsp_collection";
+    public static final String BSP_ORGANISM = "bsp_organism";
 
     //kit request
     public static final String DSM_KIT_ID = "dsm_kit_id";
@@ -62,6 +63,8 @@ public class DBConstants {
     public static final String UPS_RETURN_DATE = "ups_return_date";
     public static final String SAMPLE_TYPE = "sample_type";
     public static final String DDP_KIT_REQUEST_TABLE_ABBR = "req.";
+    public static final String BSP_MATERIAL_TYPE = "bsp_material_type";
+    public static final String BSP_RECEPTABLE_TYPE = "bsp_receptable_type";
 
 
 
@@ -84,8 +87,6 @@ public class DBConstants {
     public static final String KIT_TYPE_RETURN_ADDRESS_COUNTRY = "return_address_country";
     public static final String KIT_TYPE_RETURN_ADDRESS_PHONE = "return_address_phone";
     public static final String CUSTOMS_JSON = "customs_json";
-    public static final String BSP_MATERIAL_TYPE = "bsp_material_type";
-    public static final String BSP_RECEPTABLE_TYPE = "bsp_receptable_type";
     public static final String KIT_DIMENSIONS_LENGTH = "kit_length";
     public static final String KIT_DIMENSIONS_HEIGHT = "kit_height";
     public static final String KIT_DIMENSIONS_WIDTH = "kit_width";

@@ -44,6 +44,14 @@
             <column name="sm_id_type" value="uss"></column>
         </insert>
     </changeSet>
+    <changeSet id="sm_id_type_fk_kit_type" author="pegah">
+        <addColumn tableName="sm_id_type">
+            <column name="kit_type_id" type="INT(11)">
+                <constraints foreignKeyName="kit_type_id_sm_id_fk" referencedTableName="kit_type"
+                             referencedColumnNames="kit_type_id"></constraints>
+            </column>
+        </addColumn>
+    </changeSet>
 
 
 </databaseChangeLog>

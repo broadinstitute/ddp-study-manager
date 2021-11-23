@@ -47,9 +47,6 @@ public class DDPInstance {
             "(SELECT count(role.name) FROM ddp_instance realm, ddp_instance_role inRol, instance_role role WHERE realm.ddp_instance_id = inRol.ddp_instance_id AND inRol.instance_role_id = role.instance_role_id "+
             "AND role.name = ? AND realm.ddp_instance_id = main.ddp_instance_id) as 'has_role', mr_attention_flag_d, tissue_attention_flag_d, auth0_token, notification_recipients "+
             "FROM ddp_instance main, ddp_participant part WHERE main.ddp_instance_id = part.ddp_instance_id AND main.is_active = 1 AND part.ddp_participant_id = ? AND main.instance_name = ?";
-    private static final String SQL_SELECT_INSTANCE_PARTICIPANT = "SELECT realm.*  " +
-            "FROM ddp_participant p LEFT JOIN ddp_instance realm on (p.ddp_instance_id = realm.ddp_instance_id) " +
-            " WHERE p.ddp_participant_id = ? ";
     public static final String SQL_SELECT_GROUP = "SELECT ddp_group_id from ddp_instance_group g LEFT JOIN ddp_instance realm ON (g.ddp_instance_id = realm.ddp_instance_id) WHERE instance_name =?";
     public static final String BY_BASE_URL = " and base_url like \"%dsm/studies/%1\"";
     private static final String SQL_SELECT_STUDY_GUID_BY_INSTANCE_NAME =
@@ -74,7 +71,6 @@ public class DDPInstance {
     private final String participantIndexES;
     private final String activityDefinitionIndexES;
     private final String usersIndexES;
-    private  String bspCollection;
 
     private InstanceSettings instanceSettings;
 
@@ -96,27 +92,6 @@ public class DDPInstance {
         this.participantIndexES = participantIndexES;
         this.activityDefinitionIndexES = activityDefinitionIndexES;
         this.usersIndexES = usersIndexES;
-    }
-
-    public DDPInstance(String ddpInstanceId, String name, String baseUrl, String collaboratorIdPrefix, boolean hasRole,
-                       int daysMrAttentionNeeded, int daysTissueAttentionNeeded, boolean hasAuth0Token, List<String> notificationRecipient,
-                       boolean migratedDDP, String billingReference, String participantIndexES, String activityDefinitionIndexES,
-                       String usersIndexES, String bspCollection) {
-        this.ddpInstanceId = ddpInstanceId;
-        this.name = name;
-        this.baseUrl = baseUrl;
-        this.collaboratorIdPrefix = collaboratorIdPrefix;
-        this.hasRole = hasRole;
-        this.daysMrAttentionNeeded = daysMrAttentionNeeded;
-        this.daysTissueAttentionNeeded = daysTissueAttentionNeeded;
-        this.hasAuth0Token = hasAuth0Token;
-        this.notificationRecipient = notificationRecipient;
-        this.migratedDDP = migratedDDP;
-        this.billingReference = billingReference;
-        this.participantIndexES = participantIndexES;
-        this.activityDefinitionIndexES = activityDefinitionIndexES;
-        this.usersIndexES = usersIndexES;
-        this.bspCollection = bspCollection;
     }
 
     public int getDdpInstanceIdAsInt() {
@@ -503,30 +478,5 @@ public class DDPInstance {
             throw new RuntimeException("Error getting ddpInstances ", results.resultException);
         }
         return ddpInstances;
-    }
-
-    public static DDPInstance getDDPInstanceFromParticipantId(String participantId) {
-        SimpleResult results = inTransaction((conn) -> {
-            SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement statemnt = conn.prepareStatement(SQL_SELECT_INSTANCE_PARTICIPANT)) {
-                statemnt.setString(1, participantId);
-                try (ResultSet rs = statemnt.executeQuery()) {
-                    if (rs.next()) {
-                        DDPInstance ddpInstance = getDDPInstanceFormResultSet(rs);
-                        ddpInstance.setBspCollection(rs.getString(DBConstants.BSP_COLLECTION));
-                        dbVals.resultValue = ddpInstance;
-                    }
-                }
-            }
-            catch (SQLException ex) {
-                dbVals.resultException = ex;
-            }
-            return dbVals;
-        });
-
-        if (results.resultException != null) {
-            throw new RuntimeException("Error getting ddpInstances ", results.resultException);
-        }
-        return (DDPInstance) results.resultValue;
     }
 }
