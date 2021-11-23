@@ -1,11 +1,18 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
+import java.util.Map;
+
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 
 public interface Exportable {
+
     void export();
+
+    void setSource(Map<String, Object> source);
+
+    void setRequestPayload(RequestPayload requestPayload);
 
     default String getParticipantGuid(String participantId, String index) {
         if (!(ParticipantUtil.isGuid(participantId))) {

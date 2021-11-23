@@ -12,22 +12,11 @@ public class ElasticMappingExportAdapter extends BaseExporter {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticMappingExportAdapter.class);
 
-    private UpsertMappingRequestPayload upsertMappingRequestPayload;
-    private Map<String, Object> mapping;
-
-    public void setUpsertMappingRequestPayload(UpsertMappingRequestPayload upsertMappingRequestPayload) {
-        this.upsertMappingRequestPayload = upsertMappingRequestPayload;
-    }
-
-    public void setMapping(Map<String, Object> mapping) {
-        this.mapping = mapping;
-    }
-
     @Override
     public void export() {
         logger.info("initialize exporting mapping to ES");
-        PutMappingRequest putMappingRequest = upsertMappingRequestPayload.getPutMappingRequest();
-        putMappingRequest.source(mapping);
+        PutMappingRequest putMappingRequest = new PutMappingRequest(requestPayload.getIndex());
+        putMappingRequest.source(source);
         try {
             clientInstance.indices().putMapping(putMappingRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {

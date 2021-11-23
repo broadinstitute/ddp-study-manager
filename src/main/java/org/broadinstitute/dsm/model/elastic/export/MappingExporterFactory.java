@@ -1,10 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
-import java.util.Objects;
-
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
-import org.broadinstitute.dsm.model.elastic.export.generate.CollectionMappingGenerator;
-import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 
 public class MappingExporterFactory implements ExportableFactory {
 

@@ -43,15 +43,14 @@ public class ExportFacade {
     }
 
     private void upsertMapping() {
-//        generator = new MappingGenerator(new TypeParser(), exportFacadePayload.getGeneratorPayload());
-        generator = null;
-        // mapping
         Map<String, Object> mappingToUpsert = generator.generate();
-        UpsertMappingRequestPayload upsertMappingRequestPayload = new UpsertMappingRequestPayload(exportFacadePayload.getIndex());
+        RequestPayload upsertMappingRequestPayload = new RequestPayload(exportFacadePayload.getIndex());
         BaseGenerator.PropertyInfo propertyInfo = getPropertyInfo();
         propertyInfo.setFieldName(Util.underscoresToCamelCase(exportFacadePayload.getFieldName()));
         ExportableFactory mappingExporterFactory = new MappingExporterFactory();
         exportable = mappingExporterFactory.make(propertyInfo);
+        exportable.setRequestPayload(upsertMappingRequestPayload);
+        exportable.setSource(mappingToUpsert);
         exportable.export();
     }
 
@@ -88,13 +87,11 @@ public class ExportFacade {
     }
 
     private void upsertData(Map<String, Object> elasticDataToExport) {
-        UpsertDataRequestPayload upsertDataRequestPayload = new UpsertDataRequestPayload.Builder(exportFacadePayload.getIndex(),
-                exportFacadePayload.getDocId())
-                .withDocAsUpsert(true)
-                .withRetryOnConflict(5)
-                .build();
+        RequestPayload requestPayload = new RequestPayload(exportFacadePayload.getIndex(), exportFacadePayload.getDocId());
         logger.info("Built upsert data request payload");
-        exportable = new ElasticDataExportAdapter(upsertDataRequestPayload, elasticDataToExport);
+        exportable = new ElasticDataExportAdapter();
+        exportable.setRequestPayload(requestPayload);
+        exportable.setSource(elasticDataToExport);
         exportable.export();
     }
 

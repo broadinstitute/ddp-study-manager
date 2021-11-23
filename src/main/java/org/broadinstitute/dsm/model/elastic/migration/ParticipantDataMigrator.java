@@ -10,7 +10,7 @@ import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.elastic.export.ElasticMappingExportAdapter;
-import org.broadinstitute.dsm.model.elastic.export.UpsertMappingRequestPayload;
+import org.broadinstitute.dsm.model.elastic.export.RequestPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
 import org.broadinstitute.dsm.model.elastic.export.parse.BaseParser;
@@ -60,7 +60,7 @@ public class ParticipantDataMigrator extends BaseCollectionMigrator {
             throw new RuntimeException(e);
         }
         ElasticMappingExportAdapter mappingExporter = new ElasticMappingExportAdapter();
-        mappingExporter.setUpsertMappingRequestPayload(new UpsertMappingRequestPayload(index));
+        mappingExporter.setUpsertMappingRequestPayload(new RequestPayload(index));
         mappingExporter.setMapping(mapping);
         mappingExporter.export();
     }

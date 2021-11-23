@@ -116,16 +116,6 @@ public class MappingGeneratorTest {
         Assert.assertFalse(Objects.isNull(value));
     }
 
-    @Test
-    public void removeFollowUpsFromConstruct() {
-        NameValue nameValue = new NameValue("m.followUps", "TEST");
-        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 0);
-        TypeParser parser = new TypeParser();
-        MappingGenerator mappingGenerator = new MedicalRecordMappingGenerator(parser, generatorPayload);
-        Map<String, Object> objectMap = mappingGenerator.generate();
-
-    }
-
     private String extractDeepestLeveleValue(Map<String, Object> objectMap) {
         return (String)
                 ((Map)
