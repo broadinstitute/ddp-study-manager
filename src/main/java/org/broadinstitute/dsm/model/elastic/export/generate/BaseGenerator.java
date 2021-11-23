@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.elastic.Util;
@@ -78,6 +79,7 @@ public abstract class BaseGenerator implements Generator, Collector {
 
         private String propertyName;
         private boolean isCollection;
+        private String fieldName;
 
         public PropertyInfo(String propertyName, boolean isCollection) {
             this.propertyName = Objects.requireNonNull(propertyName);
@@ -94,6 +96,15 @@ public abstract class BaseGenerator implements Generator, Collector {
 
         public boolean isCollection() {
             return isCollection;
+        }
+
+        public void setFieldName(String fieldName) {
+            this.fieldName = Objects.requireNonNull(fieldName);
+        }
+
+        public String getFieldName() {
+            if (StringUtils.isBlank(this.fieldName)) this.fieldName = "";
+            return this.fieldName;
         }
     }
     

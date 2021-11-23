@@ -43,9 +43,12 @@ public class ExportFacade {
     }
 
     private void upsertMapping() {
-        generator = new MappingGenerator(new TypeParser(), exportFacadePayload.getGeneratorPayload());
+//        generator = new MappingGenerator(new TypeParser(), exportFacadePayload.getGeneratorPayload());
+        generator = null;
         Map<String, Object> mappingToUpsert = generator.generate();
         UpsertMappingRequestPayload upsertMappingRequestPayload = new UpsertMappingRequestPayload(exportFacadePayload.getIndex());
+        BaseGenerator.PropertyInfo propertyInfo = getPropertyInfo();
+        propertyInfo.setFieldName(Util.underscoresToCamelCase(exportFacadePayload.getFieldName()));
         exportable = new ElasticMappingExportAdapter(upsertMappingRequestPayload, mappingToUpsert);
         exportable.export();
     }
@@ -60,12 +63,13 @@ public class ExportFacade {
     private Map<String, Object> processData(ESDsm esDsm) {
         BaseGenerator.PropertyInfo propertyInfo = getPropertyInfo();
         ValueParser valueParser = new ValueParser();
-        SourceGenerator sourceGenerator = new SourceGenerator(valueParser, exportFacadePayload.getGeneratorPayload());
+//        SourceGenerator sourceGenerator = new SourceGenerator(valueParser, exportFacadePayload.getGeneratorPayload());
+        SourceGenerator sourceGenerator = null;
         this.generator = sourceGenerator;
         Map<String, Object> dataToReturn = generator.generate();
         logger.info("Processing ES participant data");
         if (propertyInfo.isCollection()) {
-            processor = new CollectionProcessor(esDsm, propertyInfo.getPropertyName(), exportFacadePayload.getGeneratorPayload(),
+            processor = new CollectionProcessor(esDsm, propertyInfo.getPropertyName(), exportFacadePayload.getRecordId(),
                     sourceGenerator);
             List<Map<String, Object>> processedData = processor.process();
             if (!processedData.isEmpty()) {
@@ -77,7 +81,7 @@ public class ExportFacade {
     }
 
     private BaseGenerator.PropertyInfo getPropertyInfo() {
-        DBElement dbElement = PatchUtil.getColumnNameMap().get(exportFacadePayload.getGeneratorPayload().getNameValue().getName());
+        DBElement dbElement = PatchUtil.getColumnNameMap().get(exportFacadePayload.getFieldName());
         return Util.TABLE_ALIAS_MAPPINGS.get(dbElement.getTableAlias());
     }
 

@@ -51,7 +51,8 @@ public class ParticipantDataMigrator extends BaseCollectionMigrator {
                 for (Object jsonData : participantDatas) {
                     NameValue nameValue = new NameValue(DATA_WITH_ALIAS, dataField.get(jsonData));
                     GeneratorPayload generatorPayload = new GeneratorPayload(nameValue);
-                    MappingGenerator mappingGenerator = new MappingGenerator(typeParser, generatorPayload);
+//                    MappingGenerator mappingGenerator = new MappingGenerator(typeParser, generatorPayload);
+                    MappingGenerator mappingGenerator = null;
                     mapping = mappingGenerator.merge(mapping, mappingGenerator.generate());
                 }
             }

@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
+import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.broadinstitute.dsm.model.elastic.export.TestPatchUtil;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
@@ -23,9 +24,9 @@ public class SourceGeneratorTest {
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), SourceGenerator.DSM_OBJECT);
         List<Map<String, Object>> medicalRecords = (List) ((Map) objectMap.get(SourceGenerator.DSM_OBJECT)).get("medicalRecords");
         Optional<Map<String, Object>> first = medicalRecords.stream()
-                .filter(i -> i.get(TestPatchUtil.MEDICAL_RECORD_COLUMN) != null)
+                .filter(i -> i.get(Util.underscoresToCamelCase(TestPatchUtil.MEDICAL_RECORD_COLUMN)) != null)
                 .findFirst();
-        first.ifPresentOrElse(val -> Assert.assertEquals("value", val.get(TestPatchUtil.MEDICAL_RECORD_COLUMN)), Assert::fail);
+        first.ifPresentOrElse(val -> Assert.assertEquals("value", val.get(Util.underscoresToCamelCase(TestPatchUtil.MEDICAL_RECORD_COLUMN))), Assert::fail);
     }
 
     @Test
@@ -37,9 +38,9 @@ public class SourceGeneratorTest {
         Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), SourceGenerator.DSM_OBJECT);
         List<Map<String, Object>> medicalRecords = (List) ((Map) objectMap.get(SourceGenerator.DSM_OBJECT)).get("medicalRecords");
         Optional<Map<String, Object>> first = medicalRecords.stream()
-                .filter(i -> i.get(TestPatchUtil.MEDICAL_RECORD_COLUMN) != null)
+                .filter(i -> i.get(Util.underscoresToCamelCase(TestPatchUtil.MEDICAL_RECORD_COLUMN)) != null)
                 .findFirst();
-        first.ifPresentOrElse(val -> Assert.assertEquals(1L, val.get(TestPatchUtil.MEDICAL_RECORD_COLUMN)), Assert::fail);
+        first.ifPresentOrElse(val -> Assert.assertEquals(1L, val.get(Util.underscoresToCamelCase(TestPatchUtil.MEDICAL_RECORD_COLUMN))), Assert::fail);
     }
 
     @Test
@@ -54,12 +55,12 @@ public class SourceGeneratorTest {
                 .get(SourceGenerator.DSM_OBJECT))
                 .get("tissueRecords");
         Optional<Map<String, Object>> maybeDdpInstance = tissueRecords.stream()
-                .filter(i -> i.get("DDP_INSTANCE") != null)
+                .filter(i -> i.get(Util.underscoresToCamelCase("DDP_INSTANCE")) != null)
                 .findFirst();
-        maybeDdpInstance.ifPresentOrElse(m -> Assert.assertEquals("TEST", m.get("DDP_INSTANCE")), Assert::fail);
+        maybeDdpInstance.ifPresentOrElse(m -> Assert.assertEquals("TEST", m.get(Util.underscoresToCamelCase("DDP_INSTANCE"))), Assert::fail);
     }
 
-    private static class TestSourceGenerator extends SourceGenerator {
+    private static class TestSourceGenerator extends CollectionSourceGenerator {
 
         public TestSourceGenerator(Parser parser, GeneratorPayload generatorPayload) {
             super(parser,generatorPayload);

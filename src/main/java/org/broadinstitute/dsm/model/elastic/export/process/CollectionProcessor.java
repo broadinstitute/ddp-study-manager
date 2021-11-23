@@ -22,15 +22,15 @@ public class CollectionProcessor implements Processor {
 
     private ESDsm esDsm;
     private String propertyName;
-    private GeneratorPayload generatorPayload;
+    private int recordId;
     private Collector collector;
 
     private final Predicate<Field> isFieldMatchProperty = field -> propertyName.equals(field.getName());
 
-    public CollectionProcessor(ESDsm esDsm, String propertyName, GeneratorPayload generatorPayload, Collector collector) {
+    public CollectionProcessor(ESDsm esDsm, String propertyName, int recordId, Collector collector) {
         this.esDsm = Objects.requireNonNull(esDsm);
         this.propertyName = Objects.requireNonNull(propertyName);
-        this.generatorPayload = Objects.requireNonNull(generatorPayload);
+        this.recordId = recordId;
         this.collector = collector;
     }
 
@@ -76,7 +76,7 @@ public class CollectionProcessor implements Processor {
 
     private boolean isExistingRecord(Map<String, Object> eachRecord) {
         if (!eachRecord.containsKey(Util.ID)) return false;
-        return (double) eachRecord.get(Util.ID) == (double) generatorPayload.getRecordId();
+        return (double) eachRecord.get(Util.ID) == (double) recordId;
     }
 
     private void updateExistingRecord(Map<String, Object> eachRecord) {

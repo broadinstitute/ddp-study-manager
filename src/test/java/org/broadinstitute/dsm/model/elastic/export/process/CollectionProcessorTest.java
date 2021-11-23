@@ -99,7 +99,8 @@ public class CollectionProcessorTest {
     }
 
     private Collector instance(GeneratorPayload generatorPayload, NameValue nameValue) {
-        SourceGenerator sourceGenerator = new SourceGenerator(new ValueParser(), generatorPayload);
+//        SourceGenerator sourceGenerator = new SourceGenerator(new ValueParser(), generatorPayload);
+        SourceGenerator sourceGenerator = null;
         sourceGenerator.setDBElement(TestPatchUtil.getColumnNameMap().get(nameValue.getName()));
         return sourceGenerator;
     }

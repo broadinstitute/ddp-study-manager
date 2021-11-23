@@ -2,7 +2,10 @@ package org.broadinstitute.dsm.model.elastic.export;
 
 import java.util.Objects;
 
+import org.broadinstitute.dsm.db.structure.DBElement;
+import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
+import org.broadinstitute.dsm.util.PatchUtil;
 
 public class ExportFacadePayload {
     private String index;
@@ -23,11 +26,16 @@ public class ExportFacadePayload {
         return docId;
     }
 
-    public GeneratorPayload getGeneratorPayload() {
-        return generatorPayload;
+    public int getRecordId() {
+        return generatorPayload.getRecordId();
     }
 
     public void setDocId(String docId) {
         this.docId = docId;
+    }
+
+    public String getFieldName() {
+        DBElement dbElement = PatchUtil.getColumnNameMap().get(generatorPayload.getName());
+        return dbElement.getColumnName();
     }
 }
