@@ -56,6 +56,7 @@ public class DDPParticipant {
         this.state = state;
     }
 
+
     public String getShortId() {
         if (StringUtils.isNotBlank(shortId)) {
             return shortId;

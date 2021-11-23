@@ -2,6 +2,17 @@ package org.broadinstitute.dsm.db.dto.kit;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
+import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.OncHistoryDetail;
+import org.broadinstitute.dsm.db.TissueSmId;
+import org.broadinstitute.dsm.model.KitType;
+import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
+import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
+
+import java.util.HashMap;
+import java.util.Optional;
 
 @Data
 public class ClinicalKitDto {
@@ -39,11 +50,13 @@ public class ClinicalKitDto {
     @SerializedName("accession_number")
     String accessionNumber;
 
-    @SerializedName("collection_date")
-    String collectionDate;
-
     @SerializedName("kit_label")
     String mfBarcode;
+
+    private final String FFPE_SECTION_KIT_TYPE = "FFPE-SECTION";
+    private final String FFPE_SCROLLS_KIT_TYPE = "FFPE-SCROLL";
+    private final String USS = "uss";
+    private final String SCROLLS = "scrolls";
 
     public ClinicalKitDto(){}
 
@@ -75,4 +88,40 @@ public class ClinicalKitDto {
         }
     }
 
+    public void setAllInfoBasedOnTissue(TissueSmId tissueSmId, String ddpParticipantId, DDPInstance ddpInstance) {
+        OncHistoryDetail oncHistoryDetail = OncHistoryDetail.getOncHistoryDetailByTissueId(tissueSmId.getTissueId(), ddpInstance);
+        Optional<ElasticSearchParticipantDto> maybeParticipantByParticipantId = ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+        maybeParticipantByParticipantId.ifPresent(participant -> {
+            String shortId = maybeParticipantByParticipantId.get().getProfile().map(ESProfile::getHruid).get();
+            KitType kitType = getKitType(tissueSmId, ddpInstance);
+            String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(ddpInstance.getBaseUrl(), ddpInstance.getDdpInstanceId(), ddpInstance.isMigratedDDP(),
+                    ddpInstance.getCollaboratorIdPrefix(), ddpParticipantId, shortId, null);
+            this.setAccessionNumber(oncHistoryDetail.getAccessionNumber());
+            this.setCollaboratorParticipantId(collaboratorParticipantId);
+            this.setSampleType(kitType.getKitTypeName());
+            this.setMaterialType(kitType.getBspMaterialType());
+            this.setVesselType(kitType.getBspReceptableType());
+            this.setSampleCollection(ddpInstance.getBspCollection());
+            this.setSampleId(ddpInstance.getBspCollection());
+        });
+        maybeParticipantByParticipantId.orElseThrow(() -> {
+            throw new RuntimeException("Participant Info in ES not found! Participant id : "+ddpParticipantId);});
+
+    }
+
+
+    private KitType getKitType(TissueSmId tissueSmId , DDPInstance ddpInstance) {
+        KitType kitType = null;
+        HashMap<String, KitType> map = KitType.getKitLookup();
+        switch (tissueSmId.getSmIdType()){
+            case USS:
+                kitType = map.get(FFPE_SECTION_KIT_TYPE + "_" + ddpInstance.getDdpInstanceId());
+                break;
+            case SCROLLS:
+                kitType = map.get(FFPE_SCROLLS_KIT_TYPE + "_" + ddpInstance.getDdpInstanceId());
+                break;
+
+        }
+        return kitType;
+    }
 }

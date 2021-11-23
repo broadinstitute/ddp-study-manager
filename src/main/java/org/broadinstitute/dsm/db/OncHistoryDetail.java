@@ -113,40 +113,40 @@ public class OncHistoryDetail {
     private String request;
 
     @ColumnName (DBConstants.FAX_SENT)
-    @DbDateConversion(SqlDateConverter.STRING_DAY)
+    @DbDateConversion (SqlDateConverter.STRING_DAY)
     private String tFaxSent;
 
     @ColumnName (DBConstants.FAX_SENT_BY)
     private String tFaxSentBy;
 
     @ColumnName (DBConstants.FAX_CONFIRMED)
-    @DbDateConversion(SqlDateConverter.STRING_DAY)
+    @DbDateConversion (SqlDateConverter.STRING_DAY)
     private String tFaxConfirmed;
 
     @ColumnName (DBConstants.FAX_SENT_2)
-    @DbDateConversion(SqlDateConverter.STRING_DAY)
+    @DbDateConversion (SqlDateConverter.STRING_DAY)
     private String tFaxSent2;
 
     @ColumnName (DBConstants.FAX_SENT_2_BY)
     private String tFaxSent2By;
 
     @ColumnName (DBConstants.FAX_CONFIRMED_2)
-    @DbDateConversion(SqlDateConverter.STRING_DAY)
+    @DbDateConversion (SqlDateConverter.STRING_DAY)
     private String tFaxConfirmed2;
 
     @ColumnName (DBConstants.FAX_SENT_3)
-    @DbDateConversion(SqlDateConverter.STRING_DAY)
+    @DbDateConversion (SqlDateConverter.STRING_DAY)
     private String tFaxSent3;
 
     @ColumnName (DBConstants.FAX_SENT_3_BY)
     private String tFaxSent3By;
 
     @ColumnName (DBConstants.FAX_CONFIRMED_3)
-    @DbDateConversion(SqlDateConverter.STRING_DAY)
+    @DbDateConversion (SqlDateConverter.STRING_DAY)
     private String tFaxConfirmed3;
 
     @ColumnName (DBConstants.TISSUE_RECEIVED)
-    @DbDateConversion(SqlDateConverter.STRING_DAY)
+    @DbDateConversion (SqlDateConverter.STRING_DAY)
     private String tissueReceived;
 
     @ColumnName (DBConstants.TISSUE_PROBLEM_OPTION)
@@ -285,6 +285,23 @@ public class OncHistoryDetail {
         return oncHistoryDetail;
     }
 
+    public static OncHistoryDetail getOncHistoryDetailByTissueId(String tissueId, DDPInstance ddpInstance) {
+        List<String> list = new ArrayList();
+        list.add(tissueId);
+        Map<String, List<OncHistoryDetail>> oncHistoryDetailMap = getOncHistoryDetails(ddpInstance.getName(), " and t.tissue_id = ? ", list);
+        if (oncHistoryDetailMap.size() == 0) {
+            throw new RuntimeException("Onc History for tissue id " + tissueId + " was not found");
+        }
+        if (oncHistoryDetailMap.size() > 1) {
+            throw new RuntimeException("multiple participants for tissue id " + tissueId + " was  found");
+        }
+        String key = oncHistoryDetailMap.keySet().iterator().next();
+        if(oncHistoryDetailMap.get(key).size() != 1)
+            throw new RuntimeException("wrong number of onc histories for " + tissueId + " was  found ");
+        return oncHistoryDetailMap.get(key).get(0);
+
+    }
+
     public void addTissue(Tissue tissue) {
         if (tissues != null) {
             tissues.add(tissue);
@@ -307,6 +324,62 @@ public class OncHistoryDetail {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(DBUtil.getFinalQuery(SQL_SELECT_ONC_HISTORY_DETAIL, queryAddition) + SQL_ORDER_BY)) {
                 stmt.setString(1, realm);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    Map<String, OncHistoryDetail> oncHistoryMap = new HashMap<>();
+                    while (rs.next()) {
+                        String ddpParticipantId = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
+                        String oncHistoryDetailId = rs.getString(DBConstants.ONC_HISTORY_DETAIL_ID);
+
+                        Tissue tissue = Tissue.getTissue(rs);
+
+                        //check if oncHistoryDetails is already in map
+                        List<OncHistoryDetail> oncHistoryDataList = new ArrayList<>();
+                        if (oncHistory.containsKey(ddpParticipantId)) {
+                            oncHistoryDataList = oncHistory.get(ddpParticipantId);
+                        }
+                        else {
+                            oncHistory.put(ddpParticipantId, oncHistoryDataList);
+                            oncHistoryMap = new HashMap<>();
+                        }
+
+                        OncHistoryDetail oncHistoryDetail = null;
+                        if (oncHistoryMap.containsKey(oncHistoryDetailId)) {
+                            oncHistoryDetail = oncHistoryMap.get(oncHistoryDetailId);
+                            oncHistoryDetail.addTissue(tissue);
+                        }
+                        else {
+                            oncHistoryDetail = getOncHistoryDetail(rs);
+                            oncHistoryDetail.addTissue(tissue);
+                            oncHistoryDataList.add(oncHistoryDetail);
+                        }
+                        oncHistoryMap.put(oncHistoryDetailId, oncHistoryDetail);
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get list of oncHistories ", results.resultException);
+        }
+
+        logger.info("Got " + oncHistory.size() + " participants oncHistories in DSM DB for " + realm);
+        return oncHistory;
+    }
+
+    public static Map<String, List<OncHistoryDetail>> getOncHistoryDetails(@NonNull String realm, String queryAddition, List<String> values) {
+        logger.info("Collection oncHistoryDetail information");
+        Map<String, List<OncHistoryDetail>> oncHistory = new HashMap<>();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(DBUtil.getFinalQuery(SQL_SELECT_ONC_HISTORY_DETAIL, queryAddition) + SQL_ORDER_BY)) {
+                stmt.setString(1, realm);
+                for (int i = 0; i < values.size(); i++) {
+                    stmt.setString(i + 2, values.get(i));
+                }
                 try (ResultSet rs = stmt.executeQuery()) {
                     Map<String, OncHistoryDetail> oncHistoryMap = new HashMap<>();
                     while (rs.next()) {

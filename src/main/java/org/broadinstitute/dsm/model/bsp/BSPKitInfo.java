@@ -10,7 +10,7 @@ public class BSPKitInfo {
     private static final Logger logger = LoggerFactory.getLogger(BSPKitInfo.class);
 
     private String collaboratorParticipantId, collaboratorSampleId, sampleCollectionBarcode, gender, materialInfo, receptacleName,
-            accessionNumber,  realm, kitTypeName;
+            realm, kitTypeName;
     private final int organismClassificationId;
 
     public BSPKitInfo(String sampleCollectionBarcode,

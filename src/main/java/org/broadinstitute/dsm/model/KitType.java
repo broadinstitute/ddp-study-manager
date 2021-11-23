@@ -20,7 +20,7 @@ public class KitType {
 
     private static final Logger logger = LoggerFactory.getLogger(KitType.class);
 
-    private static final String SQL_SELECT_KIT_TYPE = "SELECT ks.ddp_instance_id, type.kit_type_name, ks.kit_type_display_name, type.kit_type_id, type.bsp_receptacle_type, type.customs_json, ks.external_shipper " +
+    private static final String SQL_SELECT_KIT_TYPE = "SELECT ks.ddp_instance_id, type.kit_type_name, ks.kit_type_display_name, type.kit_type_id, type.bsp_receptacle_type, type.customs_json, ks.external_shipper, type.bsp_material_type " +
             "FROM ddp_kit_request_settings ks left join kit_type type on (ks.kit_type_id = type.kit_type_id) left join sub_kits_settings subK on (subK.ddp_kit_request_settings_id = ks.ddp_kit_request_settings_id)";
     private static final String SQL_SELECT_CARRIER_SERVICE = "SELECT dkc.kit_type_id, kt.kit_type_name, kt.customs_json, ddp_instance_id, cs_to.carrier as carrierTo, cs_to.easypost_carrier_id as carrierToId, " +
         "cs_to.carrier_account_number as carrierToAccountNumber, cs_to.service as serviceTo, cs_return.carrier as carrierReturn, cs_return.easypost_carrier_id as carrierReturnId, " +
@@ -40,6 +40,9 @@ public class KitType {
     private String externalShipper;
     private String customsJson;
     private String externalKitName;
+    private String bspMaterialType;
+    private String bspReceptableType;
+
 
     public KitType (int kitTypeId, int instanceId, String kitTypeName, String kitDisplayName, String externalShipper, String customsJson) {
         this.kitTypeId = kitTypeId;
@@ -48,6 +51,18 @@ public class KitType {
         this.kitDisplayName = kitDisplayName;
         this.externalShipper = externalShipper;
         this.customsJson = customsJson;
+    }
+
+    public KitType (int kitTypeId, int instanceId, String kitTypeName, String kitDisplayName, String externalShipper, String customsJson,
+                    String bspMaterialType, String bspReceptableType) {
+        this.kitTypeId = kitTypeId;
+        this.instanceId = instanceId;
+        this.kitTypeName = kitTypeName;
+        this.kitDisplayName = kitDisplayName;
+        this.externalShipper = externalShipper;
+        this.customsJson = customsJson;
+        this.bspMaterialType = bspMaterialType;
+        this.bspReceptableType = bspReceptableType;
     }
 
     public KitType(int kitTypeId, int instanceId, String kitTypeName, String kitDisplayName, String externalShipper, String customsJson, String externalKitName) {
@@ -79,7 +94,10 @@ public class KitType {
                                 rs.getString(DBConstants.KIT_TYPE_NAME),
                                 rs.getString(DBConstants.KIT_TYPE_DISPLAY_NAME),
                                 rs.getString(DBConstants.EXTERNAL_SHIPPER),
-                                rs.getString(DBConstants.CUSTOMS_JSON)));
+                                rs.getString(DBConstants.CUSTOMS_JSON),
+                                rs.getString(DBConstants.BSP_MATERIAL_TYPE),
+                                rs.getString(DBConstants.BSP_RECEPTABLE_TYPE)
+                                ));
                     }
                 }
             }

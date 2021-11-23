@@ -4,6 +4,9 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.OncHistoryDetail;
+import org.broadinstitute.dsm.db.TissueSmId;
+import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDao;
+import org.broadinstitute.dsm.db.dao.ddp.tissue.TissueSMIDDao;
 import org.broadinstitute.dsm.db.dao.kit.BSPKitDao;
 import org.broadinstitute.dsm.db.dto.kit.BSPKitDto;
 import org.broadinstitute.dsm.db.dto.kit.ClinicalKitDto;
@@ -13,6 +16,7 @@ import org.broadinstitute.dsm.model.bsp.BSPKitStatus;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
 import org.broadinstitute.dsm.model.elasticsearch.*;
 import org.broadinstitute.dsm.statics.RequestParameter;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.NotificationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +64,7 @@ public class ClinicalKitsRoute implements Route {
         BSPKit bspKit = new BSPKit();
         ClinicalKitDto clinicalKit = new ClinicalKitDto();
         Optional<BSPKitInfo> maybeKitInfo = bspKit.receiveBSPKit(kitLabel, notificationUtil);
-        maybeKitInfo.ifPresent(kitInfo -> {
+        maybeKitInfo.ifPresentOrElse(kitInfo -> {
             logger.info("Creating clinical kit to return to GP " + kitLabel);
             clinicalKit.setCollaboratorParticipantId(kitInfo.getCollaboratorParticipantId());
             clinicalKit.setSampleId(kitInfo.getCollaboratorSampleId());
@@ -80,10 +84,31 @@ public class ClinicalKitsRoute implements Route {
             ElasticSearchParticipantDto participantByShortId =
                     new ElasticSearch().getParticipantByShortId(ddpInstance.getParticipantIndexES(), hruid);
             setNecessaryParticipantDataToClinicalKit(clinicalKit, participantByShortId, kitInfo.getRealm());
-        });
-        maybeKitInfo.orElseThrow();
+        },
+        () -> getClinicalKitWithSMId(kitLabel, clinicalKit));
         return clinicalKit;
 
+    }
+
+    private void getClinicalKitWithSMId(String smId, ClinicalKitDto clinicalKit) {
+        TissueSMIDDao tissueSmIdDao = new TissueSMIDDao();
+        Optional<TissueSmId> maybeTissueSmId = tissueSmIdDao.getTissueSMId(smId);
+        maybeTissueSmId.ifPresentOrElse( tissueSmId -> {
+            List<String> list = new ArrayList();
+            list.add(tissueSmId.getTissueId());
+            String ddpParticipantId = new ParticipantDao().getDDPParticipantId( " where t.tissue_id = ? ", list);
+            DDPInstance ddpInstance = DDPInstance.getDDPInstanceFromParticipantId(ddpParticipantId);
+            clinicalKit.setAllInfoBasedOnTissue(tissueSmId, ddpParticipantId, ddpInstance);
+            ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId).ifPresentOrElse(
+                    maybeParticipant -> {
+                        String shortId = maybeParticipant.getProfile().map(ESProfile::getHruid).get();
+                        ElasticSearchParticipantDto participantByShortId =
+                                new ElasticSearch().getParticipantByShortId(ddpInstance.getParticipantIndexES(), shortId);
+                        setNecessaryParticipantDataToClinicalKit(clinicalKit, participantByShortId, ddpInstance.getName());
+                    }, () -> {
+                        throw new RuntimeException("Participant ES Data is not found for "+ddpParticipantId);
+                    });
+        }, () -> { throw new RuntimeException("TissueeSMID for sm id was not found "+smId);});
     }
 
     private void setNecessaryParticipantDataToClinicalKit(ClinicalKitDto clinicalKit,

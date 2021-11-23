@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -19,6 +20,7 @@ public class TissueSMIDDao {
     private static final Logger logger = LoggerFactory.getLogger(TissueSMIDDao.class);
 
     public static final String SQL_GET_SM_ID_BASED_ON_TISSUE_ID=" SELECT * from sm_id where tissue_id= ? and sm_id_type_id  = ? and NOT deleted <=> 1";
+    public static final String SQL_GET_SM_ID_BASED_ON_SM_ID_VALUE=" SELECT * from sm_id where sm_id_value= ? ";
     public static final String SQL_TYPE_ID_FOR_TYPE="SELECT sm_id_type_id from sm_id_type where `sm_id_type` = ?";
     public static final String SQL_INSERT_SM_ID = "INSERT INTO sm_id SET tissue_id = ?, sm_id_type_id = ?, last_changed = ?, changed_by = ?";
 
@@ -117,6 +119,39 @@ public class TissueSMIDDao {
         }
         else {
             return (String) results.resultValue;
+        }
+    }
+
+    public Optional<TissueSmId> getTissueSMId(String smId) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_SM_ID_BASED_ON_SM_ID_VALUE)) {
+                stmt.setString(1, smId);
+                stmt.executeQuery();
+                    try (ResultSet rs = stmt.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            dbVals.resultValue = new TissueSmId(
+                                    rs.getString(DBConstants.SM_ID_PK),
+                                    rs.getString(DBConstants.SM_ID_TYPE),
+                                    rs.getString(DBConstants.SM_ID_VALUE),
+                                    rs.getString(DBConstants.TISSUE_ID));
+                        }
+                    }
+                    catch (Exception e) {
+                        throw new RuntimeException("Error getting id of new sm id ", e);
+                    }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting tissueSmId based on smId " + smId, results.resultException);
+        }
+        else {
+            return Optional.ofNullable((TissueSmId)results.resultValue);
         }
     }
 }
