@@ -14,6 +14,7 @@ import org.broadinstitute.dsm.model.elastic.export.RequestPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
 import org.broadinstitute.dsm.model.elastic.export.parse.BaseParser;
+import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
@@ -63,5 +64,15 @@ public class ParticipantDataMigrator extends BaseCollectionMigrator {
         mappingExporter.setRequestPayload(new RequestPayload(index));
         mappingExporter.setSource(mapping);
         mappingExporter.export();
+    }
+
+    @Override
+    public void setParser(Parser parser) {
+
+    }
+
+    @Override
+    public void setPayload(GeneratorPayload generatorPayload) {
+
     }
 }

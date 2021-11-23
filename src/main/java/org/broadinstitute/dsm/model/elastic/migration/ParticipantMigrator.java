@@ -6,6 +6,8 @@ import org.broadinstitute.dsm.db.Participant;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.Exportable;
 import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
+import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
+import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 public class ParticipantMigrator extends BaseSingleMigrator implements Exportable, Generator {
@@ -17,5 +19,15 @@ public class ParticipantMigrator extends BaseSingleMigrator implements Exportabl
     @Override
     protected Map<String, Object> getDataByRealm() {
         return (Map) Participant.getParticipants(realm);
+    }
+
+    @Override
+    public void setParser(Parser parser) {
+
+    }
+
+    @Override
+    public void setPayload(GeneratorPayload generatorPayload) {
+
     }
 }

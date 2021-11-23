@@ -17,6 +17,9 @@ abstract public class SourceGenerator extends BaseGenerator {
         super(parser, generatorPayload);
     }
 
+    public SourceGenerator() {
+
+    }
 
     @Override
     public Map<String, Object> generate() {

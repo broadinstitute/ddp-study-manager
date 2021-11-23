@@ -3,6 +3,8 @@ package org.broadinstitute.dsm.model.elastic.migration;
 import java.util.Map;
 
 import org.broadinstitute.dsm.db.MedicalRecord;
+import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
+import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 public class MedicalRecordMigrator extends BaseCollectionMigrator {
@@ -16,4 +18,13 @@ public class MedicalRecordMigrator extends BaseCollectionMigrator {
         return (Map) MedicalRecord.getMedicalRecords(realm);
     }
 
+    @Override
+    public void setParser(Parser parser) {
+
+    }
+
+    @Override
+    public void setPayload(GeneratorPayload generatorPayload) {
+
+    }
 }

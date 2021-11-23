@@ -18,6 +18,10 @@ public class CollectionSourceGenerator extends SourceGenerator {
         super(parser, generatorPayload);
     }
 
+    public CollectionSourceGenerator() {
+
+    }
+
     @Override
     protected Object construct() {
         logger.info("Constructing nested data");

@@ -56,6 +56,8 @@ public abstract class BaseGenerator implements Generator, Collector {
 
     //wrap Util.getDBElement in protected method so that we can override it in testing class for tests
     protected DBElement getDBElement() {
+        if (dbElement == null)
+            dbElement = Util.getDBElement(getNameValue().getName());
         return dbElement;
     }
 

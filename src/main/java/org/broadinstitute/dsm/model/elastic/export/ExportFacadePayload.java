@@ -8,6 +8,7 @@ import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.broadinstitute.dsm.util.PatchUtil;
 
 public class ExportFacadePayload {
+
     private String index;
     private String docId;
     private GeneratorPayload generatorPayload;
@@ -34,8 +35,16 @@ public class ExportFacadePayload {
         this.docId = docId;
     }
 
-    public String getFieldName() {
+    public String getColumnName() {
         DBElement dbElement = PatchUtil.getColumnNameMap().get(generatorPayload.getName());
         return dbElement.getColumnName();
+    }
+
+    public GeneratorPayload getGeneratorPayload() {
+        return generatorPayload;
+    }
+
+    public String getFieldNameWithAlias() {
+        return generatorPayload.getName();
     }
 }

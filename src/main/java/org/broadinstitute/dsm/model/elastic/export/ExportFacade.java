@@ -7,12 +7,7 @@ import java.util.Objects;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.Util;
-import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
-import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
-import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorFactory;
-import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
-import org.broadinstitute.dsm.model.elastic.export.generate.MappingGeneratorFactory;
-import org.broadinstitute.dsm.model.elastic.export.generate.SourceGenerator;
+import org.broadinstitute.dsm.model.elastic.export.generate.*;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
 import org.broadinstitute.dsm.model.elastic.export.process.CollectionProcessor;
@@ -29,7 +24,7 @@ public class ExportFacade {
     private static final Logger logger = LoggerFactory.getLogger(ExportFacade.class);
 
     Exportable exportable;
-    Generator generator;
+    BaseGenerator generator;
     ElasticSearchable searchable;
     private ExportFacadePayload exportFacadePayload;
     Processor processor;
@@ -48,9 +43,11 @@ public class ExportFacade {
         BaseGenerator.PropertyInfo propertyInfo = getPropertyInfo();
         GeneratorFactory generatorFactory = new MappingGeneratorFactory();
         generator = generatorFactory.make(propertyInfo);
+        generator.setParser(new TypeParser());
+        generator.setPayload(exportFacadePayload.getGeneratorPayload());
         Map<String, Object> mappingToUpsert = generator.generate();
         RequestPayload upsertMappingRequestPayload = new RequestPayload(exportFacadePayload.getIndex());
-        propertyInfo.setFieldName(Util.underscoresToCamelCase(exportFacadePayload.getFieldName()));
+        propertyInfo.setFieldName(Util.underscoresToCamelCase(exportFacadePayload.getColumnName()));
         ExportableFactory mappingExporterFactory = new MappingExporterFactory();
         exportable = mappingExporterFactory.make(propertyInfo);
         exportable.setRequestPayload(upsertMappingRequestPayload);
@@ -68,15 +65,15 @@ public class ExportFacade {
     private Map<String, Object> processData(ESDsm esDsm) {
         BaseGenerator.PropertyInfo propertyInfo = getPropertyInfo();
         ValueParser valueParser = new ValueParser();
-        SourceGenerator sourceGenerator = new SourceGenerator(valueParser, exportFacadePayload.getGeneratorPayload());
-        GeneratorFactory generatorFactory = new MappingGeneratorFactory();
-        generator = generatorFactory.make(propertyInfo);
-        this.generator = sourceGenerator;
+        GeneratorFactory sourceGeneratorFactory = new SourceGeneratorFactory();
+        generator = sourceGeneratorFactory.make(propertyInfo);
+        generator.setParser(valueParser);
+        generator.setPayload(exportFacadePayload.getGeneratorPayload());
         Map<String, Object> dataToReturn = generator.generate();
         logger.info("Processing ES participant data");
         if (propertyInfo.isCollection()) {
             processor = new CollectionProcessor(esDsm, propertyInfo.getPropertyName(), exportFacadePayload.getRecordId(),
-                    sourceGenerator);
+                    generator);
             List<Map<String, Object>> processedData = processor.process();
             if (!processedData.isEmpty()) {
                 dataToReturn = Map.of(MappingGenerator.DSM_OBJECT, Map.of(propertyInfo.getPropertyName(), processedData));
@@ -87,7 +84,7 @@ public class ExportFacade {
     }
 
     private BaseGenerator.PropertyInfo getPropertyInfo() {
-        DBElement dbElement = PatchUtil.getColumnNameMap().get(exportFacadePayload.getFieldName());
+        DBElement dbElement = PatchUtil.getColumnNameMap().get(exportFacadePayload.getFieldNameWithAlias());
         return Util.TABLE_ALIAS_MAPPINGS.get(dbElement.getTableAlias());
     }
 

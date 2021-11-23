@@ -16,6 +16,10 @@ public class SingleSourceGenerator extends SourceGenerator {
         super(parser, generatorPayload);
     }
 
+    public SingleSourceGenerator() {
+
+    }
+
     @Override
     protected Object construct() {
         return parseJsonValuesToObject();

@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.db.Tissue;
+import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
+import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -48,6 +50,16 @@ public class BaseCollectionMigratorTest {
         @Override
         protected Map<String, Object> getDataByRealm() {
             return Map.of();
+        }
+
+        @Override
+        public void setParser(Parser parser) {
+
+        }
+
+        @Override
+        public void setPayload(GeneratorPayload generatorPayload) {
+
         }
     }
 }

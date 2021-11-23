@@ -17,8 +17,8 @@ public class ElasticDataExportAdapter extends BaseExporter {
     public void export() {
         logger.info("initialize exporting data to ES");
         UpdateRequest updateRequest = new UpdateRequest(requestPayload.getIndex(), Util.DOC, requestPayload.getId())
-                .retryOnConflict(5)
-                .docAsUpsert(true);
+                .doc(source)
+                .retryOnConflict(5);
         try {
             clientInstance.update(updateRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
