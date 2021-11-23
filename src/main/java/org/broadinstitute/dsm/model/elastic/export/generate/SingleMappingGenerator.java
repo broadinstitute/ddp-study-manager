@@ -12,6 +12,8 @@ public class SingleMappingGenerator extends MappingGenerator {
         super(parser, generatorPayload);
     }
 
+    public SingleMappingGenerator() {}
+
     @Override
     protected Map<String, Object> getElement(Object type) {
         return Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), type);

@@ -9,7 +9,9 @@ import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
+import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorFactory;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
+import org.broadinstitute.dsm.model.elastic.export.generate.MappingGeneratorFactory;
 import org.broadinstitute.dsm.model.elastic.export.generate.SourceGenerator;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
@@ -43,9 +45,11 @@ public class ExportFacade {
     }
 
     private void upsertMapping() {
+        BaseGenerator.PropertyInfo propertyInfo = getPropertyInfo();
+        GeneratorFactory generatorFactory = new MappingGeneratorFactory();
+        generator = generatorFactory.make(propertyInfo);
         Map<String, Object> mappingToUpsert = generator.generate();
         RequestPayload upsertMappingRequestPayload = new RequestPayload(exportFacadePayload.getIndex());
-        BaseGenerator.PropertyInfo propertyInfo = getPropertyInfo();
         propertyInfo.setFieldName(Util.underscoresToCamelCase(exportFacadePayload.getFieldName()));
         ExportableFactory mappingExporterFactory = new MappingExporterFactory();
         exportable = mappingExporterFactory.make(propertyInfo);
@@ -64,8 +68,9 @@ public class ExportFacade {
     private Map<String, Object> processData(ESDsm esDsm) {
         BaseGenerator.PropertyInfo propertyInfo = getPropertyInfo();
         ValueParser valueParser = new ValueParser();
-//        SourceGenerator sourceGenerator = new SourceGenerator(valueParser, exportFacadePayload.getGeneratorPayload());
-        SourceGenerator sourceGenerator = null;
+        SourceGenerator sourceGenerator = new SourceGenerator(valueParser, exportFacadePayload.getGeneratorPayload());
+        GeneratorFactory generatorFactory = new MappingGeneratorFactory();
+        generator = generatorFactory.make(propertyInfo);
         this.generator = sourceGenerator;
         Map<String, Object> dataToReturn = generator.generate();
         logger.info("Processing ES participant data");

@@ -21,7 +21,7 @@ public abstract class BaseGenerator implements Generator, Collector {
     public static final String DSM_OBJECT = "dsm";
     public static final String PROPERTIES = "properties";
     protected static final Gson GSON = new Gson();
-    protected final Parser parser;
+    protected Parser parser;
     protected GeneratorPayload generatorPayload;
     private DBElement dbElement;
 
@@ -29,6 +29,20 @@ public abstract class BaseGenerator implements Generator, Collector {
         this.parser = Objects.requireNonNull(parser);
         this.generatorPayload = Objects.requireNonNull(generatorPayload);
         dbElement = Util.getDBElement(getNameValue().getName());
+    }
+
+    public BaseGenerator() {
+
+    }
+
+    @Override
+    public void setParser(Parser parser) {
+        this.parser = Objects.requireNonNull(parser);
+    }
+
+    @Override
+    public void setPayload(GeneratorPayload generatorPayload) {
+        this.generatorPayload = Objects.requireNonNull(generatorPayload);
     }
 
     //setter method to set dbElement for testing only!!!

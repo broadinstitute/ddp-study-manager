@@ -12,6 +12,8 @@ public class CollectionMappingGenerator extends MappingGenerator {
         super(parser, generatorPayload);
     }
 
+    public CollectionMappingGenerator() {}
+
     @Override
     protected Map<String, Object> getElement(Object type) {
         return Map.of(
