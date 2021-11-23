@@ -28,7 +28,7 @@ public class CreateClinicalDummyKitRoute implements Route {
     private final String FFPE_USER = "ffpe-dummy-kit-creator";
     private final String FFPE = "ffpe";
     private final String FFPE_SCROLL = "ffpe-scroll";
-    private final String FFPE_SSECTION = "ffpe-section";
+    private final String FFPE_SECTION = "ffpe-section";
 
     @Override
     public Object handle(Request request, Response response) {
@@ -73,7 +73,7 @@ public class CreateClinicalDummyKitRoute implements Route {
                 String smIdType;
                 if(kitTypeString.equalsIgnoreCase(FFPE_SCROLL)){
                     smIdType = TissueSmId.SCROLLS;
-                }else if(kitTypeString.equalsIgnoreCase(FFPE_SSECTION)){
+                }else if(kitTypeString.equalsIgnoreCase(FFPE_SECTION)){
                     smIdType = TissueSmId.USS;
                 }else{
                     throw new RuntimeException("The FFPE kit type does not match any of the valid types "+kitTypeString);

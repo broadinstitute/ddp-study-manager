@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import lombok.Data;
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.db.dao.ddp.tissue.TissueSMIDDao;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
 import org.broadinstitute.dsm.db.structure.SqlDateConverter;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -31,7 +33,7 @@ public class Tissue {
     private static final String SQL_SELECT_TISSUE = "SELECT tissue_id, onc_history_detail_id, notes, count_received, tissue_type, tissue_site, tumor_type, h_e, " +
             "pathology_report, collaborator_sample_id, block_sent, expected_return, return_date, return_fedex_id, scrolls_received, sk_id, sm_id, " +
             "scrolls_count, uss_count, blocks_count, h_e_count, first_sm_id, sent_gp, last_changed, changed_by, additional_tissue_value_json, shl_work_number, " +
-            "tumor_percentage, tissue_sequence, uss_sm_ids, scrolls_sm_ids, he_sm_ids FROM ddp_tissue t WHERE NOT (deleted <=> 1) AND onc_history_detail_id = ?";
+            "tumor_percentage, tissue_sequence FROM ddp_tissue t WHERE NOT (deleted <=> 1) AND onc_history_detail_id = ?";
     private static final String SQL_INSERT_TISSUE = "INSERT INTO ddp_tissue SET onc_history_detail_id = ?, last_changed = ?, changed_by = ?";
     public static final String SQL_SELECT_TISSUE_LAST_CHANGED = "SELECT t.last_changed FROM ddp_institution inst " +
             "LEFT JOIN ddp_participant as p on (p.participant_id = inst.participant_id) LEFT JOIN ddp_instance as ddp on (ddp.ddp_instance_id = p.ddp_instance_id) " +
@@ -124,13 +126,10 @@ public class Tissue {
     @ColumnName (DBConstants.H_E_COUNT)
     private Integer hECount;
 
-    @ColumnName(DBConstants.USS_SMIDS)
     private TissueSmId[] ussSMID;
 
-    @ColumnName(DBConstants.SCROLL_SMIDS)
     private TissueSmId[] scrollSMID;
 
-    @ColumnName(DBConstants.HE_SMIDS)
     private TissueSmId[] heSMID;
 
 
@@ -211,24 +210,14 @@ public class Tissue {
     }
 
     private void setSMIds() {
-        if (this.hECount>0){
-           this.heSMID = TissueSmId.getSMIdsForTissueId(this.tissueId, TissueSmId.HE);
-        } else{
-            this.heSMID = new TissueSmId[0];
-        }
-        if (this.ussCount>0){
-            this.ussSMID = TissueSmId.getSMIdsForTissueId(this.tissueId, TissueSmId.USS);
-        }
-        else{
-            this.ussSMID = new TissueSmId[0];
-        }
-        if (this.scrollsCount>0){
-            this.scrollSMID = TissueSmId.getSMIdsForTissueId(this.tissueId, TissueSmId.SCROLLS);
-        }
-        else{
-            this.scrollSMID = new TissueSmId[0];
-        }
-
+        Map<String,  List<TissueSmId>> map= TissueSmId.getSMIdsForTissueId(this.getTissueId());
+        TissueSMIDDao tissueSMIDDao = new TissueSMIDDao();
+        String typeId = tissueSMIDDao.getTypeForName(TissueSmId.HE);
+        this.heSMID = map.getOrDefault(typeId, new ArrayList<>()).toArray(new TissueSmId[map.getOrDefault(typeId, new ArrayList<>()).size()]);
+        typeId = tissueSMIDDao.getTypeForName(TissueSmId.USS);
+        this.ussSMID = map.getOrDefault(typeId, new ArrayList<>()).toArray(new TissueSmId[map.getOrDefault(typeId, new ArrayList<>()).size()]);
+        typeId = tissueSMIDDao.getTypeForName(TissueSmId.SCROLLS);
+        this.scrollSMID = map.getOrDefault(typeId, new ArrayList<>()).toArray(new TissueSmId[map.getOrDefault(typeId, new ArrayList<>()).size()]);
     }
 
     public static List<Tissue> getTissue(@NonNull Connection conn, @NonNull String oncHistoryDetailId) {

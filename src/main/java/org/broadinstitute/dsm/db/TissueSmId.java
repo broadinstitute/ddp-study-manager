@@ -7,6 +7,7 @@ import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.statics.DBConstants;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @TableName (
@@ -44,10 +45,10 @@ public class TissueSmId {
     }
 
 
-    public static TissueSmId[] getSMIdsForTissueId(String tissueId, String type) {
+    public static Map<String, List<TissueSmId>> getSMIdsForTissueId(String tissueId) {
         TissueSMIDDao tissueSMIDDao = new TissueSMIDDao();
-        List<TissueSmId> list = tissueSMIDDao.getSMIdsForTissueId(tissueId, type);
-        return list.toArray(new TissueSmId[list.size()]);
+        Map<String, List<TissueSmId>> map = tissueSMIDDao.getSMIdsForTissueId(tissueId);
+        return map;
     }
 
     public String createNewSmId(String tissueId, String userId, String smIdType){
