@@ -2,13 +2,14 @@ package org.broadinstitute.dsm.model.elastic.migration;
 
 import java.util.Map;
 
+import org.broadinstitute.dsm.model.elastic.export.BaseExporter;
 import org.broadinstitute.dsm.model.elastic.export.Exportable;
 import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.utils.StringUtils;
 
-public abstract class BaseMigrator implements Exportable, Generator {
+public abstract class BaseMigrator extends BaseExporter implements Generator {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseMigrator.class);
 

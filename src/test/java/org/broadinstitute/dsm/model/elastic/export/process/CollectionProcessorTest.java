@@ -109,7 +109,7 @@ public class CollectionProcessorTest {
 
 
         public TestCollectionProcessor(ESDsm esDsm, String propertyName, GeneratorPayload generatorPayload, Collector collector) {
-            super(esDsm, propertyName, generatorPayload, collector);
+            super(esDsm, propertyName, generatorPayload.getRecordId(), collector);
         }
 
     }

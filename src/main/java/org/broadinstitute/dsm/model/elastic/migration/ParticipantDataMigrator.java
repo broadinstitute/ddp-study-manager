@@ -60,8 +60,8 @@ public class ParticipantDataMigrator extends BaseCollectionMigrator {
             throw new RuntimeException(e);
         }
         ElasticMappingExportAdapter mappingExporter = new ElasticMappingExportAdapter();
-        mappingExporter.setUpsertMappingRequestPayload(new RequestPayload(index));
-        mappingExporter.setMapping(mapping);
+        mappingExporter.setRequestPayload(new RequestPayload(index));
+        mappingExporter.setSource(mapping);
         mappingExporter.export();
     }
 }

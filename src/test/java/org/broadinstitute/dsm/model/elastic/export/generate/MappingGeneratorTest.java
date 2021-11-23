@@ -169,6 +169,7 @@ public class MappingGeneratorTest {
 
     }
 
+
     private static class TestCollectionMappingGenerator extends CollectionMappingGenerator {
 
         public TestCollectionMappingGenerator(Parser typeParser, GeneratorPayload generatorPayload) {
