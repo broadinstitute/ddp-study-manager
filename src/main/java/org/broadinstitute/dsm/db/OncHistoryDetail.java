@@ -42,7 +42,7 @@ public class OncHistoryDetail {
             "oD.fax_sent_3_by, oD.fax_confirmed_3, oD.tissue_received, oD.tissue_problem_option, oD.gender, oD.destruction_policy, oD.unable_obtain_tissue, " +
             "tissue_id, t.notes, count_received, tissue_type, tissue_site, tumor_type, h_e, pathology_report, collaborator_sample_id, block_sent, scrolls_received, sk_id, sm_id, " +
             "sent_gp, first_sm_id, additional_tissue_value_json, expected_return, return_date, return_fedex_id, shl_work_number, tumor_percentage, tissue_sequence, " +
-            " scrolls_count, uss_count, h_e_count, blocks_count " +
+            " scrolls_count, uss_count, h_e_count, blocks_count, p.ddp_participant_id " +
             "FROM ddp_onc_history_detail oD " +
             "LEFT JOIN ddp_medical_record m on (oD.medical_record_id = m.medical_record_id AND NOT oD.deleted <=> 1 AND NOT m.deleted <=> 1) " +
             "LEFT JOIN ddp_institution inst on (inst.institution_id = m.institution_id) " +
@@ -281,7 +281,11 @@ public class OncHistoryDetail {
                 rs.getString(DBConstants.DESTRUCTION_POLICY),
                 rs.getBoolean(DBConstants.UNABLE_OBTAIN_TISSUE)
         );
-
+        try {
+            oncHistoryDetail.setParticipantId(rs.getString(DBConstants.DDP_PARTICIPANT_ID));
+        }catch (java.sql.SQLException e) {
+            oncHistoryDetail.setParticipantId(null);
+        }
         return oncHistoryDetail;
     }
 

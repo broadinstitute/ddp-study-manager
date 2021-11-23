@@ -69,31 +69,38 @@ public class CreateClinicalDummyKitRoute implements Route {
                 }, () -> {
                     throw new RuntimeException(" Participant " + ddpParticipantId + " was not found!");
                 });
-            }else{
+            }
+            else {
                 String smIdType;
-                if(kitTypeString.equalsIgnoreCase(FFPE_SCROLL)){
+                if (kitTypeString.equalsIgnoreCase(FFPE_SCROLL)) {
                     smIdType = TissueSmId.SCROLLS;
-                }else if(kitTypeString.equalsIgnoreCase(FFPE_SECTION)){
+                }
+                else if (kitTypeString.equalsIgnoreCase(FFPE_SECTION)) {
                     smIdType = TissueSmId.USS;
-                }else{
-                    throw new RuntimeException("The FFPE kit type does not match any of the valid types "+kitTypeString);
+                }
+                else {
+                    throw new RuntimeException("The FFPE kit type does not match any of the valid types " + kitTypeString);
                 }
                 String randomOncHistoryDetailId = bspDummyKitDao.getRandomOncHistoryForStudy(ddpInstance.getName());
                 OncHistoryDetail oncHistoryDetail = OncHistoryDetail.getOncHistoryDetail(randomOncHistoryDetailId, ddpInstance.getName());
-                logger.info("found randomOncHistoryDetailId "+ randomOncHistoryDetailId);
-                while(oncHistoryDetail == null){
+                String ddpParticipantId = oncHistoryDetail.getParticipantId();
+                Optional<ElasticSearchParticipantDto> maybeParticipant = ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+                logger.info("found randomOncHistoryDetailId " + randomOncHistoryDetailId);
+                while (oncHistoryDetail == null || maybeParticipant.isEmpty() || maybeParticipant.get().getProfile().map(ESProfile::getHruid).isEmpty()) {
                     randomOncHistoryDetailId = bspDummyKitDao.getRandomOncHistoryForStudy(ddpInstance.getName());
                     oncHistoryDetail = OncHistoryDetail.getOncHistoryDetail(randomOncHistoryDetailId, ddpInstance.getName());
-                    logger.info("found randomOncHistoryDetailId "+ randomOncHistoryDetailId);
-
+                    ddpParticipantId = oncHistoryDetail.getParticipantId();
+                    logger.info("found randomOncHistoryDetailId " + randomOncHistoryDetailId);
+                    maybeParticipant = ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId);
                 }
                 List<Tissue> tissueIds = OncHistoryDetail.getOncHistoryDetail(randomOncHistoryDetailId, ddpInstance.getName()).getTissues();
                 String tissueId;
 
-                if (tissueIds.isEmpty()){
+                if (tissueIds.isEmpty()) {
                     tissueId = Tissue.createNewTissue(randomOncHistoryDetailId, FFPE_USER);
-                }else{
-                    tissueId = tissueIds.get( new Random().nextInt(tissueIds.size())).getTissueId();
+                }
+                else {
+                    tissueId = tissueIds.get(new Random().nextInt(tissueIds.size())).getTissueId();
                 }
                 new TissueSMIDDao().createNewSMIDForTissueWithValue(tissueId, FFPE_USER, smIdType, kitLabel);
             }
