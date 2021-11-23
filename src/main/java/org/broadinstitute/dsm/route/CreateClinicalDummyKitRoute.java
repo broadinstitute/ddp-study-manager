@@ -78,19 +78,24 @@ public class CreateClinicalDummyKitRoute implements Route {
                 }else{
                     throw new RuntimeException("The FFPE kit type does not match any of the valid types "+kitTypeString);
                 }
-                Optional<String> randomOncHistoryDetailId = bspDummyKitDao.getRandomOncHistoryForStudy(ddpInstance.getName());
-                randomOncHistoryDetailId.ifPresentOrElse(oid -> {
-                            List<Tissue> tissueIds = OncHistoryDetail.getOncHistoryDetail(oid, ddpInstance.getName()).getTissues();
-                            String tissueId;
+                String randomOncHistoryDetailId = bspDummyKitDao.getRandomOncHistoryForStudy(ddpInstance.getName());
+                OncHistoryDetail oncHistoryDetail = OncHistoryDetail.getOncHistoryDetail(randomOncHistoryDetailId, ddpInstance.getName());
+                logger.info("found randomOncHistoryDetailId "+ randomOncHistoryDetailId);
+                while(oncHistoryDetail == null){
+                    randomOncHistoryDetailId = bspDummyKitDao.getRandomOncHistoryForStudy(ddpInstance.getName());
+                    oncHistoryDetail = OncHistoryDetail.getOncHistoryDetail(randomOncHistoryDetailId, ddpInstance.getName());
+                    logger.info("found randomOncHistoryDetailId "+ randomOncHistoryDetailId);
 
-                            if (tissueIds.isEmpty()){
-                                tissueId = Tissue.createNewTissue(oid, FFPE_USER);
-                            }else{
-                                tissueId = tissueIds.get( new Random().nextInt(tissueIds.size())).getTissueId();
-                            }
-                            new TissueSMIDDao().createNewSMIDForTissue(tissueId, FFPE_USER, smIdType);
-                        },
-                        ()-> {throw new RuntimeException("no onc history for study " + ddpInstance.getName() + " was found!");});
+                }
+                List<Tissue> tissueIds = OncHistoryDetail.getOncHistoryDetail(randomOncHistoryDetailId, ddpInstance.getName()).getTissues();
+                String tissueId;
+
+                if (tissueIds.isEmpty()){
+                    tissueId = Tissue.createNewTissue(randomOncHistoryDetailId, FFPE_USER);
+                }else{
+                    tissueId = tissueIds.get( new Random().nextInt(tissueIds.size())).getTissueId();
+                }
+                new TissueSMIDDao().createNewSMIDForTissueWithValue(tissueId, FFPE_USER, smIdType, kitLabel);
             }
             logger.info("Kit added successfully");
             response.status(200);

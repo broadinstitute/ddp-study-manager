@@ -86,14 +86,14 @@ public class BSPDummyKitDao implements Dao<ClinicalKitDto> {
         return Optional.ofNullable((String) results.resultValue);
     }
 
-    public Optional<String> getRandomOncHistoryForStudy(String ddpInstanceName) {
+    public String getRandomOncHistoryForStudy(String ddpInstanceName) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(DBUtil.getFinalQuery(OncHistoryDetail.SQL_SELECT_ONC_HISTORY_DETAIL , SQL_SELECT_RANDOM_SUFFIX))) {
                 stmt.setString(1, ddpInstanceName);
                 ResultSet rs = stmt.executeQuery();
                 if (rs.next()) {
-                    dbVals.resultValue =  Optional.of(rs.getString(DBConstants.DDP_PARTICIPANT_ID));
+                    dbVals.resultValue =  rs.getString(DBConstants.ONC_HISTORY_DETAIL_ID);
                 }else{
 
                 }
@@ -106,7 +106,7 @@ public class BSPDummyKitDao implements Dao<ClinicalKitDto> {
         if (results.resultException != null) {
             throw new RuntimeException("Problem getting a random participant id for instance " + ddpInstanceName, results.resultException);
         }
-        return (Optional<String>) results.resultValue;
+        return (String)results.resultValue;
     }
 
     @Override

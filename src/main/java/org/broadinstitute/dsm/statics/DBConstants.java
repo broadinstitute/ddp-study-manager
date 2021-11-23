@@ -64,7 +64,7 @@ public class DBConstants {
     public static final String SAMPLE_TYPE = "sample_type";
     public static final String DDP_KIT_REQUEST_TABLE_ABBR = "req.";
     public static final String BSP_MATERIAL_TYPE = "bsp_material_type";
-    public static final String BSP_RECEPTABLE_TYPE = "bsp_receptable_type";
+    public static final String BSP_RECEPTABLE_TYPE = "bsp_receptacle_type";
 
 
 

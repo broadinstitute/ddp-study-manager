@@ -41,11 +41,10 @@ public class ClinicalKitsRoute implements Route {
         BSPKit bspKit = new BSPKit();
         if (!bspKit.canReceiveKit(kitLabel)) {
             Optional<BSPKitStatus> result = bspKit.getKitStatus(kitLabel, notificationUtil);
-            if(result.isEmpty()){
-                response.status(404);
-                return null;
+            if(!result.isEmpty()){
+                return result.get();
             }
-            return result.get();
+
         }
         return getClinicalKit(kitLabel);
     }
@@ -57,7 +56,7 @@ public class ClinicalKitsRoute implements Route {
         BSPKit bspKit = new BSPKit();
         ClinicalKitDto clinicalKit = new ClinicalKitDto();
         Optional<BSPKitInfo> maybeKitInfo = bspKit.receiveBSPKit(kitLabel, notificationUtil);
-        maybeKitInfo.ifPresentOrElse(kitInfo -> {
+        maybeKitInfo.ifPresent(kitInfo -> {
             logger.info("Creating clinical kit to return to GP " + kitLabel);
             clinicalKit.setCollaboratorParticipantId(kitInfo.getCollaboratorParticipantId());
             clinicalKit.setSampleId(kitInfo.getCollaboratorSampleId());
@@ -71,9 +70,10 @@ public class ClinicalKitsRoute implements Route {
             BSPKitDto maybeBspKitQueryResult = bspKitQueryResult.get();
             DDPInstance ddpInstance = DDPInstance.getDDPInstance(maybeBspKitQueryResult.getInstanceName());
             clinicalKit.setNecessaryParticipantDataToClinicalKit( maybeBspKitQueryResult.getDdpParticipantId(), ddpInstance);
-        },
-        () -> {clinicalKit.getClinicalKitBasedONSmId(kitLabel);});
-
+        });
+        if(maybeKitInfo.isEmpty()){
+            return clinicalKit.getClinicalKitBasedONSmId(kitLabel);
+        }
         return clinicalKit;
 
     }

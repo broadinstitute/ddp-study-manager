@@ -10,6 +10,8 @@ import org.broadinstitute.dsm.db.dao.kit.ClinicalKitDao;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
 import org.broadinstitute.dsm.model.elasticsearch.*;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -55,10 +57,8 @@ public class ClinicalKitDto {
     String ddpParticipantId;
     Integer ddpInstanceId;
 
-    private final String FFPE_SECTION_KIT_TYPE = "FFPE-SECTION";
-    private final String FFPE_SCROLLS_KIT_TYPE = "FFPE-SCROLL";
-    private final String USS = "uss";
-    private final String SCROLLS = "scrolls";
+
+    private static final Logger logger = LoggerFactory.getLogger(ClinicalKitDto.class);
 
     public ClinicalKitDto(String collaboratorParticipantId, String sampleId, String sampleCollection, String materialType, String vesselType,
                           String firstName, String lastName, String dateOfBirth, String sampleType, String gender, String accessionNumber, String mfBarcode) {
@@ -109,14 +109,15 @@ public class ClinicalKitDto {
 
 
 
-    public Optional<ClinicalKitDto> getClinicalKitBasedONSmId(String smIdValue) {
+    public ClinicalKitDto getClinicalKitBasedONSmId(String smIdValue) {
+        logger.info("Checking the kit for SM Id value");
         ClinicalKitDao clinicalKitDao = new ClinicalKitDao();
         Optional<ClinicalKitDto> maybeClinicalKit = clinicalKitDao.getClinicalKitFromSMId(smIdValue);
         maybeClinicalKit.orElseThrow();
         ClinicalKitDto clinicalKitDto = maybeClinicalKit.get();
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(clinicalKitDto.ddpInstanceId);
         clinicalKitDto.setNecessaryParticipantDataToClinicalKit(clinicalKitDto.ddpParticipantId, ddpInstance);
-        return Optional.ofNullable(clinicalKitDto);
+        return clinicalKitDto;
     }
 
     public void setNecessaryParticipantDataToClinicalKit(String ddpParticipantId, DDPInstance ddpInstance) {
