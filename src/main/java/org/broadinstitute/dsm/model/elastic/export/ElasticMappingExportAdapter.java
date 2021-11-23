@@ -15,8 +15,11 @@ public class ElasticMappingExportAdapter extends BaseExporter {
     private UpsertMappingRequestPayload upsertMappingRequestPayload;
     private Map<String, Object> mapping;
 
-    public ElasticMappingExportAdapter(UpsertMappingRequestPayload upsertMappingRequestPayload, Map<String, Object> mapping) {
+    public void setUpsertMappingRequestPayload(UpsertMappingRequestPayload upsertMappingRequestPayload) {
         this.upsertMappingRequestPayload = upsertMappingRequestPayload;
+    }
+
+    public void setMapping(Map<String, Object> mapping) {
         this.mapping = mapping;
     }
 

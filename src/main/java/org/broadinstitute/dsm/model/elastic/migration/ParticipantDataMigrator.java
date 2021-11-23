@@ -59,8 +59,9 @@ public class ParticipantDataMigrator extends BaseCollectionMigrator {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        ElasticMappingExportAdapter mappingExporter = new ElasticMappingExportAdapter(new UpsertMappingRequestPayload(
-                index), mapping);
+        ElasticMappingExportAdapter mappingExporter = new ElasticMappingExportAdapter();
+        mappingExporter.setUpsertMappingRequestPayload(new UpsertMappingRequestPayload(index));
+        mappingExporter.setMapping(mapping);
         mappingExporter.export();
     }
 }

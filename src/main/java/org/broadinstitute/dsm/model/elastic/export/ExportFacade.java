@@ -26,7 +26,7 @@ public class ExportFacade {
 
     private static final Logger logger = LoggerFactory.getLogger(ExportFacade.class);
 
-    BaseExporter exportable;
+    Exportable exportable;
     Generator generator;
     ElasticSearchable searchable;
     private ExportFacadePayload exportFacadePayload;
@@ -45,11 +45,13 @@ public class ExportFacade {
     private void upsertMapping() {
 //        generator = new MappingGenerator(new TypeParser(), exportFacadePayload.getGeneratorPayload());
         generator = null;
+        // mapping
         Map<String, Object> mappingToUpsert = generator.generate();
         UpsertMappingRequestPayload upsertMappingRequestPayload = new UpsertMappingRequestPayload(exportFacadePayload.getIndex());
         BaseGenerator.PropertyInfo propertyInfo = getPropertyInfo();
         propertyInfo.setFieldName(Util.underscoresToCamelCase(exportFacadePayload.getFieldName()));
-        exportable = new ElasticMappingExportAdapter(upsertMappingRequestPayload, mappingToUpsert);
+        ExportableFactory mappingExporterFactory = new MappingExporterFactory();
+        exportable = mappingExporterFactory.make(propertyInfo);
         exportable.export();
     }
 
