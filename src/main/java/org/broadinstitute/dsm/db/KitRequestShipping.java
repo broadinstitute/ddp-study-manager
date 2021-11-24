@@ -38,7 +38,7 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 @TableName (
         name = DBConstants.DDP_KIT_REQUEST,
         alias = DBConstants.DDP_KIT_REQUEST_ALIAS,
-        primaryKey = "",
+        primaryKey = DBConstants.DSM_KIT_REQUEST_ID,
         columnPrefix = "")
 public class KitRequestShipping extends KitRequest {
 

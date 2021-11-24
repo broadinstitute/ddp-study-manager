@@ -1,31 +1,40 @@
 package org.broadinstitute.dsm.db;
 
-import com.google.common.reflect.TypeToken;
+import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
+
+import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.google.gson.Gson;
 import lombok.Data;
 import lombok.NonNull;
-import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.ddp.handlers.util.InstitutionDetail;
 import org.broadinstitute.ddp.handlers.util.MedicalInfo;
-import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
 import org.broadinstitute.dsm.db.structure.SqlDateConverter;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.model.FollowUp;
-import org.broadinstitute.dsm.statics.*;
+import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.QueryExtension;
+import org.broadinstitute.dsm.statics.RequestParameter;
+import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.DBUtil;
 import org.broadinstitute.dsm.util.DDPRequestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.sql.*;
-import java.util.*;
-
-import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
-
+@TableName (
+        name = DBConstants.DDP_MEDICAL_RECORD,
+        alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+        primaryKey = DBConstants.MEDICAL_RECORD_ID,
+        columnPrefix = "")
 @Data
 public class MedicalRecord {
 

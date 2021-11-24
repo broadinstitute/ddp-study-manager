@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.generate.Collector;
@@ -24,6 +25,7 @@ public class CollectionProcessor implements Processor {
     private String propertyName;
     private int recordId;
     private Collector collector;
+    private String primaryKey;
 
     private final Predicate<Field> isFieldMatchProperty = field -> propertyName.equals(field.getName());
 
@@ -55,10 +57,23 @@ public class CollectionProcessor implements Processor {
 
     private List<Map<String, Object>> getRecordsByField(Field field) {
         try {
-            return Util.convertObjectListToMapList(field.get(esDsm));
+
+            List<Object> objectCollection = (List<Object>) field.get(esDsm);
+            primaryKey = findPrimaryKeyOfObject(objectCollection);
+            return Util.convertObjectListToMapList(objectCollection);
         } catch (IllegalAccessException iae) {
             throw new RuntimeException("error occurred while attempting to get data from ESDsm", iae);
         }
+    }
+
+    private String findPrimaryKeyOfObject(List<Object> objectCollection) {
+        Optional<Object> maybeObject = objectCollection.stream().findFirst();
+        return maybeObject
+                .map(o -> {
+                    TableName tableName = o.getClass().getAnnotation(TableName.class);
+                    return tableName != null ? tableName.primaryKey() : "";
+                })
+                .orElse("");
     }
 
     private List<Map<String, Object>> updateIfExistsOrPut(List<Map<String, Object>> fetchedRecords) {
@@ -75,8 +90,8 @@ public class CollectionProcessor implements Processor {
     }
 
     private boolean isExistingRecord(Map<String, Object> eachRecord) {
-        if (!eachRecord.containsKey(Util.ID)) return false;
-        return (double) eachRecord.get(Util.ID) == (double) recordId;
+        if (!eachRecord.containsKey(Util.underscoresToCamelCase(primaryKey))) return false;
+        return Double.parseDouble(String.valueOf(eachRecord.get(Util.underscoresToCamelCase(primaryKey)))) == (double) recordId;
     }
 
     private void updateExistingRecord(Map<String, Object> eachRecord) {

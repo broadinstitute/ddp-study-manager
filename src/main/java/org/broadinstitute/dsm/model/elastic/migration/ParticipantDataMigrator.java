@@ -11,8 +11,10 @@ import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.elastic.export.ElasticMappingExportAdapter;
 import org.broadinstitute.dsm.model.elastic.export.RequestPayload;
+import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
+import org.broadinstitute.dsm.model.elastic.export.generate.MappingGeneratorFactory;
 import org.broadinstitute.dsm.model.elastic.export.parse.BaseParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
@@ -52,8 +54,9 @@ public class ParticipantDataMigrator extends BaseCollectionMigrator {
                 for (Object jsonData : participantDatas) {
                     NameValue nameValue = new NameValue(DATA_WITH_ALIAS, dataField.get(jsonData));
                     GeneratorPayload generatorPayload = new GeneratorPayload(nameValue);
-//                    MappingGenerator mappingGenerator = new MappingGenerator(typeParser, generatorPayload);
-                    MappingGenerator mappingGenerator = null;
+                    MappingGenerator mappingGenerator = (MappingGenerator) new MappingGeneratorFactory().make(new BaseGenerator.PropertyInfo("", true));
+                    mappingGenerator.setParser(typeParser);
+                    mappingGenerator.setPayload(generatorPayload);
                     mapping = mappingGenerator.merge(mapping, mappingGenerator.generate());
                 }
             }
