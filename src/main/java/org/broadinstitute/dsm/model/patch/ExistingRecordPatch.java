@@ -15,7 +15,6 @@ import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.settings.field.FieldSettings;
-import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.NotificationUtil;
@@ -117,7 +116,7 @@ public class ExistingRecordPatch extends BasePatch {
                 writeFamilyMemberWorklow(patch, ddpInstance, profile, pData);
             } else {
                 Map<String, Object> esMap = ElasticSearchUtil
-                        .getObjectsMap(ddpInstance.getParticipantIndexES(), profile.getParticipantGuid(),
+                        .getObjectsMap(ddpInstance.getParticipantIndexES(), profile.getGuid(),
                                 ESObjectConstants.WORKFLOWS);
                 if (Objects.isNull(esMap) || esMap.isEmpty()) return;
                 removeFamilyMemberWorkflowData(ddpInstance, profile, pData, esMap);
@@ -136,7 +135,7 @@ public class ExistingRecordPatch extends BasePatch {
             if (!patch.getFieldId().contains(org.broadinstitute.dsm.model.participant.data.ParticipantData.FIELD_TYPE_PARTICIPANTS)) return;
             // Use participant guid here to avoid multiple ES lookups.
             ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance,
-                    profile.getParticipantGuid(), columnName, columnValue, new WorkflowForES.StudySpecificData(
+                    profile.getGuid(), columnName, columnValue, new WorkflowForES.StudySpecificData(
                             pData.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
                             pData.get(FamilyMemberConstants.FIRSTNAME),
                             pData.get(FamilyMemberConstants.LASTNAME))), false);
@@ -159,14 +158,14 @@ public class ExistingRecordPatch extends BasePatch {
         if (startingSize != workflowsList.size()) {
             esMap.put(ESObjectConstants.WORKFLOWS, workflowsList);
             // Use participant guid here to avoid another ES lookup.
-            ElasticSearchUtil.updateRequest(profile.getParticipantGuid(), ddpInstance.getParticipantIndexES(), esMap);
+            ElasticSearchUtil.updateRequest(profile.getGuid(), ddpInstance.getParticipantIndexES(), esMap);
         }
     }
 
     private void writeESWorkflowElseTriggerParticipantEvent(Patch patch, DDPInstance ddpInstance, ESProfile profile, NameValue nameValue) {
         for (Value action : patch.getActions()) {
             if (hasProfileAndESWorkflowType(profile, action)) {
-                writeESWorkflow(patch, nameValue, action, ddpInstance, profile.getParticipantGuid());
+                writeESWorkflow(patch, nameValue, action, ddpInstance, profile.getGuid());
             }
             else if (EventTypeDao.EVENT.equals(action.getType())) {
                 triggerParticipantEvent(ddpInstance, patch, action);

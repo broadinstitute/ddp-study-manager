@@ -396,7 +396,7 @@ public class ElasticSearchUtil {
                     ESProfile profile = gson.fromJson(participantJson.get(PROFILE), ESProfile.class);
                     Address gbfAddress = new Address(address.getRecipient(), address.getStreet1(), address.getStreet1(),
                             address.getCity(), address.getState(), address.getZip(), address.getCountry(), address.getPhone());
-                    addressByParticipant.put(profile.getParticipantGuid(), gbfAddress);
+                    addressByParticipant.put(profile.getGuid(), gbfAddress);
                 }
                 hitNumber++;
             }
@@ -448,7 +448,7 @@ public class ElasticSearchUtil {
 
             String participantId = ParticipantUtil.isGuid(ddpParticipantId) ? ddpParticipantId : getParticipantESDataByAltpid(client, index, ddpParticipantId)
                     .getProfile()
-                    .map(ESProfile::getParticipantGuid)
+                    .map(ESProfile::getGuid)
                     .orElse(ddpParticipantId);
 
             Map<String, Object> workflowMapES = getObjectsMap(client, index, participantId, ESObjectConstants.WORKFLOWS);
@@ -679,7 +679,7 @@ public class ElasticSearchUtil {
                                       RestHighLevelClient client) throws IOException {
         String participantId = ParticipantUtil.isGuid(ddpParticipantId) ? ddpParticipantId : getParticipantESDataByAltpid(client, index, ddpParticipantId)
                 .getProfile()
-                .map(ESProfile::getParticipantGuid)
+                .map(ESProfile::getGuid)
                 .orElse(ddpParticipantId);
         UpdateRequest updateRequest = new UpdateRequest()
                 .index(index)
@@ -747,7 +747,7 @@ public class ElasticSearchUtil {
                 Map<String, Object> source = response.getHits().getAt(0).getSourceAsMap();
                 profile = ElasticSearch.parseSourceMap(source).flatMap(ElasticSearchParticipantDto::getProfile).orElse(null);
                 if (profile != null) {
-                    logger.info("Found ES profile for participant, guid: {} altpid: {}", profile.getParticipantGuid(), profile.getParticipantLegacyAltPid());
+                    logger.info("Found ES profile for participant, guid: {} altpid: {}", profile.getGuid(), profile.getLegacyAltPid());
                 }
             }
             return Optional.ofNullable(profile);

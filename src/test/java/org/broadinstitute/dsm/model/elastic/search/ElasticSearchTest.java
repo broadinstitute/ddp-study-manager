@@ -22,7 +22,7 @@ public class ElasticSearchTest {
                 .withProfile(profile)
                 .build();
         String participantId = elasticSearchParticipantDto.getParticipantId();
-        Assert.assertEquals(profile.getParticipantGuid(), participantId);
+        Assert.assertEquals(profile.getGuid(), participantId);
     }
 
     @Test
@@ -32,7 +32,7 @@ public class ElasticSearchTest {
                 .withProfile(esProfileWithLegacyAltPid)
                 .build();
         String participantId = elasticSearchParticipantDto.getParticipantId();
-        Assert.assertEquals(esProfileWithLegacyAltPid.getParticipantLegacyAltPid(), participantId);
+        Assert.assertEquals(esProfileWithLegacyAltPid.getLegacyAltPid(), participantId);
     }
 
     @Test
@@ -87,13 +87,13 @@ public class ElasticSearchTest {
 
     private static ESProfile esProfileGeneratorWithGuid() {
         ESProfile esProfile = new ESProfile();
-        esProfile.setParticipantGuid(ParticipantWrapperTest.randomGuidGenerator());
+        esProfile.setGuid(ParticipantWrapperTest.randomGuidGenerator());
         return esProfile;
     }
 
     private static ESProfile esProfileGeneratorWithLegacyAltPid() {
         ESProfile esProfile = new ESProfile();
-        esProfile.setParticipantLegacyAltPid(ParticipantWrapperTest.randomLegacyAltPidGenerator());
+        esProfile.setLegacyAltPid(ParticipantWrapperTest.randomLegacyAltPidGenerator());
         return esProfile;
     }
 

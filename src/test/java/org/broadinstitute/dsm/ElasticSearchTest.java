@@ -413,7 +413,7 @@ public class ElasticSearchTest extends TestHelper {
                     ElasticSearchUtil.fetchESDataByParticipantId("participants_structured.rgp.rgp", pIdToFilter, client);
             fetchedPid = esObject.orElse(new ElasticSearchParticipantDto.Builder().build())
                     .getProfile()
-                    .map(ESProfile::getParticipantLegacyAltPid)
+                    .map(ESProfile::getLegacyAltPid)
                     .orElse("");
         } catch (IOException e) {
             Assert.fail();
@@ -430,7 +430,7 @@ public class ElasticSearchTest extends TestHelper {
             ElasticSearchParticipantDto esObject =
                     ElasticSearchUtil.fetchESDataByAltpid("participants_structured.atcp.atcp", altpid, client);
             fetchedPid = esObject.getProfile()
-                    .map(ESProfile::getParticipantLegacyAltPid)
+                    .map(ESProfile::getLegacyAltPid)
                     .orElse("");
         } catch (IOException e) {
             Assert.fail();

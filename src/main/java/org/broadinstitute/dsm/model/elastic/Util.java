@@ -114,8 +114,9 @@ public class Util {
         Map<String, Object> finalResult;
         switch (fieldName) {
             case "follow_ups":
-                List<Map<String, Object>> followUps = convertObjectListToMapList(fieldValue);
-                finalResult = Map.of(underscoresToCamelCase(fieldName), followUps);
+                finalResult = Map.of(underscoresToCamelCase(fieldName), new Gson().toJson(fieldValue));
+//                List<Map<String, Object>> followUps = convertObjectListToMapList(fieldValue);
+//                finalResult = Map.of(underscoresToCamelCase(fieldName), followUps);
                 break;
             case "data":
                 Map<String, Object> objectMap = dynamicFieldsSpecialCase(fieldValue);

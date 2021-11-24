@@ -221,7 +221,7 @@ public class ParticipantWrapper {
         return elasticSearchParticipantDtos.
                 stream()
                 .flatMap(elasticSearch -> elasticSearch.getProfile().stream())
-                .map(ESProfile::getParticipantGuid)
+                .map(ESProfile::getGuid)
                 .collect(Collectors.toList());
     }
 

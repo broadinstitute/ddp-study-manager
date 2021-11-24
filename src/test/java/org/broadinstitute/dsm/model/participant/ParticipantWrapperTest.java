@@ -87,7 +87,7 @@ public class ParticipantWrapperTest {
         public ElasticSearch getParticipantsWithinRange(String esParticipantsIndex, int from, int to) {
             List<ElasticSearchParticipantDto> result = Stream.generate(() -> {
                         ESProfile esProfile = new ESProfile();
-                        esProfile.setParticipantGuid(randomGuidGenerator());
+                        esProfile.setGuid(randomGuidGenerator());
                         return new ElasticSearchParticipantDto.Builder()
                                 .withProfile(esProfile)
                                 .withProxies(generateProxies())
@@ -104,7 +104,7 @@ public class ParticipantWrapperTest {
             List<ElasticSearchParticipantDto> result = new ArrayList<>();
             participantIds.forEach(pId -> {
                 ESProfile esProfile = new ESProfile();
-                esProfile.setParticipantGuid(pId);
+                esProfile.setGuid(pId);
                 result.add(
                         new ElasticSearchParticipantDto.Builder()
                                 .withProfile(esProfile)

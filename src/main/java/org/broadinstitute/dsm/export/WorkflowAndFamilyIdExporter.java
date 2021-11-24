@@ -102,7 +102,7 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
 
             WorkflowsEditor editor = new WorkflowsEditor(new ArrayList<>());
             try {
-                Map<String, Object> source = ElasticSearchUtil.getObjectsMap(index, profile.getParticipantGuid(), ESObjectConstants.WORKFLOWS);
+                Map<String, Object> source = ElasticSearchUtil.getObjectsMap(index, profile.getGuid(), ESObjectConstants.WORKFLOWS);
                 if (source != null && source.containsKey(ESObjectConstants.WORKFLOWS)) {
                     List<Map<String, Object>> workflowListES = (List<Map<String, Object>>) source.get(ESObjectConstants.WORKFLOWS);
                     editor = new WorkflowsEditor(workflowListES);
@@ -136,9 +136,9 @@ public class WorkflowAndFamilyIdExporter implements Exporter {
 
             try {
                 // Even if workflow list didn't change, let's export so we start with empty list in the ES document.
-                ElasticSearchUtil.updateRequest(profile.getParticipantGuid(), index, editor.getMapForES());
+                ElasticSearchUtil.updateRequest(profile.getGuid(), index, editor.getMapForES());
                 if (StringUtils.isNotBlank(familyId)) {
-                    ElasticSearchUtil.writeDsmRecord(instance, null, profile.getParticipantGuid(), ESObjectConstants.FAMILY_ID, familyId, null);
+                    ElasticSearchUtil.writeDsmRecord(instance, null, profile.getGuid(), ESObjectConstants.FAMILY_ID, familyId, null);
                 }
             } catch (Exception e) {
                 logger.error("Error while export ES workflows for participant with guid/altpid: {}, continuing with export", guidOrAltPid, e);

@@ -2,7 +2,6 @@ package org.broadinstitute.dsm.model.patch;
 
 import org.broadinstitute.dsm.db.ParticipantData;
 import org.broadinstitute.dsm.db.dao.settings.EventTypeDao;
-import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -54,7 +53,7 @@ public class ParticipantDataPatch extends BasePatch {
                     .orElseThrow(() -> new RuntimeException("Unable to find ES profile for participant: " + patch.getParentId()));
             for (Value action : patch.getActions()) {
                 if (hasProfileAndESWorkflowType(profile, action)) {
-                    writeESWorkflow(patch, nameValue, action, ddpInstance, profile.getParticipantGuid());
+                    writeESWorkflow(patch, nameValue, action, ddpInstance, profile.getGuid());
                 }
                 else if (EventTypeDao.EVENT.equals(action.getType())) {
                     triggerParticipantEvent(ddpInstance, patch, action);

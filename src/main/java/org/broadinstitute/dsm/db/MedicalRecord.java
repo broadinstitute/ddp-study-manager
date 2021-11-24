@@ -52,7 +52,7 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.MEDICAL_RECORD_ID)
-    private final String medicalRecordId;
+    private String medicalRecordId;
 
     @TableName (
             name = DBConstants.DDP_INSTITUTION,
@@ -307,7 +307,7 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.FOLLOW_UP_REQUESTS)
-    private List<FollowUp> followUps;
+    private FollowUp[] followUps;
 
     @TableName (
             name = DBConstants.DDP_MEDICAL_RECORD,
@@ -334,6 +334,8 @@ public class MedicalRecord {
         this.type = type;
     }
 
+    public MedicalRecord() {}
+
     public MedicalRecord(String medicalRecordId, String institutionId, String ddpInstitutionId, String type,
                          String name, String contact, String phone, String fax,
                          String faxSent, String faxSentBy, String faxConfirmed,
@@ -342,7 +344,7 @@ public class MedicalRecord {
                          String mrReceived, String mrDocument, String mrDocumentFileNames, boolean mrProblem,
                          String mrProblemText, boolean unableObtain, boolean duplicate, boolean international, boolean crRequired,
                          String pathologyPresent, String mrNotes, boolean reviewMedicalRecord,
-                         List<FollowUp> followUps, boolean followUpRequired, String followUpRequiredText, String additionalValues,
+                         FollowUp[] followUps, boolean followUpRequired, String followUpRequiredText, String additionalValues,
                          String mrUnableToObtainText, String ddpParticipantId) {
         this.medicalRecordId = medicalRecordId;
         this.institutionId = institutionId;
@@ -412,7 +414,7 @@ public class MedicalRecord {
                 rs.getString(DBConstants.PATHOLOGY_PRESENT),
                 rs.getString(DBConstants.NOTES),
                 rs.getBoolean(DBConstants.REVIEW_MEDICAL_RECORD),
-                new Gson().fromJson(rs.getString(DBConstants.FOLLOW_UP_REQUESTS), new TypeToken<List<FollowUp>>(){}.getType()),
+                new Gson().fromJson(rs.getString(DBConstants.FOLLOW_UP_REQUESTS), FollowUp[].class),
                 rs.getBoolean(DBConstants.FOLLOWUP_REQUIRED),
                 rs.getString(DBConstants.FOLLOWUP_REQUIRED_TEXT),
                 rs.getString(DBConstants.ADDITIONAL_VALUES),

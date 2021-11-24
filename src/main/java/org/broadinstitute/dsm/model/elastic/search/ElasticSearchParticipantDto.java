@@ -78,11 +78,13 @@ public class ElasticSearchParticipantDto {
     }
 
     public String getParticipantId() {
-        return getProfile().map(esProfile -> StringUtils.isNotBlank(esProfile.getParticipantGuid())
-                ? esProfile.getParticipantGuid()
-                : esProfile.getParticipantLegacyAltPid())
+        return getProfile().map(esProfile -> StringUtils.isNotBlank(esProfile.getGuid())
+                ? esProfile.getGuid()
+                : esProfile.getLegacyAltPid())
                 .orElse("");
     }
+
+    public ElasticSearchParticipantDto() {}
 
     private ElasticSearchParticipantDto(ElasticSearchParticipantDto.Builder builder) {
         this.address = builder.address;

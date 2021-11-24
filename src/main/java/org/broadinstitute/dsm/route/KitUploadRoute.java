@@ -217,8 +217,8 @@ public class KitUploadRoute extends RequestHandler {
                 if (StringUtils.isBlank(kit.getParticipantId())) {
                     ElasticSearchParticipantDto participantByShortId =
                             elasticSearch.getParticipantById(ddpInstance.getParticipantIndexES(), kit.getShortId());
-                    participantGuid = participantByShortId.getProfile().map(ESProfile::getParticipantGuid).orElse("");
-                    participantLegacyAltPid = participantByShortId.getProfile().map(ESProfile::getParticipantLegacyAltPid).orElse("");
+                    participantGuid = participantByShortId.getProfile().map(ESProfile::getGuid).orElse("");
+                    participantLegacyAltPid = participantByShortId.getProfile().map(ESProfile::getLegacyAltPid).orElse("");
                     kit.setParticipantId(!participantGuid.isEmpty() ? participantGuid : participantLegacyAltPid);
                 }
                 else {
@@ -334,8 +334,8 @@ public class KitUploadRoute extends RequestHandler {
             }
         }
         else {
-            String participantGuid = elasticSearch.getParticipantById(ddpInstance.getParticipantIndexES(), kit.getShortId()).getProfile().map(ESProfile::getParticipantGuid).orElse("");
-            String participantLegacyAltPid = elasticSearch.getParticipantById(ddpInstance.getParticipantIndexES(), kit.getShortId()).getProfile().map(ESProfile::getParticipantLegacyAltPid).orElse("");
+            String participantGuid = elasticSearch.getParticipantById(ddpInstance.getParticipantIndexES(), kit.getShortId()).getProfile().map(ESProfile::getGuid).orElse("");
+            String participantLegacyAltPid = elasticSearch.getParticipantById(ddpInstance.getParticipantIndexES(), kit.getShortId()).getProfile().map(ESProfile::getLegacyAltPid).orElse("");
             if (checkAndSetParticipantIdIfKitExists(ddpInstance, conn, kit, participantGuid, participantLegacyAltPid, kitType.getKitTypeId()) && !uploadAnyway) {
                 duplicateKitList.add(kit);
             }

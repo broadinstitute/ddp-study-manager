@@ -116,7 +116,7 @@ public class KitUploadRouteTest {
         if (ParticipantUtil.isHruid(shortId)) {
             esProfile.setHruid(shortId);
         } else {
-            esProfile.setParticipantLegacyAltPid(shortId);
+            esProfile.setLegacyAltPid(shortId);
         }
 
         ElasticSearchParticipantDto elasticSearchParticipantDto = new ElasticSearchParticipantDto.Builder()

@@ -57,14 +57,14 @@ public class AutomaticProbandDataCreator implements Defaultable {
 
         return esData.getProfile()
                 .map(esProfile -> {
-                    logger.info("Got ES profile of participant: " + esProfile.getParticipantGuid());
+                    logger.info("Got ES profile of participant: " + esProfile.getGuid());
                     Map<String, String> columnsWithDefaultOptions =
                             fieldSettings.getColumnsWithDefaultValues(fieldSettingsDtosByOptionAndInstanceId);
                     Map<String, String> columnsWithDefaultOptionsFilteredByElasticExportWorkflow =
                             fieldSettings.getColumnsWithDefaultOptionsFilteredByElasticExportWorkflow(fieldSettingsDtosByOptionAndInstanceId);
-                    String participantId = StringUtils.isNotBlank(esProfile.getParticipantLegacyAltPid())
-                            ? esProfile.getParticipantLegacyAltPid()
-                            : esProfile.getParticipantGuid();
+                    String participantId = StringUtils.isNotBlank(esProfile.getLegacyAltPid())
+                            ? esProfile.getLegacyAltPid()
+                            : esProfile.getGuid();
                     ParticipantData participantData = new ParticipantData(participantDataDao);
                     Optional<BookmarkDto> maybeFamilyIdOfBookmark = bookmarkDao.getBookmarkByInstance(RGP_FAMILY_ID);
                     Map<String, String> probandDataMap = extractProbandDefaultDataFromParticipantProfile(esData, maybeFamilyIdOfBookmark);
@@ -103,7 +103,7 @@ public class AutomaticProbandDataCreator implements Defaultable {
                 .orElse("");
         return esData.getProfile()
             .map(esProfile -> {
-                logger.info("Starting extracting data from participant: " + esProfile.getParticipantGuid() + " ES profile");
+                logger.info("Starting extracting data from participant: " + esProfile.getGuid() + " ES profile");
                 String firstName = esProfile.getFirstName();
                 String lastName = esProfile.getLastName();
                 long familyId = maybeBookmark
@@ -117,7 +117,7 @@ public class AutomaticProbandDataCreator implements Defaultable {
                 probandMemberDetails.setMobilePhone(mobilePhone);
                 probandMemberDetails.setEmail(email);
                 probandMemberDetails.setApplicant(true);
-                logger.info("Profile data extracted from participant: " + esProfile.getParticipantGuid() + " ES profile");
+                logger.info("Profile data extracted from participant: " + esProfile.getGuid() + " ES profile");
                 return probandMemberDetails.toMap();
             })
             .orElse(Map.of());
