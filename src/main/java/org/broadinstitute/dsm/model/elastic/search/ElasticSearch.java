@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.search;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,7 +11,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.elastic.Util;
@@ -30,6 +34,8 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.broadinstitute.dsm.statics.ESObjectConstants.DSM;
 
 @Setter
 public class ElasticSearch implements ElasticSearchable {
@@ -60,8 +66,34 @@ public class ElasticSearch implements ElasticSearchable {
 
     public static Optional<ElasticSearchParticipantDto> parseSourceMap(Map<String, Object> sourceMap) {
         if (sourceMap == null) return Optional.of(new ElasticSearchParticipantDto.Builder().build());
-        ElasticSearchParticipantDto elasticSearchParticipantDto = GSON.fromJson(GSON.toJson(sourceMap), ElasticSearchParticipantDto.class);
+        ElasticSearchParticipantDto elasticSearchParticipantDto = serialize(sourceMap);
         return Optional.of(elasticSearchParticipantDto);
+    }
+
+    private static ElasticSearchParticipantDto serialize(Map<String, Object> sourceMap) {
+        ElasticSearchParticipantDto elasticSearchParticipantDto;
+        boolean hasMedicalRecord = false;
+        boolean hasDSM = sourceMap.containsKey(DSM);
+        if (hasDSM)
+            hasMedicalRecord = ((Map) sourceMap.get(DSM)).containsKey("medicalRecords");
+        long followUpsCount = 0;
+        if (hasMedicalRecord) {
+            followUpsCount = ((List<Map<String, Object>>) (((Map) sourceMap.get(DSM)).get("medicalRecords"))).stream().filter(map -> map.containsKey("followUps")).count();
+        }
+        if (followUpsCount > 0) {
+            try {
+                String sourceMapAsString = new ObjectMapper().writeValueAsString(sourceMap);
+                sourceMapAsString = sourceMapAsString.replace("\"[", "[").replace("]\"", "]").replace("\\\"", "\"");
+                JsonReader reader = new JsonReader(new StringReader(sourceMapAsString));
+                reader.setLenient(true);
+                elasticSearchParticipantDto = GSON.fromJson(reader, ElasticSearchParticipantDto.class);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException();
+            }
+        } else {
+            elasticSearchParticipantDto = GSON.fromJson(GSON.toJson(sourceMap), ElasticSearchParticipantDto.class);
+        }
+        return elasticSearchParticipantDto;
     }
 
     public List<ElasticSearchParticipantDto> parseSourceMaps(SearchHit[] searchHits) {

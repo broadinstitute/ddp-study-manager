@@ -23,8 +23,6 @@ public abstract class BaseParser implements Parser {
             result = forBoolean(value);
         } else if (isDateOrTimeOrDateTime(value)) {
             result = forDate(value);
-        } else if (isCollection(value)) {
-            result = Map.of("type", "nested");
         }
         return result;
     }
