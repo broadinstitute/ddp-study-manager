@@ -14,6 +14,10 @@ public class MedicalRecordCollectionProcessor extends CollectionProcessor {
         super(esDsm, propertyName, recordId, collector);
     }
 
+    public MedicalRecordCollectionProcessor() {
+
+    }
+
     @Override
     protected List<Map<String, Object>> updateIfExistsOrPut(List<Map<String, Object>> fetchedRecords) {
         for (Map<String, Object> medicalRecord: fetchedRecords) {

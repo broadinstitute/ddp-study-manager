@@ -10,9 +10,7 @@ import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.generate.*;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
-import org.broadinstitute.dsm.model.elastic.export.process.CollectionProcessor;
-import org.broadinstitute.dsm.model.elastic.export.process.MedicalRecordCollectionProcessor;
-import org.broadinstitute.dsm.model.elastic.export.process.Processor;
+import org.broadinstitute.dsm.model.elastic.export.process.*;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
@@ -28,7 +26,7 @@ public class ExportFacade {
     BaseGenerator generator;
     ElasticSearchable searchable;
     private ExportFacadePayload exportFacadePayload;
-    Processor processor;
+    BaseProcessor processor;
 
     public ExportFacade(ExportFacadePayload exportFacadePayload) {
         this.exportFacadePayload = Objects.requireNonNull(exportFacadePayload);
@@ -73,10 +71,12 @@ public class ExportFacade {
         Map<String, Object> dataToReturn = generator.generate();
         logger.info("Processing ES participant data");
         if (propertyInfo.isCollection()) {
-//            processor = new CollectionProcessor(esDsm, propertyInfo.getPropertyName(), exportFacadePayload.getRecordId(),
-//                    generator);
-            processor = new MedicalRecordCollectionProcessor(esDsm, propertyInfo.getPropertyName(), exportFacadePayload.getRecordId(),
-                    generator);
+            CollectionProcessorFactory collectionProcessorFactory = new CollectionProcessorFactory();
+            processor = collectionProcessorFactory.make(propertyInfo);
+            processor.setEsDsm(esDsm);
+            processor.setPropertyName(propertyInfo.getPropertyName());
+            processor.setRecordId(exportFacadePayload.getRecordId());
+            processor.setCollector(generator);
             List<Map<String, Object>> processedData = processor.process();
             if (!processedData.isEmpty()) {
                 dataToReturn = Map.of(MappingGenerator.DSM_OBJECT, Map.of(propertyInfo.getPropertyName(), processedData));

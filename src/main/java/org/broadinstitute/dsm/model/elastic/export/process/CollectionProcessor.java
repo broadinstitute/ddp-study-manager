@@ -17,23 +17,20 @@ import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CollectionProcessor implements Processor {
+public class CollectionProcessor extends BaseProcessor {
 
     private static final Logger logger = LoggerFactory.getLogger(CollectionProcessor.class);
 
-    private ESDsm esDsm;
-    private String propertyName;
-    private int recordId;
-    private Collector collector;
     private String primaryKey;
 
     private final Predicate<Field> isFieldMatchProperty = field -> propertyName.equals(field.getName());
 
     public CollectionProcessor(ESDsm esDsm, String propertyName, int recordId, Collector collector) {
-        this.esDsm = Objects.requireNonNull(esDsm);
-        this.propertyName = Objects.requireNonNull(propertyName);
-        this.recordId = recordId;
-        this.collector = collector;
+        super(esDsm, propertyName, recordId, collector);
+    }
+
+    public CollectionProcessor() {
+
     }
 
     @Override

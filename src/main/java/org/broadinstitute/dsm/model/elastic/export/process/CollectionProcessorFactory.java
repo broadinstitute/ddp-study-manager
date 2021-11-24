@@ -4,9 +4,14 @@ import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 
 public class CollectionProcessorFactory implements ProcessorFactory {
 
-
     @Override
-    public Processor make(BaseGenerator.PropertyInfo propertyInfo) {
-        return null;
+    public BaseProcessor make(BaseGenerator.PropertyInfo propertyInfo) {
+        BaseProcessor processor = new CollectionProcessor();
+        if (propertyInfo.isCollection()) {
+            if ("followUps".equals(propertyInfo.getFieldName())) {
+                processor = new MedicalRecordCollectionProcessor();
+            }
+        }
+        return processor;
     }
 }
