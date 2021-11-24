@@ -7,6 +7,7 @@ import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.db.dao.kit.ClinicalKitDao;
+import org.broadinstitute.dsm.model.ClinicalKitWrapper;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
 import org.broadinstitute.dsm.model.elasticsearch.*;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -53,9 +54,6 @@ public class ClinicalKitDto {
 
     @SerializedName ("kit_label")
     String mfBarcode;
-
-    String ddpParticipantId;
-    Integer ddpInstanceId;
 
 
     private static final Logger logger = LoggerFactory.getLogger(ClinicalKitDto.class);
@@ -112,11 +110,12 @@ public class ClinicalKitDto {
     public ClinicalKitDto getClinicalKitBasedONSmId(String smIdValue) {
         logger.info("Checking the kit for SM Id value");
         ClinicalKitDao clinicalKitDao = new ClinicalKitDao();
-        Optional<ClinicalKitDto> maybeClinicalKit = clinicalKitDao.getClinicalKitFromSMId(smIdValue);
-        maybeClinicalKit.orElseThrow();
-        ClinicalKitDto clinicalKitDto = maybeClinicalKit.get();
-        DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(clinicalKitDto.ddpInstanceId);
-        clinicalKitDto.setNecessaryParticipantDataToClinicalKit(clinicalKitDto.ddpParticipantId, ddpInstance);
+        Optional<ClinicalKitWrapper> maybeClinicalKitWrapper = clinicalKitDao.getClinicalKitFromSMId(smIdValue);
+        maybeClinicalKitWrapper.orElseThrow();
+        ClinicalKitWrapper clinicalKitWrapper = maybeClinicalKitWrapper.get();
+        ClinicalKitDto clinicalKitDto = clinicalKitWrapper.getClinicalKitDto();
+        DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(clinicalKitWrapper.getDdpInstanceId());
+        clinicalKitDto.setNecessaryParticipantDataToClinicalKit(clinicalKitWrapper.getDdpParticipantId(), ddpInstance);
         return clinicalKitDto;
     }
 

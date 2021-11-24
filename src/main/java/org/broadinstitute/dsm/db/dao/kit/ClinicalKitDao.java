@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.db.dao.kit;
 
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.dto.kit.ClinicalKitDto;
+import org.broadinstitute.dsm.model.ClinicalKitWrapper;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,7 @@ public class ClinicalKitDao {
                                                                             "left join kit_type ktype on ( sit.kit_type_id = ktype.kit_type_id) " +
                                                                             "where sm.sm_id_value = ? ";
 
-    public Optional<ClinicalKitDto> getClinicalKitFromSMId(String smIdValue){
+    public Optional<ClinicalKitWrapper> getClinicalKitFromSMId(String smIdValue){
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_GET_CLINICAL_KIT_BASED_ON_SM_ID_VALUE)) {
@@ -50,9 +51,10 @@ public class ClinicalKitDao {
                                 null
                                 );
                         clinicalKitDto.setSampleType(rs.getString(DBConstants.KIT_TYPE_NAME));
-                        clinicalKitDto.setDdpInstanceId(Integer.parseInt(rs.getString(DBConstants.DDP_INSTANCE_ID)));
-                        clinicalKitDto.setDdpParticipantId(rs.getString(DBConstants.DDP_PARTICIPANT_ID));
-                        dbVals.resultValue = clinicalKitDto;
+                        ClinicalKitWrapper clinicalKitWrapper = new ClinicalKitWrapper(clinicalKitDto,
+                        Integer.parseInt(rs.getString(DBConstants.DDP_INSTANCE_ID)),
+                        rs.getString(DBConstants.DDP_PARTICIPANT_ID));
+                        dbVals.resultValue = clinicalKitWrapper;
 
                     }
                 }
@@ -70,6 +72,6 @@ public class ClinicalKitDao {
         if (results.resultException != null) {
             throw new RuntimeException("Error getting clinicalKit based on smId " + smIdValue, results.resultException);
         }
-        return Optional.ofNullable((ClinicalKitDto) results.resultValue);
+        return Optional.ofNullable((ClinicalKitWrapper) results.resultValue);
     }
 }
