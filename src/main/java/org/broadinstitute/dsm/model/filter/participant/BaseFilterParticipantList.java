@@ -110,12 +110,12 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
 
             logger.info("Found query conditions for " + mergeConditions.size() + " tables");
             GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_PARTICIPANT_LIST,
-                    GoogleAnalyticsMetrics.EVENT_ACTION_PARTICIPANT_LIST, GoogleAnalyticsMetrics.EVENT_LABEL_PARTICIPANT_LIST,  Math.toIntExact((System.currentTimeMillis() - timer)/1000));
+                    GoogleAnalyticsMetrics.EVENT_PARTICIPANT_LIST_LOAD_TIME, GoogleAnalyticsMetrics.EVENT_PARTICIPANT_LIST_LOAD_TIME,  GoogleAnalyticsMetrics.getTimeDifferenceToNow(timer));
             //search bar ptL
             return ParticipantWrapper.getFilteredList(instance, mergeConditions);
         } else {
             GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_PARTICIPANT_LIST,
-                    GoogleAnalyticsMetrics.EVENT_ACTION_PARTICIPANT_LIST, GoogleAnalyticsMetrics.EVENT_LABEL_PARTICIPANT_LIST,  Math.toIntExact((System.currentTimeMillis() - timer)/1000));
+                    GoogleAnalyticsMetrics.EVENT_PARTICIPANT_LIST_LOAD_TIME, GoogleAnalyticsMetrics.EVENT_PARTICIPANT_LIST_LOAD_TIME,  GoogleAnalyticsMetrics.getTimeDifferenceToNow(timer));
             return ParticipantWrapper.getFilteredList(instance, null);
         }
     }

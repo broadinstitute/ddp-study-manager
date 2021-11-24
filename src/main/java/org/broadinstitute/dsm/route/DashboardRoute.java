@@ -5,6 +5,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.ddp.handlers.util.Result;
+import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetrics;
+import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetricsTracker;
 import org.broadinstitute.dsm.db.KitType;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.model.*;
@@ -49,6 +51,7 @@ public class DashboardRoute extends RequestHandler {
     @Override
     public Object processRequest(Request request, Response response, String userId) throws Exception {
         try {
+            Long timer = System.currentTimeMillis();
             String userIdRequest = UserUtil.getUserId(request);
             if (UserUtil.checkUserAccess(null, userId, "kit_shipping", userIdRequest) || UserUtil.checkUserAccess(null, userId, "kit_shipping_view", userIdRequest)
                     || UserUtil.checkUserAccess(null, userId, "mr_view", userIdRequest)|| UserUtil.checkUserAccess(null, userId, "pt_list_view", userIdRequest)) {
@@ -89,6 +92,8 @@ public class DashboardRoute extends RequestHandler {
                             for (String ddp : allowedRealms) {
                                 kitTypesPerDDP.put(ddp, KitType.getKitTypes(ddp, userIdRequest));
                             }
+                            GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics("", GoogleAnalyticsMetrics.EVENT_CATEGORY_DASHBOARD,
+                                    GoogleAnalyticsMetrics.EVENT_DASHBOARD_LOAD_TIME, GoogleAnalyticsMetrics.DASHBOARD_LABEL_ALL_REALM,  GoogleAnalyticsMetrics.getTimeDifferenceToNow(timer));
                             return new DashboardInformation(
                                     getRealmValueList(kitUtil.getUnsentExpressKits(false), allowedRealms, kitTypesPerDDP),
                                     KitDDPSummary.getUnsentKits(false, allowedRealms));
@@ -108,6 +113,7 @@ public class DashboardRoute extends RequestHandler {
     }
 
     public DashboardInformation getShippingDashboard(@NonNull String realm, @NonNull String userId) {
+        Long timer = System.currentTimeMillis();
         List<DashboardInformation.KitCounter> sentMap = new ArrayList<>();
         List<DashboardInformation.KitCounter> receivedMap = new ArrayList<>();
         List<NameValue> deactivatedMap = new ArrayList<>();
@@ -127,6 +133,8 @@ public class DashboardRoute extends RequestHandler {
                     realm, kitTypeId, DBConstants.KITREQUEST_COUNT);
             deactivatedMap.add(new NameValue(kitType.getName(), count));
         }
+        GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(realm, GoogleAnalyticsMetrics.EVENT_CATEGORY_DASHBOARD,
+                GoogleAnalyticsMetrics.EVENT_DASHBOARD_LOAD_TIME, GoogleAnalyticsMetrics.DASHBOARD_LABEL_SHIPPING_DASHBOARD,  GoogleAnalyticsMetrics.getTimeDifferenceToNow(timer));
         return new DashboardInformation(realm, sentMap, receivedMap, deactivatedMap);
     }
 
@@ -204,6 +212,7 @@ public class DashboardRoute extends RequestHandler {
      * @return DashboardInformation
      */
     public DashboardInformation getMedicalRecordDashboard(@NonNull long start, @NonNull long end, @NonNull String realm) {
+        Long timer =  System.currentTimeMillis();
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.MEDICAL_RECORD_ACTIVATED);
 
         Map<String, Map<String, Object>> participantESData = ParticipantWrapper.getESData(ddpInstance);
@@ -304,6 +313,8 @@ public class DashboardRoute extends RequestHandler {
             }
         }
         logger.info("Done calculating dashboard. Returning map now");
+        GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_DASHBOARD,
+                GoogleAnalyticsMetrics.EVENT_DASHBOARD_LOAD_TIME, GoogleAnalyticsMetrics.DASHBOARD_LABEL_MR,  GoogleAnalyticsMetrics.getTimeDifferenceToNow(timer));
         return new DashboardInformation(dashboardValues, dashboardValuesDetailed, dashboardValuesPeriod, dashboardValuesPeriodDetailed);
     }
 
@@ -699,6 +710,7 @@ public class DashboardRoute extends RequestHandler {
     }
 
     public Collection<KitReport> getShippingReport(@NonNull String userId, @NonNull long start, @NonNull long end) {
+        long timer = System.currentTimeMillis();
         logger.info("Shipping report");
         Collection<String> allowedRealms = UserUtil.getListOfAllowedRealms(userId);
         Collection<KitReport> kitTypesPerDDP = new ArrayList<>();
@@ -713,10 +725,14 @@ public class DashboardRoute extends RequestHandler {
             KitReport kitreport = new KitReport(ddp, kitReports);
             kitTypesPerDDP.add(kitreport);
         }
+        GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics("", GoogleAnalyticsMetrics.EVENT_CATEGORY_DASHBOARD,
+                GoogleAnalyticsMetrics.EVENT_DASHBOARD_LOAD_TIME, GoogleAnalyticsMetrics.DASHBOARD_LABEL_SHIPPING_REPORT,  GoogleAnalyticsMetrics.getTimeDifferenceToNow(timer));
+
         return kitTypesPerDDP;
     }
 
     public Collection<KitReport> getShippingReportDownload(@NonNull String userId) {
+        Long timer = System.currentTimeMillis();
         logger.info("Shipping report for download");
         Collection<String> allowedRealms = UserUtil.getListOfAllowedRealms(userId);
         Collection<KitReport> kitTypesPerDDP = new ArrayList<>();
@@ -735,6 +751,8 @@ public class DashboardRoute extends RequestHandler {
             kitTypesPerDDP.add(kitreport);
 
         }
+        GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics("", GoogleAnalyticsMetrics.EVENT_CATEGORY_DASHBOARD,
+                GoogleAnalyticsMetrics.EVENT_DASHBOARD_LOAD_TIME, GoogleAnalyticsMetrics.DASHBOARD_LABEL_SHIPPING_REPORT_DOWNLOAD,  GoogleAnalyticsMetrics.getTimeDifferenceToNow(timer));
         return kitTypesPerDDP;
     }
 
