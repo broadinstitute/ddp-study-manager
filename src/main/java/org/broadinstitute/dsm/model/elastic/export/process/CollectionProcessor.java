@@ -76,17 +76,12 @@ public class CollectionProcessor implements Processor {
                 .orElse("");
     }
 
-    private List<Map<String, Object>> updateIfExistsOrPut(List<Map<String, Object>> fetchedRecords) {
+    protected List<Map<String, Object>> updateIfExistsOrPut(List<Map<String, Object>> fetchedRecords) {
         fetchedRecords.stream()
                 .filter(this::isExistingRecord)
                 .findFirst()
                 .ifPresentOrElse(this::updateExistingRecord, () -> addNewRecordTo(fetchedRecords));
         return fetchedRecords;
-    }
-
-    private void addNewRecordTo(List<Map<String, Object>> fetchedRecords) {
-        logger.info("Adding new record");
-        collectEndResult().ifPresent(fetchedRecords::add);
     }
 
     private boolean isExistingRecord(Map<String, Object> eachRecord) {
@@ -97,6 +92,11 @@ public class CollectionProcessor implements Processor {
     private void updateExistingRecord(Map<String, Object> eachRecord) {
         logger.info("Updating existing record");
         collectEndResult().ifPresent(eachRecord::putAll);
+    }
+
+    private void addNewRecordTo(List<Map<String, Object>> fetchedRecords) {
+        logger.info("Adding new record");
+        collectEndResult().ifPresent(fetchedRecords::add);
     }
 
     private Optional<Map<String, Object>> collectEndResult() {

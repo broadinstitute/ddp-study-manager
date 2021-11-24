@@ -11,6 +11,7 @@ import org.broadinstitute.dsm.model.elastic.export.generate.*;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
 import org.broadinstitute.dsm.model.elastic.export.process.CollectionProcessor;
+import org.broadinstitute.dsm.model.elastic.export.process.MedicalRecordCollectionProcessor;
 import org.broadinstitute.dsm.model.elastic.export.process.Processor;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
@@ -72,7 +73,9 @@ public class ExportFacade {
         Map<String, Object> dataToReturn = generator.generate();
         logger.info("Processing ES participant data");
         if (propertyInfo.isCollection()) {
-            processor = new CollectionProcessor(esDsm, propertyInfo.getPropertyName(), exportFacadePayload.getRecordId(),
+//            processor = new CollectionProcessor(esDsm, propertyInfo.getPropertyName(), exportFacadePayload.getRecordId(),
+//                    generator);
+            processor = new MedicalRecordCollectionProcessor(esDsm, propertyInfo.getPropertyName(), exportFacadePayload.getRecordId(),
                     generator);
             List<Map<String, Object>> processedData = processor.process();
             if (!processedData.isEmpty()) {
