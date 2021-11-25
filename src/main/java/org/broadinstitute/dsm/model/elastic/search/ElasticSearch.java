@@ -83,7 +83,7 @@ public class ElasticSearch implements ElasticSearchable {
                     if (StringUtils.isNotBlank((String) medicalRecord.get("followUps"))) {
                         String followUps = (String) medicalRecord.get("followUps");
                         try {
-                            medicalRecord.put("followUps", new ObjectMapper().readValue(followUps, new TypeReference<List<FollowUp>>(){}));
+                            medicalRecord.put("followUps", new ObjectMapper().readValue(followUps, new TypeReference<List<Map<String, Object>>>(){}));
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }

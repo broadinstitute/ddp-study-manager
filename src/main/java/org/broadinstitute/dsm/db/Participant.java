@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.db;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -19,6 +20,7 @@ import java.util.*;
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Participant {
 
     private static final Logger logger = LoggerFactory.getLogger(Participant.class);

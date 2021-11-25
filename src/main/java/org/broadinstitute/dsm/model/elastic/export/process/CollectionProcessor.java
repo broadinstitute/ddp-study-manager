@@ -54,7 +54,6 @@ public class CollectionProcessor extends BaseProcessor {
 
     private List<Map<String, Object>> getRecordsByField(Field field) {
         try {
-
             List<Object> objectCollection = (List<Object>) field.get(esDsm);
             primaryKey = findPrimaryKeyOfObject(objectCollection);
             return Util.convertObjectListToMapList(objectCollection);
@@ -83,7 +82,7 @@ public class CollectionProcessor extends BaseProcessor {
     }
 
     private boolean isExistingRecord(Map<String, Object> eachRecord) {
-        if (!eachRecord.containsKey(Util.underscoresToCamelCase(primaryKey)) || !eachRecord.containsKey(Util.ID)) return false;
+        if (!eachRecord.containsKey(Util.underscoresToCamelCase(primaryKey)) && !eachRecord.containsKey(Util.ID)) return false;
         double id = eachRecord.containsKey(Util.ID)
                 ? Double.parseDouble(String.valueOf(eachRecord.get(Util.ID)))
                 : Double.parseDouble(String.valueOf(eachRecord.get(Util.underscoresToCamelCase(primaryKey))));
