@@ -12,12 +12,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.MedicalRecord;
+import org.broadinstitute.dsm.model.FollowUp;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
@@ -77,23 +79,39 @@ public class ElasticSearch implements ElasticSearchable {
         if (!Objects.isNull(dsm)) {
             List<Map<String, Object>> medicalRecords = (List<Map<String, Object>>)((Map) sourceMap.get(DSM)).get("medicalRecords");
             if (!Objects.isNull(medicalRecords)) {
-                boolean hasFollowUps = medicalRecords.stream()
-                        .anyMatch(medicalRecord -> StringUtils.isNotBlank((String) medicalRecord.get("followUps")));
-                if (hasFollowUps) {
-                    String sourceMapAsString = null;
-                    try {
-                        sourceMapAsString = new ObjectMapper().writeValueAsString(sourceMap);
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
+                for (Map<String, Object> medicalRecord : medicalRecords) {
+                    if (StringUtils.isNotBlank((String) medicalRecord.get("followUps"))) {
+                        String followUps = (String) medicalRecord.get("followUps");
+                        try {
+                            medicalRecord.put("followUps", new ObjectMapper().readValue(followUps, new TypeReference<List<FollowUp>>(){}));
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
-                    sourceMapAsString = sourceMapAsString.replace("\"[", "[").replace("]\"", "]").replace("\\\"", "\"");
-                    JsonReader reader = new JsonReader(new StringReader(sourceMapAsString));
-                    reader.setLenient(true);
-                    elasticSearchParticipantDto = GSON.fromJson(reader, ElasticSearchParticipantDto.class);
-                } else {
-                    elasticSearchParticipantDto = GSON.fromJson(GSON.toJson(sourceMap), ElasticSearchParticipantDto.class);
                 }
+
+
+//                if (hasFollowUps) {
+//                    String sourceMapAsString = null;
+//                    try {
+//                        sourceMapAsString = new ObjectMapper().writeValueAsString(sourceMap);
+//                    } catch (JsonProcessingException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                    sourceMapAsString = sourceMapAsString.replace("\"[", "[").replace("]\"", "]").replace("\\\"", "\"");
+//                    JsonReader reader = new JsonReader(new StringReader(sourceMapAsString));
+//                    reader.setLenient(true);
+//                    elasticSearchParticipantDto = GSON.fromJson(reader, ElasticSearchParticipantDto.class);
+//                } else {
+//                    elasticSearchParticipantDto = GSON.fromJson(GSON.toJson(sourceMap), ElasticSearchParticipantDto.class);
+//                }
+                elasticSearchParticipantDto = new ObjectMapper().convertValue(sourceMap, ElasticSearchParticipantDto.class);
+
+            } else {
+                elasticSearchParticipantDto = new ObjectMapper().convertValue(sourceMap, ElasticSearchParticipantDto.class);
             }
+        } else {
+            elasticSearchParticipantDto = new ObjectMapper().convertValue(sourceMap, ElasticSearchParticipantDto.class);
         }
         return elasticSearchParticipantDto;
 //        boolean hasMedicalRecord = false;
