@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.db;
 
 import com.easypost.exception.EasyPostException;
 import com.easypost.model.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -9,7 +10,6 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.structure.ColumnName;
-import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
 import org.broadinstitute.dsm.db.structure.SqlDateConverter;
 import org.broadinstitute.dsm.db.structure.TableName;
@@ -40,6 +40,7 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
         alias = DBConstants.DDP_KIT_REQUEST_ALIAS,
         primaryKey = DBConstants.DSM_KIT_REQUEST_ID,
         columnPrefix = "")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class KitRequestShipping extends KitRequest {
 
     private static final Logger logger = LoggerFactory.getLogger(KitRequestShipping.class);
@@ -142,65 +143,64 @@ public class KitRequestShipping extends KitRequest {
     private static final String SEARCH_MF_BAR = "MF_BAR";
 
     @ColumnName(DBConstants.DSM_KIT_ID)
-    private final String dsmKitId;
+    private String dsmKitId;
 
     @ColumnName(DBConstants.LABEL_URL_TO)
-    private final String labelUrlTo;
+    private String labelUrlTo;
 
     @ColumnName(DBConstants.LABEL_URL_RETURN)
-    private final String labelUrlReturn;
+    private String labelUrlReturn;
 
     @ColumnName (DBConstants.DSM_TRACKING_TO)
-    private final String trackingNumberTo;
+    private String trackingNumberTo;
 
     @ColumnName (DBConstants.DSM_TRACKING_RETURN)
-    private final String trackingNumberReturn;
+    private String trackingNumberReturn;
 
     @ColumnName (DBConstants.TRACKING_ID)
     private String scannedTrackingNumber;
-    private final String trackingUrlTo;
-    private final String trackingUrlReturn;
-    private final String collaboratorParticipantId;
+    private String trackingUrlTo;
+    private String trackingUrlReturn;
+    private String collaboratorParticipantId;
 
     @ColumnName (DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID)
-    private final String bspCollaboratorSampleId;
-
-    private final String easypostAddressId;
-    private final String realm;
+    private String bspCollaboratorSampleId;
+    private String easypostAddressId;
+    private String realm;
 
     @ColumnName (DBConstants.KIT_TYPE_NAME)
-    private final String kitType;
+    private String kitTypeName;
 
     @ColumnName (DBConstants.DEACTIVATION_REASON)
-    private final String deactivationReason;
+    private String deactivationReason;
 
     @ColumnName (DBConstants.KIT_LABEL)
-    private final String kitLabel;
+    private String kitLabel;
 
     @ColumnName (DBConstants.KIT_TEST_RESULT)
     private String testResult;
 
     @ColumnName (DBConstants.DSM_SCAN_DATE)
     @DbDateConversion(SqlDateConverter.EPOCH)
-    private final long scanDate;
+    private long scanDate;
 
     @ColumnName (DBConstants.DSM_RECEIVE_DATE)
     @DbDateConversion(SqlDateConverter.EPOCH)
-    private final long receiveDate;
+    private long receiveDate;
 
     @ColumnName (DBConstants.DSM_DEACTIVATED_DATE)
     @DbDateConversion(SqlDateConverter.EPOCH)
-    private final long deactivatedDate;
+    private long deactivatedDate;
 
     @ColumnName (DBConstants.EXPRESS)
-    private final boolean express;
+    private boolean express;
 
     @ColumnName (DBConstants.EASYPOST_TO_ID)
-    private final String easypostToId;
-    private final long labelTriggeredDate;
+    private String easypostToId;
+    private long labelTriggeredDate;
 
     @ColumnName (DBConstants.NO_RETURN)
-    private final boolean noReturn;
+    private boolean noReturn;
 
     @ColumnName (DBConstants.ERROR)
     private boolean error;
@@ -231,9 +231,12 @@ public class KitRequestShipping extends KitRequest {
 
     @ColumnName (DBConstants.UPLOAD_REASON)
     private String uploadReason;
-    public KitRequestShipping(String collaboratorParticipantId, String kitType, String dsmKitRequestId, long scanDate, boolean error, long receiveDate, long deactivatedDate, String testResult,
+
+    public KitRequestShipping() {}
+
+    public KitRequestShipping(String collaboratorParticipantId, String kitTypeName, String dsmKitRequestId, long scanDate, boolean error, long receiveDate, long deactivatedDate, String testResult,
                               String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus, String externalOrderNumber, long externalOrderDate, boolean careEvolve, String uploadReason) {
-        this(null, collaboratorParticipantId, null, null, null, kitType, dsmKitRequestId, null, null, null,
+        this(null, collaboratorParticipantId, null, null, null, kitTypeName, dsmKitRequestId, null, null, null,
                 null, null, null, null, scanDate, error, null, receiveDate,
                 null, deactivatedDate, null, null, false, null, 0, null, externalOrderNumber, false, externalOrderStatus, null, testResult,
                 upsTrackingStatus, upsReturnStatus, externalOrderDate, false, uploadReason, null, null, null);
@@ -255,7 +258,7 @@ public class KitRequestShipping extends KitRequest {
 
     // shippingId = ddp_label !!!
     public KitRequestShipping(String participantId, String collaboratorParticipantId, String bspCollaboratorSampleId, String shippingId, String realm,
-                              String kitType, String dsmKitRequestId, String dsmKitId, String labelUrlTo, String labelUrlReturn,
+                              String kitTypeName, String dsmKitRequestId, String dsmKitId, String labelUrlTo, String labelUrlReturn,
                               String trackingNumberTo, String trackingNumberReturn,
                               String trackingUrlTo, String trackingUrlReturn, long scanDate, boolean error, String message,
                               long receiveDate, String easypostAddressId, long deactivatedDate, String deactivationReason,
@@ -267,7 +270,7 @@ public class KitRequestShipping extends KitRequest {
         this.collaboratorParticipantId = collaboratorParticipantId;
         this.bspCollaboratorSampleId = bspCollaboratorSampleId;
         this.realm = realm;
-        this.kitType = kitType;
+        this.kitTypeName = kitTypeName;
         this.dsmKitId = dsmKitId;
         this.labelUrlTo = labelUrlTo;
         this.labelUrlReturn = labelUrlReturn;

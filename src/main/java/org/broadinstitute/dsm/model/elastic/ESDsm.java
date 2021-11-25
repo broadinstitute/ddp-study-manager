@@ -5,7 +5,9 @@ import java.util.Map;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Getter;
+import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.MedicalRecord;
+import org.broadinstitute.dsm.db.OncHistory;
 import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.db.Participant;
 import org.broadinstitute.dsm.db.ParticipantData;
@@ -45,7 +47,7 @@ public class ESDsm {
     List<MedicalRecord> medicalRecords;
 
     @SerializedName(ESObjectConstants.ONC_HISTORY_DETAIL_RECORDS)
-    List<OncHistoryDetail> oncHistoryDetailRecords;
+    List<OncHistoryDetail> oncHistoryDetails;
 
     @SerializedName(ESObjectConstants.PARTICIPANT_DATA)
     List<ParticipantData> participantData;
@@ -53,5 +55,7 @@ public class ESDsm {
     @SerializedName(ESObjectConstants.PARTICIPANT)
     Participant participant;
 
+    List<KitRequestShipping> kitRequestShipping;
 
+    OncHistory oncHistory;
 }

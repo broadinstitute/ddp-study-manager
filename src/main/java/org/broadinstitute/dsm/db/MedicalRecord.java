@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.Gson;
 import lombok.Data;
 import lombok.NonNull;
@@ -36,6 +38,7 @@ import org.slf4j.LoggerFactory;
         primaryKey = DBConstants.MEDICAL_RECORD_ID,
         columnPrefix = "")
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MedicalRecord {
 
     private static final Logger logger = LoggerFactory.getLogger(MedicalRecord.class);
@@ -260,7 +263,7 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.MR_UNABLE_OBTAIN_TEXT)
-    private String mrUnableToObtainText;
+    private String unableObtainText;
 
     @TableName (
             name = DBConstants.DDP_MEDICAL_RECORD,
@@ -269,6 +272,11 @@ public class MedicalRecord {
             columnPrefix = "")
     @ColumnName (DBConstants.FOLLOWUP_REQUIRED)
     private boolean followUpRequired;
+
+    @JsonProperty("followupRequired")
+    public boolean isFollowUpRequired() {
+        return followUpRequired;
+    }
 
     @TableName (
             name = DBConstants.DDP_MEDICAL_RECORD,
@@ -354,7 +362,7 @@ public class MedicalRecord {
                          String mrProblemText, boolean unableObtain, boolean duplicate, boolean international, boolean crRequired,
                          String pathologyPresent, String mrNotes, boolean reviewMedicalRecord,
                          FollowUp[] followUps, boolean followUpRequired, String followUpRequiredText, String additionalValues,
-                         String mrUnableToObtainText, String ddpParticipantId) {
+                         String unableObtainText, String ddpParticipantId) {
         this.medicalRecordId = medicalRecordId;
         this.institutionId = institutionId;
         this.ddpInstitutionId = ddpInstitutionId;
@@ -388,7 +396,7 @@ public class MedicalRecord {
         this.followUpRequired = followUpRequired;
         this.followUpRequiredText = followUpRequiredText;
         this.additionalValues = additionalValues;
-        this.mrUnableToObtainText = mrUnableToObtainText;
+        this.unableObtainText = unableObtainText;
         this.ddpParticipantId = ddpParticipantId;
     }
 

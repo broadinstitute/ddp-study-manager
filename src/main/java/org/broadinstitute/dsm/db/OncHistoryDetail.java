@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.db;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +30,7 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
         alias = DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS,
         primaryKey = DBConstants.ONC_HISTORY_DETAIL_ID,
         columnPrefix = "")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OncHistoryDetail {
 
     private static final Logger logger = LoggerFactory.getLogger(OncHistoryDetail.class);
@@ -80,7 +82,7 @@ public class OncHistoryDetail {
     private String oncHistoryDetailId;
 
     @ColumnName(DBConstants.MEDICAL_RECORD_ID)
-    private final String medicalRecordId;
+    private String medicalRecordId;
 
     @ColumnName (DBConstants.DATE_PX)
     private String datePx;
@@ -172,6 +174,8 @@ public class OncHistoryDetail {
     private String participantId;
 
     private List<Tissue> tissues;
+
+    public OncHistoryDetail() {}
 
     public OncHistoryDetail(String oncHistoryDetailId, String medicalRecordId, String datePx, String typePx,
                             String locationPx, String histology, String accessionNumber, String facility, String phone,

@@ -34,6 +34,8 @@ public class KitRequest {
     @DbDateConversion(SqlDateConverter.EPOCH)
     private Long externalOrderDate;
 
+    public KitRequest() {}
+
     public KitRequest(String participantId, String shortId, DDPParticipant participant, String externalOrderNumber) {
         this(null, participantId, shortId, null, externalOrderNumber, participant, null, null, null);
     }

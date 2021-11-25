@@ -15,7 +15,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -35,10 +34,10 @@ public class Participant {
             "WHERE realm.instance_name = ? ";
 
     @ColumnName(DBConstants.PARTICIPANT_ID)
-    private final String participantId;
+    private String participantId;
 
     @ColumnName(DBConstants.DDP_PARTICIPANT_ID)
-    private final String ddpParticipantId;
+    private String ddpParticipantId;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT,
@@ -46,7 +45,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ASSIGNEE_ID_MR)
-    private final String assigneeMr;
+    private String assigneeIdMr;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT,
@@ -54,8 +53,8 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ASSIGNEE_ID_TISSUE)
-    private final String assigneeTissue;
-    private final String realm;
+    private String assigneeIdTissue;
+    private String realm;
 
     @TableName (
             name = DBConstants.DDP_ONC_HISTORY,
@@ -63,7 +62,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ONC_HISTORY_CREATED)
-    private final String createdOncHistory;
+    private String createdOncHistory;
 
     @TableName (
             name = DBConstants.DDP_ONC_HISTORY,
@@ -71,7 +70,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ONC_HISTORY_REVIEWED)
-    private final String reviewedOncHistory;
+    private String reviewedOncHistory;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_RECORD,
@@ -79,7 +78,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.CR_SENT)
-    private final String paperCRSent;
+    private String paperCRSent;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_RECORD,
@@ -87,7 +86,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.CR_RECEIVED)
-    private final String paperCRReceived;
+    private String paperCRReceived;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_RECORD,
@@ -95,7 +94,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.NOTES)
-    private final String ptNotes;
+    private String ptNotes;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_RECORD,
@@ -103,7 +102,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.MINIMAL_MR)
-    private final boolean minimalMR;
+    private boolean minimalMr;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_RECORD,
@@ -111,7 +110,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ABSTRACTION_READY)
-    private final boolean abstractionReady;
+    private boolean abstractionReady;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_RECORD,
@@ -119,7 +118,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ADDITIONAL_VALUES)
-    private final String additionalValues;
+    private String additionalValuesJson;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_EXIT,
@@ -127,24 +126,26 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.EXIT_DATE)
-    private final long exitDate;
+    private long exitDate;
 
-    public Participant(String participantId, String ddpParticipantId, String assigneeMr, String assigneeTissue, String instanceName,
+    public Participant() {}
+
+    public Participant(String participantId, String ddpParticipantId, String assigneeIdMr, String assigneeIdTissue, String instanceName,
                        String createdOncHistory, String reviewedOncHistory, String paperCRSent, String paperCRReceived, String ptNotes,
-                       boolean minimalMR, boolean abstractionReady, String additionalValues, long exitDate) {
+                       boolean minimalMr, boolean abstractionReady, String additionalValuesJson, long exitDate) {
         this.participantId = participantId;
         this.ddpParticipantId = ddpParticipantId;
-        this.assigneeMr = assigneeMr;
-        this.assigneeTissue = assigneeTissue;
+        this.assigneeIdMr = assigneeIdMr;
+        this.assigneeIdTissue = assigneeIdTissue;
         this.realm = instanceName;
         this.createdOncHistory = createdOncHistory;
         this.reviewedOncHistory = reviewedOncHistory;
         this.paperCRSent = paperCRSent;
         this.paperCRReceived = paperCRReceived;
         this.ptNotes = ptNotes;
-        this.minimalMR = minimalMR;
+        this.minimalMr = minimalMr;
         this.abstractionReady = abstractionReady;
-        this.additionalValues = additionalValues;
+        this.additionalValuesJson = additionalValuesJson;
         this.exitDate = exitDate;
     }
 

@@ -62,7 +62,7 @@ public class ParticipantExitRoute extends RequestHandler {
                     for (KitRequestShipping kit : kitRequests) {
                         if (kit.getScanDate() != 0 && kit.getReceiveDate() == 0) {
                             String discardId = KitDiscard.addKitToDiscard(kit.getDsmKitRequestId(), KitDiscard.HOLD);
-                            kitsNeedAction.add(new KitDiscard(discardId, kit.getKitType(), KitDiscard.HOLD));
+                            kitsNeedAction.add(new KitDiscard(discardId, kit.getKitTypeName(), KitDiscard.HOLD));
                         }
                         else {
                             //refund label of kits which are not sent yet
