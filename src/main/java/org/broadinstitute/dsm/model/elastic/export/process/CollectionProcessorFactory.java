@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.export.process;
 
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 public class CollectionProcessorFactory implements ProcessorFactory {
 
@@ -8,7 +9,7 @@ public class CollectionProcessorFactory implements ProcessorFactory {
     public BaseProcessor make(BaseGenerator.PropertyInfo propertyInfo) {
         BaseProcessor processor = new CollectionProcessor();
         if (propertyInfo.isCollection()) {
-            if ("followUps".equals(propertyInfo.getFieldName())) {
+            if (ESObjectConstants.MEDICAL_RECORDS.equals(propertyInfo.getPropertyName())) {
                 processor = new MedicalRecordCollectionProcessor();
             }
         }

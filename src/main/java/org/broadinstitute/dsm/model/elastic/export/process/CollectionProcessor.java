@@ -64,6 +64,7 @@ public class CollectionProcessor extends BaseProcessor {
     }
 
     private String findPrimaryKeyOfObject(List<Object> objectCollection) {
+        if (Objects.isNull(objectCollection)) return "";
         Optional<Object> maybeObject = objectCollection.stream().findFirst();
         return maybeObject
                 .map(o -> {
@@ -82,8 +83,11 @@ public class CollectionProcessor extends BaseProcessor {
     }
 
     private boolean isExistingRecord(Map<String, Object> eachRecord) {
-        if (!eachRecord.containsKey(Util.underscoresToCamelCase(primaryKey))) return false;
-        return Double.parseDouble(String.valueOf(eachRecord.get(Util.underscoresToCamelCase(primaryKey)))) == (double) recordId;
+        if (!eachRecord.containsKey(Util.underscoresToCamelCase(primaryKey)) || !eachRecord.containsKey(Util.ID)) return false;
+        double id = eachRecord.containsKey(Util.ID)
+                ? Double.parseDouble(String.valueOf(eachRecord.get(Util.ID)))
+                : Double.parseDouble(String.valueOf(eachRecord.get(Util.underscoresToCamelCase(primaryKey))));
+        return id == (double) recordId;
     }
 
     private void updateExistingRecord(Map<String, Object> eachRecord) {

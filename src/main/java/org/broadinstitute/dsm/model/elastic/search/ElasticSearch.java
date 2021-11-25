@@ -17,6 +17,7 @@ import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
@@ -71,29 +72,56 @@ public class ElasticSearch implements ElasticSearchable {
     }
 
     private static ElasticSearchParticipantDto serialize(Map<String, Object> sourceMap) {
-        ElasticSearchParticipantDto elasticSearchParticipantDto;
-        boolean hasMedicalRecord = false;
-        boolean hasDSM = sourceMap.containsKey(DSM);
-        if (hasDSM)
-            hasMedicalRecord = ((Map) sourceMap.get(DSM)).containsKey("medicalRecords");
-        long followUpsCount = 0;
-        if (hasMedicalRecord) {
-            followUpsCount = ((List<Map<String, Object>>) (((Map) sourceMap.get(DSM)).get("medicalRecords"))).stream().filter(map -> map.containsKey("followUps")).count();
-        }
-        if (followUpsCount > 0) {
-            try {
-                String sourceMapAsString = new ObjectMapper().writeValueAsString(sourceMap);
-                sourceMapAsString = sourceMapAsString.replace("\"[", "[").replace("]\"", "]").replace("\\\"", "\"");
-                JsonReader reader = new JsonReader(new StringReader(sourceMapAsString));
-                reader.setLenient(true);
-                elasticSearchParticipantDto = GSON.fromJson(reader, ElasticSearchParticipantDto.class);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException();
+        ElasticSearchParticipantDto elasticSearchParticipantDto = null;
+        Object dsm = sourceMap.get(DSM);
+        if (!Objects.isNull(dsm)) {
+            List<Map<String, Object>> medicalRecords = (List<Map<String, Object>>)((Map) sourceMap.get(DSM)).get("medicalRecords");
+            if (!Objects.isNull(medicalRecords)) {
+                boolean hasFollowUps = medicalRecords.stream()
+                        .anyMatch(medicalRecord -> StringUtils.isNotBlank((String) medicalRecord.get("followUps")));
+                if (hasFollowUps) {
+                    String sourceMapAsString = null;
+                    try {
+                        sourceMapAsString = new ObjectMapper().writeValueAsString(sourceMap);
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
+                    sourceMapAsString = sourceMapAsString.replace("\"[", "[").replace("]\"", "]").replace("\\\"", "\"");
+                    JsonReader reader = new JsonReader(new StringReader(sourceMapAsString));
+                    reader.setLenient(true);
+                    elasticSearchParticipantDto = GSON.fromJson(reader, ElasticSearchParticipantDto.class);
+                } else {
+                    elasticSearchParticipantDto = GSON.fromJson(GSON.toJson(sourceMap), ElasticSearchParticipantDto.class);
+                }
             }
-        } else {
-            elasticSearchParticipantDto = GSON.fromJson(GSON.toJson(sourceMap), ElasticSearchParticipantDto.class);
         }
         return elasticSearchParticipantDto;
+//        boolean hasMedicalRecord = false;
+//        boolean hasDSM = sourceMap.containsKey(DSM);
+//        if (hasDSM)
+//            hasMedicalRecord = ((Map) sourceMap.get(DSM)).containsKey("medicalRecords");
+//        long followUpsCount = 0;
+//        if (hasMedicalRecord) {
+//            followUpsCount = ((List<Map<String, Object>>) (((Map) sourceMap.get(DSM)).get("medicalRecords"))).stream().filter(map -> map.containsKey("followUps")).count();
+//        }
+//        if (followUpsCount > 0) {
+//            try {
+//                String sourceMapAsString = new ObjectMapper().writeValueAsString(sourceMap);
+//                sourceMapAsString = sourceMapAsString.replace("\"[", "[").replace("]\"", "]").replace("\\\"", "\"");
+//                JsonReader reader = new JsonReader(new StringReader(sourceMapAsString));
+//                reader.setLenient(true);
+//                elasticSearchParticipantDto = GSON.fromJson(reader, ElasticSearchParticipantDto.class);
+//            } catch (JsonProcessingException e) {
+//                throw new RuntimeException();
+//            }
+//        } else {
+//            elasticSearchParticipantDto = GSON.fromJson(GSON.toJson(sourceMap), ElasticSearchParticipantDto.class);
+//        }
+//        return elasticSearchParticipantDto;
+    }
+
+    private static String extractListFromString(String listInString) {
+        return listInString.replace("\"[", "[").replace("]\"", "]").replace("\\\"", "\"");
     }
 
     public List<ElasticSearchParticipantDto> parseSourceMaps(SearchHit[] searchHits) {
