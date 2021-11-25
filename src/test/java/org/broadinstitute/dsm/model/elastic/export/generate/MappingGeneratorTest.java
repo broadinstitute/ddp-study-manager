@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import static org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator.PROPERTIES;
+
 public class MappingGeneratorTest {
 
 
@@ -24,7 +26,7 @@ public class MappingGeneratorTest {
             0
         );
         Map<String, Object> objectMap = TestCollectionMappingGenerator.of(generatorPayload).generate();
-        Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
+        Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), PROPERTIES);
         String type = extractDeepestLeveleValue(objectMap);
         Assert.assertEquals("text", type);
     }
@@ -36,7 +38,7 @@ public class MappingGeneratorTest {
             0
         );
         Map<String, Object> objectMap = TestCollectionMappingGenerator.of(generatorPayload).generate();
-        Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
+        Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), PROPERTIES);
         String type = extractKeywordType(objectMap);
         Assert.assertEquals("keyword", type);
     }
@@ -48,7 +50,7 @@ public class MappingGeneratorTest {
                 0
         );
         Map<String, Object> objectMap = TestCollectionMappingGenerator.of(generatorPayload).generate();
-        Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
+        Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), PROPERTIES);
         String type = extractDeepestLeveleValue(objectMap);
         Assert.assertEquals("boolean", type);
     }
@@ -60,7 +62,7 @@ public class MappingGeneratorTest {
                 0
         );
         Map<String, Object> objectMap = TestCollectionMappingGenerator.of(generatorPayload).generate();
-        Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), BaseGenerator.PROPERTIES);
+        Assert.assertEquals(objectMap.keySet().stream().findFirst().get(), PROPERTIES);
         String type = extractDeepestLeveleValue(objectMap);
         Assert.assertEquals("date", type);
     }
@@ -85,12 +87,12 @@ public class MappingGeneratorTest {
         Map<String, Object> resultMap = generator.generate();
         Map<String, Object> dsmLevelProperty = Map.of(generator.getOuterPropertyByAlias().getPropertyName(), Map.of(
                 MappingGenerator.TYPE, MappingGenerator.NESTED,
-                MappingGenerator.PROPERTIES, Map.of(Util.underscoresToCamelCase(TestPatchUtil.MEDICAL_RECORD_COLUMN), Map.of(MappingGenerator.TYPE, "date"),
+                PROPERTIES, Map.of(Util.underscoresToCamelCase(TestPatchUtil.MEDICAL_RECORD_COLUMN), Map.of(MappingGenerator.TYPE, "date"),
                         Util.ID, Map.of(MappingGenerator.TYPE, MappingGenerator.TYPE_KEYWORD)
                         )));
-        Map<String, Object> dsmLevelProperties = Map.of(MappingGenerator.PROPERTIES, dsmLevelProperty);
+        Map<String, Object> dsmLevelProperties = Map.of(PROPERTIES, dsmLevelProperty);
         Map<String, Object> dsmLevel = Map.of(MappingGenerator.DSM_OBJECT, dsmLevelProperties);
-        Map<String, Object> topLevel = Map.of(MappingGenerator.PROPERTIES, dsmLevel);
+        Map<String, Object> topLevel = Map.of(PROPERTIES, dsmLevel);
         Assert.assertTrue(topLevel.equals(resultMap));
     }
 
@@ -107,11 +109,11 @@ public class MappingGeneratorTest {
         mappingGenerator = new CollectionMappingGenerator(parser, generatorPayload2);
         base = mappingGenerator.merge(base, mappingGenerator.generate());
         Object value = ((Map) ((Map) ((Map) ((Map) ((Map) base
-                .get(MappingGenerator.PROPERTIES))
+                .get(PROPERTIES))
                 .get(MappingGenerator.DSM_OBJECT))
-                .get(MappingGenerator.PROPERTIES))
+                .get(PROPERTIES))
                 .get(mappingGenerator.getOuterPropertyByAlias().getPropertyName()))
-                .get(MappingGenerator.PROPERTIES))
+                .get(PROPERTIES))
                 .get(Util.underscoresToCamelCase("DDP_INSTANCE1"));
         Assert.assertFalse(Objects.isNull(value));
     }
@@ -125,8 +127,8 @@ public class MappingGeneratorTest {
         Map<String, Object> parseJson = mappingGenerator.parseJson();
         Map<String, Object> additionalValuesJson = (Map)parseJson.get("additionalValuesJson");
         Assert.assertNotNull(additionalValuesJson);
-        Assert.assertEquals(TypeParser.TEXT_KEYWORD_MAPPING, additionalValuesJson.get(Util.underscoresToCamelCase("DDP_INSTANCE")));
-        Assert.assertEquals(TypeParser.TEXT_KEYWORD_MAPPING, additionalValuesJson.get(Util.underscoresToCamelCase("DDP_INSTANCE1")));
+        Assert.assertEquals(TypeParser.TEXT_KEYWORD_MAPPING,((Map) additionalValuesJson.get(PROPERTIES)).get(Util.underscoresToCamelCase("DDP_INSTANCE")));
+        Assert.assertEquals(TypeParser.TEXT_KEYWORD_MAPPING,((Map) additionalValuesJson.get(PROPERTIES)).get(Util.underscoresToCamelCase("DDP_INSTANCE1")));
     }
 
 
@@ -135,7 +137,7 @@ public class MappingGeneratorTest {
                 ((Map)
                 ((Map)
                 getMedicalRecordProperty(objectMap)
-                        .get(BaseGenerator.PROPERTIES))
+                        .get(PROPERTIES))
                         .get("medicalRecordColumn"))
                         .get("type");
     }
@@ -147,7 +149,7 @@ public class MappingGeneratorTest {
                 ((Map)
                 ((Map)
                 getMedicalRecordProperty(objectMap)
-                        .get(BaseGenerator.PROPERTIES))
+                        .get(PROPERTIES))
                         .get("medicalRecordColumn"))
                         .get("fields"))
                         .get("keyword"))
@@ -159,9 +161,9 @@ public class MappingGeneratorTest {
                 ((Map)
                 ((Map)
                 ((Map) objectMap
-                        .get(BaseGenerator.PROPERTIES))
+                        .get(PROPERTIES))
                         .get(BaseGenerator.DSM_OBJECT))
-                        .get(BaseGenerator.PROPERTIES))
+                        .get(PROPERTIES))
                         .get("medicalRecords");
     }
 
