@@ -116,6 +116,20 @@ public class MappingGeneratorTest {
         Assert.assertFalse(Objects.isNull(value));
     }
 
+    @Test
+    public void parseJson() {
+        NameValue nameValue = new NameValue("m.additionalValuesJson", "{\"DDP_INSTANCE\": \"TEST\", \"DDP_INSTANCE1\": \"TEST1\"}");
+        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 0);
+        TypeParser parser = new TypeParser();
+        MappingGenerator mappingGenerator = new CollectionMappingGenerator(parser, generatorPayload);
+        Map<String, Object> parseJson = mappingGenerator.parseJson();
+        Map<String, Object> additionalValuesJson = (Map)parseJson.get("additionalValuesJson");
+        Assert.assertNotNull(additionalValuesJson);
+        Assert.assertEquals(TypeParser.TEXT_KEYWORD_MAPPING, additionalValuesJson.get(Util.underscoresToCamelCase("DDP_INSTANCE")));
+        Assert.assertEquals(TypeParser.TEXT_KEYWORD_MAPPING, additionalValuesJson.get(Util.underscoresToCamelCase("DDP_INSTANCE1")));
+    }
+
+
     private String extractDeepestLeveleValue(Map<String, Object> objectMap) {
         return (String)
                 ((Map)

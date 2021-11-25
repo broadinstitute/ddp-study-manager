@@ -41,7 +41,7 @@ abstract public class MappingGenerator extends BaseGenerator implements Merger {
             Object eachType = parser.parse(String.valueOf(entry.getValue()));
             resultMap.put(Util.underscoresToCamelCase(entry.getKey()), eachType);
         }
-        return resultMap;
+        return Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), resultMap);
     }
 
     @Override

@@ -332,7 +332,7 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ADDITIONAL_VALUES)
-    private String additionalValues;
+    private String additionalValuesJson;
 
     private boolean reviewMedicalRecord;
 
@@ -361,7 +361,7 @@ public class MedicalRecord {
                          String mrReceived, String mrDocument, String mrDocumentFileNames, boolean mrProblem,
                          String mrProblemText, boolean unableObtain, boolean duplicate, boolean international, boolean crRequired,
                          String pathologyPresent, String mrNotes, boolean reviewMedicalRecord,
-                         FollowUp[] followUps, boolean followUpRequired, String followUpRequiredText, String additionalValues,
+                         FollowUp[] followUps, boolean followUpRequired, String followUpRequiredText, String additionalValuesJson,
                          String unableObtainText, String ddpParticipantId) {
         this.medicalRecordId = medicalRecordId;
         this.institutionId = institutionId;
@@ -395,7 +395,7 @@ public class MedicalRecord {
         this.followUps = followUps;
         this.followUpRequired = followUpRequired;
         this.followUpRequiredText = followUpRequiredText;
-        this.additionalValues = additionalValues;
+        this.additionalValuesJson = additionalValuesJson;
         this.unableObtainText = unableObtainText;
         this.ddpParticipantId = ddpParticipantId;
     }
