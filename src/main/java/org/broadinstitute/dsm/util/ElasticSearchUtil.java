@@ -117,8 +117,12 @@ public class ElasticSearchUtil {
     private static Map<String, MappingMetaData> fieldMappings;
 
     static {
-        initClient();
-        fetchFieldMappings();
+        try {
+            initClient();
+            fetchFieldMappings();
+        }catch(Exception e){
+            logger.error("Problem in class ElasticSearchUtil ",e);
+        }
     }
 
     public static synchronized void initClient() {
@@ -128,7 +132,7 @@ public class ElasticSearchUtil {
                         TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_URL),
                         TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_USERNAME),
                         TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.ES_PASSWORD));
-            } catch (MalformedURLException e) {
+            } catch (Exception e) {
                 throw new RuntimeException("Error while initializing ES client", e);
             }
         }
@@ -142,7 +146,7 @@ public class ElasticSearchUtil {
             fieldMappings = getClientInstance().indices()
                     .getMapping(request, RequestOptions.DEFAULT)
                     .mappings();
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Error while fetching field mappings from ES", e);
         }
     }
