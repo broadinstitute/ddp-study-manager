@@ -6,7 +6,6 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.handlers.util.Result;
-import org.broadinstitute.dsm.db.dao.ddp.tissue.TissueSmIdType;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.db.structure.TableName;
@@ -259,9 +258,6 @@ public class ViewFilter {
                 queryCondition = queryConditions.get(tmp);
             }
             queryConditions.put(tmp, queryCondition.concat(Filter.getQueryStringForFiltering(filter, dbElement)));
-            if (dbElement.tableAlias.equals(DBConstants.SM_ID_ALIAS) && filter.getFilter2() != null) {
-                new TissueSmIdType().createFilterForType(queryConditions, (String) filter.getFilter2().getValue(), tmp);
-            }
         }
         else {
             String queryCondition = "";
@@ -475,8 +471,6 @@ public class ViewFilter {
     public static ViewFilter parseFilteringQuery(String str, ViewFilter viewFilter) {
         String[] conditions = str.split("(and\\s)|(AND\\s)");
         Map<String, Filter> filters = new HashMap<>(conditions.length);
-        Filter lastSmIdFilter = null;
-        boolean isSmIDTypeFilter = false;
         for (String condition : conditions) {
             if (StringUtils.isBlank(condition)) {
                 continue;
@@ -526,9 +520,6 @@ public class ViewFilter {
                             else {// beginning of other types of query
                                 tableName = word.substring(0, word.indexOf(Filter.DB_NAME_DELIMITER));
                                 columnName = word.substring(word.indexOf(Filter.DB_NAME_DELIMITER) + 1);
-                                if (DBConstants.SM_ID_TYPE_TABLE_ALIAS.equals(tableName)) {
-                                    isSmIDTypeFilter = true;
-                                }
                                 state = 1;
                             }
                             break;
@@ -909,18 +900,11 @@ public class ViewFilter {
                             break;
                         case 40:
                             break;
-
                     }
                 }
             }
             if (state != 7 && state != 9 && state != 10 && state != 11 && state != 13 && state != 22 && state != 25 && state != 37 && state != 40) {// terminal states
                 throw new RuntimeException("Query parsing ended in bad state: " + state);
-            }
-            if (isSmIDTypeFilter && lastSmIdFilter != null) {
-                lastSmIdFilter.setFilter2(new NameValue(null, value));
-                lastSmIdFilter = null;
-                isSmIDTypeFilter = false;
-                continue;
             }
             String columnKey = columnName;
             if (StringUtils.isNotBlank(tableName)) {
@@ -1020,9 +1004,6 @@ public class ViewFilter {
                         filter2.setName(columnName);// to change from dbName to column name
                         filter.setFilter2(filter2);
                     }
-                }
-                if (DBConstants.SM_ID_ALIAS.equals(tableName)) {
-                    lastSmIdFilter = filter;
                 }
                 filters.put(columnName, filter);
             }
