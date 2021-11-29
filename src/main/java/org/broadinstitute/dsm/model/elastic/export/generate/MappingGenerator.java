@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-abstract public class MappingGenerator extends BaseGenerator implements Merger {
+abstract public class MappingGenerator extends BaseGenerator {
 
     private static final Logger logger = LoggerFactory.getLogger(MappingGenerator.class);
 
@@ -25,8 +25,12 @@ abstract public class MappingGenerator extends BaseGenerator implements Merger {
     @Override
     public Map<String, Object> generate() {
         logger.info("preparing mapping to upsert");
+        return getCompleteMap(construct());
+    }
+
+    public Map<String, Object> getCompleteMap(Object propertyMap) {
         String propertyName = getOuterPropertyByAlias().getPropertyName();
-        Map<String, Object> objectLevel = Map.of(propertyName, construct());
+        Map<String, Object> objectLevel = Map.of(propertyName, propertyMap);
         Map<String, Object> dsmLevelProperties = Map.of(PROPERTIES, objectLevel);
         Map<String, Map<String, Object>> dsmLevel = Map.of(DSM_OBJECT, dsmLevelProperties);
         return Map.of(PROPERTIES, dsmLevel);
@@ -46,18 +50,19 @@ abstract public class MappingGenerator extends BaseGenerator implements Merger {
 
     @Override
     public Map<String, Object> merge(Map<String, Object> base, Map<String, Object> toMerge) {
-        base.putIfAbsent(PROPERTIES, toMerge.get(PROPERTIES));
+        String propertyName = Util.underscoresToCamelCase(getDBElement().getColumnName());
+        base.putIfAbsent(propertyName, getFieldLevel(toMerge));
         getFieldLevel(base).putAll(getFieldLevel(toMerge));
         return base;
     }
 
     private Map<String, Object> getFieldLevel(Map<String, Object> topLevel) {
-        String propertyName = getOuterPropertyByAlias().getPropertyName();
-        return ((Map)((Map)((Map)((Map)((Map)topLevel.get(PROPERTIES))
-                .get(DSM_OBJECT))
+        String propertyName = Util.underscoresToCamelCase(getDBElement().getColumnName());
+        Map fieldLevel = (Map) ((Map) ((Map) topLevel
                 .get(PROPERTIES))
                 .get(propertyName))
-                .get(PROPERTIES));
+                .get(PROPERTIES);
+        return fieldLevel != null ? fieldLevel : topLevel;
     }
 
 }

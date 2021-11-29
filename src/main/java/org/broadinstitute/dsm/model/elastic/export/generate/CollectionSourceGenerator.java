@@ -23,7 +23,7 @@ public class CollectionSourceGenerator extends SourceGenerator {
     }
 
     @Override
-    protected Object construct() {
+    public Object construct() {
         logger.info("Constructing nested data");
         Map<Object, Object> collectionMap = new HashMap<>();
         collectionMap.put(Util.ID, generatorPayload.getRecordId());

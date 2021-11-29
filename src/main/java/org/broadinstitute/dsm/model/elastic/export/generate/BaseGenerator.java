@@ -14,7 +14,7 @@ import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class BaseGenerator implements Generator, Collector {
+public abstract class BaseGenerator implements Generator, Collector, Merger {
 
     private static final Logger logger = LoggerFactory.getLogger(BaseGenerator.class);
 
@@ -56,9 +56,9 @@ public abstract class BaseGenerator implements Generator, Collector {
 
     //wrap Util.getDBElement in protected method so that we can override it in testing class for tests
     protected DBElement getDBElement() {
-        if (dbElement == null)
-            dbElement = Util.getDBElement(getNameValue().getName());
-        return dbElement;
+//        if (dbElement == null)
+//            dbElement = Util.getDBElement(getNameValue().getName());
+        return Util.getDBElement(getNameValue().getName());
     }
 
     protected PropertyInfo getOuterPropertyByAlias() {
@@ -89,7 +89,12 @@ public abstract class BaseGenerator implements Generator, Collector {
 
     protected abstract Object getElement(Object type);
 
-    protected abstract Object construct();
+    public abstract Object construct();
+
+    @Override
+    public Map<String, Object> merge(Map<String, Object> base, Map<String, Object> toMerge) {
+        return Map.of();
+    }
 
     public static class PropertyInfo {
 

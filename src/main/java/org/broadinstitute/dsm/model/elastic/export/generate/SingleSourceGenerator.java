@@ -21,7 +21,7 @@ public class SingleSourceGenerator extends SourceGenerator {
     }
 
     @Override
-    protected Object construct() {
+    public Object construct() {
         return parseJsonValuesToObject();
     }
 

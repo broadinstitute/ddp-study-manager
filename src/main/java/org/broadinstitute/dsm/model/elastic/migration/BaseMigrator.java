@@ -3,7 +3,9 @@ package org.broadinstitute.dsm.model.elastic.migration;
 import java.util.Map;
 
 import org.broadinstitute.dsm.model.elastic.export.BaseExporter;
+import org.broadinstitute.dsm.model.elastic.export.ElasticMappingExportAdapter;
 import org.broadinstitute.dsm.model.elastic.export.Exportable;
+import org.broadinstitute.dsm.model.elastic.export.RequestPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
 import org.slf4j.Logger;
@@ -18,7 +20,6 @@ public abstract class BaseMigrator extends BaseExporter implements Generator {
     protected final BulkExportFacade bulkExportFacade;
     protected final String realm;
     protected final String index;
-    BaseGenerator baseGenerator;
 
     public BaseMigrator(String index, String realm, String object) {
         bulkExportFacade = new BulkExportFacade(index);
@@ -26,12 +27,6 @@ public abstract class BaseMigrator extends BaseExporter implements Generator {
         this.index = index;
         this.object = object;
     }
-
-    public void setBaseGenerator(BaseGenerator baseGenerator) {
-        this.baseGenerator = baseGenerator;
-    }
-
-
 
     protected void fillBulkRequestWithTransformedMap(Map<String, Object> participantRecords) {
         logger.info("filling bulk request with participants and their details");
@@ -51,10 +46,12 @@ public abstract class BaseMigrator extends BaseExporter implements Generator {
 
     protected abstract Map<String, Object> getDataByRealm();
 
+    protected void exportMap() {}
+
     @Override
     public void export() {
-        Object mapping = baseGenerator.collect();
         fillBulkRequestWithTransformedMap(getDataByRealm());
+        exportMap();
         bulkExportFacade.executeBulkUpsert();
         logger.info("finished migrating data to ES.");
     }

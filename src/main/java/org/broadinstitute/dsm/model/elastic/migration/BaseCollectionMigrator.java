@@ -5,14 +5,25 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.TableName;
+import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.elastic.Util;
+import org.broadinstitute.dsm.model.elastic.export.ElasticMappingExportAdapter;
+import org.broadinstitute.dsm.model.elastic.export.RequestPayload;
+import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
+import org.broadinstitute.dsm.model.elastic.export.generate.CollectionMappingGenerator;
+import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
+import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
+import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 public abstract class BaseCollectionMigrator extends BaseMigrator {
 
+    private final MappingGenerator collectionMappingGenerator = new CollectionMappingGenerator();
     protected List<Map<String, Object>> transformedList;
     protected Set<String> primaryKeys;
+    private Map<String, Object> endResult = new HashMap<>();
 
     public BaseCollectionMigrator(String index, String realm, String object) {
         super(index, realm, object);
@@ -29,6 +40,29 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
         List<Object> objects = (List<Object>) object;
         Optional<Object> maybeObject = objects.stream().findFirst();
         maybeObject.ifPresent(this::collectPrimaryKeys);
+        collectionMappingGenerator.setParser(new TypeParser());
+        for (Object o: objects) {
+            Class<?> clazz = o.getClass();
+            Field[] declaredFields = clazz.getDeclaredFields();
+            TableName table = clazz.getAnnotation(TableName.class);
+            for (Field field: declaredFields) {
+                ColumnName columnName = field.getAnnotation(ColumnName.class);
+                if (columnName == null) continue;
+                field.setAccessible(true);
+                String fieldName = field.getName();
+                String fieldNameWithAlias = table.alias() + "." + fieldName;
+                try {
+                    Object fieldValue = field.get(o);
+                    if (fieldValue == null) continue;
+                    NameValue nameValue = new NameValue(fieldNameWithAlias, fieldValue);
+                    GeneratorPayload generatorPayload = new GeneratorPayload(nameValue);
+                    collectionMappingGenerator.setPayload(generatorPayload);
+                    endResult = collectionMappingGenerator.merge(endResult, (Map<String, Object>) collectionMappingGenerator.construct());
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
         transformedList = Util.transformObjectCollectionToCollectionMap((List) object);
         setPrimaryId();
     }
@@ -112,5 +146,13 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
 
     private void putPrimaryId(Map<String, Object> map, String outerKey) {
         map.put(Util.ID, map.get(outerKey));
+    }
+
+    @Override
+    protected void exportMap() {
+        ElasticMappingExportAdapter elasticMappingExportAdapter = new ElasticMappingExportAdapter();
+        elasticMappingExportAdapter.setRequestPayload(new RequestPayload(index));
+        elasticMappingExportAdapter.setSource(collectionMappingGenerator.getCompleteMap(endResult));
+        elasticMappingExportAdapter.export();
     }
 }

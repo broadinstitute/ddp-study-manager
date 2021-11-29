@@ -20,7 +20,7 @@ public class SingleMappingGenerator extends MappingGenerator {
     }
 
     @Override
-    protected Map<String, Object> construct() {
+    public Map<String, Object> construct() {
         return new HashMap<>(Map.of(PROPERTIES, collect()));
     }
 }

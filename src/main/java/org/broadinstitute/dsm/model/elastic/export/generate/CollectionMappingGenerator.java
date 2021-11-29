@@ -23,7 +23,7 @@ public class CollectionMappingGenerator extends MappingGenerator {
     }
 
     @Override
-    protected Map<String, Object> construct() {
+    public Map<String, Object> construct() {
         return new HashMap<>(Map.of(TYPE, NESTED, PROPERTIES, collect()));
     }
 

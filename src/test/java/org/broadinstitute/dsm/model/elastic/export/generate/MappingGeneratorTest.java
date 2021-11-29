@@ -115,7 +115,15 @@ public class MappingGeneratorTest {
                 .get(mappingGenerator.getOuterPropertyByAlias().getPropertyName()))
                 .get(PROPERTIES))
                 .get(Util.underscoresToCamelCase("DDP_INSTANCE1"));
+        Object value2 = ((Map) ((Map) ((Map) ((Map) ((Map) base
+                .get(PROPERTIES))
+                .get(MappingGenerator.DSM_OBJECT))
+                .get(PROPERTIES))
+                .get(mappingGenerator.getOuterPropertyByAlias().getPropertyName()))
+                .get(PROPERTIES))
+                .get(Util.underscoresToCamelCase("DDP_INSTANCE"));
         Assert.assertFalse(Objects.isNull(value));
+        Assert.assertFalse(Objects.isNull(value2));
     }
 
     @Test
