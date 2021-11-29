@@ -839,7 +839,7 @@ public class DSMServer extends BasicServer {
     }
 
     private static void registerAppEngineStartupCallback(long bootTimeoutSeconds, Config cfg) {
-            GoogleAnalyticsMetricsTracker.setConfig(cfg);
+        GoogleAnalyticsMetricsTracker.setConfig(cfg);
         // Block until isReady is available, with an optional timeout to prevent
         // instance for sitting around too long in a nonresponsive state.  There is a
         // judgement call to be made here to allow for lengthy liquibase migrations during boot.

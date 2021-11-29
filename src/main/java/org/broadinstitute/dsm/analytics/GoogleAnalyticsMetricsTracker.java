@@ -13,7 +13,7 @@ public class GoogleAnalyticsMetricsTracker {
     private static final Logger logger = LoggerFactory.getLogger(GoogleAnalyticsMetricsTracker.class);
     private static final String GA_TOKEN_PATH = "GoogleAnalytics.trackingId";
     private static GoogleAnalytics googleAnalyticsTrackers;
-    private static volatile GoogleAnalyticsMetricsTracker instance = new GoogleAnalyticsMetricsTracker();
+    private static volatile GoogleAnalyticsMetricsTracker instance;
     private static Object lockGA = new Object();
     private static Config CONFIG;
 
@@ -26,14 +26,25 @@ public class GoogleAnalyticsMetricsTracker {
     }
 
     public static GoogleAnalyticsMetricsTracker getInstance() {
+        if (instance == null) {
+            synchronized (lockGA) {
+                if (instance == null) {
+                    instance = new GoogleAnalyticsMetricsTracker();
+                }
+            }
+        }
         return instance;
     }
 
     private GoogleAnalytics getMetricTracker() {
+        if (googleAnalyticsTrackers == null) {
+
+            initStudyMetricTracker();
+        }
         return googleAnalyticsTrackers;
     }
 
-    private void initStudyMetricTracker() {
+    private synchronized void initStudyMetricTracker() {
         GoogleAnalytics metricTracker = GoogleAnalytics.builder()
                 .withConfig(new GoogleAnalyticsConfig().setGatherStats(true).setUserAgent("Custom User Agent"))
                 .withTrackingId(getAnalyticsToken(CONFIG))
