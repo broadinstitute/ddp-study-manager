@@ -27,6 +27,7 @@ public class DBConstants {
     public static final String DDP_ONC_HISTORY_ALIAS = "o";
     public static final String DDP_ONC_HISTORY_DETAIL_ALIAS = "oD";
     public static final String DDP_TISSUE_ALIAS = "t";
+    public static final String SM_ID_ALIAS = "sm";
     public static final String DDP_KIT_REQUEST_ALIAS = "k";
     public static final String DDP_ABSTRACTION_ALIAS = "a";
     public static final String DRUG_ALIAS = "d";
@@ -500,6 +501,8 @@ public class DBConstants {
 
     //sm_id_type table
     public static final String SM_ID_TYPE_TABLE = "sm_id_type";
+    public static final String SM_ID_TYPE_TABLE_ALIAS = "smt";
     public static final String SM_ID_TYPE = "sm_id_type";
+
 
 }

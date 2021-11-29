@@ -1,11 +1,5 @@
 package org.broadinstitute.dsm.model.filter.participant;
 
-import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-
 import com.google.gson.Gson;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -19,10 +13,9 @@ import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
-import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
 import org.broadinstitute.dsm.model.filter.BaseFilter;
 import org.broadinstitute.dsm.model.filter.Filterable;
-import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperPayload;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperResult;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -30,6 +23,12 @@ import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 public abstract class BaseFilterParticipantList extends BaseFilter implements Filterable<ParticipantWrapperResult> {
 
@@ -110,7 +109,7 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
                     mergeConditions.merge(DBConstants.DDP_PARTICIPANT_ALIAS, queryConditions.get(filter), String::concat);
                 } else if (DBConstants.DDP_INSTITUTION_ALIAS.equals(filter)) {
                     mergeConditions.merge(DBConstants.DDP_MEDICAL_RECORD_ALIAS, queryConditions.get(filter), String::concat);
-                } else if (DBConstants.DDP_TISSUE_ALIAS.equals(filter)) {
+                } else if (DBConstants.DDP_TISSUE_ALIAS.equals(filter) || DBConstants.SM_ID_ALIAS.equals(filter)) {
                     mergeConditions.merge(DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS, queryConditions.get(filter), String::concat);
                 } else {
                     mergeConditions.merge(filter, queryConditions.get(filter), String::concat);

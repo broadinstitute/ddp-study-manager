@@ -40,15 +40,17 @@ public class OncHistoryDetail {
             "oD.location_px, oD.histology, oD.accession_number, oD.facility, oD.phone, oD.fax, oD.notes, oD.additional_values_json, " +
             "oD.request, oD.fax_sent, oD.fax_sent_by, oD.fax_confirmed, oD.fax_sent_2, oD.fax_sent_2_by, oD.fax_confirmed_2, oD.fax_sent_3, " +
             "oD.fax_sent_3_by, oD.fax_confirmed_3, oD.tissue_received, oD.tissue_problem_option, oD.gender, oD.destruction_policy, oD.unable_obtain_tissue, " +
-            "tissue_id, t.notes, count_received, tissue_type, tissue_site, tumor_type, h_e, pathology_report, collaborator_sample_id, block_sent, scrolls_received, sk_id, sm_id, " +
+            "t.tissue_id, t.notes, count_received, tissue_type, tissue_site, tumor_type, h_e, pathology_report, collaborator_sample_id, block_sent, scrolls_received, sk_id, sm_id, " +
             "sent_gp, first_sm_id, additional_tissue_value_json, expected_return, return_date, return_fedex_id, shl_work_number, tumor_percentage, tissue_sequence, " +
-            " scrolls_count, uss_count, h_e_count, blocks_count, p.ddp_participant_id " +
+            " scrolls_count, uss_count, h_e_count, blocks_count, p.ddp_participant_id, sm.sm_id_value, sm.sm_id_type_id, sm.sm_id_pk, sm.deleted, sm.tissue_id " +
             "FROM ddp_onc_history_detail oD " +
             "LEFT JOIN ddp_medical_record m on (oD.medical_record_id = m.medical_record_id AND NOT oD.deleted <=> 1 AND NOT m.deleted <=> 1) " +
             "LEFT JOIN ddp_institution inst on (inst.institution_id = m.institution_id) " +
             "LEFT JOIN ddp_participant p on (p.participant_id = inst.participant_id) " +
             "LEFT JOIN ddp_instance realm on (p.ddp_instance_id = realm.ddp_instance_id) " +
             "LEFT JOIN ddp_tissue t on (oD.onc_history_detail_id = t.onc_history_detail_id AND NOT t.deleted <=> 1) " +
+            "LEFT JOIN sm_id sm on (sm.tissue_id = t.tissue_id AND NOT sm.deleted <=> 1 ) " +
+            "LEFT JOIN sm_id_type smt on (smt.sm_id_type_id = sm.sm_id_type_id ) " +
             "WHERE realm.instance_name = ? ";
     private static final String SQL_CREATE_ONC_HISTORY = "INSERT INTO ddp_onc_history_detail SET medical_record_id = ?, request = ?, last_changed = ?, changed_by = ?";
     private static final String SQL_SELECT_ONC_HISTORY = "SELECT onc_history_detail_id, medical_record_id, date_px, type_px, location_px, histology, accession_number, facility," +

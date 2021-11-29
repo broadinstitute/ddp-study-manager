@@ -33,7 +33,9 @@ public class Tissue {
     private static final String SQL_SELECT_TISSUE = "SELECT tissue_id, onc_history_detail_id, notes, count_received, tissue_type, tissue_site, tumor_type, h_e, " +
             "pathology_report, collaborator_sample_id, block_sent, expected_return, return_date, return_fedex_id, scrolls_received, sk_id, sm_id, " +
             "scrolls_count, uss_count, blocks_count, h_e_count, first_sm_id, sent_gp, last_changed, changed_by, additional_tissue_value_json, shl_work_number, " +
-            "tumor_percentage, tissue_sequence FROM ddp_tissue t WHERE NOT (deleted <=> 1) AND onc_history_detail_id = ?";
+            "tumor_percentage, tissue_sequence, sm.sm_id_value, sm.sm_id_type_id, sm.sm_id_pk, sm.deleted, sm.tissue_id FROM ddp_tissue t " +
+            "LEFT JOIN sm_id sm on (sm.tissue_id = t.tissue_id AND NOT sm.deleted <=> 1 AND NOT t.deleted <=> 1) "+
+            "WHERE NOT (deleted <=> 1) AND onc_history_detail_id = ?";
     private static final String SQL_INSERT_TISSUE = "INSERT INTO ddp_tissue SET onc_history_detail_id = ?, last_changed = ?, changed_by = ?";
     public static final String SQL_SELECT_TISSUE_LAST_CHANGED = "SELECT t.last_changed FROM ddp_institution inst " +
             "LEFT JOIN ddp_participant as p on (p.participant_id = inst.participant_id) LEFT JOIN ddp_instance as ddp on (ddp.ddp_instance_id = p.ddp_instance_id) " +
@@ -205,12 +207,12 @@ public class Tissue {
                 null,
                 null,
                 null);
-        tissue.setSMIds();
+        tissue.setSMIds(rs);
         return tissue;
     }
 
-    private void setSMIds() {
-        Map<String,  List<TissueSmId>> map= TissueSmId.getSMIdsForTissueId(this.getTissueId());
+    private void setSMIds(ResultSet rs) {
+        Map<String,  List<TissueSmId>> map= TissueSmId.getSMIdsForTissueId(rs);
         TissueSMIDDao tissueSMIDDao = new TissueSMIDDao();
         String typeId = tissueSMIDDao.getTypeForName(TissueSmId.HE);
         this.heSMID = map.getOrDefault(typeId, new ArrayList<>()).toArray(new TissueSmId[map.getOrDefault(typeId, new ArrayList<>()).size()]);

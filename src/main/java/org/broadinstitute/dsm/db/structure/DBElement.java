@@ -1,11 +1,10 @@
 package org.broadinstitute.dsm.db.structure;
 
-import java.text.SimpleDateFormat;
+import lombok.Data;
+
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-
-import lombok.Data;
 
 @Data
 public class DBElement {

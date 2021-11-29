@@ -26,12 +26,14 @@ public class TissueList {
             "oD.fax_sent_3_by, oD.fax_confirmed_3, oD.tissue_received, oD.tissue_problem_option, oD.additional_values_json, oD.gender, oD.destruction_policy, oD.unable_obtain_tissue," +
             "tissue_id, t.notes, t.count_received, t.tissue_type, t.tissue_site, t.tumor_type, t.h_e, t.pathology_report, t.collaborator_sample_id, t.block_sent, t.scrolls_received, t.sk_id, t.sm_id, " +
             "t.sent_gp, t.first_sm_id, t.additional_tissue_value_json, t.expected_return, t.return_date, t.return_fedex_id, t.shl_work_number, t.tumor_percentage, t.tissue_sequence, t.onc_history_detail_id, " +
-            "t.scrolls_count, t.h_e_count, t.uss_count, t.blocks_count " +
+            "t.scrolls_count, t.h_e_count, t.uss_count, t.blocks_count, sm.sm_id_value, sm.sm_id_type_id, sm.sm_id_pk, sm.deleted " +
             "FROM ddp_participant p LEFT JOIN ddp_instance realm on (p.ddp_instance_id = realm.ddp_instance_id) " +
             "LEFT JOIN ddp_participant_exit ex on (p.ddp_participant_id = ex.ddp_participant_id AND p.ddp_instance_id = ex.ddp_instance_id) " +
             "LEFT JOIN ddp_institution inst on (p.participant_id = inst.participant_id) LEFT JOIN ddp_medical_record m on (m.institution_id = inst.institution_id AND NOT m.deleted <=> 1) " +
             "LEFT JOIN ddp_onc_history_detail oD on (m.medical_record_id = oD.medical_record_id AND NOT oD.deleted <=> 1) " +
-            "LEFT JOIN ddp_tissue t on (oD.onc_history_detail_id = t.onc_history_detail_id AND NOT t.deleted <=> 1) WHERE realm.instance_name = ? AND ex.ddp_participant_exit_id IS NULL AND oD.onc_history_detail_id IS NOT NULL";
+            "LEFT JOIN ddp_tissue t on (oD.onc_history_detail_id = t.onc_history_detail_id AND NOT t.deleted <=> 1) " +
+            "LEFT JOIN sm_id sm on (sm.tissue_id = t.tissue_id AND NOT sm.deleted <=> 1 AND NOT t.deleted <=> 1) "+
+            "WHERE realm.instance_name = ? AND ex.ddp_participant_exit_id IS NULL AND oD.onc_history_detail_id IS NOT NULL";
     public static final String SQL_ORDER_BY_ONC_HISTORY = " ORDER BY oD.onc_history_detail_id ";
 
     private OncHistoryDetail oncHistoryDetails;
