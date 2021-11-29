@@ -15,12 +15,13 @@ import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.elastic.export.generate.CollectionMappingGenerator;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
+import org.broadinstitute.dsm.model.elastic.export.generate.Merger;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
-public abstract class BaseCollectionMigrator extends BaseMigrator {
+public abstract class BaseCollectionMigrator extends BaseMigrator implements Merger {
 
-    private final MappingGenerator collectionMappingGenerator = new CollectionMappingGenerator();
+    private final BaseGenerator collectionMappingGenerator = new CollectionMappingGenerator();
     protected List<Map<String, Object>> transformedList;
     protected Set<String> primaryKeys;
     private Map<String, Object> endResult = new HashMap<>();
@@ -32,7 +33,7 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
 
     @Override
     public Map<String, Object> generate() {
-        return Map.of(ESObjectConstants.DSM, Map.of(object, transformedList));
+        return new HashMap<>(Map.of(ESObjectConstants.DSM, new HashMap<>(Map.of(object, transformedList))));
     }
 
     @Override
@@ -57,7 +58,7 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
                     NameValue nameValue = new NameValue(fieldNameWithAlias, fieldValue);
                     GeneratorPayload generatorPayload = new GeneratorPayload(nameValue);
                     collectionMappingGenerator.setPayload(generatorPayload);
-                    endResult = collectionMappingGenerator.merge(endResult, (Map<String, Object>) collectionMappingGenerator.construct());
+                    endResult = merge(endResult, collectionMappingGenerator.generate());
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
@@ -65,6 +66,41 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
         }
         transformedList = Util.transformObjectCollectionToCollectionMap((List) object);
         setPrimaryId();
+    }
+
+    @Override
+    public Map<String, Object> merge(Map<String, Object> base, Map<String, Object> toMerge) {
+        if (base.isEmpty()) {
+            return toMerge;
+        }
+        getFieldLevel(base).putAll(getFieldLevel(toMerge));
+        return base;
+    }
+
+    private Map<String, Object> getFieldLevel(Map<String, Object> base) {
+        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> propertyMap = getPropertyLevel(base);
+        Map<String, Object> innerProperty = (Map<String, Object>)propertyMap.get("properties");
+        if (innerProperty == null) result = propertyMap;
+        Map<String, Object> fieldProperty = (Map<String, Object>) innerProperty.get(collectionMappingGenerator.getFieldName());
+        if (fieldProperty == null) result = innerProperty;
+        if (fieldProperty != null) {
+            Map<String, Object> fieldProperties = (Map<String, Object>)fieldProperty.get("properties");
+            if (fieldProperties != null) {
+                result = fieldProperties;
+            } else {
+                result = innerProperty;
+            }
+        }
+        return result;
+    }
+
+    private Map<String, Object> getPropertyLevel(Map<String, Object> base) {
+        Map<String, Object> topLevelProperties = (Map<String, Object>) base.get("properties");
+        Map<String, Object> dsmProperties = (Map<String, Object>) topLevelProperties.get("dsm");
+        Map<String, Object> properties = (Map<String, Object>) dsmProperties.get("properties");
+        Map<String, Object> propertyMap = (Map<String, Object>)properties.get(collectionMappingGenerator.getPropertyName());
+        return propertyMap;
     }
 
     private void collectPrimaryKeys(Object obj) {
@@ -152,7 +188,7 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
     protected void exportMap() {
         ElasticMappingExportAdapter elasticMappingExportAdapter = new ElasticMappingExportAdapter();
         elasticMappingExportAdapter.setRequestPayload(new RequestPayload(index));
-        elasticMappingExportAdapter.setSource(collectionMappingGenerator.getCompleteMap(endResult));
+        elasticMappingExportAdapter.setSource(endResult);
         elasticMappingExportAdapter.export();
     }
 }

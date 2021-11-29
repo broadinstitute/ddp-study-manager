@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.migration;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.broadinstitute.dsm.model.elastic.Util;
@@ -15,7 +16,7 @@ public abstract class BaseSingleMigrator extends BaseMigrator {
 
     @Override
     public Map<String, Object> generate() {
-        return Map.of(ESObjectConstants.DSM, Map.of(object, transformedObject));
+        return new HashMap<>(Map.of(ESObjectConstants.DSM, new HashMap<>(Map.of(object, transformedObject))));
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.broadinstitute.dsm.model.elastic.Util;
@@ -28,7 +29,7 @@ public class SingleSourceGenerator extends SourceGenerator {
     @Override
     protected Map<String, Object> getElement(Object element) {
         logger.info("Constructing single field with value");
-        return Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), element);
+        return new HashMap<>(Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), element));
     }
 }
 

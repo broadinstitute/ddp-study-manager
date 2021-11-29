@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -61,8 +62,16 @@ public abstract class BaseGenerator implements Generator, Collector, Merger {
         return Util.getDBElement(getNameValue().getName());
     }
 
-    protected PropertyInfo getOuterPropertyByAlias() {
+    private PropertyInfo getOuterPropertyByAlias() {
         return Util.TABLE_ALIAS_MAPPINGS.get(getDBElement().getTableAlias());
+    }
+
+    public String getPropertyName() {
+        return getOuterPropertyByAlias().getPropertyName();
+    }
+
+    public String getFieldName() {
+        return Util.underscoresToCamelCase(getDBElement().getColumnName());
     }
 
     @Override
@@ -93,7 +102,7 @@ public abstract class BaseGenerator implements Generator, Collector, Merger {
 
     @Override
     public Map<String, Object> merge(Map<String, Object> base, Map<String, Object> toMerge) {
-        return Map.of();
+        return new HashMap<>();
     }
 
     public static class PropertyInfo {

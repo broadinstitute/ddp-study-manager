@@ -85,7 +85,7 @@ public class MappingGeneratorTest {
         );
         MappingGenerator generator = TestCollectionMappingGenerator.of(generatorPayload);
         Map<String, Object> resultMap = generator.generate();
-        Map<String, Object> dsmLevelProperty = Map.of(generator.getOuterPropertyByAlias().getPropertyName(), Map.of(
+        Map<String, Object> dsmLevelProperty = Map.of(generator.getPropertyName(), Map.of(
                 MappingGenerator.TYPE, MappingGenerator.NESTED,
                 PROPERTIES, Map.of(Util.underscoresToCamelCase(TestPatchUtil.MEDICAL_RECORD_COLUMN), Map.of(MappingGenerator.TYPE, "date"),
                         Util.ID, Map.of(MappingGenerator.TYPE, MappingGenerator.TYPE_KEYWORD)
@@ -112,14 +112,14 @@ public class MappingGeneratorTest {
                 .get(PROPERTIES))
                 .get(MappingGenerator.DSM_OBJECT))
                 .get(PROPERTIES))
-                .get(mappingGenerator.getOuterPropertyByAlias().getPropertyName()))
+                .get(mappingGenerator.getPropertyName()))
                 .get(PROPERTIES))
                 .get(Util.underscoresToCamelCase("DDP_INSTANCE1"));
         Object value2 = ((Map) ((Map) ((Map) ((Map) ((Map) base
                 .get(PROPERTIES))
                 .get(MappingGenerator.DSM_OBJECT))
                 .get(PROPERTIES))
-                .get(mappingGenerator.getOuterPropertyByAlias().getPropertyName()))
+                .get(mappingGenerator.getPropertyName()))
                 .get(PROPERTIES))
                 .get(Util.underscoresToCamelCase("DDP_INSTANCE"));
         Assert.assertFalse(Objects.isNull(value));

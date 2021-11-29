@@ -16,10 +16,10 @@ public class CollectionMappingGenerator extends MappingGenerator {
 
     @Override
     protected Map<String, Object> getElement(Object type) {
-        return Map.of(
-                Util.ID, Map.of(TYPE, TYPE_KEYWORD),
+        return new HashMap<>(Map.of(
+                Util.ID, new HashMap<>(Map.of(TYPE, TYPE_KEYWORD)),
                 Util.underscoresToCamelCase(getDBElement().getColumnName()), type
-        );
+        ));
     }
 
     @Override
@@ -27,5 +27,8 @@ public class CollectionMappingGenerator extends MappingGenerator {
         return new HashMap<>(Map.of(TYPE, NESTED, PROPERTIES, collect()));
     }
 
-
+    @Override
+    public Map<String, Object> merge(Map<String, Object> base, Map<String, Object> toMerge) {
+        return super.merge(base, toMerge);
+    }
 }

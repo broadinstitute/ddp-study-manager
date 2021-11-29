@@ -25,11 +25,11 @@ abstract public class SourceGenerator extends BaseGenerator {
     public Map<String, Object> generate() {
         Object dataToExport = collect();
         logger.info("Generating final source");
-        return Map.of(DSM_OBJECT, buildPropertyLevelWithData(dataToExport));
+        return new HashMap<>(Map.of(DSM_OBJECT, buildPropertyLevelWithData(dataToExport)));
     }
 
     private Map<String, Object> buildPropertyLevelWithData(Object dataToExport) {
-        return Map.of(getOuterPropertyByAlias().getPropertyName(), dataToExport);
+        return new HashMap<>(Map.of(getPropertyName(), dataToExport));
     }
 
     @Override

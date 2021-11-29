@@ -29,11 +29,11 @@ abstract public class MappingGenerator extends BaseGenerator {
     }
 
     public Map<String, Object> getCompleteMap(Object propertyMap) {
-        String propertyName = getOuterPropertyByAlias().getPropertyName();
-        Map<String, Object> objectLevel = Map.of(propertyName, propertyMap);
-        Map<String, Object> dsmLevelProperties = Map.of(PROPERTIES, objectLevel);
-        Map<String, Map<String, Object>> dsmLevel = Map.of(DSM_OBJECT, dsmLevelProperties);
-        return Map.of(PROPERTIES, dsmLevel);
+        String propertyName = getPropertyName();
+        Map<String, Object> objectLevel = new HashMap<>(Map.of(propertyName, propertyMap));
+        Map<String, Object> dsmLevelProperties = new HashMap<>(Map.of(PROPERTIES, objectLevel));
+        Map<String, Map<String, Object>> dsmLevel = new HashMap<>(Map.of(DSM_OBJECT, dsmLevelProperties));
+        return new HashMap<>(Map.of(PROPERTIES, dsmLevel));
     }
 
 
@@ -45,7 +45,9 @@ abstract public class MappingGenerator extends BaseGenerator {
             Object eachType = parser.parse(String.valueOf(entry.getValue()));
             resultMap.put(Util.underscoresToCamelCase(entry.getKey()), eachType);
         }
-        return Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), Map.of(PROPERTIES, resultMap));
+        return new HashMap<>(Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()),
+                new HashMap<>(Map.of(PROPERTIES,
+                resultMap))));
     }
 
     @Override

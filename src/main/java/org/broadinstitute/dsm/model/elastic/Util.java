@@ -114,7 +114,7 @@ public class Util {
         Map<String, Object> finalResult;
         switch (fieldName) {
             case "follow_ups":
-                finalResult = Map.of(underscoresToCamelCase(fieldName), new Gson().toJson(fieldValue));
+                finalResult = new HashMap<>(Map.of(underscoresToCamelCase(fieldName), new Gson().toJson(fieldValue)));
 //                List<Map<String, Object>> followUps = convertObjectListToMapList(fieldValue);
 //                finalResult = Map.of(underscoresToCamelCase(fieldName), followUps);
                 break;
@@ -130,7 +130,7 @@ public class Util {
                 finalResult = transformedMap;
                 break;
             default:
-                finalResult = Map.of(underscoresToCamelCase(fieldName), fieldValue);
+                finalResult = new HashMap<>(Map.of(underscoresToCamelCase(fieldName), fieldValue));
                 break;
         }
         return finalResult;
@@ -141,7 +141,7 @@ public class Util {
     }
 
     private static Map<String, Object> dynamicFieldsSpecialCase(Object fieldValue) {
-        Map<String, Object> dynamicMap = Map.of();
+        Map<String, Object> dynamicMap = new HashMap<>();
         if (isJsonInString(fieldValue)) {
             String strValue = (String) fieldValue;
             ObjectMapper objectMapper = new ObjectMapper();

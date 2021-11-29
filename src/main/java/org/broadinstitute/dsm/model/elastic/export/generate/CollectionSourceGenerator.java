@@ -34,7 +34,7 @@ public class CollectionSourceGenerator extends SourceGenerator {
 
     @Override
     protected Object getElement(Object element) {
-        return List.of(Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), element,
-                Util.ID, generatorPayload.getRecordId()));
+        return List.of(new HashMap<>(Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), element,
+                Util.ID, generatorPayload.getRecordId())));
     }
 }

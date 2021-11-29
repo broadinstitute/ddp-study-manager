@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -79,7 +80,9 @@ public class ExportFacade {
             processor.setCollector(generator);
             List<Map<String, Object>> processedData = processor.process();
             if (!processedData.isEmpty()) {
-                dataToReturn = Map.of(MappingGenerator.DSM_OBJECT, Map.of(propertyInfo.getPropertyName(), processedData));
+                dataToReturn = new HashMap<>(Map.of(MappingGenerator.DSM_OBJECT,
+                        new HashMap<>(Map.of(propertyInfo.getPropertyName(),
+                        processedData))));
             }
         }
         logger.info("Returning processed ES participant data");
