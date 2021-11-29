@@ -19,6 +19,8 @@ import org.broadinstitute.dsm.model.elastic.export.generate.Merger;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
+import static org.broadinstitute.dsm.util.ElasticSearchUtil.PROPERTIES;
+
 public abstract class BaseCollectionMigrator extends BaseMigrator implements Merger {
 
     private final BaseGenerator collectionMappingGenerator = new CollectionMappingGenerator();
@@ -83,11 +85,14 @@ public abstract class BaseCollectionMigrator extends BaseMigrator implements Mer
         Map<String, Object> innerProperty = (Map<String, Object>)propertyMap.get("properties");
         if (innerProperty == null) result = propertyMap;
         Map<String, Object> fieldProperty = (Map<String, Object>) innerProperty.get(collectionMappingGenerator.getFieldName());
-        if (fieldProperty == null) result = innerProperty;
+        if (fieldProperty == null) {
+
+            result = innerProperty;
+        }
         if (fieldProperty != null) {
             Map<String, Object> fieldProperties = (Map<String, Object>)fieldProperty.get("properties");
             if (fieldProperties != null) {
-                result = fieldProperties;
+                result = fieldProperty;
             } else {
                 result = innerProperty;
             }
