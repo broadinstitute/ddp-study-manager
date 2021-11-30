@@ -1,13 +1,11 @@
 package org.broadinstitute.dsm.model.elastic.migration;
 
-import java.util.Map;
-
 import org.broadinstitute.dsm.db.MedicalRecord;
-import org.broadinstitute.dsm.model.elastic.export.generate.CollectionMappingGenerator;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
-import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
+
+import java.util.Map;
 
 public class MedicalRecordMigrator extends BaseCollectionMigrator {
 

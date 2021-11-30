@@ -1,32 +1,15 @@
 package org.broadinstitute.dsm.model.elastic.migration;
 
-import java.lang.reflect.Field;
+import org.broadinstitute.dsm.model.elastic.Util;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.db.structure.ColumnName;
-import org.broadinstitute.dsm.db.structure.TableName;
-import org.broadinstitute.dsm.model.NameValue;
-import org.broadinstitute.dsm.model.elastic.Util;
-import org.broadinstitute.dsm.model.elastic.export.ElasticMappingExportAdapter;
-import org.broadinstitute.dsm.model.elastic.export.RequestPayload;
-import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
-import org.broadinstitute.dsm.model.elastic.export.generate.CollectionMappingGenerator;
-import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
-import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
-import org.broadinstitute.dsm.model.elastic.export.generate.Merger;
-import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
-import org.broadinstitute.dsm.statics.ESObjectConstants;
-
-import static org.broadinstitute.dsm.util.ElasticSearchUtil.PROPERTIES;
-
 public abstract class BaseCollectionMigrator extends BaseMigrator {
 
-    private final BaseGenerator collectionMappingGenerator = new CollectionMappingGenerator();
     protected List<Map<String, Object>> transformedList;
     protected Set<String> primaryKeys;
-    private Map<String, Object> endResult = new HashMap<>();
 
     public BaseCollectionMigrator(String index, String realm, String object) {
         super(index, realm, object);
@@ -40,69 +23,8 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
 
     @Override
     protected void transformObject(Object object) {
-        List<Object> objects = (List<Object>) object;
-        Optional<Object> maybeObject = objects.stream().findFirst();
-        maybeObject.ifPresent(this::collectPrimaryKeys);
-        collectionMappingGenerator.setParser(new TypeParser());
-        for (Object o: objects) {
-            Class<?> clazz = o.getClass();
-            Field[] declaredFields = clazz.getDeclaredFields();
-            TableName table = clazz.getAnnotation(TableName.class);
-            for (Field field: declaredFields) {
-                ColumnName columnName = field.getAnnotation(ColumnName.class);
-                if (columnName == null) continue;
-                field.setAccessible(true);
-                String fieldName = field.getName();
-                String fieldNameWithAlias = table.alias() + "." + fieldName;
-                try {
-                    Object fieldValue = field.get(o);
-                    if (fieldValue == null) continue;
-                    NameValue nameValue = new NameValue(fieldNameWithAlias, fieldValue);
-                    GeneratorPayload generatorPayload = new GeneratorPayload(nameValue);
-                    collectionMappingGenerator.setPayload(generatorPayload);
-                    endResult = merge(endResult, collectionMappingGenerator.generate());
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
         transformedList = Util.transformObjectCollectionToCollectionMap((List) object);
         setPrimaryId();
-    }
-
-    private void collectPrimaryKeys(Object obj) {
-        Class<?> clazz = obj.getClass();
-        extractAndCollectPrimaryKey(clazz);
-        List<Field> listFields = getListTypeFields(clazz);
-        for (Field field : listFields) {
-            try {
-                Class<?> parameterizedType = Util.getParameterizedType(field.getGenericType());
-                extractAndCollectPrimaryKey(parameterizedType);
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    private void extractAndCollectPrimaryKey(Class<?> clazz) {
-        TableName upperTable = clazz.getAnnotation(TableName.class);
-        if (hasPrimaryKey(upperTable)) {
-            this.primaryKeys.add(Util.underscoresToCamelCase(upperTable.primaryKey()));
-        }
-    }
-
-    private boolean hasPrimaryKey(TableName table) {
-        return table != null && StringUtils.isNotBlank(table.primaryKey());
-    }
-
-    private List<Field> getListTypeFields(Class<?> clazz) {
-        return Arrays.stream(clazz.getDeclaredFields())
-                .filter(this::isFieldListType)
-                .collect(Collectors.toList());
-    }
-
-    public boolean isFieldListType(Field field) {
-        return List.class.isAssignableFrom(field.getType());
     }
 
     private void setPrimaryId() {
