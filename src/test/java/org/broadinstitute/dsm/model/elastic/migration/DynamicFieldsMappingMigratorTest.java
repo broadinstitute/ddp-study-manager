@@ -15,7 +15,7 @@ public class DynamicFieldsMappingMigratorTest {
 
     @Test
     public void testExport() {
-        Exportable exportable = new DynamicFieldsMappingMigrator("", "angio");
+        Exportable exportable = new DynamicFieldsMappingMigrator("participants_structured.cmi.angio", "angio");
         exportable.export();
     }
 }

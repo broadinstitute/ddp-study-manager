@@ -22,58 +22,61 @@ public class DynamicFieldsMappingMigrator implements Exportable {
 
     private final String index;
     private final String study;
+    public Parser parser;
+    public Map<String, Object> propertyMap;
 
     private ElasticMappingExportAdapter elasticMappingExportAdapter = new ElasticMappingExportAdapter();
 
     public DynamicFieldsMappingMigrator(String index, String study) {
         this.index = index;
         this.study = study;
+        this.parser = new DynamicFieldsTypeParser();
+        this.propertyMap = new HashMap<>();
     }
 
     @Override
     public void export() {
         FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
         List<FieldSettingsDto> fieldSettingsByStudyName = fieldSettingsDao.getFieldSettingsByStudyName(study);
-        Parser parser = new DynamicFieldsTypeParser();
-        Map<String, Object> propertyMap = new HashMap<>();
-//        Map.of(propertyName, new HashMap<>(Map.of(PROPERTIES, "")))
         for (FieldSettingsDto fieldSettingsDto : fieldSettingsByStudyName) {
             String fieldType = fieldSettingsDto.getFieldType();
-            // oD, m,t
             BaseGenerator.PropertyInfo propertyInfo = Util.TABLE_ALIAS_MAPPINGS.get(fieldType);
-            if (propertyInfo != null) {
-                String columnName = Util.underscoresToCamelCase(fieldSettingsDto.getColumnName());
-                String propertyName = propertyInfo.getPropertyName();
-                Object typeMap = parser.parse(fieldSettingsDto.getDisplayType());
-                if (!(propertyMap.containsKey(propertyName))) {
-                    Map<String, Object> additionalValuesJson = new HashMap<>(Map.of("additionalValuesJson", new HashMap<>(Map.of(PROPERTIES, new HashMap<>(Map.of(columnName, typeMap))))));
-                    propertyMap.put(propertyName, additionalValuesJson);
-                } else {
-                    Map<String, Object> map = (Map<String, Object>) propertyMap.get(propertyName);
-                    Map<String, Object> json = (Map<String, Object>) map.get("additionalValuesJson");
-                    Map<String, Object> properties = (Map<String, Object>) json.get(PROPERTIES);
-                    properties.putIfAbsent(columnName, typeMap);
-                }
-            } else {
-                String columnName = Util.underscoresToCamelCase(fieldSettingsDto.getColumnName());
-                String propertyName = "participantData";
-                Object typeMap = parser.parse(fieldSettingsDto.getDisplayType());
-                if (!(propertyMap.containsKey(propertyName))) {
-                    Map<String, Object> additionalValuesJson = new HashMap<>(Map.of("data", new HashMap<>()));
-                    additionalValuesJson.put(PROPERTIES, new HashMap<>(Map.of(columnName, typeMap)));
-                    propertyMap.put(propertyName, additionalValuesJson);
-                } else {
-                    Map<String, Object> map = (Map<String, Object>) propertyMap.get(propertyName);
-                    Map<String, Object> json = (Map<String, Object>) map.get("data");
-                    Map<String, Object> properties = (Map<String, Object>) json.get(PROPERTIES);
-                    properties.putIfAbsent(columnName, typeMap);
-                }
-            }
+            if (propertyInfo != null)
+                buildMapping(fieldSettingsDto, propertyInfo, "additionalValuesJson");
+            else
+                buildMapping(fieldSettingsDto, new BaseGenerator.PropertyInfo("participantData", true), "data");
         }
+        elasticMappingExportAdapter.setRequestPayload(new RequestPayload(index));
+        elasticMappingExportAdapter.setSource(buildFinalMapping());
+        elasticMappingExportAdapter.export();
+    }
+
+    private Map<String, Object> buildFinalMapping() {
         Map<String, Object> dsmLevelProperties = new HashMap<>(Map.of(PROPERTIES, propertyMap));
         Map<String, Map<String, Object>> dsmLevel = new HashMap<>(Map.of(DSM_OBJECT, dsmLevelProperties));
         Map<String, Object> finalMap = new HashMap<>(Map.of(PROPERTIES, dsmLevel));
-        elasticMappingExportAdapter.export();
+        return finalMap;
+    }
+
+    private void buildMapping(FieldSettingsDto fieldSettingsDto, BaseGenerator.PropertyInfo propertyInfo, String dynamicFieldsWrapperName) {
+        String columnName = Util.underscoresToCamelCase(fieldSettingsDto.getColumnName());
+        String propertyName = propertyInfo.getPropertyName();
+        Object typeMap = parser.parse(fieldSettingsDto.getDisplayType());
+        if (!(propertyMap.containsKey(propertyName))) {
+            Map<String, Object> additionalValuesJson = new HashMap<>(Map.of(dynamicFieldsWrapperName, new HashMap<>(Map.of(PROPERTIES, new HashMap<>(Map.of(columnName, typeMap))))));
+            Map<String, Object> wrapperMap = new HashMap<>();
+            if (propertyInfo.isCollection()) {
+                wrapperMap.put("type", "nested");
+            }
+            wrapperMap.put(PROPERTIES, additionalValuesJson);
+            propertyMap.put(propertyName, wrapperMap);
+        } else {
+            Map<String, Object> outerMap = (Map<String, Object>) propertyMap.get(propertyName);
+            Map<String, Object> outerProperties = (Map<String, Object>) outerMap.get(PROPERTIES);
+            Map<String, Object> dynamicFieldsJson = (Map<String, Object>) outerProperties.get(dynamicFieldsWrapperName);
+            Map<String, Object> innerProperties = (Map<String, Object>) dynamicFieldsJson.get(PROPERTIES);
+            innerProperties.putIfAbsent(columnName, typeMap);
+        }
     }
 
     @Override
