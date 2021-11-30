@@ -75,7 +75,25 @@ public abstract class BaseCollectionMigrator extends BaseMigrator implements Mer
         if (base.isEmpty()) {
             return toMerge;
         }
-        getFieldLevel(base).putAll(getFieldLevel(toMerge));
+        String fieldName = collectionMappingGenerator.getFieldName();
+        Map<String, Object> basePropertyLevel = getPropertyLevel(base);
+        Map<String, Object> toMergePropertyLevel = getPropertyLevel(toMerge);
+        Map<String, Object> baseProperties = (Map<String, Object>) basePropertyLevel.get("properties");
+        Map<String, Object> toMergeProperties = (Map<String, Object>) toMergePropertyLevel.get("properties");
+        Map<String, Object> baseField = (Map<String, Object>) baseProperties.get(fieldName);
+        Map<String, Object> toMergeField = (Map<String, Object>) toMergeProperties.get(fieldName);
+        if (baseField == null) {
+            base.put(fieldName, getFieldLevel(toMerge));
+        }
+        Map<String, Object> baseFieldProperties = (Map<String, Object>) baseField.get("properties");
+        Map<String, Object> toMergeFieldProperties = (Map<String, Object>) toMergeField.get("properties");
+        if (baseFieldProperties == null && toMergeFieldProperties != null) {
+            baseField.put("properties", getFieldLevel(toMerge));
+        } else if (toMergeFieldProperties != null) {
+            baseFieldProperties.putAll(getFieldLevel(toMerge));
+        } else {
+            getFieldLevel(base).putAll(getFieldLevel(toMerge));
+        }
         return base;
     }
 
