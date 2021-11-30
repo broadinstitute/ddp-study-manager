@@ -34,20 +34,31 @@ public class DynamicFieldsMappingMigrator implements Exportable {
     public void export() {
         FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
         List<FieldSettingsDto> fieldSettingsByStudyName = fieldSettingsDao.getFieldSettingsByStudyName(study);
+        Parser parser = new DynamicFieldsTypeParser();
+        Map<String, Object> propertyMap = new HashMap<>();
+        Map<String, Object> additionalValuesJson = new HashMap<>(Map.of("additionalValuesJson", new HashMap<>()));
+//        Map.of(propertyName, new HashMap<>(Map.of(PROPERTIES, "")))
         for (FieldSettingsDto fieldSettingsDto : fieldSettingsByStudyName) {
             String fieldType = fieldSettingsDto.getFieldType();
             // oD, m,t
             BaseGenerator.PropertyInfo propertyInfo = Util.TABLE_ALIAS_MAPPINGS.get(fieldType);
             if (propertyInfo != null) {
                 String propertyName = propertyInfo.getPropertyName();
-                new HashMap<>(Map.of(propertyName, new HashMap<>(Map.of(PROPERTIES,""))));
-                Map<String, Object> dsmLevelProperties = new HashMap<>(Map.of(PROPERTIES, objectLevel));
-                Map<String, Map<String, Object>> dsmLevel = new HashMap<>(Map.of(DSM_OBJECT, dsmLevelProperties));
-                Map<String, Object> finalMap = new HashMap<>(Map.of(PROPERTIES, dsmLevel));
+                Object typeMap = parser.parse(fieldSettingsDto.getDisplayType());
+                Map<String, Object> medicalRecord = (Map<String, Object>) propertyMap.get(propertyName);
+                medicalRecord
+                propertyMap.merge(propertyName, typeMap, (prev, curr) -> {
+                    Map<String, Object> valuesJson = (Map<String, Object>) ((Map) prev).get("additionalValuesJson");
+                    valuesJson.putAll((Map)curr);
+                    return prev;
+                });
             }
 
 
         }
+        Map<String, Object> dsmLevelProperties = new HashMap<>(Map.of(PROPERTIES, propertyMap));
+        Map<String, Map<String, Object>> dsmLevel = new HashMap<>(Map.of(DSM_OBJECT, dsmLevelProperties));
+        Map<String, Object> finalMap = new HashMap<>(Map.of(PROPERTIES, dsmLevel));
         elasticMappingExportAdapter.export();
     }
 
@@ -67,9 +78,12 @@ class DynamicFieldsTypeParser extends TypeParser {
 
     @Override
     public Object parse(String value) {
-
-        switch (value) {
-
+        Object parsedValue;
+        if ("DATE".equals(value)) {
+            parsedValue = forDate(value);
+        } else {
+            parsedValue = forString(value);
         }
+        return parsedValue;
     }
 }

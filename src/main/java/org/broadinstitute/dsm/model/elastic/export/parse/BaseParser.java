@@ -67,7 +67,8 @@ public abstract class BaseParser implements Parser {
     }
 
     boolean isBoolean(String value) {
-        return value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false");
+        return value.equalsIgnoreCase("true") ||
+               value.equalsIgnoreCase("false");
     }
 
     boolean isCollection(String value) {
