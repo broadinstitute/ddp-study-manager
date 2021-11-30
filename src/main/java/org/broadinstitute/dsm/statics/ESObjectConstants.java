@@ -6,6 +6,7 @@ import java.util.List;
 public class ESObjectConstants {
 
     public static final String PARTICIPANT_DATA_ID = "participantDataId";
+    public static final String ADDITIONAL_VALUES_JSON = "additionalValuesJson";
 
     //workflows
     public static final String ELASTIC_EXPORT_WORKFLOWS = "ELASTIC_EXPORT.workflows";

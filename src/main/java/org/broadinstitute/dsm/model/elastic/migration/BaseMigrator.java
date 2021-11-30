@@ -46,12 +46,9 @@ public abstract class BaseMigrator extends BaseExporter implements Generator {
 
     protected abstract Map<String, Object> getDataByRealm();
 
-    protected void exportMap() {}
-
     @Override
     public void export() {
         fillBulkRequestWithTransformedMap(getDataByRealm());
-        exportMap();
         bulkExportFacade.executeBulkUpsert();
         logger.info("finished migrating data to ES.");
     }

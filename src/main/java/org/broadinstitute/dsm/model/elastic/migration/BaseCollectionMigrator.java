@@ -21,7 +21,7 @@ import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 import static org.broadinstitute.dsm.util.ElasticSearchUtil.PROPERTIES;
 
-public abstract class BaseCollectionMigrator extends BaseMigrator implements Merger {
+public abstract class BaseCollectionMigrator extends BaseMigrator {
 
     private final BaseGenerator collectionMappingGenerator = new CollectionMappingGenerator();
     protected List<Map<String, Object>> transformedList;
@@ -68,62 +68,6 @@ public abstract class BaseCollectionMigrator extends BaseMigrator implements Mer
         }
         transformedList = Util.transformObjectCollectionToCollectionMap((List) object);
         setPrimaryId();
-    }
-
-    @Override
-    public Map<String, Object> merge(Map<String, Object> base, Map<String, Object> toMerge) {
-        if (base.isEmpty()) {
-            return toMerge;
-        }
-        String fieldName = collectionMappingGenerator.getFieldName();
-        Map<String, Object> basePropertyLevel = getPropertyLevel(base);
-        Map<String, Object> toMergePropertyLevel = getPropertyLevel(toMerge);
-        Map<String, Object> baseProperties = (Map<String, Object>) basePropertyLevel.get("properties");
-        Map<String, Object> toMergeProperties = (Map<String, Object>) toMergePropertyLevel.get("properties");
-        Map<String, Object> baseField = (Map<String, Object>) baseProperties.get(fieldName);
-        Map<String, Object> toMergeField = (Map<String, Object>) toMergeProperties.get(fieldName);
-        if (baseField == null) {
-            base.put(fieldName, getFieldLevel(toMerge));
-        }
-        Map<String, Object> baseFieldProperties = (Map<String, Object>) baseField.get("properties");
-        Map<String, Object> toMergeFieldProperties = (Map<String, Object>) toMergeField.get("properties");
-        if (baseFieldProperties == null && toMergeFieldProperties != null) {
-            baseField.put("properties", getFieldLevel(toMerge));
-        } else if (toMergeFieldProperties != null) {
-            baseFieldProperties.putAll(getFieldLevel(toMerge));
-        } else {
-            getFieldLevel(base).putAll(getFieldLevel(toMerge));
-        }
-        return base;
-    }
-
-    private Map<String, Object> getFieldLevel(Map<String, Object> base) {
-        Map<String, Object> result = new HashMap<>();
-        Map<String, Object> propertyMap = getPropertyLevel(base);
-        Map<String, Object> innerProperty = (Map<String, Object>)propertyMap.get("properties");
-        if (innerProperty == null) result = propertyMap;
-        Map<String, Object> fieldProperty = (Map<String, Object>) innerProperty.get(collectionMappingGenerator.getFieldName());
-        if (fieldProperty == null) {
-
-            result = innerProperty;
-        }
-        if (fieldProperty != null) {
-            Map<String, Object> fieldProperties = (Map<String, Object>)fieldProperty.get("properties");
-            if (fieldProperties != null) {
-                result = fieldProperty;
-            } else {
-                result = innerProperty;
-            }
-        }
-        return result;
-    }
-
-    private Map<String, Object> getPropertyLevel(Map<String, Object> base) {
-        Map<String, Object> topLevelProperties = (Map<String, Object>) base.get("properties");
-        Map<String, Object> dsmProperties = (Map<String, Object>) topLevelProperties.get("dsm");
-        Map<String, Object> properties = (Map<String, Object>) dsmProperties.get("properties");
-        Map<String, Object> propertyMap = (Map<String, Object>)properties.get(collectionMappingGenerator.getPropertyName());
-        return propertyMap;
     }
 
     private void collectPrimaryKeys(Object obj) {
@@ -205,13 +149,5 @@ public abstract class BaseCollectionMigrator extends BaseMigrator implements Mer
 
     private void putPrimaryId(Map<String, Object> map, String outerKey) {
         map.put(Util.ID, map.get(outerKey));
-    }
-
-    @Override
-    protected void exportMap() {
-        ElasticMappingExportAdapter elasticMappingExportAdapter = new ElasticMappingExportAdapter();
-        elasticMappingExportAdapter.setRequestPayload(new RequestPayload(index));
-        elasticMappingExportAdapter.setSource(endResult);
-        elasticMappingExportAdapter.export();
     }
 }

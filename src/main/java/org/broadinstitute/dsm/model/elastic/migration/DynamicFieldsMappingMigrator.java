@@ -1,5 +1,8 @@
 package org.broadinstitute.dsm.model.elastic.migration;
 
+import static org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator.DSM_OBJECT;
+import static org.broadinstitute.dsm.util.ElasticSearchUtil.PROPERTIES;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,12 +14,11 @@ import org.broadinstitute.dsm.model.elastic.export.ElasticMappingExportAdapter;
 import org.broadinstitute.dsm.model.elastic.export.Exportable;
 import org.broadinstitute.dsm.model.elastic.export.RequestPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
-import org.broadinstitute.dsm.model.elastic.export.parse.BaseParser;
+import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
-
-import static org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator.DSM_OBJECT;
-import static org.broadinstitute.dsm.util.ElasticSearchUtil.PROPERTIES;
+import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 public class DynamicFieldsMappingMigrator implements Exportable {
 
@@ -25,13 +27,14 @@ public class DynamicFieldsMappingMigrator implements Exportable {
     public Parser parser;
     public Map<String, Object> propertyMap;
 
-    private ElasticMappingExportAdapter elasticMappingExportAdapter = new ElasticMappingExportAdapter();
+    private ElasticMappingExportAdapter elasticMappingExportAdapter;
 
     public DynamicFieldsMappingMigrator(String index, String study) {
         this.index = index;
         this.study = study;
         this.parser = new DynamicFieldsTypeParser();
         this.propertyMap = new HashMap<>();
+        elasticMappingExportAdapter = new ElasticMappingExportAdapter();
     }
 
     @Override
@@ -42,9 +45,9 @@ public class DynamicFieldsMappingMigrator implements Exportable {
             String fieldType = fieldSettingsDto.getFieldType();
             BaseGenerator.PropertyInfo propertyInfo = Util.TABLE_ALIAS_MAPPINGS.get(fieldType);
             if (propertyInfo != null)
-                buildMapping(fieldSettingsDto, propertyInfo, "additionalValuesJson");
+                buildMapping(fieldSettingsDto, propertyInfo, ESObjectConstants.ADDITIONAL_VALUES_JSON);
             else
-                buildMapping(fieldSettingsDto, new BaseGenerator.PropertyInfo("participantData", true), "data");
+                buildMapping(fieldSettingsDto, new BaseGenerator.PropertyInfo(ESObjectConstants.PARTICIPANT_DATA, true), DBConstants.DATA);
         }
         elasticMappingExportAdapter.setRequestPayload(new RequestPayload(index));
         elasticMappingExportAdapter.setSource(buildFinalMapping());
@@ -66,7 +69,7 @@ public class DynamicFieldsMappingMigrator implements Exportable {
             Map<String, Object> additionalValuesJson = new HashMap<>(Map.of(dynamicFieldsWrapperName, new HashMap<>(Map.of(PROPERTIES, new HashMap<>(Map.of(columnName, typeMap))))));
             Map<String, Object> wrapperMap = new HashMap<>();
             if (propertyInfo.isCollection()) {
-                wrapperMap.put("type", "nested");
+                wrapperMap.put(MappingGenerator.TYPE, MappingGenerator.NESTED);
             }
             wrapperMap.put(PROPERTIES, additionalValuesJson);
             propertyMap.put(propertyName, wrapperMap);
