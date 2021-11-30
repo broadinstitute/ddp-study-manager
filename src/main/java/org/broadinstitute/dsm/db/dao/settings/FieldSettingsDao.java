@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.db.FieldSettings;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 
@@ -34,6 +35,22 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
             "last_changed," +
             "changed_by" +
             " FROM field_settings WHERE ddp_instance_id = ? and (display_type = 'OPTIONS' or display_type = 'RADIO') ";
+
+    private static final String SQL_FIELD_SETTINGS_BY_STUDY_NAME = "SELECT " +
+            "field_settings_id," +
+            "ddp_instance_id," +
+            "field_type," +
+            "column_name," +
+            "column_display," +
+            "display_type," +
+            "possible_values," +
+            "actions," +
+            "readonly," +
+            "order_number," +
+            "deleted," +
+            "last_changed," +
+            "changed_by" +
+            " FROM field_settings WHERE ddp_instance_id = (SELECT ddp_instance_id FROM ddp_instance WHERE instance_name = ?)";
 
     private static final String GET_FIELD_SETTINGS = "SELECT " +
             "field_settings_id," +
@@ -190,6 +207,46 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
         if (results.resultException != null) {
             throw new RuntimeException("Error getting fieldSettingsByOptions for instance id: "
                     + instanceId, results.resultException);
+        }
+        return fieldSettingsByOptions;
+    }
+
+    public List<FieldSettingsDto> getFieldSettingsByStudyName(String studyName) {
+
+        List<FieldSettingsDto> fieldSettingsByOptions = new ArrayList<>();
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_FIELD_SETTINGS_BY_STUDY_NAME)) {
+                stmt.setString(1, studyName);
+                try(ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        fieldSettingsByOptions.add(
+                                new FieldSettingsDto.Builder(rs.getInt(DDP_INSTANCE_ID))
+                                        .withFieldSettingsId(rs.getInt(FIELD_SETTINGS_ID))
+                                        .withFieldType(rs.getString(FIELD_TYPE))
+                                        .withColumnName(rs.getString(COLUMN_NAME))
+                                        .withColumnDisplay(rs.getString(COLUMN_DISPLAY))
+                                        .withDisplayType(rs.getString(DISPLAY_TYPE))
+                                        .withPossibleValues(rs.getString(POSSIBLE_VALUES))
+                                        .withActions(rs.getString(ACTIONS))
+                                        .withReadOnly(rs.getBoolean(READONLY))
+                                        .withOrderNumber(rs.getInt(ORDER_NUMBER))
+                                        .withDeleted(rs.getBoolean(DELETED))
+                                        .withLastChanged(rs.getLong(LAST_CHANGED))
+                                        .withChangedBy(rs.getString(CHANGED_BY))
+                                        .build()
+                        );
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                execResult.resultException = ex;
+            }
+            return execResult;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting fieldSettings for study: "
+                    + studyName, results.resultException);
         }
         return fieldSettingsByOptions;
     }
