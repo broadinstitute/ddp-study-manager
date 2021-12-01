@@ -20,9 +20,6 @@ import spark.Route;
 import java.util.Optional;
 
 public class ClinicalKitsRoute implements Route {
-    private String FIRSTNAME = "firstName";
-    private String LASTNAME = "lastName";
-    private String DATE_OF_BIRtH = "dateOfBirth";
 
     private static final Logger logger = LoggerFactory.getLogger(ClinicalKitsRoute.class);
 

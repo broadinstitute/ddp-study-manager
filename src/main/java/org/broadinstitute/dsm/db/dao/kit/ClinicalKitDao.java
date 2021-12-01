@@ -55,7 +55,7 @@ public class ClinicalKitDao {
                         Integer.parseInt(rs.getString(DBConstants.DDP_INSTANCE_ID)),
                         rs.getString(DBConstants.DDP_PARTICIPANT_ID));
                         dbVals.resultValue = clinicalKitWrapper;
-
+                        logger.info("found clinical kit for sm id value: " + smIdValue);
                     }
                 }
                 catch (Exception e) {

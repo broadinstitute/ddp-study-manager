@@ -86,7 +86,7 @@ public class CreateClinicalDummyKitRoute implements Route {
                 String ddpParticipantId = oncHistoryDetail.getParticipantId();
                 Optional<ElasticSearchParticipantDto> maybeParticipant = ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId);
                 logger.info("found randomOncHistoryDetailId " + randomOncHistoryDetailId);
-                while (oncHistoryDetail == null || maybeParticipant.isEmpty() || maybeParticipant.get().getProfile().map(ESProfile::getHruid).isEmpty()) {
+                while (oncHistoryDetail == null || StringUtils.isBlank(oncHistoryDetail.getAccessionNumber()) || maybeParticipant.isEmpty() || maybeParticipant.get().getProfile().map(ESProfile::getHruid).isEmpty()) {
                     randomOncHistoryDetailId = bspDummyKitDao.getRandomOncHistoryForStudy(ddpInstance.getName());
                     oncHistoryDetail = OncHistoryDetail.getOncHistoryDetail(randomOncHistoryDetailId, ddpInstance.getName());
                     ddpParticipantId = oncHistoryDetail.getParticipantId();

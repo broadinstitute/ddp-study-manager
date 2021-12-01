@@ -106,9 +106,8 @@ public class ClinicalKitDto {
     }
 
 
-
     public ClinicalKitDto getClinicalKitBasedONSmId(String smIdValue) {
-        logger.info("Checking the kit for SM Id value");
+        logger.info("Checking the kit for SM Id value " + smIdValue);
         ClinicalKitDao clinicalKitDao = new ClinicalKitDao();
         Optional<ClinicalKitWrapper> maybeClinicalKitWrapper = clinicalKitDao.getClinicalKitFromSMId(smIdValue);
         maybeClinicalKitWrapper.orElseThrow();
@@ -116,7 +115,10 @@ public class ClinicalKitDto {
         ClinicalKitDto clinicalKitDto = clinicalKitWrapper.getClinicalKitDto();
         DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(clinicalKitWrapper.getDdpInstanceId());
         clinicalKitDto.setNecessaryParticipantDataToClinicalKit(clinicalKitWrapper.getDdpParticipantId(), ddpInstance);
-        return clinicalKitDto;
+        if (StringUtils.isNotBlank(clinicalKitDto.getAccessionNumber())) {
+            return clinicalKitDto;
+        }
+        throw new RuntimeException("The kit doesn't have an accession number! SM ID is: " + smIdValue);
     }
 
     public void setNecessaryParticipantDataToClinicalKit(String ddpParticipantId, DDPInstance ddpInstance) {
