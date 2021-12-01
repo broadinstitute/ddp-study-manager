@@ -102,6 +102,8 @@ class DynamicFieldsTypeParser extends TypeParser {
         Object parsedValue;
         if ("DATE".equals(value)) {
             parsedValue = forDate(value);
+        } else if ("CHECKBOX".equals(value)) {
+            parsedValue = forBoolean(value);
         } else {
             parsedValue = forString(value);
         }
