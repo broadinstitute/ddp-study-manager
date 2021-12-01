@@ -1,10 +1,8 @@
 package org.broadinstitute.dsm.db;
 
-import com.google.gson.Gson;
 import lombok.Data;
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.dsm.db.dao.ddp.tissue.TissueSMIDDao;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
 import org.broadinstitute.dsm.db.structure.SqlDateConverter;
@@ -15,8 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -34,7 +32,7 @@ public class Tissue {
             "pathology_report, collaborator_sample_id, block_sent, expected_return, return_date, return_fedex_id, scrolls_received, sk_id, sm_id, " +
             "scrolls_count, uss_count, blocks_count, h_e_count, first_sm_id, sent_gp, last_changed, changed_by, additional_tissue_value_json, shl_work_number, " +
             "tumor_percentage, tissue_sequence, sm.sm_id_value, sm.sm_id_type_id, sm.sm_id_pk, sm.deleted, sm.tissue_id FROM ddp_tissue t " +
-            "LEFT JOIN sm_id sm on (sm.tissue_id = t.tissue_id AND NOT sm.deleted <=> 1 AND NOT t.deleted <=> 1) "+
+            "LEFT JOIN sm_id sm on (sm.tissue_id = t.tissue_id AND NOT sm.deleted <=> 1 AND NOT t.deleted <=> 1) " +
             "WHERE NOT (deleted <=> 1) AND onc_history_detail_id = ?";
     private static final String SQL_INSERT_TISSUE = "INSERT INTO ddp_tissue SET onc_history_detail_id = ?, last_changed = ?, changed_by = ?";
     public static final String SQL_SELECT_TISSUE_LAST_CHANGED = "SELECT t.last_changed FROM ddp_institution inst " +
@@ -76,7 +74,7 @@ public class Tissue {
     private final String shlWorkNumber;
 
     @ColumnName (DBConstants.SCROLLS_RECEIVED)
-    @DbDateConversion(SqlDateConverter.STRING_DAY)
+    @DbDateConversion (SqlDateConverter.STRING_DAY)
     private final String scrollsReceived;
 
     @ColumnName (DBConstants.SK_ID)
@@ -86,7 +84,7 @@ public class Tissue {
     private final String smId;
 
     @ColumnName (DBConstants.SENT_GP)
-    @DbDateConversion(SqlDateConverter.STRING_DAY)
+    @DbDateConversion (SqlDateConverter.STRING_DAY)
     private final String sentGp;
 
     private String changedBy;
@@ -101,7 +99,7 @@ public class Tissue {
     private String additionalValues;
 
     @ColumnName (DBConstants.TISSUE_RETURN_DATE)
-    @DbDateConversion(SqlDateConverter.STRING_DAY)
+    @DbDateConversion (SqlDateConverter.STRING_DAY)
     private String tissueReturnDate;
     //
     @ColumnName (DBConstants.RETURN_FEDEX_ID)
@@ -128,12 +126,11 @@ public class Tissue {
     @ColumnName (DBConstants.H_E_COUNT)
     private Integer hECount;
 
-    private TissueSmId[] ussSMID;
+    private List<TissueSmId> ussSMID;
 
-    private TissueSmId[] scrollSMID;
+    private List<TissueSmId> scrollSMID;
 
-    private TissueSmId[] heSMID;
-
+    private List<TissueSmId> heSMID;
 
 
     public Tissue(String tissueId, String oncHistoryDetailId, String tNotes, Integer countReceived, String tissueType,
@@ -141,7 +138,7 @@ public class Tissue {
                   String blockSent, String scrollsReceived, String skId, String smId, String sentGp, String firstSmId,
                   String additionalValues, String expectedReturn, String tissueReturnDate,
                   String returnFedexId, String shlWorkNumber, String tumorPercentage, String sequenceResults, Integer scrollsCount,
-                  Integer ussCount, Integer blocksCount, Integer hECount, TissueSmId[] ussSMIDs, TissueSmId[] scrollSMIDs, TissueSmId[] heSMID) {
+                  Integer ussCount, Integer blocksCount, Integer hECount, List<TissueSmId> ussSMIDs, List<TissueSmId> scrollSMIDs, List<TissueSmId> heSMID) {
         this.tissueId = tissueId;
         this.oncHistoryDetailId = oncHistoryDetailId;
         this.tNotes = tNotes;
@@ -175,9 +172,9 @@ public class Tissue {
     }
 
     public static Tissue getTissue(@NonNull ResultSet rs) throws SQLException {
-        Gson gson = new Gson();
+
         Tissue tissue = new Tissue(
-                rs.getString(DBConstants.TISSUE_ID),
+                rs.getString("t." + DBConstants.TISSUE_ID),
                 rs.getString(DBConstants.ONC_HISTORY_DETAIL_ID),
                 rs.getString(DBConstants.DDP_TISSUE_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.NOTES),
                 rs.getInt(DBConstants.COUNT_RECEIVED),
@@ -204,33 +201,38 @@ public class Tissue {
                 rs.getInt(DBConstants.USS_COUNT),
                 rs.getInt(DBConstants.BLOCKS_COUNT),
                 rs.getInt(DBConstants.H_E_COUNT),
-                null,
-                null,
-                null);
-        tissue.setSMIds(rs);
+                new ArrayList<>(),
+                new ArrayList<>(),
+                new ArrayList<>());
         return tissue;
     }
 
-    private void setSMIds(ResultSet rs) {
-        Map<String,  List<TissueSmId>> map= TissueSmId.getSMIdsForTissueId(rs);
-        TissueSMIDDao tissueSMIDDao = new TissueSMIDDao();
-        String typeId = tissueSMIDDao.getTypeForName(TissueSmId.HE);
-        this.heSMID = map.getOrDefault(typeId, new ArrayList<>()).toArray(new TissueSmId[map.getOrDefault(typeId, new ArrayList<>()).size()]);
-        typeId = tissueSMIDDao.getTypeForName(TissueSmId.USS);
-        this.ussSMID = map.getOrDefault(typeId, new ArrayList<>()).toArray(new TissueSmId[map.getOrDefault(typeId, new ArrayList<>()).size()]);
-        typeId = tissueSMIDDao.getTypeForName(TissueSmId.SCROLLS);
-        this.scrollSMID = map.getOrDefault(typeId, new ArrayList<>()).toArray(new TissueSmId[map.getOrDefault(typeId, new ArrayList<>()).size()]);
+
+    public static TissueSmId getSMIds(ResultSet rs) {
+        return TissueSmId.getSMIdsForTissueId(rs);
     }
 
     public static List<Tissue> getTissue(@NonNull Connection conn, @NonNull String oncHistoryDetailId) {
 
-        List<Tissue> tissue = new ArrayList<>();
+        List<Tissue> tissueList = new ArrayList<>();
         SimpleResult dbVals = new SimpleResult();
+        HashMap<String, Tissue> tissues = new HashMap<>();
         try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_TISSUE)) {
             stmt.setString(1, oncHistoryDetailId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    tissue.add(getTissue(rs));
+                    TissueSmId tissueSmId = getSMIds(rs);
+                    Tissue tissue;
+                    if (tissueSmId != null && tissues.containsKey(tissueSmId.getTissueId())) {
+                        tissue = tissues.get(tissueSmId.getTissueId());
+                    }
+                    else {
+                        tissue = getTissue(rs);
+                    }
+                    if (tissueSmId != null) {
+                        tissue.setSmIdBasedOnType(tissueSmId, rs);
+                    }
+                    tissues.put(tissue.tissueId, tissue);
                 }
             }
         }
@@ -241,9 +243,37 @@ public class Tissue {
         if (dbVals.resultException != null) {
             throw new RuntimeException("Error getting tissue for oncHistoryDetails w/ id " + oncHistoryDetailId, dbVals.resultException);
         }
+        tissueList.addAll(tissues.values());
+        logger.info("Found " + tissueList.size() + " tissue for oncHistoryDetails w/ id " + oncHistoryDetailId);
+        return tissueList;
+    }
 
-        logger.info("Found " + tissue.size() + " tissue for oncHistoryDetails w/ id " + oncHistoryDetailId);
-        return tissue;
+    public void setSmIdBasedOnType(TissueSmId tissueSmId, ResultSet rs) {
+        if (tissueSmId == null || tissueSmId.getSmIdType() == null) {
+            return;
+        }
+        try {
+            String type = rs.getString(DBConstants.SM_ID_TYPE_TABLE_ALIAS + "." + DBConstants.SM_ID_TYPE);
+            switch (type.toLowerCase()) {
+                case "he": {
+                    this.heSMID.add(tissueSmId);
+                    break;
+
+                }
+                case "uss": {
+                    this.ussSMID.add(tissueSmId);
+                    break;
+                }
+                case "scrolls": {
+                    this.scrollSMID.add(tissueSmId);
+                    break;
+                }
+            }
+        }
+        catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+
     }
 
     public static String createNewTissue(@NonNull String oncHistoryId, @NonNull String user) {

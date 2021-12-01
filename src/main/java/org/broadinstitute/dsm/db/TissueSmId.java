@@ -10,10 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Data
 @TableName (
@@ -36,12 +32,13 @@ public class TissueSmId {
     private String smIdPk;
 
     @ColumnName (DBConstants.DELETED)
-    private boolean deleted;
+    private Boolean deleted;
 
     public static String HE = "he";
     public static String USS = "uss";
     public static String SCROLLS = "scrolls";
     private static final Logger logger = LoggerFactory.getLogger(TissueSmId.class);
+
     public TissueSmId() {
     }
 
@@ -53,26 +50,25 @@ public class TissueSmId {
     }
 
 
-    public static Map<String, List<TissueSmId>> getSMIdsForTissueId(ResultSet rs) {
-        Map<String, List<TissueSmId>> map = new HashMap<>();
-        TissueSmId tissueSmId  = null;
+    public static TissueSmId getSMIdsForTissueId(ResultSet rs) {
+        TissueSmId tissueSmId = null;
+
         try {
+            if (rs.getString(DBConstants.SM_ID_PK) == null)
+                return null;
             tissueSmId = new TissueSmId(
                     rs.getString(DBConstants.SM_ID_PK),
                     rs.getString(DBConstants.SM_ID_TYPE_ID),
                     rs.getString(DBConstants.SM_ID_VALUE),
-                    rs.getString(DBConstants.TISSUE_ID)
+                    rs.getString("sm."+DBConstants.TISSUE_ID)
             );
+            if(tissueSmId!=null)
+                tissueSmId.setDeleted(rs.getBoolean("sm."+DBConstants.DELETED));
         }
         catch (SQLException e) {
             logger.error("problem getting tissue sm ids", e);
         }
-
-        List<TissueSmId> list = map.getOrDefault(tissueSmId.getSmIdType(), new ArrayList<>());
-            list.add(tissueSmId);
-            map.put(tissueSmId.getSmIdType(), list);
-
-        return map;
+        return tissueSmId;
     }
 
     public String createNewSmId(String tissueId, String userId, String smIdType) {

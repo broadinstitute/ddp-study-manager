@@ -42,7 +42,7 @@ public class OncHistoryDetail {
             "oD.fax_sent_3_by, oD.fax_confirmed_3, oD.tissue_received, oD.tissue_problem_option, oD.gender, oD.destruction_policy, oD.unable_obtain_tissue, " +
             "t.tissue_id, t.notes, count_received, tissue_type, tissue_site, tumor_type, h_e, pathology_report, collaborator_sample_id, block_sent, scrolls_received, sk_id, sm_id, " +
             "sent_gp, first_sm_id, additional_tissue_value_json, expected_return, return_date, return_fedex_id, shl_work_number, tumor_percentage, tissue_sequence, " +
-            " scrolls_count, uss_count, h_e_count, blocks_count, p.ddp_participant_id, sm.sm_id_value, sm.sm_id_type_id, sm.sm_id_pk, sm.deleted, sm.tissue_id " +
+            " scrolls_count, uss_count, h_e_count, blocks_count, p.ddp_participant_id, sm.sm_id_value, sm.sm_id_type_id, sm.sm_id_pk, sm.deleted, sm.tissue_id, smt.sm_id_type " +
             "FROM ddp_onc_history_detail oD " +
             "LEFT JOIN ddp_medical_record m on (oD.medical_record_id = m.medical_record_id AND NOT oD.deleted <=> 1 AND NOT m.deleted <=> 1) " +
             "LEFT JOIN ddp_institution inst on (inst.institution_id = m.institution_id) " +
@@ -58,7 +58,7 @@ public class OncHistoryDetail {
             " tissue_received, gender, tissue_problem_option, destruction_policy FROM ddp_onc_history_detail WHERE NOT (deleted <=> 1)";
     private static final String SQL_SELECT_TISSUE_RECEIVED = "SELECT tissue_received FROM ddp_onc_history_detail WHERE onc_history_detail_id = ?";
     private static final String SQL_INSERT_ONC_HISTORY_DETAIL = "INSERT INTO ddp_onc_history_detail SET medical_record_id = ?, request = ?, last_changed = ?, changed_by = ?";
-    public static final String SQL_ORDER_BY = " ORDER BY p.ddp_participant_id, inst.ddp_institution_id, oD.onc_history_detail_id ASC";
+    public static final String SQL_ORDER_BY = " ORDER BY p.ddp_participant_id, inst.ddp_institution_id, oD.onc_history_detail_id, t.tissue_id ASC";
     public static final String SQL_SELECT_ONC_HISTORY_LAST_CHANGED = "SELECT oD.last_changed FROM ddp_institution inst " +
             "LEFT JOIN ddp_participant as p on (p.participant_id = inst.participant_id) LEFT JOIN ddp_instance as ddp on (ddp.ddp_instance_id = p.ddp_instance_id) " +
             "LEFT JOIN ddp_medical_record as m on (m.institution_id = inst.institution_id AND NOT m.deleted <=> 1) LEFT JOIN ddp_onc_history_detail as oD on (m.medical_record_id = oD.medical_record_id) " +
@@ -285,7 +285,8 @@ public class OncHistoryDetail {
         );
         try {
             oncHistoryDetail.setParticipantId(rs.getString(DBConstants.DDP_PARTICIPANT_ID));
-        }catch (java.sql.SQLException e) {
+        }
+        catch (java.sql.SQLException e) {
             oncHistoryDetail.setParticipantId(null);
         }
         return oncHistoryDetail;
@@ -309,6 +310,7 @@ public class OncHistoryDetail {
     public static Map<String, List<OncHistoryDetail>> getOncHistoryDetails(@NonNull String realm, String queryAddition) {
         logger.info("Collection oncHistoryDetail information");
         Map<String, List<OncHistoryDetail>> oncHistory = new HashMap<>();
+        HashMap<String, Tissue> tissues = new HashMap<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(DBUtil.getFinalQuery(SQL_SELECT_ONC_HISTORY_DETAIL, queryAddition) + SQL_ORDER_BY)) {
@@ -318,8 +320,18 @@ public class OncHistoryDetail {
                     while (rs.next()) {
                         String ddpParticipantId = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
                         String oncHistoryDetailId = rs.getString(DBConstants.ONC_HISTORY_DETAIL_ID);
-
-                        Tissue tissue = Tissue.getTissue(rs);
+                        TissueSmId tissueSmId = Tissue.getSMIds(rs);
+                        Tissue tissue;
+                        if (tissueSmId != null && tissues.containsKey(tissueSmId.getTissueId())) {
+                            tissue = tissues.get(tissueSmId.getTissueId());
+                        }
+                        else {
+                            tissue = Tissue.getTissue(rs);
+                        }
+                        if (tissueSmId != null) {
+                            tissue.setSmIdBasedOnType(tissueSmId, rs);
+                        }
+                        tissues.put(tissue.getTissueId(), tissue);
 
                         //check if oncHistoryDetails is already in map
                         List<OncHistoryDetail> oncHistoryDataList = new ArrayList<>();
@@ -334,6 +346,7 @@ public class OncHistoryDetail {
                         OncHistoryDetail oncHistoryDetail = null;
                         if (oncHistoryMap.containsKey(oncHistoryDetailId)) {
                             oncHistoryDetail = oncHistoryMap.get(oncHistoryDetailId);
+                            oncHistoryDetail.getTissues().removeIf(tissue1 -> tissue1.getTissueId() == tissue.getTissueId());
                             oncHistoryDetail.addTissue(tissue);
                         }
                         else {
@@ -362,6 +375,7 @@ public class OncHistoryDetail {
     public static Map<String, List<OncHistoryDetail>> getOncHistoryDetails(@NonNull String realm, String queryAddition, List<String> values) {
         logger.info("Collection oncHistoryDetail information");
         Map<String, List<OncHistoryDetail>> oncHistory = new HashMap<>();
+        HashMap<String, Tissue> tissues = new HashMap<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(DBUtil.getFinalQuery(SQL_SELECT_ONC_HISTORY_DETAIL, queryAddition) + SQL_ORDER_BY)) {
@@ -375,7 +389,18 @@ public class OncHistoryDetail {
                         String ddpParticipantId = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
                         String oncHistoryDetailId = rs.getString(DBConstants.ONC_HISTORY_DETAIL_ID);
 
-                        Tissue tissue = Tissue.getTissue(rs);
+                        TissueSmId tissueSmId = Tissue.getSMIds(rs);
+                        Tissue tissue;
+                        if (tissueSmId != null && tissues.containsKey(tissueSmId.getTissueId())) {
+                            tissue = tissues.get(tissueSmId.getTissueId());
+                        }
+                        else {
+                            tissue = Tissue.getTissue(rs);
+                        }
+                        if (tissueSmId != null) {
+                            tissue.setSmIdBasedOnType(tissueSmId, rs);
+                        }
+                        tissues.put(tissue.getTissueId(), tissue);
 
                         //check if oncHistoryDetails is already in map
                         List<OncHistoryDetail> oncHistoryDataList = new ArrayList<>();
@@ -390,6 +415,7 @@ public class OncHistoryDetail {
                         OncHistoryDetail oncHistoryDetail = null;
                         if (oncHistoryMap.containsKey(oncHistoryDetailId)) {
                             oncHistoryDetail = oncHistoryMap.get(oncHistoryDetailId);
+                            oncHistoryDetail.getTissues().removeIf(tissue1 -> tissue.getTissueId() == tissue1.getTissueId());
                             oncHistoryDetail.addTissue(tissue);
                         }
                         else {
