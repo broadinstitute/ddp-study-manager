@@ -4,10 +4,19 @@ public class MappingGeneratorFactory implements GeneratorFactory {
     @Override
     public BaseGenerator make(BaseGenerator.PropertyInfo propertyInfo) {
         BaseGenerator generator;
+
         if (propertyInfo.isCollection()) {
-            generator = new CollectionMappingGenerator();
+            if ("additionalValuesJson".equals(propertyInfo.getPropertyName()) || "data".equals(propertyInfo.getPropertyName())) {
+                generator = new CollectionMappingGenerator(new DynamicFieldsMappingGenerator());
+            } else {
+                generator = new CollectionMappingGenerator();
+            }
         } else {
-            generator = new SingleMappingGenerator();
+            if ("additionalValuesJson".equals(propertyInfo.getPropertyName()) || "data".equals(propertyInfo.getPropertyName())) {
+                generator = new SingleMappingGenerator(new DynamicFieldsMappingGenerator());
+            } else {
+                generator = new SingleMappingGenerator();
+            }
         }
         return generator;
     }
