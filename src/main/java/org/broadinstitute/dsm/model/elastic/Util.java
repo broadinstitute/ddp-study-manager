@@ -115,9 +115,9 @@ public class Util {
         switch (fieldName) {
             case "follow_ups":
                 finalResult = new HashMap<>(Map.of(underscoresToCamelCase(fieldName), new Gson().toJson(fieldValue)));
-//                List<Map<String, Object>> followUps = convertObjectListToMapList(fieldValue);
-//                finalResult = Map.of(underscoresToCamelCase(fieldName), followUps);
                 break;
+            case "additional_tissue_value_json":
+            case "additional_values_json":
             case "data":
                 Map<String, Object> objectMap = dynamicFieldsSpecialCase(fieldValue);
                 Map<String, Object> transformedMap = new HashMap<>();
@@ -127,7 +127,7 @@ public class Util {
                     String camelCaseField = underscoresToCamelCase(field);
                     transformedMap.put(camelCaseField, value);
                 }
-                finalResult = transformedMap;
+                finalResult = Map.of("dynamicFields", transformedMap);
                 break;
             default:
                 finalResult = new HashMap<>(Map.of(underscoresToCamelCase(fieldName), fieldValue));
