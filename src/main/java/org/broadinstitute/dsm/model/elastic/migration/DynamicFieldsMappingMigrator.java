@@ -40,7 +40,7 @@ public class DynamicFieldsMappingMigrator implements Exportable {
     @Override
     public void export() {
         FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
-        List<FieldSettingsDto> fieldSettingsByStudyName = fieldSettingsDao.getFieldSettingsByStudyName(study);
+        List<FieldSettingsDto> fieldSettingsByStudyName = fieldSettingsDao.getAllFieldSettings();
         for (FieldSettingsDto fieldSettingsDto : fieldSettingsByStudyName) {
             String fieldType = fieldSettingsDto.getFieldType();
             BaseGenerator.PropertyInfo propertyInfo = Util.TABLE_ALIAS_MAPPINGS.get(fieldType);
