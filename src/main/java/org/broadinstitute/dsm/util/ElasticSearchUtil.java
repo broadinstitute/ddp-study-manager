@@ -133,7 +133,7 @@ public class ElasticSearchUtil {
         }
     }
 
-    private static void fetchFieldMappings() {
+    private static synchronized void fetchFieldMappings() {
         GetMappingsRequest request = new GetMappingsRequest();
         request.indices(PARTICIPANTS_STRUCTURED_ANY);
         try {
