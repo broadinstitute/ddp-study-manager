@@ -47,4 +47,8 @@ public class ExportFacadePayload {
     public String getFieldNameWithAlias() {
         return generatorPayload.getName();
     }
+
+    public String getFieldName() {
+        return generatorPayload.getFieldName();
+    }
 }

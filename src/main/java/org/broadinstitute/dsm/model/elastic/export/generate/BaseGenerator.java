@@ -71,7 +71,7 @@ public abstract class BaseGenerator implements Generator, Collector, Merger {
     }
 
     public String getFieldName() {
-        return Util.underscoresToCamelCase(getDBElement().getColumnName());
+        return generatorPayload.getFieldName();
     }
 
     @Override

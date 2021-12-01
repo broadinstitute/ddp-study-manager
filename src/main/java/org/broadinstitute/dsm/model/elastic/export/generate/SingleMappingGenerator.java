@@ -17,6 +17,10 @@ public class SingleMappingGenerator extends MappingGenerator {
 
     public SingleMappingGenerator() {}
 
+    public SingleMappingGenerator(Generator dynamicFieldsMappingGenerator) {
+        super(dynamicFieldsMappingGenerator);
+    }
+
     @Override
     protected Map<String, Object> getElement(Object type) {
         if (!Objects.nonNull(dynamicFieldsMappingGenerator)) {
@@ -24,7 +28,7 @@ public class SingleMappingGenerator extends MappingGenerator {
             dynamicFieldsMappingGenerator.setParser(parser);
             return dynamicFieldsMappingGenerator.generate();
         }
-        return new HashMap<>(Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), type));
+        return new HashMap<>(Map.of(getFieldName(), type));
     }
 
     @Override

@@ -42,6 +42,7 @@ public class ExportFacade {
     private void upsertMapping() {
         BaseGenerator.PropertyInfo propertyInfo = getPropertyInfo();
         GeneratorFactory generatorFactory = new MappingGeneratorFactory();
+        propertyInfo.setFieldName(exportFacadePayload.getFieldName());
         generator = generatorFactory.make(propertyInfo);
         generator.setParser(new TypeParser());
         generator.setPayload(exportFacadePayload.getGeneratorPayload());

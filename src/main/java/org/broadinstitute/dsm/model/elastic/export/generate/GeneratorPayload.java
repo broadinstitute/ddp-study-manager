@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
 import org.broadinstitute.dsm.model.NameValue;
+import org.broadinstitute.dsm.model.elastic.Util;
 
 public class GeneratorPayload {
 
@@ -26,5 +27,9 @@ public class GeneratorPayload {
 
     public int getRecordId() {
         return recordId;
+    }
+
+    public String getFieldName() {
+        return Util.underscoresToCamelCase(Util.getDBElement(getName()).getColumnName());
     }
 }

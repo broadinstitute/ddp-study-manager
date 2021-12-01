@@ -6,13 +6,13 @@ public class MappingGeneratorFactory implements GeneratorFactory {
         BaseGenerator generator;
 
         if (propertyInfo.isCollection()) {
-            if ("additionalValuesJson".equals(propertyInfo.getPropertyName()) || "data".equals(propertyInfo.getPropertyName())) {
+            if ("additionalValuesJson".equals(propertyInfo.getFieldName()) || "data".equals(propertyInfo.getFieldName())) {
                 generator = new CollectionMappingGenerator(new DynamicFieldsMappingGenerator());
             } else {
                 generator = new CollectionMappingGenerator();
             }
         } else {
-            if ("additionalValuesJson".equals(propertyInfo.getPropertyName()) || "data".equals(propertyInfo.getPropertyName())) {
+            if ("additionalValuesJson".equals(propertyInfo.getFieldName()) || "data".equals(propertyInfo.getFieldName())) {
                 generator = new SingleMappingGenerator(new DynamicFieldsMappingGenerator());
             } else {
                 generator = new SingleMappingGenerator();
