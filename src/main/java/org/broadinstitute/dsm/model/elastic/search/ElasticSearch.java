@@ -78,7 +78,7 @@ public class ElasticSearch implements ElasticSearchable {
         return Optional.of(elasticSearchParticipantDto);
     }
 
-    private static ElasticSearchParticipantDto serialize(Map<String, Object> sourceMap) throws NoSuchFieldException, ClassNotFoundException {
+    private static ElasticSearchParticipantDto serialize(Map<String, Object> sourceMap) {
         ElasticSearchParticipantDto elasticSearchParticipantDto = null;
         Object dsm = sourceMap.get(DSM);
         ObjectMapper objectMapper = new ObjectMapper();
@@ -88,91 +88,59 @@ public class ElasticSearch implements ElasticSearchable {
             for (Map.Entry<String, Object> entry: dsmLevel.entrySet()) {
                 String key = entry.getKey(); //medicalRecords
                 Object value = entry.getValue(); //medicalRecords: []
-                Field property = ESDsm.class.getDeclaredField(key);
-                Class<?> propertyType = Util.getParameterizedType(property.getGenericType());
-                Field[] declaredFields = propertyType.getDeclaredFields();
-                Optional<Field> maybeDynamicFields = Arrays.stream(declaredFields)
-                        .filter(field -> field.getAnnotation(JsonProperty.class).value().equals("dynamicFields"))
-                        .findFirst();
-                if (hasDynamicFields) {
-                    if (value instanceof List) {
-
-                    } else {
-
-                    }
-                }
-                if (value instanceof List) {
-                    List<Map<String, Object>> objects = (List<Map<String, Object>>) value;
-                    try {
-                        String dynamicFieldsName = "participantData".equals(key) ? "data" : "additionalValuesJson";
-                        propertyType.getDeclaredField(dynamicFieldsName);
-                        List<Map<String, Object>> newObjects = new ArrayList<>();
-                        for (Map<String, Object> object : objects) {
-                            Map<String, Object> clonedMap = new HashMap<>(object);
-                            Object dynamicFields = clonedMap.get("dynamicFields");
+                Field property = null;
+                try {
+                    property = ESDsm.class.getDeclaredField(key);
+                    Class<?> propertyType = Util.getParameterizedType(property.getGenericType());
+                    Field[] declaredFields = propertyType.getDeclaredFields();
+                    boolean hasDynamicFields = Arrays.stream(declaredFields)
+                            .anyMatch(field -> {
+                                JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
+                                if (Objects.isNull(jsonProperty)) return false;
+                                else return jsonProperty.value().equals("dynamicFields");
+                            });
+                    if (hasDynamicFields) {
+                        if (value instanceof List) {
+                            List<Map<String, Object>> objects = (List<Map<String, Object>>) value;
+                            List<Map<String, Object>> newObjects = new ArrayList<>();
+                            for (Map<String, Object> object : objects) {
+                                Map<String, Object> clonedMap = new HashMap<>(object);
+                                Object dynamicFields = clonedMap.get("dynamicFields");
+                                String followUps = (String)clonedMap.get("followUps");
+                                String dynamicFieldsValueAsJson = Objects.isNull(dynamicFields)
+                                        ? ""
+                                        : objectMapper.writeValueAsString(dynamicFields);
+                                Object convertedFollowUps = Objects.isNull(followUps)
+                                        ? Collections.emptyList()
+                                        : objectMapper.readValue(followUps, new TypeReference<List<Map<String, Object>>>() {
+                                });
+                                clonedMap.put("dynamicFields", dynamicFieldsValueAsJson);
+                                clonedMap.put("followUps", convertedFollowUps);
+                                newObjects.add(clonedMap);
+                            }
+                            if (!newObjects.isEmpty())
+                                clonedProperty.put(key, newObjects);
+                        } else {
+                            Map<String, Object> object = (Map<String, Object>) value;
+                            Map<String, Object> clonedObject = new HashMap<>(object);
+                            Object dynamicFields = clonedObject.get("dynamicFields");
                             String dynamicFieldsValueAsJson = Objects.isNull(dynamicFields)
                                     ? ""
                                     : objectMapper.writeValueAsString(dynamicFields);
-                            clonedMap.put("dynamicFields", dynamicFieldsValueAsJson);
-                            newObjects.add(clonedMap);
-                        }
-                        if (!newObjects.isEmpty())
-                            clonedProperty.put(key, newObjects);
-                    } catch (NoSuchFieldException | ClassNotFoundException | JsonProcessingException e) {
-                        if (((Map) dsm).containsKey("medicalRecords")) {
-                            List<Map<String, Object>> medicalRecords = (List<Map<String, Object>>) ((Map) sourceMap.get(DSM)).get("medicalRecords");
-                            if (!Objects.isNull(medicalRecords)) {
-                                for (Map<String, Object> medicalRecord : medicalRecords) {
-                                    if (StringUtils.isNotBlank((String) medicalRecord.get("followUps"))) {
-                                        String followUps = (String) medicalRecord.get("followUps");
-                                        try {
-                                            medicalRecord.put("followUps", objectMapper.readValue(followUps, new TypeReference<List<Map<String, Object>>>() {
-                                            }));
-                                        } catch (IOException ioe) {
-                                            throw new RuntimeException(ioe);
-                                        }
-                                    }
-                                }
-                                elasticSearchParticipantDto = objectMapper.convertValue(sourceMap, ElasticSearchParticipantDto.class);
-                            } else {
-                                elasticSearchParticipantDto = objectMapper.convertValue(sourceMap, ElasticSearchParticipantDto.class);
-                            }
-                        } else {
-                            elasticSearchParticipantDto = objectMapper.convertValue(sourceMap, ElasticSearchParticipantDto.class);
-                        }
-                    }
-                } else if("participant".equals(key) || "oncHistory".equals(key)) {
-                    Map<String, Object> object = (Map<String, Object>) value;
-                    try {
-                        Field property = ESDsm.class.getDeclaredField(key);
-                        Class<?> propertyType = Util.getParameterizedType(property.getGenericType());
-                        String dynamicFieldsName = "additionalValuesJson";
-                        propertyType.getDeclaredField(dynamicFieldsName);
-                        Map<String, Object> clonedObject = new HashMap<>(object);
-                        Object dynamicFields = clonedObject.get("dynamicFields");
-                        String dynamicFieldsValueAsJson = Objects.isNull(dynamicFields)
-                                ? ""
-                                : objectMapper.writeValueAsString(dynamicFields);
-                        clonedObject.put("dynamicFields", dynamicFieldsValueAsJson);
-                        if(!clonedObject.isEmpty())
+                            clonedObject.put("dynamicFields", dynamicFieldsValueAsJson);
                             clonedProperty.put(key, clonedObject);
-                    } catch (NoSuchFieldException | ClassNotFoundException | JsonProcessingException e) {
-                        e.printStackTrace();
+                        }
                     }
+                } catch (NoSuchFieldException | ClassNotFoundException | IOException e) {
+                    throw new RuntimeException(e);
                 }
             }
-            if (!clonedProperty.isEmpty())
+            if (!clonedProperty.isEmpty()) {
                 dsmLevel.putAll(clonedProperty);
-
-
-        } else {
-            elasticSearchParticipantDto = objectMapper.convertValue(sourceMap, ElasticSearchParticipantDto.class);
+            }
         }
+        elasticSearchParticipantDto = objectMapper.convertValue(sourceMap, ElasticSearchParticipantDto.class);
         return elasticSearchParticipantDto;
-    }
-
-    private static String extractListFromString(String listInString) {
-        return listInString.replace("\"[", "[").replace("]\"", "]").replace("\\\"", "\"");
     }
 
     public List<ElasticSearchParticipantDto> parseSourceMaps(SearchHit[] searchHits) {
