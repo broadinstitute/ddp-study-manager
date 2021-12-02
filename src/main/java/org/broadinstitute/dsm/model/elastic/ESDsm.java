@@ -41,7 +41,7 @@ public class ESDsm {
     Object diagnosisYear;
 
     @SerializedName(ESObjectConstants.TISSUE_RECORDS)
-    List<Map<String, Object>> tissueRecords;
+    List<Map<String, Object>> tissueRecords; // todo: change to Tissue
 
     @SerializedName(ESObjectConstants.MEDICAL_RECORDS)
     List<MedicalRecord> medicalRecords;

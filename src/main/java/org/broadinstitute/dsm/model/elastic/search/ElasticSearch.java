@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.model.elastic.search;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,6 +22,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.model.FollowUp;
+import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
@@ -78,6 +80,34 @@ public class ElasticSearch implements ElasticSearchable {
         ElasticSearchParticipantDto elasticSearchParticipantDto = null;
         Object dsm = sourceMap.get(DSM);
         if (!Objects.isNull(dsm)) {
+
+            Map<String, Object> dsmLevel = (Map<String, Object>) sourceMap.get(DSM);
+            for (Map.Entry<String, Object> entry: dsmLevel.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                if (value instanceof List) {
+                    List<Map<String, Object>> objects = (List<Map<String, Object>>) value;
+                    try {
+                        Field property = ESDsm.class.getDeclaredField(key);
+                        Class<?> propertyType = Util.getParameterizedType(property.getGenericType());
+                        Field additionalValuesJson = propertyType.getDeclaredField("additionalValuesJson");
+                        for (Map<String, Object> object : objects) {
+                            Object dynamicFields = object.get("dynamicFields");
+
+
+                        }
+
+                    } catch (NoSuchFieldException | ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+
+
+                } else {
+
+                }
+
+            }
+
             List<Map<String, Object>> medicalRecords = (List<Map<String, Object>>)((Map) sourceMap.get(DSM)).get("medicalRecords");
             if (!Objects.isNull(medicalRecords)) {
                 for (Map<String, Object> medicalRecord : medicalRecords) {

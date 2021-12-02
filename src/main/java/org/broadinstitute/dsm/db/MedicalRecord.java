@@ -334,6 +334,11 @@ public class MedicalRecord {
     @ColumnName (DBConstants.ADDITIONAL_VALUES)
     private String additionalValuesJson;
 
+    @JsonProperty("dynamicFields")
+    public String getAdditionalValuesJson() {
+        return additionalValuesJson;
+    }
+
     private boolean reviewMedicalRecord;
 
     @TableName (

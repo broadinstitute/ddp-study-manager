@@ -102,7 +102,7 @@ public class Tissue {
     private String firstSmId;
 
     @ColumnName (DBConstants.ADDITIONAL_TISSUE_VALUES)
-    private String additionalTissueValueJson;
+    private String additionalValuesJson;
 
     @ColumnName (DBConstants.TISSUE_RETURN_DATE)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
@@ -137,7 +137,7 @@ public class Tissue {
     public Tissue(String tissueId, String oncHistoryDetailId, String notes, Integer countReceived, String tissueType,
                   String tissueSite, String tumorType, String hE, String pathologyReport, String collaboratorSampleId,
                   String blockSent, String scrollsReceived, String skId, String smId, String sentGp, String firstSmId,
-                  String additionalTissueValueJson, String expectedReturn, String returnDate,
+                  String additionalValuesJson, String expectedReturn, String returnDate,
                   String returnFedexId, String shlWorkNumber, String tumorPercentage, String tissueSequence, Integer scrollsCount,
                   Integer ussCount, Integer blocksCount, Integer hECount) {
         this.tissueId = tissueId;
@@ -156,7 +156,7 @@ public class Tissue {
         this.smId = smId;
         this.sentGp = sentGp;
         this.firstSmId = firstSmId;
-        this.additionalTissueValueJson = additionalTissueValueJson;
+        this.additionalValuesJson = additionalValuesJson;
         this.expectedReturn = expectedReturn;
         this.returnDate = returnDate;
         this.returnFedexId = returnFedexId;
