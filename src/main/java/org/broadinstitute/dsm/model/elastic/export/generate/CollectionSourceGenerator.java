@@ -25,16 +25,12 @@ public class CollectionSourceGenerator extends SourceGenerator {
     @Override
     public Object construct() {
         logger.info("Constructing nested data");
-        Map<Object, Object> collectionMap = new HashMap<>();
-        collectionMap.put(Util.ID, generatorPayload.getRecordId());
         Map<String, Object> mapWithParsedObjects = new HashMap<>(Map.of("dynamicFields", parseJsonValuesToObject()));
-        collectionMap.putAll(mapWithParsedObjects);
-        return List.of(collectionMap);
+        return List.of(mapWithParsedObjects);
     }
 
     @Override
     protected Object getElement(Object element) {
-        return List.of(new HashMap<>(Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()), element,
-                Util.ID, generatorPayload.getRecordId())));
+        return List.of(new HashMap<>(Map.of(getFieldName(), element)));
     }
 }

@@ -1,11 +1,9 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
-import org.broadinstitute.dsm.model.elastic.Util;
-import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
-
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+
+import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 
 public class CollectionMappingGenerator extends MappingGenerator {
 
@@ -15,23 +13,9 @@ public class CollectionMappingGenerator extends MappingGenerator {
 
     public CollectionMappingGenerator() {}
 
-    public CollectionMappingGenerator(Generator dynamicFieldsMappingGenerator) {
-        super(dynamicFieldsMappingGenerator);
-    }
-
     @Override
     protected Map<String, Object> getElement(Object type) {
-        if (!Objects.nonNull(dynamicFieldsMappingGenerator)) {
-            dynamicFieldsMappingGenerator.setPayload(generatorPayload);
-            dynamicFieldsMappingGenerator.setParser(parser);
-            HashMap<String, Object> elementWithIdAndType = new HashMap<>(Map.of(Util.ID, new HashMap<>(Map.of(TYPE, TYPE_KEYWORD))));
-            elementWithIdAndType.putAll(dynamicFieldsMappingGenerator.generate());
-            return elementWithIdAndType;
-        }
-        return new HashMap<>(Map.of(
-                Util.ID, new HashMap<>(Map.of(TYPE, TYPE_KEYWORD)),
-                Util.underscoresToCamelCase(getDBElement().getColumnName()), type
-        ));
+        return new HashMap<>(Map.of(getFieldName(), type));
     }
 
     @Override

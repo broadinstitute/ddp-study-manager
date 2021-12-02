@@ -82,10 +82,8 @@ public class CollectionProcessor extends BaseProcessor {
     }
 
     private boolean isExistingRecord(Map<String, Object> eachRecord) {
-        if (!eachRecord.containsKey(Util.underscoresToCamelCase(primaryKey)) && !eachRecord.containsKey(Util.ID)) return false;
-        double id = eachRecord.containsKey(Util.ID)
-                ? Double.parseDouble(String.valueOf(eachRecord.get(Util.ID)))
-                : Double.parseDouble(String.valueOf(eachRecord.get(Util.underscoresToCamelCase(primaryKey))));
+        if (!eachRecord.containsKey(Util.underscoresToCamelCase(primaryKey))) return false;
+        double id = Double.parseDouble(String.valueOf(eachRecord.get(Util.underscoresToCamelCase(primaryKey))));
         return id == (double) recordId;
     }
 

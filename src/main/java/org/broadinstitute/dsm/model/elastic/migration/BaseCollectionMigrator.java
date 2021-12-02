@@ -24,52 +24,5 @@ public abstract class BaseCollectionMigrator extends BaseMigrator {
     @Override
     protected void transformObject(Object object) {
         transformedList = Util.transformObjectCollectionToCollectionMap((List) object);
-        setPrimaryId();
-    }
-
-    private void setPrimaryId() {
-        for(Map<String, Object> map: transformedList) {
-            List<String> listValueKeys = getListValueKeys(map);
-            for (String key : listValueKeys) {
-                List<Map<String, Object>> listValue = (List<Map<String, Object>>) map.get(key);
-                Optional<String> maybePrimary = getPrimaryKeyFromList(listValue);
-                maybePrimary.ifPresent(prKey -> {
-                    for (Map<String, Object> stringObjectMap : listValue) {
-                        putPrimaryId(stringObjectMap, prKey);
-                    }
-                });
-            }
-            getPrimaryKey(map)
-                    .ifPresent(outerKey -> putPrimaryId(map, outerKey));
-        }
-    }
-
-    private List<String> getListValueKeys(Map<String, Object> map) {
-        return map.entrySet().stream()
-                .filter(this::isMapValueListType)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-    }
-
-    private boolean isMapValueListType(Map.Entry<String, Object> entry) {
-        return entry.getValue() instanceof List;
-    }
-
-    private Optional<String> getPrimaryKeyFromList(List<Map<String, Object>> listValue) {
-        for(Map<String, Object> eachValue: listValue) {
-            Optional<String> maybePrimaryKey = getPrimaryKey(eachValue);
-            if (maybePrimaryKey.isPresent()) return maybePrimaryKey;
-        }
-        return Optional.empty();
-    }
-
-    private Optional<String> getPrimaryKey(Map<String, Object> map) {
-        return map.keySet().stream()
-                .filter(outerKey -> primaryKeys.contains(outerKey))
-                .findFirst();
-    }
-
-    private void putPrimaryId(Map<String, Object> map, String outerKey) {
-        map.put(Util.ID, map.get(outerKey));
     }
 }

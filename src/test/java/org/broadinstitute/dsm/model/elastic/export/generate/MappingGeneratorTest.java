@@ -87,9 +87,7 @@ public class MappingGeneratorTest {
         Map<String, Object> resultMap = generator.generate();
         Map<String, Object> dsmLevelProperty = Map.of(generator.getPropertyName(), Map.of(
                 MappingGenerator.TYPE, MappingGenerator.NESTED,
-                PROPERTIES, Map.of(Util.underscoresToCamelCase(TestPatchUtil.MEDICAL_RECORD_COLUMN), Map.of(MappingGenerator.TYPE, "date"),
-                        Util.ID, Map.of(MappingGenerator.TYPE, MappingGenerator.TYPE_KEYWORD)
-                        )));
+                PROPERTIES, Map.of(Util.underscoresToCamelCase(TestPatchUtil.MEDICAL_RECORD_COLUMN), Map.of(MappingGenerator.TYPE, "date"))));
         Map<String, Object> dsmLevelProperties = Map.of(PROPERTIES, dsmLevelProperty);
         Map<String, Object> dsmLevel = Map.of(MappingGenerator.DSM_OBJECT, dsmLevelProperties);
         Map<String, Object> topLevel = Map.of(PROPERTIES, dsmLevel);

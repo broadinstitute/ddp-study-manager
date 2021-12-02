@@ -33,7 +33,6 @@ public class Util {
     public static final int FIRST_ELEMENT_INDEX = 0;
     public static final String UNDERSCORE_SEPARATOR = "_";
     public static final String DOC = "_doc";
-    public static final String ID = "id";
     private static final Pattern CAMEL_CASE_REGEX = Pattern.compile("(([a-z])+([A-z]))*");
     public static final Gson GSON = new Gson();
 
