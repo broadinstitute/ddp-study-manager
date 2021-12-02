@@ -27,7 +27,7 @@ public class CollectionSourceGenerator extends SourceGenerator {
         logger.info("Constructing nested data");
         Map<Object, Object> collectionMap = new HashMap<>();
         collectionMap.put(Util.ID, generatorPayload.getRecordId());
-        Map<String, Object> mapWithParsedObjects = parseJsonValuesToObject();
+        Map<String, Object> mapWithParsedObjects = new HashMap<>(Map.of("dynamicFields", parseJsonValuesToObject()));
         collectionMap.putAll(mapWithParsedObjects);
         return List.of(collectionMap);
     }

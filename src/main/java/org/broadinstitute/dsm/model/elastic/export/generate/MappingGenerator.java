@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 abstract public class MappingGenerator extends BaseGenerator {
 
@@ -50,9 +51,8 @@ abstract public class MappingGenerator extends BaseGenerator {
             Object eachType = parser.parse(String.valueOf(entry.getValue()));
             resultMap.put(Util.underscoresToCamelCase(entry.getKey()), eachType);
         }
-        return new HashMap<>(Map.of(Util.underscoresToCamelCase(getDBElement().getColumnName()),
-                new HashMap<>(Map.of(PROPERTIES,
-                resultMap))));
+        Map<String, Object> returnMap = new HashMap<>(Map.of("dynamicFields", new HashMap<>(Map.of(PROPERTIES, resultMap))));
+        return returnMap;
     }
 
     @Override
