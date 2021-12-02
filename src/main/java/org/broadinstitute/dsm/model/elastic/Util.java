@@ -179,8 +179,9 @@ public class Util {
         String typeAsString = genericType.toString();
         String[] types = typeAsString.contains("<") ? typeAsString.split("<") : typeAsString.split("\\[L");
         if (types.length < 2) {
-            class NullClass {}
-            return NullClass.class;
+//            class NullClass {}
+//            return NullClass.class;
+            return (Class) genericType;
         }
         String parameterizedType = types[1];
         parameterizedType = parameterizedType.replace(">", "");

@@ -92,9 +92,12 @@ public class UtilTest {
         class MockClass {
             List<Object> listField;
             FollowUp[] followUps;
+            Object obj;
         }
+
         Field listField = MockClass.class.getDeclaredField("listField");
         Field followUps = MockClass.class.getDeclaredField("followUps");
+        Field obj = MockClass.class.getDeclaredField("obj");
 
         Class<?> clazz = null;
         try {
@@ -102,6 +105,8 @@ public class UtilTest {
             assertEquals(Object.class, clazz);
             clazz = Util.getParameterizedType(followUps.getGenericType());
             assertEquals(FollowUp.class, clazz);
+            clazz = Util.getParameterizedType(obj.getGenericType());
+            assertEquals(Object.class, clazz);
         } catch (ClassNotFoundException e) {
             Assert.fail();
         }
