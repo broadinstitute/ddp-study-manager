@@ -13,6 +13,12 @@ import com.google.api.client.json.Json;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.db.MedicalRecord;
+import org.broadinstitute.dsm.db.OncHistory;
+import org.broadinstitute.dsm.db.OncHistoryDetail;
+import org.broadinstitute.dsm.db.Participant;
+import org.broadinstitute.dsm.db.ParticipantData;
+import org.broadinstitute.dsm.db.Tissue;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
@@ -23,13 +29,13 @@ import org.broadinstitute.dsm.util.PatchUtil;
 public class Util {
 
     public static final Map<String, BaseGenerator.PropertyInfo> TABLE_ALIAS_MAPPINGS = Map.of(
-            "m", new BaseGenerator.PropertyInfo(ESObjectConstants.MEDICAL_RECORDS, true),
-            "t", new BaseGenerator.PropertyInfo(ESObjectConstants.TISSUE_RECORDS, true),
-            "oD", new BaseGenerator.PropertyInfo(ESObjectConstants.ONC_HISTORY_DETAILS, true),
-            "d", new BaseGenerator.PropertyInfo(ESObjectConstants.PARTICIPANT_DATA, true),
-            "r", new BaseGenerator.PropertyInfo(ESObjectConstants.PARTICIPANT, false),
-            "p", new BaseGenerator.PropertyInfo(ESObjectConstants.PARTICIPANT, false),
-            "o", new BaseGenerator.PropertyInfo(ESObjectConstants.ONC_HISTORY, false)
+            "m", new BaseGenerator.PropertyInfo(MedicalRecord.class, true),
+            "t", new BaseGenerator.PropertyInfo(Tissue.class, true),
+            "oD", new BaseGenerator.PropertyInfo(OncHistoryDetail.class, true),
+            "d", new BaseGenerator.PropertyInfo(ParticipantData.class, true),
+            "r", new BaseGenerator.PropertyInfo(Participant.class, false),
+            "p", new BaseGenerator.PropertyInfo(Participant.class, false),
+            "o", new BaseGenerator.PropertyInfo(OncHistory.class, false)
     );
     public static final int FIRST_ELEMENT_INDEX = 0;
     public static final String UNDERSCORE_SEPARATOR = "_";

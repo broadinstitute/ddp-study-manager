@@ -1,6 +1,5 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -9,6 +8,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.structure.DBElement;
+import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
@@ -66,6 +66,10 @@ public abstract class BaseGenerator implements Generator, Collector, Merger {
         return Util.TABLE_ALIAS_MAPPINGS.get(getDBElement().getTableAlias());
     }
 
+    protected String getPrimaryKey() {
+        return getOuterPropertyByAlias().getPrimaryKey();
+    }
+
     public String getPropertyName() {
         return getOuterPropertyByAlias().getPropertyName();
     }
@@ -107,12 +111,12 @@ public abstract class BaseGenerator implements Generator, Collector, Merger {
 
     public static class PropertyInfo {
 
-        private String propertyName;
+        private Class<?> propertyClass;
         private boolean isCollection;
         private String fieldName;
 
-        public PropertyInfo(String propertyName, boolean isCollection) {
-            this.propertyName = Objects.requireNonNull(propertyName);
+        public PropertyInfo(Class<?> propertyClass, boolean isCollection) {
+            this.propertyClass = Objects.requireNonNull(propertyClass);
             this.isCollection = isCollection;
         }
 
@@ -121,7 +125,14 @@ public abstract class BaseGenerator implements Generator, Collector, Merger {
         }
 
         public String getPropertyName() {
-            return propertyName;
+            StringBuilder className = new StringBuilder(propertyClass.getSimpleName());
+            StringBuilder camelCaseClassName = className.replace(0, 1, String.valueOf(className.charAt(0)).toLowerCase());
+            return camelCaseClassName.toString();
+        }
+
+        public String getPrimaryKey() {
+            TableName tableName = Objects.requireNonNull(propertyClass.getAnnotation(TableName.class));
+            return Util.underscoresToCamelCase(tableName.primaryKey());
         }
 
         public boolean isCollection() {

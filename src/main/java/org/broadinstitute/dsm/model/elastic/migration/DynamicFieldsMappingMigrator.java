@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.broadinstitute.dsm.db.ParticipantData;
 import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.elastic.Util;
@@ -48,7 +49,7 @@ public class DynamicFieldsMappingMigrator implements Exportable {
             if (propertyInfo != null)
                 buildMapping(fieldSettingsDto, propertyInfo);
             else
-                buildMapping(fieldSettingsDto, new BaseGenerator.PropertyInfo(ESObjectConstants.PARTICIPANT_DATA, true));
+                buildMapping(fieldSettingsDto, new BaseGenerator.PropertyInfo(ParticipantData.class, true));
         }
         elasticMappingExportAdapter.setRequestPayload(new RequestPayload(index));
         elasticMappingExportAdapter.setSource(buildFinalMapping());
