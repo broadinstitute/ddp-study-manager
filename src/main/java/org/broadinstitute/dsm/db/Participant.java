@@ -3,6 +3,8 @@ package org.broadinstitute.dsm.db;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.NonNull;
@@ -15,6 +17,7 @@ import org.broadinstitute.dsm.util.DBUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -129,7 +132,13 @@ public class Participant {
     private String additionalValuesJson;
 
     @JsonProperty("dynamicFields")
-    public String getAdditionalValuesJson() { return additionalValuesJson; }
+    public Map<String, Object> getDynamicFields() {
+        try {
+            return new ObjectMapper().readValue(additionalValuesJson, new TypeReference<Map<String, Object>>() {});
+        } catch (IOException e) {
+            return Map.of();
+        }
+    }
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_EXIT,

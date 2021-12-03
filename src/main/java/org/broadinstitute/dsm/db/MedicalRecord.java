@@ -342,7 +342,7 @@ public class MedicalRecord {
     private String additionalValuesJson;
 
     @JsonProperty("dynamicFields")
-    public Map<String, Object> getAdditionalValuesJson() {
+    public Map<String, Object> getDynamicFields() {
         try {
             return new ObjectMapper().readValue(additionalValuesJson, new TypeReference<Map<String, Object>>() {});
         } catch (IOException e) {

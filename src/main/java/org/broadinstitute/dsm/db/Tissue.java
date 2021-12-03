@@ -2,6 +2,8 @@ package org.broadinstitute.dsm.db;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.NonNull;
@@ -15,9 +17,11 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -111,7 +115,13 @@ public class Tissue {
     private String additionalValuesJson;
 
     @JsonProperty("dynamicFields")
-    public String getAdditionalValuesJson() {return additionalValuesJson;}
+    public Map<String, Object> getDynamicFields() {
+        try {
+            return new ObjectMapper().readValue(additionalValuesJson, new TypeReference<Map<String, Object>>() {});
+        } catch (IOException e) {
+            return Map.of();
+        }
+    }
 
     @ColumnName (DBConstants.TISSUE_RETURN_DATE)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
