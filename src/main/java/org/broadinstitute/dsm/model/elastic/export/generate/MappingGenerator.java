@@ -16,17 +16,12 @@ abstract public class MappingGenerator extends BaseGenerator {
     public static final String TYPE = "type";
     public static final String NESTED = "nested";
     public static final String TYPE_KEYWORD = "keyword";
-    protected Generator dynamicFieldsMappingGenerator;
 
     public MappingGenerator(Parser parser, GeneratorPayload generatorPayload) {
         super(parser, generatorPayload);
     }
 
     public MappingGenerator() {}
-
-    public MappingGenerator(Generator dynamicFieldsMappingGenerator) {
-        this.dynamicFieldsMappingGenerator = dynamicFieldsMappingGenerator;
-    }
 
     @Override
     public Map<String, Object> generate() {

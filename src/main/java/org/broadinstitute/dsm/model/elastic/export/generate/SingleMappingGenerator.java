@@ -17,17 +17,8 @@ public class SingleMappingGenerator extends MappingGenerator {
 
     public SingleMappingGenerator() {}
 
-    public SingleMappingGenerator(Generator dynamicFieldsMappingGenerator) {
-        super(dynamicFieldsMappingGenerator);
-    }
-
     @Override
     protected Map<String, Object> getElement(Object type) {
-        if (!Objects.nonNull(dynamicFieldsMappingGenerator)) {
-            dynamicFieldsMappingGenerator.setPayload(generatorPayload);
-            dynamicFieldsMappingGenerator.setParser(parser);
-            return dynamicFieldsMappingGenerator.generate();
-        }
         return new HashMap<>(Map.of(getFieldName(), type));
     }
 
