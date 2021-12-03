@@ -138,7 +138,6 @@ public class Util {
 
     public static List<Map<String, Object>> convertObjectListToMapList(Object fieldValue) {
         return new ObjectMapper().convertValue(fieldValue, new TypeReference<List<Map<String, Object>>>() {});
-//        return GSON.fromJson(GSON.toJson(fieldValue), new TypeToken<List<Map<String, Object>>>(){}.getType());
     }
 
     private static Map<String, Object> dynamicFieldsSpecialCase(Object fieldValue) {
