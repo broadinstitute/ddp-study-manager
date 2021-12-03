@@ -5,12 +5,7 @@ import java.util.Map;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Getter;
-import org.broadinstitute.dsm.db.KitRequestShipping;
-import org.broadinstitute.dsm.db.MedicalRecord;
-import org.broadinstitute.dsm.db.OncHistory;
-import org.broadinstitute.dsm.db.OncHistoryDetail;
-import org.broadinstitute.dsm.db.Participant;
-import org.broadinstitute.dsm.db.ParticipantData;
+import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 @Getter
@@ -41,7 +36,7 @@ public class ESDsm {
     Object diagnosisYear;
 
     @SerializedName(ESObjectConstants.TISSUE_RECORDS)
-    List<Map<String, Object>> tissueRecords; // todo: change to Tissue
+    List<Tissue> tissueRecords; // todo: change to Tissue
 
     @SerializedName(ESObjectConstants.MEDICAL_RECORDS)
     List<MedicalRecord> medicalRecords;

@@ -1,5 +1,8 @@
 package org.broadinstitute.dsm.db;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
@@ -27,6 +30,7 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
         alias = DBConstants.DDP_PARTICIPANT_DATA_ALIAS,
         primaryKey = DBConstants.PARTICIPANT_DATA_ID,
         columnPrefix = "")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ParticipantData {
 
     private static final Logger logger = LoggerFactory.getLogger(ParticipantData.class);
@@ -46,7 +50,12 @@ public class ParticipantData {
     private final String fieldTypeId;
 
     @ColumnName (DBConstants.DATA)
+    @JsonProperty("dynamicFields")
+    @SerializedName("dynamicFields")
     private final String data;
+
+    @JsonProperty("dynamicFields")
+    public String getData() {return data;}
 
     public ParticipantData(String dataId, String fieldTypeId, String data) {
         this.dataId = dataId;

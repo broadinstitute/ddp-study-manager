@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.json.Json;
 import com.google.common.reflect.TypeToken;
@@ -136,7 +137,8 @@ public class Util {
     }
 
     public static List<Map<String, Object>> convertObjectListToMapList(Object fieldValue) {
-        return GSON.fromJson(GSON.toJson(fieldValue), new TypeToken<List<Map<String, Object>>>(){}.getType());
+        return new ObjectMapper().convertValue(fieldValue, new TypeReference<List<Map<String, Object>>>() {});
+//        return GSON.fromJson(GSON.toJson(fieldValue), new TypeToken<List<Map<String, Object>>>(){}.getType());
     }
 
     private static Map<String, Object> dynamicFieldsSpecialCase(Object fieldValue) {

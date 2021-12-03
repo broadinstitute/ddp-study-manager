@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.db;
 import com.easypost.exception.EasyPostException;
 import com.easypost.model.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -41,6 +42,7 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
         primaryKey = DBConstants.DSM_KIT_REQUEST_ID,
         columnPrefix = "")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class KitRequestShipping extends KitRequest {
 
     private static final Logger logger = LoggerFactory.getLogger(KitRequestShipping.class);

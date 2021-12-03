@@ -12,8 +12,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
@@ -39,6 +43,7 @@ import org.slf4j.LoggerFactory;
         columnPrefix = "")
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MedicalRecord {
 
     private static final Logger logger = LoggerFactory.getLogger(MedicalRecord.class);
@@ -332,11 +337,17 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ADDITIONAL_VALUES)
+    @JsonProperty("dynamicFields")
+    @SerializedName("dynamicFields")
     private String additionalValuesJson;
 
     @JsonProperty("dynamicFields")
-    public String getAdditionalValuesJson() {
-        return additionalValuesJson;
+    public Map<String, Object> getAdditionalValuesJson() {
+        try {
+            return new ObjectMapper().readValue(additionalValuesJson, new TypeReference<Map<String, Object>>() {});
+        } catch (IOException e) {
+            return Map.of();
+        }
     }
 
     private boolean reviewMedicalRecord;

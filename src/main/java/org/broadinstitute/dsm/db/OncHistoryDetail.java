@@ -1,6 +1,9 @@
 package org.broadinstitute.dsm.db;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -31,6 +34,7 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
         primaryKey = DBConstants.ONC_HISTORY_DETAIL_ID,
         columnPrefix = "")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class OncHistoryDetail {
 
     private static final Logger logger = LoggerFactory.getLogger(OncHistoryDetail.class);
@@ -158,7 +162,12 @@ public class OncHistoryDetail {
     private String gender;
 
     @ColumnName (DBConstants.ADDITIONAL_VALUES)
+    @JsonProperty("dynamicFields")
+    @SerializedName("dynamicFields")
     private String additionalValuesJson;
+
+    @JsonProperty("dynamicFields")
+    public String getAdditionalValuesJson() {return additionalValuesJson;}
 
     @ColumnName (DBConstants.DESTRUCTION_POLICY)
     private String destructionPolicy;
