@@ -1,12 +1,10 @@
 package org.broadinstitute.dsm.model.elastic;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Getter;
 import org.broadinstitute.dsm.db.*;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantRecordDto;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 @Getter
@@ -37,13 +35,13 @@ public class ESDsm {
     Object diagnosisYear;
 
     @SerializedName(ESObjectConstants.TISSUE_RECORDS)
-    List<Tissue> tissueRecords; // todo: change to Tissue
+    List<Tissue> tissue; // todo: change to Tissue
 
     @SerializedName(ESObjectConstants.MEDICAL_RECORDS)
-    List<MedicalRecord> medicalRecords;
+    List<MedicalRecord> medicalRecord;
 
     @SerializedName(ESObjectConstants.ONC_HISTORY_DETAIL_RECORDS)
-    List<OncHistoryDetail> oncHistoryDetails;
+    List<OncHistoryDetail> oncHistoryDetail;
 
     @SerializedName(ESObjectConstants.PARTICIPANT_DATA)
     List<ParticipantData> participantData;

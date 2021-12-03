@@ -10,7 +10,7 @@ import java.util.Map;
 public class MedicalRecordMigrator extends BaseCollectionMigrator {
 
     public MedicalRecordMigrator(String index, String realm) {
-        super(index, realm, ESObjectConstants.MEDICAL_RECORDS);
+        super(index, realm, "medicalRecord");
     }
 
     @Override

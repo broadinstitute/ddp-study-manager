@@ -9,7 +9,7 @@ import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 public class TissueMigrator extends BaseCollectionMigrator {
 
     public TissueMigrator(String index, String realm) {
-        super(index, realm, "tissues");
+        super(index, realm, "tissue");
     }
 
     @Override
