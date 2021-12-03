@@ -20,10 +20,12 @@ public class OncHistory {
 
     private static final String SQL_UPDATE_ONC_HISTORY = "UPDATE ddp_onc_history SET created = ?, last_changed = ?, changed_by = ? WHERE participant_id = ? AND created IS NULL";
 
-    private final String participantId;
-    private final String created;
-    private final String reviewed;
-    private final String changedBy;
+    private String participantId;
+    private String created;
+    private String reviewed;
+    private String changedBy;
+
+    public OncHistory() {}
 
     public OncHistory (String participantId, String created, String reviewed, String changedBy) {
         this.participantId = participantId;
