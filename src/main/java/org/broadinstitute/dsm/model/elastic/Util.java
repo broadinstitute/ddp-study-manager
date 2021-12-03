@@ -27,7 +27,7 @@ public class Util {
             "t", new BaseGenerator.PropertyInfo(ESObjectConstants.TISSUE_RECORDS, true),
             "oD", new BaseGenerator.PropertyInfo(ESObjectConstants.ONC_HISTORY_DETAIL_RECORDS, true),
             "d", new BaseGenerator.PropertyInfo(ESObjectConstants.PARTICIPANT_DATA, true),
-            "r", new BaseGenerator.PropertyInfo(ESObjectConstants.PARTICIPANT_RECORD, false),
+            "r", new BaseGenerator.PropertyInfo(ESObjectConstants.PARTICIPANT, false),
             "p", new BaseGenerator.PropertyInfo(ESObjectConstants.PARTICIPANT, false),
             "o", new BaseGenerator.PropertyInfo(ESObjectConstants.ONC_HISTORY, false)
     );
