@@ -6,6 +6,7 @@ import java.util.Map;
 import com.google.gson.annotations.SerializedName;
 import lombok.Getter;
 import org.broadinstitute.dsm.db.*;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantRecordDto;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 @Getter
@@ -53,4 +54,5 @@ public class ESDsm {
     List<KitRequestShipping> kitRequestShipping;
 
     OncHistory oncHistory;
+
 }
