@@ -89,7 +89,20 @@ public class CollectionProcessor extends BaseProcessor {
 
     private void updateExistingRecord(Map<String, Object> eachRecord) {
         logger.info("Updating existing record");
-        collectEndResult().ifPresent(eachRecord::putAll);
+        Optional<Map<String, Object>> maybeEndResult = collectEndResult();
+        if (maybeEndResult.isPresent()) {
+            for (Map.Entry<String, Object> endResultEntry : maybeEndResult.get().entrySet()) {
+                String endResultEntryKey = endResultEntry.getKey();
+                Object eachRecordValue = eachRecord.get(endResultEntryKey);
+                if (eachRecordValue instanceof Map) {
+                    Map<String, Object> eachRecordEntryMap = (Map<String, Object>) eachRecordValue;
+                    eachRecordEntryMap.putAll((Map<String, Object>) endResultEntry.getValue());
+                } else {
+                    eachRecord.putAll(maybeEndResult.get());
+                }
+            }
+        }
+
     }
 
     private void addNewRecordTo(List<Map<String, Object>> fetchedRecords) {
