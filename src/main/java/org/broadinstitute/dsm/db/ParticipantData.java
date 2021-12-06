@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.db;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -34,6 +35,7 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
         primaryKey = DBConstants.PARTICIPANT_DATA_ID,
         columnPrefix = "")
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ParticipantData {
 
     private static final Logger logger = LoggerFactory.getLogger(ParticipantData.class);
@@ -47,18 +49,18 @@ public class ParticipantData {
             "ddp_participant_id = ?, ddp_instance_id = ?, field_type_id = ?, data = ?, last_changed = ?, changed_by = ? ";
 
     @ColumnName(DBConstants.PARTICIPANT_DATA_ID)
-    private final String dataId;
+    private String participantDataId;
+
+    @ColumnName(DBConstants.DDP_PARTICIPANT_ID)
+    private String ddpParticipantId;
 
     @ColumnName(DBConstants.FIELD_TYPE_ID)
-    private final String fieldTypeId;
+    private String fieldTypeId;
 
     @ColumnName (DBConstants.DATA)
     @JsonProperty("dynamicFields")
     @SerializedName("dynamicFields")
-    private final String data;
-
-    @JsonProperty("dynamicFields")
-    public String getData() {return data;}
+    private String data;
 
     @JsonProperty("dynamicFields")
     public Map<String, Object> getDynamicFields() {
@@ -69,8 +71,12 @@ public class ParticipantData {
         }
     }
 
+    public ParticipantData() {
+
+    }
+
     public ParticipantData(String dataId, String fieldTypeId, String data) {
-        this.dataId = dataId;
+        this.participantDataId = dataId;
         this.fieldTypeId = fieldTypeId;
         this.data = data;
     }

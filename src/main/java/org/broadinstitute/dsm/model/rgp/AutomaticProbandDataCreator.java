@@ -97,10 +97,8 @@ public class AutomaticProbandDataCreator implements Defaultable {
 
     private Map<String, String> extractProbandDefaultDataFromParticipantProfile(@NonNull ElasticSearchParticipantDto esData,
                                                                                        Optional<BookmarkDto> maybeBookmark) {
-        Optional<List<ESActivities>> participantActivities = esData.getActivities();
-        String mobilePhone = participantActivities
-                .map(this::getPhoneNumberFromActivities)
-                .orElse("");
+        List<ESActivities> participantActivities = esData.getActivities();
+        String mobilePhone = getPhoneNumberFromActivities(participantActivities);
         return esData.getProfile()
             .map(esProfile -> {
                 logger.info("Starting extracting data from participant: " + esProfile.getGuid() + " ES profile");

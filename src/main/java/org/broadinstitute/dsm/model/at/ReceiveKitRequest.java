@@ -42,7 +42,7 @@ public class ReceiveKitRequest {
             data.put(GENOME_STUDY_STATUS, "3");
 
             String dataString = new Gson().toJson(data);
-            if (updateData(dataString, participantData.getDataId())) {
+            if (updateData(dataString, participantData.getParticipantDataId())) {
                 DDPInstance ddpInstance = DDPInstance.getDDPInstance("atcp");
                 List<String> recipients = ddpInstance.getNotificationRecipient();
                 if (recipients != null && !recipients.isEmpty()) {

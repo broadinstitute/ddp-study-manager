@@ -228,9 +228,9 @@ public class ParticipantWrapper {
     Map<String, List<String>> getProxiesIdsFromElasticList(List<ElasticSearchParticipantDto> elasticSearchParticipantDtos) {
         Map<String, List<String>> participantsWithProxies = new HashMap<>();
         elasticSearchParticipantDtos.stream()
-                .filter(esParticipantData -> esParticipantData.getProxies().orElse(Collections.emptyList()).size() > 0)
+                .filter(esParticipantData -> esParticipantData.getProxies().size() > 0)
                 .forEach(esParticipantData ->
-                        participantsWithProxies.put(esParticipantData.getParticipantId(), esParticipantData.getProxies().get()));
+                        participantsWithProxies.put(esParticipantData.getParticipantId(), esParticipantData.getProxies()));
         return participantsWithProxies;
     }
 
