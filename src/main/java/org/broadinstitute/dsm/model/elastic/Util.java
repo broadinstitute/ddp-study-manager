@@ -22,6 +22,7 @@ import org.broadinstitute.dsm.db.Tissue;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
+import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.broadinstitute.dsm.util.PatchUtil;
@@ -94,8 +95,8 @@ public class Util {
 
     public static Map<String, Object> transformObjectToMap(Object obj) {
         Map<String, Object> map = new HashMap<>();
-        List<Field> declaredFields = new ArrayList(List.of(obj.getClass().getDeclaredFields()));
-        List<Field> declaredFieldsSuper = new ArrayList(List.of(obj.getClass().getSuperclass().getDeclaredFields()));
+        List<Field> declaredFields = new ArrayList<>(List.of(obj.getClass().getDeclaredFields()));
+        List<Field> declaredFieldsSuper = new ArrayList<>(List.of(obj.getClass().getSuperclass().getDeclaredFields()));
         declaredFields.addAll(declaredFieldsSuper);
         for (Field declaredField : declaredFields) {
             ColumnName annotation = declaredField.getAnnotation(ColumnName.class);
@@ -127,9 +128,10 @@ public class Util {
             case "data":
                 Map<String, Object> objectMap = dynamicFieldsSpecialCase(fieldValue);
                 Map<String, Object> transformedMap = new HashMap<>();
-                for (Map.Entry object: objectMap.entrySet()) {
-                    String field = (String) object.getKey();
+                for (Map.Entry<String, Object> object: objectMap.entrySet()) {
+                    String field = object.getKey();
                     Object value = object.getValue();
+                    if (FamilyMemberConstants.IS_APPLICANT.equals(field)) value = Boolean.valueOf(String.valueOf(value));
                     String camelCaseField = underscoresToCamelCase(field);
                     transformedMap.put(camelCaseField, value);
                 }
