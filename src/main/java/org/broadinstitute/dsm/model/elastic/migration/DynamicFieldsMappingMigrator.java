@@ -3,10 +3,15 @@ package org.broadinstitute.dsm.model.elastic.migration;
 import static org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator.DSM_OBJECT;
 import static org.broadinstitute.dsm.util.ElasticSearchUtil.PROPERTIES;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.broadinstitute.dsm.db.ParticipantData;
 import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
@@ -96,18 +101,3 @@ public class DynamicFieldsMappingMigrator implements Exportable {
 
 }
 
-class DynamicFieldsTypeParser extends TypeParser {
-
-    @Override
-    public Object parse(String value) {
-        Object parsedValue;
-        if ("DATE".equals(value)) {
-            parsedValue = forDate(value);
-        } else if ("CHECKBOX".equals(value)) {
-            parsedValue = forBoolean(value);
-        } else {
-            parsedValue = forString(value);
-        }
-        return parsedValue;
-    }
-}

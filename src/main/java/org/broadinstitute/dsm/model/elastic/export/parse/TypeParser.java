@@ -22,7 +22,7 @@ public class TypeParser extends BaseParser {
             )))));
     private static final String BOOLEAN = "boolean";
     public static final Map<String, String> BOOLEAN_MAPPING = new HashMap<>(Map.of(MappingGenerator.TYPE, BOOLEAN));
-    private static final String DATE = "date";
+    public static final String DATE = "date";
     public static final Map<String, String> DATE_MAPPING = new HashMap<>(Map.of(MappingGenerator.TYPE, DATE));
 
     @Override
