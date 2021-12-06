@@ -9,7 +9,6 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.structure.ColumnName;
-import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
 import org.broadinstitute.dsm.db.structure.SqlDateConverter;
 import org.broadinstitute.dsm.db.structure.TableName;
@@ -581,10 +580,10 @@ public class KitRequestShipping extends KitRequest {
                     || TRIGGERED.equals(target) || OVERVIEW.equals(target) || WAITING.equals(target)) {
 
                 DDPInstance ddpInstance = DDPInstance.getDDPInstanceWithRole(realm, DBConstants.NEEDS_NAME_LABELS);
-                if (StringUtils.isBlank(ddpInstance.getParticipantIndexES())) {
-                    throw new RuntimeException("No participant index setup in ddp_instance table for " + ddpInstance.getName());
+                Map<String, Map<String, Object>> participantsESData = null;
+                if (StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
+                    participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(ddpInstance.getName(), ddpInstance.getParticipantIndexES());
                 }
-                Map<String, Map<String, Object>> participantsESData = ElasticSearchUtil.getDDPParticipantsFromES(ddpInstance.getName(), ddpInstance.getParticipantIndexES());
 
                 for (String key : kitRequests.keySet()) {
                     List<KitRequestShipping> kitRequest = kitRequests.get(key);
