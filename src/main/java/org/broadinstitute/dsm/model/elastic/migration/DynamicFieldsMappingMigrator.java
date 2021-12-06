@@ -31,7 +31,7 @@ public class DynamicFieldsMappingMigrator implements Exportable {
     public static final String DYNAMIC_FIELDS_WRAPPER_NAME = "dynamicFields";
     private final String index;
     private final String study;
-    public Parser parser;
+    public DynamicFieldsTypeParser parser;
     public Map<String, Object> propertyMap;
 
     private ElasticMappingExportAdapter elasticMappingExportAdapter;
@@ -49,6 +49,7 @@ public class DynamicFieldsMappingMigrator implements Exportable {
         FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
         List<FieldSettingsDto> fieldSettingsByStudyName = fieldSettingsDao.getAllFieldSettings();
         for (FieldSettingsDto fieldSettingsDto : fieldSettingsByStudyName) {
+            parser.setFieldSettingsDto(fieldSettingsDto);
             String fieldType = fieldSettingsDto.getFieldType();
             BaseGenerator.PropertyInfo propertyInfo = Util.TABLE_ALIAS_MAPPINGS.get(fieldType);
             if (propertyInfo != null)
