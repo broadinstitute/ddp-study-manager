@@ -70,14 +70,4 @@ public abstract class BaseParser implements Parser {
         return value.equalsIgnoreCase("true") ||
                value.equalsIgnoreCase("false");
     }
-
-    boolean isCollection(String value) {
-        boolean isCollection = false;
-        try {
-            new Gson().fromJson(value, List.class);
-            isCollection = true;
-        } catch (JsonSyntaxException ignored) {
-        }
-        return isCollection;
-    }
 }

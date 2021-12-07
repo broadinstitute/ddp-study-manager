@@ -1,16 +1,15 @@
 package org.broadinstitute.dsm.model.elastic.migration;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
+import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
+import org.broadinstitute.dsm.util.ObjectMapperSingleton;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
-import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
-import org.broadinstitute.dsm.util.ObjectMapperSingleton;
 
 class DynamicFieldsTypeParser extends TypeParser {
 
@@ -33,24 +32,27 @@ class DynamicFieldsTypeParser extends TypeParser {
             parsedValue = forBoolean(type);
         } else if (isActivityRelatedType(type)) {
             String possibleValuesJson = Objects.requireNonNull(fieldSettingsDto).getPossibleValues();
-            try {
-                List<Map<String, String>> possibleValues = ObjectMapperSingleton.instance().readValue(possibleValuesJson,
-                        new TypeReference<List<Map<String, String>>>() {
-                        });
-                Optional<String> maybeType = possibleValues.stream()
-                        .filter(possibleValue -> possibleValue.containsKey(TYPE))
-                        .map(possibleValue -> possibleValue.get(TYPE))
-                        .findFirst();
-                parsedValue = maybeType
-                        .map(this::parse)
-                        .orElse(forString(type));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            Optional<String> maybeType = getTypeFromPossibleValuesJson(possibleValuesJson);
+            parsedValue = maybeType
+                    .map(this::parse)
+                    .orElse(forString(type));
         } else {
             parsedValue = forString(type);
         }
         return parsedValue;
+    }
+
+    private Optional<String> getTypeFromPossibleValuesJson(String possibleValuesJson) {
+        try {
+            List<Map<String, String>> possibleValues = ObjectMapperSingleton.instance().readValue(possibleValuesJson, new TypeReference<List<Map<String, String>>>() {});
+            Optional<String> maybeType = possibleValues.stream()
+                    .filter(possibleValue -> possibleValue.containsKey(TYPE))
+                    .map(possibleValue -> possibleValue.get(TYPE))
+                    .findFirst();
+            return maybeType;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private boolean isActivityRelatedType(String type) {

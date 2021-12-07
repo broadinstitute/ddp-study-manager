@@ -1,12 +1,10 @@
 package org.broadinstitute.dsm.model.elastic.migration;
 
+import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
+
 import java.util.List;
 import java.util.Map;
-
-import org.broadinstitute.dsm.db.KitRequestShipping;
-import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
-import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
-import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 public class KitRequestShippingMigrator extends BaseCollectionMigrator {
 
@@ -20,13 +18,4 @@ public class KitRequestShippingMigrator extends BaseCollectionMigrator {
         return (Map) kitRequests;
     }
 
-    @Override
-    public void setParser(Parser parser) {
-
-    }
-
-    @Override
-    public void setPayload(GeneratorPayload generatorPayload) {
-
-    }
 }

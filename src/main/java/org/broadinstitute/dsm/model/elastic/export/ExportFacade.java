@@ -23,7 +23,7 @@ public class ExportFacade {
 
     private static final Logger logger = LoggerFactory.getLogger(ExportFacade.class);
 
-    Exportable exportable;
+    BaseExporter exportable;
     BaseGenerator generator;
     ElasticSearchable searchable;
     private ExportFacadePayload exportFacadePayload;

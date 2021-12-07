@@ -18,12 +18,15 @@ public class ESObjectConstants {
 
     //medical records
     public static final String MEDICAL_RECORDS = "medicalRecords";
+    public static final String MEDICAL_RECORD = "medicalRecord";
     public static final String MEDICAL_RECORDS_ID = "medicalRecordId";
+    public static final String FOLLOW_UPS = "followUps";
     public static final List<String> MEDICAL_RECORDS_FIELD_NAMES = Arrays.asList("name", "type", "requested", "received");
 
     //tissue records
     public static final String TISSUE_RECORDS = "tissueRecords";
     public static final String TISSUE_RECORDS_ID = "tissueRecordId";
+    public static final String TISSUE = "tissue";
     public static final List<String> TISSUE_RECORDS_FIELD_NAMES =
             Arrays.asList("typePX", "locationPX", "datePX", "histology", "accessionNumber", "requested", "received", "sent");
 

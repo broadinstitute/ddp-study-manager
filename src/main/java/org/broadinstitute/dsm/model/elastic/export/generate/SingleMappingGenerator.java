@@ -1,13 +1,9 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
-import org.broadinstitute.dsm.model.NameValue;
-import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
-import org.jruby.ir.operands.Hash;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class SingleMappingGenerator extends MappingGenerator {
 

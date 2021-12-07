@@ -23,8 +23,4 @@ public class CollectionMappingGenerator extends MappingGenerator {
         return new HashMap<>(Map.of(TYPE, NESTED, PROPERTIES, collect()));
     }
 
-    @Override
-    public Map<String, Object> merge(Map<String, Object> base, Map<String, Object> toMerge) {
-        return super.merge(base, toMerge);
-    }
 }

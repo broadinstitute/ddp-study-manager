@@ -10,10 +10,6 @@ public interface Exportable {
 
     void export();
 
-    void setSource(Map<String, Object> source);
-
-    void setRequestPayload(RequestPayload requestPayload);
-
     default String getParticipantGuid(String participantId, String index) {
         if (!(ParticipantUtil.isGuid(participantId))) {
             ElasticSearchParticipantDto participantById =

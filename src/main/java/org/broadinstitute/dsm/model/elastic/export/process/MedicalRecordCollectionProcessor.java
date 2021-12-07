@@ -7,12 +7,9 @@ import java.util.Objects;
 import com.google.gson.Gson;
 import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.export.generate.Collector;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 public class MedicalRecordCollectionProcessor extends CollectionProcessor {
-    public MedicalRecordCollectionProcessor(ESDsm esDsm, String propertyName, int recordId,
-                                            Collector collector) {
-        super(esDsm, propertyName, recordId, collector);
-    }
 
     public MedicalRecordCollectionProcessor() {
 
@@ -21,9 +18,9 @@ public class MedicalRecordCollectionProcessor extends CollectionProcessor {
     @Override
     protected List<Map<String, Object>> updateIfExistsOrPut(List<Map<String, Object>> fetchedRecords) {
         for (Map<String, Object> medicalRecord: fetchedRecords) {
-            Object followUps = medicalRecord.get("followUps");
+            Object followUps = medicalRecord.get(ESObjectConstants.FOLLOW_UPS);
             if (!Objects.isNull(followUps)) {
-                medicalRecord.put("followUps", new Gson().toJson(followUps));
+                medicalRecord.put(ESObjectConstants.FOLLOW_UPS, new Gson().toJson(followUps));
             }
         }
         return super.updateIfExistsOrPut(fetchedRecords);

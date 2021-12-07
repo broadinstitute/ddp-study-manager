@@ -6,7 +6,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import java.util.Map;
 import java.util.Objects;
 
-public abstract class BaseExporter implements Exportable {
+public abstract class BaseExporter implements Exportable, ExportableHelper {
     protected RestHighLevelClient clientInstance = ElasticSearchUtil.getClientInstance();
 
     protected RequestPayload requestPayload;

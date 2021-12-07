@@ -19,13 +19,4 @@ public class OncHistoryDetailsMigrator extends BaseCollectionMigrator {
         return (Map) OncHistoryDetail.getOncHistoryDetails(realm);
     }
 
-    @Override
-    public void setParser(Parser parser) {
-
-    }
-
-    @Override
-    public void setPayload(GeneratorPayload generatorPayload) {
-
-    }
 }

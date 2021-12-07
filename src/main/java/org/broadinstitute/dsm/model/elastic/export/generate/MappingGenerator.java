@@ -37,7 +37,6 @@ abstract public class MappingGenerator extends BaseGenerator {
         return new HashMap<>(Map.of(PROPERTIES, dsmLevel));
     }
 
-
     @Override
     protected Map<String, Object> parseJson() {
         Map<String, Object> resultMap = new HashMap<>();
@@ -49,31 +48,4 @@ abstract public class MappingGenerator extends BaseGenerator {
         Map<String, Object> returnMap = new HashMap<>(Map.of("dynamicFields", new HashMap<>(Map.of(PROPERTIES, resultMap))));
         return returnMap;
     }
-
-    @Override
-    public Map<String, Object> merge(Map<String, Object> base, Map<String, Object> toMerge) {
-        String propertyName = Util.underscoresToCamelCase(getDBElement().getColumnName());
-//        base.putIfAbsent(propertyName, toMerge);
-
-
-
-        //dsm -> properties -> medicalRecords -> properties -> mrRecordId: {}, ragaca: {}, additionalValuesjson: { properties: {key: {type = ...}
-        getFieldLevel(base).putAll(getFieldLevel(toMerge));
-        return base;
-    }
-
-    private Map<String, Object> getFieldLevel(Map<String, Object> topLevel) {
-        if (topLevel.isEmpty()) {
-            return topLevel;
-        }
-        String propertyName = Util.underscoresToCamelCase(getDBElement().getColumnName());
-//        Map outerPropertyMap = (Map)  topLevel.get(PROPERTIES);
-        Map innerPropertyMap = (Map) topLevel.get(propertyName);
-        Map innerProperty = (Map) innerPropertyMap.get(PROPERTIES);
-        if (innerProperty != null)
-            return innerProperty;
-        else
-            return innerPropertyMap;
-    }
-
 }

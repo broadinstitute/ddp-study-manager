@@ -95,36 +95,6 @@ public class MappingGeneratorTest {
     }
 
     @Test
-    public void merge() {
-        NameValue nameValue = new NameValue("d.data", "{\"DDP_INSTANCE\": \"TEST\"}");
-        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 0);
-        TypeParser parser = new TypeParser();
-        MappingGenerator mappingGenerator = new CollectionMappingGenerator(parser, generatorPayload);
-        Map<String, Object> base = new HashMap<>();
-        base = mappingGenerator.merge(base, mappingGenerator.generate());
-        NameValue nameValue2 = new NameValue("d.data", "{\"DDP_INSTANCE1\": \"TEST1\"}");
-        GeneratorPayload generatorPayload2 = new GeneratorPayload(nameValue2, 0);
-        mappingGenerator = new CollectionMappingGenerator(parser, generatorPayload2);
-        base = mappingGenerator.merge(base, mappingGenerator.generate());
-        Object value = ((Map) ((Map) ((Map) ((Map) ((Map) base
-                .get(PROPERTIES))
-                .get(MappingGenerator.DSM_OBJECT))
-                .get(PROPERTIES))
-                .get(mappingGenerator.getPropertyName()))
-                .get(PROPERTIES))
-                .get(Util.underscoresToCamelCase("DDP_INSTANCE1"));
-        Object value2 = ((Map) ((Map) ((Map) ((Map) ((Map) base
-                .get(PROPERTIES))
-                .get(MappingGenerator.DSM_OBJECT))
-                .get(PROPERTIES))
-                .get(mappingGenerator.getPropertyName()))
-                .get(PROPERTIES))
-                .get(Util.underscoresToCamelCase("DDP_INSTANCE"));
-        Assert.assertFalse(Objects.isNull(value));
-        Assert.assertFalse(Objects.isNull(value2));
-    }
-
-    @Test
     public void parseJson() {
         NameValue nameValue = new NameValue("m.additionalValuesJson", "{\"DDP_INSTANCE\": \"TEST\", \"DDP_INSTANCE1\": \"TEST1\"}");
         GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 0);

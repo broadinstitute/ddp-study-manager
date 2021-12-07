@@ -1,17 +1,5 @@
 package org.broadinstitute.dsm.model.elastic.migration;
 
-import static org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator.DSM_OBJECT;
-import static org.broadinstitute.dsm.util.ElasticSearchUtil.PROPERTIES;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.broadinstitute.dsm.db.ParticipantData;
 import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
@@ -21,10 +9,13 @@ import org.broadinstitute.dsm.model.elastic.export.Exportable;
 import org.broadinstitute.dsm.model.elastic.export.RequestPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
-import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
-import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
-import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.statics.ESObjectConstants;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator.DSM_OBJECT;
+import static org.broadinstitute.dsm.util.ElasticSearchUtil.PROPERTIES;
 
 public class DynamicFieldsMappingMigrator implements Exportable {
 
@@ -89,16 +80,5 @@ public class DynamicFieldsMappingMigrator implements Exportable {
             innerProperties.putIfAbsent(columnName, typeMap);
         }
     }
-
-    @Override
-    public void setSource(Map<String, Object> source) {
-
-    }
-
-    @Override
-    public void setRequestPayload(RequestPayload requestPayload) {
-
-    }
-
 }
 

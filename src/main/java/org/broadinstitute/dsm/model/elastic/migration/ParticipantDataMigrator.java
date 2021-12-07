@@ -24,15 +24,4 @@ public class ParticipantDataMigrator extends BaseCollectionMigrator {
         Map<String, List<ParticipantDataDto>> participantDataByRealm = participantDataDao.getParticipantDataByRealm(realm);
         return (Map) participantDataByRealm;
     }
-
-
-    @Override
-    public void setParser(Parser parser) {
-
-    }
-
-    @Override
-    public void setPayload(GeneratorPayload generatorPayload) {
-
-    }
 }

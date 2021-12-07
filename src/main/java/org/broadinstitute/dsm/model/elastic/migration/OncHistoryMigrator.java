@@ -17,14 +17,4 @@ public class OncHistoryMigrator extends BaseSingleMigrator {
     protected Map<String, Object> getDataByRealm() {
         return (Map) new OncHistoryDao().getOncHistoriesByStudy(realm);
     }
-
-    @Override
-    public void setParser(Parser parser) {
-
-    }
-
-    @Override
-    public void setPayload(GeneratorPayload generatorPayload) {
-
-    }
 }

@@ -1,15 +1,14 @@
 package org.broadinstitute.dsm.model.elastic.migration;
 
-import java.util.Map;
-
 import org.broadinstitute.dsm.db.dao.ddp.tissue.TissueDao;
-import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
-import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
+
+import java.util.Map;
 
 public class TissueMigrator extends BaseCollectionMigrator {
 
     public TissueMigrator(String index, String realm) {
-        super(index, realm, "tissue");
+        super(index, realm, ESObjectConstants.TISSUE);
     }
 
     @Override
@@ -17,13 +16,4 @@ public class TissueMigrator extends BaseCollectionMigrator {
         return (Map) new TissueDao().getTissuesByStudy(realm);
     }
 
-    @Override
-    public void setParser(Parser parser) {
-
-    }
-
-    @Override
-    public void setPayload(GeneratorPayload generatorPayload) {
-
-    }
 }

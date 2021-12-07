@@ -51,15 +51,5 @@ public class BaseCollectionMigratorTest {
         protected Map<String, Object> getDataByRealm() {
             return Map.of();
         }
-
-        @Override
-        public void setParser(Parser parser) {
-
-        }
-
-        @Override
-        public void setPayload(GeneratorPayload generatorPayload) {
-
-        }
     }
 }

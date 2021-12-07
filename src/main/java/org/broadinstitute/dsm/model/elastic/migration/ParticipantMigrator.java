@@ -20,14 +20,4 @@ public class ParticipantMigrator extends BaseSingleMigrator implements Exportabl
     protected Map<String, Object> getDataByRealm() {
         return (Map) Participant.getParticipants(realm);
     }
-
-    @Override
-    public void setParser(Parser parser) {
-
-    }
-
-    @Override
-    public void setPayload(GeneratorPayload generatorPayload) {
-
-    }
 }

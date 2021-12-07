@@ -4,6 +4,6 @@ import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 
 public interface ExportableFactory {
 
-    Exportable make(BaseGenerator.PropertyInfo propertyInfo);
+    BaseExporter make(BaseGenerator.PropertyInfo propertyInfo);
 
 }

@@ -1,15 +1,11 @@
 package org.broadinstitute.dsm.model.elastic.export.parse;
 
-import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class TypeParser extends BaseParser {
-
 
     private static final String TEXT = "text";
     private static final String FIELDS = "fields";
