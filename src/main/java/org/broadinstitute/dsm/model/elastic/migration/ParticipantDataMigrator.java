@@ -6,8 +6,6 @@ import java.util.Map;
 
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
-import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
-import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 public class ParticipantDataMigrator extends BaseCollectionMigrator {

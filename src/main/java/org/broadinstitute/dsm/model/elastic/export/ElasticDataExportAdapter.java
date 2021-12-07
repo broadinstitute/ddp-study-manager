@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.elasticsearch.action.update.UpdateRequest;

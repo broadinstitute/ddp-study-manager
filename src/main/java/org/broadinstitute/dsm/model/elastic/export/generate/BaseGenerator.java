@@ -1,6 +1,5 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 

@@ -1,13 +1,12 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 abstract public class SourceGenerator extends BaseGenerator {
 
@@ -17,9 +16,7 @@ abstract public class SourceGenerator extends BaseGenerator {
         super(parser, generatorPayload);
     }
 
-    public SourceGenerator() {
-
-    }
+    public SourceGenerator() {}
 
     @Override
     public Map<String, Object> generate() {

@@ -4,12 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.List;
-import java.util.Map;
 
-import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import org.apache.commons.lang3.StringUtils;
 
 public abstract class BaseParser implements Parser {
@@ -67,7 +62,7 @@ public abstract class BaseParser implements Parser {
     }
 
     boolean isBoolean(String value) {
-        return value.equalsIgnoreCase("true") ||
-               value.equalsIgnoreCase("false");
+        return value.equalsIgnoreCase(Boolean.TRUE.toString()) ||
+               value.equalsIgnoreCase(Boolean.FALSE.toString());
     }
 }

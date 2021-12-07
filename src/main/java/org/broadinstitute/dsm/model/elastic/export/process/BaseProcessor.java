@@ -1,9 +1,9 @@
 package org.broadinstitute.dsm.model.elastic.export.process;
 
+import java.util.Objects;
+
 import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.export.generate.Collector;
-
-import java.util.Objects;
 
 public abstract class BaseProcessor implements Processor {
 

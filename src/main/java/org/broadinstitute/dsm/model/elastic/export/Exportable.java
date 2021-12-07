@@ -1,7 +1,5 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
-import java.util.Map;
-
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.util.ParticipantUtil;

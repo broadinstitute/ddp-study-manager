@@ -1,5 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class RequestPayload {
 
     private String index;
@@ -11,7 +13,7 @@ public class RequestPayload {
     }
 
     public RequestPayload(String index) {
-        this(index, "");
+        this(index, StringUtils.EMPTY);
     }
 
     public String getIndex() {

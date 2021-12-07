@@ -23,6 +23,7 @@ import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.broadinstitute.dsm.util.PatchUtil;
@@ -30,13 +31,13 @@ import org.broadinstitute.dsm.util.PatchUtil;
 public class Util {
 
     public static final Map<String, BaseGenerator.PropertyInfo> TABLE_ALIAS_MAPPINGS = Map.of(
-            "m", new BaseGenerator.PropertyInfo(MedicalRecord.class, true),
-            "t", new BaseGenerator.PropertyInfo(Tissue.class, true),
-            "oD", new BaseGenerator.PropertyInfo(OncHistoryDetail.class, true),
-            "d", new BaseGenerator.PropertyInfo(ParticipantData.class, true),
-            "r", new BaseGenerator.PropertyInfo(Participant.class, false),
-            "p", new BaseGenerator.PropertyInfo(Participant.class, false),
-            "o", new BaseGenerator.PropertyInfo(OncHistory.class, false)
+            DBConstants.DDP_MEDICAL_RECORD_ALIAS, new BaseGenerator.PropertyInfo(MedicalRecord.class, true),
+            DBConstants.DDP_TISSUE_ALIAS, new BaseGenerator.PropertyInfo(Tissue.class, true),
+            DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS, new BaseGenerator.PropertyInfo(OncHistoryDetail.class, true),
+            DBConstants.DDP_PARTICIPANT_DATA_ALIAS, new BaseGenerator.PropertyInfo(ParticipantData.class, true),
+            DBConstants.DDP_PARTICIPANT_RECORD_ALIAS, new BaseGenerator.PropertyInfo(Participant.class, false),
+            DBConstants.DDP_PARTICIPANT_ALIAS, new BaseGenerator.PropertyInfo(Participant.class, false),
+            DBConstants.DDP_ONC_HISTORY_ALIAS, new BaseGenerator.PropertyInfo(OncHistory.class, false)
     );
     public static final int FIRST_ELEMENT_INDEX = 0;
     public static final String UNDERSCORE_SEPARATOR = "_";

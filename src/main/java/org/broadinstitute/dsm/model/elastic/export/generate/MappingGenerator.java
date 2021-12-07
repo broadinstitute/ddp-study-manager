@@ -1,13 +1,13 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
-import org.broadinstitute.dsm.model.elastic.Util;
-import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+
+import org.broadinstitute.dsm.model.elastic.Util;
+import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 abstract public class MappingGenerator extends BaseGenerator {
 
@@ -45,7 +45,7 @@ abstract public class MappingGenerator extends BaseGenerator {
             Object eachType = parser.parse(String.valueOf(entry.getValue()));
             resultMap.put(Util.underscoresToCamelCase(entry.getKey()), eachType);
         }
-        Map<String, Object> returnMap = new HashMap<>(Map.of("dynamicFields", new HashMap<>(Map.of(PROPERTIES, resultMap))));
+        Map<String, Object> returnMap = new HashMap<>(Map.of(ESObjectConstants.DYNAMIC_FIELDS, new HashMap<>(Map.of(PROPERTIES, resultMap))));
         return returnMap;
     }
 }

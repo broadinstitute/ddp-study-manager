@@ -1,10 +1,13 @@
 package org.broadinstitute.dsm.model.elastic.migration;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 public abstract class BaseCollectionMigrator extends BaseMigrator {
 

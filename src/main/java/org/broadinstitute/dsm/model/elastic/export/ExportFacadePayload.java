@@ -3,7 +3,6 @@ package org.broadinstitute.dsm.model.elastic.export;
 import java.util.Objects;
 
 import org.broadinstitute.dsm.db.structure.DBElement;
-import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.broadinstitute.dsm.util.PatchUtil;
 

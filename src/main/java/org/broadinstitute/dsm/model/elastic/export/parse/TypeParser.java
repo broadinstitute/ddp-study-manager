@@ -1,9 +1,9 @@
 package org.broadinstitute.dsm.model.elastic.export.parse;
 
-import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
 
 public class TypeParser extends BaseParser {
 

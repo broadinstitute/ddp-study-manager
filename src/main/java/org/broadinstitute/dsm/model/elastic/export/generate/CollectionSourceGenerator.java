@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +27,7 @@ public class CollectionSourceGenerator extends SourceGenerator {
         logger.info("Constructing nested data");
         Map<String, Object> mapWithParsedObjects = new HashMap<>(Map.of(
                 getPrimaryKey(), generatorPayload.getRecordId(),
-                "dynamicFields", parseJsonValuesToObject())
+                ESObjectConstants.DYNAMIC_FIELDS, parseJsonValuesToObject())
         );
         return List.of(mapWithParsedObjects);
     }

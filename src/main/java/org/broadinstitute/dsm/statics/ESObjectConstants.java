@@ -70,9 +70,10 @@ public class ESObjectConstants {
     public static final String HAS_CONSENTED_TO_TISSUE_SAMPLE = "hasConsentedToTissueSample";
     public static final String DIAGNOSIS_YEAR = "diagnosisYear";
     public static final String ONC_HISTORY_DETAIL_RECORDS = "oncHistoryDetails";
-    public static final String ONC_HISTORY_DETAILS = "oncHistoryDetails";
+    public static final String ONC_HISTORY_DETAIL = "oncHistoryDetail";
     public static final String ONC_HISTORY = "oncHistory";
     public static final String PARTICIPANT_DATA = "participantData";
     public static final String PARTICIPANT_RECORD = "participantRecord";
     public static final String PARTICIPANT = "participant";
+    public static final String DYNAMIC_FIELDS = "dynamicFields";
 }

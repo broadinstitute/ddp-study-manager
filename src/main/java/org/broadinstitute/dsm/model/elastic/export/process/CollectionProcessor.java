@@ -13,7 +13,6 @@ import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.generate.Collector;
-import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

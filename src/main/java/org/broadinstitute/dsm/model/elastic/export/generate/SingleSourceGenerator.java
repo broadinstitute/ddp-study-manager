@@ -12,14 +12,7 @@ public class SingleSourceGenerator extends SourceGenerator {
 
     private static final Logger logger = LoggerFactory.getLogger(SingleSourceGenerator.class);
 
-    public SingleSourceGenerator(Parser parser,
-                                 GeneratorPayload generatorPayload) {
-        super(parser, generatorPayload);
-    }
-
-    public SingleSourceGenerator() {
-
-    }
+    public SingleSourceGenerator() {}
 
     @Override
     public Object construct() {

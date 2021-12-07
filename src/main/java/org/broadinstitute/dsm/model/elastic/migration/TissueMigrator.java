@@ -1,9 +1,9 @@
 package org.broadinstitute.dsm.model.elastic.migration;
 
+import java.util.Map;
+
 import org.broadinstitute.dsm.db.dao.ddp.tissue.TissueDao;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
-
-import java.util.Map;
 
 public class TissueMigrator extends BaseCollectionMigrator {
 

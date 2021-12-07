@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.indices.PutMappingRequest;

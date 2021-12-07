@@ -5,8 +5,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.google.gson.Gson;
-import org.broadinstitute.dsm.model.elastic.ESDsm;
-import org.broadinstitute.dsm.model.elastic.export.generate.Collector;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 public class MedicalRecordCollectionProcessor extends CollectionProcessor {
