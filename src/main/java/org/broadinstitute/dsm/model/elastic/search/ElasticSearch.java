@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -70,65 +71,74 @@ public class ElasticSearch implements ElasticSearchable {
 
     public static Optional<ElasticSearchParticipantDto> parseSourceMap(Map<String, Object> sourceMap) {
         if (sourceMap == null) return Optional.of(new ElasticSearchParticipantDto.Builder().build());
-        ElasticSearchParticipantDto elasticSearchParticipantDto = deserialize(sourceMap);
-        return Optional.of(elasticSearchParticipantDto);
+        return deserialize(sourceMap);
     }
 
-    private static ElasticSearchParticipantDto deserialize(Map<String, Object> sourceMap) {
-        ElasticSearchParticipantDto elasticSearchParticipantDto = null;
+    private static Optional<ElasticSearchParticipantDto> deserialize(Map<String, Object> sourceMap) {
+        Optional<ElasticSearchParticipantDto> elasticSearchParticipantDto = Optional.empty();
         Map<String, Object> dsmLevel = (Map<String, Object>) sourceMap.get(DSM);
-        ObjectMapper objectMapper = ObjectMapperSingleton.instance();
-        if (Objects.isNull(dsmLevel)) {
-            return elasticSearchParticipantDto;
-        }
 
-        Map<String, Object> clonedProperty = new HashMap<>();
+        if (Objects.isNull(dsmLevel)) return elasticSearchParticipantDto;
+
+        Map<String, Object> updatedPropertySourceMap = updatePropertySourceMapIfSpecialCases(dsmLevel);
+        if (!updatedPropertySourceMap.isEmpty()) dsmLevel.putAll(updatedPropertySourceMap);
+
+        return Optional.of(ObjectMapperSingleton.instance().convertValue(sourceMap, ElasticSearchParticipantDto.class));
+    }
+
+    private static Map<String, Object> updatePropertySourceMapIfSpecialCases(Map<String, Object> dsmLevel) {
+        Map<String, Object> updatedPropertySourceMap = new HashMap<>();
         for (Map.Entry<String, Object> entry: dsmLevel.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            try {
-                boolean hasDynamicFields = hasDynamicFields(key);
-                if (hasDynamicFields) {
-                    if (value instanceof List) {
-                        List<Map<String, Object>> objects = (List<Map<String, Object>>) value;
-                        List<Map<String, Object>> newObjects = new ArrayList<>();
-                        for (Map<String, Object> object : objects) {
-                            Map<String, Object> clonedMap = new HashMap<>(object);
-                            Object dynamicFields = clonedMap.get(ESObjectConstants.DYNAMIC_FIELDS);
-                            String followUps = (String)clonedMap.get(ESObjectConstants.FOLLOW_UPS);
-                            String dynamicFieldsValueAsJson = Objects.isNull(dynamicFields)
-                                    ? StringUtils.EMPTY
-                                    : objectMapper.writeValueAsString(dynamicFields);
-                            Object convertedFollowUps = Objects.isNull(followUps)
-                                    ? Collections.emptyList()
-                                    : objectMapper.readValue(followUps, new TypeReference<List<Map<String, Object>>>() {
-                            });
-                            clonedMap.put(ESObjectConstants.DYNAMIC_FIELDS, dynamicFieldsValueAsJson);
-                            clonedMap.put(ESObjectConstants.FOLLOW_UPS, convertedFollowUps);
-                            newObjects.add(clonedMap);
-                        }
-                        if (!newObjects.isEmpty())
-                            clonedProperty.put(key, newObjects);
-                    } else {
-                        Map<String, Object> object = (Map<String, Object>) value;
-                        Map<String, Object> clonedObject = new HashMap<>(object);
-                        Object dynamicFields = clonedObject.get(ESObjectConstants.DYNAMIC_FIELDS);
-                        String dynamicFieldsValueAsJson = Objects.isNull(dynamicFields)
-                                ? StringUtils.EMPTY
-                                : objectMapper.writeValueAsString(dynamicFields);
-                        clonedObject.put(ESObjectConstants.DYNAMIC_FIELDS, dynamicFieldsValueAsJson);
-                        clonedProperty.put(key, clonedObject);
-                    }
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            String outerProperty = entry.getKey();
+            Object outerPropertyValue = entry.getValue();
+            if (!hasDynamicFields(outerProperty)) continue;
+            if (outerPropertyValue instanceof List) {
+                List<Map<String, Object>> outerPropertyValues = (List<Map<String, Object>>) outerPropertyValue;
+                List<Map<String, Object>> updatedOuterPropertyValues = handleSpecialCases(outerPropertyValues);
+                if (!updatedOuterPropertyValues.isEmpty())
+                    updatedPropertySourceMap.put(outerProperty, updatedOuterPropertyValues);
+            } else {
+                Map<String, Object> singleOuterPropertyValue = (Map<String, Object>) outerPropertyValue;
+                Map<String, Object> updatedSingleOuterPropertyValue = new HashMap<>(singleOuterPropertyValue);
+                updatedSingleOuterPropertyValue.put(ESObjectConstants.DYNAMIC_FIELDS, getDynamicFieldsValueAsJson(updatedSingleOuterPropertyValue));
+                updatedPropertySourceMap.put(outerProperty, updatedSingleOuterPropertyValue);
             }
         }
-        if (!clonedProperty.isEmpty()) {
-            dsmLevel.putAll(clonedProperty);
+        return updatedPropertySourceMap;
+    }
+
+    private static List<Map<String, Object>> handleSpecialCases(List<Map<String, Object>> outerPropertyValues) {
+        List<Map<String, Object>> updatedOuterPropertyValues = new ArrayList<>();
+        for (Map<String, Object> object : outerPropertyValues) {
+            Map<String, Object> clonedMap = new HashMap<>(object);
+            clonedMap.put(ESObjectConstants.DYNAMIC_FIELDS, getDynamicFieldsValueAsJson(clonedMap));
+            clonedMap.put(ESObjectConstants.FOLLOW_UPS, convertFollowUpsJsonToList(clonedMap));
+            updatedOuterPropertyValues.add(clonedMap);
         }
-        elasticSearchParticipantDto = objectMapper.convertValue(sourceMap, ElasticSearchParticipantDto.class);
-        return elasticSearchParticipantDto;
+        return updatedOuterPropertyValues;
+    }
+
+    private static List<Map<String, Object>> convertFollowUpsJsonToList(Map<String, Object> clonedMap) {
+        String followUps = (String) clonedMap.get(ESObjectConstants.FOLLOW_UPS);
+        try {
+            return Objects.isNull(followUps)
+                    ? Collections.emptyList()
+                    : ObjectMapperSingleton.instance().readValue(followUps, new TypeReference<List<Map<String, Object>>>() {
+            });
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+        }
+    }
+
+    private static String getDynamicFieldsValueAsJson(Map<String, Object> clonedMap) {
+        Object dynamicFields = clonedMap.get(ESObjectConstants.DYNAMIC_FIELDS);
+        try {
+            return Objects.isNull(dynamicFields)
+                    ? StringUtils.EMPTY
+                    : ObjectMapperSingleton.instance().writeValueAsString(dynamicFields);
+        } catch (JsonProcessingException jpe) {
+            throw new RuntimeException(jpe);
+        }
     }
 
     private static boolean hasDynamicFields(String outerProperty) {
