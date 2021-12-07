@@ -14,7 +14,7 @@ public class TypeParser extends BaseParser {
     private static final String TEXT = "text";
     private static final String FIELDS = "fields";
     private static final String KEYWORD = "keyword";
-    private static final String TYPE = "type";
+    protected static final String TYPE = "type";
     public static final Map<String, Object> TEXT_KEYWORD_MAPPING = new HashMap<>(
             new HashMap<>(
                     Map.of(TYPE, TEXT,
