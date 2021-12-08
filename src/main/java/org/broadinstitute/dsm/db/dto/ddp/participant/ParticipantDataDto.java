@@ -1,11 +1,17 @@
 package org.broadinstitute.dsm.db.dto.ddp.participant;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -13,12 +19,14 @@ import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.ObjectMapperSingleton;
 
 @TableName(
         name = DBConstants.DDP_PARTICIPANT_DATA,
         alias = DBConstants.DDP_PARTICIPANT_DATA_ALIAS,
         primaryKey = DBConstants.PARTICIPANT_DATA_ID,
         columnPrefix = "")
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Setter
 public class ParticipantDataDto {
 
@@ -37,7 +45,19 @@ public class ParticipantDataDto {
     private String fieldTypeId;
 
     @ColumnName(ParticipantDataDao.DATA)
+    @JsonProperty("dynamicFields")
     private String data;
+
+    @JsonProperty("dynamicFields")
+    public Map<String, Object> getDynamicFields() {
+        try {
+            return ObjectMapperSingleton.instance().readValue(data, new TypeReference<Map<String, Object>>() {});
+        } catch (IOException e) {
+            return Map.of();
+        }
+    }
+
+    public ParticipantDataDto() {}
 
     private long lastChanged;
 
