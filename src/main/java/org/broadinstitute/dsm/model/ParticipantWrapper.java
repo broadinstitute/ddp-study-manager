@@ -7,6 +7,8 @@ import com.google.gson.JsonParser;
 import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetrics;
+import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetricsTracker;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.model.at.DefaultValues;
@@ -78,6 +80,7 @@ public class ParticipantWrapper {
     public static List<ParticipantWrapper> getFilteredList(@NonNull DDPInstance instance, Map<String, String> filters) {
         logger.info("Getting list of participant information");
         Instant start = Instant.now();
+        Long timer = System.currentTimeMillis();
 
         if (StringUtils.isBlank(instance.getParticipantIndexES())) {
             throw new RuntimeException("No participant index setup in ddp_instance table for " + instance.getName());
@@ -115,6 +118,9 @@ public class ParticipantWrapper {
             List<ParticipantWrapper> r =  addAllData(baseList, participantESData, participants, medicalRecords, oncHistoryDetails, kitRequests, abstractionActivities, abstractionSummary, proxyData, participantData);
             Duration elapsed = Duration.between(start, Instant.now());
             logger.info("Getting all participant information took {} secs ({})", elapsed.getSeconds(), elapsed.toString());
+            GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(instance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_PARTICIPANT_LIST,
+                    GoogleAnalyticsMetrics.EVENT_PARTICIPANT_LIST_LOAD_TIME, GoogleAnalyticsMetrics.EVENT_PARTICIPANT_LIST_LOAD_TIME,  GoogleAnalyticsMetrics.getTimeDifferenceToNow(timer));
+
             return r;
         }
         else {
@@ -256,6 +262,8 @@ public class ParticipantWrapper {
             List<ParticipantWrapper> r = addAllData(baseList, participantESData, participants, medicalRecords, oncHistories, kitRequests, abstractionActivities, abstractionSummary, proxyData, participantData);
             Duration elapsed = Duration.between(start, Instant.now());
             logger.info("Getting all participant information took {} secs ({})", elapsed.getSeconds(), elapsed.toString());
+            GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(instance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_TISSUE_LIST,
+                    GoogleAnalyticsMetrics.EVENT_TISSUE_LIST_LOAD_TIME, GoogleAnalyticsMetrics.EVENT_TISSUE_LIST_LOAD_TIME,  GoogleAnalyticsMetrics.getTimeDifferenceToNow(timer));
             return r;
         }
     }
