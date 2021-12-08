@@ -16,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SourceMapDeserializer implements Deserializer {
 
+    private String outerProperty;
+
     public Optional<ElasticSearchParticipantDto> deserialize(Map<String, Object> sourceMap) {
         Optional<ElasticSearchParticipantDto> elasticSearchParticipantDto = Optional.empty();
         Map<String, Object> dsmLevel = (Map<String, Object>) sourceMap.get(ESObjectConstants.DSM);
@@ -31,12 +33,12 @@ public class SourceMapDeserializer implements Deserializer {
     private Map<String, Object> updatePropertySourceMapIfSpecialCases(Map<String, Object> dsmLevel) {
         Map<String, Object> updatedPropertySourceMap = new HashMap<String, Object>();
         for (Map.Entry<String, Object> entry : dsmLevel.entrySet()) {
-            String outerProperty = entry.getKey();
+            outerProperty = entry.getKey();
             Object outerPropertyValue = entry.getValue();
             if (!hasDynamicFields(outerProperty)) continue;
             if (outerPropertyValue instanceof List) {
                 List<Map<String, Object>> outerPropertyValues = (List<Map<String, Object>>) outerPropertyValue;
-                List<Map<String, Object>> updatedOuterPropertyValues = handleSpecialCases(outerPropertyValues);
+                List<Map<String, Object>> updatedOuterPropertyValues = handleSpecialCases(outerPropertyValues);;
                 if (!updatedOuterPropertyValues.isEmpty())
                     updatedPropertySourceMap.put(outerProperty, updatedOuterPropertyValues);
             } else {
@@ -60,7 +62,7 @@ public class SourceMapDeserializer implements Deserializer {
         return updatedOuterPropertyValues;
     }
 
-    private List<Map<String, Object>> convertFollowUpsJsonToList(Map<String, Object> clonedMap) {
+    List<Map<String, Object>> convertFollowUpsJsonToList(Map<String, Object> clonedMap) {
         String followUps = (String) clonedMap.get(ESObjectConstants.FOLLOW_UPS);
         try {
             return Objects.isNull(followUps)
@@ -74,11 +76,13 @@ public class SourceMapDeserializer implements Deserializer {
 
     private String getDynamicFieldsValueAsJson(Map<String, Object> clonedMap) {
         Map<String, Object> dynamicFields = new ConcurrentHashMap<>((Map<String, Object>) clonedMap.get(ESObjectConstants.DYNAMIC_FIELDS));
-        for (Map.Entry<String, Object> key: dynamicFields.entrySet()) {
-
+        if (ESObjectConstants.PARTICIPANT_DATA.equals(outerProperty)) {
+            for (Map.Entry<String, Object> entry: dynamicFields.entrySet()) {
+                dynamicFields.put(Util.camelCaseToPascalSnakeCase(entry.getKey()), entry.getValue());
+            }
         }
         try {
-            return Objects.isNull(dynamicFields)
+            return dynamicFields.isEmpty()
                     ? StringUtils.EMPTY
                     : ObjectMapperSingleton.instance().writeValueAsString(dynamicFields);
         } catch (JsonProcessingException jpe) {

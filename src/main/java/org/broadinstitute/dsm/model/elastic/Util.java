@@ -43,6 +43,7 @@ public class Util {
     public static final String UNDERSCORE_SEPARATOR = "_";
     public static final String DOC = "_doc";
     private static final Pattern CAMEL_CASE_REGEX = Pattern.compile("(([a-z])+([A-z]))*");
+    private static final Pattern UPPER_CASE_REGEX = Pattern.compile("(?=\\p{Upper})");
     public static final Gson GSON = new Gson();
 
     public static String getQueryTypeFromId(String id) {
@@ -189,14 +190,20 @@ public class Util {
         String typeAsString = genericType.toString();
         String[] types = typeAsString.contains("<") ? typeAsString.split("<") : typeAsString.split("\\[L");
         if (types.length < 2) {
-//            class NullClass {}
-//            return NullClass.class;
             return (Class) genericType;
         }
         String parameterizedType = types[1];
         parameterizedType = parameterizedType.replace(">", "");
         parameterizedType = parameterizedType.replace(";", "");
         return Class.forName(parameterizedType);
+    }
+
+    public static String camelCaseToPascalSnakeCase(String camelCase) {
+        String[] words = camelCase.split(UPPER_CASE_REGEX.toString());
+        String pascalSnakeCase = Arrays.stream(words)
+                .map(String::toUpperCase)
+                .collect(Collectors.joining(UNDERSCORE_SEPARATOR));
+        return pascalSnakeCase;
     }
 
     public static class Constants {

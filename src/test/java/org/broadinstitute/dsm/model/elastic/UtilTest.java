@@ -113,13 +113,9 @@ public class UtilTest {
     }
 
     @Test
-    public void go() {
-
-            String s = "{followUps: \"[{\"fReceived\":\"2021-11-18\",\"fRequest1\":\"2021-11-18\"},{\"fReceived\":\"2021-11-18\",\"fRequest1\":\"2021-11-18\"}]\"}";
-
-        MedicalRecord medicalRecord = GSON.fromJson(s, MedicalRecord.class);
-
-        System.out.println();
-
+    public void camelCaseToPascalSnakeCase() {
+        String camelCase = "registrationType";
+        String pascalSnakeCase = Util.camelCaseToPascalSnakeCase(camelCase);
+        assertEquals("REGISTRATION_TYPE", pascalSnakeCase);
     }
 }
