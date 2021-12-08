@@ -203,20 +203,30 @@ public class KitUploadRoute extends RequestHandler {
                            List<KitRequest> duplicateKitList, ArrayList<KitRequest> orderKits, List<KitRequest> specialKitList, Value behavior, String uploadReason, String carrier, Connection conn) {
 
         for (KitRequest kit : kitUploadObjects) {
-            String externalOrderNumber = DDPKitRequest.generateExternalOrderNumber();
+            String externalOrderNumber = null;
+            if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
+                //only generate an external order number if it actually needed!
+                externalOrderNumber = DDPKitRequest.generateExternalOrderNumber();
+            }
             if (invalidAddressList.get(kit.getShortId()) == null) { //kit is not in the noValid list, so enter into db
                 String errorMessage = "";
                 String participantGuid = "";
                 String participantLegacyAltPid = "";
                 String collaboratorParticipantId = "";
                 if (StringUtils.isBlank(kit.getParticipantId())) {
-//                    Non RGP
-                    participantGuid = ParticipantWrapper.getParticipantGuid(ParticipantWrapper.getParticipantFromESByHruid(ddpInstance, kit.getShortId()));
-                    participantLegacyAltPid = ParticipantWrapper.getParticipantLegacyAltPid(ParticipantWrapper.getParticipantFromESByLegacyShortId(ddpInstance, kit.getShortId()));
-                    kit.setParticipantId(!participantGuid.isEmpty() ? participantGuid : participantLegacyAltPid);
-                    collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(ddpInstance.getBaseUrl(), ddpInstance.getDdpInstanceId(), ddpInstance.isMigratedDDP(),
-                            ddpInstance.getCollaboratorIdPrefix(), kit.getParticipantId(), kit.getShortId(),
-                            kitRequestSettings.getCollaboratorParticipantLengthOverwrite());
+                    if (StringUtils.isNotBlank(ddpInstance.getParticipantIndexES())) {
+                        participantGuid = ParticipantWrapper.getParticipantGuid(ParticipantWrapper.getParticipantFromESByHruid(ddpInstance, kit.getShortId()));
+                        participantLegacyAltPid = ParticipantWrapper.getParticipantLegacyAltPid(ParticipantWrapper.getParticipantFromESByLegacyShortId(ddpInstance, kit.getShortId()));
+                        kit.setParticipantId(!participantGuid.isEmpty() ? participantGuid : participantLegacyAltPid);
+                        collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(ddpInstance.getBaseUrl(), ddpInstance.getDdpInstanceId(), ddpInstance.isMigratedDDP(),
+                                ddpInstance.getCollaboratorIdPrefix(), kit.getParticipantId(), kit.getShortId(),
+                                kitRequestSettings.getCollaboratorParticipantLengthOverwrite());
+                    }
+                    else {
+                        //for ddps without ES (darwin's ark)
+                        participantGuid = kit.getShortId();
+                        kit.setParticipantId(kit.getShortId());
+                    }
                 }
                 else {
                     //if kit has ddpParticipantId use that (RGP!)
@@ -259,7 +269,7 @@ public class KitUploadRoute extends RequestHandler {
                     }
                 }
                 else {
-                    //all cmi ddps are currently using this!
+                    //all ddps are currently using this!
                     handleNormalKit(conn, ddpInstance, kitType, kit, kitRequestSettings, easyPostUtil, userIdRequest, kitTypeName,
                             collaboratorParticipantId, errorMessage, uploadAnyway, duplicateKitList, orderKits, specialKitList, behavior, externalOrderNumber, uploadReason, carrier);
                 }
