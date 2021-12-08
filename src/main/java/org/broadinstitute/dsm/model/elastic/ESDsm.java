@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.gson.annotations.SerializedName;
 import lombok.Getter;
 import org.broadinstitute.dsm.db.*;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 @Getter
@@ -44,7 +45,7 @@ public class ESDsm {
     List<OncHistoryDetail> oncHistoryDetail;
 
     @SerializedName(ESObjectConstants.PARTICIPANT_DATA)
-    List<ParticipantData> participantData;
+    List<ParticipantDataDto> participantData;
 
     @SerializedName(ESObjectConstants.PARTICIPANT)
     Participant participant;
