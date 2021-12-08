@@ -1330,18 +1330,19 @@ public class KitRequestShipping extends KitRequest {
             SimpleResult dbVals = new SimpleResult();
             String search = "";
             if (SEARCH_TRACKING_NUMBER.equals(field)) {
-                search = " and tracking_id like \"%" + value + "%\"";
+                search = " and tracking_id like ?";
             }
             else if (SEARCH_MF_BAR.equals(field)) {
-                search = " and kit_label like \"%" + value + "%\"";
+                search = " and kit_label like ?";
             }
             else if (SHORT_ID.equals(field)) {
-                search = " and bsp_collaborator_participant_id like \"%" + value + "%\"";
+                search = " and bsp_collaborator_participant_id like ?";
             }
             else {
                 throw new RuntimeException("Search field not known: " + field);
             }
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KIT_REQUEST.concat(search))) {
+                stmt.setString(1, "%" + value + "%");
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         String realm = rs.getString(DBConstants.INSTANCE_NAME);
