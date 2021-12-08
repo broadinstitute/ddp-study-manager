@@ -12,6 +12,7 @@ import org.broadinstitute.dsm.util.ObjectMapperSingleton;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SourceMapDeserializer implements Deserializer {
 
@@ -40,7 +41,7 @@ public class SourceMapDeserializer implements Deserializer {
                     updatedPropertySourceMap.put(outerProperty, updatedOuterPropertyValues);
             } else {
                 Map<String, Object> singleOuterPropertyValue = (Map<String, Object>) outerPropertyValue;
-                Map<String, Object> updatedSingleOuterPropertyValue = new HashMap<String, Object>(singleOuterPropertyValue);
+                Map<String, Object> updatedSingleOuterPropertyValue = new HashMap<>(singleOuterPropertyValue);
                 updatedSingleOuterPropertyValue.put(ESObjectConstants.DYNAMIC_FIELDS, getDynamicFieldsValueAsJson(updatedSingleOuterPropertyValue));
                 updatedPropertySourceMap.put(outerProperty, updatedSingleOuterPropertyValue);
             }
@@ -49,9 +50,9 @@ public class SourceMapDeserializer implements Deserializer {
     }
 
     private List<Map<String, Object>> handleSpecialCases(List<Map<String, Object>> outerPropertyValues) {
-        List<Map<String, Object>> updatedOuterPropertyValues = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> updatedOuterPropertyValues = new ArrayList<>();
         for (Map<String, Object> object : outerPropertyValues) {
-            Map<String, Object> clonedMap = new HashMap<String, Object>(object);
+            Map<String, Object> clonedMap = new HashMap<>(object);
             clonedMap.put(ESObjectConstants.DYNAMIC_FIELDS, getDynamicFieldsValueAsJson(clonedMap));
             clonedMap.put(ESObjectConstants.FOLLOW_UPS, convertFollowUpsJsonToList(clonedMap));
             updatedOuterPropertyValues.add(clonedMap);
@@ -72,7 +73,10 @@ public class SourceMapDeserializer implements Deserializer {
     }
 
     private String getDynamicFieldsValueAsJson(Map<String, Object> clonedMap) {
-        Object dynamicFields = clonedMap.get(ESObjectConstants.DYNAMIC_FIELDS);
+        Map<String, Object> dynamicFields = new ConcurrentHashMap<>((Map<String, Object>) clonedMap.get(ESObjectConstants.DYNAMIC_FIELDS));
+        for (Map.Entry<String, Object> key: dynamicFields.entrySet()) {
+
+        }
         try {
             return Objects.isNull(dynamicFields)
                     ? StringUtils.EMPTY

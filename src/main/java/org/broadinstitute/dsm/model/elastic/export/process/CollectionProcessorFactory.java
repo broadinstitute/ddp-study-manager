@@ -9,7 +9,7 @@ public class CollectionProcessorFactory implements ProcessorFactory {
     public BaseProcessor make(BaseGenerator.PropertyInfo propertyInfo) {
         BaseProcessor processor = new CollectionProcessor();
         if (propertyInfo.isCollection()) {
-            if (ESObjectConstants.MEDICAL_RECORDS.equals(propertyInfo.getPropertyName())) {
+            if (ESObjectConstants.MEDICAL_RECORD.equals(propertyInfo.getPropertyName())) {
                 processor = new MedicalRecordCollectionProcessor();
             }
         }
