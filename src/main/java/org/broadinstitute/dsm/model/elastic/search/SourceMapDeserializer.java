@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SourceMapDeserializer implements Deserializer {
 
-    private String outerProperty;
+    String outerProperty;
 
     public Optional<ElasticSearchParticipantDto> deserialize(Map<String, Object> sourceMap) {
         Optional<ElasticSearchParticipantDto> elasticSearchParticipantDto = Optional.empty();
@@ -62,7 +62,7 @@ public class SourceMapDeserializer implements Deserializer {
         return updatedOuterPropertyValues;
     }
 
-    List<Map<String, Object>> convertFollowUpsJsonToList(Map<String, Object> clonedMap) {
+    private List<Map<String, Object>> convertFollowUpsJsonToList(Map<String, Object> clonedMap) {
         String followUps = (String) clonedMap.get(ESObjectConstants.FOLLOW_UPS);
         try {
             return Objects.isNull(followUps)
@@ -74,7 +74,7 @@ public class SourceMapDeserializer implements Deserializer {
         }
     }
 
-    private String getDynamicFieldsValueAsJson(Map<String, Object> clonedMap) {
+    String getDynamicFieldsValueAsJson(Map<String, Object> clonedMap) {
         Map<String, Object> dynamicFields = new ConcurrentHashMap<>((Map<String, Object>) clonedMap.get(ESObjectConstants.DYNAMIC_FIELDS));
         if (ESObjectConstants.PARTICIPANT_DATA.equals(outerProperty)) {
             for (Map.Entry<String, Object> entry: dynamicFields.entrySet()) {
