@@ -17,6 +17,7 @@ import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
 import org.broadinstitute.dsm.model.elastic.export.process.BaseProcessor;
 import org.broadinstitute.dsm.model.elastic.export.process.CollectionProcessorFactory;
+import org.broadinstitute.dsm.model.elastic.export.process.SingleProcessor;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
@@ -90,6 +91,12 @@ public class ExportFacade {
                         new HashMap<>(Map.of(propertyInfo.getPropertyName(),
                         processedData))));
             }
+        } else {
+            processor = new SingleProcessor();
+            processor.setEsDsm(esDsm);
+            processor.setPropertyName(propertyInfo.getPropertyName());
+            processor.setRecordId(exportFacadePayload.getRecordId());
+            processor.setCollector(generator);
         }
         logger.info("Returning processed ES participant data");
         return dataToReturn;

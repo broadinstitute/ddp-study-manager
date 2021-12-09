@@ -19,10 +19,9 @@ public class SourceMapDeserializer implements Deserializer {
     String outerProperty;
 
     public Optional<ElasticSearchParticipantDto> deserialize(Map<String, Object> sourceMap) {
-        Optional<ElasticSearchParticipantDto> elasticSearchParticipantDto = Optional.empty();
         Map<String, Object> dsmLevel = (Map<String, Object>) sourceMap.get(ESObjectConstants.DSM);
 
-        if (Objects.isNull(dsmLevel)) return elasticSearchParticipantDto;
+        if (Objects.isNull(dsmLevel)) return Optional.of(ObjectMapperSingleton.instance().convertValue(sourceMap, ElasticSearchParticipantDto.class));
 
         Map<String, Object> updatedPropertySourceMap = updatePropertySourceMapIfSpecialCases(dsmLevel);
         if (!updatedPropertySourceMap.isEmpty()) dsmLevel.putAll(updatedPropertySourceMap);
@@ -44,7 +43,9 @@ public class SourceMapDeserializer implements Deserializer {
             } else {
                 Map<String, Object> singleOuterPropertyValue = (Map<String, Object>) outerPropertyValue;
                 Map<String, Object> updatedSingleOuterPropertyValue = new HashMap<>(singleOuterPropertyValue);
-                updatedSingleOuterPropertyValue.put(ESObjectConstants.DYNAMIC_FIELDS, getDynamicFieldsValueAsJson(updatedSingleOuterPropertyValue));
+                if (singleOuterPropertyValue.containsKey(ESObjectConstants.DYNAMIC_FIELDS))
+                    updatedSingleOuterPropertyValue.put(ESObjectConstants.DYNAMIC_FIELDS, getDynamicFieldsValueAsJson(updatedSingleOuterPropertyValue));
+
                 updatedPropertySourceMap.put(outerProperty, updatedSingleOuterPropertyValue);
             }
         }
@@ -79,7 +80,7 @@ public class SourceMapDeserializer implements Deserializer {
     }
 
     String getDynamicFieldsValueAsJson(Map<String, Object> clonedMap) {
-        Map<String, Object> dynamicFields = clonedMap.get(ESObjectConstants.DYNAMIC_FIELDS) == null ? Map.of() : (Map<String, Object>) clonedMap.get(ESObjectConstants.DYNAMIC_FIELDS);
+        Map<String, Object> dynamicFields = (Map<String, Object>) clonedMap.get(ESObjectConstants.DYNAMIC_FIELDS);
         if (ESObjectConstants.PARTICIPANT_DATA.equals(outerProperty)) {
             Map<String, Object> updatedParticipantDataDynamicFields = new HashMap<>();
             for (Map.Entry<String, Object> entry: dynamicFields.entrySet()) {
