@@ -148,7 +148,11 @@ public class Util {
     }
 
     public static List<Map<String, Object>> convertObjectListToMapList(Object fieldValue) {
-        return new ObjectMapper().convertValue(fieldValue, new TypeReference<List<Map<String, Object>>>() {});
+        return ObjectMapperSingleton.instance().convertValue(fieldValue, new TypeReference<List<Map<String, Object>>>() {});
+    }
+
+    public static Map<String, Object> convertObjectToMap(Object fieldValue) {
+        return ObjectMapperSingleton.instance().convertValue(fieldValue, new TypeReference<Map<String, Object>>() {});
     }
 
     private static Map<String, Object> dynamicFieldsSpecialCase(Object fieldValue) {

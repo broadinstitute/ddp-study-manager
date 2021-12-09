@@ -1,6 +1,8 @@
 package org.broadinstitute.dsm.model.elastic.export.process;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -71,7 +73,18 @@ public abstract class BaseProcessor implements Processor {
         }
     }
 
-    protected abstract Object extractDataByReflection();
+    protected Object extractDataByReflection() {
+        logger.info("Extracting data by field from fetched ES data");
+        try {
+            Field declaredField = esDsm.getClass().getDeclaredField(propertyName);
+            declaredField.setAccessible(true);
+            return getValueByField(declaredField);
+        } catch (NoSuchFieldException e) {
+            return this instanceof CollectionProcessor
+                    ? new ArrayList<>()
+                    : Map.of();
+        }
+    };
 
     protected Object getValueByField(Field field) {
         try {
@@ -86,6 +99,8 @@ public abstract class BaseProcessor implements Processor {
     protected abstract Object convertObjectToCollection(Object object);
 
     protected abstract String findPrimaryKeyOfObject(Object object);
+
+    protected abstract Object updateIfExistsOrPut(Object value);
 
     protected abstract Optional<Map<String, Object>> collectEndResult();
 }

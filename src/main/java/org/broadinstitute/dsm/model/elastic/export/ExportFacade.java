@@ -85,7 +85,7 @@ public class ExportFacade {
             processor.setPropertyName(propertyInfo.getPropertyName());
             processor.setRecordId(exportFacadePayload.getRecordId());
             processor.setCollector(generator);
-            List<Map<String, Object>> processedData = processor.process();
+            List<Map<String, Object>> processedData = (List<Map<String, Object>>) processor.process();
             if (!processedData.isEmpty()) {
                 dataToReturn = new HashMap<>(Map.of(MappingGenerator.DSM_OBJECT,
                         new HashMap<>(Map.of(propertyInfo.getPropertyName(),

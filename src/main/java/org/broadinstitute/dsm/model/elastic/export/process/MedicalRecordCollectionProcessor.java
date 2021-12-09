@@ -14,7 +14,8 @@ public class MedicalRecordCollectionProcessor extends CollectionProcessor {
     }
 
     @Override
-    protected List<Map<String, Object>> updateIfExistsOrPut(List<Map<String, Object>> fetchedRecords) {
+    protected List<Map<String, Object>> updateIfExistsOrPut(Object value) {
+        List<Map<String, Object>> fetchedRecords = (List<Map<String, Object>>) value;
         for (Map<String, Object> medicalRecord: fetchedRecords) {
             Object followUps = medicalRecord.get(ESObjectConstants.FOLLOW_UPS);
             if (!Objects.isNull(followUps)) {

@@ -1,7 +1,5 @@
 package org.broadinstitute.dsm.model.elastic.export.process;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -23,22 +21,10 @@ public class CollectionProcessor extends BaseProcessor {
 
     @Override
     public List<Map<String, Object>> process() {
-        List<Map<String, Object>> fetchedRecords = extractDataByReflection();
+        List<Map<String, Object>> fetchedRecords = (List<Map<String, Object>>) extractDataByReflection();
         return updateIfExistsOrPut(fetchedRecords);
     }
 
-    @Override
-    protected List<Map<String, Object>> extractDataByReflection() {
-        logger.info("Extracting data by field from fetched ES data");
-        try {
-            Field declaredField = esDsm.getClass().getDeclaredField(propertyName);
-            declaredField.setAccessible(true);
-            return (List<Map<String, Object>>) getValueByField(declaredField);
-
-        } catch (NoSuchFieldException e) {
-            return new ArrayList<>();
-        }
-    }
 
     @Override
     protected Object convertObjectToCollection(Object object) {
@@ -55,7 +41,9 @@ public class CollectionProcessor extends BaseProcessor {
                 .orElse("");
     }
 
-    protected List<Map<String, Object>> updateIfExistsOrPut(List<Map<String, Object>> fetchedRecords) {
+    @Override
+    protected List<Map<String, Object>> updateIfExistsOrPut(Object value) {
+        List<Map<String, Object>> fetchedRecords = (List<Map<String, Object>>) value;
         fetchedRecords.stream()
                 .filter(this::isExistingRecord)
                 .findFirst()
