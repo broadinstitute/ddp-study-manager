@@ -55,8 +55,12 @@ public class SourceMapDeserializer implements Deserializer {
         List<Map<String, Object>> updatedOuterPropertyValues = new ArrayList<>();
         for (Map<String, Object> object : outerPropertyValues) {
             Map<String, Object> clonedMap = new HashMap<>(object);
-            clonedMap.put(ESObjectConstants.DYNAMIC_FIELDS, getDynamicFieldsValueAsJson(clonedMap));
-            clonedMap.put(ESObjectConstants.FOLLOW_UPS, convertFollowUpsJsonToList(clonedMap));
+            if (object.containsKey(ESObjectConstants.DYNAMIC_FIELDS)) {
+                clonedMap.put(ESObjectConstants.DYNAMIC_FIELDS, getDynamicFieldsValueAsJson(clonedMap));
+            }
+            if (object.containsKey(ESObjectConstants.FOLLOW_UPS)) {
+                clonedMap.put(ESObjectConstants.FOLLOW_UPS, convertFollowUpsJsonToList(clonedMap));
+            }
             updatedOuterPropertyValues.add(clonedMap);
         }
         return updatedOuterPropertyValues;
