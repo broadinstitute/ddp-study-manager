@@ -5,11 +5,13 @@ import java.util.List;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Getter;
+import lombok.Setter;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 @Getter
+@Setter
 public class ESDsm {
 
     @SerializedName(ESObjectConstants.DATE_OF_MAJORITY)

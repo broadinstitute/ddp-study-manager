@@ -38,7 +38,7 @@ public class CollectionProcessorTest {
         Processor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, generatorPayload, instance(generatorPayload,
                 nameValue));
 
-        List<Map<String, Object>> updatedList = collectionProcessor.process();
+        List<Map<String, Object>> updatedList = (List<Map<String, Object>>) collectionProcessor.process();
 
         Map<String, Object> updatedObject = updatedList.get(0);
         Map<String, Object> oldObject = ((Map) ((List) objectMapper.readValue(json, Map.class).get(propertyName)).get(0));
