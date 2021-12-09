@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elastic;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.gson.annotations.SerializedName;
@@ -36,7 +37,7 @@ public class ESDsm {
     Object diagnosisYear;
 
     @SerializedName(ESObjectConstants.TISSUE_RECORDS)
-    List<Tissue> tissue; // todo: change to Tissue
+    List<Tissue> tissue;
 
     @SerializedName(ESObjectConstants.MEDICAL_RECORDS)
     List<MedicalRecord> medicalRecord;
@@ -54,4 +55,28 @@ public class ESDsm {
 
     OncHistory oncHistory;
 
+    public List<Tissue> getTissue() {
+        if (tissue == null) tissue = Collections.emptyList();
+        return tissue;
+    }
+
+    public List<MedicalRecord> getMedicalRecord() {
+        if (medicalRecord == null) medicalRecord = Collections.emptyList();
+        return medicalRecord;
+    }
+
+    public List<OncHistoryDetail> getOncHistoryDetail() {
+        if (oncHistoryDetail == null) oncHistoryDetail = Collections.emptyList();
+        return oncHistoryDetail;
+    }
+
+    public List<ParticipantDataDto> getParticipantData() {
+        if (participantData == null) participantData = Collections.emptyList();
+        return participantData;
+    }
+
+    public List<KitRequestShipping> getKitRequestShipping() {
+        if (kitRequestShipping == null) kitRequestShipping = Collections.emptyList();
+        return kitRequestShipping;
+    }
 }

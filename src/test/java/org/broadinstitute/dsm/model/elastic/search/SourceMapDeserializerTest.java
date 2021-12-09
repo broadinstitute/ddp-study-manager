@@ -18,13 +18,18 @@ public class SourceMapDeserializerTest {
                 "registrationType", "Self",
                 "registrationStatus", "Registered"
         );
-        Map<String, Object> outerProperties = Map.of(ESObjectConstants.DYNAMIC_FIELDS, dynamicFields);
+
+        Map<String, Object> outerProperties = Map.of(
+                "ddpInstanceId", 12,
+                ESObjectConstants.DYNAMIC_FIELDS, dynamicFields
+        );
         SourceMapDeserializer sourceMapDeserializer = new SourceMapDeserializer();
         sourceMapDeserializer.outerProperty = ESObjectConstants.PARTICIPANT_DATA;
         try {
             Map<String, Object> dynamicFieldsValueAsJson = ObjectMapperSingleton.instance().readValue(sourceMapDeserializer.getDynamicFieldsValueAsJson(outerProperties), Map.class);
             Assert.assertEquals(dynamicFieldsValueAsJson.get("REGISTRATION_TYPE"), "Self");
             Assert.assertEquals(dynamicFieldsValueAsJson.get("REGISTRATION_STATUS"), "Registered");
+            Assert.assertEquals(12, outerProperties.get("ddpInstanceId"));
         } catch (IOException e) {
             Assert.fail();
         }

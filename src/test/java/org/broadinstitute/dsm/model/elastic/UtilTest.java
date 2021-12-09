@@ -115,7 +115,10 @@ public class UtilTest {
     @Test
     public void camelCaseToPascalSnakeCase() {
         String camelCase = "registrationType";
+        String camelCase2 = "test";
         String pascalSnakeCase = Util.camelCaseToPascalSnakeCase(camelCase);
+        String pascalSnakeCase2 = Util.camelCaseToPascalSnakeCase(camelCase2);
         assertEquals("REGISTRATION_TYPE", pascalSnakeCase);
+        assertEquals("TEST", pascalSnakeCase2);
     }
 }
