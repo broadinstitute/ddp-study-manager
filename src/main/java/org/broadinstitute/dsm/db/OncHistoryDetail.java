@@ -313,7 +313,6 @@ public class OncHistoryDetail {
                 try (ResultSet rs = stmt.executeQuery()) {
                     Map<String, OncHistoryDetail> oncHistoryMap = new HashMap<>();
                     while (rs.next()) {
-                        String ddpParticipantId = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
                         String oncHistoryDetailId = rs.getString(DBConstants.ONC_HISTORY_DETAIL_ID);
                         TissueSmId tissueSmId = Tissue.getSMIds(rs);
                         Tissue tissue;
@@ -328,29 +327,28 @@ public class OncHistoryDetail {
                         }
                         tissues.put(tissue.getTissueId(), tissue);
 
-                        //check if oncHistoryDetails is already in map
-                        List<OncHistoryDetail> oncHistoryDataList = new ArrayList<>();
-                        if (oncHistory.containsKey(ddpParticipantId)) {
-                            oncHistoryDataList = oncHistory.get(ddpParticipantId);
-                        }
-                        else {
-                            oncHistory.put(ddpParticipantId, oncHistoryDataList);
-                            oncHistoryMap = new HashMap<>();
+                        if (!oncHistoryMap.containsKey(oncHistoryDetailId)) {
+                            OncHistoryDetail oncHistoryDetail = getOncHistoryDetail(rs);
+                            oncHistoryMap.put(oncHistoryDetailId, oncHistoryDetail);
                         }
 
-                        OncHistoryDetail oncHistoryDetail = null;
-                        if (oncHistoryMap.containsKey(oncHistoryDetailId)) {
-                            oncHistoryDetail = oncHistoryMap.get(oncHistoryDetailId);
-                            oncHistoryDetail.getTissues().removeIf(tissue1 -> tissue1.getTissueId() == tissue.getTissueId());
-                            oncHistoryDetail.addTissue(tissue);
-                        }
-                        else {
-                            oncHistoryDetail = getOncHistoryDetail(rs);
-                            oncHistoryDetail.addTissue(tissue);
-                            oncHistoryDataList.add(oncHistoryDetail);
-                        }
-                        oncHistoryMap.put(oncHistoryDetailId, oncHistoryDetail);
                     }
+                    //add tissues to their onc history
+                    for (Tissue tissue : tissues.values()) {
+                        String tissueOncHistoryDetailId = tissue.getOncHistoryDetailId();
+                        OncHistoryDetail oncHistoryDetail = oncHistoryMap.get(tissueOncHistoryDetailId);
+                        oncHistoryDetail.getTissues().add(tissue);
+                    }//  add onchistories to their particiapnt
+                    for (OncHistoryDetail oncHistoryDetail : oncHistoryMap.values()) {
+                        //check if oncHistoryDetails is already in map
+                        String ddpParticipantId = oncHistoryDetail.getParticipantId();
+                        List<OncHistoryDetail> oncHistoryDataList = oncHistory.getOrDefault(ddpParticipantId, new ArrayList<>());
+                        oncHistoryDataList.add(oncHistoryDetail);
+                        oncHistory.put(ddpParticipantId, oncHistoryDataList);
+                    }
+
+                } catch (Exception  e){
+                    dbVals.resultException = e;
                 }
             }
             catch (SQLException ex) {
@@ -381,9 +379,7 @@ public class OncHistoryDetail {
                 try (ResultSet rs = stmt.executeQuery()) {
                     Map<String, OncHistoryDetail> oncHistoryMap = new HashMap<>();
                     while (rs.next()) {
-                        String ddpParticipantId = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
                         String oncHistoryDetailId = rs.getString(DBConstants.ONC_HISTORY_DETAIL_ID);
-
                         TissueSmId tissueSmId = Tissue.getSMIds(rs);
                         Tissue tissue;
                         if (tissueSmId != null && tissues.containsKey(tissueSmId.getTissueId())) {
@@ -397,29 +393,28 @@ public class OncHistoryDetail {
                         }
                         tissues.put(tissue.getTissueId(), tissue);
 
-                        //check if oncHistoryDetails is already in map
-                        List<OncHistoryDetail> oncHistoryDataList = new ArrayList<>();
-                        if (oncHistory.containsKey(ddpParticipantId)) {
-                            oncHistoryDataList = oncHistory.get(ddpParticipantId);
-                        }
-                        else {
-                            oncHistory.put(ddpParticipantId, oncHistoryDataList);
-                            oncHistoryMap = new HashMap<>();
+                        if (!oncHistoryMap.containsKey(oncHistoryDetailId)) {
+                            OncHistoryDetail oncHistoryDetail = getOncHistoryDetail(rs);
+                            oncHistoryMap.put(oncHistoryDetailId, oncHistoryDetail);
                         }
 
-                        OncHistoryDetail oncHistoryDetail = null;
-                        if (oncHistoryMap.containsKey(oncHistoryDetailId)) {
-                            oncHistoryDetail = oncHistoryMap.get(oncHistoryDetailId);
-                            oncHistoryDetail.getTissues().removeIf(tissue1 -> tissue.getTissueId() == tissue1.getTissueId());
-                            oncHistoryDetail.addTissue(tissue);
-                        }
-                        else {
-                            oncHistoryDetail = getOncHistoryDetail(rs);
-                            oncHistoryDetail.addTissue(tissue);
-                            oncHistoryDataList.add(oncHistoryDetail);
-                        }
-                        oncHistoryMap.put(oncHistoryDetailId, oncHistoryDetail);
                     }
+                    //add tissues to their onc history
+                    for (Tissue tissue : tissues.values()) {
+                        String tissueOncHistoryDetailId = tissue.getOncHistoryDetailId();
+                        OncHistoryDetail oncHistoryDetail = oncHistoryMap.get(tissueOncHistoryDetailId);
+                        oncHistoryDetail.getTissues().add(tissue);
+                    }//  add onchistories to their particiapnt
+                    for (OncHistoryDetail oncHistoryDetail : oncHistoryMap.values()) {
+                        //check if oncHistoryDetails is already in map
+                        String ddpParticipantId = oncHistoryDetail.getParticipantId();
+                        List<OncHistoryDetail> oncHistoryDataList = oncHistory.getOrDefault(ddpParticipantId, new ArrayList<>());
+                        oncHistoryDataList.add(oncHistoryDetail);
+                        oncHistory.put(ddpParticipantId, oncHistoryDataList);
+                    }
+
+                } catch (Exception  e){
+                    dbVals.resultException = e;
                 }
             }
             catch (SQLException ex) {

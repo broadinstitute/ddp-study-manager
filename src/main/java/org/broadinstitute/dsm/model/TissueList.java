@@ -86,7 +86,9 @@ public class TissueList {
                         if (tissueSmId != null) {
                             tissue.setSmIdBasedOnType(tissueSmId, rs);
                         }
-                        tissues.put(tissue.getTissueId(), tissue);
+                        if (tissue.getTissueId() != null) {
+                            tissues.put(tissue.getTissueId(), tissue);
+                        }
                     }
                     for (Tissue tissue : tissues.values()) {
                         TissueList tissueList = new TissueList(oncHistoryDetailHashMap.get(tissue.getOncHistoryDetailId()), null, ddpParticipantId, participantId);
