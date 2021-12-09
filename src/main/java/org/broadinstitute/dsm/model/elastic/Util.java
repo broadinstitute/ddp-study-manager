@@ -25,6 +25,7 @@ import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
+import org.broadinstitute.dsm.util.ObjectMapperSingleton;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.broadinstitute.dsm.util.PatchUtil;
 
@@ -154,9 +155,8 @@ public class Util {
         Map<String, Object> dynamicMap = new HashMap<>();
         if (isJsonInString(fieldValue)) {
             String strValue = (String) fieldValue;
-            ObjectMapper objectMapper = new ObjectMapper();
             try {
-                dynamicMap = objectMapper.readValue(strValue, Map.class);
+                dynamicMap = ObjectMapperSingleton.instance().readValue(strValue, Map.class);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

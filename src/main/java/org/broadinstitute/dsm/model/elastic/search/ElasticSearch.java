@@ -61,7 +61,9 @@ public class ElasticSearch implements ElasticSearchable {
 
     public static Optional<ElasticSearchParticipantDto> parseSourceMap(Map<String, Object> sourceMap) {
         if (sourceMap == null) return Optional.of(new ElasticSearchParticipantDto.Builder().build());
-        return new SourceMapDeserializer().deserialize(sourceMap);
+        return new SourceMapDeserializer().deserialize(sourceMap).isPresent()
+                ? new SourceMapDeserializer().deserialize(sourceMap)
+                : Optional.of(new ElasticSearchParticipantDto.Builder().build());
     }
 
     public List<ElasticSearchParticipantDto> parseSourceMaps(SearchHit[] searchHits) {
