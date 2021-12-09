@@ -292,6 +292,12 @@ public class PatchRoute extends RequestHandler {
                             throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
                         }
                     }
+                    else if (Patch.TISSUEID.equals(patch.getParent())) {
+                        String smIdPk = new TissueSmId().createNewSmId(patch.getParentId(), patch.getUser(), (String) patch.getNameValue().getValue());
+                        Map<String, String> map = new HashMap<>();
+                        map.put("smId", smIdPk);
+                        return new Result(200, gson.toJson(map));
+                    }
                     else if (Patch.PARTICIPANT_DATA_ID.equals(patch.getParent())) {
                         String participantDataId = null;
                         Map<String, String> map = new HashMap<>();

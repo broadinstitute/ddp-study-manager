@@ -31,6 +31,7 @@ public class Patch {
     public static final String ONC_HISTORY_ID = "oncHistoryDetailId";
     public static final String PARTICIPANT_DATA_ID = "participantDataId";
     public static final String DDP_PARTICIPANT_ID = "ddpParticipantId";
+    public static final String TISSUEID = "tissueId";
 
     private String id;
     private String parent; //for new added rows at oncHistoryDetails/tissue

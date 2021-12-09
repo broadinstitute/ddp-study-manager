@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.*;
+import org.broadinstitute.dsm.db.dao.ddp.tissue.TissueSmIdType;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
@@ -42,6 +43,8 @@ public class PatchUtil {
         getColumnNames(KitRequest.class);
         getColumnNames(Drug.class);
         getColumnNames(ParticipantData.class);
+        getColumnNames(TissueSmId.class);
+        getColumnNames(TissueSmIdType.class);
         logger.info("Loaded patch utils");
     }
 
