@@ -146,8 +146,8 @@ public class PatchRoute extends RequestHandler {
                     }
                     else {
                         // mr changes
-                        if(Patch.TISSUEID.equals(patch.getParent()) && patch.getNameValue().getName().equals("sm.smIdValue")){
-                            if(StringUtils.isNotBlank(String.valueOf(patch.getNameValue().getValue())) && !TissueSmId.isUniqueSmId(String.valueOf(patch.getNameValue().getValue()))){
+                        if (Patch.TISSUEID.equals(patch.getParent()) && patch.getNameValue().getName().equals("sm.smIdValue")) {
+                            if (StringUtils.isNotBlank(String.valueOf(patch.getNameValue().getValue())) && !TissueSmId.isUniqueSmId(String.valueOf(patch.getNameValue().getValue()))) {
                                 return new Result(500, "Duplicate value");
                             }
                         }
