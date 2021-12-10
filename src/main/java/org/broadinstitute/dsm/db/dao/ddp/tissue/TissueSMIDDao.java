@@ -19,6 +19,7 @@ public class TissueSMIDDao {
     public static final String SQL_TYPE_ID_FOR_TYPE="SELECT sm_id_type_id from sm_id_type where `sm_id_type` = ?";
     public static final String SQL_INSERT_SM_ID = "INSERT INTO sm_id SET tissue_id = ?, sm_id_type_id = ?, last_changed = ?, changed_by = ?";
     public static final String SQL_INSERT_SM_ID_WITH_VALUE = "INSERT INTO sm_id SET tissue_id = ?, sm_id_type_id = ?, last_changed = ?, changed_by = ?, sm_id_value = ?";
+    public static final String SQL_SELECT_SM_ID_VALUE = "SELECT sm_id_value from sm_id where sm_id_value = ? and Not deleted <=> 1";
 
     public String getTypeForName(String type) {
         SimpleResult results = inTransaction((conn) -> {
@@ -123,5 +124,32 @@ public class TissueSMIDDao {
         else {
             return (String) results.resultValue;
         }
+    }
+
+    public boolean isUnique(String smIdValue) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_SM_ID_VALUE)) {
+                stmt.setString(1, smIdValue);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = false;
+                    }
+                    else{
+                        dbVals.resultValue = true;
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting values from sm_id table matching " + smIdValue, results.resultException);
+        }
+
+        return (boolean) results.resultValue;
     }
 }
