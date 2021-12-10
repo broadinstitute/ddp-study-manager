@@ -52,7 +52,7 @@ public class ParticipantDataDto {
     public Map<String, Object> getDynamicFields() {
         try {
             return ObjectMapperSingleton.instance().readValue(data, new TypeReference<Map<String, Object>>() {});
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             return Map.of();
         }
     }

@@ -10,6 +10,7 @@ import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.SourceGeneratorFactory;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -35,7 +36,7 @@ public class SingleProcessorTest {
         processor.setRecordId(0);
         processor.setCollector(generator);
         Map<String, Object> processedData = (Map<String, Object>) processor.process();
-        Assert.assertEquals("value", processedData.get("key"));
+        Assert.assertEquals("value", ((Map<String, Object>)processedData.get(ESObjectConstants.DYNAMIC_FIELDS)).get("key"));
     }
 
     @Test
@@ -56,6 +57,6 @@ public class SingleProcessorTest {
         processor.setRecordId(0);
         processor.setCollector(generator);
         Map<String, Object> processedData = (Map<String, Object>) processor.process();
-        Assert.assertEquals("value", processedData.get("key"));
+        Assert.assertEquals("value", ((Map<String, Object>)processedData.get(ESObjectConstants.DYNAMIC_FIELDS)).get("key"));
     }
 }

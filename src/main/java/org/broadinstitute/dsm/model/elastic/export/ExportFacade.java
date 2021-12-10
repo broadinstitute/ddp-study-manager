@@ -16,7 +16,9 @@ import org.broadinstitute.dsm.model.elastic.export.generate.SourceGeneratorFacto
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
 import org.broadinstitute.dsm.model.elastic.export.process.BaseProcessor;
-import org.broadinstitute.dsm.model.elastic.export.process.CollectionProcessorFactory;
+import org.broadinstitute.dsm.model.elastic.export.process.Processor;
+import org.broadinstitute.dsm.model.elastic.export.process.ProcessorFactory;
+import org.broadinstitute.dsm.model.elastic.export.process.ProcessorFactoryImpl;
 import org.broadinstitute.dsm.model.elastic.export.process.SingleProcessor;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
@@ -76,28 +78,17 @@ public class ExportFacade {
         generator = sourceGeneratorFactory.make(propertyInfo);
         generator.setParser(valueParser);
         generator.setPayload(exportFacadePayload.getGeneratorPayload());
-        Map<String, Object> dataToReturn = generator.generate();
         logger.info("Processing ES participant data");
-        if (propertyInfo.isCollection()) {
-            CollectionProcessorFactory collectionProcessorFactory = new CollectionProcessorFactory();
-            processor = collectionProcessorFactory.make(propertyInfo);
-            processor.setEsDsm(esDsm);
-            processor.setPropertyName(propertyInfo.getPropertyName());
-            processor.setRecordId(exportFacadePayload.getRecordId());
-            processor.setCollector(generator);
-            List<Map<String, Object>> processedData = (List<Map<String, Object>>) processor.process();
-            if (!processedData.isEmpty()) {
-                dataToReturn = new HashMap<>(Map.of(MappingGenerator.DSM_OBJECT,
-                        new HashMap<>(Map.of(propertyInfo.getPropertyName(),
-                        processedData))));
-            }
-        } else {
-            processor = new SingleProcessor();
-            processor.setEsDsm(esDsm);
-            processor.setPropertyName(propertyInfo.getPropertyName());
-            processor.setRecordId(exportFacadePayload.getRecordId());
-            processor.setCollector(generator);
-        }
+        ProcessorFactory processorFactory = new ProcessorFactoryImpl();
+        processor = processorFactory.make(propertyInfo);
+        processor.setEsDsm(esDsm);
+        processor.setPropertyName(propertyInfo.getPropertyName());
+        processor.setRecordId(exportFacadePayload.getRecordId());
+        processor.setCollector(generator);
+        Object processedData = processor.process();
+        Map<String, Object> dataToReturn = new HashMap<>(Map.of(MappingGenerator.DSM_OBJECT,
+                new HashMap<>(Map.of(propertyInfo.getPropertyName(),
+                processedData))));
         logger.info("Returning processed ES participant data");
         return dataToReturn;
     }

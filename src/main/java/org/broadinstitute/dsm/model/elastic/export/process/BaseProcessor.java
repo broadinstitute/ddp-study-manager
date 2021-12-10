@@ -52,11 +52,13 @@ public abstract class BaseProcessor implements Processor {
     }
 
     protected String getPrimaryKey(Object obj) {
+        if (Objects.isNull(obj)) return StringUtils.EMPTY;
         TableName tableName = obj.getClass().getAnnotation(TableName.class);
         return tableName != null ? tableName.primaryKey() : StringUtils.EMPTY;
     }
 
     protected void updateExistingRecord(Map<String, Object> eachRecord) {
+        if (Objects.isNull(eachRecord)) return;
         logger.info("Updating existing record");
         Optional<Map<String, Object>> maybeEndResult = collectEndResult();
         if (maybeEndResult.isPresent()) {

@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,7 @@ abstract public class SourceGenerator extends BaseGenerator {
         for (Map.Entry<String, Object> entry : dynamicFieldValues.entrySet()) {
             transformedMap.put(Util.underscoresToCamelCase(entry.getKey()), parser.parse(String.valueOf(entry.getValue())));
         }
-        return transformedMap;
+        return new HashMap<>(Map.of(ESObjectConstants.DYNAMIC_FIELDS, transformedMap));
     }
 
 }

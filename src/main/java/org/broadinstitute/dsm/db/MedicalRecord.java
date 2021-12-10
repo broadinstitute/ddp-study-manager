@@ -33,6 +33,7 @@ import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.DBUtil;
 import org.broadinstitute.dsm.util.DDPRequestUtil;
+import org.broadinstitute.dsm.util.ObjectMapperSingleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -344,8 +345,8 @@ public class MedicalRecord {
     @JsonProperty("dynamicFields")
     public Map<String, Object> getDynamicFields() {
         try {
-            return new ObjectMapper().readValue(additionalValuesJson, new TypeReference<Map<String, Object>>() {});
-        } catch (IOException e) {
+            return ObjectMapperSingleton.instance().readValue(additionalValuesJson, new TypeReference<Map<String, Object>>() {});
+        } catch (IOException | NullPointerException e) {
             return Map.of();
         }
     }
