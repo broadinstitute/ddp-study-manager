@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,7 @@ public class SingleSourceGenerator extends SourceGenerator {
 
     @Override
     public Object construct() {
-        return parseJsonValuesToObject();
+        return new HashMap<>(Map.of(ESObjectConstants.DYNAMIC_FIELDS, parseJsonValuesToObject()));
     }
 
     @Override

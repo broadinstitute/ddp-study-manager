@@ -17,11 +17,6 @@ import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ObjectMapperSingleton;
 
-@TableName(
-        name = DBConstants.DDP_PARTICIPANT_RECORD,
-        alias = DBConstants.DDP_PARTICIPANT_RECORD_ALIAS,
-        primaryKey = DBConstants.PARTICIPANT_RECORD_ID,
-        columnPrefix = "")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ParticipantRecordDto {

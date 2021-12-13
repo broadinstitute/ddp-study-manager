@@ -204,19 +204,19 @@ public abstract class BasePatch {
             nameValues.add(setAdditionalValue("m.faxConfirmed3", patch, patch.getNameValue().getValue()));
         }
         //tissue request workflow
-        else if (patch.getNameValue().getName().equals("oD.tFaxSent")) {
-            nameValues.add(setAdditionalValue("oD.tFaxSentBy", patch, patch.getUser()));
-            nameValues.add(setAdditionalValue("oD.tFaxConfirmed", patch, patch.getNameValue().getValue()));
+        else if (patch.getNameValue().getName().equals("oD.faxSent")) {
+            nameValues.add(setAdditionalValue("oD.faxSentBy", patch, patch.getUser()));
+            nameValues.add(setAdditionalValue("oD.faxConfirmed", patch, patch.getNameValue().getValue()));
             nameValues.add(setAdditionalValue("oD.request", patch, "sent"));
         }
-        else if (patch.getNameValue().getName().equals("oD.tFaxSent2")) {
-            nameValues.add(setAdditionalValue("oD.tFaxSent2By", patch, patch.getUser()));
-            nameValues.add(setAdditionalValue("oD.tFaxConfirmed2", patch, patch.getNameValue().getValue()));
+        else if (patch.getNameValue().getName().equals("oD.faxSent2")) {
+            nameValues.add(setAdditionalValue("oD.faxSent2By", patch, patch.getUser()));
+            nameValues.add(setAdditionalValue("oD.faxConfirmed2", patch, patch.getNameValue().getValue()));
             nameValues.add(setAdditionalValue("oD.request", patch, "sent"));
         }
-        else if (patch.getNameValue().getName().equals("oD.tFaxSent3")) {
-            nameValues.add(setAdditionalValue("oD.tFaxSent3By", patch, patch.getUser()));
-            nameValues.add(setAdditionalValue("oD.tFaxConfirmed3", patch, patch.getNameValue().getValue()));
+        else if (patch.getNameValue().getName().equals("oD.faxSent3")) {
+            nameValues.add(setAdditionalValue("oD.faxSent3By", patch, patch.getUser()));
+            nameValues.add(setAdditionalValue("oD.faxConfirmed3", patch, patch.getNameValue().getValue()));
             nameValues.add(setAdditionalValue("oD.request", patch, "sent"));
         }
         else if (patch.getNameValue().getName().equals("oD.tissueReceived")) {

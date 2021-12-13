@@ -42,7 +42,7 @@ abstract public class SourceGenerator extends BaseGenerator {
         for (Map.Entry<String, Object> entry : dynamicFieldValues.entrySet()) {
             transformedMap.put(Util.underscoresToCamelCase(entry.getKey()), parser.parse(String.valueOf(entry.getValue())));
         }
-        return new HashMap<>(Map.of(ESObjectConstants.DYNAMIC_FIELDS, transformedMap));
+        return transformedMap;
     }
 
 }
