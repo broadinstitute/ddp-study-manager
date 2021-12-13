@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.generate.Collector;
@@ -34,11 +35,11 @@ public class CollectionProcessor extends BaseProcessor {
     @Override
     protected String findPrimaryKeyOfObject(Object object) {
         List<Object> objectCollection = (List<Object>) object;
-        if (Objects.isNull(objectCollection)) return "";
+        if (Objects.isNull(objectCollection)) return StringUtils.EMPTY;
         Optional<Object> maybeObject = objectCollection.stream().findFirst();
         return maybeObject
                 .map(this::getPrimaryKey)
-                .orElse("");
+                .orElse(StringUtils.EMPTY);
     }
 
     @Override

@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.model.elastic.export.process;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -84,7 +85,7 @@ public abstract class BaseProcessor implements Processor {
         } catch (NoSuchFieldException e) {
             return this instanceof CollectionProcessor
                     ? new ArrayList<>()
-                    : Map.of();
+                    : new HashMap<>();
         }
     };
 
