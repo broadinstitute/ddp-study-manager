@@ -149,7 +149,7 @@ public class Util {
 
     public static List<Map<String, Object>> convertObjectListToMapList(Object fieldValue) {
         return Objects.isNull(fieldValue)
-                ? Collections.emptyList()
+                ? new ArrayList<>()
                 : ObjectMapperSingleton.instance().convertValue(fieldValue, new TypeReference<List<Map<String, Object>>>() {});
     }
 

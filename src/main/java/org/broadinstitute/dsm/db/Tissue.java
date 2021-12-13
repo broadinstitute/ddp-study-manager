@@ -56,51 +56,51 @@ public class Tissue {
     private String tissueId;
 
     @ColumnName(DBConstants.ONC_HISTORY_DETAIL_ID)
-    private final String oncHistoryDetailId;
+    private String oncHistoryDetailId;
 
     @ColumnName (DBConstants.NOTES)
-    private final String notes;
+    private String notes;
 
     @ColumnName (DBConstants.COUNT_RECEIVED)
-    private final Integer countReceived;
+    private Integer countReceived;
 
     @ColumnName (DBConstants.TISSUE_TYPE)
-    private final String tissueType;
+    private String tissueType;
 
     @ColumnName (DBConstants.TISSUE_SITE)
-    private final String tissueSite;
+    private String tissueSite;
 
     @ColumnName (DBConstants.TUMOR_TYPE)
-    private final String tumorType;
+    private String tumorType;
 
     @ColumnName (DBConstants.H_E)
-    private final String hE;
+    private String hE;
 
     @ColumnName (DBConstants.PATHOLOGY_REPORT)
-    private final String pathologyReport;
+    private String pathologyReport;
 
     @ColumnName (DBConstants.COLLABORATOR_SAMPLE_ID)
-    private final String collaboratorSampleId;
+    private String collaboratorSampleId;
 
     @ColumnName (DBConstants.BLOCK_SENT)
-    private final String blockSent;
+    private String blockSent;
 
     @ColumnName (DBConstants.SHL_WORK_NUMBER)
-    private final String shlWorkNumber;
+    private String shlWorkNumber;
 
     @ColumnName (DBConstants.SCROLLS_RECEIVED)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private final String scrollsReceived;
+    private String scrollsReceived;
 
     @ColumnName (DBConstants.SK_ID)
-    private final String skId;
+    private String skId;
 
     @ColumnName (DBConstants.SM_ID)
-    private final String smId;
+    private String smId;
 
     @ColumnName (DBConstants.SENT_GP)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private final String sentGp;
+    private String sentGp;
 
     private String changedBy;
 
@@ -152,7 +152,7 @@ public class Tissue {
     @ColumnName (DBConstants.H_E_COUNT)
     private Integer hECount;
 
-
+    public Tissue() {}
 
     public Tissue(String tissueId, String oncHistoryDetailId, String notes, Integer countReceived, String tissueType,
                   String tissueSite, String tumorType, String hE, String pathologyReport, String collaboratorSampleId,
