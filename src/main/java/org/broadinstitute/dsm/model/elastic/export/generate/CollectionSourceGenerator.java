@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.model.elastic.export.generate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -25,18 +26,24 @@ public class CollectionSourceGenerator extends SourceGenerator {
     @Override
     public Object construct() {
         logger.info("Constructing nested data");
-        Map<String, Object> mapWithParsedObjects = new HashMap<>(Map.of(
-                getPrimaryKey(), generatorPayload.getRecordId(),
-                ESObjectConstants.DYNAMIC_FIELDS, parseJsonValuesToObject())
-        );
-        return List.of(mapWithParsedObjects);
+        Map<String, Object> fieldNameElement = new HashMap<>(Map.of(ESObjectConstants.DYNAMIC_FIELDS, parseJsonValuesToObject()));
+        return getCollectionElementMap(fieldNameElement);
     }
 
     @Override
     protected Object getElement(Object element) {
-        return List.of(new HashMap<>(Map.of(
-                getPrimaryKey(), generatorPayload.getRecordId(),
-                getFieldName(), element)
-        ));
+        Map<String, Object> fieldNameElement = new HashMap<>(Map.of(getFieldName(), element));
+        return getCollectionElementMap(fieldNameElement);
+    }
+
+    private List<HashMap<String, Object>> getCollectionElementMap(Map<String, Object> element) {
+        HashMap<String, Object> mapWithParsedObjects = new HashMap<>(Map.of(getPrimaryKey(), generatorPayload.getRecordId()));
+        mapWithParsedObjects.putAll(element);
+        getParentWithId().ifPresent(mapWithParsedObjects::putAll);
+        return List.of(mapWithParsedObjects);
+    }
+
+    protected Optional<Map<String, Object>> getParentWithId() {
+        return Optional.empty();
     }
 }

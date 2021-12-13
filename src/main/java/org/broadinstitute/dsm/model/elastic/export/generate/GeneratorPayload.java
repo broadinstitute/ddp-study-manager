@@ -7,10 +7,18 @@ public class GeneratorPayload {
 
     NameValue nameValue;
     int recordId;
+    private String parent;
+    private String parentId;
 
     public GeneratorPayload(NameValue nameValue, int recordId) {
         this.nameValue = nameValue;
         this.recordId = recordId;
+    }
+
+    public GeneratorPayload(NameValue nameValue, int recordId, String parent, String parentId) {
+        this(nameValue, recordId);
+        this.parent = parent;
+        this.parentId = parentId;
     }
 
     public GeneratorPayload(NameValue nameValue) {
@@ -21,12 +29,24 @@ public class GeneratorPayload {
         return nameValue;
     }
 
-    public String getName() {return nameValue.getName();}
+    public String getName() {
+        return nameValue.getName();
+    }
 
-    public Object getValue() { return nameValue.getValue(); }
+    public Object getValue() {
+        return nameValue.getValue();
+    }
 
     public int getRecordId() {
         return recordId;
+    }
+
+    public String getParent() {
+        return parent;
+    }
+
+    public String getParentId() {
+        return parentId;
     }
 
     public String getFieldName() {

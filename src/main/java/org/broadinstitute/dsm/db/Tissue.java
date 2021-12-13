@@ -152,7 +152,9 @@ public class Tissue {
     @ColumnName (DBConstants.H_E_COUNT)
     private Integer hECount;
 
+    public Tissue() {
 
+    }
 
     public Tissue(String tissueId, String oncHistoryDetailId, String notes, Integer countReceived, String tissueType,
                   String tissueSite, String tumorType, String hE, String pathologyReport, String collaboratorSampleId,

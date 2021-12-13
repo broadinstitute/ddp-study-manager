@@ -107,6 +107,7 @@ public abstract class BaseGenerator implements Generator, Collector, GeneratorHe
         private boolean isCollection;
         private String fieldName;
 
+
         public PropertyInfo(Class<?> propertyClass, boolean isCollection) {
             this.propertyClass = Objects.requireNonNull(propertyClass);
             this.isCollection = isCollection;
@@ -138,6 +139,10 @@ public abstract class BaseGenerator implements Generator, Collector, GeneratorHe
         public String getFieldName() {
             if (StringUtils.isBlank(this.fieldName)) this.fieldName = "";
             return this.fieldName;
+        }
+
+        public Class<?> getPropertyClass() {
+            return propertyClass;
         }
     }
     
