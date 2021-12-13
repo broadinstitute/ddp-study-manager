@@ -413,4 +413,57 @@
             <column name="order_number" value="7"/>
         </insert>
     </changeSet>
+    <changeSet author="simone" id="DDP-7322_singularForm_d-TGA-VSD">
+        <sql>
+            UPDATE field_settings
+            SET display_type = 'CHECKBOX'
+            WHERE column_name = 'd-TGA-VSD'
+        </sql>
+    </changeSet>
+    <changeSet author="simone" id="DDP-7322_singularForm_PA-VSD">
+        <sql>
+            UPDATE field_settings
+            SET column_display = 'PA-VSD (TOF anatomy)'
+            WHERE column_name = 'PA-VSD'
+        </sql>
+    </changeSet>
+    <changeSet author="simone" id="DDP-7322_singularForm_d-TGA-os-Specify">
+        <sql>
+            UPDATE field_settings
+            SET column_display = 'Specify (d-TGA os)'
+            WHERE column_name = 'd-TGA-os-Specify'
+        </sql>
+    </changeSet>
+    <changeSet author="simone" id="DDP-7322_singularForm_DORV-OS-specify">
+        <sql>
+            UPDATE field_settings
+            SET column_display = 'Specify (DORV, os)'
+            WHERE column_name = 'DORV-OS-specify'
+        </sql>
+    </changeSet>
+    <changeSet author="simone" id="DDP-7322_singularForm_AVSD-OS-specify">
+        <sql>
+            UPDATE field_settings
+            SET column_display = 'Specify (AVSD, os)'
+            WHERE column_name = 'AVSD-OS-specify'
+        </sql>
+    </changeSet>
+    <changeSet author="simone" id="DDP-7322_singularForm_DIAGNOSIS_GROUP">
+        <insert tableName="field_settings">
+            <column name="ddp_instance_id"
+                    valueComputed="(SELECT ddp_instance_id FROM ddp_instance WHERE instance_name='singular')"></column>
+            <column name="field_type" value="SINGULAR_TAB_CARDIAC_MALFORMATION"/>
+            <column name="column_name" value="DIAGNOSIS_GROUP"/>
+            <column name="column_display" value="Fundamental Cardiac Diagnosis"/>
+            <column name="display_type" value="GROUP"/>
+            <column name="order_number" value="1"/>
+        </insert>
+    </changeSet>
+    <changeSet author="simone" id="DDP-7322_singularForm_DIAGNOSIS">
+        <sql>
+            UPDATE field_settings
+            SET field_type = 'DIAGNOSIS_GROUP'
+            WHERE column_name = 'DIAGNOSIS'
+        </sql>
+    </changeSet>
 </databaseChangeLog>
