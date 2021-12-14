@@ -11,7 +11,7 @@ public class SourceGeneratorFactory implements GeneratorFactory {
             if (Tissue.class.isAssignableFrom(propertyInfo.getPropertyClass())) {
                 generator = new TissueSourceGenerator();
             } else {
-                generator = new CollectionMappingGenerator();
+                generator = new CollectionSourceGenerator();
             }
         } else {
             generator = new SingleSourceGenerator();
