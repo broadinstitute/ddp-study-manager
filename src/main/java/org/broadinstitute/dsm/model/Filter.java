@@ -101,9 +101,9 @@ public class Filter {
         String finalQuery = "";
         String query = "";
         String condition = "";
+        //simple is better than complex, KISS(Keep It Simple Stupid)
         if (filter.isEmpty() && !ADDITIONAL_VALUES.equals(filter.getType()) && !JSON_ARRAY.equals(filter.getType())) {
             finalQuery = AND + filter.getColumnName(dbElement) + IS_NULL + " ";
-
         }
         else if (filter.isNotEmpty() && !ADDITIONAL_VALUES.equals(filter.getType()) && !JSON_ARRAY.equals(filter.getType())) {
             finalQuery = AND + filter.getColumnName(dbElement) + IS_NOT_NULL + " ";

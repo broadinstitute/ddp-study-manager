@@ -837,6 +837,7 @@ public class ElasticSearchUtil {
         return null;
     }
 
+    //simple is better than complex, KISS(Keep It Simple Stupid)
     public static AbstractQueryBuilder<? extends AbstractQueryBuilder<?>> createESQuery(@NonNull String filter) {
         String[] filters = filter.split(Filter.AND);
         BoolQueryBuilder finalQuery = new BoolQueryBuilder();
