@@ -71,8 +71,8 @@ public class TissueSmId {
         return tissueSmId;
     }
 
-    public static boolean isUniqueSmId(String smIdValue) {
-        return new TissueSMIDDao().isUnique(smIdValue);
+    public static boolean isUniqueSmId(String smIdValue, String id) {
+        return new TissueSMIDDao().isUnique(smIdValue, id);
     }
 
     public String createNewSmId(String tissueId, String userId, String smIdType) {

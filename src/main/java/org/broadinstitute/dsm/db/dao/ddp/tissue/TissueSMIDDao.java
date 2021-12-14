@@ -19,7 +19,7 @@ public class TissueSMIDDao {
     public static final String SQL_TYPE_ID_FOR_TYPE="SELECT sm_id_type_id from sm_id_type where `sm_id_type` = ?";
     public static final String SQL_INSERT_SM_ID = "INSERT INTO sm_id SET tissue_id = ?, sm_id_type_id = ?, last_changed = ?, changed_by = ?";
     public static final String SQL_INSERT_SM_ID_WITH_VALUE = "INSERT INTO sm_id SET tissue_id = ?, sm_id_type_id = ?, last_changed = ?, changed_by = ?, sm_id_value = ?";
-    public static final String SQL_SELECT_SM_ID_VALUE = "SELECT sm_id_value from sm_id where sm_id_value = ? and Not deleted <=> 1";
+    public static final String SQL_SELECT_SM_ID_VALUE = "SELECT sm_id_value from sm_id where sm_id_value = ? and NOT sm_id_pk = ? and Not deleted <=> 1";
 
     public String getTypeForName(String type) {
         SimpleResult results = inTransaction((conn) -> {
@@ -126,11 +126,12 @@ public class TissueSMIDDao {
         }
     }
 
-    public boolean isUnique(String smIdValue) {
+    public boolean isUnique(String smIdValue, String smIdPk) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_SM_ID_VALUE)) {
                 stmt.setString(1, smIdValue);
+                stmt.setString(2, smIdPk);// added to let updating
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         dbVals.resultValue = false;

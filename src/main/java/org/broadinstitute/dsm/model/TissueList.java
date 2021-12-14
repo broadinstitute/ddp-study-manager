@@ -66,11 +66,8 @@ public class TissueList {
                 stmt.setString(1, realm);
                 try (ResultSet rs = stmt.executeQuery()) {
                     OncHistoryDetail oncHistory = null;
-                    String ddpParticipantId = null;
-                    String participantId = null;
                     while (rs.next()) {
-                        ddpParticipantId = rs.getString(DBConstants.DDP_PARTICIPANT_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.DDP_PARTICIPANT_ID);
-                        participantId = rs.getString(DBConstants.DDP_PARTICIPANT_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.PARTICIPANT_ID);
+                        String participantId = rs.getString(DBConstants.DDP_PARTICIPANT_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.PARTICIPANT_ID);
                         TissueSmId tissueSmId = Tissue.getSMIds(rs);
                         Tissue tissue;
                         if (tissueSmId != null && tissues.containsKey(tissueSmId.getTissueId())) {
@@ -91,12 +88,23 @@ public class TissueList {
                         }
                     }
                     for (Tissue tissue : tissues.values()) {
-                        TissueList tissueList = new TissueList(oncHistoryDetailHashMap.get(tissue.getOncHistoryDetailId()), null, ddpParticipantId, participantId);
-
-                        if (!tissue.isTDeleted() && StringUtils.isNotBlank(tissue.getTissueId())) {
-                            tissueList.setTissue(tissue);
+                        String tissueOncHistoryDetailId = tissue.getOncHistoryDetailId();
+                        OncHistoryDetail oncHistoryDetail = oncHistoryDetailHashMap.get(tissueOncHistoryDetailId);
+                        oncHistoryDetail.getTissues().add(tissue);
+                    }//  add onchistories to their particiapnt
+                    for (OncHistoryDetail oncHistoryDetail : oncHistoryDetailHashMap.values()) {
+                        if (oncHistoryDetail.getTissues() == null || oncHistoryDetail.getTissues().isEmpty()){
+                            TissueList tissueList = new TissueList(oncHistoryDetail, null, oncHistoryDetail.getDdpParticipantId(), oncHistoryDetail.getParticipantId());
+                            results.add(tissueList);
+                            continue;
                         }
-                        results.add(tissueList);
+                        for (Tissue tissue : oncHistoryDetail.getTissues()) {
+                            TissueList tissueList = new TissueList(oncHistoryDetail, null, oncHistoryDetail.getDdpParticipantId(), oncHistoryDetail.getParticipantId());
+                            if (!tissue.isTDeleted() && StringUtils.isNotBlank(tissue.getTissueId())) {
+                                tissueList.setTissue(tissue);
+                            }
+                            results.add(tissueList);
+                        }
                     }
                     dbVals.resultValue = results;
                 }
