@@ -146,6 +146,11 @@ public class PatchRoute extends RequestHandler {
                     }
                     else {
                         // mr changes
+                        if (Patch.TISSUEID.equals(patch.getParent()) && patch.getNameValue().getName().equals(Patch.SM_ID_VALUE)) {
+                            if (StringUtils.isNotBlank(String.valueOf(patch.getNameValue().getValue())) && !TissueSmId.isUniqueSmId(String.valueOf(patch.getNameValue().getValue()), patch.getId())) {
+                                return new Result(500, "Duplicate value");
+                            }
+                        }
                         DBElement dbElement = patchUtil.getColumnNameMap().get(patch.getNameValue().getName());
                         if (dbElement != null) {
                             if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
@@ -290,6 +295,16 @@ public class PatchRoute extends RequestHandler {
                         }
                         else {
                             throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
+                        }
+                    }
+                    else if (Patch.TISSUEID.equals(patch.getParent())) {
+                        try {
+                            String smIdPk = new TissueSmId().createNewSmId(patch.getParentId(), patch.getUser(), patch.getNameValues());
+                            Map<String, String> map = new HashMap<>();
+                            map.put("smId", smIdPk);
+                            return new Result(200, gson.toJson(map));
+                        }catch (DuplicateException e) {
+                            return new Result(500, "Duplicate value");
                         }
                     }
                     else if (Patch.PARTICIPANT_DATA_ID.equals(patch.getParent())) {

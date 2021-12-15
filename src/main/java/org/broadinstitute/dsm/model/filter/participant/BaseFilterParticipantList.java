@@ -101,7 +101,7 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
                     mergeConditions.merge(DBConstants.DDP_PARTICIPANT_ALIAS, queryConditions.get(filter), String::concat);
                 } else if (DBConstants.DDP_INSTITUTION_ALIAS.equals(filter)) {
                     mergeConditions.merge(DBConstants.DDP_MEDICAL_RECORD_ALIAS, queryConditions.get(filter), String::concat);
-                } else if (DBConstants.DDP_TISSUE_ALIAS.equals(filter)) {
+                } else if (DBConstants.DDP_TISSUE_ALIAS.equals(filter) || DBConstants.SM_ID_ALIAS.equals(filter)) {
                     mergeConditions.merge(DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS, queryConditions.get(filter), String::concat);
                 } else {
                     mergeConditions.merge(filter, queryConditions.get(filter), String::concat);
