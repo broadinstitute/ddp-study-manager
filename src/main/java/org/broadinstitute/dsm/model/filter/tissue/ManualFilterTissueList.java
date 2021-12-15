@@ -56,7 +56,7 @@ public class ManualFilterTissueList extends BaseFilterTissueList {
         }
         logger.info("Found " + wrapperList.size() + " tissues for Tissue View");
         GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_TISSUE_LIST,
-                GoogleAnalyticsMetrics.EVENT_TISSUE_LIST_LOADED, GoogleAnalyticsMetrics.EVENT_TISSUE_LIST_LOADED,  GoogleAnalyticsMetrics.getTimeDifferenceToNow(timer));
+                GoogleAnalyticsMetrics.EVENT_TISSUE_LIST_LOAD_TIME, GoogleAnalyticsMetrics.EVENT_TISSUE_LIST_LOAD_TIME,  GoogleAnalyticsMetrics.getTimeDifferenceToNow(timer));
         return wrapperList;
     }
 }
