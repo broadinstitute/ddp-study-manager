@@ -214,6 +214,12 @@ public class Util {
         return pascalSnakeCase;
     }
 
+    public static String capitalCamelCaseToLowerCamelCase(String capitalCamelCase) {
+        StringBuilder className = new StringBuilder(capitalCamelCase);
+        StringBuilder camelCaseClassName = className.replace(0, 1, String.valueOf(className.charAt(0)).toLowerCase());
+        return camelCaseClassName.toString();
+    }
+
     public static class Constants {
         public static final String PROFILE = "profile";
         public static final String PROFILE_HRUID = PROFILE + ".hruid";

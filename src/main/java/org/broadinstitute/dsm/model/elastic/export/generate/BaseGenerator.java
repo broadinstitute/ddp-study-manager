@@ -118,9 +118,7 @@ public abstract class BaseGenerator implements Generator, Collector, GeneratorHe
         }
 
         public String getPropertyName() {
-            StringBuilder className = new StringBuilder(propertyClass.getSimpleName());
-            StringBuilder camelCaseClassName = className.replace(0, 1, String.valueOf(className.charAt(0)).toLowerCase());
-            return camelCaseClassName.toString();
+            return Util.capitalCamelCaseToLowerCamelCase(propertyClass.getSimpleName());
         }
 
         public String getPrimaryKey() {
