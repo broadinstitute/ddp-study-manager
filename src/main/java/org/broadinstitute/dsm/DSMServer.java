@@ -539,6 +539,9 @@ public class DSMServer extends BasicServer {
 
         GetParticipantDataRoute getParticipantDataRoute = new GetParticipantDataRoute();
         get(UI_ROOT + RoutePath.GET_PARTICIPANT_DATA, getParticipantDataRoute, new JsonTransformer());
+
+        FrontendAnalyticsRoute frontendAnalyticsRoute = new FrontendAnalyticsRoute();
+        patch(UI_ROOT +RoutePath.GoogleAnalytics,  frontendAnalyticsRoute, new JsonTransformer());
     }
 
     private void setupSharedRoutes(@NonNull KitUtil kitUtil, @NonNull NotificationUtil notificationUtil,

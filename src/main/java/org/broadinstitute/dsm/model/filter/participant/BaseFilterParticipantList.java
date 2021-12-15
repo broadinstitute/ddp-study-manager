@@ -109,14 +109,17 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
             }
 
             logger.info("Found query conditions for " + mergeConditions.size() + " tables");
-            GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_PARTICIPANT_LIST,
-                    GoogleAnalyticsMetrics.EVENT_PARTICIPANT_LIST_LOAD_TIME, GoogleAnalyticsMetrics.EVENT_PARTICIPANT_LIST_LOAD_TIME,  GoogleAnalyticsMetrics.getTimeDifferenceToNow(timer));
             //search bar ptL
-            return ParticipantWrapper.getFilteredList(instance, mergeConditions);
-        } else {
+            List<ParticipantWrapper> list = ParticipantWrapper.getFilteredList(instance, mergeConditions);
             GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_PARTICIPANT_LIST,
                     GoogleAnalyticsMetrics.EVENT_PARTICIPANT_LIST_LOAD_TIME, GoogleAnalyticsMetrics.EVENT_PARTICIPANT_LIST_LOAD_TIME,  GoogleAnalyticsMetrics.getTimeDifferenceToNow(timer));
-            return ParticipantWrapper.getFilteredList(instance, null);
+            return list;
+
+        } else {
+            List<ParticipantWrapper> list =  ParticipantWrapper.getFilteredList(instance, null);
+            GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_PARTICIPANT_LIST,
+                    GoogleAnalyticsMetrics.EVENT_PARTICIPANT_LIST_LOAD_TIME, GoogleAnalyticsMetrics.EVENT_PARTICIPANT_LIST_LOAD_TIME,  GoogleAnalyticsMetrics.getTimeDifferenceToNow(timer));
+            return list;
         }
     }
 
