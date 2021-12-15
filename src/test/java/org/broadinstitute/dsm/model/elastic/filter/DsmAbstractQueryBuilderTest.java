@@ -19,8 +19,10 @@ public class DsmAbstractQueryBuilderTest {
         AbstractQueryBuilder query = dsmAbstractQueryBuilder.build();
 
         String filterJson = query.toString();
-        String toBeContained = "\"dsm.medicalRecord.medicalRecordId\": \"15\"";
-        Assert.assertTrue(filterJson.contains(toBeContained));
+        String nestedKey = "\"dsm.medicalRecord.medicalRecordId\" : ";
+        String queryValue = "\"query\" : \"15\"";
+        Assert.assertTrue(filterJson.contains(nestedKey));
+        Assert.assertTrue(filterJson.contains(queryValue));
     }
 
     @Test

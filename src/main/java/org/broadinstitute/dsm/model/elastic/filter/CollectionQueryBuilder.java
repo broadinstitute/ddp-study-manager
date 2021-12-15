@@ -20,23 +20,31 @@ public class CollectionQueryBuilder extends DsmAbstractQueryBuilder {
         Map<String, List<String>> parsedFilters = parseFiltersByLogicalOperators();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         for (Map.Entry<String, List<String>> parsedFilter: parsedFilters.entrySet()) {
+            List<String> filterValues = parsedFilter.getValue();
             if (parsedFilter.getKey().equals("AND")) {
-                List<String> filterValues = parsedFilter.getValue();
-                for (String filterValue : filterValues) {
-                    String[] splittedFilter = filterValue.split("=");
-                    String value = splittedFilter[1].trim();
-                    String[] aliasWithField = splittedFilter[0].trim().split(ElasticSearchUtil.DOT_SEPARATOR);
-                    String innerProperty = aliasWithField[1];// medicalRecordId
-                    String alias = aliasWithField[0];
-                    String outerProperty = Util.TABLE_ALIAS_MAPPINGS.get(alias).getPropertyName(); //medicalRecord
-                    String nestedPath = DSM_WITH_DOT + outerProperty;
-                    boolQueryBuilder.must(new NestedQueryBuilder(nestedPath, new MatchQueryBuilder(nestedPath + "." + innerProperty, value), ScoreMode.Avg));
-                }
+                buildUpNestedQuery(boolQueryBuilder, filterValues, BoolQueryBuilder::must);
             } else {
-                boolQueryBuilder.should();
+                buildUpNestedQuery(boolQueryBuilder, filterValues, BoolQueryBuilder::should);
             }
         }
-        return null;
+        return boolQueryBuilder;
+    }
+
+    private void buildUpNestedQuery(BoolQueryBuilder boolQueryBuilder, List<String> filterValues, FilterStrategy filterStrategy) {
+        for (String filterValue : filterValues) {
+            String[] splittedFilter = filterValue.split("=");
+            String value = splittedFilter[1].trim();
+            String[] aliasWithField = splittedFilter[0].trim().split(ElasticSearchUtil.DOT_SEPARATOR);
+            String innerProperty = aliasWithField[1];// medicalRecordId
+            String alias = aliasWithField[0];
+            String outerProperty = Util.TABLE_ALIAS_MAPPINGS.get(alias).getPropertyName(); //medicalRecord
+            String nestedPath = DSM_WITH_DOT + outerProperty;
+            filterStrategy.build(boolQueryBuilder, buildNestedQueryBuilder(nestedPath, innerProperty, value));
+        }
+    }
+
+    private NestedQueryBuilder buildNestedQueryBuilder(String path, String fieldName, Object value) {
+        return new NestedQueryBuilder(path, new MatchQueryBuilder(path + "." + fieldName, value), ScoreMode.Avg);
     }
 
     protected Map<String, List<String>> parseFiltersByLogicalOperators() {
@@ -57,3 +65,4 @@ public class CollectionQueryBuilder extends DsmAbstractQueryBuilder {
         return filterByLogicalOperators;
     }
 }
+
