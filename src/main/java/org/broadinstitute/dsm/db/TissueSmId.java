@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.db;
 
 import lombok.Data;
 import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.dao.ddp.tissue.TissueSMIDDao;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.TableName;
@@ -85,7 +86,7 @@ public class TissueSmId {
         return new TissueSMIDDao().isUnique(smIdValue);
     }
 
-    public String createNewSmId(String tissueId, String userId, @NonNull List<NameValue> smIdDetails) {
+    public String createNewSmId(@NonNull String tissueId, String userId, @NonNull List<NameValue> smIdDetails) {
         String smIdType = null;
         String smIdValue = null;
         for (NameValue nameValue : smIdDetails) {
@@ -96,11 +97,11 @@ public class TissueSmId {
                 smIdValue = String.valueOf(nameValue.getValue());
             }
         }
-        if(this.isUniqueSmId(smIdValue)) {
+        if(StringUtils.isNotBlank(smIdValue) && this.isUniqueSmId(smIdValue)) {
             String smIdId = new TissueSMIDDao().createNewSMIDForTissue(tissueId, userId, smIdType, smIdValue);
             return smIdId;
         } else{
-            throw new DuplicateException("Duplicate value for sm id value");
+            throw new DuplicateException("Duplicate or blank value for sm id value "+smIdValue);
         }
     }
 }

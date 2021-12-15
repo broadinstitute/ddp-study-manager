@@ -18,7 +18,7 @@ public class TissueSMIDDao {
 
     public static final String SQL_GET_SM_ID_BASED_ON_TISSUE_ID=" SELECT * from sm_id sm where sm.tissue_id= ?   and NOT sm.deleted <=> 1";
     public static final String SQL_TYPE_ID_FOR_TYPE="SELECT sm_id_type_id from sm_id_type where `sm_id_type` = ?";
-    public static final String SQL_INSERT_SM_ID = "INSERT INTO sm_id SET tissue_id = ?, sm_id_type_id = ?, last_changed = ?, changed_by = ?";
+    public static final String SQL_INSERT_SM_ID = "INSERT INTO sm_id SET tissue_id = ?, sm_id_type_id = ?, sm_id_value=?, last_changed = ?, changed_by = ?";
     public static final String SQL_INSERT_SM_ID_WITH_VALUE = "INSERT INTO sm_id SET tissue_id = ?, sm_id_type_id = ?, last_changed = ?, changed_by = ?, sm_id_value = ?";
     public static final String SQL_SELECT_SM_ID_VALUE_WITH_ID = "SELECT sm_id_value from sm_id where sm_id_value = ? and NOT sm_id_pk = ? and Not deleted <=> 1";
     public static final String SQL_SELECT_SM_ID_VALUE = "SELECT sm_id_value from sm_id where sm_id_value = ?  and Not deleted <=> 1";
@@ -96,8 +96,9 @@ public class TissueSMIDDao {
             try (PreparedStatement stmt = conn.prepareStatement(SQL_INSERT_SM_ID, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, tissueId);
                 stmt.setString(2, smIdtypeId);
-                stmt.setLong(3, System.currentTimeMillis());
-                stmt.setString(4, userId);
+                stmt.setString(3, smIdValue);
+                stmt.setLong(4, System.currentTimeMillis());
+                stmt.setString(5, userId);
                 int result = stmt.executeUpdate();
                 if (result == 1) {
                     try (ResultSet rs = stmt.getGeneratedKeys()) {
