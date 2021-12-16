@@ -121,4 +121,5 @@ public class UtilTest {
         assertEquals("REGISTRATION_TYPE", pascalSnakeCase);
         assertEquals("TEST", pascalSnakeCase2);
     }
+
 }

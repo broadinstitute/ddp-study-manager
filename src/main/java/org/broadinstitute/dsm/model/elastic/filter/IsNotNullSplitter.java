@@ -1,0 +1,15 @@
+package org.broadinstitute.dsm.model.elastic.filter;
+
+import org.broadinstitute.dsm.model.Filter;
+
+public class IsNotNullSplitter extends BaseSplitter {
+
+    public IsNotNullSplitter(String filter) {
+        super(filter);
+    }
+
+    @Override
+    public String[] split() {
+        return filter.split(Filter.IS_NOT_NULL.trim());
+    }
+}

@@ -32,19 +32,10 @@ public class CollectionQueryBuilder extends DsmAbstractQueryBuilder {
 
     private void buildUpNestedQuery(BoolQueryBuilder boolQueryBuilder, List<String> filterValues, FilterStrategy filterStrategy) {
         for (String filterValue : filterValues) {
-            SpliteratorVisitor visitor = SpliteratorVisitor.instance(filterValue);
-            Unit unit = new Unit(filterValue);
-            unit.accept(visitor);
-            List<String> splittedFilter = unit.getSplittedWords();
-//            String splitter = filterValue.contains(Filter.EQUALS) ? Filter.EQUALS : Filter.LIKE;
-//            String[] splittedFilter = filterValue.split(splitter);
-            String value = splittedFilter.get(1).trim();
-            String[] aliasWithField = splittedFilter.get(0).trim().split(ElasticSearchUtil.DOT_SEPARATOR);
-            String innerProperty = aliasWithField[1];// medicalRecordId
-            String alias = aliasWithField[0];
-            String outerProperty = Util.TABLE_ALIAS_MAPPINGS.get(alias).getPropertyName(); //medicalRecord
+            BaseSplitter splitter = SplitterFactory.createSplitter(filterValue);
+            String outerProperty = Util.TABLE_ALIAS_MAPPINGS.get(splitter.getAlias()).getPropertyName(); //medicalRecord
             String nestedPath = DSM_WITH_DOT + outerProperty;
-            filterStrategy.build(boolQueryBuilder, buildNestedQueryBuilder(nestedPath, innerProperty, value));
+            filterStrategy.build(boolQueryBuilder, buildNestedQueryBuilder(nestedPath, splitter.getInnerProperty(), splitter.getValue()));
         }
     }
 
