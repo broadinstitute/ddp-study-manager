@@ -15,6 +15,11 @@ public class CollectionQueryBuilder extends DsmAbstractQueryBuilder {
         super(filter);
     }
 
+    public static Operator extract(String filterEquals) {
+        String operator = filterEquals.split(" ")[1];
+        return Operator.getOperator(operator);
+    }
+
     @Override
     public AbstractQueryBuilder build() {
         Map<String, List<String>> parsedFilters = parseFiltersByLogicalOperators();
