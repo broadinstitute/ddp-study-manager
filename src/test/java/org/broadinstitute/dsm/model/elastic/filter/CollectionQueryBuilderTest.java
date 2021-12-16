@@ -4,7 +4,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -26,13 +25,4 @@ public class CollectionQueryBuilderTest {
         }
     }
 
-    @Test
-    public void extractLogicalOperator() {
-        String filterEquals = "m.medicalRecordId = 15";
-        String filterLike = "m.medicalRecordId LIKE 15";
-        Operator equalsOperator = CollectionQueryBuilder.extract(filterEquals);
-        Operator likeOperator = CollectionQueryBuilder.extract(filterLike);
-        assertEquals(Operator.EQUALS, equalsOperator);
-        assertEquals(Operator.LIKE, likeOperator);
-    }
 }

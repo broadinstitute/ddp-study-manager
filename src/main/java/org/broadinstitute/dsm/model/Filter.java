@@ -54,6 +54,7 @@ public class Filter {
     public static final String JSON_CONTAINS = "JSON_CONTAINS";
     public static final String JSON_OBJECT = "JSON_OBJECT";
     public static final int THOUSAND = 1000;
+    public static final String IS_NOT_NULL_TRIMMED = "IS NOT NULL";
 
     public static String TEXT = "TEXT";
     public static String OPTIONS = "OPTIONS";

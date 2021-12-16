@@ -7,11 +7,6 @@ public abstract class BaseSplitter {
     protected String filter;
     protected String[] splittedFilter;
 
-    public BaseSplitter(String filter) {
-        this.filter = filter;
-        splittedFilter = split();
-    }
-
     public abstract String[] split();
 
     public String getValue() {
@@ -28,5 +23,10 @@ public abstract class BaseSplitter {
 
     private String[] getFieldWithAlias() {
         return splittedFilter[0].trim().split(ElasticSearchUtil.DOT_SEPARATOR);
+    }
+
+    public void setFilter(String filter) {
+        this.filter = filter;
+        splittedFilter = split();
     }
 }

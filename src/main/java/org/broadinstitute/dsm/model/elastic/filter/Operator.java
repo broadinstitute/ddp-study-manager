@@ -1,7 +1,5 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
-import java.util.Arrays;
-
 import org.broadinstitute.dsm.model.Filter;
 
 public enum Operator {
@@ -9,7 +7,7 @@ public enum Operator {
     EQUALS(Filter.EQUALS_TRIMMED),
     GREATER_THAN_EQUALS(Filter.LARGER_EQUALS_TRIMMED),
     LESS_THAN_EQUALS(Filter.SMALLER_EQUALS_TRIMMED),
-    IS_NOT_NULL(Filter.IS_NOT_NULL);
+    IS_NOT_NULL(Filter.IS_NOT_NULL_TRIMMED);
 
     private String value;
 
@@ -22,5 +20,10 @@ public enum Operator {
             if (op.value.equals(value)) return op;
         }
         throw new IllegalArgumentException("Unknown operator");
+    }
+
+    public static Operator extract(String filter) {
+        String operator = filter.split(" ")[1];
+        return getOperator(operator);
     }
 }

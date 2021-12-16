@@ -1,23 +1,20 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
-import java.util.*;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.elastic.Util;
-import org.broadinstitute.dsm.util.ElasticSearchUtil;
-import org.elasticsearch.index.query.*;
+import org.elasticsearch.index.query.AbstractQueryBuilder;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.NestedQueryBuilder;
+
+import java.util.*;
 
 public class CollectionQueryBuilder extends DsmAbstractQueryBuilder {
 
     public CollectionQueryBuilder(String filter) {
         super(filter);
-    }
-
-    public static Operator extract(String filterEquals) {
-        String operator = filterEquals.split(" ")[1];
-        return Operator.getOperator(operator);
     }
 
     @Override
@@ -37,7 +34,8 @@ public class CollectionQueryBuilder extends DsmAbstractQueryBuilder {
 
     private void buildUpNestedQuery(BoolQueryBuilder boolQueryBuilder, List<String> filterValues, FilterStrategy filterStrategy) {
         for (String filterValue : filterValues) {
-            BaseSplitter splitter = SplitterFactory.createSplitter(filterValue);
+            BaseSplitter splitter = SplitterFactory.createSplitter(Operator.extract(filterValue));
+            splitter.setFilter(filterValue);
             String outerProperty = Util.TABLE_ALIAS_MAPPINGS.get(splitter.getAlias()).getPropertyName(); //medicalRecord
             String nestedPath = DSM_WITH_DOT + outerProperty;
             filterStrategy.build(boolQueryBuilder, buildNestedQueryBuilder(nestedPath, splitter.getInnerProperty(), splitter.getValue()));
