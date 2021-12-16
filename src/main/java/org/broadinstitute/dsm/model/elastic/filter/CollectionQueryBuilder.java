@@ -32,10 +32,14 @@ public class CollectionQueryBuilder extends DsmAbstractQueryBuilder {
 
     private void buildUpNestedQuery(BoolQueryBuilder boolQueryBuilder, List<String> filterValues, FilterStrategy filterStrategy) {
         for (String filterValue : filterValues) {
-            String splitter = filterValue.contains(Filter.EQUALS) ? Filter.EQUALS : Filter.LIKE;
-            String[] splittedFilter = filterValue.split(splitter);
-            String value = splittedFilter[1].trim();
-            String[] aliasWithField = splittedFilter[0].trim().split(ElasticSearchUtil.DOT_SEPARATOR);
+            SpliteratorVisitor visitor = SpliteratorVisitor.instance(filterValue);
+            Unit unit = new Unit(filterValue);
+            unit.accept(visitor);
+            List<String> splittedFilter = unit.getSplittedWords();
+//            String splitter = filterValue.contains(Filter.EQUALS) ? Filter.EQUALS : Filter.LIKE;
+//            String[] splittedFilter = filterValue.split(splitter);
+            String value = splittedFilter.get(1).trim();
+            String[] aliasWithField = splittedFilter.get(0).trim().split(ElasticSearchUtil.DOT_SEPARATOR);
             String innerProperty = aliasWithField[1];// medicalRecordId
             String alias = aliasWithField[0];
             String outerProperty = Util.TABLE_ALIAS_MAPPINGS.get(alias).getPropertyName(); //medicalRecord
@@ -50,7 +54,7 @@ public class CollectionQueryBuilder extends DsmAbstractQueryBuilder {
 
     protected Map<String, List<String>> parseFiltersByLogicalOperators() {
         Map<String, List<String>> filterByLogicalOperators = new HashMap<>(Map.of(Filter.AND, new ArrayList<>(), Filter.OR, new ArrayList<>()));
-        String[] andSeparated = filter.split(Filter.AND);
+        String[] andSeparated = filter.split(Filter.AND_TRIMMED);
         for (String eachFilter : andSeparated) {
             String cleanedEachFilter = eachFilter.trim();
             if (cleanedEachFilter.contains(Filter.OR)) {
