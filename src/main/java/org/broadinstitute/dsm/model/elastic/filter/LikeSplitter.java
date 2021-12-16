@@ -7,6 +7,6 @@ public class LikeSplitter extends BaseSplitter {
 
     @Override
     public String[] split() {
-        return filter.split(Filter.EQUALS_TRIMMED);
+        return filter.split(Filter.LIKE_TRIMMED);
     }
 }

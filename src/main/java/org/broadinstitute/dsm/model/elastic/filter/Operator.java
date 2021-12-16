@@ -23,6 +23,8 @@ public enum Operator {
     }
 
     public static Operator extract(String filter) {
+        if (filter.contains(Filter.IS_NOT_NULL_TRIMMED))
+            return IS_NOT_NULL;
         String operator = filter.split(" ")[1];
         return getOperator(operator);
     }

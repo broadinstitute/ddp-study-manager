@@ -14,8 +14,14 @@ public class QueryBuilderFactory {
                 queryBuilder = new MatchQueryBuilder(payload.getFieldName(), payload.getValue());
                 break;
             case GREATER_THAN_EQUALS:
+                RangeQueryBuilder greaterRangeQuery = new RangeQueryBuilder(payload.getFieldName());
+                greaterRangeQuery.gte(payload.getValue());
+                queryBuilder = greaterRangeQuery;
+                break;
             case LESS_THAN_EQUALS:
-                queryBuilder = new RangeQueryBuilder(payload.getFieldName());
+                RangeQueryBuilder lessRangeQuery = new RangeQueryBuilder(payload.getFieldName());
+                lessRangeQuery.lte(payload.getValue());
+                queryBuilder = lessRangeQuery;
                 break;
             case IS_NOT_NULL:
                 queryBuilder = new ExistsQueryBuilder(payload.getFieldName());

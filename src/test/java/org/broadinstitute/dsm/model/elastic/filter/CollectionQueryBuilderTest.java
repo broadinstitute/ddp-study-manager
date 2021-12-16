@@ -1,8 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
-import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.index.query.*;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -27,6 +26,41 @@ public class CollectionQueryBuilderTest {
             }
         }
     }
+
+    @Test
+    public void collectionBuild() {
+
+        String filter = "AND m.medicalRecordId = 15 AND m.type = PHYSICIAN OR k.bspCollaboratorSampleId = ASCProject_PZ8GJC_SALIVA";
+
+        DsmAbstractQueryBuilder dsmAbstractQueryBuilder = new CollectionQueryBuilder(filter);
+
+        AbstractQueryBuilder actual = dsmAbstractQueryBuilder.build();
+
+        AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord", new MatchQueryBuilder("dsm.medicalRecord.medicalRecordId", "15"), ScoreMode.Avg))
+                .must(new NestedQueryBuilder("dsm.medicalRecord", new MatchQueryBuilder("dsm.medicalRecord.type", "PHYSICIAN"), ScoreMode.Avg))
+                .should(new NestedQueryBuilder("dsm.kitRequestShipping", new MatchQueryBuilder("dsm.kitRequestShipping.bspCollaboratorSampleId", "ASCProject_PZ8GJC_SALIVA"), ScoreMode.Avg));
+
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void collectionBuild2() {
+
+        String filter = "AND m.medicalRecordId >= 15 AND m.type LIKE PHYSICIAN OR k.bspCollaboratorSampleId = ASCProject_PZ8GJC_SALIVA AND t.returnDate <= 2015-01-01 AND p.participantId IS NOT NULL";
+
+        DsmAbstractQueryBuilder dsmAbstractQueryBuilder = new CollectionQueryBuilder(filter);
+
+        AbstractQueryBuilder actual = dsmAbstractQueryBuilder.build();
+
+        AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord", new RangeQueryBuilder("dsm.medicalRecord.medicalRecordId").gte("15"), ScoreMode.Avg))
+                .must(new NestedQueryBuilder("dsm.medicalRecord", new MatchQueryBuilder("dsm.medicalRecord.type", "PHYSICIAN"), ScoreMode.Avg))
+                .should(new NestedQueryBuilder("dsm.kitRequestShipping", new MatchQueryBuilder("dsm.kitRequestShipping.bspCollaboratorSampleId", "ASCProject_PZ8GJC_SALIVA"), ScoreMode.Avg))
+                .must(new NestedQueryBuilder("dsm.tissue", new RangeQueryBuilder("dsm.tissue.returnDate").lte("2015-01-01"), ScoreMode.Avg))
+                .must(new NestedQueryBuilder("dsm.participant", new ExistsQueryBuilder("dsm.participant.participantId"), ScoreMode.Avg));
+
+        Assert.assertEquals(expected, actual);
+    }
+
 
 
 }
