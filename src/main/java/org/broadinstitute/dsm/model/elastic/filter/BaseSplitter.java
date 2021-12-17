@@ -10,11 +10,11 @@ public abstract class BaseSplitter {
 
     public abstract String[] split();
 
-    public String getValue() {
+    public String[] getValue() {
         if (splittedFilter.length > 1) {
-            return splittedFilter[1].trim();
+            return new String[]{splittedFilter[1].trim()};
         }
-        return StringUtils.EMPTY;
+        return new String[]{StringUtils.EMPTY};
     }
 
     public String getAlias() {
