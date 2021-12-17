@@ -25,7 +25,7 @@ public abstract class BaseSplitter {
         return getFieldWithAlias()[1];
     }
 
-    private String[] getFieldWithAlias() {
+    protected String[] getFieldWithAlias() {
         return splittedFilter[0].trim().split(ElasticSearchUtil.DOT_SEPARATOR);
     }
 

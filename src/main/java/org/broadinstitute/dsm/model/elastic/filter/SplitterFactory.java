@@ -5,6 +5,9 @@ public class SplitterFactory {
     public static BaseSplitter createSplitter(Operator operator) {
         BaseSplitter splitter;
         switch (operator) {
+            case DIAMOND_EQUALS:
+                splitter = new DiamondEqualsSplitter();
+                break;
             case EQUALS:
                 splitter = new EqualsSplitter();
                 break;
