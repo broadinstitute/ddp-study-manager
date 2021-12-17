@@ -27,7 +27,13 @@ public class BaseParserTest {
     @Test
     public void parse() {
         String value = "'15'";
+        String value1 = "'ASCProject_PZ8GJC_SALIVA'";
+        String value2 = "'2015-01-01'";
         String convertedValue = valueParser.convertString(value);
+        String convertedValue1 = valueParser.convertString(value1);
+        String convertedValue2 = valueParser.convertString(value2);
         Assert.assertEquals("15", convertedValue);
+        Assert.assertEquals("ASCProject_PZ8GJC_SALIVA", convertedValue1);
+        Assert.assertEquals("2015-01-01", convertedValue2);
     }
 }

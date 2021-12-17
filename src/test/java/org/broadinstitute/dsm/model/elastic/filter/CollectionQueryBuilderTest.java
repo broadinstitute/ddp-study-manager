@@ -1,22 +1,34 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
-import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.index.query.*;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.index.query.AbstractQueryBuilder;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.ExistsQueryBuilder;
+import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.NestedQueryBuilder;
+import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class CollectionQueryBuilderTest {
+
+    static CollectionQueryBuilder collectionQueryBuilder;
+
+    @BeforeClass
+    public static void setUp() {
+        collectionQueryBuilder = new CollectionQueryBuilder();
+        collectionQueryBuilder.setParser(new FilterParser());
+    }
 
     @Test
     public void parseFiltersByLogicalOperators() {
         String filter = "AND m.medicalRecordId = '15' OR m.medicalRecordSomething LIKE '55555' OR m.medicalRecordSomethingg = '55552' AND m.dynamicFields.ragac = '55' OR m.medicalRecordName = '213'";
-        CollectionQueryBuilder collectionQueryBuilder = new CollectionQueryBuilder(filter);
+        collectionQueryBuilder.setFilter(filter);
         Map<String, List<String>> parsedFilters = collectionQueryBuilder.parseFiltersByLogicalOperators();
         for (Map.Entry<String, List<String>> eachFilter: parsedFilters.entrySet()) {
             if (eachFilter.getKey().equals("AND")) {
@@ -33,9 +45,8 @@ public class CollectionQueryBuilderTest {
 
         String filter = "AND m.medicalRecordId = '15' AND m.type = 'PHYSICIAN' OR k.bspCollaboratorSampleId = 'ASCProject_PZ8GJC_SALIVA'";
 
-        DsmAbstractQueryBuilder dsmAbstractQueryBuilder = new CollectionQueryBuilder(filter);
-
-        AbstractQueryBuilder actual = dsmAbstractQueryBuilder.build();
+        collectionQueryBuilder.setFilter(filter);
+        AbstractQueryBuilder actual = collectionQueryBuilder.build();
 
         AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord", new MatchQueryBuilder("dsm.medicalRecord.medicalRecordId", "15"), ScoreMode.Avg))
                 .must(new NestedQueryBuilder("dsm.medicalRecord", new MatchQueryBuilder("dsm.medicalRecord.type", "PHYSICIAN"), ScoreMode.Avg))
@@ -49,9 +60,8 @@ public class CollectionQueryBuilderTest {
 
         String filter = "AND m.medicalRecordId >= '15' AND m.type LIKE 'PHYSICIAN' OR k.bspCollaboratorSampleId = 'ASCProject_PZ8GJC_SALIVA' AND t.returnDate <= '2015-01-01' AND p.participantId IS NOT NULL";
 
-        DsmAbstractQueryBuilder dsmAbstractQueryBuilder = new CollectionQueryBuilder(filter);
-
-        AbstractQueryBuilder actual = dsmAbstractQueryBuilder.build();
+        collectionQueryBuilder.setFilter(filter);
+        AbstractQueryBuilder actual = collectionQueryBuilder.build();
 
         AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord", new RangeQueryBuilder("dsm.medicalRecord.medicalRecordId").gte("15"), ScoreMode.Avg))
                 .must(new NestedQueryBuilder("dsm.medicalRecord", new MatchQueryBuilder("dsm.medicalRecord.type", "PHYSICIAN"), ScoreMode.Avg))
@@ -67,9 +77,8 @@ public class CollectionQueryBuilderTest {
 
         String filter = "AND m.age >= '15' AND m.age <= '30'";
 
-        DsmAbstractQueryBuilder dsmAbstractQueryBuilder = new CollectionQueryBuilder(filter);
-
-        AbstractQueryBuilder actual = dsmAbstractQueryBuilder.build();
+        collectionQueryBuilder.setFilter(filter);
+        AbstractQueryBuilder actual = collectionQueryBuilder.build();
 
         AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord",
                         new RangeQueryBuilder("dsm.medicalRecord.age").gte("15"), ScoreMode.Avg))
@@ -84,12 +93,11 @@ public class CollectionQueryBuilderTest {
 
         String filter = "AND m.followUp LIKE '1'";
 
-        DsmAbstractQueryBuilder dsmAbstractQueryBuilder = new CollectionQueryBuilder(filter);
-
-        AbstractQueryBuilder actual = dsmAbstractQueryBuilder.build();
+        collectionQueryBuilder.setFilter(filter);
+        AbstractQueryBuilder actual = collectionQueryBuilder.build();
 
         AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord",
-                        new MatchQueryBuilder("dsm.medicalRecord.followUp", "'1'"), ScoreMode.Avg));
+                        new MatchQueryBuilder("dsm.medicalRecord.followUp", "1"), ScoreMode.Avg));
 
         Assert.assertEquals(expected, actual);
     }

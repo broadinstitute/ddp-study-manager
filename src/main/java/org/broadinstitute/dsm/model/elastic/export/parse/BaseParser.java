@@ -11,6 +11,7 @@ public abstract class BaseParser implements Parser {
 
     @Override
     public Object parse(String value) {
+        value = convertString(value);
         Object result = forString(value);
         if (StringUtils.isNumeric(value)) {
             result = forNumeric(value);
@@ -77,8 +78,12 @@ public abstract class BaseParser implements Parser {
     }
 
     public String convertString(String value) {
-        if (value.charAt(0) == '\'' && value.charAt(value.length() - 1) == '\'')
+        if (isWrappedByChar(value))
             return value.substring(1, value.length() - 1);
         return value;
+    }
+
+    private boolean isWrappedByChar(String value) {
+        return StringUtils.isNotBlank(value) && value.charAt(0) == '\'' && value.charAt(value.length() - 1) == '\'';
     }
 }

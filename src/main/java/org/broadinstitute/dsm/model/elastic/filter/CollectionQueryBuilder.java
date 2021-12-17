@@ -1,19 +1,21 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.search.Query;
 import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.elastic.Util;
+import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.elasticsearch.index.query.*;
 
 import java.util.*;
 
 public class CollectionQueryBuilder extends DsmAbstractQueryBuilder {
 
-    public CollectionQueryBuilder(String filter) {
-        super(filter);
+    public CollectionQueryBuilder(String filter, Parser parser) {
+        super(filter, parser);
     }
+
+    public CollectionQueryBuilder() {}
 
     @Override
     public AbstractQueryBuilder build() {
@@ -21,7 +23,7 @@ public class CollectionQueryBuilder extends DsmAbstractQueryBuilder {
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         for (Map.Entry<String, List<String>> parsedFilter: parsedFilters.entrySet()) {
             List<String> filterValues = parsedFilter.getValue();
-            if (parsedFilter.getKey().equals(Filter.AND)) {
+            if (parsedFilter.getKey().equals(Filter.AND_TRIMMED)) {
                 buildUpNestedQuery(boolQueryBuilder, filterValues, BoolQueryBuilder::must);
             } else {
                 buildUpNestedQuery(boolQueryBuilder, filterValues, BoolQueryBuilder::should);
@@ -37,7 +39,7 @@ public class CollectionQueryBuilder extends DsmAbstractQueryBuilder {
             splitter.setFilter(filterValue);
             String outerProperty = Util.TABLE_ALIAS_MAPPINGS.get(splitter.getAlias()).getPropertyName(); //medicalRecord
             String nestedPath = DSM_WITH_DOT + outerProperty;
-            QueryPayload queryPayload = new QueryPayload(nestedPath + "." + splitter.getInnerProperty(), splitter.getValue());
+            QueryPayload queryPayload = new QueryPayload(nestedPath + "." + splitter.getInnerProperty(), parser.parse(splitter.getValue()));
             QueryBuilder queryBuilder = QueryBuilderFactory.buildQueryBuilder(operator, queryPayload);
             filterStrategy.build(boolQueryBuilder, new NestedQueryBuilder(nestedPath, queryBuilder, ScoreMode.Avg));
         }
