@@ -44,18 +44,19 @@ public class CollectionQueryBuilder extends DsmAbstractQueryBuilder {
     }
 
     protected Map<String, List<String>> parseFiltersByLogicalOperators() {
-        Map<String, List<String>> filterByLogicalOperators = new HashMap<>(Map.of(Filter.AND, new ArrayList<>(), Filter.OR, new ArrayList<>()));
+        Map<String, List<String>> filterByLogicalOperators = new HashMap<>(Map.of(Filter.AND_TRIMMED, new ArrayList<>(), Filter.OR_TRIMMED,
+                new ArrayList<>()));
         String[] andSeparated = filter.split(Filter.AND_TRIMMED);
         for (String eachFilter : andSeparated) {
             String cleanedEachFilter = eachFilter.trim();
-            if (cleanedEachFilter.contains(Filter.OR)) {
-                String[] orSeparated = cleanedEachFilter.split(Filter.OR);
-                filterByLogicalOperators.get(Filter.AND).add(orSeparated[0].trim());
+            if (cleanedEachFilter.contains(Filter.OR_TRIMMED)) {
+                String[] orSeparated = cleanedEachFilter.split(Filter.OR_TRIMMED);
+                filterByLogicalOperators.get(Filter.AND_TRIMMED).add(orSeparated[0].trim());
                 Arrays.stream(orSeparated)
                         .skip(1)
-                        .forEach(f -> filterByLogicalOperators.get(Filter.OR).add(f.trim()));
+                        .forEach(f -> filterByLogicalOperators.get(Filter.OR_TRIMMED).add(f.trim()));
             } else if (StringUtils.isNotBlank(cleanedEachFilter)){
-                filterByLogicalOperators.get(Filter.AND).add(cleanedEachFilter);
+                filterByLogicalOperators.get(Filter.AND_TRIMMED).add(cleanedEachFilter);
             }
         }
         return filterByLogicalOperators;

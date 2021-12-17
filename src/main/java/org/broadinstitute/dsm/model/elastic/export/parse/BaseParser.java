@@ -1,9 +1,12 @@
 package org.broadinstitute.dsm.model.elastic.export.parse;
 
+import java.nio.CharBuffer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -62,7 +65,10 @@ public abstract class BaseParser implements Parser {
     }
 
     boolean isBoolean(String value) {
+        IntStream chars = CharBuffer.wrap(value.toCharArray()).chars();
+        boolean isBoolean = chars.anyMatch(c -> ((char) c) == '1' || ((char) c) == '0');
         return value.equalsIgnoreCase(Boolean.TRUE.toString()) ||
-               value.equalsIgnoreCase(Boolean.FALSE.toString());
+               value.equalsIgnoreCase(Boolean.FALSE.toString()) ||
+               isBoolean ;
     }
 }
