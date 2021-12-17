@@ -1,16 +1,21 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
-import static org.junit.Assert.*;
-
-import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.junit.Test;
 
-public class BaseSplitterTest {
+import static org.junit.Assert.*;
+
+public class DiamondEqualsSplitterTest {
 
     @Test
     public void getAlias() {
         DiamondEqualsSplitter diamondEqualsSplitter = getDiamondEqualsSplitter();
         assertEquals("m", diamondEqualsSplitter.getAlias());
+    }
+
+    @Test
+    public void getValue() {
+        DiamondEqualsSplitter diamondEqualsSplitter = getDiamondEqualsSplitter();
+        assertEquals("'1'", diamondEqualsSplitter.getValue());
     }
 
     @Test
@@ -25,5 +30,4 @@ public class BaseSplitterTest {
         diamondEqualsSplitter.setFilter(not);
         return diamondEqualsSplitter;
     }
-
 }

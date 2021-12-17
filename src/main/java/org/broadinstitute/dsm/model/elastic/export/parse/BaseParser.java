@@ -68,9 +68,9 @@ public abstract class BaseParser implements Parser {
     }
 
     public String convertBoolean(String value) {
-        if ("'1'".equals(value)) {
+        if ("'1'".equals(value) || "NOT'0'".equals(value)) {
             return "true";
-        } else if ("'0'".equals(value)){
+        } else if ("'0'".equals(value) || "NOT'1'".equals(value)) {
             return "false";
         } else {
             return value;
