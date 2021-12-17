@@ -25,7 +25,7 @@ public class BaseParserTest {
     }
 
     @Test
-    public void parse() {
+    public void convertString() {
         String value = "'15'";
         String value1 = "'ASCProject_PZ8GJC_SALIVA'";
         String value2 = "'2015-01-01'";
@@ -36,4 +36,5 @@ public class BaseParserTest {
         Assert.assertEquals("ASCProject_PZ8GJC_SALIVA", convertedValue1);
         Assert.assertEquals("2015-01-01", convertedValue2);
     }
+
 }
