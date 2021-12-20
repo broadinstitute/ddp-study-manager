@@ -11,16 +11,16 @@ public class QueryBuilderFactory {
         switch (operator) {
             case LIKE:
             case EQUALS:
-                queryBuilder = new MatchQueryBuilder(payload.getFieldName(), payload.getValue());
+                queryBuilder = new MatchQueryBuilder(payload.getFieldName(), payload.getValues());
                 break;
             case GREATER_THAN_EQUALS:
                 RangeQueryBuilder greaterRangeQuery = new RangeQueryBuilder(payload.getFieldName());
-                greaterRangeQuery.gte(payload.getValue());
+                greaterRangeQuery.gte(payload.getValues());
                 queryBuilder = greaterRangeQuery;
                 break;
             case LESS_THAN_EQUALS:
                 RangeQueryBuilder lessRangeQuery = new RangeQueryBuilder(payload.getFieldName());
-                lessRangeQuery.lte(payload.getValue());
+                lessRangeQuery.lte(payload.getValues());
                 queryBuilder = lessRangeQuery;
                 break;
             case IS_NOT_NULL:

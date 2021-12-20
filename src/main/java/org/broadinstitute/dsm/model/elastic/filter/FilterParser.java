@@ -13,6 +13,14 @@ public class FilterParser extends ValueParser {
     }
 
     @Override
+    public Object parse(String[] values) {
+        if (isBoolean(values))
+            return forBoolean(convertBoolean(values));
+        else
+            return convertString(values);
+    }
+
+    @Override
     protected Object forNumeric(String value) {
         return value;
     }

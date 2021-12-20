@@ -3,12 +3,21 @@ package org.broadinstitute.dsm.model.elastic.filter;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.Filter;
 
-public class MultipleOptionsSplitter extends BaseSplitter {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+public class MultipleOptionsSplitter extends BaseSplitter {
 
     @Override
     public String[] getValue() {
-        return super.getValue();
+        List<String> values = new ArrayList<>();
+        for (String fieldValuePair : splittedFilter) {
+            String value = fieldValuePair.split(Filter.EQUALS_TRIMMED)[1];
+            values.add(value);
+        }
+        return (String[]) values.toArray();
+
     }
 
     @Override

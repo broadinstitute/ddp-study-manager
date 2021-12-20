@@ -4,12 +4,13 @@ import lombok.Getter;
 
 @Getter
 public class QueryPayload {
-    String fieldName;
-    Object value;
 
-    public QueryPayload(String fieldName, Object value) {
+    String fieldName;
+    Object[] values;
+
+    public QueryPayload(String fieldName, Object[] value) {
         this.fieldName = fieldName;
-        this.value = value;
+        this.values = value;
     }
 
     public QueryPayload(String fieldName) {

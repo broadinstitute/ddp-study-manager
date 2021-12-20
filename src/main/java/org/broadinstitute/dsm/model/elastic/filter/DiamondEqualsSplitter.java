@@ -17,13 +17,13 @@ public class DiamondEqualsSplitter extends BaseSplitter {
     }
 
     @Override
-    public String getValue() {
-        String value = "'" + super.getValue() + "'";
+    public String[] getValue() {
+        String value = "'" + super.getValue()[0] + "'";
         try {
             String not = splitFieldWithAliasBySpace(super.getFieldWithAlias())[0];
-            return not + value;
+            return new String[] { not + value };
         } catch (Exception e) {
-            return value;
+            return new String[] { value };
         }
     }
 
