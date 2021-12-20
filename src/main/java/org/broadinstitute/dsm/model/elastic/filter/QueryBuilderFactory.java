@@ -27,6 +27,9 @@ public class QueryBuilderFactory {
             case IS_NOT_NULL:
                 qb = new ExistsQueryBuilder(payload.getFieldName());
                 break;
+            case DATE:
+                qb = new MatchQueryBuilder(payload.getFieldName(), payload.getValues()[0]);
+                break;
             case MULTIPLE_OPTIONS:
                 BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
                 Object[] values = payload.getValues();

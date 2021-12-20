@@ -15,7 +15,7 @@ public class DiamondEqualsSplitterTest {
     @Test
     public void getValue() {
         DiamondEqualsSplitter diamondEqualsSplitter = getDiamondEqualsSplitter();
-        assertEquals("'1'", diamondEqualsSplitter.getValue()[0]);
+        assertEquals("NOT'1'", diamondEqualsSplitter.getValue()[0]);
     }
 
     @Test

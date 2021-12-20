@@ -2,10 +2,7 @@ package org.broadinstitute.dsm.model.elastic.filter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.Filter;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import org.broadinstitute.dsm.model.elastic.Util;
 
 public class MultipleOptionsSplitter extends BaseSplitter {
 
@@ -23,7 +20,7 @@ public class MultipleOptionsSplitter extends BaseSplitter {
     public String getInnerProperty() {
         String propertyWithValue = super.getInnerProperty();
         String innerProperty = propertyWithValue.split(Filter.EQUALS_TRIMMED)[0].trim();
-        return innerProperty;
+        return Util.underscoresToCamelCase(innerProperty);
     }
 
     @Override
