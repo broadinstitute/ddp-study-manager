@@ -56,6 +56,7 @@ public class Filter {
     public static final int THOUSAND = 1000;
     public static final String IS_NOT_NULL_TRIMMED = "IS NOT NULL";
     public static final String DIAMOND_EQUALS = "<=>";
+    public static final String DATE_FORMAT = "STR_TO_DATE";
 
     public static String TEXT = "TEXT";
     public static String OPTIONS = "OPTIONS";

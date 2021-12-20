@@ -9,19 +9,19 @@ import org.junit.Test;
 
 public class QueryBuilderFactoryTest {
 
-//
-//    @Test
-//    public void buildQueryBuilder() {
-//        QueryPayload payload = new QueryPayload("medicalRecordId", 15);
-//        Operator operator = Operator.EQUALS;
-//        QueryBuilder queryBuilder = QueryBuilderFactory.buildQueryBuilder(operator, payload, boolQueryBuilder, filterStrategy);
-//        assertTrue(queryBuilder instanceof MatchQueryBuilder);
-//        operator = Operator.LIKE;
-//        queryBuilder = QueryBuilderFactory.buildQueryBuilder(operator, payload, boolQueryBuilder, filterStrategy);
-//        assertTrue(queryBuilder instanceof MatchQueryBuilder);
-//        operator = Operator.GREATER_THAN_EQUALS;
-//        queryBuilder = QueryBuilderFactory.buildQueryBuilder(operator, payload, boolQueryBuilder, filterStrategy);
-//        assertTrue(queryBuilder instanceof RangeQueryBuilder);
-//    }
+
+    @Test
+    public void buildQueryBuilder() {
+        QueryPayload payload = new QueryPayload("dsm.medicalRecord", "medicalRecordId", new Integer[] {10});
+        Operator operator = Operator.EQUALS;
+        QueryBuilder queryBuilder = QueryBuilderFactory.buildQueryBuilder(operator, payload);
+        assertTrue(queryBuilder instanceof MatchQueryBuilder);
+        operator = Operator.LIKE;
+        queryBuilder = QueryBuilderFactory.buildQueryBuilder(operator, payload);
+        assertTrue(queryBuilder instanceof MatchQueryBuilder);
+        operator = Operator.GREATER_THAN_EQUALS;
+        queryBuilder = QueryBuilderFactory.buildQueryBuilder(operator, payload);
+        assertTrue(queryBuilder instanceof RangeQueryBuilder);
+    }
 
 }

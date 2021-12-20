@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 
 public abstract class BaseSplitter {
@@ -12,7 +13,7 @@ public abstract class BaseSplitter {
 
     public String[] getValue() {
         if (splittedFilter.length > 1) {
-            return new String[]{splittedFilter[1].trim()};
+            return new String[]{splittedFilter[1].trim() };
         }
         return new String[]{StringUtils.EMPTY};
     }
@@ -22,7 +23,7 @@ public abstract class BaseSplitter {
     }
 
     public String getInnerProperty() {
-        return getFieldWithAlias()[1];
+        return Util.underscoresToCamelCase(getFieldWithAlias()[1]);
     }
 
     protected String[] getFieldWithAlias() {

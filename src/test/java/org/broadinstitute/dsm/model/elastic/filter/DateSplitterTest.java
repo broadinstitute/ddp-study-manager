@@ -1,0 +1,20 @@
+package org.broadinstitute.dsm.model.elastic.filter;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
+
+public class DateSplitterTest {
+
+    @Test
+    public void split() {
+
+        BaseSplitter dateSplitter = SplitterFactory.createSplitter(Operator.DATE);
+        dateSplitter.setFilter("STR_TO_DATE(m.fax_sent,'%Y-%m-%d') = STR_TO_DATE('2021-12-17','%Y-%m-%d')");
+
+        Assert.assertEquals("m", dateSplitter.getAlias());
+        Assert.assertEquals("faxSent", dateSplitter.getInnerProperty());
+        Assert.assertEquals("'2021-12-17'", dateSplitter.getValue()[0]);
+    }
+}

@@ -9,7 +9,8 @@ public enum Operator {
     LESS_THAN_EQUALS(Filter.SMALLER_EQUALS_TRIMMED),
     IS_NOT_NULL(Filter.IS_NOT_NULL_TRIMMED),
     DIAMOND_EQUALS(Filter.DIAMOND_EQUALS),
-    MULTIPLE_OPTIONS(Filter.OPEN_PARENTHESIS);
+    MULTIPLE_OPTIONS(Filter.OPEN_PARENTHESIS),
+    DATE(Filter.DATE_FORMAT);
 
     private String value;
 
@@ -29,6 +30,8 @@ public enum Operator {
             return IS_NOT_NULL;
         else if (filter.startsWith(Filter.OPEN_PARENTHESIS))
             return MULTIPLE_OPTIONS;
+        else if (filter.startsWith(Filter.DATE_FORMAT))
+            return DATE;
         String operator = filter.split(" ")[1];
         return getOperator(operator);
     }

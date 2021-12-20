@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
 import org.broadinstitute.dsm.model.Filter;
+import org.broadinstitute.dsm.model.elastic.Util;
 
 public class DiamondEqualsSplitter extends BaseSplitter {
 
@@ -8,7 +9,7 @@ public class DiamondEqualsSplitter extends BaseSplitter {
     protected String[] getFieldWithAlias() {
         String[] fieldWithAlias = super.getFieldWithAlias();
         String alias = splitFieldWithAliasBySpace(fieldWithAlias)[1];
-        String innerProperty = fieldWithAlias[1];
+        String innerProperty = Util.underscoresToCamelCase(fieldWithAlias[1]);
         return new String[] {alias, innerProperty};
     }
 

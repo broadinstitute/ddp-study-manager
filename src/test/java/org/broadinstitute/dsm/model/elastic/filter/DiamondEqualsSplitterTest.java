@@ -15,17 +15,17 @@ public class DiamondEqualsSplitterTest {
     @Test
     public void getValue() {
         DiamondEqualsSplitter diamondEqualsSplitter = getDiamondEqualsSplitter();
-        assertEquals("'1'", diamondEqualsSplitter.getValue());
+        assertEquals("'1'", diamondEqualsSplitter.getValue()[0]);
     }
 
     @Test
     public void getInnerProperty() {
         DiamondEqualsSplitter diamondEqualsSplitter = getDiamondEqualsSplitter();
-        assertEquals("international", diamondEqualsSplitter.getInnerProperty());
+        assertEquals("faxSent", diamondEqualsSplitter.getInnerProperty());
     }
 
     private DiamondEqualsSplitter getDiamondEqualsSplitter() {
-        String not = "NOT m.international <=> 1";
+        String not = "NOT m.fax_sent <=> 1";
         DiamondEqualsSplitter diamondEqualsSplitter = new DiamondEqualsSplitter();
         diamondEqualsSplitter.setFilter(not);
         return diamondEqualsSplitter;
