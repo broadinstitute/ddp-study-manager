@@ -11,13 +11,12 @@ public class MultipleOptionsSplitter extends BaseSplitter {
 
     @Override
     public String[] getValue() {
-        List<String> values = new ArrayList<>();
-        for (String fieldValuePair : splittedFilter) {
-            String value = fieldValuePair.split(Filter.EQUALS_TRIMMED)[1];
-            values.add(value);
+        String[] values = new String[splittedFilter.length];
+        for (int i = 0; i < values.length; i++) {
+            String value = splittedFilter[i].split(Filter.EQUALS_TRIMMED)[1];
+            values[i] = value;
         }
-        return (String[]) values.toArray();
-
+        return values;
     }
 
     @Override

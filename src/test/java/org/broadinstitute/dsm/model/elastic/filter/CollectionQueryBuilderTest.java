@@ -102,6 +102,30 @@ public class CollectionQueryBuilderTest {
         Assert.assertEquals(expected, actual);
     }
 
+    @Test
+    public void multipleOptionsQueryBuilder() {
+
+        String filter = "AND ( oD.request = 'review' OR oD.request = 'no' OR oD.request = 'hold' OR oD.request = 'request' OR oD.request = 'unable To Obtain' OR oD.request = 'sent' OR oD.request = 'received' OR oD.request = 'returned' )";
+
+        collectionQueryBuilder.setFilter(filter);
+        AbstractQueryBuilder actual = collectionQueryBuilder.build();
+
+        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        boolQueryBuilder.should(new MatchQueryBuilder("dsm.oncHistoryDetail.request", "review"));
+        boolQueryBuilder.should(new MatchQueryBuilder("dsm.oncHistoryDetail.request", "no"));
+        boolQueryBuilder.should(new MatchQueryBuilder("dsm.oncHistoryDetail.request", "hold"));
+        boolQueryBuilder.should(new MatchQueryBuilder("dsm.oncHistoryDetail.request", "request"));
+        boolQueryBuilder.should(new MatchQueryBuilder("dsm.oncHistoryDetail.request", "unable To Obtain"));
+        boolQueryBuilder.should(new MatchQueryBuilder("dsm.oncHistoryDetail.request", "sent"));
+        boolQueryBuilder.should(new MatchQueryBuilder("dsm.oncHistoryDetail.request", "received"));
+        boolQueryBuilder.should(new MatchQueryBuilder("dsm.oncHistoryDetail.request", "returned"));
+
+        AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord",
+                        boolQueryBuilder, ScoreMode.Avg));
+
+        Assert.assertEquals(expected, actual);
+    }
+
 
 
 }

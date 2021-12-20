@@ -40,8 +40,8 @@ public class CollectionQueryBuilder extends DsmAbstractQueryBuilder {
             String outerProperty = Util.TABLE_ALIAS_MAPPINGS.get(splitter.getAlias()).getPropertyName(); //medicalRecord
             String nestedPath = DSM_WITH_DOT + outerProperty;
             QueryPayload queryPayload = new QueryPayload(nestedPath + "." + splitter.getInnerProperty(), parser.parse(splitter.getValue()));
-            QueryBuilder queryBuilder = QueryBuilderFactory.buildQueryBuilder(operator, queryPayload);
-            filterStrategy.build(boolQueryBuilder, new NestedQueryBuilder(nestedPath, queryBuilder, ScoreMode.Avg));
+            QueryBuilderFactory.buildQueryBuilder(operator, queryPayload, boolQueryBuilder, filterStrategy);
+//            filterStrategy.build(boolQueryBuilder, new NestedQueryBuilder(nestedPath, queryBuilder, ScoreMode.Avg));
         }
     }
 
