@@ -126,6 +126,22 @@ public class CollectionQueryBuilderTest {
         Assert.assertEquals(expected, actual);
     }
 
+    @Test
+    public void dateGreaterBuild() {
+
+        String filter = "AND m.received >= STR_TO_DATE('2012-01-01', %yyyy-%MM-%dd) AND m.received <= STR_TO_DATE('2015-01-01', %yyyy-%MM-%dd)";
+
+        collectionQueryBuilder.setFilter(filter);
+        AbstractQueryBuilder actual = collectionQueryBuilder.build();
+
+        AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord",
+                        new RangeQueryBuilder("dsm.medicalRecord.received").gte("2012-01-01"), ScoreMode.Avg))
+                .must(new NestedQueryBuilder("dsm.medicalRecord", new RangeQueryBuilder("dsm.medicalRecord.received").lte("2015-01-01"),
+                        ScoreMode.Avg));
+
+        Assert.assertEquals(expected, actual);
+    }
+
 
 
 }

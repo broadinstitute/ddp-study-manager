@@ -26,6 +26,12 @@ public class SplitterFactory {
             case DATE:
                 splitter = new DateSplitter();
                 break;
+            case DATE_GREATER:
+                splitter = new DateGreaterSplitter();
+                break;
+            case DATE_LESS:
+                splitter = new DateLowerSplitter();
+                break;
             case IS_NOT_NULL:
                 splitter = new IsNotNullSplitter();
                 break;

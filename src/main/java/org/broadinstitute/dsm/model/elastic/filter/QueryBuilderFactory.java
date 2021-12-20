@@ -12,6 +12,7 @@ public class QueryBuilderFactory {
         switch (operator) {
             case LIKE:
             case EQUALS:
+            case DATE:
                 qb = new MatchQueryBuilder(payload.getFieldName(), payload.getValues()[0]);
                 break;
             case GREATER_THAN_EQUALS:
@@ -24,11 +25,18 @@ public class QueryBuilderFactory {
                 lessRangeQuery.lte(payload.getValues()[0]);
                 qb = lessRangeQuery;
                 break;
+            case DATE_GREATER:
+                RangeQueryBuilder dateGreaterQuery = new RangeQueryBuilder(payload.getFieldName());
+                dateGreaterQuery.gte(payload.getValues()[0]);
+                qb = dateGreaterQuery;
+                break;
+            case DATE_LESS:
+                RangeQueryBuilder dateLessQuery = new RangeQueryBuilder(payload.getFieldName());
+                dateLessQuery.lte(payload.getValues()[0]);
+                qb = dateLessQuery;
+                break;
             case IS_NOT_NULL:
                 qb = new ExistsQueryBuilder(payload.getFieldName());
-                break;
-            case DATE:
-                qb = new MatchQueryBuilder(payload.getFieldName(), payload.getValues()[0]);
                 break;
             case MULTIPLE_OPTIONS:
                 BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();

@@ -57,6 +57,8 @@ public class Filter {
     public static final String IS_NOT_NULL_TRIMMED = "IS NOT NULL";
     public static final String DIAMOND_EQUALS = "<=>";
     public static final String DATE_FORMAT = "STR_TO_DATE";
+    public static final String DATE_GREATER = LARGER_EQUALS + DATE_FORMAT;
+    public static final String DATE_LESS = SMALLER_EQUALS + DATE_FORMAT;
 
     public static String TEXT = "TEXT";
     public static String OPTIONS = "OPTIONS";
