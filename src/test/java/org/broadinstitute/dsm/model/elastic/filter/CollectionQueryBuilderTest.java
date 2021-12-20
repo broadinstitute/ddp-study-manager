@@ -97,7 +97,7 @@ public class CollectionQueryBuilderTest {
         AbstractQueryBuilder actual = collectionQueryBuilder.build();
 
         AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord",
-                        new MatchQueryBuilder("dsm.medicalRecord.followUp", "1"), ScoreMode.Avg));
+                        new MatchQueryBuilder("dsm.medicalRecord.followUp", true), ScoreMode.Avg));
 
         Assert.assertEquals(expected, actual);
     }
@@ -120,7 +120,7 @@ public class CollectionQueryBuilderTest {
         boolQueryBuilder.should(new MatchQueryBuilder("dsm.oncHistoryDetail.request", "received"));
         boolQueryBuilder.should(new MatchQueryBuilder("dsm.oncHistoryDetail.request", "returned"));
 
-        AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord",
+        AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.oncHistoryDetail",
                         boolQueryBuilder, ScoreMode.Avg));
 
         Assert.assertEquals(expected, actual);

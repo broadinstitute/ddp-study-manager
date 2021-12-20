@@ -5,15 +5,17 @@ import lombok.Getter;
 @Getter
 public class QueryPayload {
 
-    String fieldName;
+    private String property;
+    private String path;
     Object[] values;
 
-    public QueryPayload(String fieldName, Object[] value) {
-        this.fieldName = fieldName;
-        this.values = value;
+    public QueryPayload(String path, String property, Object[] values) {
+        this.path = path;
+        this.property = property;
+        this.values = values;
     }
 
-    public QueryPayload(String fieldName) {
-        this.fieldName = fieldName;
+    public String getFieldName() {
+        return path + "." + property;
     }
 }

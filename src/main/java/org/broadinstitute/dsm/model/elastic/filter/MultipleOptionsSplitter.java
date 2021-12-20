@@ -13,10 +13,17 @@ public class MultipleOptionsSplitter extends BaseSplitter {
     public String[] getValue() {
         String[] values = new String[splittedFilter.length];
         for (int i = 0; i < values.length; i++) {
-            String value = splittedFilter[i].split(Filter.EQUALS_TRIMMED)[1];
+            String value = splittedFilter[i].split(Filter.EQUALS_TRIMMED)[1].trim();
             values[i] = value;
         }
         return values;
+    }
+
+    @Override
+    public String getInnerProperty() {
+        String propertyWithValue = super.getInnerProperty();
+        String innerProperty = propertyWithValue.split(Filter.EQUALS_TRIMMED)[0].trim();
+        return innerProperty;
     }
 
     @Override
