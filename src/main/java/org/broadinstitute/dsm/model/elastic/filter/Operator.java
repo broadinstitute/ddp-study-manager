@@ -12,7 +12,8 @@ public enum Operator {
     MULTIPLE_OPTIONS(Filter.OPEN_PARENTHESIS),
     DATE(Filter.DATE_FORMAT),
     DATE_GREATER(Filter.DATE_GREATER),
-    DATE_LESS(Filter.DATE_LESS);
+    DATE_LESS(Filter.DATE_LESS),
+    JSON_EXTRACT(Filter.JSON_EXTRACT);
 
     private String value;
 
@@ -38,6 +39,8 @@ public enum Operator {
             return DATE_GREATER;
         else if (filter.contains(Filter.DATE_LESS))
             return DATE_LESS;
+        else if (filter.contains(Filter.JSON_EXTRACT))
+            return JSON_EXTRACT;
         String operator = filter.split(" ")[1];
         return getOperator(operator);
     }

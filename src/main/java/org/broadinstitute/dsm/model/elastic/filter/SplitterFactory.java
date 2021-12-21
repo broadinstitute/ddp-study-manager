@@ -35,6 +35,9 @@ public class SplitterFactory {
             case IS_NOT_NULL:
                 splitter = new IsNotNullSplitter();
                 break;
+            case JSON_EXTRACT:
+                splitter = new JsonExtractSplitter();
+                break;
             default:
                 throw new IllegalArgumentException("Unknown operator");
         }
