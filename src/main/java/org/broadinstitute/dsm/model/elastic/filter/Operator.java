@@ -33,15 +33,7 @@ public enum Operator {
     }
 
     public static Operator extract(String filter) {
-        String filterValue = StringUtils.EMPTY;
-        List<Character> chars = new ArrayList<>();
-        for (int i = filter.length() - 1; i > 0 ; i--) {
-            if (Filter.IS_NOT_NULL_TRIMMED.equals(filterValue))
-                break;
-            else
-                chars.add((char) filter.indexOf(i));
-        }
-        if (new String(chars.toArray()).equals(Filter.IS_NOT_NULL_TRIMMED))
+        if (filter.endsWith(Filter.IS_NOT_NULL_TRIMMED) && !filter.startsWith(Filter.JSON_EXTRACT))
             return IS_NOT_NULL;
         else if (filter.startsWith(Filter.OPEN_PARENTHESIS))
             return MULTIPLE_OPTIONS;

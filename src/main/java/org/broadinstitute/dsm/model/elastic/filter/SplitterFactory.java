@@ -1,5 +1,8 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
+import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.model.Filter;
+
 public class SplitterFactory {
 
     public static BaseSplitter createSplitter(Operator operator, String filterValue) {
@@ -36,7 +39,7 @@ public class SplitterFactory {
                 splitter = new IsNotNullSplitter();
                 break;
             case JSON_EXTRACT:
-                Operator decoratedOperator = Operator.extract(filterValue);
+                Operator decoratedOperator = Operator.extract(filterValue.replace(Filter.JSON_EXTRACT, StringUtils.EMPTY));
                 if (Operator.IS_NOT_NULL.compareTo(decoratedOperator) != 0) {
                     splitter = new JsonExtractSplitter();
                     break;
