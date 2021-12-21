@@ -1,6 +1,10 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.Filter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public enum Operator {
     LIKE(Filter.LIKE_TRIMMED),
@@ -29,7 +33,15 @@ public enum Operator {
     }
 
     public static Operator extract(String filter) {
-        if (filter.contains(Filter.IS_NOT_NULL_TRIMMED))
+        String filterValue = StringUtils.EMPTY;
+        List<Character> chars = new ArrayList<>();
+        for (int i = filter.length() - 1; i > 0 ; i--) {
+            if (Filter.IS_NOT_NULL_TRIMMED.equals(filterValue))
+                break;
+            else
+                chars.add((char) filter.indexOf(i));
+        }
+        if (new String(chars.toArray()).equals(Filter.IS_NOT_NULL_TRIMMED))
             return IS_NOT_NULL;
         else if (filter.startsWith(Filter.OPEN_PARENTHESIS))
             return MULTIPLE_OPTIONS;

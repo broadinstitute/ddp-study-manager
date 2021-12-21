@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.ExistsQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
@@ -45,6 +46,14 @@ public class QueryBuilderFactory {
                     boolQueryBuilder.should(new MatchQueryBuilder(payload.getFieldName(), value));
                 }
                 qb = boolQueryBuilder;
+                break;
+            case JSON_EXTRACT:
+                Object[] dynamicFieldValues = payload.getValues();
+                if (!StringUtils.EMPTY.equals(dynamicFieldValues[0])) {
+                    qb = new MatchQueryBuilder(payload.getFieldName(), dynamicFieldValues[0]);
+                } else {
+                    qb = new ExistsQueryBuilder(payload.getFieldName());
+                }
                 break;
             default:
                 throw new IllegalArgumentException("Unknown operator");

@@ -145,8 +145,16 @@ public class CollectionQueryBuilderTest {
     @Test
     public void dynamicFieldsQueryBuild() {
 
-        String filter = "AND JSON_EXTRACT ( m.additional_values_json , '$.seeingIfBugExists' ) = 'true' AND m.received <= STR_TO_DATE('2015-01-01', %yyyy-%MM-%dd)";
+        String filter = "AND JSON_EXTRACT ( m.additional_values_json , '$.seeingIfBugExists' ) = 'true' AND JSON_EXTRACT ( m.additional_values_json , '$.tryAgain' ) IS NOT NULL";
 
+        collectionQueryBuilder.setFilter(filter);
+        AbstractQueryBuilder actual = collectionQueryBuilder.build();
+
+        AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord",
+                        new MatchQueryBuilder("dsm.medicalRecord.dynamicFields.seeingIfBugExists", true), ScoreMode.Avg))
+                .must(new NestedQueryBuilder("dsm.medicalRecord", new ExistsQueryBuilder("dsm.medicalRecord.dynamicFields.tryAgain"),ScoreMode.Avg));
+
+        Assert.assertEquals(expected, actual);
     }
 
 
