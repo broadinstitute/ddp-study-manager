@@ -1,20 +1,20 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
 public class JsonExtractSplitterTest {
 
-    static String filter;
-    static BaseSplitter splitter;
+    String filter;
+    BaseSplitter splitter;
 
-    @BeforeClass
-    public static void setUp() {
+    @Before
+    public void setUp() {
         filter = "JSON_EXTRACT ( m.additional_values_json , '$.seeingIfBugExists' ) = 'true'";
-        splitter = SplitterFactory.createSplitter(Operator.JSON_EXTRACT);
+        splitter = SplitterFactory.createSplitter(Operator.JSON_EXTRACT, filter);
         splitter.setFilter(filter);
     }
 
@@ -25,6 +25,13 @@ public class JsonExtractSplitterTest {
 
     @Test
     public void getInnerProperty() {
-        Assert.assertEquals("dynamicFields", splitter.getInnerProperty());
+        Assert.assertEquals("dynamicFields.seeingIfBugExists", splitter.getInnerProperty());
+    }
+
+    @Test
+    public void getIsNotNullValue() {
+        filter = "JSON_EXTRACT ( m.additional_values_json , '$.seeingIfBugExists' ) IS NOT NULL";
+        splitter.setFilter(filter);
+        Assert.assertEquals(StringUtils.EMPTY, splitter.getValue()[0]);
     }
 }

@@ -142,6 +142,13 @@ public class CollectionQueryBuilderTest {
         Assert.assertEquals(expected, actual);
     }
 
+    @Test
+    public void dynamicFieldsQueryBuild() {
+
+        String filter = "AND JSON_EXTRACT ( m.additional_values_json , '$.seeingIfBugExists' ) = 'true' AND m.received <= STR_TO_DATE('2015-01-01', %yyyy-%MM-%dd)";
+
+    }
+
 
 
 }

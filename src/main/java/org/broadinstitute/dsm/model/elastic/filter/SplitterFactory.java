@@ -2,7 +2,7 @@ package org.broadinstitute.dsm.model.elastic.filter;
 
 public class SplitterFactory {
 
-    public static BaseSplitter createSplitter(Operator operator) {
+    public static BaseSplitter createSplitter(Operator operator, String filterValue) {
         BaseSplitter splitter;
         switch (operator) {
             case MULTIPLE_OPTIONS:
@@ -36,7 +36,13 @@ public class SplitterFactory {
                 splitter = new IsNotNullSplitter();
                 break;
             case JSON_EXTRACT:
-                splitter = new JsonExtractSplitter();
+                Operator decoratedOperator = Operator.extract(filterValue);
+                if (Operator.IS_NOT_NULL.compareTo(decoratedOperator) != 0) {
+                    splitter = new JsonExtractSplitter();
+                    break;
+                }
+                BaseSplitter decoratedSplitter = createSplitter(decoratedOperator, filterValue);
+                splitter = new JsonExtractSplitter(decoratedSplitter);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown operator");

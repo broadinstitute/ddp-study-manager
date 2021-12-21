@@ -35,7 +35,7 @@ public class CollectionQueryBuilder extends DsmAbstractQueryBuilder {
     private void buildUpNestedQuery(BoolQueryBuilder boolQueryBuilder, List<String> filterValues, FilterStrategy filterStrategy) {
         for (String filterValue : filterValues) {
             Operator operator = Operator.extract(filterValue);
-            BaseSplitter splitter = SplitterFactory.createSplitter(operator);
+            BaseSplitter splitter = SplitterFactory.createSplitter(operator, filterValue);
             splitter.setFilter(filterValue);
             String outerProperty = Util.TABLE_ALIAS_MAPPINGS.get(splitter.getAlias()).getPropertyName(); //medicalRecord
             String nestedPath = DSM_WITH_DOT + outerProperty;

@@ -39,7 +39,7 @@ public class Util {
     public static final int FIRST_ELEMENT_INDEX = 0;
     public static final String UNDERSCORE_SEPARATOR = "_";
     public static final String DOC = "_doc";
-    private static final Pattern CAMEL_CASE_REGEX = Pattern.compile("(([a-z])+([A-z]))*");
+    private static final Pattern CAMEL_CASE_REGEX = Pattern.compile("(([a-z])+([A-z])+(\\.)*)*");
     private static final Pattern UPPER_CASE_REGEX = Pattern.compile("(?=\\p{Upper})");
     public static final Gson GSON = new Gson();
 
@@ -73,7 +73,7 @@ public class Util {
                 word.replace(FIRST_ELEMENT_INDEX, 1, String.valueOf(word.charAt(FIRST_ELEMENT_INDEX)).toUpperCase());
             }
         }
-        return String.join("", words);
+        return String.join(StringUtils.EMPTY, words);
     }
 
     private static String handleAllUppercase(String word) {
