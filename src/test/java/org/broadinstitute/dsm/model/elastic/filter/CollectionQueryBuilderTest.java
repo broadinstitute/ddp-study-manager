@@ -12,15 +12,16 @@ import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class CollectionQueryBuilderTest {
 
-    static CollectionQueryBuilder collectionQueryBuilder;
+    CollectionQueryBuilder collectionQueryBuilder;
 
-    @BeforeClass
-    public static void setUp() {
+    @Before
+    public void setUp() {
         collectionQueryBuilder = new CollectionQueryBuilder();
         collectionQueryBuilder.setParser(new FilterParser());
     }
