@@ -4,7 +4,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.Filter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public enum Operator {
     LIKE(Filter.LIKE_TRIMMED),
@@ -45,7 +47,10 @@ public enum Operator {
             return DATE_LESS;
         else if (filter.contains(Filter.JSON_EXTRACT))
             return JSON_EXTRACT;
-        String operator = filter.split(" ")[1];
+        String operator = Arrays.stream(filter.split(" "))
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toList())
+                .get(1);
         return getOperator(operator);
     }
 }

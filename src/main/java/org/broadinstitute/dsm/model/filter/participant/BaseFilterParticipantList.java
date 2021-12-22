@@ -118,8 +118,9 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
 
             logger.info("Found query conditions for " + mergeConditions.size() + " tables");
             //search bar ptL
-
-            return new ParticipantWrapper(participantWrapperPayload.withFilter(mergeConditions).build(), elasticSearch).getFilteredList();
+            //TODO -> instead of passing mergeConditions passing queryConditions directly to avoid merge different keys like o,r -> p and
+            // etc.
+            return new ParticipantWrapper(participantWrapperPayload.withFilter(queryConditions).build(), elasticSearch).getFilteredList();
         } else {
             return new ParticipantWrapper(participantWrapperPayload.build(), elasticSearch).getFilteredList();
         }
