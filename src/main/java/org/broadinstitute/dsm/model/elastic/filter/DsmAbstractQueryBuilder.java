@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.model.elastic.filter;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.elastic.Util;
+import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -25,6 +26,12 @@ public abstract class DsmAbstractQueryBuilder {
         this();
         this.parser = parser;
         this.filter = filter;
+    }
+
+    public static DsmAbstractQueryBuilder of(String alias) {
+        DsmAbstractQueryBuilder queryBuilder;
+        boolean isCollection = Util.TABLE_ALIAS_MAPPINGS.get(alias).isCollection();
+        return isCollection ? new CollectionQueryBuilder() : new SingleQueryBuilder();
     }
 
     public DsmAbstractQueryBuilder() {

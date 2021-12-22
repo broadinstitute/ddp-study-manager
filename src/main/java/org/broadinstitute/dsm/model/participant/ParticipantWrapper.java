@@ -11,12 +11,17 @@ import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
+import org.broadinstitute.dsm.model.elastic.filter.DsmAbstractQueryBuilder;
+import org.broadinstitute.dsm.model.elastic.filter.FilterParser;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.at.DefaultValues;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.elasticsearch.index.query.AbstractQueryBuilder;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,26 +87,36 @@ public class ParticipantWrapper {
     //TODO could be better, good place for refactoring for future
     private void fetchAndPrepareDataByFilters(DDPInstance ddpInstance, Map<String, String> filters) {
         List<String> participantIdsToFetch = Collections.emptyList();
+        FilterParser parser = new FilterParser();
+        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         for (String source : filters.keySet()) {
             if (StringUtils.isNotBlank(filters.get(source))) {
-                if (DBConstants.DDP_PARTICIPANT_ALIAS.equals(source)) {
-                    Map<String, Participant> participants =
-                            Participant.getParticipants(ddpInstance.getName(), filters.get(source));
-                    this.participants = new ArrayList<>(participants.values());
-                    participantIdsToFetch = new ArrayList<>(participants.keySet());
+                if (isUnderDsmKey(source)) {
+                    DsmAbstractQueryBuilder queryBuilder = DsmAbstractQueryBuilder.of(source);
+                    queryBuilder.setFilter(filters.get(source));
+                    queryBuilder.setParser(parser);
+                    boolQueryBuilder.must(queryBuilder.build());
                 }
-                else if (DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(source)) {
-                    medicalRecords = MedicalRecord.getMedicalRecords(ddpInstance.getName(), filters.get(source));
-                    participantIdsToFetch = new ArrayList<>(medicalRecords.keySet());
-                }
-                else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(source)) {
-                    oncHistoryDetails = OncHistoryDetail.getOncHistoryDetails(ddpInstance.getName(), filters.get(source));
-                    participantIdsToFetch = new ArrayList<>(oncHistoryDetails.keySet());
-                }
-                else if (DBConstants.DDP_KIT_REQUEST_ALIAS.equals(source)) {
-                    kitRequests = KitRequestShipping.getKitRequests(ddpInstance, filters.get(source));
-                    participantIdsToFetch = new ArrayList<>(kitRequests.keySet());
-                }
+
+//                if (DBConstants.DDP_PARTICIPANT_ALIAS.equals(source)) {
+//                    Map<String, Participant> participants =
+//                            Participant.getParticipants(ddpInstance.getName(), filters.get(source));
+//                    this.participants = new ArrayList<>(participants.values());
+//                    participantIdsToFetch = new ArrayList<>(participants.keySet());
+//                }
+//                else if (DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(source)) {
+//                    medicalRecords = MedicalRecord.getMedicalRecords(ddpInstance.getName(), filters.get(source));
+//                    participantIdsToFetch = new ArrayList<>(medicalRecords.keySet());
+//                }
+//                else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(source)) {
+//                    oncHistoryDetails = OncHistoryDetail.getOncHistoryDetails(ddpInstance.getName(), filters.get(source));
+//                    participantIdsToFetch = new ArrayList<>(oncHistoryDetails.keySet());
+//                }
+//                else if (DBConstants.DDP_KIT_REQUEST_ALIAS.equals(source)) {
+//                    kitRequests = KitRequestShipping.getKitRequests(ddpInstance, filters.get(source));
+//                    participantIdsToFetch = new ArrayList<>(kitRequests.keySet());
+//                }
+
                 else if (DBConstants.DDP_PARTICIPANT_DATA_ALIAS.equals(source)) {
                     participantData = new ParticipantDataDao().getParticipantDataByInstanceIdAndFilterQuery(Integer.parseInt(ddpInstance.getDdpInstanceId()), filters.get(source));
                     participantIdsToFetch = new ArrayList<>(participantData.keySet());
@@ -113,16 +128,17 @@ public class ParticipantWrapper {
                         participantData = defaultValues.addDefaultValues();
                     }
                 }
-                else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
-                    abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(ddpInstance.getName(), filters.get(source));
-                    participantIdsToFetch = new ArrayList<>(abstractionActivities.keySet());
-                }
+//                else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
+//                    abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(ddpInstance.getName(), filters.get(source));
+//                    participantIdsToFetch = new ArrayList<>(abstractionActivities.keySet());
+//                }
                 else { //source is not of any study-manager table so it must be ES
                     esData = elasticSearchable.getParticipantsByRangeAndFilter(ddpInstance.getParticipantIndexES(), participantWrapperPayload.getFrom(),
                             participantWrapperPayload.getTo(), filters.get(source));
                     participantIdsToFetch = esData.getEsParticipants().stream().map(ElasticSearchParticipantDto::getParticipantId)
                             .collect(
                             Collectors.toList());
+                    boolQueryBuilder.must(ElasticSearchUtil.createESQuery(filters.get(source)));
                 }
             }
         }
@@ -164,6 +180,13 @@ public class ParticipantWrapper {
         if (proxiesByParticipantIds.isEmpty()) {
             proxiesByParticipantIds = getProxiesWithParticipantIdsFromElasticList(ddpInstance.getUsersIndexES(), esData.getEsParticipants());
         }
+
+        System.out.println();
+        System.out.println("awdwa");
+    }
+
+    private boolean isUnderDsmKey(String source) {
+        return DBConstants.DDP_PARTICIPANT_ALIAS.equals(source) || DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(source) || DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(source) || DBConstants.DDP_KIT_REQUEST_ALIAS.equals(source) || DBConstants.DDP_TISSUE_ALIAS.equals(source) || DBConstants.DDP_ONC_HISTORY_ALIAS.equals(source) || DBConstants.DDP_PARTICIPANT_RECORD_ALIAS.equals(source);
     }
 
     private void fetchAndPrepareData(DDPInstance ddpInstance) {

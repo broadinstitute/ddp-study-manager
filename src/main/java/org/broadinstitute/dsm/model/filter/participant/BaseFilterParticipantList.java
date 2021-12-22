@@ -104,13 +104,19 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
             //combine queries
             Map<String, String> mergeConditions = new HashMap<>();
             for (String filter : queryConditions.keySet()) {
-                if (DBConstants.DDP_PARTICIPANT_RECORD_ALIAS.equals(filter)
-                        || DBConstants.DDP_PARTICIPANT_EXIT_ALIAS.equals(filter) || DBConstants.DDP_ONC_HISTORY_ALIAS.equals(filter)) {
-                    mergeConditions.merge(DBConstants.DDP_PARTICIPANT_ALIAS, queryConditions.get(filter), String::concat);
-                } else if (DBConstants.DDP_INSTITUTION_ALIAS.equals(filter)) {
-                    mergeConditions.merge(DBConstants.DDP_MEDICAL_RECORD_ALIAS, queryConditions.get(filter), String::concat);
-                } else if (DBConstants.DDP_TISSUE_ALIAS.equals(filter)) {
-                    mergeConditions.merge(DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS, queryConditions.get(filter), String::concat);
+//                if (DBConstants.DDP_PARTICIPANT_RECORD_ALIAS.equals(filter)
+//                        || DBConstants.DDP_PARTICIPANT_EXIT_ALIAS.equals(filter) || DBConstants.DDP_ONC_HISTORY_ALIAS.equals(filter)) {
+//                    mergeConditions.merge(DBConstants.DDP_PARTICIPANT_ALIAS, queryConditions.get(filter), String::concat);
+//                } else if (DBConstants.DDP_INSTITUTION_ALIAS.equals(filter)) {
+//                    mergeConditions.merge(DBConstants.DDP_MEDICAL_RECORD_ALIAS, queryConditions.get(filter), String::concat);
+//                } else if (DBConstants.DDP_TISSUE_ALIAS.equals(filter)) {
+//                    mergeConditions.merge(DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS, queryConditions.get(filter), String::concat);
+//                } else {
+//                    mergeConditions.merge(filter, queryConditions.get(filter), String::concat);
+//                }
+                if (DBConstants.DDP_PARTICIPANT_EXIT_ALIAS.equals(filter)) {
+                    String exitFilter = queryConditions.get(filter).replace("ex.", "p.");
+                    mergeConditions.merge(DBConstants.DDP_PARTICIPANT_ALIAS, exitFilter, String::concat);
                 } else {
                     mergeConditions.merge(filter, queryConditions.get(filter), String::concat);
                 }
@@ -120,7 +126,7 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
             //search bar ptL
             //TODO -> instead of passing mergeConditions passing queryConditions directly to avoid merge different keys like o,r -> p and
             // etc.
-            return new ParticipantWrapper(participantWrapperPayload.withFilter(queryConditions).build(), elasticSearch).getFilteredList();
+            return new ParticipantWrapper(participantWrapperPayload.withFilter(mergeConditions).build(), elasticSearch).getFilteredList();
         } else {
             return new ParticipantWrapper(participantWrapperPayload.build(), elasticSearch).getFilteredList();
         }
