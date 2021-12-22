@@ -8,8 +8,8 @@ public class DateSplitterTest {
     @Test
     public void split() {
 
-        BaseSplitter dateSplitter = SplitterFactory.createSplitter(Operator.DATE, "");
-        dateSplitter.setFilter("STR_TO_DATE(m.fax_sent,'%Y-%m-%d') = STR_TO_DATE('2021-12-17','%Y-%m-%d')");
+        String filter = "STR_TO_DATE(m.fax_sent,'%Y-%m-%d') = STR_TO_DATE('2021-12-17','%Y-%m-%d')";
+        BaseSplitter dateSplitter = SplitterFactory.createSplitter(Operator.DATE, filter);
 
         Assert.assertEquals("m", dateSplitter.getAlias());
         Assert.assertEquals("faxSent", dateSplitter.getInnerProperty());

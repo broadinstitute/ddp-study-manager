@@ -5,7 +5,6 @@ import org.broadinstitute.dsm.model.Filter;
 
 public class DateSplitter extends BaseSplitter {
 
-
     @Override
     public String[] split() {
         // STR_TO_DATE(m.fax_sent,'%Y-%m-%d') = STR_TO_DATE('2021-12-17','%Y-%m-%d')
