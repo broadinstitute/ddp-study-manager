@@ -1,13 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
@@ -15,8 +8,9 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.elasticsearch.index.query.AbstractQueryBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+
+import java.util.*;
 
 public abstract class DsmAbstractQueryBuilder {
 
@@ -70,8 +64,7 @@ public abstract class DsmAbstractQueryBuilder {
     }
 
     protected String buildPath() {
-        String outerProperty = Util.TABLE_ALIAS_MAPPINGS.get(splitter.getAlias()).getPropertyName(); //medicalRecord
-        return DSM_WITH_DOT + outerProperty;
+        return DSM_WITH_DOT + Util.TABLE_ALIAS_MAPPINGS.get(splitter.getAlias()).getPropertyName();
     }
 
     protected abstract void buildEachQuery(FilterStrategy filterStrategy);
