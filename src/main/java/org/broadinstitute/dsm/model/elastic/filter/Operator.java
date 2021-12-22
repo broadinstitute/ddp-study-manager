@@ -35,6 +35,7 @@ public enum Operator {
     }
 
     public static Operator extract(String filter) {
+        filter = filter.trim();
         if (filter.endsWith(Filter.IS_NOT_NULL_TRIMMED) && !filter.startsWith(Filter.JSON_EXTRACT))
             return IS_NOT_NULL;
         else if (filter.startsWith(Filter.OPEN_PARENTHESIS))

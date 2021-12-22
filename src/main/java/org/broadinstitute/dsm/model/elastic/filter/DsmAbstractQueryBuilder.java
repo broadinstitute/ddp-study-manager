@@ -12,6 +12,7 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 public abstract class DsmAbstractQueryBuilder {
 
@@ -81,7 +82,7 @@ public abstract class DsmAbstractQueryBuilder {
                 new ArrayList<>()));
         String[] andSeparated = filter.split(Filter.AND_TRIMMED);
         for (String eachFilter : andSeparated) {
-            String cleanedEachFilter = eachFilter.trim();
+            String cleanedEachFilter = cleanUpData(eachFilter).trim();
             if (cleanedEachFilter.contains(Filter.OR_TRIMMED) && !cleanedEachFilter.startsWith(Filter.OPEN_PARENTHESIS) && !cleanedEachFilter.endsWith(Filter.CLOSE_PARENTHESIS)) {
                 String[] orSeparated = cleanedEachFilter.split(Filter.OR_TRIMMED);
                 filterByLogicalOperators.get(Filter.AND_TRIMMED).add(orSeparated[0].trim());
@@ -93,5 +94,10 @@ public abstract class DsmAbstractQueryBuilder {
             }
         }
         return filterByLogicalOperators;
+    }
+
+    private String cleanUpData(String filterValue) {
+        final Pattern additionalValuesJsonToClean = Pattern.compile("([a-zA-Z]+\\.(additional_values_json IS NOT NULL))");
+        return filterValue.replaceAll(additionalValuesJsonToClean.pattern(), StringUtils.EMPTY);
     }
 }

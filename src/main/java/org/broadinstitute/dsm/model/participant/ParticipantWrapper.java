@@ -132,7 +132,7 @@ public class ParticipantWrapper {
 //                    abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(ddpInstance.getName(), filters.get(source));
 //                    participantIdsToFetch = new ArrayList<>(abstractionActivities.keySet());
 //                }
-                else { //source is not of any study-manager table so it must be ES
+                else if ("ES".equals(source)){ //source is not of any study-manager table so it must be ES
                     esData = elasticSearchable.getParticipantsByRangeAndFilter(ddpInstance.getParticipantIndexES(), participantWrapperPayload.getFrom(),
                             participantWrapperPayload.getTo(), filters.get(source));
                     participantIdsToFetch = esData.getEsParticipants().stream().map(ElasticSearchParticipantDto::getParticipantId)
@@ -186,7 +186,13 @@ public class ParticipantWrapper {
     }
 
     private boolean isUnderDsmKey(String source) {
-        return DBConstants.DDP_PARTICIPANT_ALIAS.equals(source) || DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(source) || DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(source) || DBConstants.DDP_KIT_REQUEST_ALIAS.equals(source) || DBConstants.DDP_TISSUE_ALIAS.equals(source) || DBConstants.DDP_ONC_HISTORY_ALIAS.equals(source) || DBConstants.DDP_PARTICIPANT_RECORD_ALIAS.equals(source);
+        return DBConstants.DDP_PARTICIPANT_ALIAS.equals(source)
+                || DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(source)
+                || DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(source)
+                || DBConstants.DDP_KIT_REQUEST_ALIAS.equals(source)
+                || DBConstants.DDP_TISSUE_ALIAS.equals(source)
+                || DBConstants.DDP_ONC_HISTORY_ALIAS.equals(source)
+                || DBConstants.DDP_PARTICIPANT_RECORD_ALIAS.equals(source);
     }
 
     private void fetchAndPrepareData(DDPInstance ddpInstance) {
