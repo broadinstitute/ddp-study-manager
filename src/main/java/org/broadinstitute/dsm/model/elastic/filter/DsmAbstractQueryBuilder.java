@@ -78,21 +78,85 @@ public abstract class DsmAbstractQueryBuilder {
     protected abstract void buildEachQuery(FilterStrategy filterStrategy);
 
     protected Map<String, List<String>> parseFiltersByLogicalOperators() {
-        Map<String, List<String>> filterByLogicalOperators = new HashMap<>(Map.of(Filter.AND_TRIMMED, new ArrayList<>(), Filter.OR_TRIMMED,
-                new ArrayList<>()));
-        String[] andSeparated = filter.split(Filter.AND_TRIMMED);
-        for (String eachFilter : andSeparated) {
-            String cleanedEachFilter = cleanUpData(eachFilter).trim();
-            if (cleanedEachFilter.contains(Filter.OR_TRIMMED) && !cleanedEachFilter.startsWith(Filter.OPEN_PARENTHESIS) && !cleanedEachFilter.endsWith(Filter.CLOSE_PARENTHESIS)) {
-                String[] orSeparated = cleanedEachFilter.split(Filter.OR_TRIMMED);
-                filterByLogicalOperators.get(Filter.AND_TRIMMED).add(orSeparated[0].trim());
-                Arrays.stream(orSeparated)
-                        .skip(1)
-                        .forEach(f -> filterByLogicalOperators.get(Filter.OR_TRIMMED).add(f.trim()));
-            } else if (StringUtils.isNotBlank(cleanedEachFilter)){
-                filterByLogicalOperators.get(Filter.AND_TRIMMED).add(cleanedEachFilter);
+        Map<String, List<String>> filterByLogicalOperators = new HashMap<>(Map.of(Filter.AND_TRIMMED, new ArrayList<>(), Filter.OR_TRIMMED, new ArrayList<>()));
+        // (OR|AND) (m|p|r|t|d|oD|o)\.
+        int flag = 0;
+        int andIndex = filter.indexOf(Filter.AND_TRIMMED);
+        int orIndex = filter.indexOf(Filter.OR_TRIMMED);
+        while (andIndex != -1 || orIndex != -1) {
+            if (andIndex != -1) {
+
+                // substring -> exclusive
+                int filterIndex = andIndex + 7;
+                boolean matches = filter.substring(andIndex, filterIndex).matches(Pattern.compile("(AND) (m|p|r|t|d|oD|o)\\.[a-z]").pattern());
+                // AND m.red = '5' OR k.kkk = '5'
+
+                int orPrecedeIndex = filter.indexOf("OR", andIndex + 3); // pirveli OR
+                while (orPrecedeIndex != -1 && !filter.substring(orPrecedeIndex, orPrecedeIndex + 6).matches(Pattern.compile("(OR) (m|p|r|t|d|oD|o)\\.[a-z]").pattern())) {
+                    orPrecedeIndex = filter.indexOf("OR", orPrecedeIndex + 3);
+                }
+
+                int andPrecedeIndex = filter.indexOf("AND", andIndex + 3); // shemdegi AND
+                while (andPrecedeIndex != -1 && !filter.substring(andPrecedeIndex, andPrecedeIndex + 7).matches(Pattern.compile("(AND) (m|p|r|t|d|oD|o)\\.[a-z]").pattern())) {
+                    andPrecedeIndex = filter.indexOf("AND", andPrecedeIndex + 3);
+                }
+
+                if (orPrecedeIndex < andPrecedeIndex && matches) {
+                    filterByLogicalOperators.get("AND").add(filter.substring(andIndex + 3, orPrecedeIndex == -1 ? andPrecedeIndex : orPrecedeIndex).trim());
+//                    orIndex = orPrecedeIndex;
+                    andIndex = andPrecedeIndex;
+                }
+                else if (andPrecedeIndex < orPrecedeIndex && matches) {
+                    filterByLogicalOperators.get("AND").add(filter.substring(andIndex + 3, andPrecedeIndex == -1 ? orPrecedeIndex : andPrecedeIndex).trim());
+                    andIndex = andPrecedeIndex;
+//                    orIndex = orPrecedeIndex;
+                } else {
+                    filterByLogicalOperators.get("AND").add(filter.substring(andIndex + 3).trim());
+                    andIndex = andPrecedeIndex;
+                }
+            } else {
+                int filterIndex = orIndex + 6;
+                boolean matches = filter.substring(orIndex, filterIndex).matches(Pattern.compile("(OR) (m|p|r|t|d|oD|o)\\.[a-z]").pattern());
+                int orPrecedeIndex = filter.indexOf("OR", orIndex + 3);
+                while (orPrecedeIndex != -1 && !filter.substring(orPrecedeIndex, orPrecedeIndex + 6).matches(Pattern.compile("(OR) (m|p|r|t|d|oD|o)\\.[a-z]").pattern())) {
+                    orPrecedeIndex = filter.indexOf("OR", orPrecedeIndex + 3);
+                }
+                int andPrecedeIndex = filter.indexOf("AND", orIndex + 3);
+                while (andPrecedeIndex != -1 && !filter.substring(andPrecedeIndex, andPrecedeIndex + 7).matches(Pattern.compile("(AND) (m|p|r|t|d|oD|o)\\.[a-z]").pattern())) {
+                    andPrecedeIndex = filter.indexOf("AND", andPrecedeIndex + 3);
+                }
+                if (orPrecedeIndex < andPrecedeIndex && matches) {
+                    filterByLogicalOperators.get("OR").add(filter.substring(orIndex + 3, orPrecedeIndex == -1 ? andPrecedeIndex : orPrecedeIndex).trim());
+                    orIndex = orPrecedeIndex;
+//                    andIndex = andPrecedeIndex;
+                }
+                else if (andPrecedeIndex < orPrecedeIndex && matches) {
+                    filterByLogicalOperators.get("OR").add(filter.substring(orIndex + 3, andPrecedeIndex == -1 ? orPrecedeIndex : andPrecedeIndex).trim());
+                    orIndex = orPrecedeIndex;
+//                    andIndex = andPrecedeIndex;
+                } else {
+                    filterByLogicalOperators.get("OR").add(filter.substring(orIndex + 3).trim());
+                    orIndex = orPrecedeIndex;
+                }
             }
+
         }
+
+//
+//        String[] andSeparated = filter.split(Filter.AND_TRIMMED);
+//
+//        for (String eachFilter : andSeparated) {
+//            String cleanedEachFilter = cleanUpData(eachFilter).trim();
+//            if (cleanedEachFilter.startsWith(Filter.OR_TRIMMED) && !cleanedEachFilter.startsWith(Filter.OPEN_PARENTHESIS) && !cleanedEachFilter.endsWith(Filter.CLOSE_PARENTHESIS)) {
+//                String[] orSeparated = cleanedEachFilter.split(Filter.OR_TRIMMED);
+//                filterByLogicalOperators.get(Filter.AND_TRIMMED).add(orSeparated[0].trim());
+//                Arrays.stream(orSeparated)
+//                        .skip(1)
+//                        .forEach(f -> filterByLogicalOperators.get(Filter.OR_TRIMMED).add(f.trim()));
+//            } else if (StringUtils.isNotBlank(cleanedEachFilter)){
+//                filterByLogicalOperators.get(Filter.AND_TRIMMED).add(cleanedEachFilter);
+//            }
+//        }
         return filterByLogicalOperators;
     }
 

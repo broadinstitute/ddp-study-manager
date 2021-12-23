@@ -3,9 +3,7 @@ package org.broadinstitute.dsm.model.elastic.filter;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.Filter;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public enum Operator {

@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.model.elastic.filter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.AbstractQueryBuilder;
@@ -28,15 +29,23 @@ public class CollectionQueryBuilderTest {
 
     @Test
     public void parseFiltersByLogicalOperators() {
-        String filter = "AND m.medicalRecordId = '15' OR m.medicalRecordSomething LIKE '55555' OR m.medicalRecordSomethingg = '55552' AND m.dynamicFields.ragac = '55' OR m.medicalRecordName = '213'";
+        String filter = "AND m.medicalRecordId = '15' " +
+                "OR m.medicalRecordSomething LIKE '55555' " +
+                "OR m.medicalRecordSomethingg = '55552' " +
+                "AND t.tissueRecord IS NOT NULL " +
+                "AND m.dynamicFields.ragac = '55' " +
+                "OR m.medicalRecordName = '213' " +
+                "OR m.mrNotes = 'MEDICAL_RECORD_NOTESS' " +
+                "AND m.medicalMedical = 'something AND something' " +
+                "AND ( oD.request = 'review' OR oD.request = 'no' )";
         collectionQueryBuilder.setFilter(filter);
         Map<String, List<String>> parsedFilters = collectionQueryBuilder.parseFiltersByLogicalOperators();
         for (Map.Entry<String, List<String>> eachFilter: parsedFilters.entrySet()) {
             if (eachFilter.getKey().equals("AND")) {
-                Assert.assertArrayEquals(new ArrayList<>(List.of("m.medicalRecordId = '15'", "m.dynamicFields.ragac = '55'")).toArray(),
+                Assert.assertArrayEquals(new ArrayList<>(List.of("m.medicalRecordId = '15'", "m.dynamicFields.ragac = '55'", "m.medicalMedical = 'something AND something'", "t.tissueRecord IS NOT NULL", "( oD.request = 'review' OR oD.request = 'no' )")).toArray(),
                         eachFilter.getValue().toArray());
             } else {
-                Assert.assertArrayEquals(new ArrayList<>(List.of("m.medicalRecordSomething LIKE '55555'", "m.medicalRecordSomethingg = '55552'", "m.medicalRecordName = '213'")).toArray(), eachFilter.getValue().toArray());
+                Assert.assertArrayEquals(new ArrayList<>(List.of("m.medicalRecordSomething LIKE '55555'", "m.medicalRecordSomethingg = '55552'", "m.medicalRecordName = '213'", "m.mrNotes = 'MEDICAL_RECORD_NOTESS'")).toArray(), eachFilter.getValue().toArray());
             }
         }
     }
