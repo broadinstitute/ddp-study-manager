@@ -1,8 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
 import org.broadinstitute.dsm.model.Filter;
-import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,62 +36,11 @@ public class AndOrFilterSeparator {
             andIndex = findProperOperatorSplitterIndex(Filter.AND_TRIMMED, andIndex, AND_PATTERN_MATCHER_NUMBER, MINIMUM_STEP_FROM_OPERATOR);
             orIndex = findProperOperatorSplitterIndex(Filter.OR_TRIMMED, orIndex, OR_PATTERN_MATCHER_NUMBER, MINIMUM_STEP_FROM_OPERATOR);
             if (andIndex != -1) {
-
-                int filterIndex = andIndex + AND_PATTERN_MATCHER_NUMBER;
-                boolean matches =
-                        filter.substring(andIndex, filterIndex).matches(Pattern.compile(AND_DSM_ALIAS_REGEX).pattern());
-
-                int orPrecedeIndex = filter.indexOf(Filter.OR_TRIMMED, andIndex + MINIMUM_STEP_FROM_OPERATOR);
-                while (orPrecedeIndex != -1 && !filter.substring(orPrecedeIndex, orPrecedeIndex + OR_PATTERN_MATCHER_NUMBER).matches(Pattern.compile(
-                        OR_DSM_ALIAS_REGEX).pattern())) {
-                    orPrecedeIndex = filter.indexOf(Filter.OR_TRIMMED, orPrecedeIndex + MINIMUM_STEP_FROM_OPERATOR);
-                }
-
-                int andPrecedeIndex = filter.indexOf(Filter.AND_TRIMMED, andIndex + MINIMUM_STEP_FROM_OPERATOR);
-                while (andPrecedeIndex != -1 && !filter.substring(andPrecedeIndex, andPrecedeIndex + AND_PATTERN_MATCHER_NUMBER).matches(Pattern.compile(
-                        AND_DSM_ALIAS_REGEX).pattern())) {
-                    andPrecedeIndex = filter.indexOf(Filter.AND_TRIMMED, andPrecedeIndex + MINIMUM_STEP_FROM_OPERATOR);
-                }
-
-                if (orPrecedeIndex < andPrecedeIndex && matches) {
-                    filterByLogicalOperators.get(Filter.AND_TRIMMED).add(filter.substring(andIndex + MINIMUM_STEP_FROM_OPERATOR, orPrecedeIndex == -1 ? andPrecedeIndex : orPrecedeIndex).trim());
-                    andIndex = andPrecedeIndex;
-                }
-                else if (andPrecedeIndex < orPrecedeIndex && matches) {
-                    filterByLogicalOperators.get(Filter.AND_TRIMMED).add(filter.substring(andIndex + MINIMUM_STEP_FROM_OPERATOR, andPrecedeIndex == -1 ? orPrecedeIndex : andPrecedeIndex).trim());
-                    andIndex = andPrecedeIndex;
-                } else {
-                    filterByLogicalOperators.get(Filter.AND_TRIMMED).add(filter.substring(andIndex + MINIMUM_STEP_FROM_OPERATOR).trim());
-                    andIndex = andPrecedeIndex;
-                }
+                andIndex = getIndex(filterByLogicalOperators, andIndex, Filter.AND_TRIMMED);
             } else {
-                int filterIndex = orIndex + OR_PATTERN_MATCHER_NUMBER;
-                boolean matches = filter.substring(orIndex, filterIndex).matches(Pattern.compile(OR_DSM_ALIAS_REGEX).pattern());
-                int orPrecedeIndex = filter.indexOf(Filter.OR_TRIMMED, orIndex + MINIMUM_STEP_FROM_OPERATOR);
-                while (orPrecedeIndex != -1 && !filter.substring(orPrecedeIndex, orPrecedeIndex + OR_PATTERN_MATCHER_NUMBER).matches(Pattern.compile(
-                        OR_DSM_ALIAS_REGEX).pattern())) {
-                    orPrecedeIndex = filter.indexOf(Filter.OR_TRIMMED, orPrecedeIndex + MINIMUM_STEP_FROM_OPERATOR);
-                }
-                int andPrecedeIndex = filter.indexOf(Filter.AND_TRIMMED, orIndex + MINIMUM_STEP_FROM_OPERATOR);
-                while (andPrecedeIndex != -1 && !filter.substring(andPrecedeIndex, andPrecedeIndex + AND_PATTERN_MATCHER_NUMBER).matches(Pattern.compile(
-                        AND_DSM_ALIAS_REGEX).pattern())) {
-                    andPrecedeIndex = filter.indexOf(Filter.AND_TRIMMED, andPrecedeIndex + MINIMUM_STEP_FROM_OPERATOR);
-                }
-                if (orPrecedeIndex < andPrecedeIndex && matches) {
-                    filterByLogicalOperators.get(Filter.OR_TRIMMED).add(filter.substring(orIndex + MINIMUM_STEP_FROM_OPERATOR, orPrecedeIndex == -1 ? andPrecedeIndex : orPrecedeIndex).trim());
-                    orIndex = orPrecedeIndex;
-                }
-                else if (andPrecedeIndex < orPrecedeIndex && matches) {
-                    filterByLogicalOperators.get(Filter.OR_TRIMMED).add(filter.substring(orIndex + MINIMUM_STEP_FROM_OPERATOR, andPrecedeIndex == -1 ? orPrecedeIndex : andPrecedeIndex).trim());
-                    orIndex = orPrecedeIndex;
-                } else {
-                    filterByLogicalOperators.get(Filter.OR_TRIMMED).add(filter.substring(orIndex + MINIMUM_STEP_FROM_OPERATOR).trim());
-                    orIndex = orPrecedeIndex;
-                }
+                orIndex = getIndex(filterByLogicalOperators, orIndex, Filter.OR_TRIMMED);
             }
-
         }
-
         return filterByLogicalOperators;
     }
 
@@ -107,15 +54,61 @@ public class AndOrFilterSeparator {
      * @return index of next proper operator after first operator, proper operator matches either AND_DSM_ALIAS_REGEX or OR_DSM_ALIAS_REGEX
      */
     private int findProperOperatorSplitterIndex(String operator, int startIndex, int patternMatcherNumber, int nextOperatorFromNumber) {
-        String aliasRegex = "AND".equals(operator) ? AND_DSM_ALIAS_REGEX : OR_DSM_ALIAS_REGEX;
+        String aliasRegex = getAliasRegexByOperator(operator);
         while (startIndex != -1 && !filter.substring(startIndex, startIndex + patternMatcherNumber).matches(aliasRegex)) {
             startIndex = findNextOperatorIndex(operator, startIndex + nextOperatorFromNumber);
         }
         return startIndex;
     }
 
+    private String getAliasRegexByOperator(String operator) {
+        return "AND".equals(operator) ? AND_DSM_ALIAS_REGEX : OR_DSM_ALIAS_REGEX;
+    }
+
     private int findNextOperatorIndex(String operator, int fromIndex) {
         return filter.indexOf(operator, fromIndex);
+    }
+
+    private int getIndex(Map<String, List<String>> filterByLogicalOperators, int index, String operator) {
+        boolean matches = filter.substring(index, getFilterIndex(index, getPatternMatcherNumberByOperator(operator))).matches(Pattern.compile(getAliasRegexByOperator(operator)).pattern());
+
+        int orPrecedeIndex = findNextOperatorIndex(Filter.OR_TRIMMED, index + MINIMUM_STEP_FROM_OPERATOR);
+        orPrecedeIndex = findProperOperatorSplitterIndex(Filter.OR_TRIMMED, orPrecedeIndex, OR_PATTERN_MATCHER_NUMBER, MINIMUM_STEP_FROM_OPERATOR);
+
+        int andPrecedeIndex = findNextOperatorIndex(Filter.AND_TRIMMED, index + MINIMUM_STEP_FROM_OPERATOR);
+        andPrecedeIndex = findProperOperatorSplitterIndex(Filter.AND_TRIMMED, andPrecedeIndex, AND_PATTERN_MATCHER_NUMBER, MINIMUM_STEP_FROM_OPERATOR);
+
+        if (isLeftMostOR(matches, orPrecedeIndex, andPrecedeIndex)) {
+            filterByLogicalOperators.get(operator).add(filter.substring(index + MINIMUM_STEP_FROM_OPERATOR, orPrecedeIndex == -1 ? andPrecedeIndex : orPrecedeIndex).trim());
+            index = isAndOperator(operator) ? andPrecedeIndex : orPrecedeIndex;
+        } else if (isLeftMostAND(matches, orPrecedeIndex, andPrecedeIndex)) {
+            filterByLogicalOperators.get(operator).add(filter.substring(index + MINIMUM_STEP_FROM_OPERATOR, andPrecedeIndex == -1 ? orPrecedeIndex : andPrecedeIndex).trim());
+            index = isAndOperator(operator) ? andPrecedeIndex : orPrecedeIndex;
+        } else {
+            filterByLogicalOperators.get(operator).add(filter.substring(index + MINIMUM_STEP_FROM_OPERATOR).trim());
+            index = isAndOperator(operator) ? andPrecedeIndex : orPrecedeIndex;
+        }
+        return index;
+    }
+
+    private boolean isLeftMostOR(boolean matches, int orPrecedeIndex, int andPrecedeIndex) {
+        return orPrecedeIndex < andPrecedeIndex && matches;
+    }
+
+    private boolean isLeftMostAND(boolean matches, int orPrecedeIndex, int andPrecedeIndex) {
+        return andPrecedeIndex < orPrecedeIndex && matches;
+    }
+
+    private boolean isAndOperator(String operator) {
+        return "AND".equals(operator);
+    }
+
+    private int getPatternMatcherNumberByOperator(String operator) {
+        return isAndOperator(operator) ? AND_PATTERN_MATCHER_NUMBER : OR_PATTERN_MATCHER_NUMBER;
+    }
+
+    private int getFilterIndex(int andIndex, int patternMatcherNumber) {
+        return andIndex + patternMatcherNumber;
     }
 
 }
