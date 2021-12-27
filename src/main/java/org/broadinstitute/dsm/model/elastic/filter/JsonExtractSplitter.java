@@ -25,6 +25,12 @@ public class JsonExtractSplitter extends BaseSplitter {
     }
 
     @Override
+    public String getInnerProperty() {
+        String[] separatedByDot = getFieldWithAlias()[1].split(ElasticSearchUtil.DOT_SEPARATOR);
+        return String.join(".", separatedByDot[0], Util.underscoresToCamelCase(separatedByDot[1]));
+    }
+
+    @Override
     protected String[] getFieldWithAlias() {
         String[] splittedByJsonExtractAndComma = splittedFilter[0]
                 .split(Filter.JSON_EXTRACT)[1]

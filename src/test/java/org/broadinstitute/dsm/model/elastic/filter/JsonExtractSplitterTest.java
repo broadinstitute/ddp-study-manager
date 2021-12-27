@@ -29,6 +29,12 @@ public class JsonExtractSplitterTest {
     }
 
     @Test
+    public void getInnerPropertyIfUpperCaseAfterDot() {
+        splitter.setFilter("JSON_EXTRACT ( m.additional_values_json , '$.Scooby' ) = 'true'");
+        Assert.assertEquals("dynamicFields.scooby", splitter.getInnerProperty());
+    }
+
+    @Test
     public void getIsNotNullValue() {
         filter = "JSON_EXTRACT ( m.additional_values_json , '$.seeingIfBugExists' ) IS NOT NULL";
         splitter.setFilter(filter);

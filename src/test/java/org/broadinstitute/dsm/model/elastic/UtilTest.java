@@ -122,4 +122,11 @@ public class UtilTest {
         assertEquals("TEST", pascalSnakeCase2);
     }
 
+    @Test
+    public void camelCaseIfContainsDot() {
+        String field = "dynamicFields.Scooby";
+        String converted = Util.underscoresToCamelCase(field);
+        assertEquals("dynamicFields.scooby", converted);
+    }
+
 }

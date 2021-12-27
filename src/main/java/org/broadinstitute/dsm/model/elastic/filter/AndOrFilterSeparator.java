@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class AndOrFilterSeparator {
 
@@ -41,7 +42,18 @@ public class AndOrFilterSeparator {
                 orIndex = getIndex(filterByLogicalOperators, orIndex, Filter.OR_TRIMMED);
             }
         }
+        handleSpecialCases(filterByLogicalOperators);
         return filterByLogicalOperators;
+    }
+
+    private void handleSpecialCases(Map<String, List<String>> filterByLogicalOperators) {
+        final String additionalValuesJsonIsNotNull = "additional_values_json IS NOT NULL";
+        for (Map.Entry<String, List<String>> entry: filterByLogicalOperators.entrySet()) {
+            List<String> filteredByNotAdditionalValuesIsNotNull = entry.getValue().stream()
+                    .filter(f -> !f.contains(additionalValuesJsonIsNotNull))
+                    .collect(Collectors.toList());
+        filterByLogicalOperators.put(entry.getKey(), filteredByNotAdditionalValuesIsNotNull);
+        }
     }
 
     /**
