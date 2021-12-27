@@ -83,7 +83,7 @@ public abstract class BaseParser implements Parser {
         return value;
     }
 
-    private boolean isWrappedByChar(String value) {
+    protected boolean isWrappedByChar(String value) {
         return StringUtils.isNotBlank(value) && value.charAt(0) == '\'' && value.charAt(value.length() - 1) == '\'';
     }
 }

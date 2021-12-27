@@ -14,10 +14,11 @@ public enum Operator {
     IS_NOT_NULL(Filter.IS_NOT_NULL_TRIMMED),
     DIAMOND_EQUALS(Filter.DIAMOND_EQUALS),
     MULTIPLE_OPTIONS(Filter.OPEN_PARENTHESIS),
-    DATE(Filter.DATE_FORMAT),
+    STR_DATE(Filter.DATE_FORMAT),
     DATE_GREATER(Filter.DATE_GREATER),
     DATE_LESS(Filter.DATE_LESS),
-    JSON_EXTRACT(Filter.JSON_EXTRACT);
+    JSON_EXTRACT(Filter.JSON_EXTRACT),
+    DATE(Filter.DATE);
 
     private String value;
 
@@ -39,6 +40,8 @@ public enum Operator {
         else if (filter.startsWith(Filter.OPEN_PARENTHESIS))
             return MULTIPLE_OPTIONS;
         else if (filter.startsWith(Filter.DATE_FORMAT))
+            return STR_DATE;
+        else if (filter.startsWith(Filter.DATE))
             return DATE;
         else if (filter.contains(Filter.DATE_GREATER))
             return DATE_GREATER;

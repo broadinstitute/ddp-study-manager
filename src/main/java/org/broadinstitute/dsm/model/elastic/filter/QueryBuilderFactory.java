@@ -13,7 +13,7 @@ public class QueryBuilderFactory {
         switch (operator) {
             case LIKE:
             case EQUALS:
-            case DATE:
+            case STR_DATE:
                 qb = new MatchQueryBuilder(payload.getFieldName(), payload.getValues()[0]);
                 break;
             case GREATER_THAN_EQUALS:

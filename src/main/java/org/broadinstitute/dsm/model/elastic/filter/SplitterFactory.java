@@ -26,6 +26,9 @@ public class SplitterFactory {
             case LESS_THAN_EQUALS:
                 splitter = new LessThanEqualsSplitter();
                 break;
+            case STR_DATE:
+                splitter = new StrDateSplitter();
+                break;
             case DATE:
                 splitter = new DateSplitter();
                 break;
