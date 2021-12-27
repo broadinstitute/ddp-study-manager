@@ -133,56 +133,63 @@ public class ParticipantWrapper {
 //                    participantIdsToFetch = new ArrayList<>(abstractionActivities.keySet());
 //                }
                 else if ("ES".equals(source)){ //source is not of any study-manager table so it must be ES
-                    esData = elasticSearchable.getParticipantsByRangeAndFilter(ddpInstance.getParticipantIndexES(), participantWrapperPayload.getFrom(),
-                            participantWrapperPayload.getTo(), filters.get(source));
-                    participantIdsToFetch = esData.getEsParticipants().stream().map(ElasticSearchParticipantDto::getParticipantId)
-                            .collect(
-                            Collectors.toList());
+//                    esData = elasticSearchable.getParticipantsByRangeAndFilter(ddpInstance.getParticipantIndexES(), participantWrapperPayload.getFrom(),
+//                            participantWrapperPayload.getTo(), boolQueryBuilder);
+//                    participantIdsToFetch = esData.getEsParticipants().stream().map(ElasticSearchParticipantDto::getParticipantId)
+//                            .collect(
+//                            Collectors.toList());
                     boolQueryBuilder.must(ElasticSearchUtil.createESQuery(filters.get(source)));
                 }
             }
         }
-        if (esData.getEsParticipants().isEmpty()) {
-            esData = elasticSearchable.getParticipantsByRangeAndIds(ddpInstance.getParticipantIndexES(), participantWrapperPayload.getFrom(),
-                    participantWrapperPayload.getTo(), participantIdsToFetch);
-        }
-        if (participants.isEmpty()) {
-            participants = Participant.getParticipantsByIds(ddpInstance.getName(), participantIdsToFetch);
-        }
-        if (medicalRecords.isEmpty() && ddpInstance.isHasRole()) {
-            medicalRecords = MedicalRecord.getMedicalRecordsByParticipantIds(ddpInstance.getName(), participantIdsToFetch);
-        }
-        if (oncHistoryDetails.isEmpty() && ddpInstance.isHasRole()) {
-            oncHistoryDetails = OncHistoryDetail.getOncHistoryDetailsByParticipantIds(ddpInstance.getName(), participantIdsToFetch);
-        }
-        if (kitRequests.isEmpty() && DDPInstanceDao.getRole(ddpInstance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
-            //get only kitRequests for the filtered pts
-            if (Objects.nonNull(esData) && !esData.getEsParticipants().isEmpty()) {
-                logger.info("About to query for kits from " + esData.getEsParticipants().size() + " participants");
-                kitRequests = KitRequestShipping.getKitRequestsByParticipantIds(ddpInstance, participantIdsToFetch);
-            }
-        }
-        if (participantData.isEmpty()) {
-            participantData = new ParticipantDataDao().getParticipantDataByParticipantIds(participantIdsToFetch);
 
-            //if study is AT
-            if ("atcp".equals(ddpInstance.getName())) {
-                DefaultValues defaultValues = new DefaultValues(participantData, esData.getEsParticipants(), ddpInstance, null);
-                participantData = defaultValues.addDefaultValues();
-            }
-        }
-        if (abstractionActivities.isEmpty()) {
-            abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(ddpInstance.getName());
-        }
-        if (abstractionSummary.isEmpty()) {
-            abstractionSummary = AbstractionFinal.getAbstractionFinal(ddpInstance.getName());
-        }
-        if (proxiesByParticipantIds.isEmpty()) {
-            proxiesByParticipantIds = getProxiesWithParticipantIdsFromElasticList(ddpInstance.getUsersIndexES(), esData.getEsParticipants());
-        }
+        esData = elasticSearchable.getParticipantsByRangeAndFilter(ddpInstance.getParticipantIndexES(), participantWrapperPayload.getFrom(),
+                            participantWrapperPayload.getTo(), boolQueryBuilder);
+
+//        if (esData.getEsParticipants().isEmpty()) {
+//            esData = elasticSearchable.getParticipantsByRangeAndIds(ddpInstance.getParticipantIndexES(), participantWrapperPayload.getFrom(),
+//                    participantWrapperPayload.getTo(), participantIdsToFetch);
+//        }
+//        if (participants.isEmpty()) {
+//            participants = Participant.getParticipantsByIds(ddpInstance.getName(), participantIdsToFetch);
+//        }
+//        if (medicalRecords.isEmpty() && ddpInstance.isHasRole()) {
+//            medicalRecords = MedicalRecord.getMedicalRecordsByParticipantIds(ddpInstance.getName(), participantIdsToFetch);
+//        }
+//        if (oncHistoryDetails.isEmpty() && ddpInstance.isHasRole()) {
+//            oncHistoryDetails = OncHistoryDetail.getOncHistoryDetailsByParticipantIds(ddpInstance.getName(), participantIdsToFetch);
+//        }
+//        if (kitRequests.isEmpty() && DDPInstanceDao.getRole(ddpInstance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
+//            //get only kitRequests for the filtered pts
+//            if (Objects.nonNull(esData) && !esData.getEsParticipants().isEmpty()) {
+//                logger.info("About to query for kits from " + esData.getEsParticipants().size() + " participants");
+//                kitRequests = KitRequestShipping.getKitRequestsByParticipantIds(ddpInstance, participantIdsToFetch);
+//            }
+//        }
+
+//        if (participantData.isEmpty()) {
+//            participantData = new ParticipantDataDao().getParticipantDataByParticipantIds(participantIdsToFetch);
+//
+//            // if study is AT
+//            // TODO - what's the purpose of this if statement
+//            if ("atcp".equals(ddpInstance.getName())) {
+//                DefaultValues defaultValues = new DefaultValues(participantData, esData.getEsParticipants(), ddpInstance, null);
+//                participantData = defaultValues.addDefaultValues();
+//            }
+//        }
+//        if (abstractionActivities.isEmpty()) {
+//            abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(ddpInstance.getName());
+//        }
+//        if (abstractionSummary.isEmpty()) {
+//            abstractionSummary = AbstractionFinal.getAbstractionFinal(ddpInstance.getName());
+//        }
+//        if (proxiesByParticipantIds.isEmpty()) {
+//            proxiesByParticipantIds = getProxiesWithParticipantIdsFromElasticList(ddpInstance.getUsersIndexES(), esData.getEsParticipants());
+//        }
+
 
         System.out.println();
-        System.out.println("awdwa");
+        System.out.println();
     }
 
     private boolean isUnderDsmKey(String source) {

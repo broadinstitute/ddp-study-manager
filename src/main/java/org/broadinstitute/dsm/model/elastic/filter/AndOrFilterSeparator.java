@@ -38,7 +38,7 @@ public class AndOrFilterSeparator {
             orIndex = findProperOperatorSplitterIndex(Filter.OR_TRIMMED, orIndex, OR_PATTERN_MATCHER_NUMBER, MINIMUM_STEP_FROM_OPERATOR);
             if (andIndex != -1) {
                 andIndex = getIndex(filterByLogicalOperators, andIndex, Filter.AND_TRIMMED);
-            } else {
+            } else if (orIndex != -1){
                 orIndex = getIndex(filterByLogicalOperators, orIndex, Filter.OR_TRIMMED);
             }
         }

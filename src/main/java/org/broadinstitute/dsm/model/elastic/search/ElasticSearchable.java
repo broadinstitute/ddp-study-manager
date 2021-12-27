@@ -1,5 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.search;
 
+import org.elasticsearch.index.query.AbstractQueryBuilder;
+
 import java.util.List;
 
 public interface ElasticSearchable {
@@ -11,7 +13,7 @@ public interface ElasticSearchable {
 
     long getParticipantsSize(String esParticipantsIndex);
 
-    ElasticSearch getParticipantsByRangeAndFilter(String esParticipantsIndex, int from, int to, String filter);
+    ElasticSearch getParticipantsByRangeAndFilter(String esParticipantsIndex, int from, int to, AbstractQueryBuilder queryBuilder);
 
     ElasticSearch getParticipantsByRangeAndIds(String participantIndexES, int from, int to, List<String> participantIds);
 
