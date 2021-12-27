@@ -14,13 +14,8 @@ public class DateSplitterTest {
         BaseSplitter splitter = SplitterFactory.createSplitter(Operator.DATE, filter);
         splitter.setFilter(filter);
 
-//        Assert.assertEquals("1640563200");
-        splitter.getValue();
-//        splitter.();
-        splitter.getValue();
-
-//        '123123'
-
+        Assert.assertEquals("1640563200", splitter.getValue()[0]);
+        Assert.assertEquals("scanDate", splitter.getInnerProperty());
 
     }
 }

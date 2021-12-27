@@ -31,6 +31,8 @@ public class FilterParser extends ValueParser {
         for (String value : values) {
             if (isBoolean(value))
                 parsedValues.add(forBoolean(convertBoolean(value)));
+            else if (isNumeric(value))
+                parsedValues.add(forNumber(value));
             else
                 parsedValues.add(convertString(value));
         }

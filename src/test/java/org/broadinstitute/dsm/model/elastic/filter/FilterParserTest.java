@@ -21,7 +21,7 @@ public class FilterParserTest {
         Assert.assertEquals(false, filterParser.parse(falseValue));
         Assert.assertEquals("string", filterParser.parse(str));
         Assert.assertEquals("5", filterParser.parse(number));
-        Assert.assertEquals(5, filterParser.parse(number2));
+        Assert.assertEquals(5L, filterParser.parse(number2));
         Assert.assertEquals("1999-05-22", filterParser.parse(date));
     }
 
