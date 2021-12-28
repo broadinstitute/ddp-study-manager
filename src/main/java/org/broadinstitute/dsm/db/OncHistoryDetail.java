@@ -313,6 +313,13 @@ public class OncHistoryDetail {
         }
     }
 
+    public List<Tissue> getTissues() {
+        if (tissues == null) {
+            tissues = new ArrayList<>();
+        }
+        return tissues;
+    }
+
     public static Map<String, List<OncHistoryDetail>> getOncHistoryDetails(@NonNull String realm) {
         return getOncHistoryDetails(realm, null);
     }

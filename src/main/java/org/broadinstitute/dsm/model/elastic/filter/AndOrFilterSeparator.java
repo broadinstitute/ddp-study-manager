@@ -11,11 +11,11 @@ import java.util.stream.Collectors;
 
 public class AndOrFilterSeparator {
 
-    public static final String DSM_ALIAS_REGEX = "(m|p|r|t|d|oD|o|k|JS|ST|DA|\\()(\\.|\\s)*([a-z]|O|R|T)";
+    public static final String DSM_ALIAS_REGEX = "(m|p|r|t|d|oD|o|k|JS|ST|DA|\\()(\\.|\\s)*([a-z]|O|R|T){1,2}";
     public static final String OR_DSM_ALIAS_REGEX = "(OR) " + DSM_ALIAS_REGEX;
     public static final String AND_DSM_ALIAS_REGEX = "(AND) " + DSM_ALIAS_REGEX;
-    public static final int AND_PATTERN_MATCHER_NUMBER = 7;
-    public static final int OR_PATTERN_MATCHER_NUMBER = 6;
+    public static final int AND_PATTERN_MATCHER_NUMBER = 8;
+    public static final int OR_PATTERN_MATCHER_NUMBER = 7;
     public static final int MINIMUM_STEP_FROM_OPERATOR = 3;
 
     private String filter;

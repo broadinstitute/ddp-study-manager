@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.model.elastic;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Getter;
@@ -80,5 +81,13 @@ public class ESDsm {
     public List<KitRequestShipping> getKitRequestShipping() {
         if (kitRequestShipping == null) kitRequestShipping = Collections.emptyList();
         return kitRequestShipping;
+    }
+
+    public Optional<OncHistory> getOncHistory() {
+        return Optional.ofNullable(oncHistory);
+    }
+
+    public Optional<Participant> getParticipant() {
+        return Optional.ofNullable(participant);
     }
 }

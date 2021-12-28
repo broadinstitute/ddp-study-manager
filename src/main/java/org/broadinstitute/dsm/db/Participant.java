@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.NonNull;
@@ -104,7 +103,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.NOTES)
-    private String ptNotes;
+    private String notes;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_RECORD,
@@ -152,7 +151,7 @@ public class Participant {
     public Participant() {}
 
     public Participant(String participantId, String ddpParticipantId, String assigneeIdMr, String assigneeIdTissue, String instanceName,
-                       String createdOncHistory, String reviewedOncHistory, String paperCRSent, String paperCRReceived, String ptNotes,
+                       String createdOncHistory, String reviewedOncHistory, String paperCRSent, String paperCRReceived, String notes,
                        boolean minimalMr, boolean abstractionReady, String additionalValuesJson, long exitDate) {
         this.participantId = participantId;
         this.ddpParticipantId = ddpParticipantId;
@@ -163,7 +162,7 @@ public class Participant {
         this.reviewedOncHistory = reviewedOncHistory;
         this.paperCRSent = paperCRSent;
         this.paperCRReceived = paperCRReceived;
-        this.ptNotes = ptNotes;
+        this.notes = notes;
         this.minimalMr = minimalMr;
         this.abstractionReady = abstractionReady;
         this.additionalValuesJson = additionalValuesJson;
