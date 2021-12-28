@@ -11,11 +11,11 @@ import java.util.stream.Collectors;
 
 public class AndOrFilterSeparator {
 
-    public static final String DSM_ALIAS_REGEX = "(m|p|r|t|d|oD|o|k|JS|ST|DA|\\()(\\.|\\s)*([a-z]|O|R|T){1,2}";
+    public static final String DSM_ALIAS_REGEX = "(m|p|r|t|d|oD|o|k|JS|ST|DA|\\()(\\.|\\s)*([a-z]|O|R|T)";
     public static final String OR_DSM_ALIAS_REGEX = "(OR) " + DSM_ALIAS_REGEX;
     public static final String AND_DSM_ALIAS_REGEX = "(AND) " + DSM_ALIAS_REGEX;
-    public static final int AND_PATTERN_MATCHER_NUMBER = 8;
-    public static final int OR_PATTERN_MATCHER_NUMBER = 7;
+    public static final int AND_PATTERN_MATCHER_NUMBER = 7;
+    public static final int OR_PATTERN_MATCHER_NUMBER = 6;
     public static final int MINIMUM_STEP_FROM_OPERATOR = 3;
 
     private String filter;
@@ -67,10 +67,25 @@ public class AndOrFilterSeparator {
      */
     private int findProperOperatorSplitterIndex(String operator, int startIndex, int patternMatcherNumber, int nextOperatorFromNumber) {
         String aliasRegex = getAliasRegexByOperator(operator);
-        while (startIndex != -1 && !filter.substring(startIndex, startIndex + patternMatcherNumber).matches(aliasRegex)) {
+        while (startIndex != -1
+                && !filter.substring(startIndex, startIndex + patternMatcherNumber).matches(aliasRegex)
+                && !isLeftSideOpeningParenthesisPresent(startIndex)){
             startIndex = findNextOperatorIndex(operator, startIndex + nextOperatorFromNumber);
         }
         return startIndex;
+    }
+
+    private boolean isLeftSideOpeningParenthesisPresent(int startIndex) {
+        boolean exists = false;
+        for (int i = startIndex; i > 0; i++) {
+            char c = filter.charAt(i);
+            if (c == '(') {
+                exists = true;
+                break;
+            }
+            if (Filter.AND_TRIMMED.equals(filter.substring(i-3, i)) || c == ')') break;
+        }
+        return exists;
     }
 
     private String getAliasRegexByOperator(String operator) {

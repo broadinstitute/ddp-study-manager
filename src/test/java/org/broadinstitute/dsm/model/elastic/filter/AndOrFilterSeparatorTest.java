@@ -20,10 +20,11 @@ public class AndOrFilterSeparatorTest {
                 "OR m.medicalRecordSomethingg = '55552' " +
                 "AND t.tissueRecord IS NOT NULL " +
                 "AND m.dynamicFields.ragac = '55' " +
+                "AND ( t.tissue = 'review' OR t.tissue = 'no' OR t.tissue = 'bla' ) " +
                 "OR m.medicalRecordName = '213' " +
                 "OR m.mrNotes = 'MEDICAL_RECORD_NOTESS' " +
                 "AND m.medicalMedical = 'something AND something' " +
-                "AND ( oD.request = 'review' OR oD.request = 'no' ) " +
+                "AND ( oD.request = 'review' OR oD.request = 'no' OR oD.request = 'bla' ) " +
                 "OR t.tissueRecord = '225' " +
                 "AND JSON_EXTRACT ( m.additiona`l_values_json , '$.seeingIfBugExists' )";
         AndOrFilterSeparator andOrFilterSeparator = new AndOrFilterSeparator(filter);
@@ -31,8 +32,10 @@ public class AndOrFilterSeparatorTest {
         for (Map.Entry<String, List<String>> eachFilter: parsedFilters.entrySet()) {
             if (eachFilter.getKey().equals("AND")) {
                 Assert.assertArrayEquals(new ArrayList<>(List.of("m.medicalRecordId = '15'",
-                                "t.tissueRecord IS NOT NULL" ,"m.dynamicFields.ragac = '55'", "m" +
-                                        ".medicalMedical = 'something AND something'", "( oD.request = 'review' OR oD.request = 'no' )",
+                                "t.tissueRecord IS NOT NULL" ,"m.dynamicFields.ragac = '55'",
+                                        "( t.tissue = 'review' OR t.tissue = 'no' OR t.tissue = 'bla' )",
+                                        "m.medicalMedical = 'something AND something'", "( oD.request = 'review' OR oD.request = 'no' OR " +
+                                        "oD.request = 'bla' )",
                                 "JSON_EXTRACT ( m.additiona`l_values_json , '$.seeingIfBugExists' )")).toArray(),
                         eachFilter.getValue().toArray());
             } else {
