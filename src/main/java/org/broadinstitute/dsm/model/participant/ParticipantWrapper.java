@@ -292,6 +292,27 @@ public class ParticipantWrapper {
         logger.info("Collecting participant data...");
         List<ParticipantWrapperDto> result = new ArrayList<>();
         for (ElasticSearchParticipantDto elasticSearchParticipantDto: esData.getEsParticipants()) {
+
+            elasticSearchParticipantDto.getDsm().ifPresent(esDsm -> {
+                ParticipantWrapperDto participantWrapperDto = new ParticipantWrapperDto();
+                participantWrapperDto.setEsData(elasticSearchParticipantDto);
+
+                Participant participant = esDsm.getParticipant();
+                participant.setCreatedOncHistory(esDsm.getOncHistory().getCreated());
+                participant.setReviewedOncHistory(esDsm.getOncHistory().getReviewed());
+
+                List<OncHistoryDetail> oncHistoryDetails = esDsm.getOncHistoryDetail();
+                List<Tissue> tissues = esDsm.getTissue();
+                for (Tissue tissue : tissues) {
+                    String oncHistoryDetailId = tissue.getOncHistoryDetailId();
+                    oncHistoryDetails.stream()
+                            .filter(oncHistoryDetail -> oncHistoryDetail.getOncHistoryDetailId().equals(oncHistoryDetailId))
+                            .findFirst()
+                            .ifPresent(oncHistoryDetail -> oncHistoryDetail.getTissues().add(tissue));
+                }
+
+                List<KitRequestShipping> kitRequestShipping = esDsm.getKitRequestShipping();
+            });
             String participantId = elasticSearchParticipantDto.getParticipantId();
             if (StringUtils.isBlank(participantId)) continue;
             Participant participant = participants.stream()
