@@ -304,6 +304,7 @@ public class Filter {
             dateConverter = dbElement.getDateConverter();
             Instant instant = null;
             try {
+                // 29/07/2021
                 LocalDate date = LocalDate.parse(arg.toString(), DateTimeFormatter.ISO_LOCAL_DATE);
                 instant = useEndOfday ? date.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC) : date.atStartOfDay().toInstant(ZoneOffset.UTC);
             } catch (DateTimeParseException e) {
