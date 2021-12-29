@@ -15,7 +15,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
@@ -292,6 +291,9 @@ public class MedicalRecord {
     @ColumnName (DBConstants.FOLLOWUP_REQUIRED_TEXT)
     private String followUpRequiredText;
 
+    @JsonProperty("followupRequiredText")
+    public String getFollowUpRequiredText() { return followUpRequiredText; }
+
     @TableName (
             name = DBConstants.DDP_MEDICAL_RECORD,
             alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
@@ -322,7 +324,7 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.NOTES)
-    private String mrNotes;
+    private String notes;
 
     @TableName (
             name = DBConstants.DDP_MEDICAL_RECORD,
@@ -407,7 +409,7 @@ public class MedicalRecord {
         this.international = international;
         this.crRequired = crRequired;
         this.pathologyPresent = pathologyPresent;
-        this.mrNotes = mrNotes;
+        this.notes = mrNotes;
         this.reviewMedicalRecord = reviewMedicalRecord;
         this.followUps = followUps;
         this.followUpRequired = followUpRequired;

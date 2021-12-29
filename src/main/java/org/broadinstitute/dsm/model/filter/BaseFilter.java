@@ -1,7 +1,9 @@
 package org.broadinstitute.dsm.model.filter;
 
+import java.io.IOException;
 import java.util.Objects;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
@@ -10,6 +12,7 @@ import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.RoutePath;
+import org.broadinstitute.dsm.util.ObjectMapperSingleton;
 import spark.QueryParamsMap;
 
 public class BaseFilter {
@@ -42,7 +45,14 @@ public class BaseFilter {
         quickFilterName = "";
         Filter[] savedFilters = new Gson().fromJson(queryParamsMap.get(RequestParameter.FILTERS).value(), Filter[].class);
         if (!Objects.isNull(jsonBody)) {
-            ViewFilter requestForFiltering = new Gson().fromJson(jsonBody, ViewFilter.class);
+
+            ViewFilter requestForFiltering = null;
+            try {
+                requestForFiltering = ObjectMapperSingleton.instance().readValue(jsonBody, ViewFilter.class);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
             if (requestForFiltering != null) {
                 if (requestForFiltering.getFilters() == null && StringUtils.isNotBlank(requestForFiltering.getFilterQuery())) {
                     filterQuery = ViewFilter.changeFieldsInQuery(requestForFiltering.getFilterQuery(), false);

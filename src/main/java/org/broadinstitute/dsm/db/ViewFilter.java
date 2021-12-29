@@ -91,6 +91,10 @@ public class ViewFilter {
     public String parent;
     public String filterQuery;
 
+    public ViewFilter() {
+
+    }
+
     public ViewFilter(String filterName, String parent) {
         this(filterName, null, null, null, null, null, null, parent, null,
                 null, null, null, null);
