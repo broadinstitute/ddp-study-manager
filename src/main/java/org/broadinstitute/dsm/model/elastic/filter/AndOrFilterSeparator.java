@@ -1,12 +1,12 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
-import org.broadinstitute.dsm.model.Filter;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
+import org.broadinstitute.dsm.model.Filter;
 
 public class AndOrFilterSeparator {
 
@@ -44,16 +44,6 @@ public class AndOrFilterSeparator {
         return filterByLogicalOperators;
     }
 
-    private void handleSpecialCases(Map<String, List<String>> filterByLogicalOperators) {
-        final String additionalValuesJsonIsNotNull = "additional_values_json IS NOT NULL";
-        for (Map.Entry<String, List<String>> entry: filterByLogicalOperators.entrySet()) {
-            List<String> filteredByNotAdditionalValuesIsNotNull = entry.getValue().stream()
-                    .filter(f -> !f.contains(additionalValuesJsonIsNotNull))
-                    .collect(Collectors.toList());
-        filterByLogicalOperators.put(entry.getKey(), filteredByNotAdditionalValuesIsNotNull);
-        }
-    }
-
     /**
      * "AND ( oD.request = 'review' OR oD.request = 'no' ) " - filter
      *
@@ -71,35 +61,6 @@ public class AndOrFilterSeparator {
             startIndex = findNextOperatorIndex(operator, startIndex + nextOperatorFromNumber);
         }
         return startIndex;
-    }
-
-    private boolean isOperatorWrappedInParenthesis(int startIndex) {
-        final char openParenthesis = '(';
-        final char closeParenthesis = ')';
-        boolean exists = false;
-        for (int i = startIndex; i > 2; i--) {
-            char c = filter.charAt(i);
-            if (c == openParenthesis) {
-                exists = true;
-                break;
-            }
-            if (Filter.AND_TRIMMED.equals(filter.substring(i - 3, i)) || c == closeParenthesis) break;
-            // ) OR
-        }
-        return exists;
-    }
-
-    private String getAliasRegexByOperator(String operator) {
-        return "AND".equals(operator) ? AND_DSM_ALIAS_REGEX : OR_DSM_ALIAS_REGEX;
-    }
-
-    private int findNextOperatorIndex(String operator, int fromIndex) {
-        int index = filter.indexOf(operator, fromIndex);
-        if (isOperatorWrappedInParenthesis(index)) {
-            index = filter.indexOf(Filter.CLOSE_PARENTHESIS, index);
-            index = filter.indexOf(operator, index);
-        }
-        return index;
     }
 
     private int getIndex(Map<String, List<String>> filterByLogicalOperators, int index, String operator) {
@@ -128,6 +89,44 @@ public class AndOrFilterSeparator {
         return index;
     }
 
+    private void handleSpecialCases(Map<String, List<String>> filterByLogicalOperators) {
+        final String additionalValuesJsonIsNotNull = "additional_values_json IS NOT NULL";
+        for (Map.Entry<String, List<String>> entry: filterByLogicalOperators.entrySet()) {
+            List<String> filteredByNotAdditionalValuesIsNotNull = entry.getValue().stream()
+                    .filter(f -> !f.contains(additionalValuesJsonIsNotNull))
+                    .collect(Collectors.toList());
+            filterByLogicalOperators.put(entry.getKey(), filteredByNotAdditionalValuesIsNotNull);
+        }
+    }
+
+    private String getAliasRegexByOperator(String operator) {
+        return Filter.AND_TRIMMED.equals(operator) ? AND_DSM_ALIAS_REGEX : OR_DSM_ALIAS_REGEX;
+    }
+
+    private boolean isOperatorWrappedInParenthesis(int startIndex) {
+        final char openParenthesis = '(';
+        final char closeParenthesis = ')';
+        boolean exists = false;
+        for (int i = startIndex; i > 2; i--) {
+            char c = filter.charAt(i);
+            if (c == openParenthesis) {
+                exists = true;
+                break;
+            }
+            if (Filter.AND_TRIMMED.equals(filter.substring(i - 3, i)) || c == closeParenthesis) break;
+        }
+        return exists;
+    }
+
+    private int findNextOperatorIndex(String operator, int fromIndex) {
+        int index = filter.indexOf(operator, fromIndex);
+        if (isOperatorWrappedInParenthesis(index)) {
+            index = filter.indexOf(Filter.CLOSE_PARENTHESIS, index);
+            index = filter.indexOf(operator, index);
+        }
+        return index;
+    }
+
     private boolean isMatches(int index, int index1, String operator) {
         return filter.substring(index, index1).matches(operator);
     }
@@ -138,26 +137,6 @@ public class AndOrFilterSeparator {
 
     private boolean isEndOfFilter(int orPrecedeIndex, int andPrecedeIndex) {
         return andPrecedeIndex == -1 && orPrecedeIndex == -1;
-    }
-
-    private boolean isLeftMostOR(boolean matches, int orPrecedeIndex, int andPrecedeIndex) {
-        return orPrecedeIndex < andPrecedeIndex && matches;
-    }
-
-    private boolean isLeftMostAND(boolean matches, int orPrecedeIndex, int andPrecedeIndex) {
-        return andPrecedeIndex < orPrecedeIndex && matches;
-    }
-
-    private boolean isAndOperator(String operator) {
-        return "AND".equals(operator);
-    }
-
-    private int getPatternMatcherNumberByOperator(String operator) {
-        return isAndOperator(operator) ? AND_PATTERN_MATCHER_NUMBER : OR_PATTERN_MATCHER_NUMBER;
-    }
-
-    private int getFilterIndex(int andIndex, int patternMatcherNumber) {
-        return andIndex + patternMatcherNumber;
     }
 
 }

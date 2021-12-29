@@ -1,8 +1,5 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.search.join.ScoreMode;
@@ -14,7 +11,6 @@ import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class CollectionQueryBuilderTest {
