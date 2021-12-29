@@ -36,7 +36,7 @@ public class OncHistoryDetail {
 
     private static final Logger logger = LoggerFactory.getLogger(OncHistoryDetail.class);
 
-    public static final String SQL_SELECT_ONC_HISTORY_DETAIL = "SELECT p.ddp_participant_id, oD.onc_history_detail_id, oD.request, oD.deleted, oD.fax_sent, oD.tissue_received, oD.medical_record_id, oD.date_px, oD.type_px, " +
+    public static final String SQL_SELECT_ONC_HISTORY_DETAIL = "SELECT p.ddp_participant_id, p.participant_id, oD.onc_history_detail_id, oD.request, oD.deleted, oD.fax_sent, oD.tissue_received, oD.medical_record_id, oD.date_px, oD.type_px, " +
             "oD.location_px, oD.histology, oD.accession_number, oD.facility, oD.phone, oD.fax, oD.notes, oD.additional_values_json, " +
             "oD.request, oD.fax_sent, oD.fax_sent_by, oD.fax_confirmed, oD.fax_sent_2, oD.fax_sent_2_by, oD.fax_confirmed_2, oD.fax_sent_3, " +
             "oD.fax_sent_3_by, oD.fax_confirmed_3, oD.tissue_received, oD.tissue_problem_option, oD.gender, oD.destruction_policy, oD.unable_obtain_tissue, " +
@@ -172,6 +172,7 @@ public class OncHistoryDetail {
     private boolean unableToObtain;
 
     private String participantId;
+    private String ddpParticipantId;
 
 
     private List<Tissue> tissues;
@@ -221,7 +222,7 @@ public class OncHistoryDetail {
                             String tFaxSent2, String tFaxSent2By, String tFaxConfirmed2,
                             String tFaxSent3, String tFaxSent3By, String tFaxConfirmed3,
                             String tissueReceived, String gender, String additionalValues, List<Tissue> tissues,
-                            String tissueProblemOption, String destructionPolicy, boolean unableToObtain) {
+                            String tissueProblemOption, String destructionPolicy, boolean unableToObtain, String participantId, String ddpParticipantId) {
         this.oncHistoryDetailId = oncHistoryDetailId;
         this.medicalRecordId = medicalRecordId;
         this.datePX = datePX;
@@ -250,6 +251,8 @@ public class OncHistoryDetail {
         this.tissueProblemOption = tissueProblemOption;
         this.destructionPolicy = destructionPolicy;
         this.unableToObtain = unableToObtain;
+        this.participantId = participantId;
+        this.ddpParticipantId = ddpParticipantId;
     }
 
     public static OncHistoryDetail getOncHistoryDetail(@NonNull ResultSet rs) throws SQLException {
@@ -281,14 +284,11 @@ public class OncHistoryDetail {
                 rs.getString(DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.ADDITIONAL_VALUES), tissues,
                 rs.getString(DBConstants.TISSUE_PROBLEM_OPTION),
                 rs.getString(DBConstants.DESTRUCTION_POLICY),
-                rs.getBoolean(DBConstants.UNABLE_OBTAIN_TISSUE)
+                rs.getBoolean(DBConstants.UNABLE_OBTAIN_TISSUE),
+                rs.getString(DBConstants.PARTICIPANT_ID),
+                rs.getString(DBConstants.DDP_PARTICIPANT_ID)
         );
-        try {
-            oncHistoryDetail.setParticipantId(rs.getString(DBConstants.DDP_PARTICIPANT_ID));
-        }
-        catch (java.sql.SQLException e) {
-            oncHistoryDetail.setParticipantId(null);
-        }
+
         return oncHistoryDetail;
     }
 
@@ -346,11 +346,8 @@ public class OncHistoryDetail {
                     }//  add onchistories to their particiapnt
                     for (OncHistoryDetail oncHistoryDetail : oncHistoryMap.values()) {
                         //check if oncHistoryDetails is already in map
-                        List<OncHistoryDetail> oncHistoryDataList = new ArrayList<>();
-                        String ddpParticipantId = oncHistoryDetail.getParticipantId();
-                        if (oncHistory.containsKey(ddpParticipantId)) {
-                            oncHistoryDataList = oncHistory.get(ddpParticipantId);
-                        }
+                        String ddpParticipantId = oncHistoryDetail.getDdpParticipantId();
+                        List<OncHistoryDetail> oncHistoryDataList = oncHistory.getOrDefault(ddpParticipantId, new ArrayList<>());
                         oncHistoryDataList.add(oncHistoryDetail);
                         oncHistory.put(ddpParticipantId, oncHistoryDataList);
                     }
@@ -415,11 +412,8 @@ public class OncHistoryDetail {
                     }//  add onchistories to their particiapnt
                     for (OncHistoryDetail oncHistoryDetail : oncHistoryMap.values()) {
                         //check if oncHistoryDetails is already in map
-                        List<OncHistoryDetail> oncHistoryDataList = new ArrayList<>();
-                        String ddpParticipantId = oncHistoryDetail.getParticipantId();
-                        if (oncHistory.containsKey(ddpParticipantId)) {
-                            oncHistoryDataList = oncHistory.get(ddpParticipantId);
-                        }
+                        String ddpParticipantId = oncHistoryDetail.getDdpParticipantId();
+                        List<OncHistoryDetail> oncHistoryDataList = oncHistory.getOrDefault(ddpParticipantId, new ArrayList<>());
                         oncHistoryDataList.add(oncHistoryDetail);
                         oncHistory.put(ddpParticipantId, oncHistoryDataList);
                     }
