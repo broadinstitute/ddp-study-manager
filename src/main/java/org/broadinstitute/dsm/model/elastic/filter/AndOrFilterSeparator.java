@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class AndOrFilterSeparator {
@@ -29,8 +28,7 @@ public class AndOrFilterSeparator {
     }
 
     protected Map<String, List<String>> parseFiltersByLogicalOperators() {
-        Map<String, List<String>> filterByLogicalOperators = new ConcurrentHashMap<>(Map.of(Filter.AND_TRIMMED, new ArrayList<>(), Filter.OR_TRIMMED,
-                new ArrayList<>()));
+        Map<String, List<String>> filterByLogicalOperators = new ConcurrentHashMap<>(Map.of(Filter.AND_TRIMMED, new ArrayList<>(), Filter.OR_TRIMMED, new ArrayList<>()));
         int andIndex = filter.indexOf(Filter.AND_TRIMMED);
         int orIndex = filter.indexOf(Filter.OR_TRIMMED);
         while (andIndex != -1 || orIndex != -1) {
@@ -68,22 +66,25 @@ public class AndOrFilterSeparator {
     private int findProperOperatorSplitterIndex(String operator, int startIndex, int patternMatcherNumber, int nextOperatorFromNumber) {
         String aliasRegex = getAliasRegexByOperator(operator);
         while (startIndex != -1
-                && (isLeftSideOpeningParenthesisPresent(startIndex)
-                || !filter.substring(startIndex, startIndex + patternMatcherNumber).matches(aliasRegex))){
+                && (isOperatorWrappedInParenthesis(startIndex)
+                || !isMatches(startIndex, startIndex + patternMatcherNumber, aliasRegex))){
             startIndex = findNextOperatorIndex(operator, startIndex + nextOperatorFromNumber);
         }
         return startIndex;
     }
 
-    private boolean isLeftSideOpeningParenthesisPresent(int startIndex) {
+    private boolean isOperatorWrappedInParenthesis(int startIndex) {
+        final char openParenthesis = '(';
+        final char closeParenthesis = ')';
         boolean exists = false;
         for (int i = startIndex; i > 2; i--) {
             char c = filter.charAt(i);
-            if (c == '(') {
+            if (c == openParenthesis) {
                 exists = true;
                 break;
             }
-            if (Filter.AND_TRIMMED.equals(filter.substring(i-3, i)) || c == ')') break;
+            if (Filter.AND_TRIMMED.equals(filter.substring(i - 3, i)) || c == closeParenthesis) break;
+            // ) OR
         }
         return exists;
     }
@@ -94,7 +95,7 @@ public class AndOrFilterSeparator {
 
     private int findNextOperatorIndex(String operator, int fromIndex) {
         int index = filter.indexOf(operator, fromIndex);
-        if (isLeftSideOpeningParenthesisPresent(index)) {
+        if (isOperatorWrappedInParenthesis(index)) {
             index = filter.indexOf(Filter.CLOSE_PARENTHESIS, index);
             index = filter.indexOf(operator, index);
         }
@@ -102,7 +103,6 @@ public class AndOrFilterSeparator {
     }
 
     private int getIndex(Map<String, List<String>> filterByLogicalOperators, int index, String operator) {
-        boolean matches = filter.substring(index, getFilterIndex(index, getPatternMatcherNumberByOperator(operator))).matches(Pattern.compile(getAliasRegexByOperator(operator)).pattern());
 
         int orPrecedeIndex = findNextOperatorIndex(Filter.OR_TRIMMED, index + MINIMUM_STEP_FROM_OPERATOR);
         orPrecedeIndex = findProperOperatorSplitterIndex(Filter.OR_TRIMMED, orPrecedeIndex, OR_PATTERN_MATCHER_NUMBER, MINIMUM_STEP_FROM_OPERATOR);
@@ -110,46 +110,34 @@ public class AndOrFilterSeparator {
         int andPrecedeIndex = findNextOperatorIndex(Filter.AND_TRIMMED, index + MINIMUM_STEP_FROM_OPERATOR);
         andPrecedeIndex = findProperOperatorSplitterIndex(Filter.AND_TRIMMED, andPrecedeIndex, AND_PATTERN_MATCHER_NUMBER, MINIMUM_STEP_FROM_OPERATOR);
 
-        if (andPrecedeIndex > index && orPrecedeIndex > index) {
-            filterByLogicalOperators.get(operator).add(filter.substring(index + MINIMUM_STEP_FROM_OPERATOR, Math.min(orPrecedeIndex,
-                    andPrecedeIndex)).trim());
-            index = Math.min(orPrecedeIndex,
-                    andPrecedeIndex);
+        // index = 5, 4 ,20
+        if (isAndOrGreaterThanCurrentPosition(index, orPrecedeIndex, andPrecedeIndex)) {
+            filterByLogicalOperators.get(operator).add(filter.substring(index + MINIMUM_STEP_FROM_OPERATOR, Math.min(orPrecedeIndex, andPrecedeIndex)).trim());
+            index = Math.min(orPrecedeIndex, andPrecedeIndex);
         } else {
-            if (andPrecedeIndex == -1 && orPrecedeIndex == -1) {
+            if (isEndOfFilter(orPrecedeIndex, andPrecedeIndex)) {
                 filterByLogicalOperators.get(operator).add(filter.substring(index + MINIMUM_STEP_FROM_OPERATOR).trim());
-                return -1;
+                index = -1;
+            } else {
+                filterByLogicalOperators.get(operator).add(filter.substring(index + MINIMUM_STEP_FROM_OPERATOR, Math.max(orPrecedeIndex,
+                        andPrecedeIndex)).trim());
+                index = Math.max(orPrecedeIndex,
+                        andPrecedeIndex);
             }
-            filterByLogicalOperators.get(operator).add(filter.substring(index + MINIMUM_STEP_FROM_OPERATOR, Math.max(orPrecedeIndex,
-                    andPrecedeIndex)).trim());
-            index = Math.max(orPrecedeIndex,
-                    andPrecedeIndex);
         }
-
-//        if (isLeftMostOR(matches, orPrecedeIndex, andPrecedeIndex)) {
-//            if (orPrecedeIndex > index && andPrecedeIndex > index) {
-//                filterByLogicalOperators.get(operator).add(filter.substring(index + MINIMUM_STEP_FROM_OPERATOR, Math.min(orPrecedeIndex,
-//                        andPrecedeIndex)).trim());
-//            } else {
-//                filterByLogicalOperators.get(operator).add(filter.substring(index + MINIMUM_STEP_FROM_OPERATOR, Math.max(orPrecedeIndex,
-//                        andPrecedeIndex)).trim());
-//            }
-//            index = isAndOperator(operator) ? andPrecedeIndex : orPrecedeIndex;
-//        } else if (isLeftMostAND(matches, orPrecedeIndex, andPrecedeIndex)) {
-//            if (orPrecedeIndex > index && andPrecedeIndex > index) {
-//                filterByLogicalOperators.get(operator).add(filter.substring(index + MINIMUM_STEP_FROM_OPERATOR, Math.min(orPrecedeIndex,
-//                        andPrecedeIndex)).trim());
-//            } else {
-//                filterByLogicalOperators.get(operator).add(filter.substring(index + MINIMUM_STEP_FROM_OPERATOR, Math.max(orPrecedeIndex,
-//                        andPrecedeIndex)).trim());
-//            }
-////            filterByLogicalOperators.get(operator).add(filter.substring(index + MINIMUM_STEP_FROM_OPERATOR, andPrecedeIndex == -1 ? orPrecedeIndex : andPrecedeIndex).trim());
-//            index = isAndOperator(operator) ? andPrecedeIndex : orPrecedeIndex;
-//        } else {
-//            filterByLogicalOperators.get(operator).add(filter.substring(index + MINIMUM_STEP_FROM_OPERATOR).trim());
-//            index = isAndOperator(operator) ? andPrecedeIndex : orPrecedeIndex;
-//        }
         return index;
+    }
+
+    private boolean isMatches(int index, int index1, String operator) {
+        return filter.substring(index, index1).matches(operator);
+    }
+
+    private boolean isAndOrGreaterThanCurrentPosition(int index, int orPrecedeIndex, int andPrecedeIndex) {
+        return andPrecedeIndex > index && orPrecedeIndex > index;
+    }
+
+    private boolean isEndOfFilter(int orPrecedeIndex, int andPrecedeIndex) {
+        return andPrecedeIndex == -1 && orPrecedeIndex == -1;
     }
 
     private boolean isLeftMostOR(boolean matches, int orPrecedeIndex, int andPrecedeIndex) {
