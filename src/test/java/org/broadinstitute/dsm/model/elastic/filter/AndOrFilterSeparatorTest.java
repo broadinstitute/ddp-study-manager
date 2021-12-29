@@ -49,10 +49,21 @@ public class AndOrFilterSeparatorTest {
     @Test
     public void parseFiltersByLogicalOperatorsSingle() {
 
-        String filter = "AND oD.datePx = '15'";
+        String filter = "AND oD.datePx = '15' ";
         Map<String, List<String>> stringListMap = new AndOrFilterSeparator(filter).parseFiltersByLogicalOperators();
         Assert.assertEquals("oD.datePx = '15'", stringListMap.get("AND").get(0));
 
-
     }
+
 }
+
+
+
+
+
+
+
+
+
+
+
