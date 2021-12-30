@@ -6,8 +6,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -38,11 +40,31 @@ public class ParticipantDataDto {
     @ColumnName(ParticipantDataDao.DDP_PARTICIPANT_ID)
     private String ddpParticipantId;
 
+    /*
+        used only for Jackson library, jackson by default uses getter of the field to serialize its data
+        since we follow Optional way of getters, jackson by default weirdly serializes Optional and not field's data
+        JsonGetter is used to give a hint to Jackson to use specific method to serialize data for the field
+     */
+    @JsonGetter("ddpParticipantId")
+    private String serializeDdpParticipantId() {
+        return ddpParticipantId;
+    }
+
     @ColumnName(ParticipantDataDao.DDP_INSTANCE_ID)
     private int ddpInstanceId;
 
     @ColumnName(ParticipantDataDao.FIELD_TYPE_ID)
     private String fieldTypeId;
+
+    /*
+        used only for Jackson library, jackson by default uses getter of the field to serialize its data
+        since we follow Optional way of getters, jackson by default weirdly serializes Optional and not field's data
+        JsonGetter is used to give a hint to Jackson to use specific method to serialize data for the field
+     */
+    @JsonGetter("fieldTypeId")
+    private String serializeFieldTypeId() {
+        return fieldTypeId;
+    }
 
     @ColumnName(ParticipantDataDao.DATA)
     @JsonProperty("dynamicFields")

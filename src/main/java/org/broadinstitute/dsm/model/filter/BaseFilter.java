@@ -48,7 +48,9 @@ public class BaseFilter {
 
             ViewFilter requestForFiltering = null;
             try {
-                requestForFiltering = ObjectMapperSingleton.instance().readValue(jsonBody, ViewFilter.class);
+                requestForFiltering = StringUtils.isNotBlank(jsonBody)
+                        ? ObjectMapperSingleton.instance().readValue(jsonBody, ViewFilter.class)
+                        : null;
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
