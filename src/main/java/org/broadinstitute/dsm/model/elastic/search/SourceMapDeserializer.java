@@ -12,7 +12,6 @@ import org.broadinstitute.dsm.util.ObjectMapperSingleton;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class SourceMapDeserializer implements Deserializer {
 
@@ -82,11 +81,7 @@ public class SourceMapDeserializer implements Deserializer {
     String getDynamicFieldsValueAsJson(Map<String, Object> clonedMap) {
         Map<String, Object> dynamicFields = (Map<String, Object>) clonedMap.get(ESObjectConstants.DYNAMIC_FIELDS);
         if (ESObjectConstants.PARTICIPANT_DATA.equals(outerProperty)) {
-            Map<String, Object> updatedParticipantDataDynamicFields = new HashMap<>();
-            for (Map.Entry<String, Object> entry: dynamicFields.entrySet()) {
-                updatedParticipantDataDynamicFields.put(Util.camelCaseToPascalSnakeCase(entry.getKey()), entry.getValue());
-            }
-            dynamicFields = updatedParticipantDataDynamicFields;
+            dynamicFields = convertDynamicFieldsFromCamelCaseToPascalCase(dynamicFields);
         }
         try {
             return dynamicFields.isEmpty()
@@ -95,6 +90,15 @@ public class SourceMapDeserializer implements Deserializer {
         } catch (JsonProcessingException jpe) {
             throw new RuntimeException(jpe);
         }
+    }
+
+    protected Map<String, Object> convertDynamicFieldsFromCamelCaseToPascalCase(Map<String, Object> dynamicFields) {
+        Map<String, Object> updatedParticipantDataDynamicFields = new HashMap<>();
+        for (Map.Entry<String, Object> entry: dynamicFields.entrySet()) {
+            updatedParticipantDataDynamicFields.put(Util.camelCaseToPascalSnakeCase(entry.getKey()), entry.getValue());
+        }
+        dynamicFields = updatedParticipantDataDynamicFields;
+        return dynamicFields;
     }
 
     private boolean hasDynamicFields(String outerProperty) {
