@@ -118,11 +118,22 @@ public class UtilTest {
     @Test
     public void camelCaseToPascalSnakeCase() {
         String camelCase = "registrationType";
-        String camelCase2 = "test";
+        String camelCaseVal = "test";
+
+        String camelCase2 = "medicalRecordsReleaseObtained";
+        String camelCase2Val = "NO";
+
         String pascalSnakeCase = Util.camelCaseToPascalSnakeCase(camelCase);
+        String pascalSnakeCaseVal = Util.camelCaseToPascalSnakeCase(camelCaseVal);
+
         String pascalSnakeCase2 = Util.camelCaseToPascalSnakeCase(camelCase2);
+        String pascalSnakeCase2Val = Util.camelCaseToPascalSnakeCase(camelCase2Val);
+
         assertEquals("REGISTRATION_TYPE", pascalSnakeCase);
-        assertEquals("TEST", pascalSnakeCase2);
+        assertEquals("TEST", pascalSnakeCaseVal);
+
+        assertEquals("MEDICAL_RECORDS_RELEASE_OBTAINED", pascalSnakeCase2);
+        assertEquals("NO", pascalSnakeCase2Val);
     }
 
     @Test

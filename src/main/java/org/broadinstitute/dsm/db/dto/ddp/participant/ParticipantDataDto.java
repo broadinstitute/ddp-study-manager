@@ -6,10 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -81,11 +78,14 @@ public class ParticipantDataDto {
 
     public ParticipantDataDto() {}
 
+    @JsonIgnore
     private long lastChanged;
 
+    @JsonIgnore
     private String changedBy;
 
     // We cache the json data map to avoid deserializing it multiple times.
+    @JsonIgnore
     private Map<String, String> cachedDataMap;
 
     public int getParticipantDataId() {
@@ -113,6 +113,7 @@ public class ParticipantDataDto {
         this.cachedDataMap = null;
     }
 
+    @JsonIgnore
     public Map<String, String> getDataMap() {
         if (cachedDataMap != null) {
             return cachedDataMap;

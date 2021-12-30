@@ -3,7 +3,7 @@ package org.broadinstitute.dsm.model.elastic.search;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.*;
 
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ObjectMapperSingleton;
@@ -23,6 +23,8 @@ public class SourceMapDeserializerTest {
                 "ddpInstanceId", 12,
                 ESObjectConstants.DYNAMIC_FIELDS, dynamicFields
         );
+
+
         SourceMapDeserializer sourceMapDeserializer = new SourceMapDeserializer();
         sourceMapDeserializer.outerProperty = ESObjectConstants.PARTICIPANT_DATA;
         try {
@@ -33,5 +35,38 @@ public class SourceMapDeserializerTest {
         } catch (IOException e) {
             Assert.fail();
         }
+    }
+
+    @Test
+    public void convertSeveralDynamicFields() {
+
+        Map<String, String> dynamicFields1 = new HashMap<>(Map.of(
+                "registrationType", "Self",
+                "registrationStatus", "Registered"
+        ));
+
+        Map<String, String> dynamicFields2 = new HashMap<>(Map.of(
+                "registrationType", "Self",
+                "registrationStatus", "Registered"
+        ));
+
+        Map<String, Object> outerProperties1 = new HashMap<>(Map.of(
+                "ddpInstanceId", 12,
+                ESObjectConstants.DYNAMIC_FIELDS, dynamicFields1
+        ));
+
+        Map<String, Object> outerProperties2 = new HashMap<>(Map.of(
+                "ddpInstanceId", 13,
+                ESObjectConstants.DYNAMIC_FIELDS, dynamicFields2
+        ));
+
+        Map<String, Object> participantData = new HashMap<>(Map.of("participantData", new ArrayList<>(Arrays.asList(outerProperties1, outerProperties2))));
+        Map<String, Object> dsm = new HashMap<>(Map.of("dsm", participantData));
+
+        Optional<ElasticSearchParticipantDto> des = new SourceMapDeserializer().deserialize(dsm);
+
+        System.out.println(des);
+
+
     }
 }
