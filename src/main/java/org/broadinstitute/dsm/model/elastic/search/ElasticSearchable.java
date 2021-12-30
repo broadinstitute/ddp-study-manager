@@ -21,4 +21,8 @@ public interface ElasticSearchable {
 
     ElasticSearch getAllParticipantsDataByInstanceIndex(String esParticipantsIndex);
 
+    default void setDeserializer(Deserializer deserializer) {
+
+    }
+
 }

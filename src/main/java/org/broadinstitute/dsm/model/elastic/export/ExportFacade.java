@@ -20,6 +20,7 @@ import org.broadinstitute.dsm.model.elastic.export.process.Processor;
 import org.broadinstitute.dsm.model.elastic.export.process.ProcessorFactory;
 import org.broadinstitute.dsm.model.elastic.export.process.ProcessorFactoryImpl;
 import org.broadinstitute.dsm.model.elastic.export.process.SingleProcessor;
+import org.broadinstitute.dsm.model.elastic.search.DefaultDeserializer;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
@@ -65,6 +66,7 @@ public class ExportFacade {
     }
 
     private ESDsm fetchData() {
+        searchable.setDeserializer(new DefaultDeserializer());
         ElasticSearchParticipantDto participantById = searchable.getParticipantById(exportFacadePayload.getIndex(), exportFacadePayload.getDocId());
         // Ensure that participant data will be stored by participant guid
         exportFacadePayload.setDocId(participantById.getParticipantId());

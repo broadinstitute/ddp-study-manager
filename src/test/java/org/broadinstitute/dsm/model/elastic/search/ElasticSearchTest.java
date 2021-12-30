@@ -74,7 +74,7 @@ public class ElasticSearchTest {
                 .withAddress(esAddress)
                 .build();
         Map<String, Object> esMap = GSON.fromJson(GSON.toJson(elasticSearchParticipantDto), Map.class);
-        Optional<ElasticSearchParticipantDto> maybeElasticSearchParticipantDto = ElasticSearch.parseSourceMap(esMap);
+        Optional<ElasticSearchParticipantDto> maybeElasticSearchParticipantDto = new ElasticSearch().parseSourceMap(esMap);
         try {
             ElasticSearchParticipantDto esParticipantDto = maybeElasticSearchParticipantDto.get();
             Assert.assertEquals("Tommy", esParticipantDto.getProfile().map(ESProfile::getFirstName).orElse(""));

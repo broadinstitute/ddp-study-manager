@@ -308,7 +308,8 @@ public class ElasticSearchUtil {
 
         response = client.search(searchRequest, RequestOptions.DEFAULT);
         response.getHits();
-        return ElasticSearch.parseSourceMap(response.getHits().getTotalHits() > 0 ? response.getHits().getAt(0).getSourceAsMap() : null).get();
+        ElasticSearch elasticSearch = new ElasticSearch();
+        return elasticSearch.parseSourceMap(response.getHits().getTotalHits() > 0 ? response.getHits().getAt(0).getSourceAsMap() : null).get();
     }
 
     public static Map<String, Map<String, Object>> getDDPParticipantsFromES(@NonNull String realm, @NonNull String index) {
@@ -745,7 +746,7 @@ public class ElasticSearchUtil {
             ESProfile profile = null;
             if (response.getHits().getTotalHits() > 0) {
                 Map<String, Object> source = response.getHits().getAt(0).getSourceAsMap();
-                profile = ElasticSearch.parseSourceMap(source).flatMap(ElasticSearchParticipantDto::getProfile).orElse(null);
+                profile = new ElasticSearch().parseSourceMap(source).flatMap(ElasticSearchParticipantDto::getProfile).orElse(null);
                 if (profile != null) {
                     logger.info("Found ES profile for participant, guid: {} altpid: {}", profile.getGuid(), profile.getLegacyAltPid());
                 }

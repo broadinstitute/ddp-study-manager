@@ -36,10 +36,25 @@ import org.slf4j.LoggerFactory;
 public class ElasticSearch implements ElasticSearchable {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearch.class);
-    private static final Gson GSON = new Gson();
+    private Deserializer deserializer;
 
     List<ElasticSearchParticipantDto> esParticipants;
     long totalCount;
+
+
+    public ElasticSearch() {
+        this.deserializer = new SourceMapDeserializer();
+    }
+
+    public ElasticSearch(List<ElasticSearchParticipantDto> esParticipants, long totalCount) {
+        this();
+        this.esParticipants = esParticipants;
+        this.totalCount = totalCount;
+    }
+
+    public void setDeserializer(Deserializer deserializer) {
+        this.deserializer = deserializer;
+    }
 
     public List<ElasticSearchParticipantDto> getEsParticipants() {
         if (Objects.isNull(esParticipants)) {
@@ -48,20 +63,13 @@ public class ElasticSearch implements ElasticSearchable {
         return esParticipants;
     }
 
-    public ElasticSearch() {}
-
-    public ElasticSearch(List<ElasticSearchParticipantDto> esParticipants, long totalCount) {
-        this.esParticipants = esParticipants;
-        this.totalCount = totalCount;
-    }
-
     public long getTotalCount() {
         return totalCount;
     }
 
-    public static Optional<ElasticSearchParticipantDto> parseSourceMap(Map<String, Object> sourceMap) {
+    public Optional<ElasticSearchParticipantDto> parseSourceMap(Map<String, Object> sourceMap) {
         if (sourceMap == null) return Optional.of(new ElasticSearchParticipantDto.Builder().build());
-        Optional<ElasticSearchParticipantDto> deserializedSourceMap = new SourceMapDeserializer().deserialize(sourceMap);
+        Optional<ElasticSearchParticipantDto> deserializedSourceMap = deserializer.deserialize(sourceMap);
         return deserializedSourceMap.isPresent()
                 ? deserializedSourceMap
                 : Optional.of(new ElasticSearchParticipantDto.Builder().build());
