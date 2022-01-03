@@ -81,17 +81,24 @@ public class CreateClinicalDummyKitRoute implements Route {
                 else {
                     throw new RuntimeException("The FFPE kit type does not match any of the valid types " + kitTypeString);
                 }
+                int tries = 0;
                 String randomOncHistoryDetailId = bspDummyKitDao.getRandomOncHistoryForStudy(ddpInstance.getName());
                 OncHistoryDetail oncHistoryDetail = OncHistoryDetail.getOncHistoryDetail(randomOncHistoryDetailId, ddpInstance.getName());
-                String ddpParticipantId = oncHistoryDetail.getParticipantId();
+                String ddpParticipantId = oncHistoryDetail.getDdpParticipantId();
                 Optional<ElasticSearchParticipantDto> maybeParticipant = ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId);
                 logger.info("found randomOncHistoryDetailId " + randomOncHistoryDetailId);
-                while (oncHistoryDetail == null || StringUtils.isBlank(oncHistoryDetail.getAccessionNumber()) || maybeParticipant.isEmpty() || maybeParticipant.get().getProfile().map(ESProfile::getHruid).isEmpty()) {
+                logger.info("found short id " + maybeParticipant.get().getProfile().map(ESProfile::getHruid));
+                while (tries < 10 && (oncHistoryDetail == null || StringUtils.isBlank(oncHistoryDetail.getAccessionNumber()) || maybeParticipant.isEmpty() || maybeParticipant.get().getProfile().map(ESProfile::getHruid).isEmpty())) {
                     randomOncHistoryDetailId = bspDummyKitDao.getRandomOncHistoryForStudy(ddpInstance.getName());
                     oncHistoryDetail = OncHistoryDetail.getOncHistoryDetail(randomOncHistoryDetailId, ddpInstance.getName());
-                    ddpParticipantId = oncHistoryDetail.getParticipantId();
-                    logger.info("found randomOncHistoryDetailId " + randomOncHistoryDetailId);
+                    ddpParticipantId = oncHistoryDetail.getDdpParticipantId();
                     maybeParticipant = ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+                    logger.info("found randomOncHistoryDetailId " + randomOncHistoryDetailId);
+                    logger.info("found short id " + maybeParticipant.get().getProfile().map(ESProfile::getHruid));
+                    tries++;
+                }
+                if(tries >= 10 ){
+                    throw new RuntimeException("couldn't find a valid onc history to create dummy");
                 }
                 List<Tissue> tissueIds = OncHistoryDetail.getOncHistoryDetail(randomOncHistoryDetailId, ddpInstance.getName()).getTissues();
                 String tissueId;

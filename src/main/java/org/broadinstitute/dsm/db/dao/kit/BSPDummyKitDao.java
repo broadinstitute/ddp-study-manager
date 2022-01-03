@@ -89,12 +89,13 @@ public class BSPDummyKitDao implements Dao<ClinicalKitDto> {
     public String getRandomOncHistoryForStudy(String ddpInstanceName) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
-            try (PreparedStatement stmt = conn.prepareStatement(DBUtil.getFinalQuery(OncHistoryDetail.SQL_SELECT_ONC_HISTORY_DETAIL , SQL_SELECT_RANDOM_SUFFIX))) {
+            try (PreparedStatement stmt = conn.prepareStatement(DBUtil.getFinalQuery(OncHistoryDetail.SQL_SELECT_ONC_HISTORY_DETAIL + " AND oD.accession_number is not null ", SQL_SELECT_RANDOM_SUFFIX))) {
                 stmt.setString(1, ddpInstanceName);
                 ResultSet rs = stmt.executeQuery();
                 if (rs.next()) {
                     dbVals.resultValue =  rs.getString(DBConstants.ONC_HISTORY_DETAIL_ID);
                 }else{
+                    throw new RuntimeException("Couldn't find a valid random onc history with accession number in realm "+ddpInstanceName);
 
                 }
             }
