@@ -85,7 +85,7 @@ public class MedicalRecord {
             primaryKey = DBConstants.DDP_INSTITUTION_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.DDP_INSTITUTION_ID)
-    private long ddpInstitutionId;
+    private String ddpInstitutionId;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT,
@@ -363,7 +363,7 @@ public class MedicalRecord {
     @ColumnName (DBConstants.PATHOLOGY_PRESENT)
     private String pathologyPresent;
 
-    public MedicalRecord(long medicalRecordId, long institutionId, long ddpInstitutionId, String type) {
+    public MedicalRecord(long medicalRecordId, long institutionId, String ddpInstitutionId, String type) {
         this.medicalRecordId = medicalRecordId;
         this.institutionId = institutionId;
         this.ddpInstitutionId = ddpInstitutionId;
@@ -372,7 +372,7 @@ public class MedicalRecord {
 
     public MedicalRecord() {}
 
-    public MedicalRecord(long medicalRecordId, long institutionId, long ddpInstitutionId, String type,
+    public MedicalRecord(long medicalRecordId, long institutionId, String ddpInstitutionId, String type,
                          String name, String contact, String phone, String fax,
                          String faxSent, String faxSentBy, String faxConfirmed,
                          String faxSent2, String faxSent2By, String faxConfirmed2,
@@ -423,7 +423,7 @@ public class MedicalRecord {
         MedicalRecord medicalRecord = new MedicalRecord(
                 rs.getLong(DBConstants.MEDICAL_RECORD_ID),
                 rs.getLong(DBConstants.INSTITUTION_ID),
-                rs.getLong(DBConstants.DDP_INSTITUTION_ID),
+                rs.getString(DBConstants.DDP_INSTITUTION_ID),
                 rs.getString(DBConstants.TYPE),
                 rs.getString(DBConstants.NAME),
                 rs.getString(DBConstants.CONTACT),
@@ -552,7 +552,7 @@ public class MedicalRecord {
                         medicalRecords.add(new MedicalRecord(
                                 rs.getLong(DBConstants.MEDICAL_RECORD_ID),
                                 rs.getLong(DBConstants.INSTITUTION_ID),
-                                rs.getLong(DBConstants.DDP_INSTITUTION_ID),
+                                rs.getString(DBConstants.DDP_INSTITUTION_ID),
                                 rs.getString(DBConstants.TYPE)));
                     }
                 }

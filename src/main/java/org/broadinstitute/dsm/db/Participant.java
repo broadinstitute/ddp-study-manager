@@ -43,7 +43,7 @@ public class Participant {
             "WHERE realm.instance_name = ? ";
 
     @ColumnName(DBConstants.PARTICIPANT_ID)
-    private String participantId;
+    private long participantId;
 
     @ColumnName(DBConstants.DDP_PARTICIPANT_ID)
     private String ddpParticipantId;
@@ -54,7 +54,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ASSIGNEE_ID_MR)
-    private String assigneeIdMr;
+    private long assigneeIdMr;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT,
@@ -62,7 +62,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ASSIGNEE_ID_TISSUE)
-    private String assigneeIdTissue;
+    private long assigneeIdTissue;
     private String realm;
 
     @TableName (
@@ -87,7 +87,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.CR_SENT)
-    private String paperCRSent;
+    private String crSent;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_RECORD,
@@ -95,7 +95,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.CR_RECEIVED)
-    private String paperCRReceived;
+    private String crReceived;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_RECORD,
@@ -150,8 +150,8 @@ public class Participant {
 
     public Participant() {}
 
-    public Participant(String participantId, String ddpParticipantId, String assigneeIdMr, String assigneeIdTissue, String instanceName,
-                       String createdOncHistory, String reviewedOncHistory, String paperCRSent, String paperCRReceived, String notes,
+    public Participant(long participantId, String ddpParticipantId, long assigneeIdMr, long assigneeIdTissue, String instanceName,
+                       String createdOncHistory, String reviewedOncHistory, String crSent, String crReceived, String notes,
                        boolean minimalMr, boolean abstractionReady, String additionalValuesJson, long exitDate) {
         this.participantId = participantId;
         this.ddpParticipantId = ddpParticipantId;
@@ -160,8 +160,8 @@ public class Participant {
         this.realm = instanceName;
         this.createdOncHistory = createdOncHistory;
         this.reviewedOncHistory = reviewedOncHistory;
-        this.paperCRSent = paperCRSent;
-        this.paperCRReceived = paperCRReceived;
+        this.crSent = crSent;
+        this.crReceived = crReceived;
         this.notes = notes;
         this.minimalMr = minimalMr;
         this.abstractionReady = abstractionReady;
@@ -182,9 +182,10 @@ public class Participant {
                 assigneeTissue = assignees.get(assigneeIdTissue).getName();
             }
         }
-        Participant participant = new Participant(rs.getString(DBConstants.PARTICIPANT_ID),
+        Participant participant = new Participant(rs.getLong(DBConstants.PARTICIPANT_ID),
                 rs.getString(DBConstants.DDP_PARTICIPANT_ID),
-                assigneeMR, assigneeTissue, realm,
+                rs.getLong(DBConstants.ASSIGNEE_ID_MR),
+                rs.getLong(DBConstants.ASSIGNEE_ID_TISSUE), realm,
                 rs.getString(DBConstants.ONC_HISTORY_CREATED),
                 rs.getString(DBConstants.ONC_HISTORY_REVIEWED),
                 rs.getString(DBConstants.CR_SENT),

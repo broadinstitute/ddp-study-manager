@@ -261,12 +261,12 @@ public class KitDiscard {
         }
     }
 
-    public static String addKitToDiscard(@NonNull String kitRequestId, @NonNull String action) {
+    public static String addKitToDiscard(@NonNull long kitRequestId, @NonNull String action) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.INSERT_KIT_DISCARD), Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, action);
-                stmt.setString(2, kitRequestId);
+                stmt.setLong(2, kitRequestId);
                 int result = stmt.executeUpdate();
                 if (result == 1) {
                     try (ResultSet rs = stmt.getGeneratedKeys()) {

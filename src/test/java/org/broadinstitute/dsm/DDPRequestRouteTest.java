@@ -105,7 +105,7 @@ public class DDPRequestRouteTest extends TestHelper {
                     response().withStatusCode(200).withBody(message.replaceAll("%1", test_participant_id).replaceAll("%2", ""))
             );
             kitRequestTestList.add(new KitRequestShipping(test_participant_id, "TestProject_2", null, "FAKE_DSM_LABEL_UID", TEST_DDP,
-                    "SALIVA", "1", "1", "https://easypost-files.s3-us-west-2.amazonaws.com/files/postage_label/20200214/8240f1b66535494a82b1ec0d566c3f0f.png",
+                    "SALIVA", 1, 1, "https://easypost-files.s3-us-west-2.amazonaws.com/files/postage_label/20200214/8240f1b66535494a82b1ec0d566c3f0f.png",
                     "", "794685038506", "9405536897846100551129", "https://track.easypost.com/djE6dHJrXzY4NGJmYzU3ZjM5OTQ1Zjg5MjEzOGRmMWVmMjI1NWZl",
                     null, 12, false, "", 12, null, 12, "so what", "mf_testLabel", false, "shp_f470591c3fb441a68dbb9b76ecf3bb3d",
                     12, null, "44445", false, "NOT FOUND", null, null, null, null, 0, false, "STANDALONE", null, null, null));
@@ -120,7 +120,7 @@ public class DDPRequestRouteTest extends TestHelper {
                         response().withStatusCode(200).withBody(message.replaceAll("%1", participant_id).replaceAll("%2", Integer.toString(counter)))
                 );
                 kitRequestTestList.add(new KitRequestShipping(participant_id, "TestProject_2", null, "FAKE_DSM_LABEL_UID" + counter, TEST_DDP,
-                        "SALIVA", "1", "1", "https://easypost-files.s3-us-west-2.amazonaws.com/files/postage_label/20200214/8240f1b66535494a82b1ec0d566c3f0f.png",
+                        "SALIVA", 1, 1, "https://easypost-files.s3-us-west-2.amazonaws.com/files/postage_label/20200214/8240f1b66535494a82b1ec0d566c3f0f.png",
                         "", "794685038506", "9405536897846100551129", "https://track.easypost.com/djE6dHJrXzY4NGJmYzU3ZjM5OTQ1Zjg5MjEzOGRmMWVmMjI1NWZl",
                         null, 12, false, "", 12, null, 12, "so what", "mf_testLabel", false, "shp_f470591c3fb441a68dbb9b76ecf3bb3d",
                         12, null, "44445", false, "NOT FOUND", null, null, null, null, 0 ,false, null, null, null, null));
@@ -148,7 +148,7 @@ public class DDPRequestRouteTest extends TestHelper {
                             kitRequestList.sort(new Comparator<KitRequestShipping>() {
                                 @Override
                                 public int compare(KitRequestShipping o1, KitRequestShipping o2) {
-                                    return Integer.parseInt(o1.getDsmKitId()) - Integer.parseInt(o2.getDsmKitId());
+                                    return (int) (o1.getDsmKitId() - o2.getDsmKitId());
                                 }
                             });
                             for (KitRequestShipping kit : kitRequestList) {

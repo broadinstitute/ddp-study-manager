@@ -71,7 +71,8 @@ public class KitExpressRoute extends RequestHandler {
     public void expressKitRequest(@NonNull String kitRequestId, @NonNull String userId) {
         KitRequestShipping kitRequest = KitRequestShipping.getKitRequest(kitRequestId);
         //deactivate kit which is  already in db and refund the label
-        KitRequestShipping.deactivateKitRequest(kitRequestId, KitRequestShipping.DEACTIVATION_REASON, DSMServer.getDDPEasypostApiKey(kitRequest.getRealm()), userId);
+        KitRequestShipping.deactivateKitRequest(Long.valueOf(kitRequestId), KitRequestShipping.DEACTIVATION_REASON,
+                DSMServer.getDDPEasypostApiKey(kitRequest.getRealm()), userId);
         //add new kit into db
         KitRequestShipping.reactivateKitRequest(kitRequestId);
 

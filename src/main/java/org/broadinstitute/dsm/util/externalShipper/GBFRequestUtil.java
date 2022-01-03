@@ -253,7 +253,10 @@ public class GBFRequestUtil implements ExternalShipper {
                         if (kitDDPNotification != null) {
                             logger.info("Triggering DDP for shipped kit with external order number: " + kit.getExternalOrderNumber());
                             if (gbfShippedTriggerDSSDelivered) {
-                                KitDDPNotification kitDeliveredNotification = KitDDPNotification.getKitDDPNotification(conn, SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER, new String[] { DELIVERED, String.valueOf(instanceId), kit.getDsmKitRequestId(), kit.getExternalOrderNumber() }, 1);
+                                KitDDPNotification kitDeliveredNotification = KitDDPNotification.getKitDDPNotification(conn,
+                                        SQL_SELECT_KIT_FOR_NOTIFICATION_EXTERNAL_SHIPPER + SELECT_BY_EXTERNAL_ORDER_NUMBER,
+                                        new String[] { DELIVERED, String.valueOf(instanceId), String.valueOf(kit.getDsmKitRequestId()),
+                                                kit.getExternalOrderNumber() }, 1);
                                 if (kitDeliveredNotification != null) {
                                     logger.info("Triggering DDP for kit 'DELIVERED' with external order number: " + kit.getExternalOrderNumber());
                                     EventUtil.triggerDDP(conn, kitDeliveredNotification);
@@ -389,7 +392,7 @@ public class GBFRequestUtil implements ExternalShipper {
                     while (rs.next()) {
                         String ddpParticipantId = rs.getString(DBConstants.DDP_PARTICIPANT_ID);
                         if (StringUtils.isNotBlank(ddpParticipantId)) {
-                            KitRequest kitRequest = new KitRequest(rs.getString(DBConstants.DSM_KIT_REQUEST_ID), ddpParticipantId,
+                            KitRequest kitRequest = new KitRequest(rs.getLong(DBConstants.DSM_KIT_REQUEST_ID), ddpParticipantId,
                                     null, null, rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER), null,
                                     rs.getString(DBConstants.EXTERNAL_ORDER_STATUS),
                                     rs.getString("subkits." + DBConstants.EXTERNAL_KIT_NAME),
@@ -447,7 +450,7 @@ public class GBFRequestUtil implements ExternalShipper {
 //                                DDPParticipant ddpParticipant = ElasticSearchUtil.getParticipantAsDDPParticipant(participantsESData, ddpParticipantId);
 //                                logger.info("ddpParticipant found: "+ddpParticipant.getParticipantId());
 //                                if (ddpParticipant != null) {
-                            kitRequests.add(new KitRequest(rs.getString(DBConstants.DSM_KIT_REQUEST_ID), ddpParticipantId,
+                            kitRequests.add(new KitRequest(rs.getLong(DBConstants.DSM_KIT_REQUEST_ID), ddpParticipantId,
                                     null, null, rs.getString(DBConstants.EXTERNAL_ORDER_NUMBER), null,
                                     rs.getString(DBConstants.EXTERNAL_ORDER_STATUS),
                                     rs.getString("subkits." + DBConstants.EXTERNAL_KIT_NAME),
@@ -634,7 +637,7 @@ public class GBFRequestUtil implements ExternalShipper {
                 SimpleResult dbVals = new SimpleResult();
                 try (PreparedStatement stmt = conn.prepareStatement(query)) {
                     stmt.setLong(1, System.currentTimeMillis() / 1000);
-                    stmt.setString(2, kitRequest.getDsmKitRequestId());
+                    stmt.setLong(2, kitRequest.getDsmKitRequestId());
                     int result = stmt.executeUpdate();
                     if (result != 1) {
                         throw new RuntimeException("Error updating status as ordered");

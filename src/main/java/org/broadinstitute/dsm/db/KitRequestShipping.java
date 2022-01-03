@@ -145,7 +145,7 @@ public class KitRequestShipping extends KitRequest {
     private static final String SEARCH_MF_BAR = "MF_BAR";
 
     @ColumnName(DBConstants.DSM_KIT_ID)
-    private String dsmKitId;
+    private long dsmKitId;
 
     @ColumnName(DBConstants.LABEL_URL_TO)
     private String labelUrlTo;
@@ -236,22 +236,24 @@ public class KitRequestShipping extends KitRequest {
 
     public KitRequestShipping() {}
 
-    public KitRequestShipping(String collaboratorParticipantId, String kitTypeName, String dsmKitRequestId, long scanDate, boolean error, long receiveDate, long deactivatedDate, String testResult,
+    public KitRequestShipping(String collaboratorParticipantId, String kitTypeName, long dsmKitRequestId, long scanDate, boolean error,
+                              long receiveDate, long deactivatedDate, String testResult,
                               String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus, String externalOrderNumber, long externalOrderDate, boolean careEvolve, String uploadReason) {
-        this(null, collaboratorParticipantId, null, null, null, kitTypeName, dsmKitRequestId, null, null, null,
+        this(null, collaboratorParticipantId, null, null, null, kitTypeName, dsmKitRequestId, 0, null, null,
                 null, null, null, null, scanDate, error, null, receiveDate,
                 null, deactivatedDate, null, null, false, null, 0, null, externalOrderNumber, false, externalOrderStatus, null, testResult,
                 upsTrackingStatus, upsReturnStatus, externalOrderDate, false, uploadReason, null, null, null);
     }
 
     public KitRequestShipping(String participantId, String collaboratorParticipantId, String dsmKitId, String realm, String trackingNumberTo, String receiveDateString, String hruid, String gender) {
-        this(participantId, collaboratorParticipantId, null, null, realm, null, null, null, null, null,
+        this(participantId, collaboratorParticipantId, null, null, realm, null, 0, 0, null, null,
                 trackingNumberTo, null, null, null, 0, false, null, 0,
                 null, 0, null, dsmKitId, false, null, 0, null, null, false, null, null, null, null, null, 0, false, null,
                 receiveDateString, hruid, gender);
     }
 
-    public KitRequestShipping(String dsmKitRequestId, String dsmKitId, String easypostToId, String easypostAddressId, boolean error, String message) {
+    public KitRequestShipping(long dsmKitRequestId, long dsmKitId, String easypostToId, String easypostAddressId, boolean error,
+                              String message) {
         this(null, null, null, null, null, null, dsmKitRequestId, dsmKitId, null, null,
                 null, null, null, null, 0, error, message, 0,
                 easypostAddressId, 0, null, null, false, easypostToId, 0, null, null, false, null, null, null, null, null, 0, false, null,
@@ -260,7 +262,7 @@ public class KitRequestShipping extends KitRequest {
 
     // shippingId = ddp_label !!!
     public KitRequestShipping(String participantId, String collaboratorParticipantId, String bspCollaboratorSampleId, String shippingId, String realm,
-                              String kitTypeName, String dsmKitRequestId, String dsmKitId, String labelUrlTo, String labelUrlReturn,
+                              String kitTypeName, long dsmKitRequestId, long dsmKitId, String labelUrlTo, String labelUrlReturn,
                               String trackingNumberTo, String trackingNumberReturn,
                               String trackingUrlTo, String trackingUrlReturn, long scanDate, boolean error, String message,
                               long receiveDate, String easypostAddressId, long deactivatedDate, String deactivationReason,
@@ -316,8 +318,8 @@ public class KitRequestShipping extends KitRequest {
                 rs.getString(DBConstants.DSM_LABEL),
                 rs.getString(DBConstants.INSTANCE_NAME),
                 rs.getString(DBConstants.KIT_TYPE_NAME),
-                rs.getString(DBConstants.DSM_KIT_REQUEST_ID),
-                rs.getString(DBConstants.DSM_KIT_ID),
+                rs.getLong(DBConstants.DSM_KIT_REQUEST_ID),
+                rs.getLong(DBConstants.DSM_KIT_ID),
                 rs.getString(DBConstants.DSM_LABEL_TO),
                 rs.getString(DBConstants.DSM_LABEL_RETURN),
                 rs.getString(DBConstants.DSM_TRACKING_TO),
@@ -441,10 +443,11 @@ public class KitRequestShipping extends KitRequest {
         KitRequestShipping krs = getKitRequestShipping(rs);
         if (kitRequests.containsKey(ddpParticipantId)) {
             kitRequestList = kitRequests.get(ddpParticipantId);
-            boolean kitPresent = kitRequestList.stream().filter(k -> k.getDsmKitRequestId().equals(krs.getDsmKitRequestId())).findFirst().isPresent();
+            boolean kitPresent = kitRequestList.stream().filter(k -> k.getDsmKitRequestId() == krs.getDsmKitRequestId()).findFirst().isPresent();
             if (kitRequestList != null && kitPresent) {
-                KitRequestShipping kit = kitRequestList.stream().filter(k -> k.getDsmKitRequestId().equals(krs.getDsmKitRequestId())).findFirst().get();
-                kitRequestList.removeIf((k -> k.getDsmKitRequestId().equals(krs.getDsmKitRequestId())));
+                KitRequestShipping kit =
+                        kitRequestList.stream().filter(k -> k.getDsmKitRequestId() == krs.getDsmKitRequestId()).findFirst().get();
+                kitRequestList.removeIf((k -> k.getDsmKitRequestId() == krs.getDsmKitRequestId()));
                 if (StringUtils.isBlank(kit.getUpsTrackingStatus()) && StringUtils.isNotBlank(krs.getUpsTrackingStatus())) {
                     kit.setUpsTrackingStatus(krs.getUpsTrackingStatus());
                 }
@@ -494,7 +497,7 @@ public class KitRequestShipping extends KitRequest {
                         KitRequestShipping kitRequest = new KitRequestShipping(
                                 rs.getString(DBConstants.COLLABORATOR_PARTICIPANT_ID),
                                 rs.getString(DBConstants.KIT_TYPE_NAME),
-                                rs.getString(DBConstants.DSM_KIT_REQUEST_ID),
+                                rs.getLong(DBConstants.DSM_KIT_REQUEST_ID),
                                 rs.getLong(DBConstants.DSM_SCAN_DATE),
                                 false,
                                 rs.getLong(DBConstants.DSM_RECEIVE_DATE),
@@ -727,14 +730,15 @@ public class KitRequestShipping extends KitRequest {
         }
     }
 
-    public static void deactivateKitRequest(@NonNull String kitRequestId, @NonNull String reason, String easypostApiKey, @NonNull String userId) {
+    public static void deactivateKitRequest(@NonNull long kitRequestId, @NonNull String reason, String easypostApiKey,
+                                            @NonNull String userId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(UPDATE_KIT_DEACTIVATION)) {
                 stmt.setLong(1, System.currentTimeMillis());
                 stmt.setString(2, reason);
                 stmt.setString(3, userId);
-                stmt.setString(4, kitRequestId);
+                stmt.setLong(4, kitRequestId);
                 int result = stmt.executeUpdate();
                 if (result == 1) {
                     logger.info("Deactivated kitRequest w/ dsm_kit_request_id " + kitRequestId);
@@ -909,13 +913,13 @@ public class KitRequestShipping extends KitRequest {
     }
 
     // update kit with label trigger user and date
-    public static void updateKit(String dsmKitId, String userId) {
+    public static void updateKit(long dsmKitId, String userId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT)) {
                 stmt.setString(1, userId);
                 stmt.setLong(2, System.currentTimeMillis());
-                stmt.setString(3, dsmKitId);
+                stmt.setLong(3, dsmKitId);
 
                 int result = stmt.executeUpdate();
                 if (result > 1) {
@@ -1251,7 +1255,7 @@ public class KitRequestShipping extends KitRequest {
         return null;
     }
 
-    public static void refundKit(@NonNull String kitRequestId, @NonNull String easypostApiKey) {
+    public static void refundKit(@NonNull long kitRequestId, @NonNull String easypostApiKey) {
         KitShippingIds shippingIds = KitShippingIds.getKitShippingIds(kitRequestId, easypostApiKey);
         if (shippingIds != null) {
             String message = "";
@@ -1281,13 +1285,13 @@ public class KitRequestShipping extends KitRequest {
         }
     }
 
-    public static void updateKitError(@NonNull String kitRequestId, @NonNull String message) {
+    public static void updateKitError(@NonNull long kitRequestId, @NonNull String message) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.UPDATE_KIT_ERROR))) {
                 stmt.setInt(1, 1);
                 stmt.setString(2, message);
-                stmt.setString(3, kitRequestId);
+                stmt.setLong(3, kitRequestId);
                 int result = stmt.executeUpdate();
                 if (result == 1) {
                     logger.info("Updated error/message for kit request w/ dsm_kit_request_id " + kitRequestId);
@@ -1326,8 +1330,8 @@ public class KitRequestShipping extends KitRequest {
                     }
                     if (rs.next()) {
                         dbVals.resultValue = new KitRequestShipping(
-                                rs.getString(DBConstants.DSM_KIT_REQUEST_ID),
-                                rs.getString(DBConstants.DSM_KIT_ID),
+                                rs.getLong(DBConstants.DSM_KIT_REQUEST_ID),
+                                rs.getLong(DBConstants.DSM_KIT_ID),
                                 rs.getString(DBConstants.EASYPOST_TO_ID),
                                 rs.getString(DBConstants.EASYPOST_ADDRESS_ID_TO),
                                 false, null

@@ -48,7 +48,8 @@ public class KitDeactivationRoute extends RequestHandler {
                 if (deactivate) {
                     JsonObject jsonObject = new JsonParser().parse(request.body()).getAsJsonObject();
                     String reason = jsonObject.get("reason").getAsString();
-                    KitRequestShipping.deactivateKitRequest(kitRequestId, reason, DSMServer.getDDPEasypostApiKey(realm), userIdRequest);
+                    KitRequestShipping.deactivateKitRequest(Long.parseLong(kitRequestId), reason,
+                            DSMServer.getDDPEasypostApiKey(realm), userIdRequest);
                 }
                 else {
                     QueryParamsMap queryParams = request.queryMap();

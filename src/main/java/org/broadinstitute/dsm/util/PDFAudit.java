@@ -36,7 +36,7 @@ public class PDFAudit {
                                 DDPRequestUtil.makeNonStandardPDF(instance, request.getParticipantId(), request.getCreatedBy(), request.getKitTypeName());
                             }
                         }
-                        newAuditKit = Math.max(newAuditKit, Integer.parseInt(request.getDsmKitRequestId()));
+                        newAuditKit = Math.max(newAuditKit, request.getDsmKitRequestId());
                     }
                 }
                 catch (Exception e) {

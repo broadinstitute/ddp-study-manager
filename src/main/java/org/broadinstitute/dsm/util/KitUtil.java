@@ -141,7 +141,9 @@ public class KitUtil {
                         KitRequestShipping.updateRequest(kitLabelTriggered, ddpParticipant, kitLabelTriggered.getKitTyp(), kitLabelTriggered.getKitRequestSettings());
                     }
                     else {
-                        KitRequestShipping.deactivateKitRequest(kitLabelTriggered.getDsmKitRequestId(), "Participant not found", null, "System");
+                        KitRequestShipping.deactivateKitRequest(Long.parseLong(kitLabelTriggered.getDsmKitRequestId()), "Participant not found",
+                                null,
+                                "System");
                         logger.error("Didn't find participant " + kitLabelTriggered.getDdpParticipantId());
                     }
                 }
@@ -447,8 +449,8 @@ public class KitUtil {
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         KitRequestShipping kitRequest = new KitRequestShipping(
-                                rs.getString(DBConstants.DSM_KIT_REQUEST_ID),
-                                rs.getString(DBConstants.DSM_KIT_ID),
+                                rs.getLong(DBConstants.DSM_KIT_REQUEST_ID),
+                                rs.getLong(DBConstants.DSM_KIT_ID),
                                 rs.getString(DBConstants.EASYPOST_TO_ID),
                                 rs.getString(DBConstants.EASYPOST_ADDRESS_ID_TO),
                                 rs.getBoolean(DBConstants.ERROR),
@@ -471,13 +473,14 @@ public class KitUtil {
     }
 
     // update kit with label trigger user and date
-    private static SimpleResult updateKit(@NonNull Connection conn, String status, Long date, String message, String dsmKitId) {
+    private static SimpleResult updateKit(@NonNull Connection conn, String status, Long date, String message,
+                                          long dsmKitId) {
         SimpleResult dbVals = new SimpleResult();
         try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT)) {
             stmt.setString(1, status);
             stmt.setLong(2, date);
             stmt.setString(3, message);
-            stmt.setString(4, dsmKitId);
+            stmt.setLong(4, dsmKitId);
 
             int result = stmt.executeUpdate();
             if (result != 1) {

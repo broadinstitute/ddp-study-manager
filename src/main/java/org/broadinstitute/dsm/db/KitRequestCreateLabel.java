@@ -112,7 +112,7 @@ public class KitRequestCreateLabel {
 
         if (!kitsNoLabel.isEmpty()) {
             for (KitRequestCreateLabel uploadedKit : kitsNoLabel) {
-                KitRequestShipping.updateKit(uploadedKit.getDsmKitId(), userId);
+                KitRequestShipping.updateKit(Long.parseLong(uploadedKit.getDsmKitId()), userId);
             }
         }
         logger.info("Done triggering label creation");

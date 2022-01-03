@@ -17,7 +17,7 @@ public class KitUploadObject extends KitRequest {
 
     public KitUploadObject(String externalOrderNumber, String ddpParticipantId, String shortId, String firstName, String lastName,
                            String street1, String street2, String city, String state, String postalCode, String country, String phoneNumber) {
-        super(null, ddpParticipantId, shortId, null, externalOrderNumber, null, null, null, null);
+        super(0, ddpParticipantId, shortId, null, externalOrderNumber, null, null, null, null);
         this.firstName = firstName;
         this.lastName = lastName;
         this.street1 = street1;

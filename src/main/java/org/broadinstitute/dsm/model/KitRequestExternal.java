@@ -23,7 +23,8 @@ public class KitRequestExternal extends KitRequest {
     private static final String SQL_UPDATE_KIT_REQUEST_EXTERNAL_SHIPPER_STATUS = "UPDATE ddp_kit_request SET external_order_status = ?, external_order_date = ? WHERE dsm_kit_request_id = ? AND NOT external_order_status <=> ?";
     private static final String SQL_UPDATE_KIT_REQUEST_EXTERNAL_SHIPPER_RESPONSE = "UPDATE ddp_kit_request SET external_response = ? WHERE dsm_kit_request_id = ?";
 
-    public KitRequestExternal(String dsmKitRequestId, String participantId, String shortId, String shippingId, String externalOrderNumber, DDPParticipant participant,
+    public KitRequestExternal(long dsmKitRequestId, String participantId, String shortId, String shippingId, String externalOrderNumber,
+                              DDPParticipant participant,
                               String externalOrderStatus, String externalKitName) {
         super(dsmKitRequestId, participantId, shortId, shippingId, externalOrderNumber, participant, externalOrderStatus, externalKitName, null);
     }
