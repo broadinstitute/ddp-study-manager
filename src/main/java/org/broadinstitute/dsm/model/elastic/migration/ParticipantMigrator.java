@@ -14,8 +14,5 @@ public class ParticipantMigrator extends BaseSingleMigrator implements Exportabl
     }
 
     @Override
-    protected Map<String, Object> getDataByRealm() {
-        System.out.println();
-        return (Map) Participant.getParticipants(realm);
-    }
+    protected Map<String, Object> getDataByRealm() { return (Map) Participant.getParticipants(realm); }
 }
