@@ -1,5 +1,7 @@
 package org.broadinstitute.dsm.db;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
@@ -14,6 +16,7 @@ import java.sql.SQLException;
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OncHistory {
 
     private static final Logger logger = LoggerFactory.getLogger(OncHistory.class);

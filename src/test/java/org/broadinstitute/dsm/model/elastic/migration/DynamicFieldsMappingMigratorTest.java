@@ -22,6 +22,7 @@ public class DynamicFieldsMappingMigratorTest {
         List<? extends Exportable> exportables = Arrays.asList(
                 //DynamicFieldsMappingMigrator should be first in the list to make sure that mapping will be exported for first
                 new DynamicFieldsMappingMigrator(index, study),
+                new OncHistoryMigrator(index, study),
                 new MedicalRecordMigrator(index, study),
                 new OncHistoryDetailsMigrator(index, study),
                 new ParticipantDataMigrator(index, study),
