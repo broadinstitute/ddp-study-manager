@@ -96,7 +96,6 @@ public class ParticipantWrapper {
                     queryBuilder.setParser(parser);
                     boolQueryBuilder.must(queryBuilder.build());
                 }
-
                 else if (DBConstants.DDP_PARTICIPANT_DATA_ALIAS.equals(source)) {
                     participantData = new ParticipantDataDao().getParticipantDataByInstanceIdAndFilterQuery(Integer.parseInt(ddpInstance.getDdpInstanceId()), filters.get(source));
 
@@ -107,17 +106,14 @@ public class ParticipantWrapper {
                         participantData = defaultValues.addDefaultValues();
                     }
                 }
-                else if ("ES".equals(source)){ //source is not of any study-manager table so it must be ES
+                else if ("ES".equals(source)){
+                    //source is not of any study-manager table so it must be ES
                     boolQueryBuilder.must(ElasticSearchUtil.createESQuery(filters.get(source)));
                 }
             }
         }
-
         esData = elasticSearchable.getParticipantsByRangeAndFilter(ddpInstance.getParticipantIndexES(), participantWrapperPayload.getFrom(),
                             participantWrapperPayload.getTo(), boolQueryBuilder);
-
-        System.out.println();
-        System.out.println();
     }
 
     private boolean isUnderDsmKey(String source) {
@@ -234,13 +230,7 @@ public class ParticipantWrapper {
 
                 List<OncHistoryDetail> oncHistoryDetails = esDsm.getOncHistoryDetail();
                 List<Tissue> tissues = esDsm.getTissue();
-                for (Tissue tissue : tissues) {
-                    String oncHistoryDetailId = tissue.getOncHistoryDetailId();
-                    oncHistoryDetails.stream()
-                            .filter(oncHistoryDetail -> oncHistoryDetail.getOncHistoryDetailId().equals(oncHistoryDetailId))
-                            .findFirst()
-                            .ifPresent(oncHistoryDetail -> oncHistoryDetail.getTissues().add(tissue));
-                }
+                mapTissueToProperOncHistoryDetail(oncHistoryDetails, tissues);
 
                 List<KitRequestShipping> kitRequestShipping = esDsm.getKitRequestShipping();
 
@@ -250,7 +240,6 @@ public class ParticipantWrapper {
                 List<ElasticSearchParticipantDto> proxies = participantsByIds.getEsParticipants();
 
                 List<ParticipantDataDto> participantData = esDsm.getParticipantData();
-
 
                 ParticipantWrapperDto participantWrapperDto = new ParticipantWrapperDto();
                 participantWrapperDto.setEsData(elasticSearchParticipantDto);
@@ -266,18 +255,18 @@ public class ParticipantWrapper {
                 result.add(participantWrapperDto);
 
             });
-//            String participantId = elasticSearchParticipantDto.getParticipantId();
-//            if (StringUtils.isBlank(participantId)) continue;
-//            Participant participant = participants.stream()
-//                    .filter(ppt -> participantId.equals(ppt.getDdpParticipantId()))
-//                    .findFirst()
-//                    .orElse(null);
-//            result.add(new ParticipantWrapperDto(
-//                    elasticSearchParticipantDto, participant, medicalRecords.get(participantId),
-//                    oncHistoryDetails.get(participantId), kitRequests.get(participantId), abstractionActivities.get(participantId),
-//                    abstractionSummary.get(participantId), proxiesByParticipantIds.get(participantId), participantData.get(participantId)));
         }
         return result;
+    }
+
+    private void mapTissueToProperOncHistoryDetail(List<OncHistoryDetail> oncHistoryDetails, List<Tissue> tissues) {
+        for (Tissue tissue : tissues) {
+            String oncHistoryDetailId = tissue.getOncHistoryDetailId();
+            oncHistoryDetails.stream()
+                    .filter(oncHistoryDetail -> oncHistoryDetail.getOncHistoryDetailId().equals(oncHistoryDetailId))
+                    .findFirst()
+                    .ifPresent(oncHistoryDetail -> oncHistoryDetail.getTissues().add(tissue));
+        }
     }
 
     void sortBySelfElseById(Collection<List<ParticipantDataDto>> participantDatas) {
