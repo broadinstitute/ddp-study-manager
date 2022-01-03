@@ -50,10 +50,10 @@ public class ParticipantData {
             "ddp_participant_id = ?, ddp_instance_id = ?, field_type_id = ?, data = ?, last_changed = ?, changed_by = ? ";
 
     @ColumnName(DBConstants.PARTICIPANT_DATA_ID)
-    private String participantDataId;
+    private long participantDataId;
 
     @ColumnName(DBConstants.DDP_PARTICIPANT_ID)
-    private String ddpParticipantId;
+    private long ddpParticipantId;
 
     @ColumnName(DBConstants.FIELD_TYPE_ID)
     private String fieldTypeId;
@@ -76,7 +76,7 @@ public class ParticipantData {
 
     }
 
-    public ParticipantData(String dataId, String fieldTypeId, String data) {
+    public ParticipantData(long dataId, String fieldTypeId, String data) {
         this.participantDataId = dataId;
         this.fieldTypeId = fieldTypeId;
         this.data = data;
@@ -84,7 +84,7 @@ public class ParticipantData {
 
     public static ParticipantData getParticipantDataObject(@NonNull ResultSet rs) throws SQLException {
         ParticipantData participantData = new ParticipantData(
-                rs.getString(DBConstants.PARTICIPANT_DATA_ID),
+                rs.getLong(DBConstants.PARTICIPANT_DATA_ID),
                 rs.getString(DBConstants.FIELD_TYPE_ID),
                 rs.getString(DBConstants.DATA)
         );

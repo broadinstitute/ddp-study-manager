@@ -41,7 +41,7 @@ public class SearchKitRequest {
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KIT_REQUEST.concat(MF_BARCODE + " like \"%" + mfBarcode + "%\""))) {
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        dbVals.resultValue = new ParticipantData(rs.getString(DBConstants.PARTICIPANT_DATA_ID), null, rs.getString(DBConstants.DATA));
+                        dbVals.resultValue = new ParticipantData(rs.getLong(DBConstants.PARTICIPANT_DATA_ID), null, rs.getString(DBConstants.DATA));
                     }
                 }
             }

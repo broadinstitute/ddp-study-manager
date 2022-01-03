@@ -261,9 +261,9 @@ public class ParticipantWrapper {
 
     private void mapTissueToProperOncHistoryDetail(List<OncHistoryDetail> oncHistoryDetails, List<Tissue> tissues) {
         for (Tissue tissue : tissues) {
-            String oncHistoryDetailId = tissue.getOncHistoryDetailId();
+            long oncHistoryDetailId = tissue.getOncHistoryDetailId();
             oncHistoryDetails.stream()
-                    .filter(oncHistoryDetail -> oncHistoryDetail.getOncHistoryDetailId().equals(oncHistoryDetailId))
+                    .filter(oncHistoryDetail -> oncHistoryDetail.getOncHistoryDetailId() == oncHistoryDetailId)
                     .findFirst()
                     .ifPresent(oncHistoryDetail -> oncHistoryDetail.getTissues().add(tissue));
         }

@@ -55,16 +55,16 @@ public class Tissue {
             primaryKey = DBConstants.TISSUE_ID,
             columnPrefix = "")
     @ColumnName(DBConstants.TISSUE_ID)
-    private String tissueId;
+    private long tissueId;
 
     @ColumnName(DBConstants.ONC_HISTORY_DETAIL_ID)
-    private String oncHistoryDetailId;
+    private long oncHistoryDetailId;
 
     @ColumnName (DBConstants.NOTES)
     private String notes;
 
     @ColumnName (DBConstants.COUNT_RECEIVED)
-    private Integer countReceived;
+    private long countReceived;
 
     @ColumnName (DBConstants.TISSUE_TYPE)
     private String tissueType;
@@ -143,30 +143,30 @@ public class Tissue {
     private String tissueSequence;
 
     @ColumnName (DBConstants.SCROLLS_COUNT)
-    private Integer scrollsCount;
+    private long scrollsCount;
 
     @ColumnName (DBConstants.USS_COUNT)
-    private Integer ussCount;
+    private long ussCount;
 
     @ColumnName (DBConstants.BLOCKS_COUNT)
-    private Integer blocksCount;
+    private long blocksCount;
 
     @ColumnName (DBConstants.H_E_COUNT)
-    private Integer hECount;
+    private long hECount;
 
     @JsonProperty("hECount")
-    public Integer gethECount() {
+    public long gethECount() {
         return hECount;
     }
 
     public Tissue() {}
 
-    public Tissue(String tissueId, String oncHistoryDetailId, String notes, Integer countReceived, String tissueType,
+    public Tissue(long tissueId, long oncHistoryDetailId, String notes, Integer countReceived, String tissueType,
                   String tissueSite, String tumorType, String hE, String pathologyReport, String collaboratorSampleId,
                   String blockSent, String scrollsReceived, String skId, String smId, String sentGp, String firstSmId,
                   String additionalValuesJson, String expectedReturn, String returnDate,
-                  String returnFedexId, String shlWorkNumber, String tumorPercentage, String tissueSequence, Integer scrollsCount,
-                  Integer ussCount, Integer blocksCount, Integer hECount) {
+                  String returnFedexId, String shlWorkNumber, String tumorPercentage, String tissueSequence, long scrollsCount,
+                  long ussCount, long blocksCount, long hECount) {
         this.tissueId = tissueId;
         this.oncHistoryDetailId = oncHistoryDetailId;
         this.notes = notes;
@@ -201,8 +201,8 @@ public class Tissue {
         if (StringUtils.isBlank(tissueId))
             return null;
         Tissue tissue = new Tissue(
-                rs.getString(DBConstants.TISSUE_ID),
-                rs.getString(DBConstants.ONC_HISTORY_DETAIL_ID),
+                rs.getLong(DBConstants.TISSUE_ID),
+                rs.getLong(DBConstants.ONC_HISTORY_DETAIL_ID),
                 rs.getString(DBConstants.DDP_TISSUE_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.NOTES),
                 rs.getInt(DBConstants.COUNT_RECEIVED),
                 rs.getString(DBConstants.TISSUE_TYPE),
@@ -224,10 +224,10 @@ public class Tissue {
                 rs.getString(DBConstants.SHL_WORK_NUMBER),
                 rs.getString(DBConstants.TUMOR_PERCENTAGE),
                 rs.getString(DBConstants.TISSUE_SEQUENCE),
-                rs.getInt(DBConstants.SCROLLS_COUNT),
-                rs.getInt(DBConstants.USS_COUNT),
-                rs.getInt(DBConstants.BLOCKS_COUNT),
-                rs.getInt(DBConstants.H_E_COUNT));
+                rs.getLong(DBConstants.SCROLLS_COUNT),
+                rs.getLong(DBConstants.USS_COUNT),
+                rs.getLong(DBConstants.BLOCKS_COUNT),
+                rs.getLong(DBConstants.H_E_COUNT));
         return tissue;
     }
 

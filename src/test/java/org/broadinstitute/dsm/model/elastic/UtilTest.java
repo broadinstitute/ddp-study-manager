@@ -27,19 +27,16 @@ public class UtilTest {
         String fieldName3 = "column";
         String fieldName4 = "COLUMN";
         String fieldName5 = "columnName";
-        String fieldName6 = "column.name";
         String transformed = Util.underscoresToCamelCase(fieldName);
         String transformed2 = Util.underscoresToCamelCase(fieldName2);
         String transformed3 = Util.underscoresToCamelCase(fieldName3);
         String transformed4 = Util.underscoresToCamelCase(fieldName4);
         String transformed5 = Util.underscoresToCamelCase(fieldName5);
-        String transformed6 = Util.underscoresToCamelCase(fieldName6);
         assertEquals("columnName", transformed);
         assertEquals("columnName", transformed2);
         assertEquals("column", transformed3);
         assertEquals("column", transformed4);
         assertEquals("columnName", transformed5);
-        assertEquals("columnName", transformed6);
     }
 
 
@@ -72,22 +69,8 @@ public class UtilTest {
                 .build();
 
         Map<String, Object> result = Util.transformObjectToMap(participantDataDto);
-        assertEquals("TEST", result.get("ddpInstance"));
-        assertEquals("VALUE", result.get("ddpValue"));
-    }
-
-    @Test
-    public void convertToMap() {
-        String fieldName = "tissue";
-        List<Object> fieldValue = List.of(new Tissue("11", "22",
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null));
-
-        Map<String, Object> stringObjectMap = Util.convertToMap(fieldName, fieldValue);
-
-        System.out.println();
-        System.out.println();
+        assertEquals("TEST", ((Map) result.get("dynamicFields")).get("ddpInstance"));
+        assertEquals("VALUE", ((Map) result.get("dynamicFields")).get("ddpValue"));
     }
 
     @Test
@@ -117,30 +100,17 @@ public class UtilTest {
 
     @Test
     public void camelCaseToPascalSnakeCase() {
-        String camelCase = "registrationType";
-        String camelCaseVal = "test";
+        String camelCase1 = "registrationType";
+        String camelCase2 = "test";
+        String camelCase3 = "medicalRecordsReleaseObtained";
 
-        String camelCase2 = "medicalRecordsReleaseObtained";
-        String camelCase2Val = "NO";
-
-        String pascalSnakeCase = Util.camelCaseToPascalSnakeCase(camelCase);
-        String pascalSnakeCaseVal = Util.camelCaseToPascalSnakeCase(camelCaseVal);
-
+        String pascalSnakeCase1 = Util.camelCaseToPascalSnakeCase(camelCase1);
         String pascalSnakeCase2 = Util.camelCaseToPascalSnakeCase(camelCase2);
-        String pascalSnakeCase2Val = Util.camelCaseToPascalSnakeCase(camelCase2Val);
+        String pascalSnakeCase3 = Util.camelCaseToPascalSnakeCase(camelCase3);
 
-        assertEquals("REGISTRATION_TYPE", pascalSnakeCase);
-        assertEquals("TEST", pascalSnakeCaseVal);
-
-        assertEquals("MEDICAL_RECORDS_RELEASE_OBTAINED", pascalSnakeCase2);
-        assertEquals("NO", pascalSnakeCase2Val);
-    }
-
-    @Test
-    public void camelCaseIfContainsDot() {
-        String field = "dynamicFields.Scooby";
-        String converted = Util.underscoresToCamelCase(field);
-        assertEquals("dynamicFields.scooby", converted);
+        assertEquals("REGISTRATION_TYPE", pascalSnakeCase1);
+        assertEquals("TEST", pascalSnakeCase2);
+        assertEquals("MEDICAL_RECORDS_RELEASE_OBTAINED", pascalSnakeCase3);
     }
 
 }

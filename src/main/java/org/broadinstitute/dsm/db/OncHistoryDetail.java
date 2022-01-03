@@ -87,10 +87,10 @@ public class OncHistoryDetail {
     public static final String PROBLEM_OTHER_OLD = "Other";
 
     @ColumnName(DBConstants.ONC_HISTORY_DETAIL_ID)
-    private String oncHistoryDetailId;
+    private long oncHistoryDetailId;
 
     @ColumnName(DBConstants.MEDICAL_RECORD_ID)
-    private String medicalRecordId;
+    private long medicalRecordId;
 
     @ColumnName (DBConstants.DATE_PX)
     private String datePx;
@@ -196,7 +196,7 @@ public class OncHistoryDetail {
 
     public OncHistoryDetail() {}
 
-    public OncHistoryDetail(String oncHistoryDetailId, String medicalRecordId, String datePx, String typePx,
+    public OncHistoryDetail(long oncHistoryDetailId, long medicalRecordId, String datePx, String typePx,
                             String locationPx, String histology, String accessionNumber, String facility, String phone,
                             String fax, String notes, String request, String faxSent,
                             String faxSentBy, String faxConfirmed,
@@ -234,7 +234,7 @@ public class OncHistoryDetail {
         this.unableObtainTissue = unableObtainTissue;
     }
 
-    public OncHistoryDetail(String oncHistoryDetailId, String medicalRecordId, String datePx, String typePx,
+    public OncHistoryDetail(long oncHistoryDetailId, long medicalRecordId, String datePx, String typePx,
                             String locationPx, String histology, String accessionNumber, String facility, String phone,
                             String fax, String notes, String request, String faxSent,
                             String faxSentBy, String faxConfirmed,
@@ -275,8 +275,8 @@ public class OncHistoryDetail {
     public static OncHistoryDetail getOncHistoryDetail(@NonNull ResultSet rs) throws SQLException {
         List tissues = new ArrayList<>();
         OncHistoryDetail oncHistoryDetail = new OncHistoryDetail(
-                rs.getString(DBConstants.ONC_HISTORY_DETAIL_ID),
-                rs.getString(DBConstants.MEDICAL_RECORD_ID),
+                rs.getLong(DBConstants.ONC_HISTORY_DETAIL_ID),
+                rs.getLong(DBConstants.MEDICAL_RECORD_ID),
                 rs.getString(DBConstants.DATE_PX),
                 rs.getString(DBConstants.TYPE_PX),
                 rs.getString(DBConstants.LOCATION_PX),
