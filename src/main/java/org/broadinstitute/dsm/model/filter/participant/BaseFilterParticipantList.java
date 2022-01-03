@@ -80,27 +80,27 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
                     } else if (filter.getFilter2() != null && StringUtils.isNotBlank(filter.getFilter2().getName())) {
                         tmpName = filter.getFilter2().getName();
                     }
-//                    if (filter.getParticipantColumn() != null && (PARTICIPANT_DATA.equals(filter.getParticipantColumn().tableAlias) || BaseFilter.PARENT_PARTICIPANT_LIST.equals(filter.getParentName()))) {
-//
-//
-//                        if (allParticipantData == null) {
-//                            allParticipantData = participantDataDao
-//                                    .getParticipantDataByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
-//                        }
-//                        numberOfParticipantDataFilters++;
-//                        addParticipantDataIdsForFilters(filter, tmpName, allParticipantData, allIdsForParticipantDataFiltering);
-//                    }
-//                    else {
+                    if (filter.getParticipantColumn() != null && (PARTICIPANT_DATA.equals(filter.getParticipantColumn().tableAlias) || BaseFilter.PARENT_PARTICIPANT_LIST.equals(filter.getParentName()))) {
+
+
+                        if (allParticipantData == null) {
+                            allParticipantData = participantDataDao
+                                    .getParticipantDataByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
+                        }
+                        numberOfParticipantDataFilters++;
+                        addParticipantDataIdsForFilters(filter, tmpName, allParticipantData, allIdsForParticipantDataFiltering);
+                    }
+                    else {
                         if (StringUtils.isNotBlank(tmpName)) {
                             dbElement = columnNameMap.get(tmp + "." + tmpName);
                         }
                         ViewFilter.addQueryCondition(queryConditions, dbElement, filter);
-//                    }
+                    }
                 }
             }
-//            if (numberOfParticipantDataFilters != 0) {
-//                addParticipantDataConditionsToQuery(allIdsForParticipantDataFiltering, queryConditions, numberOfParticipantDataFilters);
-//            }
+            if (numberOfParticipantDataFilters != 0) {
+                addParticipantDataConditionsToQuery(allIdsForParticipantDataFiltering, queryConditions, numberOfParticipantDataFilters);
+            }
         }
 
         if (!queryConditions.isEmpty()) {

@@ -86,7 +86,6 @@ public class ParticipantWrapper {
 
     //TODO could be better, good place for refactoring for future
     private void fetchAndPrepareDataByFilters(DDPInstance ddpInstance, Map<String, String> filters) {
-        List<String> participantIdsToFetch = Collections.emptyList();
         FilterParser parser = new FilterParser();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         for (String source : filters.keySet()) {
@@ -98,28 +97,8 @@ public class ParticipantWrapper {
                     boolQueryBuilder.must(queryBuilder.build());
                 }
 
-//                if (DBConstants.DDP_PARTICIPANT_ALIAS.equals(source)) {
-//                    Map<String, Participant> participants =
-//                            Participant.getParticipants(ddpInstance.getName(), filters.get(source));
-//                    this.participants = new ArrayList<>(participants.values());
-//                    participantIdsToFetch = new ArrayList<>(participants.keySet());
-//                }
-//                else if (DBConstants.DDP_MEDICAL_RECORD_ALIAS.equals(source)) {
-//                    medicalRecords = MedicalRecord.getMedicalRecords(ddpInstance.getName(), filters.get(source));
-//                    participantIdsToFetch = new ArrayList<>(medicalRecords.keySet());
-//                }
-//                else if (DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS.equals(source)) {
-//                    oncHistoryDetails = OncHistoryDetail.getOncHistoryDetails(ddpInstance.getName(), filters.get(source));
-//                    participantIdsToFetch = new ArrayList<>(oncHistoryDetails.keySet());
-//                }
-//                else if (DBConstants.DDP_KIT_REQUEST_ALIAS.equals(source)) {
-//                    kitRequests = KitRequestShipping.getKitRequests(ddpInstance, filters.get(source));
-//                    participantIdsToFetch = new ArrayList<>(kitRequests.keySet());
-//                }
-
                 else if (DBConstants.DDP_PARTICIPANT_DATA_ALIAS.equals(source)) {
                     participantData = new ParticipantDataDao().getParticipantDataByInstanceIdAndFilterQuery(Integer.parseInt(ddpInstance.getDdpInstanceId()), filters.get(source));
-                    participantIdsToFetch = new ArrayList<>(participantData.keySet());
 
                     //if study is AT TODO
                     if ("atcp".equals(ddpInstance.getName())) {
@@ -128,16 +107,7 @@ public class ParticipantWrapper {
                         participantData = defaultValues.addDefaultValues();
                     }
                 }
-//                else if (DBConstants.DDP_ABSTRACTION_ALIAS.equals(source)) {
-//                    abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(ddpInstance.getName(), filters.get(source));
-//                    participantIdsToFetch = new ArrayList<>(abstractionActivities.keySet());
-//                }
                 else if ("ES".equals(source)){ //source is not of any study-manager table so it must be ES
-//                    esData = elasticSearchable.getParticipantsByRangeAndFilter(ddpInstance.getParticipantIndexES(), participantWrapperPayload.getFrom(),
-//                            participantWrapperPayload.getTo(), boolQueryBuilder);
-//                    participantIdsToFetch = esData.getEsParticipants().stream().map(ElasticSearchParticipantDto::getParticipantId)
-//                            .collect(
-//                            Collectors.toList());
                     boolQueryBuilder.must(ElasticSearchUtil.createESQuery(filters.get(source)));
                 }
             }
@@ -145,48 +115,6 @@ public class ParticipantWrapper {
 
         esData = elasticSearchable.getParticipantsByRangeAndFilter(ddpInstance.getParticipantIndexES(), participantWrapperPayload.getFrom(),
                             participantWrapperPayload.getTo(), boolQueryBuilder);
-
-//        if (esData.getEsParticipants().isEmpty()) {
-//            esData = elasticSearchable.getParticipantsByRangeAndIds(ddpInstance.getParticipantIndexES(), participantWrapperPayload.getFrom(),
-//                    participantWrapperPayload.getTo(), participantIdsToFetch);
-//        }
-//        if (participants.isEmpty()) {
-//            participants = Participant.getParticipantsByIds(ddpInstance.getName(), participantIdsToFetch);
-//        }
-//        if (medicalRecords.isEmpty() && ddpInstance.isHasRole()) {
-//            medicalRecords = MedicalRecord.getMedicalRecordsByParticipantIds(ddpInstance.getName(), participantIdsToFetch);
-//        }
-//        if (oncHistoryDetails.isEmpty() && ddpInstance.isHasRole()) {
-//            oncHistoryDetails = OncHistoryDetail.getOncHistoryDetailsByParticipantIds(ddpInstance.getName(), participantIdsToFetch);
-//        }
-//        if (kitRequests.isEmpty() && DDPInstanceDao.getRole(ddpInstance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) { //only needed if study is shipping samples per DSM
-//            //get only kitRequests for the filtered pts
-//            if (Objects.nonNull(esData) && !esData.getEsParticipants().isEmpty()) {
-//                logger.info("About to query for kits from " + esData.getEsParticipants().size() + " participants");
-//                kitRequests = KitRequestShipping.getKitRequestsByParticipantIds(ddpInstance, participantIdsToFetch);
-//            }
-//        }
-
-//        if (participantData.isEmpty()) {
-//            participantData = new ParticipantDataDao().getParticipantDataByParticipantIds(participantIdsToFetch);
-//
-//            // if study is AT
-//            // TODO - what's the purpose of this if statement
-//            if ("atcp".equals(ddpInstance.getName())) {
-//                DefaultValues defaultValues = new DefaultValues(participantData, esData.getEsParticipants(), ddpInstance, null);
-//                participantData = defaultValues.addDefaultValues();
-//            }
-//        }
-//        if (abstractionActivities.isEmpty()) {
-//            abstractionActivities = AbstractionActivity.getAllAbstractionActivityByRealm(ddpInstance.getName());
-//        }
-//        if (abstractionSummary.isEmpty()) {
-//            abstractionSummary = AbstractionFinal.getAbstractionFinal(ddpInstance.getName());
-//        }
-//        if (proxiesByParticipantIds.isEmpty()) {
-//            proxiesByParticipantIds = getProxiesWithParticipantIdsFromElasticList(ddpInstance.getUsersIndexES(), esData.getEsParticipants());
-//        }
-
 
         System.out.println();
         System.out.println();
