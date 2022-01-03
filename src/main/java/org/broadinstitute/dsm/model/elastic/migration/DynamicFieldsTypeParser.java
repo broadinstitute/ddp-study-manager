@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.migration;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.util.ObjectMapperSingleton;
@@ -10,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
+import static org.broadinstitute.dsm.model.Filter.NUMBER;
 
 class DynamicFieldsTypeParser extends TypeParser {
 
@@ -36,6 +39,8 @@ class DynamicFieldsTypeParser extends TypeParser {
             parsedValue = maybeType
                     .map(this::parse)
                     .orElse(forString(type));
+        } else if (NUMBER.equals(type)) {
+            parsedValue = forNumeric(type);
         } else {
             parsedValue = forString(type);
         }

@@ -20,10 +20,12 @@ public class TypeParser extends BaseParser {
     public static final Map<String, String> BOOLEAN_MAPPING = new HashMap<>(Map.of(MappingGenerator.TYPE, BOOLEAN));
     public static final String DATE = "date";
     public static final Map<String, String> DATE_MAPPING = new HashMap<>(Map.of(MappingGenerator.TYPE, DATE));
+    public static final String LONG = "long";
+    public static final Map<String, String> LONG_MAPPING = new HashMap<>(Map.of(MappingGenerator.TYPE, LONG));
 
     @Override
     protected Object forNumeric(String value) {
-        return TEXT_KEYWORD_MAPPING;
+        return LONG_MAPPING;
     }
 
     @Override
