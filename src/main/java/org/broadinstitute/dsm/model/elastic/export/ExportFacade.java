@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.export;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -13,14 +12,11 @@ import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorFactory;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGeneratorFactory;
 import org.broadinstitute.dsm.model.elastic.export.generate.SourceGeneratorFactory;
-import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParserFactory;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
 import org.broadinstitute.dsm.model.elastic.export.process.BaseProcessor;
-import org.broadinstitute.dsm.model.elastic.export.process.Processor;
 import org.broadinstitute.dsm.model.elastic.export.process.ProcessorFactory;
 import org.broadinstitute.dsm.model.elastic.export.process.ProcessorFactoryImpl;
-import org.broadinstitute.dsm.model.elastic.export.process.SingleProcessor;
 import org.broadinstitute.dsm.model.elastic.search.DefaultDeserializer;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
@@ -52,10 +48,10 @@ public class ExportFacade {
     private void upsertMapping() {
         BaseGenerator.PropertyInfo propertyInfo = getPropertyInfo();
         GeneratorFactory generatorFactory = new MappingGeneratorFactory();
-        String fieldName = exportFacadePayload.getFieldName();
+        String fieldName = exportFacadePayload.getCamelCaseFieldName();
         propertyInfo.setFieldName(fieldName);
         generator = generatorFactory.make(propertyInfo);
-        generator.setParser(TypeParserFactory.of(fieldName, exportFacadePayload.getRealm()));
+        generator.setParser(TypeParserFactory.of(exportFacadePayload));
         generator.setPayload(exportFacadePayload.getGeneratorPayload());
         Map<String, Object> mappingToUpsert = generator.generate();
         RequestPayload upsertMappingRequestPayload = new RequestPayload(exportFacadePayload.getIndex());

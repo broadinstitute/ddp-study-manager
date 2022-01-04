@@ -49,7 +49,11 @@ public class GeneratorPayload {
         return parentId;
     }
 
-    public String getFieldName() {
+    public String getCamelCaseFieldName() {
         return Util.underscoresToCamelCase(Util.getDBElement(getName()).getColumnName());
+    }
+
+    public String getRawFieldName() {
+        return Util.getDBElement(getName()).getColumnName();
     }
 }

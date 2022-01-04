@@ -1,14 +1,12 @@
 package org.broadinstitute.dsm.model.elastic.export.parse;
 
-import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
-import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.Optional;
+
+import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 
 public abstract class BaseParser implements Parser {
 

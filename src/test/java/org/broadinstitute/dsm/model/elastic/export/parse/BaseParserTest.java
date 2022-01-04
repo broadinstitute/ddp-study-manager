@@ -40,20 +40,4 @@ public class BaseParserTest {
         Assert.assertEquals("2015-01-01", convertedValue2);
     }
 
-    @Test
-    public void parse() {
-
-        BaseGenerator.PropertyInfo propertyInfo = new BaseGenerator.PropertyInfo(MedicalRecord.class, true);
-        propertyInfo.setFieldName("additionalValuesJson");
-
-        BaseParser typeParser = new TypeParser();
-        typeParser.setPropertyInfo(propertyInfo);
-        typeParser.setFieldName("scooby");
-
-        Object parsedObject = typeParser.parse("10");
-
-        Assert.assertEquals(TEXT_KEYWORD_MAPPING, parsedObject);
-
-    }
-
 }

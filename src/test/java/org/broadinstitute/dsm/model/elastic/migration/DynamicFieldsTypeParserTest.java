@@ -15,12 +15,9 @@ public class DynamicFieldsTypeParserTest {
     public void parse() {
         String possibleValuesJson = "[{\"value\":\"CONSENT.completedAt\",\"type\":\"DATE\"}]";
         String displayType = "ACTIVITY_STAFF";
-        FieldSettingsDto fieldSettingsDto = new FieldSettingsDto.Builder(0)
-                .withDisplayType(displayType)
-                .withPossibleValues(possibleValuesJson)
-                .build();
         DynamicFieldsTypeParser dynamicFieldsTypeParser = new DynamicFieldsTypeParser();
-        dynamicFieldsTypeParser.setFieldSettingsDto(fieldSettingsDto);
+        dynamicFieldsTypeParser.setDisplayType(displayType);
+        dynamicFieldsTypeParser.setPossibleValuesJson(possibleValuesJson);
         Map<String, Object> mapping = (Map<String, Object>)dynamicFieldsTypeParser.parse(displayType);
         Object date = mapping.get(MappingGenerator.TYPE);
         assertEquals(TypeParser.DATE, date);

@@ -2,14 +2,13 @@ package org.broadinstitute.dsm.model.elastic.migration;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
+import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.util.ObjectMapperSingleton;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 import static org.broadinstitute.dsm.model.Filter.NUMBER;
@@ -20,35 +19,40 @@ public class DynamicFieldsTypeParser extends TypeParser {
     public static final String CHECKBOX_TYPE = "CHECKBOX";
     public static final String ACTIVITY_STAFF_TYPE = "ACTIVITY_STAFF";
     public static final String ACTIVITY_TYPE = "ACTIVITY";
-    private FieldSettingsDto fieldSettingsDto;
+    private String displayType;
+    private String possibleValuesJson;
 
-    public void setFieldSettingsDto(FieldSettingsDto fieldSettingsDto) {
-        this.fieldSettingsDto = fieldSettingsDto;
+    public void setDisplayType(String displayType) {
+        this.displayType = displayType;
+    }
+
+    public void setPossibleValuesJson(String possibleValuesJson) {
+        this.possibleValuesJson = possibleValuesJson;
     }
 
     @Override
-    public Object parse() {
-        String type = fieldSettingsDto.getDisplayType();
+    public Object parse(String fieldName) {
+        displayType = FieldSettingsDao.of().getDisplayTypeByInstanceNameAndColumnName(realm, fieldName).orElse(StringUtils.EMPTY);
         Object parsedValue;
-        if (DATE_TYPE.equals(type)) {
-            parsedValue = forDate(type);
-        } else if (CHECKBOX_TYPE.equals(type)) {
-            parsedValue = forBoolean(type);
-        } else if (isActivityRelatedType(type)) {
-            String possibleValuesJson = Objects.requireNonNull(fieldSettingsDto).getPossibleValues();
-            Optional<String> maybeType = getTypeFromPossibleValuesJson(possibleValuesJson);
+        if (DATE_TYPE.equals(displayType)) {
+            parsedValue = forDate(displayType);
+        } else if (CHECKBOX_TYPE.equals(displayType)) {
+            parsedValue = forBoolean(displayType);
+        } else if (isActivityRelatedType()) {
+            Optional<String> maybeType = getTypeFromPossibleValuesJson();
+            this.displayType = maybeType.orElse(StringUtils.EMPTY);
             parsedValue = maybeType
                     .map(this::parse)
-                    .orElse(forString(type));
-        } else if (NUMBER.equals(type)) {
-            parsedValue = forNumeric(type);
+                    .orElse(forString(displayType));
+        } else if (NUMBER.equals(displayType)) {
+            parsedValue = forNumeric(displayType);
         } else {
-            parsedValue = forString(type);
+            parsedValue = forString(displayType);
         }
         return parsedValue;
     }
 
-    private Optional<String> getTypeFromPossibleValuesJson(String possibleValuesJson) {
+    private Optional<String> getTypeFromPossibleValuesJson() {
         try {
             List<Map<String, String>> possibleValues = ObjectMapperSingleton.instance().readValue(possibleValuesJson, new TypeReference<List<Map<String, String>>>() {});
             Optional<String> maybeType = possibleValues.stream()
@@ -57,11 +61,11 @@ public class DynamicFieldsTypeParser extends TypeParser {
                     .findFirst();
             return maybeType;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            return Optional.empty();
         }
     }
 
-    private boolean isActivityRelatedType(String type) {
-        return ACTIVITY_STAFF_TYPE.equals(type) || ACTIVITY_TYPE.equals(type);
+    private boolean isActivityRelatedType() {
+        return ACTIVITY_STAFF_TYPE.equals(displayType) || ACTIVITY_TYPE.equals(displayType);
     }
 }

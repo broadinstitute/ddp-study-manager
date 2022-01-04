@@ -49,8 +49,16 @@ public class ExportFacadePayload {
         return generatorPayload.getName();
     }
 
-    public String getFieldName() {
-        return generatorPayload.getFieldName();
+    public String getCamelCaseFieldName() {
+        return generatorPayload.getCamelCaseFieldName();
+    }
+
+    public String getRawFieldName() {
+        return generatorPayload.getRawFieldName();
+    }
+
+    public Object getValue() {
+        return generatorPayload.getValue();
     }
 
     public String getRealm() { return realm; }

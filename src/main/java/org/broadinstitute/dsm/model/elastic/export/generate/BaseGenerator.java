@@ -72,7 +72,7 @@ public abstract class BaseGenerator implements Generator, Collector, GeneratorHe
     }
 
     public String getFieldName() {
-        return generatorPayload.getFieldName();
+        return generatorPayload.getCamelCaseFieldName();
     }
 
     @Override
