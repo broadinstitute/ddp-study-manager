@@ -69,6 +69,9 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
     private static final String SQL_DELETE_FIELD_SETTING_BY_ID = "DELETE FROM field_settings " +
             "WHERE field_settings_id = ?";
 
+    private static final String SQL_DISPLAY_TYPE_BY_INSTANCE_NAME_AND_COLUMN_NAME = "SELECT display_type FROM field_settings " +
+            "WHERE ddp_instance_id = (select ddp_instance_id from ddp_instance where instance_name = ?) AND column_name = ?";
+
     private static final String BY_INSTANCE_ID = " WHERE ddp_instance_id = ?";
     private static final String AND_BY_COLUMN_NAME = " AND column_name = ?";
     private static final String AND_BY_COLUMN_NAMES = " AND column_name IN (?)";
@@ -153,6 +156,30 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
     @Override
     public Optional<FieldSettingsDto> get(long id) {
         return Optional.empty();
+    }
+
+    public Optional<String> getDisplayTypeByInstanceNameAndColumnName(String instanceName, String columnName) {
+        SimpleResult simpleResult = inTransaction(conn -> {
+            SimpleResult execResult = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_DISPLAY_TYPE_BY_INSTANCE_NAME_AND_COLUMN_NAME)) {
+                stmt.setString(1, instanceName);
+                stmt.setString(2, columnName);
+                try (ResultSet resultSet = stmt.executeQuery()) {
+                    if (resultSet.next()) {
+                        execResult.resultValue = resultSet.getString(DISPLAY_TYPE);
+                    }
+                }
+            } catch (SQLException sqle) {
+                execResult.resultException = sqle;
+            }
+            return execResult;
+        });
+
+        if (simpleResult.resultException != null) {
+            throw new RuntimeException("could not find the specified display type by instance name and column name", simpleResult.resultException);
+        }
+
+        return Optional.of((String) simpleResult.resultValue);
     }
 
     public List<FieldSettingsDto> getOptionAndRadioFieldSettingsByInstanceId(int instanceId) {

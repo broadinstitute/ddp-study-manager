@@ -14,7 +14,7 @@ import java.util.Optional;
 
 import static org.broadinstitute.dsm.model.Filter.NUMBER;
 
-class DynamicFieldsTypeParser extends TypeParser {
+public class DynamicFieldsTypeParser extends TypeParser {
 
     public static final String DATE_TYPE = "DATE";
     public static final String CHECKBOX_TYPE = "CHECKBOX";
@@ -27,7 +27,8 @@ class DynamicFieldsTypeParser extends TypeParser {
     }
 
     @Override
-    public Object parse(String type) {
+    public Object parse() {
+        String type = fieldSettingsDto.getDisplayType();
         Object parsedValue;
         if (DATE_TYPE.equals(type)) {
             parsedValue = forDate(type);

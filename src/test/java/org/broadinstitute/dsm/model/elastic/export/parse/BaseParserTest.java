@@ -1,7 +1,10 @@
 package org.broadinstitute.dsm.model.elastic.export.parse;
 
+import static org.broadinstitute.dsm.model.elastic.export.parse.TypeParser.TEXT_KEYWORD_MAPPING;
 import static org.junit.Assert.*;
 
+import org.broadinstitute.dsm.db.MedicalRecord;
+import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -35,6 +38,22 @@ public class BaseParserTest {
         Assert.assertEquals("15", convertedValue);
         Assert.assertEquals("ASCProject_PZ8GJC_SALIVA", convertedValue1);
         Assert.assertEquals("2015-01-01", convertedValue2);
+    }
+
+    @Test
+    public void parse() {
+
+        BaseGenerator.PropertyInfo propertyInfo = new BaseGenerator.PropertyInfo(MedicalRecord.class, true);
+        propertyInfo.setFieldName("additionalValuesJson");
+
+        BaseParser typeParser = new TypeParser();
+        typeParser.setPropertyInfo(propertyInfo);
+        typeParser.setFieldName("scooby");
+
+        Object parsedObject = typeParser.parse("10");
+
+        Assert.assertEquals(TEXT_KEYWORD_MAPPING, parsedObject);
+
     }
 
 }

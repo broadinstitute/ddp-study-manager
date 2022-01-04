@@ -8,14 +8,16 @@ import org.broadinstitute.dsm.util.PatchUtil;
 
 public class ExportFacadePayload {
 
+    private String realm;
     private String index;
     private String docId;
     private GeneratorPayload generatorPayload;
 
-    public ExportFacadePayload(String index, String docId, GeneratorPayload generatorPayload) {
+    public ExportFacadePayload(String index, String docId, GeneratorPayload generatorPayload, String realm) {
         this.index = Objects.requireNonNull(index);
         this.docId = Objects.requireNonNull(docId);
         this.generatorPayload = Objects.requireNonNull(generatorPayload);
+        this.realm = Objects.requireNonNull(realm);
     }
 
     public String getIndex() {
@@ -50,4 +52,6 @@ public class ExportFacadePayload {
     public String getFieldName() {
         return generatorPayload.getFieldName();
     }
+
+    public String getRealm() { return realm; }
 }

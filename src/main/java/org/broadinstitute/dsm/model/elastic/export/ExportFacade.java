@@ -14,6 +14,7 @@ import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGeneratorFactory;
 import org.broadinstitute.dsm.model.elastic.export.generate.SourceGeneratorFactory;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
+import org.broadinstitute.dsm.model.elastic.export.parse.TypeParserFactory;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
 import org.broadinstitute.dsm.model.elastic.export.process.BaseProcessor;
 import org.broadinstitute.dsm.model.elastic.export.process.Processor;
@@ -51,9 +52,10 @@ public class ExportFacade {
     private void upsertMapping() {
         BaseGenerator.PropertyInfo propertyInfo = getPropertyInfo();
         GeneratorFactory generatorFactory = new MappingGeneratorFactory();
-        propertyInfo.setFieldName(exportFacadePayload.getFieldName());
+        String fieldName = exportFacadePayload.getFieldName();
+        propertyInfo.setFieldName(fieldName);
         generator = generatorFactory.make(propertyInfo);
-        generator.setParser(new TypeParser());
+        generator.setParser(TypeParserFactory.of(fieldName, exportFacadePayload.getRealm()));
         generator.setPayload(exportFacadePayload.getGeneratorPayload());
         Map<String, Object> mappingToUpsert = generator.generate();
         RequestPayload upsertMappingRequestPayload = new RequestPayload(exportFacadePayload.getIndex());

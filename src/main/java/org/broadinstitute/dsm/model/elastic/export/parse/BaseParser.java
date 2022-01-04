@@ -1,13 +1,32 @@
 package org.broadinstitute.dsm.model.elastic.export.parse;
 
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
+import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.Optional;
 
 public abstract class BaseParser implements Parser {
+
+    protected BaseGenerator.PropertyInfo propertyInfo;
+    protected String fieldName;
+    protected String realm;
+
+    public void setPropertyInfo(BaseGenerator.PropertyInfo propertyInfo) {
+        this.propertyInfo = propertyInfo;
+    }
+
+    public void setFieldName(String fieldName) {
+        this.fieldName = fieldName;
+    }
+
+    public void setRealm(String realm) {
+        this.realm = realm;
+    }
 
     @Override
     public Object parse(String value) {
