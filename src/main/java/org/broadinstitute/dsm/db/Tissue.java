@@ -85,6 +85,7 @@ public class Tissue {
     private String collaboratorSampleId;
 
     @ColumnName (DBConstants.BLOCK_SENT)
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
     private String blockSent;
 
     @ColumnName (DBConstants.SHL_WORK_NUMBER)
@@ -129,11 +130,12 @@ public class Tissue {
     @ColumnName (DBConstants.TISSUE_RETURN_DATE)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
     private String returnDate;
-    //
+
     @ColumnName (DBConstants.RETURN_FEDEX_ID)
     private String returnFedexId;
 
     @ColumnName (DBConstants.EXPECTED_RETURN)
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
     private String expectedReturn;
 
     @ColumnName (DBConstants.TUMOR_PERCENTAGE)

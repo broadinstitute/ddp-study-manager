@@ -93,6 +93,7 @@ public class OncHistoryDetail {
     private long medicalRecordId;
 
     @ColumnName (DBConstants.DATE_PX)
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
     private String datePx;
 
     @ColumnName (DBConstants.TYPE_PX)

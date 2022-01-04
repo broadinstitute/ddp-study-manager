@@ -93,9 +93,11 @@ public abstract class BaseGenerator implements Generator, Collector, GeneratorHe
     }
 
     protected Object parseSingleElement() {
-        Object element = parser.parse(String.valueOf(getNameValue().getValue()));
+        Object element = parseElement();
         return getElement(element);
-    };
+    }
+
+    protected abstract Object parseElement();
 
     protected abstract Object getElement(Object type);
 

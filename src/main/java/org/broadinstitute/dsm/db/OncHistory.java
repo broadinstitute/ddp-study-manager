@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.db.structure.DbDateConversion;
+import org.broadinstitute.dsm.db.structure.SqlDateConverter;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.util.SystemUtil;
 import org.slf4j.Logger;
@@ -24,7 +26,11 @@ public class OncHistory {
     private static final String SQL_UPDATE_ONC_HISTORY = "UPDATE ddp_onc_history SET created = ?, last_changed = ?, changed_by = ? WHERE participant_id = ? AND created IS NULL";
 
     private long participantId;
+
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
     private String created;
+
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
     private String reviewed;
     private String changedBy;
 

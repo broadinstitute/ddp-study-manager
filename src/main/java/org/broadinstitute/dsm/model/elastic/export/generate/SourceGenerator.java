@@ -31,6 +31,11 @@ abstract public class SourceGenerator extends BaseGenerator {
     }
 
     @Override
+    protected Object parseElement() {
+        return parser.parse(String.valueOf(getNameValue().getValue()));
+    }
+
+    @Override
     protected Object parseJson() {
         return construct();
     }

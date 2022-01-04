@@ -1,11 +1,13 @@
 package org.broadinstitute.dsm.model.elastic.export.parse;
 
+import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.db.structure.DbDateConversion;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 
 public abstract class BaseParser implements Parser {
@@ -27,17 +29,27 @@ public abstract class BaseParser implements Parser {
     }
 
     @Override
-    public Object parse(String value) {
-        value = convertString(value);
-        Object result = forString(value);
-        if (StringUtils.isNumeric(value)) {
-            result = forNumeric(value);
-        } else if (isBoolean(value)) {
-            result = forBoolean(convertBoolean(value));
-        } else if (isDateOrTimeOrDateTime(value)) {
-            result = forDate(value);
+    public Object parse(String element) {
+        Class<?> propertyClass = propertyInfo.getPropertyClass();
+        Object elementMap;
+        try {
+            Field field = propertyClass.getDeclaredField(element);
+            if (long.class.isAssignableFrom(field.getType())) {
+                elementMap = forNumeric(element);
+            } else if (boolean.class.isAssignableFrom(field.getType())) {
+                elementMap = forBoolean(element);
+            } else {
+                // either text or date in string
+                if (field.getAnnotation(DbDateConversion.class) != null) {
+                    elementMap = forDate(element);
+                } else {
+                    elementMap = forString(element);
+                }
+            }
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
         }
-        return result;
+        return elementMap;
     }
 
     protected abstract Object forNumeric(String value);

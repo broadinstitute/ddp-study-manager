@@ -44,12 +44,24 @@ public class TypeParserTest {
 
     @Test
     public void parseNonDynamicFields() {
-        NameValue crRequired = new NameValue("crRequired", true);
+        NameValue crRequired = new NameValue("m.crRequired", true);
         GeneratorPayload generatorPayload = new GeneratorPayload(crRequired);
         ExportFacadePayload exportFacadePayload = new ExportFacadePayload("", "", generatorPayload, "");
         TypeParser typeParser = TypeParserFactory.of(exportFacadePayload);
-        Object booleanMapping = typeParser.parse("true");
+        typeParser.setPropertyInfo(new BaseGenerator.PropertyInfo(MedicalRecord.class, true));
+        Object booleanMapping = typeParser.parse("crRequired");
         assertEquals(BOOLEAN_MAPPING, booleanMapping);
+    }
+
+    @Test
+    public void parseDateField() {
+        NameValue faxConfirmed3 = new NameValue("m.faxConfirmed3", "2020-10-10");
+        GeneratorPayload generatorPayload = new GeneratorPayload(faxConfirmed3);
+        ExportFacadePayload exportFacadePayload = new ExportFacadePayload("", "", generatorPayload, "");
+        TypeParser typeParser = TypeParserFactory.of(exportFacadePayload);
+        typeParser.setPropertyInfo(new BaseGenerator.PropertyInfo(MedicalRecord.class, true));
+        Object booleanMapping = typeParser.parse("faxConfirmed3");
+        assertEquals(DATE_MAPPING, booleanMapping);
     }
 
 }

@@ -29,6 +29,11 @@ abstract public class MappingGenerator extends BaseGenerator {
         return getCompleteMap(construct());
     }
 
+    @Override
+    protected Object parseElement() {
+        return parser.parse(getFieldName());
+    }
+
     public Map<String, Object> getCompleteMap(Object propertyMap) {
         String propertyName = getPropertyName();
         Map<String, Object> objectLevel = new HashMap<>(Map.of(propertyName, propertyMap));
