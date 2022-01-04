@@ -64,7 +64,7 @@ public class DynamicFieldsMappingMigrator implements Exportable {
     private void buildMapping(FieldSettingsDto fieldSettingsDto, BaseGenerator.PropertyInfo propertyInfo) {
         String columnName = Util.underscoresToCamelCase(fieldSettingsDto.getColumnName());
         String propertyName = propertyInfo.getPropertyName();
-        Object typeMap = parser.parse();
+        Object typeMap = parser.parse(fieldSettingsDto.getDisplayType());
         if (!(propertyMap.containsKey(propertyName))) {
             Map<String, Object> dynamicFields = new HashMap<>(Map.of(DYNAMIC_FIELDS_WRAPPER_NAME, new HashMap<>(Map.of(PROPERTIES, new HashMap<>(Map.of(columnName, typeMap))))));
             Map<String, Object> wrapperMap = new HashMap<>();

@@ -32,7 +32,10 @@ public class DynamicFieldsTypeParser extends TypeParser {
 
     @Override
     public Object parse(String fieldName) {
-        displayType = FieldSettingsDao.of().getDisplayTypeByInstanceNameAndColumnName(realm, fieldName).orElse(StringUtils.EMPTY);
+
+        if (StringUtils.isBlank(displayType))
+            displayType = FieldSettingsDao.of().getDisplayTypeByInstanceNameAndColumnName(realm, fieldName).orElse(StringUtils.EMPTY);
+
         Object parsedValue;
         if (DATE_TYPE.equals(displayType)) {
             parsedValue = forDate(displayType);
@@ -49,6 +52,9 @@ public class DynamicFieldsTypeParser extends TypeParser {
         } else {
             parsedValue = forString(displayType);
         }
+
+        displayType = null;
+
         return parsedValue;
     }
 

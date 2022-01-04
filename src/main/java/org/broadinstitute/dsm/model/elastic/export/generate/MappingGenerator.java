@@ -42,7 +42,7 @@ abstract public class MappingGenerator extends BaseGenerator {
         Map<String, Object> resultMap = new HashMap<>();
         Map<String, Object> fieldsByValues = parseJsonToMapFromValue();
         for (Map.Entry<String, Object> entry: fieldsByValues.entrySet()) {
-            Object eachType = parser.parse(String.valueOf(entry.getValue()));
+            Object eachType = parser.parse(entry.getKey());
             resultMap.put(Util.underscoresToCamelCase(entry.getKey()), eachType);
         }
         Map<String, Object> returnMap = new HashMap<>(Map.of(ESObjectConstants.DYNAMIC_FIELDS, new HashMap<>(Map.of(PROPERTIES, resultMap))));
