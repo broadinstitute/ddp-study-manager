@@ -21,6 +21,7 @@ public class DynamicFieldsParser extends BaseParser {
     private String displayType;
     private String possibleValuesJson;
     private BaseParser parser;
+    public FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
 
     public void setDisplayType(String displayType) {
         this.displayType = displayType;
@@ -34,27 +35,32 @@ public class DynamicFieldsParser extends BaseParser {
         this.parser = parser;
     }
 
-    @Override
-    public Object parse(String fieldName) {
+    public void setFieldSettingsDao(FieldSettingsDao fieldSettingsDao) {
+        this.fieldSettingsDao = fieldSettingsDao;
+    }
 
-        if (StringUtils.isBlank(displayType))
-            displayType = FieldSettingsDao.of().getDisplayTypeByInstanceNameAndColumnName(realm, super.fieldName).orElse(StringUtils.EMPTY);
+    @Override
+    public Object parse(String element) {
+
+        if (StringUtils.isBlank(displayType)) {
+            displayType = fieldSettingsDao.getDisplayTypeByInstanceNameAndColumnName(realm, super.fieldName).orElse(StringUtils.EMPTY);
+        }
 
         Object parsedValue;
         if (DATE_TYPE.equals(displayType)) {
-            parsedValue = forDate(fieldName);
+            parsedValue = forDate(element);
         } else if (CHECKBOX_TYPE.equals(displayType)) {
-            parsedValue = forBoolean(fieldName);
+            parsedValue = forBoolean(element);
         } else if (isActivityRelatedType()) {
             Optional<String> maybeType = getTypeFromPossibleValuesJson();
             this.displayType = maybeType.orElse(StringUtils.EMPTY);
             parsedValue = maybeType
                     .map(this::parse)
-                    .orElse(forString(fieldName));
+                    .orElse(forString(element));
         } else if (NUMBER.equals(displayType)) {
-            parsedValue = forNumeric(fieldName);
+            parsedValue = forNumeric(element);
         } else {
-            parsedValue = forString(fieldName);
+            parsedValue = forString(element);
         }
 
         displayType = null;

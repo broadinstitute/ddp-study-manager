@@ -4,16 +4,16 @@ import static org.broadinstitute.dsm.model.participant.data.ParticipantData.GSON
 import static org.junit.Assert.*;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.db.Participant;
 import org.broadinstitute.dsm.db.Tissue;
+import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.FollowUp;
 import org.junit.Assert;
 import org.junit.Test;
@@ -58,7 +58,26 @@ public class UtilTest {
 
     @Test
     public void transformJsonToMap() {
-        String json = "{\"DDP_INSTANCE\": \"TEST\", \"DDP_VALUE\": \"VALUE\"}";
+
+        class FieldSettingsDaoMock extends FieldSettingsDao {
+
+            @Override
+            public Optional<String> getDisplayTypeByInstanceNameAndColumnName(String instanceName, String columnName) {
+                String displayType = StringUtils.EMPTY;
+                if ("BOOLEAN_VAL".equals(columnName)) {
+                    displayType = "CHECKBOX";
+                } else if ("LONG_VAL".equals(columnName)) {
+                    displayType = "NUMBER";
+                }
+                return Optional.of(displayType);
+            }
+        }
+
+        FieldSettingsDaoMock fieldSettingsDaoMock = new FieldSettingsDaoMock();
+
+        FieldSettingsDao.setInstance(fieldSettingsDaoMock);
+
+        String json = "{\"DDP_INSTANCE\": \"TEST\", \"DDP_VALUE\": \"VALUE\", \"BOOLEAN_VAL\": \"true\", \"LONG_VAL\": \"5\"}";
 
         ParticipantDataDto participantDataDto = new ParticipantDataDto.Builder()
                 .withParticipantDataId(10)
@@ -71,6 +90,8 @@ public class UtilTest {
         Map<String, Object> result = Util.transformObjectToMap(participantDataDto);
         assertEquals("TEST", ((Map) result.get("dynamicFields")).get("ddpInstance"));
         assertEquals("VALUE", ((Map) result.get("dynamicFields")).get("ddpValue"));
+        assertEquals(true, ((Map) result.get("dynamicFields")).get("booleanVal"));
+        assertEquals(5L, ((Map) result.get("dynamicFields")).get("longVal"));
     }
 
     @Test

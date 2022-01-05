@@ -17,6 +17,9 @@ import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
+import org.broadinstitute.dsm.model.elastic.export.parse.DynamicFieldsParser;
+import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
+import org.broadinstitute.dsm.model.elastic.export.parse.ValueParserFactory;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -42,6 +45,12 @@ public class Util {
     private static final Pattern CAMEL_CASE_REGEX = Pattern.compile("(([a-z])+([A-z])+(\\.)*)*");
     private static final Pattern UPPER_CASE_REGEX = Pattern.compile("(?=\\p{Upper})");
     public static final Gson GSON = new Gson();
+    public static final DynamicFieldsParser DYNAMIC_FIELDS_PARSER = new DynamicFieldsParser();
+    public static final ValueParser PARSER = new ValueParser();
+
+    static {
+        DYNAMIC_FIELDS_PARSER.setParser(PARSER);
+    }
 
     public static String getQueryTypeFromId(String id) {
         String type;
@@ -129,8 +138,8 @@ public class Util {
                 Map<String, Object> transformedMap = new HashMap<>();
                 for (Map.Entry<String, Object> object: objectMap.entrySet()) {
                     String field = object.getKey();
-                    Object value = object.getValue();
-                    if (FamilyMemberConstants.IS_APPLICANT.equals(field)) value = Boolean.valueOf(String.valueOf(value));
+                    DYNAMIC_FIELDS_PARSER.setFieldName(field);
+                    Object value = DYNAMIC_FIELDS_PARSER.parse(String.valueOf(object.getValue()));
                     String camelCaseField = underscoresToCamelCase(field);
                     transformedMap.put(camelCaseField, value);
                 }

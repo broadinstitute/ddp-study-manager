@@ -61,37 +61,6 @@ public abstract class BaseParser implements Parser {
 
     protected abstract Object forString(String value);
 
-    boolean isDateOrTimeOrDateTime(String value) {
-        return isDate(value) || isTime(value) || isDateTime(value);
-    }
-
-    boolean isDateTime(String value) {
-        try {
-            LocalDateTime.parse(value);
-        } catch (DateTimeParseException dtpe) {
-            return false;
-        }
-        return true;
-    }
-
-    boolean isTime(String value) {
-        try {
-            LocalTime.parse(value);
-        } catch (DateTimeParseException dtpe) {
-            return false;
-        }
-        return true;
-    }
-
-    boolean isDate(String value) {
-        try {
-            LocalDate.parse(value);
-        } catch (DateTimeParseException dtpe) {
-            return false;
-        }
-        return true;
-    }
-
     protected boolean isBoolean(String value) {
         return convertBoolean(value).equalsIgnoreCase(Boolean.TRUE.toString()) ||
                convertBoolean(value).equalsIgnoreCase(Boolean.FALSE.toString());

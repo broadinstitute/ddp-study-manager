@@ -90,13 +90,18 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
     private static final String LAST_CHANGED = "last_changed";
     private static final String CHANGED_BY = "changed_by";
 
-    private FieldSettingsDao() {}
+    // for test purposes only
+    protected FieldSettingsDao() {}
 
     public static FieldSettingsDao of() {
         if (fieldSettingsDao == null) {
             fieldSettingsDao = new FieldSettingsDao();
         }
         return fieldSettingsDao;
+    }
+
+    public static void setInstance(FieldSettingsDao fieldSettingsDao) {
+        FieldSettingsDao.fieldSettingsDao = fieldSettingsDao;
     }
 
     @Override
