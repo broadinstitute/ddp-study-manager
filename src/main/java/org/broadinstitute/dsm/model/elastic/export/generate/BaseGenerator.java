@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
@@ -11,6 +12,7 @@ import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
+import org.broadinstitute.dsm.util.ObjectMapperSingleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,7 +91,11 @@ public abstract class BaseGenerator implements Generator, Collector, GeneratorHe
     protected abstract <T> T parseJson();
 
     protected Map<String, Object> parseJsonToMapFromValue() {
-        return GSON.fromJson(String.valueOf(getNameValue().getValue()), Map.class);
+        try {
+            return ObjectMapperSingleton.instance().readValue(String.valueOf(getNameValue().getValue()), Map.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     protected Object parseSingleElement() {
