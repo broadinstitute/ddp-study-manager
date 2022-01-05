@@ -32,6 +32,7 @@ abstract public class SourceGenerator extends BaseGenerator {
 
     @Override
     protected Object parseElement() {
+        parser.setFieldName(getFieldName());
         return parser.parse(String.valueOf(getNameValue().getValue()));
     }
 
@@ -45,6 +46,7 @@ abstract public class SourceGenerator extends BaseGenerator {
         Map<String, Object> dynamicFieldValues = parseJsonToMapFromValue();
         Map<String, Object> transformedMap = new HashMap<>();
         for (Map.Entry<String, Object> entry : dynamicFieldValues.entrySet()) {
+            parser.setFieldName(entry.getKey());
             transformedMap.put(Util.underscoresToCamelCase(entry.getKey()), parser.parse(String.valueOf(entry.getValue())));
         }
         return transformedMap;

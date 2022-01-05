@@ -9,7 +9,6 @@ import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.elastic.export.ExportFacadePayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
-import org.broadinstitute.dsm.model.elastic.migration.DynamicFieldsTypeParser;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -22,7 +21,8 @@ public class TypeParserTest {
         BaseGenerator.PropertyInfo propertyInfo = new BaseGenerator.PropertyInfo(MedicalRecord.class, true);
         propertyInfo.setFieldName("additionalValuesJson");
 
-        DynamicFieldsTypeParser typeParser = new DynamicFieldsTypeParser();
+        DynamicFieldsParser typeParser = new DynamicFieldsParser();
+        typeParser.setParser(new TypeParser());
         typeParser.setPropertyInfo(propertyInfo);
         typeParser.setFieldName("scooby");
         typeParser.setDisplayType("TEXT");
@@ -47,7 +47,8 @@ public class TypeParserTest {
         NameValue crRequired = new NameValue("m.crRequired", true);
         GeneratorPayload generatorPayload = new GeneratorPayload(crRequired);
         ExportFacadePayload exportFacadePayload = new ExportFacadePayload("", "", generatorPayload, "");
-        TypeParser typeParser = TypeParserFactory.of(exportFacadePayload);
+        BaseParser typeParser = new TypeParserFactory().of(exportFacadePayload);
+        typeParser.setFieldName("crRequired");
         typeParser.setPropertyInfo(new BaseGenerator.PropertyInfo(MedicalRecord.class, true));
         Object booleanMapping = typeParser.parse("crRequired");
         assertEquals(BOOLEAN_MAPPING, booleanMapping);
@@ -58,7 +59,8 @@ public class TypeParserTest {
         NameValue faxConfirmed3 = new NameValue("m.faxConfirmed3", "2020-10-10");
         GeneratorPayload generatorPayload = new GeneratorPayload(faxConfirmed3);
         ExportFacadePayload exportFacadePayload = new ExportFacadePayload("", "", generatorPayload, "");
-        TypeParser typeParser = TypeParserFactory.of(exportFacadePayload);
+        BaseParser typeParser = new TypeParserFactory().of(exportFacadePayload);
+        typeParser.setFieldName("faxConfirmed3");
         typeParser.setPropertyInfo(new BaseGenerator.PropertyInfo(MedicalRecord.class, true));
         Object booleanMapping = typeParser.parse("faxConfirmed3");
         assertEquals(DATE_MAPPING, booleanMapping);

@@ -6,4 +6,5 @@ public interface Parser {
     default Object[] parse(String[] values) {
         throw new UnsupportedOperationException();
     }
+    void setFieldName(String fieldName);
 }

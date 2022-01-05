@@ -12,9 +12,11 @@ import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorFactory;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGeneratorFactory;
 import org.broadinstitute.dsm.model.elastic.export.generate.SourceGeneratorFactory;
+import org.broadinstitute.dsm.model.elastic.export.parse.BaseParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParserFactory;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
+import org.broadinstitute.dsm.model.elastic.export.parse.ValueParserFactory;
 import org.broadinstitute.dsm.model.elastic.export.process.BaseProcessor;
 import org.broadinstitute.dsm.model.elastic.export.process.ProcessorFactory;
 import org.broadinstitute.dsm.model.elastic.export.process.ProcessorFactoryImpl;
@@ -52,7 +54,7 @@ public class ExportFacade {
         String fieldName = exportFacadePayload.getCamelCaseFieldName();
         propertyInfo.setFieldName(fieldName);
         generator = generatorFactory.make(propertyInfo);
-        TypeParser typeParser = TypeParserFactory.of(exportFacadePayload);
+        BaseParser typeParser = new TypeParserFactory().of(exportFacadePayload);
         typeParser.setPropertyInfo(propertyInfo);
         generator.setParser(typeParser);
         generator.setPayload(exportFacadePayload.getGeneratorPayload());
@@ -76,7 +78,8 @@ public class ExportFacade {
 
     private Map<String, Object> processData(ESDsm esDsm) {
         BaseGenerator.PropertyInfo propertyInfo = getPropertyInfo();
-        ValueParser valueParser = new ValueParser();
+        BaseParser valueParser = new ValueParserFactory().of(exportFacadePayload);
+        valueParser.setPropertyInfo(propertyInfo);
         GeneratorFactory sourceGeneratorFactory = new SourceGeneratorFactory();
         generator = sourceGeneratorFactory.make(propertyInfo);
         generator.setParser(valueParser);

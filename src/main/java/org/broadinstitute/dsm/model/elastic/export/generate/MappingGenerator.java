@@ -31,6 +31,7 @@ abstract public class MappingGenerator extends BaseGenerator {
 
     @Override
     protected Object parseElement() {
+        parser.setFieldName(getFieldName());
         return parser.parse(getFieldName());
     }
 
@@ -47,6 +48,7 @@ abstract public class MappingGenerator extends BaseGenerator {
         Map<String, Object> resultMap = new HashMap<>();
         Map<String, Object> fieldsByValues = parseJsonToMapFromValue();
         for (Map.Entry<String, Object> entry: fieldsByValues.entrySet()) {
+            parser.setFieldName(entry.getKey());
             Object eachType = parser.parse(entry.getKey());
             resultMap.put(Util.underscoresToCamelCase(entry.getKey()), eachType);
         }

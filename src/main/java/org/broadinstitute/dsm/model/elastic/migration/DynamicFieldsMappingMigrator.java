@@ -9,6 +9,7 @@ import org.broadinstitute.dsm.model.elastic.export.Exportable;
 import org.broadinstitute.dsm.model.elastic.export.RequestPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
+import org.broadinstitute.dsm.model.elastic.export.parse.DynamicFieldsParser;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +23,7 @@ public class DynamicFieldsMappingMigrator implements Exportable {
     public static final String DYNAMIC_FIELDS_WRAPPER_NAME = "dynamicFields";
     private final String index;
     private final String study;
-    public DynamicFieldsTypeParser parser;
+    public DynamicFieldsParser parser;
     public Map<String, Object> propertyMap;
 
     private ElasticMappingExportAdapter elasticMappingExportAdapter;
@@ -30,7 +31,7 @@ public class DynamicFieldsMappingMigrator implements Exportable {
     public DynamicFieldsMappingMigrator(String index, String study) {
         this.index = index;
         this.study = study;
-        this.parser = new DynamicFieldsTypeParser();
+        this.parser = new DynamicFieldsParser();
         this.propertyMap = new HashMap<>();
         elasticMappingExportAdapter = new ElasticMappingExportAdapter();
     }

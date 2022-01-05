@@ -4,21 +4,21 @@ import static org.junit.Assert.*;
 
 import java.util.Map;
 
-import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
+import org.broadinstitute.dsm.model.elastic.export.parse.DynamicFieldsParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.junit.Test;
 
-public class DynamicFieldsTypeParserTest {
+public class DynamicFieldsParserTest {
 
     @Test
     public void parse() {
         String possibleValuesJson = "[{\"value\":\"CONSENT.completedAt\",\"type\":\"DATE\"}]";
         String displayType = "ACTIVITY_STAFF";
-        DynamicFieldsTypeParser dynamicFieldsTypeParser = new DynamicFieldsTypeParser();
-        dynamicFieldsTypeParser.setDisplayType(displayType);
-        dynamicFieldsTypeParser.setPossibleValuesJson(possibleValuesJson);
-        Map<String, Object> mapping = (Map<String, Object>)dynamicFieldsTypeParser.parse(displayType);
+        DynamicFieldsParser dynamicFieldsParser = new DynamicFieldsParser();
+        dynamicFieldsParser.setDisplayType(displayType);
+        dynamicFieldsParser.setPossibleValuesJson(possibleValuesJson);
+        Map<String, Object> mapping = (Map<String, Object>) dynamicFieldsParser.parse(displayType);
         Object date = mapping.get(MappingGenerator.TYPE);
         assertEquals(TypeParser.DATE, date);
     }

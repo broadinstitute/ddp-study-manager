@@ -12,6 +12,7 @@ import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 
 public abstract class BaseParser implements Parser {
 
+    protected static final String TYPE = "type";
     protected BaseGenerator.PropertyInfo propertyInfo;
     protected String fieldName;
     protected String realm;
@@ -33,7 +34,7 @@ public abstract class BaseParser implements Parser {
         Class<?> propertyClass = propertyInfo.getPropertyClass();
         Object elementMap;
         try {
-            Field field = propertyClass.getDeclaredField(element);
+            Field field = propertyClass.getDeclaredField(fieldName);
             if (long.class.isAssignableFrom(field.getType())) {
                 elementMap = forNumeric(element);
             } else if (boolean.class.isAssignableFrom(field.getType())) {

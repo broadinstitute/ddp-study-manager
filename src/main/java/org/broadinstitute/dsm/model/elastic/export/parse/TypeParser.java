@@ -1,19 +1,15 @@
 package org.broadinstitute.dsm.model.elastic.export.parse;
 
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.broadinstitute.dsm.db.structure.DbDateConversion;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
-import org.elasticsearch.common.text.Text;
 
 public class TypeParser extends BaseParser {
 
     private static final String TEXT = "text";
     private static final String FIELDS = "fields";
     private static final String KEYWORD = "keyword";
-    protected static final String TYPE = "type";
     public static final Map<String, Object> TEXT_KEYWORD_MAPPING = new HashMap<>(
             new HashMap<>(
                     Map.of(TYPE, TEXT,
