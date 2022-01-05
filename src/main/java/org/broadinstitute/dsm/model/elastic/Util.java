@@ -8,9 +8,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.api.client.json.Json;
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.*;
@@ -19,10 +16,7 @@ import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.elastic.export.parse.DynamicFieldsParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
-import org.broadinstitute.dsm.model.elastic.export.parse.ValueParserFactory;
-import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ObjectMapperSingleton;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.broadinstitute.dsm.util.PatchUtil;
@@ -93,15 +87,15 @@ public class Util {
         return splittedWords.length < 2;
     }
 
-    public static List<Map<String, Object>> transformObjectCollectionToCollectionMap(List<Object> values) {
+    public static List<Map<String, Object>> transformObjectCollectionToCollectionMap(List<Object> values, String realm) {
         List<Map<String, Object>> result = new ArrayList<>();
         for (Object obj : values) {
-            result.add(transformObjectToMap(obj));
+            result.add(transformObjectToMap(obj, realm));
         }
         return result;
     }
 
-    public static Map<String, Object> transformObjectToMap(Object obj) {
+    public static Map<String, Object> transformObjectToMap(Object obj, String realm) {
         Map<String, Object> map = new HashMap<>();
         List<Field> declaredFields = new ArrayList<>(List.of(obj.getClass().getDeclaredFields()));
         List<Field> declaredFieldsSuper = new ArrayList<>(List.of(obj.getClass().getSuperclass().getDeclaredFields()));
@@ -117,7 +111,7 @@ public class Util {
                 if (Objects.isNull(fieldValue)) {
                     continue;
                 }
-                map.putAll(convertToMap(annotation.value(), fieldValue));
+                map.putAll(convertToMap(annotation.value(), fieldValue, realm));
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
@@ -125,7 +119,7 @@ public class Util {
         return map;
     }
 
-    static Map<String, Object> convertToMap(String fieldName, Object fieldValue) {
+    static Map<String, Object> convertToMap(String fieldName, Object fieldValue, String realm) {
         Map<String, Object> finalResult;
         switch (fieldName) {
             case "follow_ups":
@@ -139,6 +133,7 @@ public class Util {
                 for (Map.Entry<String, Object> object: objectMap.entrySet()) {
                     String field = object.getKey();
                     DYNAMIC_FIELDS_PARSER.setFieldName(field);
+                    DYNAMIC_FIELDS_PARSER.setRealm(realm);
                     Object value = DYNAMIC_FIELDS_PARSER.parse(String.valueOf(object.getValue()));
                     String camelCaseField = underscoresToCamelCase(field);
                     transformedMap.put(camelCaseField, value);

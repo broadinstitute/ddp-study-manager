@@ -1,19 +1,14 @@
 package org.broadinstitute.dsm.model.elastic;
 
-import static org.broadinstitute.dsm.model.participant.data.ParticipantData.GSON;
 import static org.junit.Assert.*;
 
 import java.lang.reflect.Field;
 import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.db.MedicalRecord;
-import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.db.Participant;
-import org.broadinstitute.dsm.db.Tissue;
 import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
-import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.FollowUp;
 import org.junit.Assert;
 import org.junit.Test;
@@ -48,7 +43,7 @@ public class UtilTest {
                 "2020-10-28", "2020-10-28", "2020-10-28",
                 "ptNotes", true, true,
                 "additionalValuesJson", 1934283746283L);
-        Map<String, Object> transformedObject = Util.transformObjectToMap(participant);
+        Map<String, Object> transformedObject = Util.transformObjectToMap(participant, "angio");
         assertEquals("1", transformedObject.get("participantId"));
         assertEquals("QWERTY", transformedObject.get("ddpParticipantId"));
         assertEquals("2020-10-28", transformedObject.get("created"));
@@ -87,7 +82,7 @@ public class UtilTest {
                 .withData(json)
                 .build();
 
-        Map<String, Object> result = Util.transformObjectToMap(participantDataDto);
+        Map<String, Object> result = Util.transformObjectToMap(participantDataDto, "angio");
         assertEquals("TEST", ((Map) result.get("dynamicFields")).get("ddpInstance"));
         assertEquals("VALUE", ((Map) result.get("dynamicFields")).get("ddpValue"));
         assertEquals(true, ((Map) result.get("dynamicFields")).get("booleanVal"));

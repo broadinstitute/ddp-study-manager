@@ -184,7 +184,7 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
             throw new RuntimeException("could not find the specified display type by instance name and column name", simpleResult.resultException);
         }
 
-        return Optional.of((String) simpleResult.resultValue);
+        return Optional.ofNullable((String) simpleResult.resultValue);
     }
 
     public List<FieldSettingsDto> getOptionAndRadioFieldSettingsByInstanceId(int instanceId) {

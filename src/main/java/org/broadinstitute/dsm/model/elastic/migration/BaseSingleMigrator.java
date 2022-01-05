@@ -21,6 +21,6 @@ public abstract class BaseSingleMigrator extends BaseMigrator {
 
     @Override
     protected void transformObject(Object object) {
-        transformedObject = Util.transformObjectToMap(object);
+        transformedObject = Util.transformObjectToMap(object, realm);
     }
 }

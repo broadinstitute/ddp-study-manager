@@ -10,6 +10,8 @@ import org.broadinstitute.dsm.model.elastic.export.RequestPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.elastic.export.generate.MappingGenerator;
 import org.broadinstitute.dsm.model.elastic.export.parse.DynamicFieldsParser;
+import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
+import org.broadinstitute.dsm.model.elastic.export.parse.TypeParserFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +34,7 @@ public class DynamicFieldsMappingMigrator implements Exportable {
         this.index = index;
         this.study = study;
         this.parser = new DynamicFieldsParser();
+        this.parser.setParser(new TypeParser());
         this.propertyMap = new HashMap<>();
         elasticMappingExportAdapter = new ElasticMappingExportAdapter();
     }
