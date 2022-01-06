@@ -96,6 +96,11 @@ public class KitUploadRoute extends RequestHandler {
                 shippingCarrier.set(queryParams.get("carrier").value());
             }
 
+            AtomicBoolean skipAddressValidation = new AtomicBoolean(false);
+            if (queryParams.value("skipAddressValidation") != null) {
+                skipAddressValidation.set(queryParams.get("skipAddressValidation").booleanValue());
+            }
+
             AtomicBoolean uploadAnyway = new AtomicBoolean(false);
             if (queryParams.value("uploadAnyway") != null) {
                 uploadAnyway.set(queryParams.get("uploadAnyway").booleanValue());
@@ -151,7 +156,7 @@ public class KitUploadRoute extends RequestHandler {
                 logger.info("Setup EasyPost...");
                 EasyPostUtil easyPostUtil = new EasyPostUtil(ddpInstance.getName());
 
-                Map<String, KitRequest> invalidAddressList = checkAddress(kitUploadObjects, kitRequestSettings.getPhone());
+                Map<String, KitRequest> invalidAddressList = checkAddress(kitUploadObjects, kitRequestSettings.getPhone(), skipAddressValidation.get());
                 List<KitRequest> duplicateKitList = new ArrayList<>();
                 List<KitRequest> specialKitList = new ArrayList<>();
                 ArrayList<KitRequest> orderKits = new ArrayList<>();
@@ -546,8 +551,12 @@ public class KitUploadRoute extends RequestHandler {
         return message;
     }
 
-    public Map<String, KitRequest> checkAddress(List<KitRequest> kitUploadObjects, String phone) {
+    public Map<String, KitRequest> checkAddress(List<KitRequest> kitUploadObjects, String phone, boolean skipAddressValidation) {
         Map<String, KitRequest> noValidAddress = new HashMap<>();
+        if (skipAddressValidation) {
+            return noValidAddress;
+        }
+
         for (KitRequest o : kitUploadObjects) {
             KitUploadObject object = (KitUploadObject) o;
             //only if participant has shortId, first- and lastName
