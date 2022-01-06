@@ -553,10 +553,6 @@ public class KitUploadRoute extends RequestHandler {
 
     public Map<String, KitRequest> checkAddress(List<KitRequest> kitUploadObjects, String phone, boolean skipAddressValidation) {
         Map<String, KitRequest> noValidAddress = new HashMap<>();
-        if (skipAddressValidation) {
-            return noValidAddress;
-        }
-
         for (KitRequest o : kitUploadObjects) {
             KitUploadObject object = (KitUploadObject) o;
             //only if participant has shortId, first- and lastName
@@ -570,15 +566,17 @@ public class KitUploadRoute extends RequestHandler {
                 DeliveryAddress deliveryAddress = new DeliveryAddress(object.getStreet1(), object.getStreet2(),
                         object.getCity(), object.getState(), object.getPostalCode(), object.getCountry(),
                         name, phone);
-                deliveryAddress.validate();
 
-                if (deliveryAddress.isValid()) {
-                    //store the address back
-                    object.setEasyPostAddressId(deliveryAddress.getId());
-                }
-                else {
-                    logger.info("Address is not valid " + object.getShortId());
-                    noValidAddress.put(object.getShortId(), object);
+                if (!skipAddressValidation) {
+                    deliveryAddress.validate();
+                    if (deliveryAddress.isValid()) {
+                        //store the address back
+                        object.setEasyPostAddressId(deliveryAddress.getId());
+                    }
+                    else {
+                        logger.info("Address is not valid " + object.getShortId());
+                        noValidAddress.put(object.getShortId(), object);
+                    }
                 }
             }
             else {
