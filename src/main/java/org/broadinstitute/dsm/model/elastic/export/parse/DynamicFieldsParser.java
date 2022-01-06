@@ -98,7 +98,7 @@ public class DynamicFieldsParser extends BaseParser {
                     .map(possibleValue -> possibleValue.get(TYPE))
                     .findFirst();
             return maybeType;
-        } catch (IOException e) {
+        } catch (Exception e) {
             return Optional.empty();
         }
     }
