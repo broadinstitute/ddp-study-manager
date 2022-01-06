@@ -289,10 +289,10 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.FOLLOWUP_REQUIRED_TEXT)
-    private String followUpRequiredText;
+    private String followupRequiredText;
 
     @JsonProperty("followupRequiredText")
-    public String getFollowUpRequiredText() { return followUpRequiredText; }
+    public String getFollowupRequiredText() { return followupRequiredText; }
 
     @TableName (
             name = DBConstants.DDP_MEDICAL_RECORD,
@@ -380,7 +380,7 @@ public class MedicalRecord {
                          String mrReceived, String mrDocument, String mrDocumentFileNames, boolean mrProblem,
                          String mrProblemText, boolean unableObtain, boolean duplicate, boolean international, boolean crRequired,
                          String pathologyPresent, String mrNotes, boolean reviewMedicalRecord,
-                         FollowUp[] followUps, boolean followUpRequired, String followUpRequiredText, String additionalValuesJson,
+                         FollowUp[] followUps, boolean followUpRequired, String followupRequiredText, String additionalValuesJson,
                          String unableObtainText, String ddpParticipantId) {
         this.medicalRecordId = medicalRecordId;
         this.institutionId = institutionId;
@@ -413,7 +413,7 @@ public class MedicalRecord {
         this.reviewMedicalRecord = reviewMedicalRecord;
         this.followUps = followUps;
         this.followupRequired = followUpRequired;
-        this.followUpRequiredText = followUpRequiredText;
+        this.followupRequiredText = followupRequiredText;
         this.additionalValuesJson = additionalValuesJson;
         this.unableObtainText = unableObtainText;
         this.ddpParticipantId = ddpParticipantId;
