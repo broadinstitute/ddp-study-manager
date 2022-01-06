@@ -567,7 +567,10 @@ public class KitUploadRoute extends RequestHandler {
                         object.getCity(), object.getState(), object.getPostalCode(), object.getCountry(),
                         name, phone);
 
-                if (!skipAddressValidation) {
+                if (skipAddressValidation) {
+                    object.setEasyPostAddressId(deliveryAddress.getId());
+                }
+                else {
                     deliveryAddress.validate();
                     if (deliveryAddress.isValid()) {
                         //store the address back
