@@ -26,6 +26,7 @@ import org.broadinstitute.dsm.model.participant.ParticipantWrapperPayload;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperResult;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.broadinstitute.dsm.util.ObjectMapperSingleton;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -158,7 +159,7 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
                 continue;
             }
             String ddpParticipantId = participantData.getDdpParticipantId().orElse(null);
-            Map<String, String> dataMap = GSON.fromJson(data, Map.class);
+            Map<String, String> dataMap = ObjectMapperSingleton.readValue(data, Map.class);
             boolean questionWithOptions = (OPTIONS.equals(filter.getType()) || RADIO.equals(filter.getType())) && filter.getSelectedOptions() != null;
             boolean notEmptyCheck = filter.isNotEmpty() && dataMap.get(fieldName) != null && !dataMap.get(fieldName).isEmpty();
             boolean emptyCheck = filter.isEmpty() && (dataMap.get(fieldName) == null || dataMap.get(fieldName).isEmpty());
