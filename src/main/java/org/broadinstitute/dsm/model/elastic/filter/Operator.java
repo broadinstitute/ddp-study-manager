@@ -51,8 +51,11 @@ public enum Operator {
             return JSON_EXTRACT;
         String operator = Arrays.stream(filter.split(" "))
                 .filter(StringUtils::isNotBlank)
-                .collect(Collectors.toList())
-                .get(1);
+                .filter(str -> Arrays.stream(Operator.values()).anyMatch(op -> op.value.equals(str)))
+                .findFirst()
+                .orElse(StringUtils.EMPTY);
+        // [NOT , m.mr_problem, <=>, 1]
+        //
         return getOperator(operator);
     }
 }

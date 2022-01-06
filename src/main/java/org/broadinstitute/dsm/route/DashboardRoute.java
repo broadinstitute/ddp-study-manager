@@ -359,7 +359,7 @@ public class DashboardRoute extends RequestHandler {
                 incrementCounter(dashboardValuesDetailed, "unableToObtainMedicalRecord");
                 foundAtPT.add("unableToObtainMedicalRecord");
             }
-            if (medicalRecord.isFollowUpRequired()) {
+            if (medicalRecord.isFollowupRequired()) {
                 incrementCounter(dashboardValuesDetailed, "followupRequiredMedicalRecord");
                 foundAtPT.add("followupRequiredMedicalRecord");
                 if (medicalRecord.getFollowUps() == null || medicalRecord.getFollowUps().length == 0) {

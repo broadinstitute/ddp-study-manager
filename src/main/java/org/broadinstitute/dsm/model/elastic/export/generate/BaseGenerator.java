@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.db.structure.TableName;
@@ -82,7 +82,7 @@ public abstract class BaseGenerator implements Generator, Collector, GeneratorHe
         Object sourceToUpsert;
         try {
             sourceToUpsert = parseJson();
-        } catch (JsonSyntaxException jse) {
+        } catch (JsonParseException jpe) {
             sourceToUpsert = parseSingleElement();
         }
         return sourceToUpsert;
@@ -93,6 +93,8 @@ public abstract class BaseGenerator implements Generator, Collector, GeneratorHe
     protected Map<String, Object> parseJsonToMapFromValue() {
         try {
             return ObjectMapperSingleton.instance().readValue(String.valueOf(getNameValue().getValue()), Map.class);
+        } catch (com.fasterxml.jackson.core.JsonParseException | JsonMappingException je) {
+            throw new JsonParseException(je.getMessage());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

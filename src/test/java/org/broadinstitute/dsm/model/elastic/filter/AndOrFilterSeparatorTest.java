@@ -56,6 +56,18 @@ public class AndOrFilterSeparatorTest {
 
     }
 
+    @Test
+    public void parseFiltersByLogicalOperatorsSingle2() {
+
+        String filter = " AND NOT m.mr_problem <=> 1 ";
+        Map<String, List<String>> stringListMap = new AndOrFilterSeparator(filter).parseFiltersByLogicalOperators();
+        Assert.assertEquals("NOT m.mr_problem <=> 1", stringListMap.get("AND").get(0));
+
+
+        //
+        //
+    }
+
 }
 
 

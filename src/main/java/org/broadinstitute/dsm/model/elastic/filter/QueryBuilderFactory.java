@@ -14,6 +14,7 @@ public class QueryBuilderFactory {
             case LIKE:
             case EQUALS:
             case DATE:
+            case DIAMOND_EQUALS:
             case STR_DATE:
                 qb = new MatchQueryBuilder(payload.getFieldName(), payload.getValues()[0]);
                 break;

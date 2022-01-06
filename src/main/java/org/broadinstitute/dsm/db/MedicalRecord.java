@@ -276,11 +276,11 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.FOLLOWUP_REQUIRED)
-    private boolean followUpRequired;
+    private boolean followupRequired;
 
     @JsonProperty("followupRequired")
-    public boolean isFollowUpRequired() {
-        return followUpRequired;
+    public boolean isFollowupRequired() {
+        return followupRequired;
     }
 
     @TableName (
@@ -412,7 +412,7 @@ public class MedicalRecord {
         this.notes = mrNotes;
         this.reviewMedicalRecord = reviewMedicalRecord;
         this.followUps = followUps;
-        this.followUpRequired = followUpRequired;
+        this.followupRequired = followUpRequired;
         this.followUpRequiredText = followUpRequiredText;
         this.additionalValuesJson = additionalValuesJson;
         this.unableObtainText = unableObtainText;

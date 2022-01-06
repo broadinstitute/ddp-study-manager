@@ -31,9 +31,14 @@ public class OperatorTest {
     public void extractLogicalOperator() {
         String filterEquals = "m.medicalRecordId = 15";
         String filterLike = "m.medicalRecordId LIKE 15";
+        String notFilter = "NOT m.mrProblem <=> 1";
+
         Operator equalsOperator = Operator.extract(filterEquals);
         Operator likeOperator = Operator.extract(filterLike);
+        Operator diamondsOperator = Operator.extract(notFilter);
+
         assertEquals(Operator.EQUALS, equalsOperator);
         assertEquals(Operator.LIKE, likeOperator);
+        assertEquals(Operator.DIAMOND_EQUALS, diamondsOperator);
     }
 }
