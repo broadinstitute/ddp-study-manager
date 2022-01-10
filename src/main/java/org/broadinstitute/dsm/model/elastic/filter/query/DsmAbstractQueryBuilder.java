@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.query;
 
 import java.util.List;
 import java.util.Map;
@@ -6,6 +6,9 @@ import java.util.Map;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
+import org.broadinstitute.dsm.model.elastic.filter.AndOrFilterSeparator;
+import org.broadinstitute.dsm.model.elastic.filter.FilterStrategy;
+import org.broadinstitute.dsm.model.elastic.filter.Operator;
 import org.broadinstitute.dsm.model.elastic.filter.splitter.BaseSplitter;
 import org.broadinstitute.dsm.model.elastic.filter.splitter.SplitterFactory;
 import org.broadinstitute.dsm.statics.DBConstants;

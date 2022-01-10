@@ -1,7 +1,10 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.query;
 
 import static org.junit.Assert.*;
 
+import org.broadinstitute.dsm.model.elastic.filter.Operator;
+import org.broadinstitute.dsm.model.elastic.filter.query.QueryBuilderFactory;
+import org.broadinstitute.dsm.model.elastic.filter.query.QueryPayload;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;

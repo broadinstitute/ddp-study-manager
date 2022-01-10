@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.query;
 
 import lombok.Getter;
 import org.broadinstitute.dsm.statics.DBConstants;

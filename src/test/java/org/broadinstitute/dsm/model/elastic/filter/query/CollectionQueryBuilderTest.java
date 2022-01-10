@@ -1,8 +1,10 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.query;
 
 import java.util.regex.Pattern;
 
 import org.apache.lucene.search.join.ScoreMode;
+import org.broadinstitute.dsm.model.elastic.filter.FilterParser;
+import org.broadinstitute.dsm.model.elastic.filter.query.CollectionQueryBuilder;
 import org.elasticsearch.index.query.AbstractQueryBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.ExistsQueryBuilder;

@@ -27,7 +27,7 @@ public class AndOrFilterSeparator {
         this.filter = filter;
     }
 
-    protected Map<String, List<String>> parseFiltersByLogicalOperators() {
+    public Map<String, List<String>> parseFiltersByLogicalOperators() {
         Map<String, List<String>> filterByLogicalOperators = new ConcurrentHashMap<>(Map.of(Filter.AND_TRIMMED, new ArrayList<>(), Filter.OR_TRIMMED, new ArrayList<>()));
         int andIndex = filter.indexOf(Filter.AND_TRIMMED);
         int orIndex = filter.indexOf(Filter.OR_TRIMMED);

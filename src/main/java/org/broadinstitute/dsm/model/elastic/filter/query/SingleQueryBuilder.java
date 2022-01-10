@@ -1,4 +1,6 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.query;
+
+import org.broadinstitute.dsm.model.elastic.filter.FilterStrategy;
 
 public class SingleQueryBuilder extends DsmAbstractQueryBuilder {
 

@@ -1,6 +1,7 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.splitter;
 
 import org.broadinstitute.dsm.model.elastic.export.parse.BaseParser;
+import org.broadinstitute.dsm.model.elastic.filter.FilterParser;
 import org.junit.Assert;
 import org.junit.Test;
 
