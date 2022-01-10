@@ -9,16 +9,19 @@ public class BSPKitInfo {
 
     private static final Logger logger = LoggerFactory.getLogger(BSPKitInfo.class);
 
-    private final String collaboratorParticipantId, collaboratorSampleId, sampleCollectionBarcode, gender, materialInfo, receptacleName;
+    private String collaboratorParticipantId, collaboratorSampleId, sampleCollectionBarcode, gender, materialInfo, receptacleName,
+            accessionNumber,  realm, kitTypeName;
     private final int organismClassificationId;
 
-    public BSPKitInfo (String sampleCollectionBarcode,
-                       int organismClassificationId,
-                       String gender,
-                       String bspParticipantId,
-                       String bspSampleId,
-                       String materialInfo,
-                       String receptacleName) {
+    public BSPKitInfo(String sampleCollectionBarcode,
+                      int organismClassificationId,
+                      String gender,
+                      String bspParticipantId,
+                      String bspSampleId,
+                      String materialInfo,
+                      String receptacleName,
+                      String realm,
+                      String kitTypeName) {
         this.sampleCollectionBarcode = sampleCollectionBarcode;
         // note that organism is bsp's internal organismClassificationId, as per Damien
         this.organismClassificationId = organismClassificationId;
@@ -27,5 +30,15 @@ public class BSPKitInfo {
         this.collaboratorSampleId = bspSampleId;
         this.materialInfo = materialInfo;
         this.receptacleName = receptacleName;
+        this.realm = realm;
+        this.kitTypeName = kitTypeName;
+    }
+
+    public String getKitType() {
+        return kitTypeName;
+    }
+
+    public void setKitType(String kitType) {
+        this.kitTypeName = kitType;
     }
 }

@@ -21,7 +21,7 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 public class BSPDummyKitDao implements Dao<ClinicalKitDto> {
 
     private static final String SQL_UPDATE_DUMMY_KIT = "UPDATE ddp_kit SET kit_label = ? where dsm_kit_request_id = ?";
-    private static final String SQL_SELECT_RANDOM_PT = "SELECT ddp_participant_id FROM ddp_kit_request where ddp_instance_id = ?  ORDER BY RAND() LIMIT 1";
+    private static final String SQL_SELECT_RANDOM_PT = "SELECT ddp_participant_id FROM ddp_kit_request req, ddp_kit kit where req.dsm_kit_request_id = kit.dsm_kit_request_id and deactivated_date is null and ddp_instance_id = ? group by ddp_participant_id ORDER BY RAND() LIMIT 1";
     private static final Logger logger = LoggerFactory.getLogger(BSPDummyKitDao.class);
 
     public void updateKitLabel(String kitLabel, String dsmKitRequestId) {
@@ -61,6 +61,7 @@ public class BSPDummyKitDao implements Dao<ClinicalKitDto> {
         }
         return ddpParticipantId;
     }
+
     public Optional<String> getRandomParticipantIdForStudy(String ddpInstanceId) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
