@@ -2,12 +2,11 @@ package org.broadinstitute.dsm.util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.*;
+import org.broadinstitute.dsm.db.dao.ddp.tissue.TissueSmIdType;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
-import org.broadinstitute.dsm.db.structure.SqlDateConverter;
 import org.broadinstitute.dsm.db.structure.TableName;
-import org.broadinstitute.dsm.db.ViewFilter;
 import org.broadinstitute.dsm.model.KitRequest;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
@@ -15,7 +14,10 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class PatchUtil {
 
@@ -41,6 +43,8 @@ public class PatchUtil {
         getColumnNames(KitRequest.class);
         getColumnNames(Drug.class);
         getColumnNames(ParticipantData.class);
+        getColumnNames(TissueSmId.class);
+        getColumnNames(TissueSmIdType.class);
         logger.info("Loaded patch utils");
     }
 

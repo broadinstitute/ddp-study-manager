@@ -2,6 +2,19 @@ package org.broadinstitute.dsm.db.dto.kit;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.OncHistoryDetail;
+import org.broadinstitute.dsm.db.dao.kit.ClinicalKitDao;
+import org.broadinstitute.dsm.model.ClinicalKitWrapper;
+import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
+import org.broadinstitute.dsm.model.elasticsearch.*;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 @Data
 public class ClinicalKitDto {
@@ -30,25 +43,42 @@ public class ClinicalKitDto {
     @SerializedName ("date_of_birth")
     String dateOfBirth;
 
-    @SerializedName("sample_type")
+    @SerializedName ("sample_type")
     String sampleType;
 
-    @SerializedName("gender")
+    @SerializedName ("gender")
     String gender;
 
-    @SerializedName("accession_number")
+    @SerializedName ("accession_number")
     String accessionNumber;
 
-    @SerializedName("collection_date")
-    String collectionDate;
-
-    @SerializedName("kit_label")
+    @SerializedName ("kit_label")
     String mfBarcode;
 
-    public ClinicalKitDto(){}
 
-    public void setSampleType(String kitType){
-        switch (kitType.toLowerCase()){
+    private static final Logger logger = LoggerFactory.getLogger(ClinicalKitDto.class);
+
+    public ClinicalKitDto(String collaboratorParticipantId, String sampleId, String sampleCollection, String materialType, String vesselType,
+                          String firstName, String lastName, String dateOfBirth, String sampleType, String gender, String accessionNumber, String mfBarcode) {
+        this.collaboratorParticipantId = collaboratorParticipantId;
+        this.sampleId = sampleId;
+        this.sampleCollection = sampleCollection;
+        this.materialType = materialType;
+        this.vesselType = vesselType;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.dateOfBirth = dateOfBirth;
+        this.sampleType = sampleType;
+        this.gender = gender;
+        this.accessionNumber = accessionNumber;
+        this.mfBarcode = mfBarcode;
+    }
+
+    public ClinicalKitDto() {
+    }
+
+    public void setSampleType(String kitType) {
+        switch (kitType.toLowerCase()) {
             case "saliva":
                 this.sampleType = "Normal";
                 break;
@@ -61,8 +91,8 @@ public class ClinicalKitDto {
         }
     }
 
-    public void setGender(String genderString){
-        switch (genderString.toLowerCase()){
+    public void setGender(String genderString) {
+        switch (genderString.toLowerCase()) {
             case "male":
                 this.gender = "M";
                 break;
@@ -75,4 +105,78 @@ public class ClinicalKitDto {
         }
     }
 
+
+    public ClinicalKitDto getClinicalKitBasedONSmId(String smIdValue) {
+        logger.info("Checking the kit for SM Id value " + smIdValue);
+        ClinicalKitDao clinicalKitDao = new ClinicalKitDao();
+        Optional<ClinicalKitWrapper> maybeClinicalKitWrapper = clinicalKitDao.getClinicalKitFromSMId(smIdValue);
+        maybeClinicalKitWrapper.orElseThrow();
+        ClinicalKitWrapper clinicalKitWrapper = maybeClinicalKitWrapper.get();
+        ClinicalKitDto clinicalKitDto = clinicalKitWrapper.getClinicalKitDto();
+        DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(clinicalKitWrapper.getDdpInstanceId());
+        clinicalKitDto.setNecessaryParticipantDataToClinicalKit(clinicalKitWrapper.getDdpParticipantId(), ddpInstance);
+        if (StringUtils.isNotBlank(clinicalKitDto.getAccessionNumber())) {
+            return clinicalKitDto;
+        }
+        throw new RuntimeException("The kit doesn't have an accession number! SM ID is: " + smIdValue);
+    }
+
+    public void setNecessaryParticipantDataToClinicalKit(String ddpParticipantId, DDPInstance ddpInstance) {
+        ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId).ifPresentOrElse(
+                maybeParticipant -> {
+                    String shortId = maybeParticipant.getProfile().map(ESProfile::getHruid).get();
+                    ElasticSearchParticipantDto participantByShortId =
+                            new ElasticSearch().getParticipantByShortId(ddpInstance.getParticipantIndexES(), shortId);
+                    try {
+                        this.setDateOfBirth(Objects.requireNonNull(participantByShortId).getDsm().map(ESDsm::getDateOfBirth).orElse(""));
+                        String firstName = participantByShortId.getProfile().map(ESProfile::getFirstName).orElse("");
+                        String lastName = participantByShortId.getProfile().map(ESProfile::getLastName).orElse("");
+                        String gender = getParticipantGender(participantByShortId, ddpInstance.getName());
+                        this.setFirstName(firstName);
+                        this.setLastName(lastName);
+                        this.setGender(gender);
+                        String collaboratorParticipantId = KitRequestShipping.getCollaboratorParticipantId(ddpInstance.getBaseUrl(), ddpInstance.getDdpInstanceId(), ddpInstance.isMigratedDDP(),
+                                ddpInstance.getCollaboratorIdPrefix(), ddpParticipantId, shortId, null);
+                        this.setCollaboratorParticipantId(collaboratorParticipantId);
+                    }
+                    catch (Exception e) {
+                        throw new RuntimeException("Participant doesn't exist / is not valid for kit ");
+                    }
+
+                }, () -> {
+                    throw new RuntimeException("Participant ES Data is not found for " + ddpParticipantId);
+                });
+    }
+
+    private String getParticipantGender(ElasticSearchParticipantDto participantByShortId, String realm) {
+        // if gender is set on tissue page use that
+        List<String> list = new ArrayList();
+        list.add(participantByShortId.getParticipantId());
+        Map<String, List<OncHistoryDetail>> oncHistoryDetails = OncHistoryDetail.getOncHistoryDetailsByParticipantIds(realm, list);
+        if (!oncHistoryDetails.isEmpty()) {
+            Optional<OncHistoryDetail> oncHistoryWithGender = oncHistoryDetails.get(participantByShortId.getParticipantId()).stream().filter(o -> StringUtils.isNotBlank(o.getGender())).findFirst();
+            if (oncHistoryWithGender.isPresent()) {
+                return oncHistoryWithGender.get().getGender();
+            }
+        }
+        //if gender is not set on tissue page get answer from "ABOUT_YOU.ASSIGNED_SEX"
+        return participantByShortId.getActivities()
+                .map(this::getGenderFromActivities)
+                .orElse("U");
+    }
+
+    private String getGenderFromActivities(List<ESActivities> activities) {
+        Optional<ESActivities> maybeAboutYouActivity = activities.stream()
+                .filter(activity -> DDPActivityConstants.ACTIVITY_ABOUT_YOU.equals(activity.getActivityCode()))
+                .findFirst();
+        return (String) maybeAboutYouActivity.map(aboutYou -> {
+            List<Map<String, Object>> questionsAnswers = aboutYou.getQuestionsAnswers();
+            Optional<Map<String, Object>> maybeGenderQuestionAnswer = questionsAnswers.stream()
+                    .filter(q -> DDPActivityConstants.ABOUT_YOU_ACTIVITY_GENDER.equals(q.get(DDPActivityConstants.DDP_ACTIVITY_STABLE_ID)))
+                    .findFirst();
+            return maybeGenderQuestionAnswer
+                    .map(answer -> answer.get(DDPActivityConstants.ACTIVITY_QUESTION_ANSWER))
+                    .orElse("");
+        }).orElse("");
+    }
 }

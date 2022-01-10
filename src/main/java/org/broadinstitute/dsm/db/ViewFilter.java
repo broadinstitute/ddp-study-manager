@@ -492,6 +492,7 @@ public class ViewFilter {
             Boolean f1 = false;
             NameValue filter2 = null;
             NameValue filter1 = null;
+
             String[] words = condition.trim().split("(\\s+)");
             for (String word : words) {
                 if (StringUtils.isNotBlank(word)) {
@@ -581,8 +582,9 @@ public class ViewFilter {
                             if (word.equals(Filter.TODAY) || word.matches("'\\d{4}-\\d{1,2}-\\d{1,2}'")) {
                                 if (word.equals(Filter.TODAY)) {
                                     value = getDate();
-                                } else {
-                                    value = word.replace("'","");
+                                }
+                                else {
+                                    value = word.replace("'", "");
                                 }
                                 state = 22;
                                 break;
@@ -591,7 +593,8 @@ public class ViewFilter {
                                 value = word;
                                 type = Filter.BOOLEAN;
                                 state = 40;
-                            } else if (StringUtils.isNumeric(word)) {
+                            }
+                            else if (StringUtils.isNumeric(word)) {
                                 value = word;
                                 type = Filter.NUMBER;
                                 state = 40;
@@ -633,7 +636,8 @@ public class ViewFilter {
                             value = trimValue(word);
                             if (isValidDate(value, false)) {
                                 type = Filter.DATE;
-                            } else if (StringUtils.isNumeric(word)) {
+                            }
+                            else if (StringUtils.isNumeric(word)) {
                                 type = Filter.NUMBER;
                             }
                             state = 11;
@@ -896,7 +900,6 @@ public class ViewFilter {
                             break;
                         case 40:
                             break;
-
                     }
                 }
             }
@@ -965,7 +968,8 @@ public class ViewFilter {
                     if (Filter.NUMBER.equals(filter.type)
                             && condition.contains(Filter.SMALLER_EQUALS_TRIMMED) && !arrayContains(conditions, Filter.LARGER_EQUALS_TRIMMED)) {
                         filter.setFilter2(new NameValue(columnName, value));
-                    } else {
+                    }
+                    else {
                         filter.setFilter1(new NameValue(columnName, value));
                     }
                 }

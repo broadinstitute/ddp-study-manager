@@ -42,6 +42,7 @@ import spark.Response;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 //Class needs to be refactored as soon as possible!!!
@@ -139,6 +140,11 @@ public class PatchRoute extends RequestHandler {
                     }
                     else {
                         // mr changes
+                        if (Patch.TISSUEID.equals(patch.getParent()) && patch.getNameValue().getName().equals(Patch.SM_ID_VALUE)) {
+                            if (StringUtils.isNotBlank(String.valueOf(patch.getNameValue().getValue())) && !TissueSmId.isUniqueSmId(String.valueOf(patch.getNameValue().getValue()), patch.getId())) {
+                                return new Result(500, "Duplicate value");
+                            }
+                        }
                         DBElement dbElement = patchUtil.getColumnNameMap().get(patch.getNameValue().getName());
                         if (dbElement != null) {
                             if (Patch.patch(patch.getId(), patch.getUser(), patch.getNameValue(), dbElement)) {
@@ -273,6 +279,16 @@ public class PatchRoute extends RequestHandler {
                             throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
                         }
                     }
+                    else if (Patch.TISSUEID.equals(patch.getParent())) {
+                        try {
+                            String smIdPk = new TissueSmId().createNewSmId(patch.getParentId(), patch.getUser(), patch.getNameValues());
+                            Map<String, String> map = new HashMap<>();
+                            map.put("smId", smIdPk);
+                            return new Result(200, gson.toJson(map));
+                        }catch (DuplicateException e) {
+                            return new Result(500, "Duplicate value");
+                        }
+                    }
                     else if (Patch.PARTICIPANT_DATA_ID.equals(patch.getParent())) {
                         String participantDataId = null;
                         Map<String, String> map = new HashMap<>();
@@ -348,9 +364,13 @@ public class PatchRoute extends RequestHandler {
                 logger.info("Email in patch data matches participant profile email, will update workflows");
                 int ddpInstanceIdByGuid = Integer.parseInt(ddpInstance.getDdpInstanceId());
                 FieldSettings fieldSettings = new FieldSettings();
-                pData.forEach((columnName,columnValue) -> {
-                    if (!fieldSettings.isColumnExportable(ddpInstanceIdByGuid, columnName)) return;
-                    if (!patch.getFieldId().contains(org.broadinstitute.dsm.model.participant.data.ParticipantData.FIELD_TYPE)) return;
+                pData.forEach((columnName, columnValue) -> {
+                    if (!fieldSettings.isColumnExportable(ddpInstanceIdByGuid, columnName)) {
+                        return;
+                    }
+                    if (!patch.getFieldId().contains(org.broadinstitute.dsm.model.participant.data.ParticipantData.FIELD_TYPE)) {
+                        return;
+                    }
                     // Use participant guid here to avoid multiple ES lookups.
                     ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(ddpInstance,
                             profile.getParticipantGuid(), columnName, columnValue, new WorkflowForES.StudySpecificData(
@@ -358,18 +378,23 @@ public class PatchRoute extends RequestHandler {
                                     pData.get(FamilyMemberConstants.FIRSTNAME),
                                     pData.get(FamilyMemberConstants.LASTNAME))), false);
                 });
-            } else {
+            }
+            else {
                 logger.info("Email in patch data does not match participant profile email, will remove workflows");
                 Map<String, Object> esMap = ElasticSearchUtil
                         .getObjectsMap(ddpInstance.getParticipantIndexES(), profile.getParticipantGuid(),
                                 ESObjectConstants.WORKFLOWS);
-                if (Objects.isNull(esMap) || esMap.isEmpty()) return;
-                CopyOnWriteArrayList<Map<String, Object>> workflowsList = new CopyOnWriteArrayList<>((List<Map<String, Object>>)esMap.get(ESObjectConstants.WORKFLOWS));
+                if (Objects.isNull(esMap) || esMap.isEmpty()) {
+                    return;
+                }
+                CopyOnWriteArrayList<Map<String, Object>> workflowsList = new CopyOnWriteArrayList<>((List<Map<String, Object>>) esMap.get(ESObjectConstants.WORKFLOWS));
                 int startingSize = workflowsList.size();
                 workflowsList.forEach(workflow -> {
                     Map<String, String> workflowDataMap = (Map<String, String>) workflow.get(ESObjectConstants.DATA);
                     String collaboratorParticipantId = workflowDataMap.get(ESObjectConstants.SUBJECT_ID);
-                    if (Objects.isNull(collaboratorParticipantId)) return;
+                    if (Objects.isNull(collaboratorParticipantId)) {
+                        return;
+                    }
                     if (collaboratorParticipantId.equals(pData.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID))) {
                         workflowsList.remove(workflow);
                     }
@@ -380,8 +405,10 @@ public class PatchRoute extends RequestHandler {
                     ElasticSearchUtil.updateRequest(profile.getParticipantGuid(), ddpInstance.getParticipantIndexES(), esMap);
                 }
             }
-        } catch (JsonSyntaxException ignored) {
-        } catch (Exception e) {
+        }
+        catch (JsonSyntaxException ignored) {
+        }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -550,7 +577,7 @@ public class PatchRoute extends RequestHandler {
         }
     }
 
-    private void triggerParticipantEvent(DDPInstance ddpInstance, Patch patch, Value action){
+    private void triggerParticipantEvent(DDPInstance ddpInstance, Patch patch, Value action) {
         Optional<EventTypeDto> eventType = eventTypeDao.getEventTypeByEventTypeAndInstanceId(action.getName(), ddpInstance.getDdpInstanceId());
         eventType.ifPresent(eventTypeDto -> {
             boolean participantHasTriggeredEventByEventType = eventDao.hasTriggeredEventByEventTypeAndDdpParticipantId(action.getName(), patch.getParentId()).orElse(false);

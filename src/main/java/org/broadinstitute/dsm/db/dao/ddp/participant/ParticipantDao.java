@@ -1,6 +1,8 @@
 package org.broadinstitute.dsm.db.dao.ddp.participant;
 
-import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
+import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.db.dao.Dao;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDto;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,9 +10,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Optional;
 
-import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.dsm.db.dao.Dao;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDto;
+import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 public class ParticipantDao implements Dao<ParticipantDto> {
 
