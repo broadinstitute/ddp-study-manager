@@ -1,16 +1,18 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
+import java.util.List;
+import java.util.Map;
+
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
+import org.broadinstitute.dsm.model.elastic.filter.splitter.BaseSplitter;
+import org.broadinstitute.dsm.model.elastic.filter.splitter.SplitterFactory;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.elasticsearch.index.query.AbstractQueryBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
-
-import java.util.List;
-import java.util.Map;
 
 public abstract class DsmAbstractQueryBuilder {
 
@@ -30,9 +32,10 @@ public abstract class DsmAbstractQueryBuilder {
     }
 
     public static DsmAbstractQueryBuilder of(String alias) {
-        DsmAbstractQueryBuilder queryBuilder;
         boolean isCollection = Util.TABLE_ALIAS_MAPPINGS.get(alias).isCollection();
-        return isCollection ? new CollectionQueryBuilder() : new SingleQueryBuilder();
+        return isCollection
+                ? new CollectionQueryBuilder()
+                : new SingleQueryBuilder();
     }
 
     public DsmAbstractQueryBuilder() {

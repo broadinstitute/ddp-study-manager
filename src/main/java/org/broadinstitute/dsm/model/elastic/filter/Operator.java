@@ -1,10 +1,9 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
+import java.util.Arrays;
+
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.Filter;
-
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 public enum Operator {
     LIKE(Filter.LIKE_TRIMMED),
@@ -20,6 +19,8 @@ public enum Operator {
     JSON_EXTRACT(Filter.JSON_EXTRACT),
     DATE(Filter.DATE);
 
+    public static final String UNKNOWN_OPERATOR = "Unknown operator";
+
     private String value;
 
     Operator(String value) {
@@ -30,7 +31,7 @@ public enum Operator {
         for (Operator op: Operator.values()) {
             if (op.value.equals(value)) return op;
         }
-        throw new IllegalArgumentException("Unknown operator");
+        throw new IllegalArgumentException(UNKNOWN_OPERATOR);
     }
 
     public static Operator extract(String filter) {
@@ -49,13 +50,11 @@ public enum Operator {
             return DATE_LESS;
         else if (filter.contains(Filter.JSON_EXTRACT))
             return JSON_EXTRACT;
-        String operator = Arrays.stream(filter.split(" "))
+        String operator = Arrays.stream(filter.split(Filter.SPACE))
                 .filter(StringUtils::isNotBlank)
                 .filter(str -> Arrays.stream(Operator.values()).anyMatch(op -> op.value.equals(str)))
                 .findFirst()
                 .orElse(StringUtils.EMPTY);
-        // [NOT , m.mr_problem, <=>, 1]
-        //
         return getOperator(operator);
     }
 }

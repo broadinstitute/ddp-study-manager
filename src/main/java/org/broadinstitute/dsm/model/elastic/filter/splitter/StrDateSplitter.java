@@ -1,7 +1,8 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.splitter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.Filter;
+import org.broadinstitute.dsm.model.elastic.Util;
 
 public class StrDateSplitter extends BaseSplitter {
 
@@ -14,7 +15,7 @@ public class StrDateSplitter extends BaseSplitter {
             splittedFilter[i] = dateFieldWithValue[i].split(Filter.DATE_FORMAT)[1]
                     .replace(Filter.OPEN_PARENTHESIS, StringUtils.EMPTY)
                     .replace(Filter.CLOSE_PARENTHESIS, StringUtils.EMPTY)
-                    .split(",")[0];
+                    .split(Util.COMMA_SEPARATOR)[0];
         }
         return splittedFilter;
     }

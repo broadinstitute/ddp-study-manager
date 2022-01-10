@@ -1,9 +1,10 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.model.elastic.filter.splitter.BaseSplitter;
+import org.broadinstitute.dsm.model.elastic.filter.splitter.SplitterFactory;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class JsonExtractSplitterTest {

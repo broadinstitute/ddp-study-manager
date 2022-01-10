@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.splitter;
 
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.elastic.Util;
@@ -14,12 +14,12 @@ public class DiamondEqualsSplitter extends BaseSplitter {
     }
 
     private String[] splitFieldWithAliasBySpace(String[] fieldWithAlias) {
-        return fieldWithAlias[0].split(" ");
+        return fieldWithAlias[0].split(Filter.SPACE);
     }
 
     @Override
     public String[] getValue() {
-        String value = "'" + super.getValue()[0] + "'";
+        String value = Filter.SINGLE_QUOTE + super.getValue()[0] + Filter.SINGLE_QUOTE;
         try {
             String not = splitFieldWithAliasBySpace(super.getFieldWithAlias())[0];
             return new String[] { not + value };

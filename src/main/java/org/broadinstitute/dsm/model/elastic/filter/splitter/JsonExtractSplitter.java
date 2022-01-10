@@ -1,8 +1,9 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.splitter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.elastic.Util;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 
@@ -26,8 +27,8 @@ public class JsonExtractSplitter extends BaseSplitter {
 
     @Override
     public String getInnerProperty() {
-        String[] separatedByDot = getFieldWithAlias()[1].split(ElasticSearchUtil.DOT_SEPARATOR);
-        return String.join(".", separatedByDot[0], Util.underscoresToCamelCase(separatedByDot[1]));
+        String[] separatedByDot = getFieldWithAlias()[1].split(ElasticSearchUtil.ESCAPE_CHARACTER_DOT_SEPARATOR);
+        return String.join(DBConstants.ALIAS_DELIMITER, separatedByDot[0], Util.underscoresToCamelCase(separatedByDot[1]));
     }
 
     @Override
@@ -37,15 +38,15 @@ public class JsonExtractSplitter extends BaseSplitter {
                 .replace(Filter.OPEN_PARENTHESIS, StringUtils.EMPTY)
                 .replace(Filter.CLOSE_PARENTHESIS, StringUtils.EMPTY)
                 .trim()
-                .split(",");
-        String[] splittedByDot = splittedByJsonExtractAndComma[0].split(ElasticSearchUtil.DOT_SEPARATOR);
+                .split(Util.COMMA_SEPARATOR);
+        String[] splittedByDot = splittedByJsonExtractAndComma[0].split(ElasticSearchUtil.ESCAPE_CHARACTER_DOT_SEPARATOR);
         String alias = splittedByDot[0];
         String removedSingleQuotes = splittedByJsonExtractAndComma[1]
-                .replace("'", StringUtils.EMPTY)
+                .replace(Filter.SINGLE_QUOTE, StringUtils.EMPTY)
                 .trim();
         String innerProperty = removedSingleQuotes
-                .substring(removedSingleQuotes.indexOf(".")+1);
-        return new String[] {alias, String.join(".", ESObjectConstants.DYNAMIC_FIELDS,
+                .substring(removedSingleQuotes.indexOf(DBConstants.ALIAS_DELIMITER)+1);
+        return new String[] {alias, String.join(DBConstants.ALIAS_DELIMITER, ESObjectConstants.DYNAMIC_FIELDS,
                 innerProperty)};
     }
 }

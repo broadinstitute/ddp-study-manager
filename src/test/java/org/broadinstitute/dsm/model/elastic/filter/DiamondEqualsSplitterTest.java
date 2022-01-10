@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
+import org.broadinstitute.dsm.model.elastic.filter.splitter.DiamondEqualsSplitter;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

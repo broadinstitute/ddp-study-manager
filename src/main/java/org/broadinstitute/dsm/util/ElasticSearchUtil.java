@@ -88,7 +88,7 @@ public class ElasticSearchUtil {
     public static final String AND = " AND (";
     public static final String ES = "ES";
     public static final String CLOSING_PARENTHESIS = ")";
-    public static final String DOT_SEPARATOR = "\\.";
+    public static final String ESCAPE_CHARACTER_DOT_SEPARATOR = "\\.";
     public static final String BY_LEGACY_ALTPIDS = " OR profile.legacyAltPid = ";
     public static final String BY_LEGACY_SHORTID = " AND profile.legacyShortId = ";
     public static final String END_OF_DAY = " 23:59:59";
@@ -1516,7 +1516,7 @@ public class ElasticSearchUtil {
     private static String getFieldTypeByFieldName(String name) {
         String anyStudy = getAnyStudy();
         String fields = getFieldsAsString(anyStudy);
-        String[] fieldsArray = name.split(DOT_SEPARATOR);
+        String[] fieldsArray = name.split(ESCAPE_CHARACTER_DOT_SEPARATOR);
         String outerField = fieldsArray[OUTER_FIELD_INDEX];
         Gson gson = new Gson();
         HashMap fieldsMap = gson.fromJson(fields, HashMap.class);

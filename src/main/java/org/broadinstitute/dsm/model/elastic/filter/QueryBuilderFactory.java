@@ -58,7 +58,7 @@ public class QueryBuilderFactory {
                 }
                 break;
             default:
-                throw new IllegalArgumentException("Unknown operator");
+                throw new IllegalArgumentException(Operator.UNKNOWN_OPERATOR);
         }
         return qb;
     }

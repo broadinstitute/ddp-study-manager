@@ -1,5 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
+import org.broadinstitute.dsm.model.elastic.filter.splitter.BaseSplitter;
+import org.broadinstitute.dsm.model.elastic.filter.splitter.SplitterFactory;
 import org.junit.Assert;
 import org.junit.Test;
 

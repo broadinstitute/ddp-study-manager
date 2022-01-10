@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
 import lombok.Getter;
+import org.broadinstitute.dsm.statics.DBConstants;
 
 @Getter
 public class QueryPayload {
@@ -16,6 +17,6 @@ public class QueryPayload {
     }
 
     public String getFieldName() {
-        return path + "." + property;
+        return path + DBConstants.ALIAS_DELIMITER + property;
     }
 }

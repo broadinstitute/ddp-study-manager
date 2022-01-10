@@ -1,10 +1,10 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
-import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
 
 public class FilterParser extends ValueParser {
 

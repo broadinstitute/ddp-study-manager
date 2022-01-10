@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.splitter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.elastic.Util;
@@ -27,7 +27,7 @@ public abstract class BaseSplitter {
     }
 
     protected String[] getFieldWithAlias() {
-        return splittedFilter[0].trim().split(ElasticSearchUtil.DOT_SEPARATOR);
+        return splittedFilter[0].trim().split(ElasticSearchUtil.ESCAPE_CHARACTER_DOT_SEPARATOR);
     }
 
     public void setFilter(String filter) {

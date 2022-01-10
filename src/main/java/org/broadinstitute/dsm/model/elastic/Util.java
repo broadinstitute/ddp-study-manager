@@ -35,7 +35,10 @@ public class Util {
     );
     public static final int FIRST_ELEMENT_INDEX = 0;
     public static final String UNDERSCORE_SEPARATOR = "_";
+    public static final String COMMA_SEPARATOR = ",";
     public static final String DOC = "_doc";
+    public static final String ESCAPE_CHARACTER = "\\";
+    public static final String FORWARD_SLASH_SEPARATOR = "/";
     private static final Pattern CAMEL_CASE_REGEX = Pattern.compile("(([a-z])+([A-z])+(\\.)*)*");
     private static final Pattern UPPER_CASE_REGEX = Pattern.compile("(?=\\p{Upper})");
     public static final Gson GSON = new Gson();

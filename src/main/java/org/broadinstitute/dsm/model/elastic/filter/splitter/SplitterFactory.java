@@ -1,7 +1,8 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.splitter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.Filter;
+import org.broadinstitute.dsm.model.elastic.filter.Operator;
 
 public class SplitterFactory {
 
@@ -51,7 +52,7 @@ public class SplitterFactory {
                 splitter = new JsonExtractSplitter(decoratedSplitter);
                 break;
             default:
-                throw new IllegalArgumentException("Unknown operator");
+                throw new IllegalArgumentException(Operator.UNKNOWN_OPERATOR);
         }
         return splitter;
     }

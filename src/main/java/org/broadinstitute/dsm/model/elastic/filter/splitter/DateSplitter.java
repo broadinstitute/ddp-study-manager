@@ -1,6 +1,7 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.splitter;
 
 import org.broadinstitute.dsm.model.Filter;
+import org.broadinstitute.dsm.model.elastic.Util;
 
 public class DateSplitter extends EqualsSplitter {
 
@@ -10,8 +11,9 @@ public class DateSplitter extends EqualsSplitter {
         String[] equalSeparated = super.split();
         String leftSide = equalSeparated[0].trim();
         String rightSide = equalSeparated[1].trim();
-        String fieldWithAlias = leftSide.split("\\" + Filter.OPEN_PARENTHESIS)[2].split("/")[0];
-        String value = rightSide.split("\\" + Filter.OPEN_PARENTHESIS)[2].split("\\" + Filter.CLOSE_PARENTHESIS)[0];
+        String fieldWithAlias =
+                leftSide.split(Util.ESCAPE_CHARACTER + Filter.OPEN_PARENTHESIS)[2].split(Util.FORWARD_SLASH_SEPARATOR)[0];
+        String value = rightSide.split(Util.ESCAPE_CHARACTER + Filter.OPEN_PARENTHESIS)[2].split(Util.ESCAPE_CHARACTER + Filter.CLOSE_PARENTHESIS)[0];
         return new String[] {fieldWithAlias, value};
     }
 
