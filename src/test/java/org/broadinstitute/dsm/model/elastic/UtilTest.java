@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.Participant;
 import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.FollowUp;
 import org.junit.Assert;
 import org.junit.Test;
@@ -57,14 +58,14 @@ public class UtilTest {
         class FieldSettingsDaoMock extends FieldSettingsDao {
 
             @Override
-            public Optional<String> getDisplayTypeByInstanceNameAndColumnName(String instanceName, String columnName) {
-                String displayType = StringUtils.EMPTY;
+            public Optional<FieldSettingsDto> getFieldSettingsByInstanceNameAndColumnName(String instanceName, String columnName) {
+                FieldSettingsDto.Builder builder = new FieldSettingsDto.Builder(0);
                 if ("BOOLEAN_VAL".equals(columnName)) {
-                    displayType = "CHECKBOX";
+                    builder.withDisplayType("CHECKBOX");
                 } else if ("LONG_VAL".equals(columnName)) {
-                    displayType = "NUMBER";
+                    builder.withDisplayType("NUMBER");
                 }
-                return Optional.of(displayType);
+                return Optional.of(builder.build());
             }
         }
 

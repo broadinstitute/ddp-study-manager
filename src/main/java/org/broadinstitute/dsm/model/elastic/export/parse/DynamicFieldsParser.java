@@ -3,9 +3,9 @@ package org.broadinstitute.dsm.model.elastic.export.parse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
+import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.util.ObjectMapperSingleton;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,7 +45,7 @@ public class DynamicFieldsParser extends BaseParser {
     public Object parse(String element) {
 
         if (StringUtils.isBlank(displayType)) {
-            displayType = fieldSettingsDao.getDisplayTypeByInstanceNameAndColumnName(realm, super.fieldName).orElse(StringUtils.EMPTY);
+            getProperDisplayTypeWithPossibleValues();
         }
 
         Object parsedValue;
@@ -57,7 +57,10 @@ public class DynamicFieldsParser extends BaseParser {
             Optional<String> maybeType = getTypeFromPossibleValuesJson();
             this.displayType = maybeType.orElse(StringUtils.EMPTY);
             parsedValue = maybeType
-                    .map(this::parse)
+                    .map(displayType -> {
+                        if (parser instanceof TypeParser) return parse(displayType);
+                        else return parse(element);
+                    })
                     .orElse(forString(element));
         } else if (NUMBER.equals(displayType)) {
             parsedValue = forNumeric(element);
@@ -68,6 +71,22 @@ public class DynamicFieldsParser extends BaseParser {
         displayType = null;
 
         return parsedValue;
+    }
+
+    private void getProperDisplayTypeWithPossibleValues() {
+        Optional<FieldSettingsDto> fieldSettingsByInstanceNameAndColumnName =
+                fieldSettingsDao.getFieldSettingsByInstanceNameAndColumnName(realm, super.fieldName);
+        if (fieldSettingsByInstanceNameAndColumnName.isPresent()) {
+            FieldSettingsDto fieldSettings = fieldSettingsByInstanceNameAndColumnName.get();
+            displayType = StringUtils.isNotBlank(fieldSettings.getDisplayType())
+                    ? fieldSettings.getDisplayType()
+                    : StringUtils.EMPTY;
+            possibleValuesJson = StringUtils.isNotBlank(fieldSettings.getPossibleValues())
+                    ? fieldSettings.getPossibleValues()
+                    : StringUtils.EMPTY;
+        } else {
+            displayType = StringUtils.EMPTY;
+        }
     }
 
     @Override
