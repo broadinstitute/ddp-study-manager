@@ -137,25 +137,8 @@ public class ParticipantWrapper {
         if (DDPInstanceDao.getRole(ddpInstance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) {
             kitRequests = getKitRequestsFromEsData();
         }
-//        abstractionActivities =
-//                AbstractionActivity.getAllAbstractionActivityByParticipantIds(ddpInstance.getName(), participantIds);
-//        abstractionSummary = AbstractionFinal.getAbstractionFinalByParticipantIds(ddpInstance.getName(), participantIds);
         proxiesByParticipantIds = getProxiesWithParticipantIdsFromElasticList(ddpInstance.getUsersIndexES(), esData.getEsParticipants());
         participantData = getParticipantDataFromEsData();
-//        List<String> participantIds = getParticipantIdsFromElasticList(esData.getEsParticipants());
-//        participants = Participant.getParticipantsByIds(ddpInstance.getName(), participantIds);
-//        if (ddpInstance.isHasRole()) {
-//            medicalRecords = MedicalRecord.getMedicalRecordsByParticipantIds(ddpInstance.getName(), participantIds);
-//            oncHistoryDetails = OncHistoryDetail.getOncHistoryDetailsByParticipantIds(ddpInstance.getName(), participantIds);
-//        }
-//        if (DDPInstanceDao.getRole(ddpInstance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) {
-//            kitRequests = KitRequestShipping.getKitRequestsByParticipantIds(ddpInstance, participantIds);
-//        }
-//        abstractionActivities =
-//                AbstractionActivity.getAllAbstractionActivityByParticipantIds(ddpInstance.getName(), participantIds);
-//        abstractionSummary = AbstractionFinal.getAbstractionFinalByParticipantIds(ddpInstance.getName(), participantIds);
-//        proxiesByParticipantIds = getProxiesWithParticipantIdsFromElasticList(ddpInstance.getUsersIndexES(), esData.getEsParticipants());
-//        participantData = new ParticipantDataDao().getParticipantDataByParticipantIds(participantIds);
     }
 
     private Map<String, List<ParticipantDataDto>> getParticipantDataFromEsData() {
