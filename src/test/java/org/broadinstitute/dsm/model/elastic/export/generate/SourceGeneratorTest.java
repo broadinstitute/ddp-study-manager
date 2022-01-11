@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.export.generate;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -60,6 +61,24 @@ public class SourceGeneratorTest {
         maybeDdpInstance.ifPresentOrElse(m -> Assert.assertEquals("TEST", m.get(Util.underscoresToCamelCase("DDP_INSTANCE"))), Assert::fail);
     }
 
+    @Test
+    public void generateFromMultipleNameValues() {
+        final String externalOrderNumber = "externalOrderNumber";
+        final String bspCollaboratorSampleId = "bspCollaboratorSampleId";
+        List<NameValue> nameValues = Arrays.asList(new NameValue(externalOrderNumber, 12), new NameValue(bspCollaboratorSampleId, 55));
+        TestGeneratorPayload testGeneratorPayload = new TestGeneratorPayload(nameValues, 1);
+        SourceGenerator sourceGenerator = new SourceGenerator(new ValueParser(), testGeneratorPayload);
+        Map<String, Object> generatedMap = sourceGenerator.generate();
+        // dsm.kitRequestShipping.[{}]
+        List<Map<String, Object>> kitRequestShippings = (List<Map<String, Object>>) ((Map) generatedMap.get("dsm")).get("kitRequestShipping");
+        for (Map<String, Object> kitRequestShipping : kitRequestShippings) {
+            Object externalOrderNumberVal = kitRequestShipping.get(externalOrderNumber);
+            Object collaboratorSampleIdVal = kitRequestShipping.get(bspCollaboratorSampleId);
+            Assert.assertEquals("12", externalOrderNumberVal);
+            Assert.assertEquals("55", collaboratorSampleIdVal);
+        }
+    }
+
     private static class TestSourceGenerator extends CollectionSourceGenerator {
 
         public TestSourceGenerator(Parser parser, GeneratorPayload generatorPayload) {
@@ -72,5 +91,19 @@ public class SourceGeneratorTest {
         }
     }
 
+    private class TestGeneratorPayload extends GeneratorPayload {
+
+        List<NameValue> nameValue;
+
+        public TestGeneratorPayload(List<NameValue> nameValues, int id) {
+            this.nameValue = nameValues;
+            this.recordId = id;
+        }
+
+
+        public List<NameValue> getNameValue() {
+            return nameValue;
+        }
+    }
 }
 
