@@ -1,6 +1,8 @@
 package org.broadinstitute.dsm.model.elastic.search;
 
 import java.util.Collections;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
@@ -17,6 +19,7 @@ import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
 
 @Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ElasticSearchParticipantDto {
 
     private ESAddress address;

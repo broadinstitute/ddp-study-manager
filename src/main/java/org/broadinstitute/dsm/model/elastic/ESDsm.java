@@ -43,7 +43,7 @@ public class ESDsm {
     @SerializedName(ESObjectConstants.TISSUE_RECORDS)
     List<Tissue> tissue;
 
-    @SerializedName(ESObjectConstants.MEDICAL_RECORDS)
+    @SerializedName(ESObjectConstants.MEDICAL_RECORD)
     List<MedicalRecord> medicalRecord;
 
     @SerializedName(ESObjectConstants.ONC_HISTORY_DETAIL_RECORDS)
