@@ -1,9 +1,10 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.splitter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.broadinstitute.dsm.model.elastic.filter.AndOrFilterSeparator;
 import org.junit.Assert;
 import org.junit.Test;
 

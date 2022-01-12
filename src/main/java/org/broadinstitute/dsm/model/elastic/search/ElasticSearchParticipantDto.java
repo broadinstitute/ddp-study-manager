@@ -1,6 +1,9 @@
 package org.broadinstitute.dsm.model.elastic.search;
 
 import java.util.Collections;
+import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
