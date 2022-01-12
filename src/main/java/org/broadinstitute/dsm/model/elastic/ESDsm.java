@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.model.elastic;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.google.gson.annotations.SerializedName;
@@ -57,6 +58,8 @@ public class ESDsm {
     List<KitRequestShipping> kitRequestShipping;
 
     OncHistory oncHistory;
+
+    List<Map<String, Object>> medicalRecords;
 
     public List<Tissue> getTissue() {
         if (tissue == null) tissue = Collections.emptyList();
