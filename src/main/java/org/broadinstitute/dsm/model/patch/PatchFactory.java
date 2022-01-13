@@ -2,10 +2,13 @@ package org.broadinstitute.dsm.model.patch;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.NameValue;
+import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.ExportFacade;
 import org.broadinstitute.dsm.model.elastic.export.ExportFacadePayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.broadinstitute.dsm.util.NotificationUtil;
+
+import java.util.Objects;
 
 public class PatchFactory {
 
@@ -31,14 +34,13 @@ public class PatchFactory {
         if (patcher instanceof NullPatch) {
             throw new RuntimeException("Id and parentId was null");
         }
-        if (isElasticSearchExportable(patch)) {
-            NameValue nameValue = patch.getNameValue();
-            GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, Integer.parseInt(patch.getId()), patch.getParent(), patch.getParentId());
-            ExportFacadePayload exportFacadePayload =
-                    new ExportFacadePayload(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId(), generatorPayload, patch.getRealm());
-            ExportFacade exportFacade = new ExportFacade(exportFacadePayload);
-        }
+        patcher.setElasticSearchExportable(isElasticSearchExportable(patch));
         return patcher;
+    }
+
+    private static boolean isElasticSearchExportable(Patch patch) {
+        if (Objects.isNull(patch.getTableAlias())) return false;
+        return Util.TABLE_ALIAS_MAPPINGS.containsKey(patch.getTableAlias());
     }
 
     private static boolean isExistingRecord(Patch patch) {

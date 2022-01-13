@@ -50,8 +50,7 @@ public abstract class BasePatch {
     protected ESProfile profile;
     protected DDPInstance ddpInstance;
     protected DBElement dbElement;
-    private ExportFacade exportFacade;
-
+    private boolean isElasticSearchExportable;
 
     {
         resultMap = new HashMap<>();
@@ -66,13 +65,16 @@ public abstract class BasePatch {
         prepareCommonData();
     }
 
-    public void setExportFacade(ExportFacade exportFacade) {
-        this.exportFacade = exportFacade;
+    public void setElasticSearchExportable(boolean elasticSearchExportable) {
+        isElasticSearchExportable = elasticSearchExportable;
     }
 
     private void exportToES(NameValue nameValue) {
-        if (Objects.isNull(exportFacade)) return;
-
+        if (!isElasticSearchExportable) return;
+        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, Integer.parseInt(patch.getId()), patch.getParent(), patch.getParentId());
+        ExportFacadePayload exportFacadePayload =
+                new ExportFacadePayload(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId(), generatorPayload, patch.getRealm());
+        ExportFacade exportFacade = new ExportFacade(exportFacadePayload);
         exportFacade.export();
     }
 
@@ -86,7 +88,7 @@ public abstract class BasePatch {
 
     protected void prepareCommonData() {
         ddpInstance = DDPInstance.getDDPInstance(patch.getRealm());
-        if (Objects.nonNull(exportFacade)){
+        if (isElasticSearchExportable){
             profile = ElasticSearchUtil.getParticipantProfileByGuidOrAltPid(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId())
                 .orElse(null);
         }
@@ -119,7 +121,7 @@ public abstract class BasePatch {
     }
 
     protected void exportToESWithId(String id, NameValue nameValue) {
-        if (Objects.isNull(exportFacade)) return;
+        if (!isElasticSearchExportable) return;
         patch.setId(Objects.requireNonNull(id));
         exportToES(Objects.requireNonNull(nameValue));
     }
