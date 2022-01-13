@@ -96,6 +96,11 @@ public class KitUploadRoute extends RequestHandler {
                 shippingCarrier.set(queryParams.get("carrier").value());
             }
 
+            AtomicBoolean skipAddressValidation = new AtomicBoolean(false);
+            if (queryParams.value("skipAddressValidation") != null) {
+                skipAddressValidation.set(queryParams.get("skipAddressValidation").booleanValue());
+            }
+
             AtomicBoolean uploadAnyway = new AtomicBoolean(false);
             if (queryParams.value("uploadAnyway") != null) {
                 uploadAnyway.set(queryParams.get("uploadAnyway").booleanValue());
@@ -151,7 +156,7 @@ public class KitUploadRoute extends RequestHandler {
                 logger.info("Setup EasyPost...");
                 EasyPostUtil easyPostUtil = new EasyPostUtil(ddpInstance.getName());
 
-                Map<String, KitRequest> invalidAddressList = checkAddress(kitUploadObjects, kitRequestSettings.getPhone());
+                Map<String, KitRequest> invalidAddressList = checkAddress(kitUploadObjects, kitRequestSettings.getPhone(), skipAddressValidation.get(), easyPostUtil);
                 List<KitRequest> duplicateKitList = new ArrayList<>();
                 List<KitRequest> specialKitList = new ArrayList<>();
                 ArrayList<KitRequest> orderKits = new ArrayList<>();
@@ -546,7 +551,7 @@ public class KitUploadRoute extends RequestHandler {
         return message;
     }
 
-    public Map<String, KitRequest> checkAddress(List<KitRequest> kitUploadObjects, String phone) {
+    public Map<String, KitRequest> checkAddress(List<KitRequest> kitUploadObjects, String phone, boolean skipAddressValidation, EasyPostUtil easyPostUtil) {
         Map<String, KitRequest> noValidAddress = new HashMap<>();
         for (KitRequest o : kitUploadObjects) {
             KitUploadObject object = (KitUploadObject) o;
@@ -558,18 +563,30 @@ public class KitUploadRoute extends RequestHandler {
                     name += object.getFirstName() + " ";
                 }
                 name += object.getLastName();
-                DeliveryAddress deliveryAddress = new DeliveryAddress(object.getStreet1(), object.getStreet2(),
-                        object.getCity(), object.getState(), object.getPostalCode(), object.getCountry(),
-                        name, phone);
-                deliveryAddress.validate();
 
-                if (deliveryAddress.isValid()) {
-                    //store the address back
-                    object.setEasyPostAddressId(deliveryAddress.getId());
+                if (skipAddressValidation) {
+                    try {
+                        Address address = easyPostUtil.createBroadAddress(name, object.getStreet1(), object.getStreet2(),
+                                object.getCity(), object.getPostalCode(), object.getState(), object.getCountry(), phone);
+                        object.setEasyPostAddressId(address.getId());
+                    }
+                    catch (EasyPostException e) {
+                        logger.error("Easypost couldn't create an address for " + object.getShortId());
+                    }
                 }
                 else {
-                    logger.info("Address is not valid " + object.getShortId());
-                    noValidAddress.put(object.getShortId(), object);
+                    DeliveryAddress deliveryAddress = new DeliveryAddress(object.getStreet1(), object.getStreet2(),
+                            object.getCity(), object.getState(), object.getPostalCode(), object.getCountry(),
+                            name, phone);
+                    deliveryAddress.validate();
+                    if (deliveryAddress.isValid()) {
+                        //store the address back
+                        object.setEasyPostAddressId(deliveryAddress.getId());
+                    }
+                    else {
+                        logger.info("Address is not valid " + object.getShortId());
+                        noValidAddress.put(object.getShortId(), object);
+                    }
                 }
             }
             else {
