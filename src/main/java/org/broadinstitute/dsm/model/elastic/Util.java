@@ -17,6 +17,7 @@ import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.elastic.export.parse.DynamicFieldsParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ObjectMapperSingleton;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.broadinstitute.dsm.util.PatchUtil;
@@ -137,11 +138,13 @@ public class Util {
                     String field = object.getKey();
                     DYNAMIC_FIELDS_PARSER.setFieldName(field);
                     DYNAMIC_FIELDS_PARSER.setRealm(realm);
-                    Object value = DYNAMIC_FIELDS_PARSER.parse(String.valueOf(object.getValue()));
+                    String elementValue = String.valueOf(object.getValue());
+                    if (StringUtils.isBlank(elementValue)) continue;
+                    Object parsedValue = DYNAMIC_FIELDS_PARSER.parse(elementValue);
                     String camelCaseField = underscoresToCamelCase(field);
-                    transformedMap.put(camelCaseField, value);
+                    transformedMap.put(camelCaseField, parsedValue);
                 }
-                finalResult = Map.of("dynamicFields", transformedMap);
+                finalResult = Map.of(ESObjectConstants.DYNAMIC_FIELDS, transformedMap);
                 break;
             default:
                 finalResult = new HashMap<>(Map.of(underscoresToCamelCase(fieldName), fieldValue));
