@@ -139,7 +139,6 @@ public class Util {
                     DYNAMIC_FIELDS_PARSER.setFieldName(field);
                     DYNAMIC_FIELDS_PARSER.setRealm(realm);
                     String elementValue = String.valueOf(object.getValue());
-                    if (StringUtils.isBlank(elementValue)) continue;
                     Object parsedValue = DYNAMIC_FIELDS_PARSER.parse(elementValue);
                     String camelCaseField = underscoresToCamelCase(field);
                     transformedMap.put(camelCaseField, parsedValue);
