@@ -1,6 +1,10 @@
 package org.broadinstitute.dsm.model.patch;
 
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.model.NameValue;
+import org.broadinstitute.dsm.model.elastic.export.ExportFacade;
+import org.broadinstitute.dsm.model.elastic.export.ExportFacadePayload;
+import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.broadinstitute.dsm.util.NotificationUtil;
 
 public class PatchFactory {
@@ -26,6 +30,13 @@ public class PatchFactory {
         }
         if (patcher instanceof NullPatch) {
             throw new RuntimeException("Id and parentId was null");
+        }
+        if (isElasticSearchExportable(patch)) {
+            NameValue nameValue = patch.getNameValue();
+            GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, Integer.parseInt(patch.getId()), patch.getParent(), patch.getParentId());
+            ExportFacadePayload exportFacadePayload =
+                    new ExportFacadePayload(ddpInstance.getParticipantIndexES(), patch.getDdpParticipantId(), generatorPayload, patch.getRealm());
+            ExportFacade exportFacade = new ExportFacade(exportFacadePayload);
         }
         return patcher;
     }
