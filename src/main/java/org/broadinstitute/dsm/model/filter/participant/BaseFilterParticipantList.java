@@ -27,6 +27,7 @@ import org.broadinstitute.dsm.model.filter.Filterable;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperPayload;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperResult;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ObjectMapperSingleton;
 import org.broadinstitute.dsm.util.ParticipantUtil;
@@ -89,9 +90,12 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
                     if (StringUtils.isNotBlank(tmpName)) {
                         if (PARTICIPANT_DATA.equals(filter.getParticipantColumn().getTableAlias())
                                 || "data".equals(filter.getParticipantColumn().getTableAlias())) {
-                            filter.setFilter1(new NameValue(Util.underscoresToCamelCase(tmpName), filter.getFilter1().getValue()));
+                            filter.setFilter1(new NameValue("additionalValuesJson", filter.getFilter1().getValue()));
+                            filter.setFilter2(new NameValue(Util.underscoresToCamelCase(tmpName), null));
                             filter.setParentName(DBConstants.DDP_PARTICIPANT_DATA_ALIAS);
-                            queryConditions.put(DBConstants.DDP_PARTICIPANT_DATA_ALIAS, Filter.getQueryStringForFiltering(filter, null));
+                            filter.setType("ADDITIONALVALUE");
+                            dbElement = new DBElement("ddp_participant_data", "d", null, "additional_values_json");
+                            queryConditions.put(DBConstants.DDP_PARTICIPANT_DATA_ALIAS, Filter.getQueryStringForFiltering(filter, dbElement));
                         } else {
                             dbElement = columnNameMap.get(tableAlias + "." + tmpName);
                             ViewFilter.addQueryCondition(queryConditions, dbElement, filter);
