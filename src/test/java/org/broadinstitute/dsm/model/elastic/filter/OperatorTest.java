@@ -41,4 +41,11 @@ public class OperatorTest {
         assertEquals(Operator.LIKE, likeOperator);
         assertEquals(Operator.DIAMOND_EQUALS, diamondsOperator);
     }
+
+    @Test
+    public void extractJsonExtractValue() {
+        String filter = " ( d.additional_values_json , '$.status' )   LIKE  '%EXITED_BEFORE_ENROLLMENT%'";
+        Operator likeOperator = Operator.extract(filter);
+        assertEquals(Operator.LIKE, likeOperator);
+    }
 }

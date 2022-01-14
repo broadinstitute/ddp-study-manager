@@ -44,10 +44,10 @@ public class SplitterFactory {
                 break;
             case JSON_EXTRACT:
                 Operator decoratedOperator = Operator.extract(filterValue.replace(Filter.JSON_EXTRACT, StringUtils.EMPTY));
-                if (Operator.IS_NOT_NULL.compareTo(decoratedOperator) != 0) {
-                    splitter = new JsonExtractSplitter();
-                    break;
-                }
+//                if (Operator.IS_NOT_NULL.compareTo(decoratedOperator) != 0) {
+//                    splitter = new JsonExtractSplitter();
+//                    break;
+//                }
                 BaseSplitter decoratedSplitter = createSplitter(decoratedOperator, filterValue);
                 splitter = new JsonExtractSplitter(decoratedSplitter);
                 break;

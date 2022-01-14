@@ -35,27 +35,20 @@ public enum Operator {
     }
 
     public static Operator extract(String filter) {
-        filter = filter.trim();
-        if (filter.endsWith(Filter.IS_NOT_NULL_TRIMMED) && !filter.startsWith(Filter.JSON_EXTRACT))
-            return IS_NOT_NULL;
-        else if (filter.startsWith(Filter.OPEN_PARENTHESIS) && filter.endsWith(Filter.CLOSE_PARENTHESIS))
+        String[] splittedFilter = filter.split(Filter.SPACE);
+        if (isMultipleOptions(splittedFilter))
             return MULTIPLE_OPTIONS;
-        else if (filter.startsWith(Filter.DATE_FORMAT))
-            return STR_DATE;
-        else if (filter.startsWith(Filter.DATE))
-            return DATE;
-        else if (filter.contains(Filter.DATE_GREATER))
-            return DATE_GREATER;
-        else if (filter.contains(Filter.DATE_LESS))
-            return DATE_LESS;
-        else if (filter.contains(Filter.JSON_EXTRACT))
-            return JSON_EXTRACT;
-        String operator = Arrays.stream(filter.split(Filter.SPACE))
+        String operator = Arrays.stream(splittedFilter)
                 .filter(StringUtils::isNotBlank)
-                .filter(str -> Arrays.asList(Operator.values()).contains(str))
+                .filter(str -> !Filter.OPEN_PARENTHESIS.equals(str) && !Filter.CLOSE_PARENTHESIS.equals(str))
                 .filter(str -> Arrays.stream(Operator.values()).anyMatch(op -> op.value.equals(str)))
                 .findFirst()
                 .orElse(StringUtils.EMPTY);
         return getOperator(operator);
+    }
+
+    private static boolean isMultipleOptions(String[] splittedFilter) {
+        return splittedFilter.length > 0 && Filter.OPEN_PARENTHESIS.equals(splittedFilter[0]) &&
+                Filter.CLOSE_PARENTHESIS.equals(splittedFilter[splittedFilter.length - 1]);
     }
 }
