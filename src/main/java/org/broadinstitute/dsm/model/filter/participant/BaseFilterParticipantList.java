@@ -18,6 +18,8 @@ import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.Filter;
+import org.broadinstitute.dsm.model.NameValue;
+import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
 import org.broadinstitute.dsm.model.filter.BaseFilter;
@@ -70,9 +72,12 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
             int numberOfParticipantDataFilters = 0;
             for (Filter filter : filters) {
                 if (filter != null) {
-                    String tmp = null;
+                    String tableAlias = null;
                     if (filter.getParticipantColumn() != null) {
-                        tmp = StringUtils.isNotBlank(filter.getParentName()) ? filter.getParentName() : filter.getParticipantColumn().getTableAlias();
+//                        tableAlias = StringUtils.isNotBlank(filter.getParentName()) ? filter.getParentName() : filter.getParticipantColumn().getTableAlias();
+                        tableAlias = StringUtils.isNotBlank(filter.getParticipantColumn().getTableAlias())
+                                ? filter.getParticipantColumn().getTableAlias()
+                                : filter.getParentName();
                     }
                     String tmpName = null;
                     DBElement dbElement = null;
@@ -81,22 +86,33 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
                     } else if (filter.getFilter2() != null && StringUtils.isNotBlank(filter.getFilter2().getName())) {
                         tmpName = filter.getFilter2().getName();
                     }
-                    if (filter.getParticipantColumn() != null && (PARTICIPANT_DATA.equals(filter.getParticipantColumn().tableAlias) || BaseFilter.PARENT_PARTICIPANT_LIST.equals(filter.getParentName()))) {
-
-
-                        if (allParticipantData == null) {
-                            allParticipantData = participantDataDao
-                                    .getParticipantDataByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
+                    if (StringUtils.isNotBlank(tmpName)) {
+                        if (PARTICIPANT_DATA.equals(filter.getParticipantColumn().getTableAlias())
+                                || "data".equals(filter.getParticipantColumn().getTableAlias())) {
+                            filter.setFilter1(new NameValue(Util.underscoresToCamelCase(tmpName), filter.getFilter1().getValue()));
+                            filter.setParentName(DBConstants.DDP_PARTICIPANT_DATA_ALIAS);
+                            queryConditions.put(DBConstants.DDP_PARTICIPANT_DATA_ALIAS, Filter.getQueryStringForFiltering(filter, null));
+                        } else {
+                            dbElement = columnNameMap.get(tableAlias + "." + tmpName);
+                            ViewFilter.addQueryCondition(queryConditions, dbElement, filter);
                         }
-                        numberOfParticipantDataFilters++;
-                        addParticipantDataIdsForFilters(filter, tmpName, allParticipantData, allIdsForParticipantDataFiltering);
                     }
-                    else {
-                        if (StringUtils.isNotBlank(tmpName)) {
-                            dbElement = columnNameMap.get(tmp + "." + tmpName);
-                        }
-                        ViewFilter.addQueryCondition(queryConditions, dbElement, filter);
-                    }
+//                    if (filter.getParticipantColumn() != null && (PARTICIPANT_DATA.equals(filter.getParticipantColumn().tableAlias))) {
+//
+//
+//                        if (allParticipantData == null) {
+//                            allParticipantData = participantDataDao
+//                                    .getParticipantDataByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
+//                        }
+//                        numberOfParticipantDataFilters++;
+//                        addParticipantDataIdsForFilters(filter, tmpName, allParticipantData, allIdsForParticipantDataFiltering);
+//                    }
+//                    else {
+//                        if (StringUtils.isNotBlank(tmpName)) {
+//                            dbElement = columnNameMap.get(tableAlias + "." + tmpName);
+//                        }
+//                        ViewFilter.addQueryCondition(queryConditions, dbElement, filter);
+//                    }
                 }
             }
             if (numberOfParticipantDataFilters != 0) {
