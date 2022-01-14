@@ -38,7 +38,7 @@ public enum Operator {
         filter = filter.trim();
         if (filter.endsWith(Filter.IS_NOT_NULL_TRIMMED) && !filter.startsWith(Filter.JSON_EXTRACT))
             return IS_NOT_NULL;
-        else if (filter.startsWith(Filter.OPEN_PARENTHESIS))
+        else if (filter.startsWith(Filter.OPEN_PARENTHESIS) && filter.endsWith(Filter.CLOSE_PARENTHESIS))
             return MULTIPLE_OPTIONS;
         else if (filter.startsWith(Filter.DATE_FORMAT))
             return STR_DATE;
@@ -52,6 +52,7 @@ public enum Operator {
             return JSON_EXTRACT;
         String operator = Arrays.stream(filter.split(Filter.SPACE))
                 .filter(StringUtils::isNotBlank)
+                .filter(str -> Arrays.asList(Operator.values()).contains(str))
                 .filter(str -> Arrays.stream(Operator.values()).anyMatch(op -> op.value.equals(str)))
                 .findFirst()
                 .orElse(StringUtils.EMPTY);
