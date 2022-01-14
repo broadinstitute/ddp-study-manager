@@ -210,7 +210,7 @@ public class DBConstants {
     public static final String ACCESSION_NUMBER = "accession_number";
     public static final String FACILITY = "facility";
     public static final String REQUEST = "request";
-    public static final String ADDITIONAL_VALUES = "additional_values_json";
+    public static final String ADDITIONAL_VALUES_JSON = "additional_values_json";
     public static final String COLUMN_NAME = "column_name";
     public static final String COLUMN_DISPLAY = "column_display";
     public static final String TISSUE_RECEIVED = "tissue_received";

@@ -8,12 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.annotations.SerializedName;
-import lombok.Data;
-import lombok.Getter;
 import org.broadinstitute.dsm.db.structure.ColumnName;
-import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ObjectMapperSingleton;
 
@@ -42,7 +37,7 @@ public class ParticipantRecordDto {
     @ColumnName (DBConstants.ABSTRACTION_READY)
     private Integer abstractionReady;
 
-    @ColumnName (DBConstants.ADDITIONAL_VALUES)
+    @ColumnName (DBConstants.ADDITIONAL_VALUES_JSON)
     @JsonProperty("dynamicFields")
     private String additionalValuesJson;
 
