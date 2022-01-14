@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
@@ -20,6 +21,7 @@ import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.elastic.Util;
+import org.broadinstitute.dsm.model.elastic.filter.AndOrFilterSeparator;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
 import org.broadinstitute.dsm.model.filter.BaseFilter;
@@ -95,7 +97,20 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
                             filter.setParentName(DBConstants.DDP_PARTICIPANT_DATA_ALIAS);
                             filter.setType("ADDITIONALVALUE");
                             dbElement = new DBElement("ddp_participant_data", "d", null, "additional_values_json");
-                            queryConditions.put(DBConstants.DDP_PARTICIPANT_DATA_ALIAS, Filter.getQueryStringForFiltering(filter, dbElement));
+                            if (Objects.nonNull(filter.getSelectedOptions())) {
+                                for (String selectedOption : filter.getSelectedOptions()) {
+                                    filter.getFilter1().setValue(selectedOption);
+                                    filter.getFilter2().setName(Util.underscoresToCamelCase(tmpName));
+                                    String filterQuery = "OR" +Filter.getQueryStringForFiltering(filter,
+                                            dbElement).trim().substring(AndOrFilterSeparator.MINIMUM_STEP_FROM_OPERATOR);
+                                    queryConditions.merge(DBConstants.DDP_PARTICIPANT_DATA_ALIAS, filterQuery,
+                                            (prev, curr) -> String.join(Filter.SPACE, prev, curr));
+                                }
+                            } else {
+                                queryConditions.put(DBConstants.DDP_PARTICIPANT_DATA_ALIAS, Filter.getQueryStringForFiltering(filter, dbElement));
+                                queryConditions.merge(DBConstants.DDP_PARTICIPANT_DATA_ALIAS, Filter.getQueryStringForFiltering(filter,
+                                        dbElement), (prev, curr) -> String.join(Filter.SPACE, prev, curr));
+                            }
                         } else {
                             dbElement = columnNameMap.get(tableAlias + "." + tmpName);
                             ViewFilter.addQueryCondition(queryConditions, dbElement, filter);

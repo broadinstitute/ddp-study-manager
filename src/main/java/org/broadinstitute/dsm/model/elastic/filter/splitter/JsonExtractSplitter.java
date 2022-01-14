@@ -11,6 +11,7 @@ public class JsonExtractSplitter extends BaseSplitter {
 
     private BaseSplitter decoratedSplitter;
 
+
     public JsonExtractSplitter(BaseSplitter splitter) {
         this.decoratedSplitter = splitter;
     }

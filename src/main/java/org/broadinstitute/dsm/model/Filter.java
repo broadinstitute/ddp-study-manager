@@ -6,6 +6,7 @@ import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Objects;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -199,30 +200,7 @@ public class Filter {
             }
         }
         else if (ADDITIONAL_VALUES.equals(filter.getType())) {
-            String jsonExtract = "JSON_EXTRACT ( ";
-            query = AND +
-                    jsonExtract + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " , '$." + filter.getFilter2().getName() + "' ) ";
-            if (filter.isEmpty()) {
-                finalQuery = query + IS_NULL + " ";
-            }
-            else if (filter.isNotEmpty()) {
-                finalQuery = query + IS_NOT_NULL + " ";
-            }
-            else {
-                String notNullQuery = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + IS_NOT_NULL;
-                if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue()))) {
-                    query = AND + jsonExtract + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " , '$." + filter.getFilter2().getName() + "' ) ";
-                    if (filter.isExactMatch()) {
-                        query += EQUALS + "'#'";
-                        query = query.replaceAll("#", String.valueOf(filter.getFilter1().getValue()));
-                    }
-                    else {
-                        query += " " + LIKE + " '%#%'";
-                        query = query.replaceAll("#", String.valueOf(filter.getFilter1().getValue()));
-                    }
-                }
-                finalQuery = notNullQuery + query;
-            }
+            finalQuery = buildJsonExtract(filter, dbElement);
         }
         else if (JSON_ARRAY.equals(filter.getType())) {
             query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() ;
@@ -275,6 +253,41 @@ public class Filter {
         }
 
         //        logger.info(finalQuery);
+        return finalQuery;
+    }
+
+    private static String buildJsonExtract(Filter filter, DBElement dbElement) {
+        String query;
+        String finalQuery;
+        String jsonExtract = "JSON_EXTRACT ( ";
+        query = AND +
+                jsonExtract + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " , '$." + filter.getFilter2().getName() + "' ) ";
+        if (filter.isEmpty()) {
+            finalQuery = query + IS_NULL + " ";
+        }
+        else if (filter.isNotEmpty()) {
+            finalQuery = query + IS_NOT_NULL + " ";
+        }
+        else {
+            String notNullQuery = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + IS_NOT_NULL;
+            if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(
+                    filter.getFilter1().getValue()))) {
+                query = AND + jsonExtract + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " , '$." + filter.getFilter2().getName() + "' ) ";
+                if (filter.isExactMatch()) {
+                    query += EQUALS + "'#'";
+                    query = query.replaceAll("#", String.valueOf(filter.getFilter1().getValue()));
+                }
+                else {
+                    query += " " + LIKE + " '%#%'";
+                    query = query.replaceAll("#", String.valueOf(filter.getFilter1().getValue()));
+                }
+            }
+            if (Objects.nonNull(filter.getSelectedOptions())) {
+                finalQuery = query;
+            } else {
+                finalQuery = notNullQuery + query;
+            }
+        }
         return finalQuery;
     }
 
