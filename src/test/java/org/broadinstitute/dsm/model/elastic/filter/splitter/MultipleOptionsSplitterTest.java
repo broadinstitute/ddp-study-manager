@@ -17,4 +17,14 @@ public class MultipleOptionsSplitterTest {
         multipleSplitter.setFilter(filter);
         assertEquals("faxSent", multipleSplitter.getInnerProperty());
     }
+
+    @Test
+    public void contentContainsOR() {
+        String filter = "( d.status = 'EXITED_BEFORE_ENROLLMENT' OR d.status = 'EXITED_AFTER_ENROLLMENT' )";
+        String[] filters = new String[] {"d.status = 'EXITED_BEFORE_ENROLLMENT'", "d.status = 'EXITED_AFTER_ENROLLMENT'"};
+        BaseSplitter multipleSplitter = SplitterFactory.createSplitter(Operator.MULTIPLE_OPTIONS, "");
+        multipleSplitter.setFilter(filter);
+        String[] actualFilters = multipleSplitter.split();
+        assertArrayEquals(filters, actualFilters);
+    }
 }
