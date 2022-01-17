@@ -128,7 +128,7 @@ public class OperatorTest {
 
     @Test
     public void extractJsonExctractOperator() {
-        String filter = "JSON_EXTRACT ( m.additiona`l_values_json , '$.seeingIfBugExists' )";
+        String filter = "JSON_EXTRACT ( m.additiona`l_values_json , '$.seeingIfBugExists' ) = 'true'";
         Operator operator = Operator.extract(filter);
         assertEquals(Operator.JSON_EXTRACT, operator);
     }

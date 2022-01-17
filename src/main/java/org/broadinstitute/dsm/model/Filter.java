@@ -277,7 +277,13 @@ public class Filter {
                     filter.getFilter1().getValue()))) {
                 query = AND + jsonExtract + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " , '$." + filter.getFilter2().getName() + "' ) ";
                 if (BaseFilterParticipantList.isDateRange(filter)) {
-                    System.out.println();
+                    String moreThan = generateDateComparisonSql(filter, dbElement, LARGER_EQUALS, filter.getFilter1().getValue(), false);
+                    String lessThan = generateDateComparisonSql(filter, dbElement, SMALLER_EQUALS, filter.getFilter2().getValue(), true);
+                    int moreThanIndex = moreThan.indexOf(Filter.LARGER_EQUALS_TRIMMED);
+                    int lessThanIndex = lessThan.indexOf(Filter.SMALLER_EQUALS_TRIMMED);
+                    moreThan = moreThan.substring(moreThanIndex);
+                    lessThan = lessThan.substring(lessThanIndex);
+                    query += moreThan + query + lessThan;
                 } else if (filter.isExactMatch()) {
                     query += EQUALS + "'#'";
                     query = query.replaceAll("#", String.valueOf(filter.getFilter1().getValue()));
@@ -286,7 +292,7 @@ public class Filter {
                     query = query.replaceAll("#", String.valueOf(filter.getFilter1().getValue()));
                 }
             }
-            if (Objects.nonNull(filter.getSelectedOptions())) {
+            if (Objects.nonNull(filter.getSelectedOptions()) || BaseFilterParticipantList.isDateRange(filter)) {
                 finalQuery = query;
             } else {
                 finalQuery = notNullQuery + query;

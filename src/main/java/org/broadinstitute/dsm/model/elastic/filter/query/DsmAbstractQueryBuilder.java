@@ -73,7 +73,7 @@ public abstract class DsmAbstractQueryBuilder {
             splitter = SplitterFactory.createSplitter(operator, filterValue);
             splitter.setFilter(filterValue);
             QueryPayload queryPayload = new QueryPayload(buildPath(), splitter.getInnerProperty(), parser.parse(splitter.getValue()));
-            queryBuilder = QueryBuilderFactory.buildQueryBuilder(operator, queryPayload);
+            queryBuilder = QueryBuilderFactory.buildQueryBuilder(operator, queryPayload, splitter);
             buildEachQuery(filterStrategy);
         }
     }

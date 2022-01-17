@@ -11,13 +11,16 @@ public class JsonExtractSplitter extends BaseSplitter {
 
     private BaseSplitter decoratedSplitter;
 
-
     public JsonExtractSplitter(BaseSplitter splitter) {
         this.decoratedSplitter = splitter;
     }
 
     public JsonExtractSplitter() {
         decoratedSplitter = new EqualsSplitter();
+    }
+
+    public BaseSplitter getDecoratedSplitter() {
+        return decoratedSplitter;
     }
 
     @Override

@@ -104,15 +104,19 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
         DBElement dbElement = new DBElement(DBConstants.DDP_PARTICIPANT_DATA, DBConstants.DDP_PARTICIPANT_DATA_ALIAS, null,
                 DBConstants.ADDITIONAL_VALUES_JSON);
         if (isDateRange(filter)) {
+            filter.getFilter1().setName(ESObjectConstants.ADDITIONAL_VALUES_JSON);
+            filter.getFilter2().setName(Util.underscoresToCamelCase(tmpName));
+            filter.setNotEmpty(false);
+            filter.setParentName(DBConstants.DDP_PARTICIPANT_DATA_ALIAS);
             filter.setType(Filter.ADDITIONAL_VALUES);
             Filter.getQueryStringForFiltering(filter, dbElement);
-            System.out.println();
+        } else {
+            filter.setFilter1(new NameValue(ESObjectConstants.ADDITIONAL_VALUES_JSON, filter.getFilter1().getValue()));
+            filter.setFilter2(new NameValue(Util.underscoresToCamelCase(tmpName), null));
+            filter.setParentName(DBConstants.DDP_PARTICIPANT_DATA_ALIAS);
+            filter.setType(Filter.ADDITIONAL_VALUES);
         }
-        filter.setFilter1(new NameValue(ESObjectConstants.ADDITIONAL_VALUES_JSON, filter.getFilter1().getValue()));
-        filter.setFilter2(new NameValue(Util.underscoresToCamelCase(tmpName), null));
-        filter.setParentName(DBConstants.DDP_PARTICIPANT_DATA_ALIAS);
-        filter.setType(Filter.ADDITIONAL_VALUES);
-        if (Objects.nonNull(filter.getSelectedOptions())) {
+        if (Objects.nonNull(filter.getSelectedOptions()) && filter.getSelectedOptions().length > 0) {
             for (String selectedOption : filter.getSelectedOptions()) {
                 filter.getFilter1().setValue(selectedOption);
                 filter.getFilter2().setName(Util.underscoresToCamelCase(tmpName));

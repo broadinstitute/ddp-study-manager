@@ -61,6 +61,10 @@ public enum Operator {
                     return Operator.DATE_GREATER;
                 case "DATE =":
                     return Operator.DATE;
+                case "JSON_EXTRACT =":
+                case "JSON_EXTRACT >=":
+                case "JSON_EXTRACT <=":
+                    return JSON_EXTRACT;
                 default:
                     return Operator.getOperator(operator);
             }
