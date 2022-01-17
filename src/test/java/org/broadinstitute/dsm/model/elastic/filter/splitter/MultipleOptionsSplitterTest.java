@@ -1,10 +1,9 @@
 package org.broadinstitute.dsm.model.elastic.filter.splitter;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 import org.broadinstitute.dsm.model.elastic.filter.Operator;
-import org.broadinstitute.dsm.model.elastic.filter.splitter.BaseSplitter;
-import org.broadinstitute.dsm.model.elastic.filter.splitter.SplitterFactory;
 import org.junit.Test;
 
 public class MultipleOptionsSplitterTest {

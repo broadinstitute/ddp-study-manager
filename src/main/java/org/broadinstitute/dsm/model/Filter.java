@@ -61,6 +61,8 @@ public class Filter {
     public static final String DATE_FORMAT = "STR_TO_DATE";
     public static final String DATE_GREATER = LARGER_EQUALS + DATE_FORMAT;
     public static final String DATE_LESS = SMALLER_EQUALS + DATE_FORMAT;
+    public static final char OPEN_PARENTHESIS_CHAR = '(';
+    public static final char CLOSE_PARENTHESIS_CHAR = ')';
 
     public static String TEXT = "TEXT";
     public static String OPTIONS = "OPTIONS";

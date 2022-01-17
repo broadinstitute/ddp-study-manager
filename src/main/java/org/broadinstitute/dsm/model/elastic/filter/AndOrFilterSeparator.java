@@ -104,16 +104,14 @@ public class AndOrFilterSeparator {
     }
 
     private boolean isOperatorWrappedInParenthesis(int startIndex) {
-        final char openParenthesis = '(';
-        final char closeParenthesis = ')';
         boolean exists = false;
         for (int i = startIndex; i > 2; i--) {
             char c = filter.charAt(i);
-            if (c == openParenthesis) {
+            if (c == Filter.OPEN_PARENTHESIS_CHAR) {
                 exists = true;
                 break;
             }
-            if (Filter.AND_TRIMMED.equals(filter.substring(i - 3, i)) || c == closeParenthesis) break;
+            if (Filter.AND_TRIMMED.equals(filter.substring(i - 3, i)) || c == Filter.CLOSE_PARENTHESIS_CHAR) break;
         }
         return exists;
     }
