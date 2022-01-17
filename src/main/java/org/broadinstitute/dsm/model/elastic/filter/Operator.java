@@ -1,10 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
@@ -72,24 +68,50 @@ public enum Operator {
 
     public static Operator extractOperator(String filter) {
         String[] splittedFilter = filter.split(Filter.SPACE);
-        Arrays.stream(splittedFilter)
+        if (isMultipleOptions(splittedFilter))
+            return MULTIPLE_OPTIONS;
+        Optional<String> maybeOperator = Arrays.stream(splittedFilter)
                 .filter(StringUtils::isNotBlank)
+                .map(word -> {
+                    String strOperator = StringUtils.EMPTY;
+                    for (Operator operator : Operator.values()) {
+                        int startIndex = word.indexOf(operator.value);
+                        if (startIndex == -1) continue;
+                        strOperator = word.substring(startIndex, startIndex + operator.value.length());
+                        return strOperator;
+                    }
+                    return strOperator;
+                })
                 .filter(word -> Arrays.stream(Operator.values()).anyMatch(op -> op.value.equals(word)))
                 .distinct()
                 .reduce((prev, curr) -> String.join(Filter.SPACE, prev, curr));
-
-        Operator operator = null;
-        for (Operator op: Operator.values()) {
-            int startIndex = filter.indexOf(op.value);
-            if (startIndex <= 0) continue;
-            String extractedOperator = filter.substring(0, startIndex + op.value.length());
-            boolean isOperatorMatch = op.regex.matcher(extractedOperator).matches();
-            if (isOperatorMatch) {
-                operator = op;
-                break;
+        if (maybeOperator.isPresent()) {
+            String operator = maybeOperator.get();
+            switch (operator) {
+                case "STR_TO_DATE =":
+                    return Operator.STR_DATE;
+                case "STR_TO_DATE <=":
+                    return Operator.DATE_LESS;
+                case "STR_TO_DATE >=":
+                    return Operator.DATE_GREATER;
+                default:
+                    return Operator.getOperator(operator);
             }
+        } else {
+            throw new NoSuchElementException(UNKNOWN_OPERATOR);
         }
-        if (Objects.isNull(operator)) throw new NoSuchElementException(UNKNOWN_OPERATOR);
-        return operator;
+//        Operator operator = null;
+//        for (Operator op: Operator.values()) {
+//            int startIndex = filter.indexOf(op.value);
+//            if (startIndex <= 0) continue;
+//            String extractedOperator = filter.substring(0, startIndex + op.value.length());
+//            boolean isOperatorMatch = op.regex.matcher(extractedOperator).matches();
+//            if (isOperatorMatch) {
+//                operator = op;
+//                break;
+//            }
+//        }
+//        if (Objects.isNull(operator)) throw new NoSuchElementException(UNKNOWN_OPERATOR);
+//        return operator;
     }
 }

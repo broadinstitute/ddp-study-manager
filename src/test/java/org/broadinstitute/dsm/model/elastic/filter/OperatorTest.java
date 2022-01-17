@@ -76,4 +76,47 @@ public class OperatorTest {
 //        Operator operator2 = Operator.extractOperator(filter2);
         assertEquals(Operator.EQUALS, operator);
     }
+
+    @Test
+    public void extractGreaterThanEqualsOperator() {
+        String filter = "m.mr_received >= 15";
+        Operator operator = Operator.extractOperator(filter);
+        assertEquals(Operator.GREATER_THAN_EQUALS, operator);
+    }
+
+    @Test
+    public void extractLessThanEqualsOperator() {
+        String filter = "m.mr_received <= 15";
+        Operator operator = Operator.extractOperator(filter);
+        assertEquals(Operator.LESS_THAN_EQUALS, operator);
+    }
+
+    @Test
+    @Ignore
+    public void extractIsNotNullOperator() {
+        String filter = "m.mr_received IS NOT NULL";
+        Operator operator = Operator.extractOperator(filter);
+        assertEquals(Operator.IS_NOT_NULL, operator);
+    }
+
+    @Test
+    public void extractDiamondEqualsOperatorOperator() {
+        String filter = "m.mr_received <=> 15";
+        Operator operator = Operator.extractOperator(filter);
+        assertEquals(Operator.DIAMOND_EQUALS, operator);
+    }
+
+    @Test
+    public void extractMultipleOptionsOperator() {
+        String filter = "(m.mr_received = 15 OR m.mr_received = 15)";
+        Operator operator = Operator.extractOperator(filter);
+        assertEquals(Operator.MULTIPLE_OPTIONS, operator);
+    }
+
+    @Test
+    public void extractStrToDateOperator() {
+        String filter = "STR_TO_DATE(m.fax_sent,'%Y-%m-%d') = STR_TO_DATE('2021-12-17','%Y-%m-%d')";
+        Operator operator = Operator.extractOperator(filter);
+        assertEquals(Operator.STR_DATE, operator);
+    }
 }
