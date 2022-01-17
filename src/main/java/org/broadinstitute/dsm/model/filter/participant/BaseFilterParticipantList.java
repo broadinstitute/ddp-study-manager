@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.filter.participant;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -100,12 +101,17 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
     }
 
     private void addParticipantDataQueryToQueryConditions(Map<String, String> queryConditions, Filter filter, String tmpName) {
+        DBElement dbElement = new DBElement(DBConstants.DDP_PARTICIPANT_DATA, DBConstants.DDP_PARTICIPANT_DATA_ALIAS, null,
+                DBConstants.ADDITIONAL_VALUES_JSON);
+        if (isDateRange(filter)) {
+            filter.setType(Filter.ADDITIONAL_VALUES);
+            Filter.getQueryStringForFiltering(filter, dbElement);
+            System.out.println();
+        }
         filter.setFilter1(new NameValue(ESObjectConstants.ADDITIONAL_VALUES_JSON, filter.getFilter1().getValue()));
         filter.setFilter2(new NameValue(Util.underscoresToCamelCase(tmpName), null));
         filter.setParentName(DBConstants.DDP_PARTICIPANT_DATA_ALIAS);
         filter.setType(Filter.ADDITIONAL_VALUES);
-        DBElement dbElement = new DBElement(DBConstants.DDP_PARTICIPANT_DATA, DBConstants.DDP_PARTICIPANT_DATA_ALIAS, null,
-                DBConstants.ADDITIONAL_VALUES_JSON);
         if (Objects.nonNull(filter.getSelectedOptions())) {
             for (String selectedOption : filter.getSelectedOptions()) {
                 filter.getFilter1().setValue(selectedOption);
@@ -117,8 +123,16 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
             }
         } else {
             queryConditions.put(DBConstants.DDP_PARTICIPANT_DATA_ALIAS, Filter.getQueryStringForFiltering(filter, dbElement));
-            queryConditions.merge(DBConstants.DDP_PARTICIPANT_DATA_ALIAS, Filter.getQueryStringForFiltering(filter,
-                    dbElement), (prev, curr) -> String.join(Filter.SPACE, prev, curr));
+        }
+    }
+
+    public static boolean isDateRange(Filter filter) {
+        try {
+            LocalDate.parse(String.valueOf(filter.getFilter1().getValue()));
+            LocalDate.parse(String.valueOf(filter.getFilter2().getValue()));
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 

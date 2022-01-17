@@ -13,6 +13,7 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.db.structure.SqlDateConverter;
+import org.broadinstitute.dsm.model.filter.participant.BaseFilterParticipantList;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -273,11 +274,12 @@ public class Filter {
             if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(
                     filter.getFilter1().getValue()))) {
                 query = AND + jsonExtract + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " , '$." + filter.getFilter2().getName() + "' ) ";
-                if (filter.isExactMatch()) {
+                if (BaseFilterParticipantList.isDateRange(filter)) {
+                    System.out.println();
+                } else if (filter.isExactMatch()) {
                     query += EQUALS + "'#'";
                     query = query.replaceAll("#", String.valueOf(filter.getFilter1().getValue()));
-                }
-                else {
+                } else {
                     query += " " + LIKE + " '%#%'";
                     query = query.replaceAll("#", String.valueOf(filter.getFilter1().getValue()));
                 }
