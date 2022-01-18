@@ -59,10 +59,11 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
                 if (filter != null) {
                     String tableAlias = null;
                     if (filter.getParticipantColumn() != null) { // profile.firstName
-                        if (PARTICIPANT_DATA.equals(filter.getParticipantColumn().getTableAlias())) {
+                        if (PARTICIPANT_DATA.equals(filter.getParticipantColumn().getTableAlias()) || PARENT_PARTICIPANT_LIST.equals(filter.getParentName())) {
                             tableAlias = StringUtils.isNotBlank(filter.getParticipantColumn().getTableAlias())
                                 ? filter.getParticipantColumn().getTableAlias()
                                 : filter.getParentName();
+                            filter.setParentName(tableAlias);
                         } else {
                             tableAlias = StringUtils.isNotBlank(filter.getParentName()) ? filter.getParentName() : filter.getParticipantColumn().getTableAlias();
                         }
