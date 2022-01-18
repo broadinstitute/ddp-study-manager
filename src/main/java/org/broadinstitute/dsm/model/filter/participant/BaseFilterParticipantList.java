@@ -58,10 +58,14 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
             for (Filter filter : filters) {
                 if (filter != null) {
                     String tableAlias = null;
-                    if (filter.getParticipantColumn() != null) {
-                        tableAlias = StringUtils.isNotBlank(filter.getParticipantColumn().getTableAlias())
+                    if (filter.getParticipantColumn() != null) { // profile.firstName
+                        if (PARTICIPANT_DATA.equals(filter.getParticipantColumn().getTableAlias())) {
+                            tableAlias = StringUtils.isNotBlank(filter.getParticipantColumn().getTableAlias())
                                 ? filter.getParticipantColumn().getTableAlias()
                                 : filter.getParentName();
+                        } else {
+                            tableAlias = StringUtils.isNotBlank(filter.getParentName()) ? filter.getParentName() : filter.getParticipantColumn().getTableAlias();
+                        }
                     }
                     String tmpName = null;
                     DBElement dbElement = null;

@@ -271,7 +271,6 @@ public class ViewFilter {
             if (queryConditions.containsKey("ES")) {
                 queryCondition = queryConditions.get("ES");
             }
-            filter.setParentName(filter.getParticipantColumn().getTableAlias());
             queryConditions.put("ES", queryCondition.concat(Filter.getQueryStringForFiltering(filter, null)));
         }
     }
