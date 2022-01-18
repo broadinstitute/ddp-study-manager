@@ -1,6 +1,11 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.query;
 
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.model.elastic.filter.Operator;
+import org.broadinstitute.dsm.model.elastic.filter.splitter.BaseSplitter;
+import org.broadinstitute.dsm.model.elastic.filter.splitter.GreaterThanEqualsSplitter;
+import org.broadinstitute.dsm.model.elastic.filter.splitter.JsonExtractSplitter;
+import org.broadinstitute.dsm.model.elastic.filter.splitter.LessThanEqualsSplitter;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.ExistsQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
@@ -8,7 +13,8 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 
 public class QueryBuilderFactory {
-    public static QueryBuilder buildQueryBuilder(Operator operator, QueryPayload payload) {
+    public static QueryBuilder buildQueryBuilder(Operator operator, QueryPayload payload,
+                                                 BaseSplitter splitter) {
         QueryBuilder qb;
         switch (operator) {
             case LIKE:
@@ -52,7 +58,16 @@ public class QueryBuilderFactory {
             case JSON_EXTRACT:
                 Object[] dynamicFieldValues = payload.getValues();
                 if (!StringUtils.EMPTY.equals(dynamicFieldValues[0])) {
-                    qb = new MatchQueryBuilder(payload.getFieldName(), dynamicFieldValues[0]);
+                    JsonExtractSplitter jsonExtractSplitter = (JsonExtractSplitter) splitter;
+                    if (jsonExtractSplitter.getDecoratedSplitter() instanceof GreaterThanEqualsSplitter) {
+                        qb = new RangeQueryBuilder(payload.getFieldName());
+                        ((RangeQueryBuilder)qb).gte(dynamicFieldValues[0]);
+                    } else if (jsonExtractSplitter.getDecoratedSplitter() instanceof LessThanEqualsSplitter) {
+                        qb = new RangeQueryBuilder(payload.getFieldName());
+                        ((RangeQueryBuilder)qb).lte(dynamicFieldValues[0]);
+                    } else {
+                        qb = new MatchQueryBuilder(payload.getFieldName(), dynamicFieldValues[0]);
+                    }
                 } else {
                     qb = new ExistsQueryBuilder(payload.getFieldName());
                 }

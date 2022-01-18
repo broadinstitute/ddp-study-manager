@@ -257,7 +257,10 @@ public class ViewFilter {
     public static void addQueryCondition(@NonNull Map<String, String> queryConditions, DBElement dbElement, Filter filter) {
         if (dbElement != null) {
             String queryCondition = "";
-            String propertyName = StringUtils.isNotBlank(filter.getParentName()) ? filter.getParentName() : filter.getParticipantColumn().getTableAlias();
+//            String propertyName = StringUtils.isNotBlank(filter.getParentName()) ? filter.getParentName() : filter.getParticipantColumn().getTableAlias();
+            String propertyName = StringUtils.isNotBlank(filter.getParticipantColumn().getTableAlias())
+                    ? filter.getParticipantColumn().getTableAlias()
+                    : filter.getParentName();
             if (queryConditions.containsKey(propertyName)) {
                 queryCondition = queryConditions.get(propertyName);
             }
@@ -530,6 +533,7 @@ public class ViewFilter {
                             if (word.equals(Filter.EQUALS_TRIMMED)) { // exact match selected in the frontend
                                 exact = true;
                                 range = false;
+                                f1 = true;
                                 state = 3;
                                 break;
                             }

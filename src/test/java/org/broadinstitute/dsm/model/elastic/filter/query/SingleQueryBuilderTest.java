@@ -1,13 +1,13 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.query;
 
+import org.broadinstitute.dsm.model.elastic.filter.FilterParser;
+import org.broadinstitute.dsm.model.elastic.filter.query.SingleQueryBuilder;
 import org.elasticsearch.index.query.AbstractQueryBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class SingleQueryBuilderTest {
 

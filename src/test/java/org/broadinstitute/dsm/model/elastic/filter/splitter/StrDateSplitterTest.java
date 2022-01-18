@@ -1,7 +1,6 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.splitter;
 
-import org.broadinstitute.dsm.model.elastic.filter.splitter.BaseSplitter;
-import org.broadinstitute.dsm.model.elastic.filter.splitter.SplitterFactory;
+import org.broadinstitute.dsm.model.elastic.filter.Operator;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -1,8 +1,11 @@
 package org.broadinstitute.dsm.model.elastic.filter.splitter;
 
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.elastic.Util;
+import org.broadinstitute.dsm.model.elastic.filter.AndOrFilterSeparator;
 
 public class MultipleOptionsSplitter extends BaseSplitter {
 
@@ -25,11 +28,13 @@ public class MultipleOptionsSplitter extends BaseSplitter {
 
     @Override
     public String[] split() {
-        String[] multipleFilters = filter
+        String multipleFilters =
+                Filter.OR +
+                filter
                 .replace(Filter.OPEN_PARENTHESIS, StringUtils.EMPTY)
                 .replace(Filter.CLOSE_PARENTHESIS, StringUtils.EMPTY)
-                .trim()
-                .split(Filter.OR_TRIMMED);
-        return multipleFilters;
+                .trim();
+        List<String> splittedFilter = new AndOrFilterSeparator(multipleFilters).parseFiltersByLogicalOperators().get(Filter.OR_TRIMMED);
+        return splittedFilter.toArray(new String[]{});
     }
 }

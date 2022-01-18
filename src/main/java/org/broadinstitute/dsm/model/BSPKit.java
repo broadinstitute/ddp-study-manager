@@ -79,7 +79,7 @@ public class BSPKit {
         if (StringUtils.isBlank(maybeBspKitQueryResult.getDdpParticipantId())) {
             throw new RuntimeException("No participant id for " + kitLabel + " from " + maybeBspKitQueryResult.getInstanceName());
         }
-        logger.info("particpant id is " + maybeBspKitQueryResult.getDdpParticipantId());
+        logger.info("participant id is " + maybeBspKitQueryResult.getDdpParticipantId());
         DDPInstance ddpInstance = DDPInstance.getDDPInstance(maybeBspKitQueryResult.getInstanceName());
         InstanceSettings instanceSettings = new InstanceSettings();
         InstanceSettingsDto instanceSettingsDto = instanceSettings.getInstanceSettings(maybeBspKitQueryResult.getInstanceName());
@@ -132,7 +132,9 @@ public class BSPKit {
                 bspParticipantId,
                 bspSampleId,
                 bspMaterialType,
-                bspReceptacleType));
+                bspReceptacleType,
+                ddpInstance.getName(),
+                maybeBspKitQueryResult.getKitTypeName()));
 
     }
 

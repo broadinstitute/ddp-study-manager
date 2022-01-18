@@ -1,9 +1,8 @@
-package org.broadinstitute.dsm.model.elastic.filter;
+package org.broadinstitute.dsm.model.elastic.filter.splitter;
 
-import org.broadinstitute.dsm.model.elastic.filter.splitter.DiamondEqualsSplitter;
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class DiamondEqualsSplitterTest {
 

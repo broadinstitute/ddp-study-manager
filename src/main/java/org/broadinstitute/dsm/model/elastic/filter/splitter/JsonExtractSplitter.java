@@ -19,6 +19,10 @@ public class JsonExtractSplitter extends BaseSplitter {
         decoratedSplitter = new EqualsSplitter();
     }
 
+    public BaseSplitter getDecoratedSplitter() {
+        return decoratedSplitter;
+    }
+
     @Override
     public String[] split() {
         decoratedSplitter.filter = filter;

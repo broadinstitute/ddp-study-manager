@@ -9,9 +9,8 @@ import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
-import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
-import org.broadinstitute.dsm.model.elastic.filter.DsmAbstractQueryBuilder;
+import org.broadinstitute.dsm.model.elastic.filter.query.DsmAbstractQueryBuilder;
 import org.broadinstitute.dsm.model.elastic.filter.FilterParser;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
@@ -20,7 +19,6 @@ import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.at.DefaultValues;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
-import org.elasticsearch.index.query.AbstractQueryBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,6 +121,7 @@ public class ParticipantWrapper {
                 || DBConstants.DDP_KIT_REQUEST_ALIAS.equals(source)
                 || DBConstants.DDP_TISSUE_ALIAS.equals(source)
                 || DBConstants.DDP_ONC_HISTORY_ALIAS.equals(source)
+                || DBConstants.DDP_PARTICIPANT_DATA_ALIAS.equals(source)
                 || DBConstants.DDP_PARTICIPANT_RECORD_ALIAS.equals(source);
     }
 
@@ -139,25 +138,8 @@ public class ParticipantWrapper {
         if (DDPInstanceDao.getRole(ddpInstance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) {
             kitRequests = getKitRequestsFromEsData();
         }
-//        abstractionActivities =
-//                AbstractionActivity.getAllAbstractionActivityByParticipantIds(ddpInstance.getName(), participantIds);
-//        abstractionSummary = AbstractionFinal.getAbstractionFinalByParticipantIds(ddpInstance.getName(), participantIds);
         proxiesByParticipantIds = getProxiesWithParticipantIdsFromElasticList(ddpInstance.getUsersIndexES(), esData.getEsParticipants());
         participantData = getParticipantDataFromEsData();
-//        List<String> participantIds = getParticipantIdsFromElasticList(esData.getEsParticipants());
-//        participants = Participant.getParticipantsByIds(ddpInstance.getName(), participantIds);
-//        if (ddpInstance.isHasRole()) {
-//            medicalRecords = MedicalRecord.getMedicalRecordsByParticipantIds(ddpInstance.getName(), participantIds);
-//            oncHistoryDetails = OncHistoryDetail.getOncHistoryDetailsByParticipantIds(ddpInstance.getName(), participantIds);
-//        }
-//        if (DDPInstanceDao.getRole(ddpInstance.getName(), DBConstants.KIT_REQUEST_ACTIVATED)) {
-//            kitRequests = KitRequestShipping.getKitRequestsByParticipantIds(ddpInstance, participantIds);
-//        }
-//        abstractionActivities =
-//                AbstractionActivity.getAllAbstractionActivityByParticipantIds(ddpInstance.getName(), participantIds);
-//        abstractionSummary = AbstractionFinal.getAbstractionFinalByParticipantIds(ddpInstance.getName(), participantIds);
-//        proxiesByParticipantIds = getProxiesWithParticipantIdsFromElasticList(ddpInstance.getUsersIndexES(), esData.getEsParticipants());
-//        participantData = new ParticipantDataDao().getParticipantDataByParticipantIds(participantIds);
     }
 
     private Map<String, List<ParticipantDataDto>> getParticipantDataFromEsData() {

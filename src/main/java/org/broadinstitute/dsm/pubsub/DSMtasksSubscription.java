@@ -108,6 +108,7 @@ public class DSMtasksSubscription {
                     new DynamicFieldsMappingMigrator(index, study),
                     new MedicalRecordMigrator(index, study),
                     new OncHistoryDetailsMigrator(index, study),
+                    new OncHistoryMigrator(index, study),
                     new ParticipantDataMigrator(index, study),
                     new ParticipantMigrator(index, study),
                     new KitRequestShippingMigrator(index, study),

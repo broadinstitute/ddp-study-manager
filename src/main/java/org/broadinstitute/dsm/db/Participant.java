@@ -130,7 +130,7 @@ public class Participant {
             alias = DBConstants.DDP_PARTICIPANT_RECORD_ALIAS,
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
-    @ColumnName (DBConstants.ADDITIONAL_VALUES)
+    @ColumnName (DBConstants.ADDITIONAL_VALUES_JSON)
     @JsonProperty("dynamicFields")
     @SerializedName("dynamicFields")
     private String additionalValuesJson;
@@ -197,7 +197,7 @@ public class Participant {
                 rs.getString(DBConstants.DDP_PARTICIPANT_RECORD_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.NOTES),
                 rs.getBoolean(DBConstants.DDP_PARTICIPANT_RECORD_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.MINIMAL_MR),
                 rs.getBoolean(DBConstants.DDP_PARTICIPANT_RECORD_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.ABSTRACTION_READY),
-                rs.getString(DBConstants.DDP_PARTICIPANT_RECORD_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.ADDITIONAL_VALUES),
+                rs.getString(DBConstants.DDP_PARTICIPANT_RECORD_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.ADDITIONAL_VALUES_JSON),
                 rs.getLong(DBConstants.EXIT_DATE));
         return participant;
     }

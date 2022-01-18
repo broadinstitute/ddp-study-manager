@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.NonNull;
@@ -166,7 +165,7 @@ public class OncHistoryDetail {
     @ColumnName (DBConstants.GENDER)
     private String gender;
 
-    @ColumnName (DBConstants.ADDITIONAL_VALUES)
+    @ColumnName (DBConstants.ADDITIONAL_VALUES_JSON)
     @JsonProperty("dynamicFields")
     @SerializedName("dynamicFields")
     private String additionalValuesJson;
@@ -299,7 +298,7 @@ public class OncHistoryDetail {
                 rs.getString(DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.FAX_CONFIRMED_3),
                 rs.getString(DBConstants.TISSUE_RECEIVED),
                 rs.getString(DBConstants.GENDER),
-                rs.getString(DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.ADDITIONAL_VALUES), tissues,
+                rs.getString(DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.ADDITIONAL_VALUES_JSON), tissues,
                 rs.getString(DBConstants.TISSUE_PROBLEM_OPTION),
                 rs.getString(DBConstants.DESTRUCTION_POLICY),
                 rs.getBoolean(DBConstants.UNABLE_OBTAIN_TISSUE)
