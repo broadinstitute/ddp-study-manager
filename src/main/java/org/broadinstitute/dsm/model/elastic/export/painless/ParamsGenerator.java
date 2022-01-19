@@ -9,6 +9,7 @@ import java.util.Map;
 
 public class ParamsGenerator implements Generator {
 
+    static final String PARAMS = "params";
     private Object source;
     private String realm;
 
@@ -19,10 +20,14 @@ public class ParamsGenerator implements Generator {
 
     @Override
     public Map<String, Object> generate() {
-        String propertyName = Util.capitalCamelCaseToLowerCamelCase(source.getClass().getSimpleName());
         Map<String, Object> fieldsMap = Util.transformObjectToMap(source, realm);
-        return new HashMap<>(Map.of("params",
+        return new HashMap<>(Map.of(PARAMS,
                 new HashMap<>(Map.of(ESObjectConstants.DSM,
-                        new HashMap<>(Map.of(propertyName, fieldsMap))))));
+                        new HashMap<>(Map.of(getPropertyName(), fieldsMap))))));
+    }
+
+    @Override
+    public String getPropertyName() {
+        return Util.capitalCamelCaseToLowerCamelCase(source.getClass().getSimpleName());
     }
 }

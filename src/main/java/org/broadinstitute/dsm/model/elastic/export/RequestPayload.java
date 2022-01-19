@@ -5,11 +5,11 @@ import org.apache.commons.lang3.StringUtils;
 public class RequestPayload {
 
     private String index;
-    private String id;
+    private String docId;
 
-    public RequestPayload(String index, String id) {
+    public RequestPayload(String index, String docId) {
         this.index = index;
-        this.id = id;
+        this.docId = docId;
     }
 
     public RequestPayload(String index) {
@@ -20,7 +20,7 @@ public class RequestPayload {
         return index;
     }
 
-    public String getId() {
-        return id;
+    public String getDocId() {
+        return docId;
     }
 }
