@@ -45,7 +45,7 @@ public class UtilTest {
                 "ptNotes", true, true,
                 "additionalValuesJson", 1934283746283L);
         Map<String, Object> transformedObject = Util.transformObjectToMap(participant, "angio");
-        assertEquals("1", transformedObject.get("participantId"));
+        assertEquals(1L, transformedObject.get("participantId"));
         assertEquals("QWERTY", transformedObject.get("ddpParticipantId"));
         assertEquals("2020-10-28", transformedObject.get("created"));
         assertEquals(true, transformedObject.get("minimalMr"));

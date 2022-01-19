@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.script.Script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
