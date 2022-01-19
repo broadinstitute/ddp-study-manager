@@ -8,4 +8,8 @@ public interface Generator {
     default String getPropertyName() {
         throw new UnsupportedOperationException();
     }
+
+    default String getUniqueIdentifier() {
+        throw new UnsupportedOperationException();
+    }
 }

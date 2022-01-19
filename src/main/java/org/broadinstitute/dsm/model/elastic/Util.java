@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
+import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.elastic.export.parse.DynamicFieldsParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
@@ -85,6 +86,11 @@ public class Util {
 
     private static String handleAllUppercase(String word) {
         return CAMEL_CASE_REGEX.matcher(word).matches() ? word : word.toLowerCase();
+    }
+
+    public static String getPrimaryKeyFromClass(Class<?> clazz) {
+        TableName tableName = Objects.requireNonNull(clazz.getAnnotation(TableName.class));
+        return underscoresToCamelCase(tableName.primaryKey());
     }
 
     private static boolean hasNoUnderscores(String[] splittedWords) {

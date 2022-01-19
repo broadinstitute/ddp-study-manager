@@ -13,23 +13,23 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 
-public abstract class BaseUpsertPainless implements Exportable {
+public class UpsertPainless implements Exportable {
 
-    protected String script;
     private Generator generator;
     private RequestPayload requestPayload; // index, docId
+    private ScriptBuilder scriptBuilder;
 
-    public BaseUpsertPainless(String script, Generator generator, RequestPayload requestPayload) {
-        this.script = script;
+    public UpsertPainless(Generator generator, RequestPayload requestPayload, ScriptBuilder scriptBuilder) {
         this.generator = generator;
         this.requestPayload = requestPayload;
+        this.scriptBuilder = scriptBuilder;
     }
 
     @Override
     public void export() {
         RestHighLevelClient clientInstance = ElasticSearchUtil.getClientInstance();
         UpdateRequest updateRequest = new UpdateRequest(requestPayload.getIndex(), Util.DOC, requestPayload.getDocId());
-        Script painless = new Script(ScriptType.INLINE, "painless", script, generator.generate());
+        Script painless = new Script(ScriptType.INLINE, "painless", scriptBuilder.build(), generator.generate());
         updateRequest.script(painless);
         try {
             clientInstance.update(updateRequest, RequestOptions.DEFAULT);

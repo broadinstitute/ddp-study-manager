@@ -18,6 +18,9 @@ import org.broadinstitute.dsm.model.KitType;
 import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.ddp.KitDetail;
+import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
+import org.broadinstitute.dsm.model.elastic.export.painless.ParamsGenerator;
+import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainless;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
@@ -867,6 +870,9 @@ public class KitRequestShipping extends KitRequest {
         if (results.resultException != null) {
             throw new RuntimeException("Error adding kit request  w/ ddpKitRequestId " + ddpKitRequestId, results.resultException);
         }
+
+        new ParamsGenerator("", )
+        new UpsertPainless()
 
         logger.info("Added kitRequest w/ ddpKitRequestId " + ddpKitRequestId);
         return (String) results.resultValue;

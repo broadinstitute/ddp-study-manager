@@ -132,8 +132,7 @@ public abstract class BaseGenerator implements Generator, Collector, GeneratorHe
         }
 
         public String getPrimaryKey() {
-            TableName tableName = Objects.requireNonNull(propertyClass.getAnnotation(TableName.class));
-            return Util.underscoresToCamelCase(tableName.primaryKey());
+            return Util.getPrimaryKeyFromClass(propertyClass);
         }
 
         public boolean isCollection() {
