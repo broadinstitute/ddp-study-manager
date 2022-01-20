@@ -871,8 +871,8 @@ public class KitRequestShipping extends KitRequest {
             throw new RuntimeException("Error adding kit request  w/ ddpKitRequestId " + ddpKitRequestId, results.resultException);
         }
 
-        new ParamsGenerator("", )
-        new UpsertPainless()
+//        new ParamsGenerator("", )
+//        new UpsertPainless()
 
         logger.info("Added kitRequest w/ ddpKitRequestId " + ddpKitRequestId);
         return (String) results.resultValue;

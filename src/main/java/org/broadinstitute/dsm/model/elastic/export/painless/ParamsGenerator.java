@@ -30,9 +30,4 @@ public class ParamsGenerator implements Generator {
     public String getPropertyName() {
         return Util.capitalCamelCaseToLowerCamelCase(source.getClass().getSimpleName());
     }
-
-    @Override
-    public String getUniqueIdentifier() {
-        return Util.getPrimaryKeyFromClass(source.getClass());
-    }
 }

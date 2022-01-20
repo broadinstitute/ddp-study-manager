@@ -18,7 +18,7 @@ public class DynamicFieldsParser extends BaseParser {
     public static final String CHECKBOX_TYPE = "CHECKBOX";
     public static final String ACTIVITY_STAFF_TYPE = "ACTIVITY_STAFF";
     public static final String ACTIVITY_TYPE = "ACTIVITY";
-    private String displayType;
+    protected String displayType;
     private String possibleValuesJson;
     private BaseParser parser;
     public FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
@@ -73,7 +73,7 @@ public class DynamicFieldsParser extends BaseParser {
         return parsedValue;
     }
 
-    private void getProperDisplayTypeWithPossibleValues() {
+    protected void getProperDisplayTypeWithPossibleValues() {
         Optional<FieldSettingsDto> fieldSettingsByInstanceNameAndColumnName =
                 fieldSettingsDao.getFieldSettingsByInstanceNameAndColumnName(realm, super.fieldName);
         if (fieldSettingsByInstanceNameAndColumnName.isPresent()) {

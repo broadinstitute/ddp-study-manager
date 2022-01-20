@@ -11,10 +11,33 @@ import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.FollowUp;
+import org.broadinstitute.dsm.model.elastic.export.generate.SourceGeneratorTest;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class UtilTest {
+
+    @Before
+    public void setUp() {
+        class FieldSettingsDaoMock extends FieldSettingsDao {
+
+            @Override
+            public Optional<FieldSettingsDto> getFieldSettingsByInstanceNameAndColumnName(String instanceName, String columnName) {
+                FieldSettingsDto.Builder builder = new FieldSettingsDto.Builder(0);
+                if ("BOOLEAN_VAL".equals(columnName)) {
+                    builder.withDisplayType("CHECKBOX");
+                } else if ("LONG_VAL".equals(columnName)) {
+                    builder.withDisplayType("NUMBER");
+                }
+                return Optional.of(builder.build());
+            }
+        }
+
+        FieldSettingsDaoMock fieldSettingsDaoMock = new FieldSettingsDaoMock();
+
+        FieldSettingsDao.setInstance(fieldSettingsDaoMock);
+    }
 
     @Test
     public void underscoresToCamelCase() {
@@ -55,23 +78,7 @@ public class UtilTest {
     @Test
     public void transformJsonToMap() {
 
-        class FieldSettingsDaoMock extends FieldSettingsDao {
-
-            @Override
-            public Optional<FieldSettingsDto> getFieldSettingsByInstanceNameAndColumnName(String instanceName, String columnName) {
-                FieldSettingsDto.Builder builder = new FieldSettingsDto.Builder(0);
-                if ("BOOLEAN_VAL".equals(columnName)) {
-                    builder.withDisplayType("CHECKBOX");
-                } else if ("LONG_VAL".equals(columnName)) {
-                    builder.withDisplayType("NUMBER");
-                }
-                return Optional.of(builder.build());
-            }
-        }
-
-        FieldSettingsDaoMock fieldSettingsDaoMock = new FieldSettingsDaoMock();
-
-        FieldSettingsDao.setInstance(fieldSettingsDaoMock);
+        setUp();
 
         String json = "{\"DDP_INSTANCE\": \"TEST\", \"DDP_VALUE\": \"VALUE\", \"BOOLEAN_VAL\": \"true\", \"LONG_VAL\": \"5\"}";
 

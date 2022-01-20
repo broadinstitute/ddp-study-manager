@@ -69,6 +69,7 @@ public abstract class BaseGenerator implements Generator, Collector, GeneratorHe
         return getOuterPropertyByAlias().getPrimaryKey();
     }
 
+    @Override
     public String getPropertyName() {
         return getOuterPropertyByAlias().getPropertyName();
     }

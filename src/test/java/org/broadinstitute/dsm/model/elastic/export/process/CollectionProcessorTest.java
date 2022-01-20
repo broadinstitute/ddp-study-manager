@@ -1,15 +1,22 @@
 package org.broadinstitute.dsm.model.elastic.export.process;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.broadinstitute.dsm.db.MedicalRecord;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.export.TestPatchUtil;
+import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
+import org.broadinstitute.dsm.model.elastic.export.generate.CollectionSourceGenerator;
 import org.broadinstitute.dsm.model.elastic.export.generate.Collector;
 import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
+import org.broadinstitute.dsm.model.elastic.export.generate.MappingGeneratorTest;
 import org.broadinstitute.dsm.model.elastic.export.generate.SourceGenerator;
+import org.broadinstitute.dsm.model.elastic.export.parse.BaseParser;
+import org.broadinstitute.dsm.model.elastic.export.parse.DynamicFieldsParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
+import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
 import org.broadinstitute.dsm.model.elastic.export.process.CollectionProcessor;
 import org.junit.Assert;
@@ -23,7 +30,7 @@ public class CollectionProcessorTest {
 
     @Test
     public void testProcess() throws IOException {
-        String propertyName = "medicalRecords";
+        String propertyName = "medicalRecord";
         double recordId = 5;
         String oldValue = "mr_old";
         String json = String.format("{\"%s\":[{\"id\":%s,\"mr\":\"%s\"}]}", propertyName, recordId, oldValue);
@@ -33,10 +40,10 @@ public class CollectionProcessorTest {
         ESDsm esDsm = objectMapper.readValue(json, ESDsm.class);
 
         NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "mr_updated");
-        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, (int)recordId);
-
-        Processor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, generatorPayload, instance(generatorPayload,
-                nameValue));
+        GeneratorPayload generatorPayload = MappingGeneratorTest.getGeneratorPayload(TestPatchUtil.MEDICAL_RECORD_COLUMN, "mr_updated", 5);
+        Processor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, generatorPayload,
+                instance(generatorPayload,
+                nameValue, new ValueParser()));
 
         List<Map<String, Object>> updatedList = (List<Map<String, Object>>) collectionProcessor.process();
 
@@ -49,7 +56,7 @@ public class CollectionProcessorTest {
 
     @Test
     public void updateIfExistsOrPut() throws IOException {
-        String propertyName = "medicalRecords";
+        String propertyName = "medicalRecord";
         double recordId = 5;
         String json = String.format("{\"%s\":[{\"id\":%s,\"mr\":\"%s\"}]}", propertyName, recordId, "value");;
 
@@ -58,10 +65,9 @@ public class CollectionProcessorTest {
         ESDsm esDsm = objectMapper.readValue(json, ESDsm.class);
 
         NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "val");
-        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 10);
-
+        GeneratorPayload generatorPayload = MappingGeneratorTest.getGeneratorPayload(TestPatchUtil.MEDICAL_RECORD_COLUMN, "val", 10);
         CollectionProcessor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, generatorPayload,
-                instance(generatorPayload, nameValue));
+                instance(generatorPayload, nameValue, new ValueParser()));
 
         List<Map<String, Object>> updatedList = collectionProcessor.process();
 
@@ -71,7 +77,7 @@ public class CollectionProcessorTest {
 
     @Test
     public void updateIfExists() throws IOException {
-        String propertyName = "medicalRecords";
+        String propertyName = "medicalRecord";
         double recordId = 5;
         String json = String.format("{\"%s\":[{\"id\":%s,\"TEST1\":\"%s\", \"TEST2\":\"TEST_VAL2\"}]}", propertyName, recordId, "value");;
 
@@ -79,11 +85,14 @@ public class CollectionProcessorTest {
 
         ESDsm esDsm = objectMapper.readValue(json, ESDsm.class);
 
-        NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "{\"TEST1\":\"TEST_VAL\", \"TEST2\":\"TEST_VAL3\"}");
+        NameValue nameValue = new NameValue(TestPatchUtil.ADDITIONAL_VALUES_JSON, "{\"TEST1\":\"TEST_VAL\"}");
         GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 5);
-
+        DynamicFieldsParser parser = new DynamicFieldsParser();
+        parser.setDisplayType("TEXT");
+        parser.setParser(new ValueParser());
+        parser.setPropertyInfo(new BaseGenerator.PropertyInfo(MedicalRecord.class, true));
         CollectionProcessor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, generatorPayload,
-                instance(generatorPayload, nameValue));
+                instance(generatorPayload, nameValue, parser));
 
         List<Map<String, Object>> updatedList = collectionProcessor.process();
 
@@ -98,10 +107,14 @@ public class CollectionProcessorTest {
                 .ifPresentOrElse(m -> m.get("TEST2").equals("TEST_VAL3"), Assert::fail);
     }
 
-    private Collector instance(GeneratorPayload generatorPayload, NameValue nameValue) {
-//        SourceGenerator sourceGenerator = new SourceGenerator(new ValueParser(), generatorPayload);
-        SourceGenerator sourceGenerator = null;
-        sourceGenerator.setDBElement(TestPatchUtil.getColumnNameMap().get(nameValue.getName()));
+    private Collector instance(GeneratorPayload generatorPayload, NameValue nameValue, BaseParser parser) {
+        parser.setPropertyInfo(new BaseGenerator.PropertyInfo(MappingGeneratorTest.TestPropertyClass.class, true));
+        BaseGenerator sourceGenerator = new CollectionSourceGenerator(parser, generatorPayload) {
+            @Override
+            protected DBElement getDBElement() {
+                return TestPatchUtil.getColumnNameMap().get(nameValue.getName());
+            }
+        };
         return sourceGenerator;
     }
 
