@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.DSMServer;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
 import org.broadinstitute.dsm.db.structure.SqlDateConverter;
@@ -736,8 +737,9 @@ public class KitRequestShipping extends KitRequest {
         }
     }
 
-    public static void deactivateKitRequest(@NonNull long kitRequestId, @NonNull String reason, String easypostApiKey,
-                                            @NonNull String userId) {
+    public static void deactivateKitRequest(long kitRequestId, @NonNull String reason, String easypostApiKey,
+                                            @NonNull String userId,
+                                            DDPInstanceDto ddpInstanceDto) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(UPDATE_KIT_DEACTIVATION)) {
@@ -761,6 +763,19 @@ public class KitRequestShipping extends KitRequest {
 
         if (results.resultException != null) {
             throw new RuntimeException("Error setting kitRequest to deactivated w/ dsm_kit_request_id " + kitRequestId, results.resultException);
+        }
+        if (Objects.nonNull(ddpInstanceDto)) {
+            new KitRequestShipping()
+            KitRequestShipping kitRequestShipping = new KitRequestShipping(ddpParticipantId, collaboratorPatientId, collaboratorSampleId, null,
+                    null, null, Long.parseLong(ddpKitRequestId), 0, null, null, null, null, null, null, 0, false, errorMessage, 0, null,
+                    0, null, null, false, null, 0, null, externalOrderNumber, false, null, createdBy, null,
+                    null, null, 0, false, uploadReason, null, null, null);
+
+            Generator paramsGenerator = new ParamsGenerator(kitRequestShipping, ddpInstanceDto.getInstanceName());
+            RequestPayload requestPayload = new RequestPayload(ddpInstanceDto.getEsParticipantIndex(), ddpParticipantId);
+            ScriptBuilder scriptBuilder = new NestedScriptBuilder("kitRequestShipping", "ddpKitRequestId");
+            UpsertPainless upsertPainless = new UpsertPainless(paramsGenerator, requestPayload, scriptBuilder);
+            upsertPainless.export();
         }
         else {
             if (easypostApiKey != null) {
@@ -874,17 +889,18 @@ public class KitRequestShipping extends KitRequest {
             throw new RuntimeException("Error adding kit request  w/ ddpKitRequestId " + ddpKitRequestId, results.resultException);
         }
 
+        if (Objects.nonNull(ddpInstance)) {
+            KitRequestShipping kitRequestShipping = new KitRequestShipping(ddpParticipantId, collaboratorPatientId, collaboratorSampleId, null,
+                    null, null, Long.parseLong(ddpKitRequestId), 0, null, null, null, null, null, null, 0, false, errorMessage, 0, null,
+                    0, null, null, false, null, 0, null, externalOrderNumber, false, null, createdBy, null,
+                    null, null, 0, false, uploadReason, null, null, null);
 
-        KitRequestShipping kitRequestShipping = new KitRequestShipping(ddpParticipantId, collaboratorPatientId, collaboratorSampleId, null,
-                null, null, 0, 0, null, null, null, null, null, null, 0, false, errorMessage, 0, null,
-                0, null, null, false, null, 0, null, externalOrderNumber, false, null, createdBy, null,
-                null, null, 0, false, uploadReason, null, null, null);
-
-        Generator paramsGenerator = new ParamsGenerator(kitRequestShipping, ddpInstance.getName());
-        RequestPayload requestPayload = new RequestPayload(ddpInstance.getParticipantIndexES(), ddpParticipantId);
-        ScriptBuilder scriptBuilder = new NestedScriptBuilder("kitRequestShipping", "ddpKitRequestId");
-        UpsertPainless upsertPainless = new UpsertPainless(paramsGenerator, requestPayload, scriptBuilder);
-        upsertPainless.export();
+            Generator paramsGenerator = new ParamsGenerator(kitRequestShipping, ddpInstance.getName());
+            RequestPayload requestPayload = new RequestPayload(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+            ScriptBuilder scriptBuilder = new NestedScriptBuilder("kitRequestShipping", "ddpKitRequestId");
+            UpsertPainless upsertPainless = new UpsertPainless(paramsGenerator, requestPayload, scriptBuilder);
+            upsertPainless.export();
+        }
 
         logger.info("Added kitRequest w/ ddpKitRequestId " + ddpKitRequestId);
         return (String) results.resultValue;

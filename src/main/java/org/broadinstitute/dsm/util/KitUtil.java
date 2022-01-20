@@ -143,7 +143,7 @@ public class KitUtil {
                     else {
                         KitRequestShipping.deactivateKitRequest(Long.parseLong(kitLabelTriggered.getDsmKitRequestId()), "Participant not found",
                                 null,
-                                "System");
+                                "System", ddpInstanceByInstanceName.orElse(null));
                         logger.error("Didn't find participant " + kitLabelTriggered.getDdpParticipantId());
                     }
                 }
@@ -525,7 +525,8 @@ public class KitUtil {
                                         boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(participant, uploaded);
                                         if (specialBehavior) {
                                             KitRequestShipping.deactivateKitRequest(kit.getDsmKitRequestId(), SYSTEM_AUTOMATICALLY_DEACTIVATED + ": " + uploaded.getValue(),
-                                                    DSMServer.getDDPEasypostApiKey(ddpInstance.getName()), "System");
+                                                    DSMServer.getDDPEasypostApiKey(ddpInstance.getName()), "System",
+                                                    ddpInstanceByInstanceName.orElse(null));
                                             if (InstanceSettings.TYPE_NOTIFICATION.equals(uploaded.getType())) {
                                                 String message = kitType.getName() + " kit for participant " + kit.getParticipantId() + " (<b>" + kit.getCollaboratorParticipantId()
                                                         + "</b>) was deactivated per background job <br>. " + uploaded.getValue();

@@ -72,7 +72,7 @@ public class KitExpressRoute extends RequestHandler {
         KitRequestShipping kitRequest = KitRequestShipping.getKitRequest(kitRequestId);
         //deactivate kit which is  already in db and refund the label
         KitRequestShipping.deactivateKitRequest(Long.valueOf(kitRequestId), KitRequestShipping.DEACTIVATION_REASON,
-                DSMServer.getDDPEasypostApiKey(kitRequest.getRealm()), userId);
+                DSMServer.getDDPEasypostApiKey(kitRequest.getRealm()), userId, ddpInstanceByInstanceName.orElse(null));
         //add new kit into db
         KitRequestShipping.reactivateKitRequest(kitRequestId);
 

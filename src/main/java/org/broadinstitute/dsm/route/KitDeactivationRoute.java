@@ -9,6 +9,8 @@ import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.dto.settings.InstanceSettingsDto;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.security.RequestHandler;
@@ -25,6 +27,7 @@ import spark.Request;
 import spark.Response;
 
 import java.util.Map;
+import java.util.Optional;
 
 public class KitDeactivationRoute extends RequestHandler {
 
@@ -44,12 +47,13 @@ public class KitDeactivationRoute extends RequestHandler {
             boolean deactivate = request.url().toLowerCase().contains("deactivate");
             KitRequestShipping kitRequest = KitRequestShipping.getKitRequest(kitRequestId);
             String realm = kitRequest.getRealm();
+            Optional<DDPInstanceDto> ddpInstanceByInstanceName = new DDPInstanceDao().getDDPInstanceByInstanceName(realm);
             if ( UserUtil.checkUserAccess(realm, userId, "kit_deactivation", userIdRequest)) {
                 if (deactivate) {
                     JsonObject jsonObject = new JsonParser().parse(request.body()).getAsJsonObject();
                     String reason = jsonObject.get("reason").getAsString();
                     KitRequestShipping.deactivateKitRequest(Long.parseLong(kitRequestId), reason,
-                            DSMServer.getDDPEasypostApiKey(realm), userIdRequest);
+                            DSMServer.getDDPEasypostApiKey(realm), userIdRequest, ddpInstanceByInstanceName.orElse(null));
                 }
                 else {
                     QueryParamsMap queryParams = request.queryMap();
