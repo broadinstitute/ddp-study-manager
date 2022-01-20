@@ -2,12 +2,8 @@ package org.broadinstitute.dsm.model.elastic.filter;
 
 import static org.junit.Assert.*;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.broadinstitute.dsm.model.Filter;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class OperatorTest {
@@ -25,7 +21,7 @@ public class OperatorTest {
             assertEquals(Operator.EQUALS, equals);
             assertEquals(Operator.GREATER_THAN_EQUALS, larger);
             assertEquals(Operator.LESS_THAN_EQUALS, smaller);
-            assertEquals(Operator.IS_NOT_NULL, isNotNull);
+            assertEquals(Operator.IS_NOT_NULL_LIST, isNotNull);
         } catch (IllegalArgumentException iae) {
             Assert.assertTrue(true);
         }
@@ -85,7 +81,7 @@ public class OperatorTest {
     public void extractIsNotNullOperator() {
         String filter = "m.mr_received IS NOT NULL";
         Operator operator = Operator.extract(filter);
-        assertEquals(Operator.IS_NOT_NULL, operator);
+        assertEquals(Operator.IS_NOT_NULL_LIST, operator);
     }
 
     @Test

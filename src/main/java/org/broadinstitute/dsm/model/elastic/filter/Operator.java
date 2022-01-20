@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -24,6 +23,8 @@ public enum Operator {
 
     public static final String MULTIPLE_OPTIONS_INDICATOR = "()";
     public static final String UNKNOWN_OPERATOR = "Unknown operator";
+    public static final List<String> IS_NOT_NULL_LIST = Arrays.asList("IS", "NOT",
+            "NULL");
 
     private String value;
 
@@ -42,12 +43,10 @@ public enum Operator {
         String[] splittedFilter = filter.split(Filter.SPACE);
         if (isMultipleOptions(splittedFilter))
             return MULTIPLE_OPTIONS;
-        else if (isNotNull(splittedFilter))
-            return IS_NOT_NULL;
         Optional<String> maybeOperator = Arrays.stream(splittedFilter)
                 .filter(StringUtils::isNotBlank)
                 .map(Operator::handleSpecialCaseOperators)
-                .filter(word -> Arrays.stream(Operator.values()).anyMatch(op -> op.value.equals(word)))
+                .filter(word -> Arrays.stream(Operator.values()).anyMatch(op -> op.value.equals(word)) || Operator.IS_NOT_NULL_LIST.contains(word))
                 .distinct()
                 .reduce((prev, curr) -> String.join(Filter.SPACE, prev, curr));
         if (maybeOperator.isPresent()) {
@@ -64,6 +63,7 @@ public enum Operator {
                 case "JSON_EXTRACT =":
                 case "JSON_EXTRACT >=":
                 case "JSON_EXTRACT <=":
+                case "JSON_EXTRACT IS NOT NULL":
                     return JSON_EXTRACT;
                 default:
                     return Operator.getOperator(operator);
@@ -77,7 +77,7 @@ public enum Operator {
         String strOperator = StringUtils.EMPTY;
         for (Operator operator : Operator.values()) {
             int startIndex = word.indexOf(operator.value);
-            if (startIndex == -1) continue;
+            if (startIndex == -1 && !Operator.IS_NOT_NULL_LIST.contains(word)) continue;
             if (word.contains(Filter.OPEN_PARENTHESIS)) strOperator = word.substring(startIndex, startIndex + operator.value.length());
             else strOperator = word;
             return strOperator;
