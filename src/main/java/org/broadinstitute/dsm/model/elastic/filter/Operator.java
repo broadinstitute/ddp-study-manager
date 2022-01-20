@@ -60,6 +60,8 @@ public enum Operator {
                     return Operator.DATE_GREATER;
                 case "DATE =":
                     return Operator.DATE;
+                case "NOT <=>":
+                    return Operator.DIAMOND_EQUALS;
                 case "JSON_EXTRACT =":
                 case "JSON_EXTRACT >=":
                 case "JSON_EXTRACT <=":

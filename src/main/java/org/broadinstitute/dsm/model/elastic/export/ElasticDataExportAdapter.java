@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.model.elastic.export;
 import java.io.IOException;
 
 import org.broadinstitute.dsm.model.elastic.Util;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.slf4j.Logger;
@@ -19,7 +20,7 @@ public class ElasticDataExportAdapter extends BaseExporter {
                 .doc(source)
                 .retryOnConflict(5);
         try {
-            clientInstance.update(updateRequest, RequestOptions.DEFAULT);
+            ElasticSearchUtil.getClientInstance().update(updateRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
             throw new RuntimeException("Error occurred while exporting data to ES", e);
         }

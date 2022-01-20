@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.model.elastic.export;
 
 import java.io.IOException;
 
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.slf4j.Logger;
@@ -17,7 +18,7 @@ public class ElasticMappingExportAdapter extends BaseExporter {
         PutMappingRequest putMappingRequest = new PutMappingRequest(requestPayload.getIndex());
         putMappingRequest.source(source);
         try {
-            clientInstance.indices().putMapping(putMappingRequest, RequestOptions.DEFAULT);
+            ElasticSearchUtil.getClientInstance().indices().putMapping(putMappingRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
             throw new RuntimeException("Error occurred while updating mapping to ES", e);
         }

@@ -81,7 +81,7 @@ public class OperatorTest {
     public void extractIsNotNullOperator() {
         String filter = "m.mr_received IS NOT NULL";
         Operator operator = Operator.extract(filter);
-        assertEquals(Operator.IS_NOT_NULL_LIST, operator);
+        assertEquals(Operator.IS_NOT_NULL, operator);
     }
 
     @Test

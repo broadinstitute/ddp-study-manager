@@ -163,7 +163,7 @@ public class Tissue {
 
     public Tissue() {}
 
-    public Tissue(long tissueId, long oncHistoryDetailId, String notes, Integer countReceived, String tissueType,
+    public Tissue(long tissueId, long oncHistoryDetailId, String notes, long countReceived, String tissueType,
                   String tissueSite, String tumorType, String hE, String pathologyReport, String collaboratorSampleId,
                   String blockSent, String scrollsReceived, String skId, String smId, String sentGp, String firstSmId,
                   String additionalValuesJson, String expectedReturn, String returnDate,

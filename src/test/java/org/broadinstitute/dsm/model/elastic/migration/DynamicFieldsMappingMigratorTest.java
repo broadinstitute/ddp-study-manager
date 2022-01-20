@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.model.elastic.migration;
 import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.model.elastic.export.Exportable;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -16,6 +17,7 @@ public class DynamicFieldsMappingMigratorTest {
     }
 
     @Test
+    @Ignore
     public void testExport() {
         final String index = "participants_structured.cmi.angio";
         final String study = "angio";
