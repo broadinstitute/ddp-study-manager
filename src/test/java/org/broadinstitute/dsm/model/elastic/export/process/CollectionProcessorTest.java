@@ -33,17 +33,21 @@ public class CollectionProcessorTest {
         String propertyName = "medicalRecord";
         double recordId = 5;
         String oldValue = "mr_old";
-        String json = String.format("{\"%s\":[{\"id\":%s,\"mr\":\"%s\"}]}", propertyName, recordId, oldValue);
+        String json = String.format("{\"%s\":[{\"medicalRcordId\":%s,\"mrProblemText\":\"%s\"}]}", propertyName, recordId, oldValue);
 
         ObjectMapper objectMapper = new ObjectMapper();
 
         ESDsm esDsm = objectMapper.readValue(json, ESDsm.class);
 
-        NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "mr_updated");
-        GeneratorPayload generatorPayload = MappingGeneratorTest.getGeneratorPayload(TestPatchUtil.MEDICAL_RECORD_COLUMN, "mr_updated", 5);
+        NameValue nameValue = new NameValue("m.mrProblemText", "mr_updated");
+
+        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 5);
+
+        BaseParser valueParser = new ValueParser();
+        valueParser.setPropertyInfo(new BaseGenerator.PropertyInfo(MedicalRecord.class, true));
+
         Processor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, generatorPayload,
-                instance(generatorPayload,
-                nameValue, new ValueParser()));
+                new CollectionSourceGenerator(valueParser, generatorPayload));
 
         List<Map<String, Object>> updatedList = (List<Map<String, Object>>) collectionProcessor.process();
 
@@ -58,16 +62,21 @@ public class CollectionProcessorTest {
     public void updateIfExistsOrPut() throws IOException {
         String propertyName = "medicalRecord";
         double recordId = 5;
-        String json = String.format("{\"%s\":[{\"id\":%s,\"mr\":\"%s\"}]}", propertyName, recordId, "value");;
+        String json = String.format("{\"%s\":[{\"medicalRcordId\":%s,\"mrProblemText\":\"%s\"}]}", propertyName, recordId, "value");;
 
         ObjectMapper objectMapper = new ObjectMapper();
 
         ESDsm esDsm = objectMapper.readValue(json, ESDsm.class);
 
-        NameValue nameValue = new NameValue(TestPatchUtil.MEDICAL_RECORD_COLUMN, "val");
-        GeneratorPayload generatorPayload = MappingGeneratorTest.getGeneratorPayload(TestPatchUtil.MEDICAL_RECORD_COLUMN, "val", 10);
+        NameValue nameValue = new NameValue("m.mrProblemText", "val");
+
+        GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 10);
+
+        BaseParser valueParser = new ValueParser();
+        valueParser.setPropertyInfo(new BaseGenerator.PropertyInfo(MedicalRecord.class, true));
+
         CollectionProcessor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, generatorPayload,
-                instance(generatorPayload, nameValue, new ValueParser()));
+                new CollectionSourceGenerator(valueParser, generatorPayload));
 
         List<Map<String, Object>> updatedList = collectionProcessor.process();
 
@@ -79,43 +88,33 @@ public class CollectionProcessorTest {
     public void updateIfExists() throws IOException {
         String propertyName = "medicalRecord";
         double recordId = 5;
-        String json = String.format("{\"%s\":[{\"id\":%s,\"TEST1\":\"%s\", \"TEST2\":\"TEST_VAL2\"}]}", propertyName, recordId, "value");;
+        String json = String.format("{\"%s\":[{\"medicalRecordId\":%s,\"type\":\"%s\", \"mrProblemText\":\"TEST_VAL2\"}]}", propertyName, recordId, "value");;
 
         ObjectMapper objectMapper = new ObjectMapper();
 
         ESDsm esDsm = objectMapper.readValue(json, ESDsm.class);
 
-        NameValue nameValue = new NameValue(TestPatchUtil.ADDITIONAL_VALUES_JSON, "{\"TEST1\":\"TEST_VAL\"}");
+        NameValue nameValue = new NameValue("m.type", "TEST_VAL");
         GeneratorPayload generatorPayload = new GeneratorPayload(nameValue, 5);
-        DynamicFieldsParser parser = new DynamicFieldsParser();
-        parser.setDisplayType("TEXT");
-        parser.setParser(new ValueParser());
-        parser.setPropertyInfo(new BaseGenerator.PropertyInfo(MedicalRecord.class, true));
+
+        BaseParser valueParser = new ValueParser();
+        valueParser.setPropertyInfo(new BaseGenerator.PropertyInfo(MedicalRecord.class, true));
+
         CollectionProcessor collectionProcessor = new TestCollectionProcessor(esDsm, propertyName, generatorPayload,
-                instance(generatorPayload, nameValue, parser));
+                new CollectionSourceGenerator(valueParser, generatorPayload));
+
 
         List<Map<String, Object>> updatedList = collectionProcessor.process();
 
         updatedList.stream()
-                .filter(i -> i.containsKey("TEST1"))
+                .filter(i -> i.containsKey("type"))
                 .findFirst()
-                .ifPresentOrElse(m -> m.get("TEST1").equals("TEST_VAL"), Assert::fail);
+                .ifPresentOrElse(m -> Assert.assertEquals("TEST_VAL", m.get("type")), Assert::fail);
 
         updatedList.stream()
-                .filter(i -> i.containsKey("TEST2"))
+                .filter(i -> i.containsKey("mrProblemText"))
                 .findFirst()
-                .ifPresentOrElse(m -> m.get("TEST2").equals("TEST_VAL3"), Assert::fail);
-    }
-
-    private Collector instance(GeneratorPayload generatorPayload, NameValue nameValue, BaseParser parser) {
-        parser.setPropertyInfo(new BaseGenerator.PropertyInfo(MappingGeneratorTest.TestPropertyClass.class, true));
-        BaseGenerator sourceGenerator = new CollectionSourceGenerator(parser, generatorPayload) {
-            @Override
-            protected DBElement getDBElement() {
-                return TestPatchUtil.getColumnNameMap().get(nameValue.getName());
-            }
-        };
-        return sourceGenerator;
+                .ifPresentOrElse(m -> Assert.assertEquals("TEST_VAL2", m.get("mrProblemText")), Assert::fail);
     }
 
     private static class TestCollectionProcessor extends CollectionProcessor {

@@ -106,6 +106,6 @@ public enum Operator {
         splittedFilter = cleanFromEmptySpaces(splittedFilter);
         final int BOTTOM_SIZE_OF_IS_NOT_NULL = 4;
         if (splittedFilter.length < BOTTOM_SIZE_OF_IS_NOT_NULL) return false;
-        return Filter.IS.equals(splittedFilter[1]) && Filter.NOT.equals(splittedFilter[2]) && Filter.NULL.equals(splittedFilter[3]);
+        return Filter.IS.equals(splittedFilter[splittedFilter.length - 3]) && Filter.NOT.equals(splittedFilter[splittedFilter.length - 2]) && Filter.NULL.equals(splittedFilter[splittedFilter.length - 1]);
     }
 }

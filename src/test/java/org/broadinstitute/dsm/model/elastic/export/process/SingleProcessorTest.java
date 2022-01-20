@@ -8,6 +8,7 @@ import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorFactory;
 import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.SourceGeneratorFactory;
+import org.broadinstitute.dsm.model.elastic.export.parse.DynamicFieldsParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -22,9 +23,15 @@ public class SingleProcessorTest {
     public void processExisting() {
         BaseGenerator.PropertyInfo propertyInfo = Util.TABLE_ALIAS_MAPPINGS.get(DBConstants.DDP_PARTICIPANT_ALIAS);
         ValueParser valueParser = new ValueParser();
+        valueParser.setPropertyInfo(propertyInfo);
+
+        DynamicFieldsParser dynamicFieldsParser = new DynamicFieldsParser();
+        dynamicFieldsParser.setParser(valueParser);
+        dynamicFieldsParser.setDisplayType("TEXT");
+
         GeneratorFactory sourceGeneratorFactory = new SourceGeneratorFactory();
         BaseGenerator generator = sourceGeneratorFactory.make(propertyInfo);
-        generator.setParser(valueParser);
+        generator.setParser(dynamicFieldsParser);
         generator.setPayload(new GeneratorPayload(new NameValue("p.additionalValuesJson", "{\"key\":\"value\"}"), 0));
 
         ESDsm esDsm = new ESDsm();
@@ -43,9 +50,14 @@ public class SingleProcessorTest {
     public void processNew() {
         BaseGenerator.PropertyInfo propertyInfo = Util.TABLE_ALIAS_MAPPINGS.get(DBConstants.DDP_PARTICIPANT_ALIAS);
         ValueParser valueParser = new ValueParser();
+
+        DynamicFieldsParser dynamicFieldsParser = new DynamicFieldsParser();
+        dynamicFieldsParser.setParser(valueParser);
+        dynamicFieldsParser.setDisplayType("TEXT");
+
         GeneratorFactory sourceGeneratorFactory = new SourceGeneratorFactory();
         BaseGenerator generator = sourceGeneratorFactory.make(propertyInfo);
-        generator.setParser(valueParser);
+        generator.setParser(dynamicFieldsParser);
         generator.setPayload(new GeneratorPayload(new NameValue("p.additionalValuesJson", "{\"key\":\"value\"}"), 0));
 
         ESDsm esDsm = new ESDsm();
