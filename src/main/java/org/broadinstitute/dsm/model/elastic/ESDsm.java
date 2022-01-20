@@ -40,7 +40,7 @@ public class ESDsm {
     @SerializedName(ESObjectConstants.DIAGNOSIS_YEAR)
     Object diagnosisYear;
 
-    @SerializedName(ESObjectConstants.TISSUE_RECORDS)
+    @SerializedName(ESObjectConstants.TISSUE)
     List<Tissue> tissue;
 
     @SerializedName(ESObjectConstants.MEDICAL_RECORD)
@@ -60,6 +60,8 @@ public class ESDsm {
     OncHistory oncHistory;
 
     List<Map<String, Object>> medicalRecords;
+
+    List<Map<String, Object>> tissueRecords;
 
     public List<Tissue> getTissue() {
         if (tissue == null) tissue = Collections.emptyList();
