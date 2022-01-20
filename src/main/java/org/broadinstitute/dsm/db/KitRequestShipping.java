@@ -18,8 +18,11 @@ import org.broadinstitute.dsm.model.KitType;
 import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.ddp.KitDetail;
+import org.broadinstitute.dsm.model.elastic.export.RequestPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
+import org.broadinstitute.dsm.model.elastic.export.painless.NestedScriptBuilder;
 import org.broadinstitute.dsm.model.elastic.export.painless.ParamsGenerator;
+import org.broadinstitute.dsm.model.elastic.export.painless.ScriptBuilder;
 import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainless;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -796,15 +799,15 @@ public class KitRequestShipping extends KitRequest {
 
     //adding kit request to db (called by hourly job to add kits into DSM)
     public static void addKitRequests(@NonNull String instanceId, @NonNull KitDetail kitDetail, @NonNull int kitTypeId,
-                                      @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, String externalOrderNumber, String uploadReason) {
+                                      @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, String externalOrderNumber, String uploadReason, DDPInstance ddpInstance) {
         addKitRequests(instanceId, kitDetail.getKitType(), kitDetail.getParticipantId(), kitDetail.getKitRequestId(), kitTypeId, kitRequestSettings,
-                collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber, uploadReason);
+                collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber, uploadReason, ddpInstance);
     }
 
     //adding kit request to db (called by hourly job to add kits into DSM)
     public static void addKitRequests(@NonNull String instanceId, @NonNull String kitType, @NonNull String participantId, @NonNull String kitRequestId,
                                       @NonNull int kitTypeId, @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, boolean needsApproval, String externalOrderNumber,
-                                      String uploadReason) {
+                                      String uploadReason, DDPInstance ddpInstance) {
         inTransaction((conn) -> {
             String errorMessage = "";
             String collaboratorSampleId = null;
@@ -822,7 +825,7 @@ public class KitRequestShipping extends KitRequest {
                 }
             }
             writeRequest(instanceId, kitRequestId, kitTypeId, participantId, collaboratorParticipantId, collaboratorSampleId,
-                    "SYSTEM", null, errorMessage, externalOrderNumber, needsApproval, uploadReason);
+                    "SYSTEM", null, errorMessage, externalOrderNumber, needsApproval, uploadReason, ddpInstance);
             return null;
         });
     }
@@ -831,9 +834,9 @@ public class KitRequestShipping extends KitRequest {
     // called by
     // 1. hourly job to add kit requests into db
     // 2. kit upload
-    public static String writeRequest(@NonNull String instanceId, @NonNull String ddpKitRequestId, @NonNull int kitTypeId,
+    public static String writeRequest(@NonNull String instanceId, @NonNull String ddpKitRequestId, int kitTypeId,
                                       @NonNull String ddpParticipantId, String collaboratorPatientId, String collaboratorSampleId,
-                                      @NonNull String createdBy, String addressIdTo, String errorMessage, String externalOrderNumber, boolean needsApproval, String uploadReason) {
+                                      @NonNull String createdBy, String addressIdTo, String errorMessage, String externalOrderNumber, boolean needsApproval, String uploadReason, DDPInstance ddpInstance) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult(0);
             try (PreparedStatement insertKitRequest = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.INSERT_KIT_REQUEST), Statement.RETURN_GENERATED_KEYS)) {
@@ -871,8 +874,17 @@ public class KitRequestShipping extends KitRequest {
             throw new RuntimeException("Error adding kit request  w/ ddpKitRequestId " + ddpKitRequestId, results.resultException);
         }
 
-//        new ParamsGenerator("", )
-//        new UpsertPainless()
+
+        KitRequestShipping kitRequestShipping = new KitRequestShipping(ddpParticipantId, collaboratorPatientId, collaboratorSampleId, null,
+                null, null, 0, 0, null, null, null, null, null, null, 0, false, errorMessage, 0, null,
+                0, null, null, false, null, 0, null, externalOrderNumber, false, null, createdBy, null,
+                null, null, 0, false, uploadReason, null, null, null);
+
+        Generator paramsGenerator = new ParamsGenerator(kitRequestShipping, ddpInstance.getName());
+        RequestPayload requestPayload = new RequestPayload(ddpInstance.getParticipantIndexES(), ddpParticipantId);
+        ScriptBuilder scriptBuilder = new NestedScriptBuilder("kitRequestShipping", "ddpKitRequestId");
+        UpsertPainless upsertPainless = new UpsertPainless(paramsGenerator, requestPayload, scriptBuilder);
+        upsertPainless.export();
 
         logger.info("Added kitRequest w/ ddpKitRequestId " + ddpKitRequestId);
         return (String) results.resultValue;
