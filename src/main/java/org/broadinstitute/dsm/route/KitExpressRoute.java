@@ -78,6 +78,7 @@ public class KitExpressRoute extends RequestHandler {
 
         DDPInstance ddpInstance = DDPInstance.getDDPInstance(kitRequest.getRealm());
 
+
         EasyPostUtil easyPostUtil = new EasyPostUtil(kitRequest.getRealm());
         HashMap<String, KitType> kitTypes = org.broadinstitute.dsm.model.KitType.getKitLookup();
         String key = kitRequest.getKitTypeName() + "_" + ddpInstance.getDdpInstanceId();

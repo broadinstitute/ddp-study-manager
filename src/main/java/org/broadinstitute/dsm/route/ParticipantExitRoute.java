@@ -11,6 +11,8 @@ import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitDiscard;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.ParticipantExit;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.exception.ParticipantNotExist;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -26,6 +28,7 @@ import spark.Response;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class ParticipantExitRoute extends RequestHandler {
 
@@ -66,7 +69,8 @@ public class ParticipantExitRoute extends RequestHandler {
                         }
                         else {
                             //refund label of kits which are not sent yet
-                            KitRequestShipping.refundKit(kit.getDsmKitRequestId(), DSMServer.getDDPEasypostApiKey(realm));
+                            Optional<DDPInstanceDto> maybeInstance = new DDPInstanceDao().getDDPInstanceByInstanceName(realm);
+                            KitRequestShipping.refundKit(kit.getDsmKitRequestId(), DSMServer.getDDPEasypostApiKey(realm), maybeInstance.orElse(null));
                         }
                     }
                     return kitsNeedAction;
