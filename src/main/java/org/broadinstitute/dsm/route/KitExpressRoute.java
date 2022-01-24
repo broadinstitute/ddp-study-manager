@@ -12,6 +12,8 @@ import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.model.EasypostLabelRate;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitType;
@@ -70,30 +72,33 @@ public class KitExpressRoute extends RequestHandler {
 
     public void expressKitRequest(@NonNull String kitRequestId, @NonNull String userId) {
         KitRequestShipping kitRequest = KitRequestShipping.getKitRequest(kitRequestId);
-        //deactivate kit which is  already in db and refund the label
-        KitRequestShipping.deactivateKitRequest(Long.valueOf(kitRequestId), KitRequestShipping.DEACTIVATION_REASON,
-                DSMServer.getDDPEasypostApiKey(kitRequest.getRealm()), userId, ddpInstanceByInstanceName.orElse(null));
-        //add new kit into db
-        KitRequestShipping.reactivateKitRequest(kitRequestId);
 
-        DDPInstance ddpInstance = DDPInstance.getDDPInstance(kitRequest.getRealm());
+        DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName(kitRequest.getRealm()).orElseThrow();
+
+        //deactivate kit which is  already in db and refund the label
+        KitRequestShipping.deactivateKitRequest(Long.parseLong(kitRequestId), KitRequestShipping.DEACTIVATION_REASON,
+                DSMServer.getDDPEasypostApiKey(kitRequest.getRealm()), userId, ddpInstanceDto);
+        //add new kit into db
+        KitRequestShipping.reactivateKitRequest(kitRequestId, ddpInstanceDto);
+
 
 
         EasyPostUtil easyPostUtil = new EasyPostUtil(kitRequest.getRealm());
         HashMap<String, KitType> kitTypes = org.broadinstitute.dsm.model.KitType.getKitLookup();
-        String key = kitRequest.getKitTypeName() + "_" + ddpInstance.getDdpInstanceId();
+        String key = kitRequest.getKitTypeName() + "_" + ddpInstanceDto.getDdpInstanceId();
         KitType kitType = kitTypes.get(key);
 
-        Map<Integer, KitRequestSettings> carrierServiceTypes = KitRequestSettings.getKitRequestSettings(ddpInstance.getDdpInstanceId());
+        Map<Integer, KitRequestSettings> carrierServiceTypes =
+                KitRequestSettings.getKitRequestSettings(String.valueOf(ddpInstanceDto.getDdpInstanceId()));
         KitRequestSettings kitRequestSettings = carrierServiceTypes.get(kitType.getKitTypeId());
 
         String kitId = getKitId(kitRequestId);
         //trigger label creation
-        createExpressLabelToParticipant(easyPostUtil, kitRequestSettings, kitType, kitId, kitRequest.getEasypostAddressId(), ddpInstance);
+        createExpressLabelToParticipant(easyPostUtil, kitRequestSettings, kitType, kitId, kitRequest.getEasypostAddressId(), ddpInstanceDto);
     }
 
     private void createExpressLabelToParticipant(@NonNull EasyPostUtil easyPostUtil, @NonNull KitRequestSettings kitRequestSettings,
-                                                 @NonNull KitType kitType, @NonNull String kitId, @NonNull String addressToId, @NonNull DDPInstance ddpInstance) {
+                                                 @NonNull KitType kitType, @NonNull String kitId, @NonNull String addressToId, DDPInstanceDto ddpInstance) {
         String errorMessage = "";
         Shipment participantShipment = null;
         Address toAddress = null;
@@ -101,7 +106,7 @@ public class KitExpressRoute extends RequestHandler {
             toAddress = KitRequestShipping.getToAddressId(easyPostUtil, kitRequestSettings, addressToId, null);
             participantShipment = KitRequestShipping.getShipment(easyPostUtil, ddpInstance.getBillingReference(),
                     kitType, kitRequestSettings, toAddress, "FedEx", kitRequestSettings.getCarrierToId(), "FIRST_OVERNIGHT");
-            doNotification(ddpInstance.getName());
+            doNotification(ddpInstance.getInstanceName());
         }
         catch (Exception e) {
             errorMessage = "To: " + e.getMessage();

@@ -911,7 +911,7 @@ public class KitRequestShipping extends KitRequest {
 
     private static SimpleResult writeNewKit(Connection conn, String kitRequestId, String addressIdTo, String errorMessage, boolean needsApproval) {
         SimpleResult dbVals = new SimpleResult();
-        try (PreparedStatement insertKit = conn.prepareStatement(INSERT_KIT)) {
+        try (PreparedStatement insertKit = conn.prepareStatement(INSERT_KIT, Statement.RETURN_GENERATED_KEYS)) {
             insertKit.setString(1, kitRequestId);
             if (StringUtils.isNotBlank(addressIdTo)) {
                 insertKit.setString(2, addressIdTo);
@@ -928,6 +928,14 @@ public class KitRequestShipping extends KitRequest {
             insertKit.setObject(4, errorMessage);
             insertKit.setBoolean(5, needsApproval);
             insertKit.executeUpdate();
+            try (ResultSet rs = insertKit.getGeneratedKeys()) {
+                if (rs.next()) {
+                    dbVals.resultValue = rs.getString(1);
+                }
+            }
+            catch (Exception e) {
+                throw new RuntimeException("Error getting id of new kit request ", e);
+            }
         }
         catch (SQLException e) {
             dbVals.resultException = e;
@@ -936,10 +944,8 @@ public class KitRequestShipping extends KitRequest {
     }
 
     // called by reactivation of a deactivated kit
-    public static void writeNewKit(String kitRequestId, String addressIdTo, String errorMessage, boolean needsApproval) {
-        SimpleResult results = inTransaction((conn) -> {
-            return writeNewKit(conn, kitRequestId, addressIdTo, errorMessage, needsApproval);
-        });
+    public static long writeNewKit(String kitRequestId, String addressIdTo, String errorMessage, boolean needsApproval) {
+        SimpleResult results = inTransaction((conn) -> writeNewKit(conn, kitRequestId, addressIdTo, errorMessage, needsApproval));
 
         if (results.resultException != null) {
             logger.error("Error writing new kit w/ dsm_kit_id " + kitRequestId, results.resultException);
@@ -947,6 +953,7 @@ public class KitRequestShipping extends KitRequest {
         else {
             logger.info("Wrote new kit w/ dsm_kit_id " + kitRequestId, results.resultException);
         }
+        return (long) results.resultValue;
     }
 
     // update kit with label trigger user and date
@@ -1357,11 +1364,11 @@ public class KitRequestShipping extends KitRequest {
 
     }
 
-    public static void reactivateKitRequest(@NonNull String kitRequestId) {
-        reactivateKitRequest(kitRequestId, null);
+    public static void reactivateKitRequest(@NonNull String kitRequestId, DDPInstanceDto ddpInstanceDto) {
+        reactivateKitRequest(kitRequestId, null, ddpInstanceDto);
     }
 
-    public static void reactivateKitRequest(@NonNull String dsmKitRequestId, String message) {
+    public static void reactivateKitRequest(@NonNull String dsmKitRequestId, String message, DDPInstanceDto ddpInstanceDto) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KIT + QueryExtension.KIT_DEACTIVATED,
@@ -1396,7 +1403,13 @@ public class KitRequestShipping extends KitRequest {
         }
         if (results.resultValue != null) {
             KitRequestShipping kitRequestShipping = (KitRequestShipping) results.resultValue;
-            KitRequestShipping.writeNewKit(dsmKitRequestId, kitRequestShipping.getEasypostAddressId(), message, false);
+            long dsmKitId = KitRequestShipping.writeNewKit(dsmKitRequestId, kitRequestShipping.getEasypostAddressId(), message, false);
+            Generator paramsGenerator = new ParamsGenerator(kitRequestShipping, ddpInstanceDto.getInstanceName());
+            ScriptBuilder scriptBuilder = new NestedScriptBuilder(paramsGenerator.getPropertyName(), "dsmKitId");
+            MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder("dsmKitId", dsmKitId);
+            NestedQueryBuilder nestedQueryBuilder = new NestedQueryBuilder("dsm.kitRequestShipping", matchQueryBuilder, ScoreMode.Avg);
+            UpsertPainless upsertPainless = new UpsertPainless(paramsGenerator, ddpInstanceDto.getEsParticipantIndex(), scriptBuilder, nestedQueryBuilder);
+            upsertPainless.export();
         }
     }
 

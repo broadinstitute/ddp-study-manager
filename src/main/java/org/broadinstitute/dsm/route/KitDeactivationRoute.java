@@ -47,13 +47,13 @@ public class KitDeactivationRoute extends RequestHandler {
             boolean deactivate = request.url().toLowerCase().contains("deactivate");
             KitRequestShipping kitRequest = KitRequestShipping.getKitRequest(kitRequestId);
             String realm = kitRequest.getRealm();
-            Optional<DDPInstanceDto> ddpInstanceByInstanceName = new DDPInstanceDao().getDDPInstanceByInstanceName(realm);
+            DDPInstanceDto ddpInstanceByInstanceName = new DDPInstanceDao().getDDPInstanceByInstanceName(realm).orElse(null);
             if ( UserUtil.checkUserAccess(realm, userId, "kit_deactivation", userIdRequest)) {
                 if (deactivate) {
                     JsonObject jsonObject = new JsonParser().parse(request.body()).getAsJsonObject();
                     String reason = jsonObject.get("reason").getAsString();
                     KitRequestShipping.deactivateKitRequest(Long.parseLong(kitRequestId), reason,
-                            DSMServer.getDDPEasypostApiKey(realm), userIdRequest, ddpInstanceByInstanceName.orElse(null));
+                            DSMServer.getDDPEasypostApiKey(realm), userIdRequest, ddpInstanceByInstanceName);
                 }
                 else {
                     QueryParamsMap queryParams = request.queryMap();
@@ -62,7 +62,8 @@ public class KitDeactivationRoute extends RequestHandler {
                         activateAnyway = queryParams.get("activate").booleanValue();
                     }
                     if (activateAnyway) {
-                        KitRequestShipping.reactivateKitRequest(kitRequestId, KitUtil.IGNORE_AUTO_DEACTIVATION);
+                        KitRequestShipping.reactivateKitRequest(kitRequestId, KitUtil.IGNORE_AUTO_DEACTIVATION,
+                                ddpInstanceByInstanceName);
                     }
                     else {
                         DDPInstance ddpInstance = DDPInstance.getDDPInstance(realm);
@@ -91,11 +92,11 @@ public class KitDeactivationRoute extends RequestHandler {
                                 }
                             }
                             else {
-                                KitRequestShipping.reactivateKitRequest(kitRequestId);
+                                KitRequestShipping.reactivateKitRequest(kitRequestId, ddpInstanceByInstanceName);
                             }
                         }
                         else {
-                            KitRequestShipping.reactivateKitRequest(kitRequestId);
+                            KitRequestShipping.reactivateKitRequest(kitRequestId, ddpInstanceByInstanceName);
                         }
                     }
 
