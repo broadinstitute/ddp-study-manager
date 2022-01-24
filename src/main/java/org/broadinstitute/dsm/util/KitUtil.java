@@ -280,7 +280,9 @@ public class KitUtil {
         catch (Exception e) {
             errorMessage += "Return: " + e.getMessage();
         }
-        KitRequestShipping.updateKit(dsmKitId, participantShipment, returnShipment, errorMessage, toAddress, false);
+        DDPInstanceDao ddpInstanceDao = new DDPInstanceDao();
+        DDPInstanceDto ddpInstanceDto = ddpInstanceDao.getDDPInstanceByInstanceId(kitRequestSettings.getDdpInstanceId()).orElseThrow();
+        KitRequestShipping.updateKit(dsmKitId, participantShipment, returnShipment, errorMessage, toAddress, false, ddpInstanceDto);
     }
 
     public static String getKitCollaboratorId(@NonNull String ddpParticipantId, @NonNull String realmId) {
@@ -499,6 +501,9 @@ public class KitUtil {
         catch (Exception e) {
             dbVals.resultException = e;
         }
+
+        exportToEs();
+
         return dbVals;
     }
 

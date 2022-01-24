@@ -93,6 +93,9 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
     private static final String SQL_SELECT_DDP_INSTANCE_BY_INSTANCE_NAME = SQL_BASE_SELECT +
             "WHERE instance_name = ? ";
 
+    private static final String SQL_SELECT_DDP_INSTANCE_BY_INSTANCE_ID = SQL_BASE_SELECT +
+            "WHERE ddp_instance_id = ? ";
+
 
 
     public static final String DDP_INSTANCE_ID = "ddp_instance_id";
@@ -389,5 +392,31 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
             throw new RuntimeException("Couldn't get collaborator id prefix with study guid: " + studyGuid, results.resultException);
         }
         return Optional.ofNullable((String) results.resultValue);
+    }
+
+    public Optional<DDPInstanceDto> getDDPInstanceByInstanceId(Integer ddpInstanceId) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_DDP_INSTANCE_BY_INSTANCE_ID)) {
+                stmt.setInt(1, ddpInstanceId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = getDdpInstanceDtoFromResultSet(rs);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting ddp instance for " + ddpInstanceId, e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get ddp instance for " + ddpInstanceId, results.resultException);
+        }
+        return Optional.ofNullable((DDPInstanceDto) results.resultValue);
     }
 }

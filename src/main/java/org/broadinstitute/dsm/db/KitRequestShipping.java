@@ -167,12 +167,13 @@ public class KitRequestShipping extends KitRequest {
     private String trackingNumberTo;
 
     @ColumnName (DBConstants.DSM_TRACKING_RETURN)
-    private String trackingNumberReturn;
+    private String trackingReturnId;
 
     @ColumnName (DBConstants.TRACKING_ID)
     private String scannedTrackingNumber;
     private String trackingUrlTo;
-    private String trackingUrlReturn;
+    @ColumnName(DBConstants.DSM_TRACKING_URL_RETURN)
+    private String easypostTrackingReturnUrl;
     private String collaboratorParticipantId;
 
     @ColumnName (DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID)
@@ -274,7 +275,7 @@ public class KitRequestShipping extends KitRequest {
     // shippingId = ddp_label !!!
     public KitRequestShipping(String participantId, String collaboratorParticipantId, String bspCollaboratorSampleId, String shippingId, String realm,
                               String kitTypeName, long dsmKitRequestId, long dsmKitId, String labelUrlTo, String labelUrlReturn,
-                              String trackingNumberTo, String trackingNumberReturn,
+                              String trackingNumberTo, String trackingReturnId,
                               String trackingUrlTo, String trackingUrlReturn, long scanDate, boolean error, String message,
                               long receiveDate, String easypostAddressId, long deactivatedDate, String deactivationReason,
                               String kitLabel, boolean express, String easypostToId, long labelDate, String easypostShipmentStatus,
@@ -290,9 +291,9 @@ public class KitRequestShipping extends KitRequest {
         this.labelUrlTo = labelUrlTo;
         this.labelUrlReturn = labelUrlReturn;
         this.trackingNumberTo = trackingNumberTo;
-        this.trackingNumberReturn = trackingNumberReturn;
+        this.trackingReturnId = trackingReturnId;
         this.trackingUrlTo = trackingUrlTo;
-        this.trackingUrlReturn = trackingUrlReturn;
+        this.easypostTrackingReturnUrl = trackingUrlReturn;
         this.scanDate = scanDate;
         this.error = error;
         this.message = message;
@@ -367,7 +368,7 @@ public class KitRequestShipping extends KitRequest {
                 kitRequestShipping.setUpsTrackingStatus(rs.getString(DBConstants.UPS_STATUS_DESCRIPTION));
 
             }
-            else if (StringUtils.isNotBlank(upsPackageTrackingNumber) && upsPackageTrackingNumber.equals(kitRequestShipping.getTrackingNumberReturn())) {
+            else if (StringUtils.isNotBlank(upsPackageTrackingNumber) && upsPackageTrackingNumber.equals(kitRequestShipping.getTrackingReturnId())) {
                 kitRequestShipping.setUpsReturnStatus(rs.getString(DBConstants.UPS_STATUS_DESCRIPTION));
             }
 
@@ -993,7 +994,7 @@ public class KitRequestShipping extends KitRequest {
 
     // update kit with label information
     public static void updateKit(String dsmKitId, Shipment participantShipment, Shipment returnShipment,
-                                 String errorMessage, Address toAddress, boolean isExpress) {
+                                 String errorMessage, Address toAddress, boolean isExpress, DDPInstanceDto ddpInstanceDto) {
         KitRequestShipping kitRequestShipping = new KitRequestShipping();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -1023,7 +1024,9 @@ public class KitRequestShipping extends KitRequest {
                     stmt.setString(4, returnShipment.getId());
                     stmt.setString(6, returnShipment.getTrackingCode());
                     stmt.setString(8, returnTracker.getPublicUrl());
-                    kitRequestShipping.setLabelUrlReturn();
+                    kitRequestShipping.setLabelUrlReturn(returnLabel.getLabelUrl());
+                    kitRequestShipping.setTrackingReturnId(returnShipment.getTrackingCode());
+                    kitRequestShipping.setEasypostTrackingReturnUrl(returnTracker.getPublicUrl());
                 }
                 else {
                     stmt.setString(2, null);
@@ -1035,26 +1038,33 @@ public class KitRequestShipping extends KitRequest {
                 if (StringUtils.isNotBlank(errorMessage)) {
                     stmt.setInt(9, 1);
                     stmt.setString(10, errorMessage);
+                    kitRequestShipping.setError(true);
+                    kitRequestShipping.setMessage(errorMessage);
                     logger.info("Added kit request with error message " + errorMessage);
                 }
                 else {
                     stmt.setInt(9, 0);
                     stmt.setString(10, null);
+                    kitRequestShipping.setError(false);
                 }
 
                 if (toAddress != null) {
                     stmt.setString(11, toAddress.getId());
+                    kitRequestShipping.setEasypostAddressId(toAddress.getId());
                 }
                 else {
                     stmt.setString(11, null);
                 }
                 if (isExpress) {
                     stmt.setInt(12, 1);
+                    kitRequestShipping.setExpress(true);
                 }
                 else {
                     stmt.setInt(12, 0);
+                    kitRequestShipping.setExpress(false);
                 }
                 stmt.setString(13, dsmKitId);
+                kitRequestShipping.setDsmKitId(Long.valueOf(dsmKitId));
                 int result = stmt.executeUpdate();
                 if (result != 1) {
                     throw new RuntimeException("Error updating kit " + dsmKitId + " it was updating " + result + " rows");
@@ -1071,6 +1081,7 @@ public class KitRequestShipping extends KitRequest {
         }
         else {
             logger.info("Updated kit w/ dsm_kit_id " + dsmKitId, results.resultException);
+            exportToES(kitRequestShipping, ddpInstanceDto, "dsmKitId", "dsmKitId", dsmKitId);
         }
     }
 

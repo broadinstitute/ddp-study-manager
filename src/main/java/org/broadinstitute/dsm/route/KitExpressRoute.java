@@ -98,20 +98,20 @@ public class KitExpressRoute extends RequestHandler {
     }
 
     private void createExpressLabelToParticipant(@NonNull EasyPostUtil easyPostUtil, @NonNull KitRequestSettings kitRequestSettings,
-                                                 @NonNull KitType kitType, @NonNull String kitId, @NonNull String addressToId, DDPInstanceDto ddpInstance) {
+                                                 @NonNull KitType kitType, @NonNull String kitId, @NonNull String addressToId, DDPInstanceDto ddpInstanceDto) {
         String errorMessage = "";
         Shipment participantShipment = null;
         Address toAddress = null;
         try {
             toAddress = KitRequestShipping.getToAddressId(easyPostUtil, kitRequestSettings, addressToId, null);
-            participantShipment = KitRequestShipping.getShipment(easyPostUtil, ddpInstance.getBillingReference(),
+            participantShipment = KitRequestShipping.getShipment(easyPostUtil, ddpInstanceDto.getBillingReference(),
                     kitType, kitRequestSettings, toAddress, "FedEx", kitRequestSettings.getCarrierToId(), "FIRST_OVERNIGHT");
-            doNotification(ddpInstance.getInstanceName());
+            doNotification(ddpInstanceDto.getInstanceName());
         }
         catch (Exception e) {
             errorMessage = "To: " + e.getMessage();
         }
-        KitRequestShipping.updateKit(kitId, participantShipment, null, errorMessage, toAddress, true);
+        KitRequestShipping.updateKit(kitId, participantShipment, null, errorMessage, toAddress, true, ddpInstanceDto);
     }
 
     private String getKitId(@NonNull String kitRequestId) {
