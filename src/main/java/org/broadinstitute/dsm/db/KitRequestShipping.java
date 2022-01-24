@@ -955,7 +955,7 @@ public class KitRequestShipping extends KitRequest {
     }
 
     // update kit with label trigger user and date
-    public static void updateKit(long dsmKitId, String userId) {
+    public static void updateKit(long dsmKitId, String userId, DDPInstanceDto ddpInstanceDto) {
         long labelDate = System.currentTimeMillis();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -987,19 +987,14 @@ public class KitRequestShipping extends KitRequest {
             KitRequestShipping kitRequestShipping = new KitRequestShipping(null, dsmKitId, null, null, null, null);
             kitRequestShipping.setLabelDate(labelDate);
 
-            exportToES(kitRequestShipping, );
-            Generator paramsGenerator = new ParamsGenerator(kitRequestShipping, ddpInstanceDto.getInstanceName());
-            ScriptBuilder scriptBuilder = new NestedScriptBuilder(paramsGenerator.getPropertyName(), "dsmKitId");
-            MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder("dsmKitRequestId", dsmKitRequestId);
-            NestedQueryBuilder nestedQueryBuilder = new NestedQueryBuilder("dsm.kitRequestShipping", matchQueryBuilder, ScoreMode.Avg);
-            UpsertPainless upsertPainless = new UpsertPainless(paramsGenerator, ddpInstanceDto.getEsParticipantIndex(), scriptBuilder, nestedQueryBuilder);
-            upsertPainless.export();
+            exportToES(kitRequestShipping, ddpInstanceDto, "dsmKitId", "dsmKitId", dsmKitId);
         }
     }
 
     // update kit with label information
-    public static void updateKit(String kitRequestId, Shipment participantShipment, Shipment returnShipment,
+    public static void updateKit(String dsmKitId, Shipment participantShipment, Shipment returnShipment,
                                  String errorMessage, Address toAddress, boolean isExpress) {
+        KitRequestShipping kitRequestShipping = new KitRequestShipping();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(UPDATE_KIT)) {
@@ -1010,6 +1005,10 @@ public class KitRequestShipping extends KitRequest {
                     stmt.setString(3, participantShipment.getId());
                     stmt.setString(5, participantShipment.getTrackingCode());
                     stmt.setString(7, participantTracker.getPublicUrl());
+                    kitRequestShipping.setLabelUrlTo(participantLabel.getLabelUrl());
+                    kitRequestShipping.setEasypostToId(participantShipment.getId());
+                    kitRequestShipping.setTrackingNumberTo(participantShipment.getTrackingCode());
+                    kitRequestShipping.setTrackingUrlTo(participantTracker.getPublicUrl()); //TODO
                 }
                 else {
                     stmt.setString(1, null);
@@ -1024,6 +1023,7 @@ public class KitRequestShipping extends KitRequest {
                     stmt.setString(4, returnShipment.getId());
                     stmt.setString(6, returnShipment.getTrackingCode());
                     stmt.setString(8, returnTracker.getPublicUrl());
+                    kitRequestShipping.setLabelUrlReturn();
                 }
                 else {
                     stmt.setString(2, null);
@@ -1054,10 +1054,10 @@ public class KitRequestShipping extends KitRequest {
                 else {
                     stmt.setInt(12, 0);
                 }
-                stmt.setString(13, kitRequestId);
+                stmt.setString(13, dsmKitId);
                 int result = stmt.executeUpdate();
                 if (result != 1) {
-                    throw new RuntimeException("Error updating kit " + kitRequestId + " it was updating " + result + " rows");
+                    throw new RuntimeException("Error updating kit " + dsmKitId + " it was updating " + result + " rows");
                 }
             }
             catch (Exception e) {
@@ -1067,10 +1067,10 @@ public class KitRequestShipping extends KitRequest {
         });
 
         if (results.resultException != null) {
-            logger.error("Error updating kit w/ dsm_kit_id " + kitRequestId, results.resultException);
+            logger.error("Error updating kit w/ dsm_kit_id " + dsmKitId, results.resultException);
         }
         else {
-            logger.info("Updated kit w/ dsm_kit_id " + kitRequestId, results.resultException);
+            logger.info("Updated kit w/ dsm_kit_id " + dsmKitId, results.resultException);
         }
     }
 

@@ -13,6 +13,8 @@ import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.KitRequestCreateLabel;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitType;
 import org.broadinstitute.dsm.model.Value;
@@ -128,7 +130,14 @@ public class KitUtil {
             Address toAddress = null;
             try {
                 if (StringUtils.isBlank(kitLabelTriggered.getAddressIdTo())) {
+
                     DDPInstance ddpInstance = DDPInstance.getDDPInstance(kitLabelTriggered.getInstanceName());
+
+                    //TODO -> before we finally switch to ddpInstanceDao/ddpInstanceDto pair
+                    DDPInstanceDto ddpInstanceDto = new DDPInstanceDto.Builder()
+                            .withInstanceName(ddpInstance.getName())
+                            .withEsParticipantIndex(ddpInstance.getParticipantIndexES())
+                            .build();
 
                     Map<String, Map<String, Object>> participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
                             ElasticSearchUtil.BY_GUID + kitLabelTriggered.getDdpParticipantId());
@@ -143,7 +152,7 @@ public class KitUtil {
                     else {
                         KitRequestShipping.deactivateKitRequest(Long.parseLong(kitLabelTriggered.getDsmKitRequestId()), "Participant not found",
                                 null,
-                                "System", ddpInstanceByInstanceName.orElse(null));
+                                "System", ddpInstanceDto);
                         logger.error("Didn't find participant " + kitLabelTriggered.getDdpParticipantId());
                     }
                 }
@@ -526,7 +535,7 @@ public class KitUtil {
                                         if (specialBehavior) {
                                             KitRequestShipping.deactivateKitRequest(kit.getDsmKitRequestId(), SYSTEM_AUTOMATICALLY_DEACTIVATED + ": " + uploaded.getValue(),
                                                     DSMServer.getDDPEasypostApiKey(ddpInstance.getName()), "System",
-                                                    ddpInstanceByInstanceName.orElse(null));
+                                                    new DDPInstanceDao().getDDPInstanceByInstanceName(ddpInstance.getName()).orElseThrow());
                                             if (InstanceSettings.TYPE_NOTIFICATION.equals(uploaded.getType())) {
                                                 String message = kitType.getName() + " kit for participant " + kit.getParticipantId() + " (<b>" + kit.getCollaboratorParticipantId()
                                                         + "</b>) was deactivated per background job <br>. " + uploaded.getValue();

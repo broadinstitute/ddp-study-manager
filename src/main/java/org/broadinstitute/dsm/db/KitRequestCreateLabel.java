@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitType;
@@ -70,7 +71,7 @@ public class KitRequestCreateLabel {
     public static void updateKitLabelRequested(KitRequestShipping[] kitRequests, @NonNull String userId, DDPInstanceDto ddpInstanceDto) {
         if (kitRequests.length > 0) {
             for (KitRequestShipping kitRequest : kitRequests) {
-                KitRequestShipping.updateKit(kitRequest.getDsmKitId(), userId);
+                KitRequestShipping.updateKit(kitRequest.getDsmKitId(), userId, ddpInstanceDto);
             }
             logger.info("Done triggering label creation");
         }
@@ -110,10 +111,10 @@ public class KitRequestCreateLabel {
             throw new RuntimeException("Error looking up the latestKitRequests ", results.resultException);
         }
         logger.info("Found " + kitsNoLabel.size() + " kit requests which need a label");
-
+        DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName(realm).orElseThrow();
         if (!kitsNoLabel.isEmpty()) {
             for (KitRequestCreateLabel uploadedKit : kitsNoLabel) {
-                KitRequestShipping.updateKit(Long.parseLong(uploadedKit.getDsmKitId()), userId);
+                KitRequestShipping.updateKit(Long.parseLong(uploadedKit.getDsmKitId()), userId, ddpInstanceDto);
             }
         }
         logger.info("Done triggering label creation");
