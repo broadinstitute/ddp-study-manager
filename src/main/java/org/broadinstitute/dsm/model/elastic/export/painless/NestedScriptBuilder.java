@@ -4,7 +4,8 @@ public class NestedScriptBuilder implements ScriptBuilder {
 
     private final static String SCRIPT = "if (ctx._source.dsm.#propertyName == null) {ctx._source.dsm.#propertyName = [params.dsm.#propertyName]} " +
             "else {def targets = ctx._source.dsm.#propertyName.findAll(obj -> obj.#uniqueIdentifier == params.dsm.#propertyName.#uniqueIdentifier); " +
-            "for(target in targets) { for (entry in params.dsm.#propertyName.entrySet()) { target.put(entry.getKey(), entry.getValue()) } }}";
+            "if (targets.size() == 0) { ctx._source.dsm.#propertyName.add(params.dsm.#propertyName) } " +
+            "else { for(target in targets) { for (entry in params.dsm.#propertyName.entrySet()) { target.put(entry.getKey(), entry.getValue()) } }}}";
 
     private final String propertyName;
     private final String uniqueIdentifier;

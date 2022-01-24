@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitType;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -66,7 +67,7 @@ public class KitRequestCreateLabel {
     /**
      * Set given kitRequests to need label
      */
-    public static void updateKitLabelRequested(KitRequestShipping[] kitRequests, @NonNull String userId) {
+    public static void updateKitLabelRequested(KitRequestShipping[] kitRequests, @NonNull String userId, DDPInstanceDto ddpInstanceDto) {
         if (kitRequests.length > 0) {
             for (KitRequestShipping kitRequest : kitRequests) {
                 KitRequestShipping.updateKit(kitRequest.getDsmKitId(), userId);

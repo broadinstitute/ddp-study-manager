@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.migration;
 
 import org.broadinstitute.dsm.model.elastic.export.BaseExporter;
+import org.broadinstitute.dsm.model.elastic.export.Exportable;
 import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,7 @@ public abstract class BaseMigrator extends BaseExporter implements Generator {
         logger.info("filling bulk request with participants and their details");
         for (Map.Entry<String, Object> entry: participantRecords.entrySet()) {
             String participantId = entry.getKey();
-            participantId = getParticipantGuid(participantId, index);
+            participantId = Exportable.getParticipantGuid(participantId, index);
             if (StringUtils.isBlank(participantId)) continue;
             Object participantDetails = entry.getValue();
             transformObject(participantDetails);

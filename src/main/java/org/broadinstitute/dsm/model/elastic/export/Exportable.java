@@ -8,7 +8,7 @@ public interface Exportable {
 
     void export();
 
-    default String getParticipantGuid(String participantId, String index) {
+    static String getParticipantGuid(String participantId, String index) {
         if (!(ParticipantUtil.isGuid(participantId))) {
             ElasticSearchParticipantDto participantById =
                     new ElasticSearch().getParticipantById(index, participantId);

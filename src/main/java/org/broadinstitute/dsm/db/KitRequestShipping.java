@@ -20,6 +20,7 @@ import org.broadinstitute.dsm.model.KitType;
 import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.ddp.KitDetail;
+import org.broadinstitute.dsm.model.elastic.export.Exportable;
 import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
 import org.broadinstitute.dsm.model.elastic.export.painless.NestedScriptBuilder;
 import org.broadinstitute.dsm.model.elastic.export.painless.ParamsGenerator;
@@ -208,7 +209,8 @@ public class KitRequestShipping extends KitRequest {
 
     @ColumnName (DBConstants.EASYPOST_TO_ID)
     private String easypostToId;
-    private Long labelTriggeredDate;
+    @ColumnName (DBConstants.LABEL_TRIGGERED_DATE)
+    private Long labelDate;
 
     @ColumnName (DBConstants.NO_RETURN)
     private Boolean noReturn;
@@ -275,7 +277,7 @@ public class KitRequestShipping extends KitRequest {
                               String trackingNumberTo, String trackingNumberReturn,
                               String trackingUrlTo, String trackingUrlReturn, long scanDate, boolean error, String message,
                               long receiveDate, String easypostAddressId, long deactivatedDate, String deactivationReason,
-                              String kitLabel, boolean express, String easypostToId, long labelTriggeredDate, String easypostShipmentStatus,
+                              String kitLabel, boolean express, String easypostToId, long labelDate, String easypostShipmentStatus,
                               String externalOrderNumber, boolean noReturn, String externalOrderStatus, String createdBy, String testResult,
                               String upsTrackingStatus, String upsReturnStatus, long externalOrderDate, boolean careEvolve, String uploadReason,
                               String receiveDateString, String hruid, String gender) {
@@ -301,7 +303,7 @@ public class KitRequestShipping extends KitRequest {
         this.kitLabel = kitLabel;
         this.express = express;
         this.easypostToId = easypostToId;
-        this.labelTriggeredDate = labelTriggeredDate;
+        this.labelDate = labelDate;
         this.easypostShipmentStatus = easypostShipmentStatus;
         this.noReturn = noReturn;
         this.createdBy = createdBy;
@@ -772,12 +774,8 @@ public class KitRequestShipping extends KitRequest {
             KitRequestShipping kitRequestShipping = new KitRequestShipping(dsmKitRequestId, null, null, null, null, null);
             kitRequestShipping.setDeactivationReason(deactivationReason);
             kitRequestShipping.setDeactivatedDate(deactivatedDate);
-            Generator paramsGenerator = new ParamsGenerator(kitRequestShipping, ddpInstanceDto.getInstanceName());
-            ScriptBuilder scriptBuilder = new NestedScriptBuilder(paramsGenerator.getPropertyName(), "dsmKitRequestId");
-            MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder("dsmKitRequestId", dsmKitRequestId);
-            NestedQueryBuilder nestedQueryBuilder = new NestedQueryBuilder("dsm.kitRequestShipping", matchQueryBuilder, ScoreMode.Avg);
-            UpsertPainless upsertPainless = new UpsertPainless(paramsGenerator, ddpInstanceDto.getEsParticipantIndex(), scriptBuilder, nestedQueryBuilder);
-            upsertPainless.export();
+
+            exportToES(kitRequestShipping, ddpInstanceDto, "dsmKitRequestId", "dsmKitRequestId", dsmKitRequestId);
         }
         else {
             if (easypostApiKey != null) {
@@ -900,7 +898,7 @@ public class KitRequestShipping extends KitRequest {
 
             Generator paramsGenerator = new ParamsGenerator(kitRequestShipping, ddpInstance.getName());
             ScriptBuilder scriptBuilder = new NestedScriptBuilder(paramsGenerator.getPropertyName(), "dsmKitRequestId");
-            MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder("_id", ddpParticipantId);
+            MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder("_id", Exportable.getParticipantGuid(ddpParticipantId, ddpInstance.getParticipantIndexES()));
             UpsertPainless upsertPainless = new UpsertPainless(paramsGenerator, ddpInstance.getParticipantIndexES(), scriptBuilder, matchQueryBuilder);
             upsertPainless.export();
         }
@@ -958,11 +956,12 @@ public class KitRequestShipping extends KitRequest {
 
     // update kit with label trigger user and date
     public static void updateKit(long dsmKitId, String userId) {
+        long labelDate = System.currentTimeMillis();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT)) {
                 stmt.setString(1, userId);
-                stmt.setLong(2, System.currentTimeMillis());
+                stmt.setLong(2, labelDate);
                 stmt.setLong(3, dsmKitId);
 
                 int result = stmt.executeUpdate();
@@ -984,6 +983,17 @@ public class KitRequestShipping extends KitRequest {
         }
         else {
             logger.info("Updated kit w/ kit_id " + dsmKitId, results.resultException);
+
+            KitRequestShipping kitRequestShipping = new KitRequestShipping(null, dsmKitId, null, null, null, null);
+            kitRequestShipping.setLabelDate(labelDate);
+
+            exportToES(kitRequestShipping, );
+            Generator paramsGenerator = new ParamsGenerator(kitRequestShipping, ddpInstanceDto.getInstanceName());
+            ScriptBuilder scriptBuilder = new NestedScriptBuilder(paramsGenerator.getPropertyName(), "dsmKitId");
+            MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder("dsmKitRequestId", dsmKitRequestId);
+            NestedQueryBuilder nestedQueryBuilder = new NestedQueryBuilder("dsm.kitRequestShipping", matchQueryBuilder, ScoreMode.Avg);
+            UpsertPainless upsertPainless = new UpsertPainless(paramsGenerator, ddpInstanceDto.getEsParticipantIndex(), scriptBuilder, nestedQueryBuilder);
+            upsertPainless.export();
         }
     }
 
@@ -1355,12 +1365,7 @@ public class KitRequestShipping extends KitRequest {
         }
 
         KitRequestShipping kitRequestShipping = new KitRequestShipping(dsmKitRequestId, null, null, null, null, message);
-        Generator paramsGenerator = new ParamsGenerator(kitRequestShipping, ddpInstanceDto.getInstanceName());
-        ScriptBuilder scriptBuilder = new NestedScriptBuilder(paramsGenerator.getPropertyName(), "dsmKitRequestId");
-        MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder("dsmKitRequestId", dsmKitRequestId);
-        NestedQueryBuilder nestedQueryBuilder = new NestedQueryBuilder("dsm.kitRequestShipping", matchQueryBuilder, ScoreMode.Avg);
-        UpsertPainless upsertPainless = new UpsertPainless(paramsGenerator, ddpInstanceDto.getEsParticipantIndex(), scriptBuilder, nestedQueryBuilder);
-        upsertPainless.export();
+        exportToES(kitRequestShipping, ddpInstanceDto, "dsmKitRequestId", "dsmKitRequestId", dsmKitRequestId);
 
     }
 
@@ -1403,14 +1408,21 @@ public class KitRequestShipping extends KitRequest {
         }
         if (results.resultValue != null) {
             KitRequestShipping kitRequestShipping = (KitRequestShipping) results.resultValue;
+
             long dsmKitId = KitRequestShipping.writeNewKit(dsmKitRequestId, kitRequestShipping.getEasypostAddressId(), message, false);
-            Generator paramsGenerator = new ParamsGenerator(kitRequestShipping, ddpInstanceDto.getInstanceName());
-            ScriptBuilder scriptBuilder = new NestedScriptBuilder(paramsGenerator.getPropertyName(), "dsmKitId");
-            MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder("dsmKitId", dsmKitId);
-            NestedQueryBuilder nestedQueryBuilder = new NestedQueryBuilder("dsm.kitRequestShipping", matchQueryBuilder, ScoreMode.Avg);
-            UpsertPainless upsertPainless = new UpsertPainless(paramsGenerator, ddpInstanceDto.getEsParticipantIndex(), scriptBuilder, nestedQueryBuilder);
-            upsertPainless.export();
+            kitRequestShipping.setDsmKitId(dsmKitId);
+
+            exportToES(kitRequestShipping, ddpInstanceDto, "dsmKitId", "dsmKitRequestId", dsmKitRequestId);
         }
+    }
+
+    private static void exportToES(KitRequestShipping kitRequestShipping, DDPInstanceDto ddpInstanceDto, String uniqueIdentifier, String fieldName, Object fieldValue) {
+        Generator paramsGenerator = new ParamsGenerator(kitRequestShipping, ddpInstanceDto.getInstanceName());
+        ScriptBuilder scriptBuilder = new NestedScriptBuilder(paramsGenerator.getPropertyName(), uniqueIdentifier);
+        MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder(fieldName, fieldValue);
+        NestedQueryBuilder nestedQueryBuilder = new NestedQueryBuilder("dsm.kitRequestShipping", matchQueryBuilder, ScoreMode.Avg);
+        UpsertPainless upsertPainless = new UpsertPainless(paramsGenerator, ddpInstanceDto.getEsParticipantIndex(), scriptBuilder, nestedQueryBuilder);
+        upsertPainless.export();
     }
 
     public static List<KitRequestShipping> findKitRequest(@NonNull String field, @NonNull String value, String[] realms) {
