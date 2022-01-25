@@ -1431,9 +1431,9 @@ public class KitRequestShipping extends KitRequest {
         }
     }
 
-    public static void exportToES(KitRequestShipping kitRequestShipping, DDPInstanceDto ddpInstanceDto, String uniqueIdentifier,
+    public static void exportToES(Object source, DDPInstanceDto ddpInstanceDto, String uniqueIdentifier,
                              String fieldName, Object fieldValue) {
-        Generator paramsGenerator = new ParamsGenerator(kitRequestShipping, ddpInstanceDto.getInstanceName());
+        Generator paramsGenerator = new ParamsGenerator(source, ddpInstanceDto.getInstanceName());
         ScriptBuilder scriptBuilder = new NestedScriptBuilder(paramsGenerator.getPropertyName(), uniqueIdentifier);
         MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder(fieldName, fieldValue);
         NestedQueryBuilder nestedQueryBuilder = new NestedQueryBuilder("dsm.kitRequestShipping", matchQueryBuilder, ScoreMode.Avg);

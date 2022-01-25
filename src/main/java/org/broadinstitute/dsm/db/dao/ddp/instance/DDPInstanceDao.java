@@ -165,7 +165,7 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
                 stmt.setObject(11, ddpInstanceDto.getMrAttentionFlagD());
                 stmt.setObject(12, ddpInstanceDto.getTissueAttentionFlagD());
                 stmt.setBoolean(13, ddpInstanceDto.getAuth0Token());
-                stmt.setString(14, ddpInstanceDto.getNotificationRecipients());
+                stmt.setString(14, getNotificationsAsSequence(ddpInstanceDto));
                 stmt.setBoolean(15, ddpInstanceDto.getMigratedDdp());
                 stmt.setString(16, ddpInstanceDto.getBillingReference());
                 stmt.setString(17, ddpInstanceDto.getEsParticipantIndex());
@@ -186,6 +186,10 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
             throw new RuntimeException("Error inserting ddp instance ", simpleResult.resultException);
         }
         return (int) simpleResult.resultValue;
+    }
+
+    private String getNotificationsAsSequence(DDPInstanceDto ddpInstanceDto) {
+        return ddpInstanceDto.getNotificationRecipients().toString().replace("[", "").replace("]", "").replace("\\s", "");
     }
 
     @Override

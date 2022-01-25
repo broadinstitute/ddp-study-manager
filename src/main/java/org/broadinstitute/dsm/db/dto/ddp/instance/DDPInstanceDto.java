@@ -1,13 +1,12 @@
 package org.broadinstitute.dsm.db.dto.ddp.instance;
 
+import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
+
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import lombok.Data;
-import lombok.NonNull;
 
 @Data
 public class DDPInstanceDto {
@@ -33,12 +32,21 @@ public class DDPInstanceDto {
     String esActivityDefinitionIndex;
     String esUsersIndex;
 
+    public List<String> getNotificationRecipients() {
+        if (StringUtils.isBlank(notificationRecipients)) {
+            return Collections.emptyList();
+        }
+        notificationRecipients = notificationRecipients.replaceAll("\\s", "");
+        return Arrays.asList(notificationRecipients.split(","));
+    }
+
+
     private DDPInstanceDto(Builder builder) {
         Class<DDPInstanceDto> ddpInstanceDtoClazz = DDPInstanceDto.class;
         Field[] declaredFields = ddpInstanceDtoClazz.getDeclaredFields();
         Map<String, Field> builderFieldsMap =
                 Arrays.stream(builder.getClass().getDeclaredFields()).collect(Collectors.toMap(Field::getName, Function.identity()));
-        for (Field field: declaredFields) {
+        for (Field field : declaredFields) {
             try {
                 field.set(this, builderFieldsMap.get(field.getName()).get(builder));
             } catch (IllegalAccessException e) {
@@ -69,7 +77,8 @@ public class DDPInstanceDto {
         String esActivityDefinitionIndex;
         String esUsersIndex;
 
-        public Builder() {}
+        public Builder() {
+        }
 
         public Builder withDdpInstanceId(int ddpInstanceId) {
             this.ddpInstanceId = ddpInstanceId;

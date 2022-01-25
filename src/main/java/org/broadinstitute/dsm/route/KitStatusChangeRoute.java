@@ -14,6 +14,7 @@ import org.broadinstitute.dsm.db.dao.ddp.kitrequest.KitRequestDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.dto.ddp.kitrequest.KitRequestDto;
 import org.broadinstitute.dsm.model.KitDDPNotification;
+import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.at.ReceiveKitRequest;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.*;
@@ -182,9 +183,11 @@ public class KitStatusChangeRoute extends RequestHandler {
                         if (kitDDPNotification != null) {
                             EventUtil.triggerDDP(conn, kitDDPNotification);
                         }
+                        KitRequestShipping.exportToES(kitRequestShipping, ddpInstanceDto, "kitLabel", "kitLabel", addValue);
                     }
                     else if (RoutePath.TRACKING_SCAN_REQUEST.equals(changeType)) {
                         logger.info("Added tracking for kit w/ kit_label " + kit);
+                        KitRequestShipping.exportToES(kitRequestShipping, ddpInstanceDto, "kitLabel", "kitLabel", addValue);
                     }
                     else if (RoutePath.RECEIVED_KIT_REQUEST.equals(changeType)) {
                         logger.info("Updated kitRequest w/ SM-ID kit_label " + kit);

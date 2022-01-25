@@ -5,8 +5,11 @@ import com.google.gson.reflect.TypeToken;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.ParticipantData;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.util.NotificationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,11 +43,10 @@ public class ReceiveKitRequest {
             String formattedDate = formatter.format(now);
             data.put(RECEIVED_DATE, formattedDate);
             data.put(GENOME_STUDY_STATUS, "3");
-
+            DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName("atcp").orElseThrow();
             String dataString = new Gson().toJson(data);
-            if (updateData(dataString, participantData.getParticipantDataId())) {
-                DDPInstance ddpInstance = DDPInstance.getDDPInstance("atcp");
-                List<String> recipients = ddpInstance.getNotificationRecipient();
+            if (updateData(dataString, participantData.getParticipantDataId(), ddpInstanceDto)) {
+                List<String> recipients = ddpInstanceDto.getNotificationRecipients();
                 if (recipients != null && !recipients.isEmpty()) {
                     for (String recipient : recipients) {
                         String message = NOTIFICATION_MESSAGE.replace("GENOME_STUDY_SPIT_KIT_BARCODE", mfBarcode).replace("GENOME_STUDY_DATE_RECEIVED", formattedDate);
@@ -58,8 +60,7 @@ public class ReceiveKitRequest {
         return false;
     }
 
-    private static boolean updateData(@NonNull String data, @NonNull long participantDataId) {
-        //TODO -> update participantData ES
+    private static boolean updateData(@NonNull String data, @NonNull long participantDataId, DDPInstanceDto ddpInstanceDto) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT_REQUEST)){
@@ -82,6 +83,14 @@ public class ReceiveKitRequest {
         if (results.resultException != null) {
             throw new RuntimeException("Error setting AT kit to received with id " + participantDataId, results.resultException);
         }
+
+        ParticipantDataDto participantDataDto = new ParticipantDataDto.Builder()
+                .withData(data)
+                .withParticipantDataId((int) participantDataId)
+                .build();
+
+        KitRequestShipping.exportToES(participantDataDto, ddpInstanceDto, "participantDataId", "participantDataId", participantDataId);
+
         return true;
     }
 }
