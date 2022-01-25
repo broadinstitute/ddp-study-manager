@@ -429,7 +429,12 @@ public class KitUtil {
                                                     kitMessage = message;
                                                 }
                                             }
-                                            SimpleResult result = updateKit(conn, status, deliveredDate, kitMessage, kitRequest.getDsmKitId());
+                                            DDPInstanceDto ddpInstanceDto = new DDPInstanceDto.Builder()
+                                                    .withInstanceName(ddpInstance.getName())
+                                                    .withEsParticipantIndex(ddpInstance.getParticipantIndexES())
+                                                    .build();
+                                            SimpleResult result = updateKit(conn, status, deliveredDate, kitMessage,
+                                                    kitRequest.getDsmKitId(), ddpInstanceDto);
                                             if (result.resultException != null) {
                                                 logger.error("Error updating kit for kit request " + kitRequest.getDsmKitRequestId() + " of realm " + ddpInstance.getName(), result.resultException);
                                             }
@@ -485,7 +490,7 @@ public class KitUtil {
 
     // update kit with label trigger user and date
     private static SimpleResult updateKit(@NonNull Connection conn, String status, Long date, String message,
-                                          long dsmKitId) {
+                                          long dsmKitId, DDPInstanceDto ddpInstanceDto) {
         SimpleResult dbVals = new SimpleResult();
         try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT)) {
             stmt.setString(1, status);
@@ -502,7 +507,11 @@ public class KitUtil {
             dbVals.resultException = e;
         }
 
-        exportToEs();
+        KitRequestShipping kitRequestShipping = new KitRequestShipping();
+        kitRequestShipping.setEasypostShipmentStatus(status);
+        kitRequestShipping.setMessage(message);
+        kitRequestShipping.setDsmKitId(dsmKitId);
+        KitRequestShipping.exportToES(kitRequestShipping, ddpInstanceDto, "dsmKitId", "dsmKitId", dsmKitId);
 
         return dbVals;
     }

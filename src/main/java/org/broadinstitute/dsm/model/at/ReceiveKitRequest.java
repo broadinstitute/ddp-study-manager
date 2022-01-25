@@ -59,6 +59,7 @@ public class ReceiveKitRequest {
     }
 
     private static boolean updateData(@NonNull String data, @NonNull long participantDataId) {
+        //TODO -> update participantData ES
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT_REQUEST)){

@@ -170,10 +170,14 @@ public class KitRequestShipping extends KitRequest {
     private String trackingReturnId;
 
     @ColumnName (DBConstants.TRACKING_ID)
-    private String scannedTrackingNumber;
-    private String trackingUrlTo;
+    private String trackingId;
+
+    @ColumnName(DBConstants.DSM_TRACKING_URL_TO)
+    private String easypostTrackingToUrl;
+
     @ColumnName(DBConstants.DSM_TRACKING_URL_RETURN)
     private String easypostTrackingReturnUrl;
+
     private String collaboratorParticipantId;
 
     @ColumnName (DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID)
@@ -276,7 +280,7 @@ public class KitRequestShipping extends KitRequest {
     public KitRequestShipping(String participantId, String collaboratorParticipantId, String bspCollaboratorSampleId, String shippingId, String realm,
                               String kitTypeName, long dsmKitRequestId, long dsmKitId, String labelUrlTo, String labelUrlReturn,
                               String trackingNumberTo, String trackingReturnId,
-                              String trackingUrlTo, String trackingUrlReturn, long scanDate, boolean error, String message,
+                              String easypostTrackingToUrl, String trackingUrlReturn, long scanDate, boolean error, String message,
                               long receiveDate, String easypostAddressId, long deactivatedDate, String deactivationReason,
                               String kitLabel, boolean express, String easypostToId, long labelDate, String easypostShipmentStatus,
                               String externalOrderNumber, boolean noReturn, String externalOrderStatus, String createdBy, String testResult,
@@ -292,7 +296,7 @@ public class KitRequestShipping extends KitRequest {
         this.labelUrlReturn = labelUrlReturn;
         this.trackingNumberTo = trackingNumberTo;
         this.trackingReturnId = trackingReturnId;
-        this.trackingUrlTo = trackingUrlTo;
+        this.easypostTrackingToUrl = easypostTrackingToUrl;
         this.easypostTrackingReturnUrl = trackingUrlReturn;
         this.scanDate = scanDate;
         this.error = error;
@@ -1009,7 +1013,7 @@ public class KitRequestShipping extends KitRequest {
                     kitRequestShipping.setLabelUrlTo(participantLabel.getLabelUrl());
                     kitRequestShipping.setEasypostToId(participantShipment.getId());
                     kitRequestShipping.setTrackingNumberTo(participantShipment.getTrackingCode());
-                    kitRequestShipping.setTrackingUrlTo(participantTracker.getPublicUrl()); //TODO
+                    kitRequestShipping.setEasypostTrackingToUrl(participantTracker.getPublicUrl()); //TODO
                 }
                 else {
                     stmt.setString(1, null);
@@ -1427,7 +1431,8 @@ public class KitRequestShipping extends KitRequest {
         }
     }
 
-    private static void exportToES(KitRequestShipping kitRequestShipping, DDPInstanceDto ddpInstanceDto, String uniqueIdentifier, String fieldName, Object fieldValue) {
+    public static void exportToES(KitRequestShipping kitRequestShipping, DDPInstanceDto ddpInstanceDto, String uniqueIdentifier,
+                             String fieldName, Object fieldValue) {
         Generator paramsGenerator = new ParamsGenerator(kitRequestShipping, ddpInstanceDto.getInstanceName());
         ScriptBuilder scriptBuilder = new NestedScriptBuilder(paramsGenerator.getPropertyName(), uniqueIdentifier);
         MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder(fieldName, fieldValue);
