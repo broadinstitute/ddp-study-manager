@@ -17,7 +17,6 @@ public class DynamicFieldsMappingMigratorTest {
     }
 
     @Test
-    @Ignore
     public void testExport() {
         final String index = "participants_structured.cmi.angio";
         final String study = "angio";
@@ -33,7 +32,5 @@ public class DynamicFieldsMappingMigratorTest {
                 new TissueMigrator(index, study));
         exportables.forEach(Exportable::export);
 
-//        Exportable exportable = new DynamicFieldsMappingMigrator("participants_structured.cmi.angio", "angio");
-//        exportable.export();
     }
 }

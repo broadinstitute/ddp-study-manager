@@ -961,7 +961,7 @@ public class KitRequestShipping extends KitRequest {
         else {
             logger.info("Wrote new kit w/ dsm_kit_id " + kitRequestId, results.resultException);
         }
-        return (long) results.resultValue;
+        return Long.parseLong(String.valueOf(results.resultValue));
     }
 
     // update kit with label trigger user and date
