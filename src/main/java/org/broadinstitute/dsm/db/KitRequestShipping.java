@@ -11,6 +11,7 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.DSMServer;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
@@ -133,7 +134,6 @@ public class KitRequestShipping extends KitRequest {
 
     private static final String QUEUE = "queue";
 
-    @ColumnName(DBConstants.ERROR)
     private static final String ERROR = "error";
     private static final String SENT = "sent";
     private static final String RECEIVED = "received";
@@ -896,16 +896,21 @@ public class KitRequestShipping extends KitRequest {
         }
 
         if (Objects.nonNull(ddpInstance)) {
-            KitRequestShipping kitRequestShipping = new KitRequestShipping(ddpParticipantId, collaboratorPatientId, collaboratorSampleId, null,
-                    null, null, (long) results.resultValue, 0, null, null, null, null, null, null, 0, false, errorMessage, 0, null,
-                    0, null, null, false, null, 0, null, externalOrderNumber, false, null, createdBy, null,
-                    null, null, 0, false, uploadReason, null, null, null);
+            KitRequestShipping kitRequestShipping = new KitRequestShipping();
+            kitRequestShipping.setParticipantId(ddpParticipantId);
+            kitRequestShipping.setCollaboratorParticipantId(collaboratorPatientId);
+            kitRequestShipping.setBspCollaboratorSampleId(collaboratorSampleId);
+            kitRequestShipping.setDsmKitRequestId(Long.parseLong(String.valueOf(results.resultValue)));
+            kitRequestShipping.setMessage(errorMessage);
+            kitRequestShipping.setExternalOrderNumber(externalOrderNumber);
+            kitRequestShipping.setCreatedBy(createdBy);
+            kitRequestShipping.setUploadReason(uploadReason);
 
-            Generator paramsGenerator = new ParamsGenerator(kitRequestShipping, ddpInstance.getName());
-            ScriptBuilder scriptBuilder = new NestedScriptBuilder(paramsGenerator.getPropertyName(), "dsmKitRequestId");
-            MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder("_id", Exportable.getParticipantGuid(ddpParticipantId, ddpInstance.getParticipantIndexES()));
-            UpsertPainless upsertPainless = new UpsertPainless(paramsGenerator, ddpInstance.getParticipantIndexES(), scriptBuilder, matchQueryBuilder);
-            upsertPainless.export();
+            DDPInstanceDto ddpInstanceDto =
+                    new DDPInstanceDao().getDDPInstanceByInstanceId(Integer.valueOf(ddpInstance.getDdpInstanceId())).orElseThrow();
+
+            exportToES(kitRequestShipping, ddpInstanceDto, "dsmKitRequestId", "_id", Exportable.getParticipantGuid(ddpParticipantId,
+                    ddpInstance.getParticipantIndexES()));
         }
 
         logger.info("Added kitRequest w/ ddpKitRequestId " + ddpKitRequestId);

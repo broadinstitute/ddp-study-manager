@@ -21,9 +21,8 @@ public class ParamsGenerator implements Generator {
     @Override
     public Map<String, Object> generate() {
         Map<String, Object> fieldsMap = Util.transformObjectToMap(source, realm);
-        return new HashMap<>(Map.of(PARAMS,
-                new HashMap<>(Map.of(ESObjectConstants.DSM,
-                        new HashMap<>(Map.of(getPropertyName(), fieldsMap))))));
+        return new HashMap<>(Map.of(ESObjectConstants.DSM,
+                        new HashMap<>(Map.of(getPropertyName(), fieldsMap))));
     }
 
     @Override
