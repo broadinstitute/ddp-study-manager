@@ -255,36 +255,39 @@ public class KitRequestShipping extends KitRequest {
     public KitRequestShipping(String collaboratorParticipantId, String kitTypeName, Long dsmKitRequestId, Long scanDate, Boolean error,
                               Long receiveDate, Long deactivatedDate, String testResult,
                               String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus, String externalOrderNumber, Long externalOrderDate, Boolean careEvolve, String uploadReason) {
-        this(null, collaboratorParticipantId, null, null, null, kitTypeName, dsmKitRequestId, 0, null, null,
+        this(null, collaboratorParticipantId, null, null, null, kitTypeName, dsmKitRequestId, null, null, null,
                 null, null, null, null, scanDate, error, null, receiveDate,
-                null, deactivatedDate, null, null, false, null, 0, null, externalOrderNumber, false, externalOrderStatus, null, testResult,
+                null, deactivatedDate, null, null, false, null, null, null, externalOrderNumber, false, externalOrderStatus, null,
+                testResult,
                 upsTrackingStatus, upsReturnStatus, externalOrderDate, false, uploadReason, null, null, null);
     }
 
     public KitRequestShipping(String participantId, String collaboratorParticipantId, String dsmKitId, String realm, String trackingNumberTo, String receiveDateString, String hruid, String gender) {
-        this(participantId, collaboratorParticipantId, null, null, realm, null, 0, 0, null, null,
-                trackingNumberTo, null, null, null, 0, false, null, 0,
-                null, 0, null, dsmKitId, false, null, 0, null, null, false, null, null, null, null, null, 0, false, null,
+        this(participantId, collaboratorParticipantId, null, null, realm, null, null, null, null, null,
+                trackingNumberTo, null, null, null, null, false, null, null,
+                null, null, null, dsmKitId, false, null, null, null, null, false, null, null, null, null, null, null, false, null,
                 receiveDateString, hruid, gender);
     }
 
     public KitRequestShipping(Long dsmKitRequestId, Long dsmKitId, String easypostToId, String easypostAddressId, Boolean error,
                               String message) {
         this(null, null, null, null, null, null, dsmKitRequestId, dsmKitId, null, null,
-                null, null, null, null, 0, error, message, 0,
-                easypostAddressId, 0, null, null, false, easypostToId, 0, null, null, false, null, null, null, null, null, 0, false, null,
+                null, null, null, null, null, error, message, null,
+                easypostAddressId, null, null, null, false, easypostToId, null, null, null, false, null, null, null, null, null, null,
+                false,
+                null,
                 null, null, null);
     }
 
     // shippingId = ddp_label !!!
     public KitRequestShipping(String participantId, String collaboratorParticipantId, String bspCollaboratorSampleId, String shippingId, String realm,
-                              String kitTypeName, long dsmKitRequestId, long dsmKitId, String labelUrlTo, String labelUrlReturn,
+                              String kitTypeName, Long dsmKitRequestId, Long dsmKitId, String labelUrlTo, String labelUrlReturn,
                               String trackingNumberTo, String trackingReturnId,
-                              String easypostTrackingToUrl, String trackingUrlReturn, long scanDate, boolean error, String message,
-                              long receiveDate, String easypostAddressId, long deactivatedDate, String deactivationReason,
-                              String kitLabel, boolean express, String easypostToId, long labelDate, String easypostShipmentStatus,
-                              String externalOrderNumber, boolean noReturn, String externalOrderStatus, String createdBy, String testResult,
-                              String upsTrackingStatus, String upsReturnStatus, long externalOrderDate, boolean careEvolve, String uploadReason,
+                              String easypostTrackingToUrl, String trackingUrlReturn, Long scanDate, Boolean error, String message,
+                              Long receiveDate, String easypostAddressId, Long deactivatedDate, String deactivationReason,
+                              String kitLabel, Boolean express, String easypostToId, Long labelDate, String easypostShipmentStatus,
+                              String externalOrderNumber, Boolean noReturn, String externalOrderStatus, String createdBy, String testResult,
+                              String upsTrackingStatus, String upsReturnStatus, Long externalOrderDate, Boolean careEvolve, String uploadReason,
                               String receiveDateString, String hruid, String gender) {
         super(dsmKitRequestId, participantId, null, shippingId, externalOrderNumber, null, externalOrderStatus, null, externalOrderDate);
         this.collaboratorParticipantId = collaboratorParticipantId;
@@ -776,7 +779,8 @@ public class KitRequestShipping extends KitRequest {
         }
         if (Objects.nonNull(ddpInstanceDto)) {
 
-            KitRequestShipping kitRequestShipping = new KitRequestShipping(dsmKitRequestId, null, null, null, null, null);
+            KitRequestShipping kitRequestShipping = new KitRequestShipping();
+            kitRequestShipping.setDsmKitRequestId(dsmKitRequestId);
             kitRequestShipping.setDeactivationReason(deactivationReason);
             kitRequestShipping.setDeactivatedDate(deactivatedDate);
 
