@@ -258,15 +258,15 @@ public class KitRequestShipping extends KitRequest {
                               String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus, String externalOrderNumber, Long externalOrderDate, Boolean careEvolve, String uploadReason) {
         this(null, collaboratorParticipantId, null, null, null, kitTypeName, dsmKitRequestId, null, null, null,
                 null, null, null, null, scanDate, error, null, receiveDate,
-                null, deactivatedDate, null, null, false, null, null, null, externalOrderNumber, false, externalOrderStatus, null,
+                null, deactivatedDate, null, null, null, null, null, null, externalOrderNumber, null, externalOrderStatus, null,
                 testResult,
-                upsTrackingStatus, upsReturnStatus, externalOrderDate, false, uploadReason, null, null, null);
+                upsTrackingStatus, upsReturnStatus, externalOrderDate, careEvolve, uploadReason, null, null, null);
     }
 
     public KitRequestShipping(String participantId, String collaboratorParticipantId, String dsmKitId, String realm, String trackingNumberTo, String receiveDateString, String hruid, String gender) {
         this(participantId, collaboratorParticipantId, null, null, realm, null, null, null, null, null,
-                trackingNumberTo, null, null, null, null, false, null, null,
-                null, null, null, dsmKitId, false, null, null, null, null, false, null, null, null, null, null, null, false, null,
+                trackingNumberTo, null, null, null, null, null, null, null,
+                null, null, null, dsmKitId, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                 receiveDateString, hruid, gender);
     }
 
@@ -274,8 +274,8 @@ public class KitRequestShipping extends KitRequest {
                               String message) {
         this(null, null, null, null, null, null, dsmKitRequestId, dsmKitId, null, null,
                 null, null, null, null, null, error, message, null,
-                easypostAddressId, null, null, null, false, easypostToId, null, null, null, false, null, null, null, null, null, null,
-                false,
+                easypostAddressId, null, null, null, null, easypostToId, null, null, null, null, null, null, null, null, null, null,
+                null,
                 null,
                 null, null, null);
     }

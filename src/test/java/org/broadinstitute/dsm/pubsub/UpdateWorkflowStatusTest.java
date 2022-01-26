@@ -37,7 +37,7 @@ public class UpdateWorkflowStatusTest {
 
     private static ParticipantData participantData;
 
-    private static final Map<String, String> participantData = new HashMap<>();
+    private static final Map<String, String> testParticipantData = new HashMap<>();
 
     private static DDPInstanceDto ddpInstanceDto;
     private static final DDPInstanceDao ddpInstanceDao = new DDPInstanceDao();
@@ -89,8 +89,8 @@ public class UpdateWorkflowStatusTest {
     }
 
     private static void createDataForParticipant() {
-        participantData.put("REGISTRATION_STATUS", "REGISTERED");
-        participantData.put("MEMBER_TYPE", "SELF");
+        testParticipantData.put("REGISTRATION_STATUS", "REGISTERED");
+        testParticipantData.put("MEMBER_TYPE", "SELF");
     }
 
     private static void createParticipantData() {
@@ -99,7 +99,7 @@ public class UpdateWorkflowStatusTest {
                     .withDdpParticipantId(participantId)
                     .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())
                     .withFieldTypeId(UPDATE_WORKFLOW_TEST)
-                    .withData(gson.toJson(participantData))
+                    .withData(gson.toJson(testParticipantData))
                     .withLastChanged(System.currentTimeMillis())
                     .withChangedBy(userDto.getEmail().orElse(""))
                     .build();
@@ -110,7 +110,7 @@ public class UpdateWorkflowStatusTest {
                     .withDdpParticipantId(participantId)
                     .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())
                     .withFieldTypeId(UPDATE_WORKFLOW_TEST)
-                    .withData(gson.toJson(participantData))
+                    .withData(gson.toJson(testParticipantData))
                     .withLastChanged(System.currentTimeMillis())
                     .withChangedBy(userDto.getEmail().orElse(""))
                     .build();

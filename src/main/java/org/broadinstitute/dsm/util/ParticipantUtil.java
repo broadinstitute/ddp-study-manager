@@ -91,9 +91,9 @@ public class ParticipantUtil {
         return email.toString();
     }
 
-    public static ParticipantData findApplicantData(String ddpParticipantId, List<ParticipantData> participantData) {
+    public static ParticipantData findApplicantData(String ddpParticipantId, List<ParticipantData> participantsDatas) {
         ParticipantData applicantData = null;
-        for (ParticipantData participantData : participantData) {
+        for (ParticipantData participantData : participantsDatas) {
             Map<String, String> dataMap = participantData.getDataMap();
             if (dataMap == null) {
                 continue;

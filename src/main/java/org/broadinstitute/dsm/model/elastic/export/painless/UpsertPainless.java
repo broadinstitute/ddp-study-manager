@@ -34,6 +34,8 @@ public class UpsertPainless implements Exportable {
         UpdateByQueryRequest updateByQueryRequest = new UpdateByQueryRequest(index);
         updateByQueryRequest.setQuery(queryBuilder);
         updateByQueryRequest.setScript(painless);
+        updateByQueryRequest.setMaxRetries(5);
+        updateByQueryRequest.setRefresh(true);
         try {
             clientInstance.updateByQuery(updateByQueryRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
