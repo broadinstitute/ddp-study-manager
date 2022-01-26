@@ -9,12 +9,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
-import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
-import org.broadinstitute.dsm.model.bookmark.Bookmark;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.utils.StringUtils;

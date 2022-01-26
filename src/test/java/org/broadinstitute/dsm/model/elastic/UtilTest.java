@@ -5,13 +5,11 @@ import static org.junit.Assert.*;
 import java.lang.reflect.Field;
 import java.util.*;
 
-import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.Participant;
 import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.FollowUp;
-import org.broadinstitute.dsm.model.elastic.export.generate.SourceGeneratorTest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,7 +80,7 @@ public class UtilTest {
 
         String json = "{\"DDP_INSTANCE\": \"TEST\", \"DDP_VALUE\": \"VALUE\", \"BOOLEAN_VAL\": \"true\", \"LONG_VAL\": \"5\"}";
 
-        ParticipantDataDto participantDataDto = new ParticipantDataDto.Builder()
+        ParticipantData participantData = new ParticipantData.Builder()
                 .withParticipantDataId(10)
                 .withDdpParticipantId("123")
                 .withDdpInstanceId(55)
@@ -90,7 +88,7 @@ public class UtilTest {
                 .withData(json)
                 .build();
 
-        Map<String, Object> result = Util.transformObjectToMap(participantDataDto, "angio");
+        Map<String, Object> result = Util.transformObjectToMap(participantData, "angio");
         assertEquals("TEST", ((Map) result.get("dynamicFields")).get("ddpInstance"));
         assertEquals("VALUE", ((Map) result.get("dynamicFields")).get("ddpValue"));
         assertEquals(true, ((Map) result.get("dynamicFields")).get("booleanVal"));

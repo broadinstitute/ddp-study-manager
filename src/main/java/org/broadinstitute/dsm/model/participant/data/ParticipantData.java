@@ -16,7 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
@@ -53,19 +52,19 @@ public class ParticipantData {
         this.data = data;
     }
 
-    public static ParticipantData parseDto(@NonNull ParticipantDataDto participantDataDto) {
+    public static ParticipantData parseDto(@NonNull org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData participantData) {
         return new ParticipantData(
-                participantDataDto.getParticipantDataId(),
-                participantDataDto.getDdpParticipantId().orElse(""),
-                participantDataDto.getDdpInstanceId(),
-                participantDataDto.getFieldTypeId().orElse(""),
-                GSON.fromJson(participantDataDto.getData().orElse(""), new TypeToken<Map<String, String>>() {}.getType())
+                participantData.getParticipantDataId(),
+                participantData.getDdpParticipantId().orElse(""),
+                participantData.getDdpInstanceId(),
+                participantData.getFieldTypeId().orElse(""),
+                GSON.fromJson(participantData.getData().orElse(""), new TypeToken<Map<String, String>>() {}.getType())
         );
     }
 
-    public static List<ParticipantData> parseDtoList(@NonNull List<ParticipantDataDto> participantDataDtoList) {
+    public static List<ParticipantData> parseDtoList(@NonNull List<org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData> participantDataList) {
         List<ParticipantData> participantData = new ArrayList<>();
-        participantDataDtoList.forEach(dto -> participantData.add(new ParticipantData(
+        participantDataList.forEach(dto -> participantData.add(new ParticipantData(
                 dto.getParticipantDataId(),
                 dto.getDdpParticipantId().orElse(""),
                 dto.getDdpInstanceId(),
@@ -75,7 +74,7 @@ public class ParticipantData {
         return participantData;
     }
 
-    public List<ParticipantDataDto> getParticipantDataByParticipantId(String ddpParticipantId) {
+    public List<org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData> getParticipantDataByParticipantId(String ddpParticipantId) {
         if (StringUtils.isBlank(ddpParticipantId)) return Collections.emptyList();
         ParticipantDataDao dataAccess = (ParticipantDataDao) setDataAccess(new ParticipantDataDao());
         return dataAccess.getParticipantDataByParticipantId(ddpParticipantId);
@@ -101,8 +100,8 @@ public class ParticipantData {
 
     public long insertParticipantData(String userEmail) {
         dataAccess = new ParticipantDataDao();
-        ParticipantDataDto participantDataDto =
-                new ParticipantDataDto.Builder()
+        org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData participantData =
+                new org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData.Builder()
                     .withDdpParticipantId(this.ddpParticipantId)
                     .withDdpInstanceId(this.ddpInstanceId)
                     .withFieldTypeId(this.fieldTypeId)
@@ -113,7 +112,7 @@ public class ParticipantData {
         if (isRelationshipIdExists()) {
             throw new RuntimeException(String.format("Family member with that Relationship ID: %s already exists", getRelationshipId()));
         }
-        int createdDataKey = dataAccess.create(participantDataDto);
+        int createdDataKey = dataAccess.create(participantData);
         if (createdDataKey < 1) {
             throw new RuntimeException("Could not insert participant data for : " + this.ddpParticipantId);
         }
@@ -141,7 +140,7 @@ public class ParticipantData {
     }
 
     public boolean updateParticipantData(int dataId, String changedByUser) {
-        ParticipantDataDto participantDataDto = new ParticipantDataDto.Builder()
+        org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData participantData = new org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData.Builder()
             .withParticipantDataId(dataId)
             .withDdpParticipantId(this.ddpParticipantId)
             .withDdpInstanceId(this.ddpInstanceId)
@@ -150,12 +149,12 @@ public class ParticipantData {
             .withLastChanged(System.currentTimeMillis())
             .withChangedBy(changedByUser)
             .build();
-        int rowsAffected = ((ParticipantDataDao) dataAccess).updateParticipantDataColumn(participantDataDto);
+        int rowsAffected = ((ParticipantDataDao) dataAccess).updateParticipantDataColumn(participantData);
         return rowsAffected == 1;
     }
 
-    public Optional<ParticipantDataDto> findProband(List<ParticipantDataDto> participantDataDtoList) {
-        return Objects.requireNonNull(participantDataDtoList).stream()
+    public Optional<org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData> findProband(List<org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData> participantDataList) {
+        return Objects.requireNonNull(participantDataList).stream()
                 .filter(participantDataDto -> {
                     Map<String, String> pDataMap = GSON.fromJson(participantDataDto.getData().orElse(""), Map.class);
                     return FamilyMemberConstants.MEMBER_TYPE_SELF.equals(pDataMap.get(FamilyMemberConstants.MEMBER_TYPE));

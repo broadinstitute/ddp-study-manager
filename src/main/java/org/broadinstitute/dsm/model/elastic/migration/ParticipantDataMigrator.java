@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 
 public class ParticipantDataMigrator extends BaseCollectionMigrator {
@@ -19,7 +19,7 @@ public class ParticipantDataMigrator extends BaseCollectionMigrator {
 
     @Override
     protected Map<String, Object> getDataByRealm() {
-        Map<String, List<ParticipantDataDto>> participantDataByRealm = participantDataDao.getParticipantDataByRealm(realm);
+        Map<String, List<ParticipantData>> participantDataByRealm = participantDataDao.getParticipantDataByRealm(realm);
         return (Map) participantDataByRealm;
     }
 }

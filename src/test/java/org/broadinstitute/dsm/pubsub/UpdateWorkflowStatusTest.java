@@ -9,7 +9,7 @@ import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.broadinstitute.dsm.util.DBTestUtil;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -35,7 +35,7 @@ public class UpdateWorkflowStatusTest {
 
     private static int participantDataId;
 
-    private static ParticipantDataDto participantDataDto;
+    private static ParticipantData participantData;
 
     private static final Map<String, String> participantData = new HashMap<>();
 
@@ -66,7 +66,7 @@ public class UpdateWorkflowStatusTest {
     public void testUpdateProbandStatusInDB() {
         String workflow = "REGISTRATION_STATUS";
         String status = "ENROLLED";
-        WorkflowStatusUpdate.updateProbandStatusInDB(workflow, status, participantDataDto, RGP);
+        WorkflowStatusUpdate.updateProbandStatusInDB(workflow, status, participantData, RGP);
         String data = participantDataDao.get(participantDataId).orElseThrow().getData().orElse("");
         JsonObject dataJsonObject = gson.fromJson(data, JsonObject.class);
         Assert.assertEquals(status, dataJsonObject.get(workflow).getAsString());
@@ -94,8 +94,8 @@ public class UpdateWorkflowStatusTest {
     }
 
     private static void createParticipantData() {
-        participantDataDto =
-                new ParticipantDataDto.Builder()
+        participantData =
+                new ParticipantData.Builder()
                     .withDdpParticipantId(participantId)
                     .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())
                     .withFieldTypeId(UPDATE_WORKFLOW_TEST)
@@ -103,9 +103,9 @@ public class UpdateWorkflowStatusTest {
                     .withLastChanged(System.currentTimeMillis())
                     .withChangedBy(userDto.getEmail().orElse(""))
                     .build();
-        participantDataId = participantDataDao.create(participantDataDto);
-        participantDataDto =
-                new ParticipantDataDto.Builder()
+        participantDataId = participantDataDao.create(participantData);
+        participantData =
+                new ParticipantData.Builder()
                     .withParticipantDataId(participantDataId)
                     .withDdpParticipantId(participantId)
                     .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())

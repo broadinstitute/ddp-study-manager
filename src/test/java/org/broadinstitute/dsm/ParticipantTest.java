@@ -1,6 +1,6 @@
 package org.broadinstitute.dsm;
 
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.junit.Assert;
 import org.junit.Before;
@@ -10,13 +10,13 @@ import java.util.List;
 
 public class ParticipantTest {
 
-    List<ParticipantDataDto> participantDatas;
-    List<ParticipantDataDto> newParticipantDatas;
+    List<ParticipantData> participantDatas;
+    List<ParticipantData> newParticipantDatas;
 
     @Before
     public void initializeParticipantDatas() {
         participantDatas = List.of(
-                new ParticipantDataDto.Builder()
+                new ParticipantData.Builder()
                         .withDdpParticipantId("testId")
                         .withDdpInstanceId(19)
                         .withFieldTypeId("testFieldType")
@@ -24,7 +24,7 @@ public class ParticipantTest {
                         .withLastChanged(0)
                         .withChangedBy(null)
                         .build(),
-                new ParticipantDataDto.Builder()
+                new ParticipantData.Builder()
                         .withDdpParticipantId("testId2")
                         .withDdpInstanceId(19)
                         .withFieldTypeId("testFieldType")
@@ -32,7 +32,7 @@ public class ParticipantTest {
                         .withLastChanged(0)
                         .withChangedBy(null)
                         .build(),
-                new ParticipantDataDto.Builder()
+                new ParticipantData.Builder()
                         .withDdpParticipantId("testId3")
                         .withDdpInstanceId(19)
                         .withFieldTypeId("testFieldType")
@@ -43,7 +43,7 @@ public class ParticipantTest {
         );
 
         newParticipantDatas = List.of(
-                new ParticipantDataDto.Builder()
+                new ParticipantData.Builder()
                         .withDdpParticipantId("testId")
                         .withDdpInstanceId(19)
                         .withFieldTypeId("testFieldType")
@@ -51,7 +51,7 @@ public class ParticipantTest {
                         .withLastChanged(0)
                         .withChangedBy(null)
                         .build(),
-                new ParticipantDataDto.Builder()
+                new ParticipantData.Builder()
                         .withDdpParticipantId("testId2")
                         .withDdpInstanceId(19)
                         .withFieldTypeId("testFieldType")
@@ -59,7 +59,7 @@ public class ParticipantTest {
                         .withLastChanged(0)
                         .withChangedBy(null)
                         .build(),
-                new ParticipantDataDto.Builder()
+                new ParticipantData.Builder()
                         .withDdpParticipantId("testId3")
                         .withDdpInstanceId(19)
                         .withFieldTypeId("testFieldType")

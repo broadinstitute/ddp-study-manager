@@ -8,7 +8,7 @@ import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
 import org.broadinstitute.dsm.model.elastic.filter.query.DsmAbstractQueryBuilder;
 import org.broadinstitute.dsm.model.elastic.filter.FilterParser;
@@ -46,7 +46,7 @@ public class ParticipantWrapper {
     private Map<String, List<AbstractionActivity>> abstractionActivities = new HashMap<>();
     private Map<String, List<AbstractionGroup>> abstractionSummary = new HashMap<>();
     private Map<String, List<ElasticSearchParticipantDto>> proxiesByParticipantIds = new HashMap<>();
-    private Map<String, List<ParticipantDataDto>> participantData = new HashMap<>();
+    private Map<String, List<ParticipantData>> participantData = new HashMap<>();
 
     public ParticipantWrapper(ParticipantWrapperPayload participantWrapperPayload, ElasticSearchable elasticSearchable) {
         this.participantWrapperPayload = Objects.requireNonNull(participantWrapperPayload);
@@ -142,8 +142,8 @@ public class ParticipantWrapper {
         participantData = getParticipantDataFromEsData();
     }
 
-    private Map<String, List<ParticipantDataDto>> getParticipantDataFromEsData() {
-        Map<String, List<ParticipantDataDto>> participantDataByParticipantId = new HashMap<>();
+    private Map<String, List<ParticipantData>> getParticipantDataFromEsData() {
+        Map<String, List<ParticipantData>> participantDataByParticipantId = new HashMap<>();
         for (ElasticSearchParticipantDto elasticSearchParticipantDto: esData.getEsParticipants()) {
             String participantId = elasticSearchParticipantDto.getParticipantId();
             elasticSearchParticipantDto.getDsm().ifPresent(esDsm -> participantDataByParticipantId.put(participantId, esDsm.getParticipantData()));
@@ -221,7 +221,7 @@ public class ParticipantWrapper {
                 ElasticSearch participantsByIds = elasticSearchable.getParticipantsByIds(usersIndexES, proxyGuids);
                 List<ElasticSearchParticipantDto> proxies = participantsByIds.getEsParticipants();
 
-                List<ParticipantDataDto> participantData = esDsm.getParticipantData();
+                List<ParticipantData> participantData = esDsm.getParticipantData();
 
                 ParticipantWrapperDto participantWrapperDto = new ParticipantWrapperDto();
                 participantWrapperDto.setEsData(elasticSearchParticipantDto);
@@ -251,7 +251,7 @@ public class ParticipantWrapper {
         }
     }
 
-    void sortBySelfElseById(Collection<List<ParticipantDataDto>> participantDatas) {
+    void sortBySelfElseById(Collection<List<ParticipantData>> participantDatas) {
         participantDatas.forEach(pDataList -> pDataList.sort((o1, o2) -> {
             Map<String, String> pData = new Gson().fromJson(o1.getData().orElse(""), new TypeToken<Map<String, String>>() {}.getType());
             if (Objects.nonNull(pData) && FamilyMemberConstants.MEMBER_TYPE_SELF.equals(pData.get(FamilyMemberConstants.MEMBER_TYPE))) return -1;

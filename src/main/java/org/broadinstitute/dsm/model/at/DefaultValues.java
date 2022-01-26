@@ -10,12 +10,11 @@ import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.settings.field.FieldSettings;
-import org.broadinstitute.dsm.model.participant.data.ParticipantData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,13 +42,13 @@ public class DefaultValues {
     public static final String AT_GENOMIC_ID = "at_genomic_id";
     private Dao dataAccess;
 
-    private Map<String, List<ParticipantDataDto>> participantData;
+    private Map<String, List<ParticipantData>> participantData;
     private List<ElasticSearchParticipantDto> participantESData;
     private DDPInstance instance;
     private String queryAddition;
     private ParticipantDataDao participantDataDao;
 
-    public DefaultValues(Map<String, List<ParticipantDataDto>> participantData,
+    public DefaultValues(Map<String, List<ParticipantData>> participantData,
                          List<ElasticSearchParticipantDto> participantESData, @NonNull DDPInstance instance, String queryAddition) {
         this.participantData = participantData;
         this.participantESData = participantESData;
@@ -58,7 +57,7 @@ public class DefaultValues {
         this.participantDataDao = new ParticipantDataDao();
     }
 
-    public Map<String, List<ParticipantDataDto>> addDefaultValues() {
+    public Map<String, List<ParticipantData>> addDefaultValues() {
         if (participantESData == null) {
             logger.warn("Could not update default values, participant ES data is null");
             return participantData;
@@ -68,7 +67,7 @@ public class DefaultValues {
                 participantESData.stream().collect(Collectors.toMap(ElasticSearchParticipantDto::getParticipantId, Function.identity()));
         for (Map.Entry<String, ElasticSearchParticipantDto> entry: participantEsDataByParticipantId.entrySet()) {
             String ddpParticipantId = entry.getKey();
-            List<ParticipantDataDto> participantDataList = participantData.get(ddpParticipantId);
+            List<ParticipantData> participantDataList = participantData.get(ddpParticipantId);
             if (participantDataList == null) continue;
 
             if (!hasParticipantDataGenomicId(participantDataList) && isSelfOrDependentParticipant(participantDataList)) {
@@ -89,13 +88,13 @@ public class DefaultValues {
         if (addedNewParticipantData) {
             //participant data was added, getting new list of data
             if (StringUtils.isNotBlank(queryAddition)) {
-                List<ParticipantDataDto> participantDataByInstanceIdAndQueryAddition =
+                List<ParticipantData> participantDataByInstanceIdAndQueryAddition =
                         participantDataDao.getParticipantDataByInstanceIdAndQueryAddition(Integer.parseInt(instance.getDdpInstanceId()),
                                 queryAddition);
                 participantData = getParticipantDataWithParticipantId(participantDataByInstanceIdAndQueryAddition);
             }
             else {
-                List<ParticipantDataDto> participantDataByInstanceId =
+                List<ParticipantData> participantDataByInstanceId =
                         participantDataDao.getParticipantDataByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
                 participantData = getParticipantDataWithParticipantId(participantDataByInstanceId);
             }
@@ -103,7 +102,7 @@ public class DefaultValues {
         return participantData;
     }
 
-    private Map<String, List<ParticipantDataDto>> getParticipantDataWithParticipantId(List<ParticipantDataDto> participantDataByInstanceId) {
+    private Map<String, List<ParticipantData>> getParticipantDataWithParticipantId(List<ParticipantData> participantDataByInstanceId) {
         return participantDataByInstanceId.stream()
                 .collect(Collectors.toMap(
                         pDataDto -> pDataDto.getDdpParticipantId().orElse(""),
@@ -115,7 +114,7 @@ public class DefaultValues {
                 ));
     }
 
-    private boolean hasParticipantDataGenomicId(List<ParticipantDataDto> participantDataList) {
+    private boolean hasParticipantDataGenomicId(List<ParticipantData> participantDataList) {
         if (participantDataList.isEmpty()) return false;
         return participantDataList.stream()
                 .anyMatch(participantData -> {
@@ -124,7 +123,7 @@ public class DefaultValues {
                 });
     }
 
-    private boolean isSelfOrDependentParticipant(List<ParticipantDataDto> participantDataList) {
+    private boolean isSelfOrDependentParticipant(List<ParticipantData> participantDataList) {
         if (participantDataList.isEmpty()) return false;
         return participantDataList.stream()
                 .anyMatch(pData -> {
@@ -135,7 +134,7 @@ public class DefaultValues {
                 });
     }
 
-    private boolean hasExitedStatusDefaultValue(List<ParticipantDataDto> participantDataList) {
+    private boolean hasExitedStatusDefaultValue(List<ParticipantData> participantDataList) {
         if (participantDataList.isEmpty()) return false;
         return participantDataList.stream()
                 .anyMatch(participantData -> {
@@ -144,7 +143,7 @@ public class DefaultValues {
                 });
     }
 
-    private Optional<ParticipantDataDto> getParticipantGenomicFieldData(List<ParticipantDataDto> participantDataList) {
+    private Optional<ParticipantData> getParticipantGenomicFieldData(List<ParticipantData> participantDataList) {
         if (participantDataList.isEmpty()) return Optional.empty();
         return participantDataList.stream()
                 .filter(participantData -> FIELD_TYPE_ID.equals(participantData.getFieldTypeId().orElse("")))
@@ -152,7 +151,7 @@ public class DefaultValues {
     }
 
     private boolean insertGenomicIdIfNotExistsInData(String ddpParticipantId, String hruid,
-                                                     ParticipantDataDto pData) {
+                                                     ParticipantData pData) {
         Map<String, String> dataMap = GSON.fromJson(pData.getData().orElse(""), new TypeToken<Map<String, String>>() {}.getType());
         if (dataMap.containsKey(GENOME_STUDY_CPT_ID)) return false;
         dataMap.put(GENOME_STUDY_CPT_ID, PREFIX.concat(getGenomicIdValue(hruid)));
@@ -176,14 +175,14 @@ public class DefaultValues {
         return insertParticipantData(Map.of(GENOME_STUDY_CPT_ID, PREFIX.concat(getGenomicIdValue(hruid))), ddpParticipantId, FIELD_TYPE_ID);
     }
 
-    private Optional<ParticipantDataDto> getParticipantExitFieldData(List<ParticipantDataDto> participantDataList) {
+    private Optional<ParticipantData> getParticipantExitFieldData(List<ParticipantData> participantDataList) {
         if (participantDataList.isEmpty()) return Optional.empty();
         return participantDataList.stream()
                 .filter(participantData -> AT_PARTICIPANT_EXIT.equals(participantData.getFieldTypeId().orElse("")))
                 .findFirst();
     }
 
-    private boolean insertExitStatusIfNotExistsInData(String ddpParticipantId, ParticipantDataDto pData) {
+    private boolean insertExitStatusIfNotExistsInData(String ddpParticipantId, ParticipantData pData) {
         Map<String, String> dataMap = GSON.fromJson(pData.getData().orElse(""), new TypeToken<Map<String, String>>() {}.getType());
         if (dataMap.containsKey(EXITSTATUS)) return false;
         dataMap.put(EXITSTATUS, getDefaultExitStatus());
@@ -195,16 +194,16 @@ public class DefaultValues {
         return insertParticipantData(Map.of(EXITSTATUS, datstatExitReasonDefaultOption), ddpParticipantId, AT_PARTICIPANT_EXIT);
     }
 
-    private boolean updateParticipantData(String ddpParticipantId, ParticipantDataDto pData, Map<String, String> dataMap) {
+    private boolean updateParticipantData(String ddpParticipantId, ParticipantData pData, Map<String, String> dataMap) {
         this.setDataAccess(new ParticipantDataDao());
-        ParticipantData participantData = new ParticipantData(dataAccess);
+        org.broadinstitute.dsm.model.participant.data.ParticipantData participantData = new org.broadinstitute.dsm.model.participant.data.ParticipantData(dataAccess);
         participantData.setData(ddpParticipantId, Integer.parseInt(instance.getDdpInstanceId()), pData.getFieldTypeId().orElse(""), dataMap);
         return participantData.updateParticipantData(pData.getParticipantDataId(), "SYSTEM");
     }
 
     private boolean insertParticipantData(Map<String, String> data, String ddpParticipantId, String fieldTypeId) {
         this.setDataAccess(new ParticipantDataDao());
-        ParticipantData participantData = new ParticipantData(dataAccess);
+        org.broadinstitute.dsm.model.participant.data.ParticipantData participantData = new org.broadinstitute.dsm.model.participant.data.ParticipantData(dataAccess);
         participantData.setData(ddpParticipantId, Integer.parseInt(instance.getDdpInstanceId()),
                 fieldTypeId, data);
         try {

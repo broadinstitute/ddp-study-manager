@@ -6,10 +6,9 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.KitRequestShipping;
-import org.broadinstitute.dsm.db.ParticipantData;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.broadinstitute.dsm.util.NotificationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +34,7 @@ public class ReceiveKitRequest {
     private static final String NOTIFICATION_MESSAGE = "Sample GENOME_STUDY_SPIT_KIT_BARCODE has been received at the Broad Institute as of GENOME_STUDY_DATE_RECEIVED.";
 
     public static boolean receiveATKitRequest(@NonNull NotificationUtil notificationUtil, @NonNull String mfBarcode) {
-        ParticipantData participantData = SearchKitRequest.findATKitRequest(mfBarcode);
+        org.broadinstitute.dsm.db.ParticipantData participantData = SearchKitRequest.findATKitRequest(mfBarcode);
         if (participantData != null && StringUtils.isNotBlank(participantData.getData())) {
             Map<String,String> data = new Gson().fromJson(participantData.getData(), new TypeToken<Map<String, String>>(){}.getType());
             long now = Instant.now().toEpochMilli();
@@ -84,12 +83,12 @@ public class ReceiveKitRequest {
             throw new RuntimeException("Error setting AT kit to received with id " + participantDataId, results.resultException);
         }
 
-        ParticipantDataDto participantDataDto = new ParticipantDataDto.Builder()
+        ParticipantData participantData = new ParticipantData.Builder()
                 .withData(data)
                 .withParticipantDataId((int) participantDataId)
                 .build();
 
-        KitRequestShipping.exportToES(participantDataDto, ddpInstanceDto, "participantDataId", "participantDataId", participantDataId);
+        KitRequestShipping.exportToES(participantData, ddpInstanceDto, "participantDataId", "participantDataId", participantDataId);
 
         return true;
     }

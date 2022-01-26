@@ -29,6 +29,7 @@ import org.broadinstitute.dsm.model.elastic.export.painless.ScriptBuilder;
 import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainless;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
 import org.broadinstitute.dsm.util.DBUtil;
 import org.broadinstitute.dsm.util.EasyPostUtil;
@@ -1444,8 +1445,8 @@ public class KitRequestShipping extends KitRequest {
                              String fieldName, Object fieldValue) {
         Generator paramsGenerator = new ParamsGenerator(source, ddpInstanceDto.getInstanceName());
         ScriptBuilder scriptBuilder = new NestedScriptBuilder(paramsGenerator.getPropertyName(), uniqueIdentifier);
-        MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder(fieldName, fieldValue);
-        NestedQueryBuilder nestedQueryBuilder = new NestedQueryBuilder("dsm.kitRequestShipping", matchQueryBuilder, ScoreMode.Avg);
+        MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder(String.join(".",ESObjectConstants.DSM, paramsGenerator.getPropertyName(), fieldName), fieldValue);
+        NestedQueryBuilder nestedQueryBuilder = new NestedQueryBuilder(String.join(".",ESObjectConstants.DSM, paramsGenerator.getPropertyName()), matchQueryBuilder, ScoreMode.Avg);
         UpsertPainless upsertPainless = new UpsertPainless(paramsGenerator, ddpInstanceDto.getEsParticipantIndex(), scriptBuilder, nestedQueryBuilder);
         upsertPainless.export();
     }
