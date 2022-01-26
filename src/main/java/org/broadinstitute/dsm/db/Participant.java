@@ -14,7 +14,8 @@ import org.slf4j.LoggerFactory;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -142,6 +143,12 @@ public class Participant {
         this.abstractionReady = abstractionReady;
         this.additionalValues = additionalValues;
         this.exitDate = exitDate;
+    }
+    //For TissueList
+    public Participant(String participantId, String  ddpParticipantId, String  assigneeIdTissue){
+        this(participantId, ddpParticipantId, null, assigneeIdTissue, null,
+                null, null, null, null, null,
+                false, false, null, 0);
     }
 
     public static Participant getParticipant(@NonNull Map<String, Assignee> assignees, @NonNull String realm, @NonNull ResultSet rs) throws SQLException {
