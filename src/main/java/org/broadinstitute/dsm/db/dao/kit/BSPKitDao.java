@@ -33,7 +33,6 @@ public class BSPKitDao implements Dao<BSPKitDto> {
             "        kt.kit_type_name, " +
             "        kt.bsp_material_type, " +
             "        kt.bsp_receptacle_type, " +
-//            "        kt.sample_type, " +
             "        (select count(role.name) " +
             "            from ddp_instance realm2, " +
             "            ddp_instance_role inRol, " +
