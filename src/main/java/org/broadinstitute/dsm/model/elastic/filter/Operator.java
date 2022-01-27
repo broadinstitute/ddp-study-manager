@@ -103,11 +103,4 @@ public enum Operator {
                 .collect(Collectors.toList())
                 .toArray(new String[] {});
     }
-
-    private static boolean isNotNull(String[] splittedFilter) {
-        splittedFilter = cleanFromEmptySpaces(splittedFilter);
-        final int BOTTOM_SIZE_OF_IS_NOT_NULL = 4;
-        if (splittedFilter.length < BOTTOM_SIZE_OF_IS_NOT_NULL) return false;
-        return Filter.IS.equals(splittedFilter[splittedFilter.length - 3]) && Filter.NOT.equals(splittedFilter[splittedFilter.length - 2]) && Filter.NULL.equals(splittedFilter[splittedFilter.length - 1]);
-    }
 }

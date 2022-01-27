@@ -20,7 +20,8 @@ public class KitRequest {
     private Long dsmKitRequestId;
     private String participantId;
     private String shortId;
-    private String shippingId;
+    @ColumnName(DBConstants.DSM_LABEL)
+    private String ddpLabel;
     private DDPParticipant participant;
 
     @ColumnName(DBConstants.EXTERNAL_ORDER_STATUS)
@@ -40,12 +41,12 @@ public class KitRequest {
         this(null, participantId, shortId, null, externalOrderNumber, participant, null, null, null);
     }
 
-    public KitRequest(Long dsmKitRequestId, String participantId, String shortId, String shippingId, String externalOrderNumber,
+    public KitRequest(Long dsmKitRequestId, String participantId, String shortId, String ddpLabel, String externalOrderNumber,
                       DDPParticipant participant, String externalOrderStatus, String externalKitName, Long externalOrderDate) {
         this.dsmKitRequestId = dsmKitRequestId;
         this.participantId = participantId;
         this.shortId = shortId;
-        this.shippingId = shippingId;
+        this.ddpLabel = ddpLabel;
         this.externalOrderNumber = externalOrderNumber;
         this.participant = participant;
         this.externalOrderStatus = externalOrderStatus;

@@ -154,6 +154,7 @@ public class KitStatusChangeRoute extends RequestHandler {
                 query = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.UPDATE_KIT_REQUEST);
                 kitRequestShipping.setScanDate(currentTime);
                 kitRequestShipping.setKitLabel(addValue);
+                kitRequestShipping.setDdpLabel(kit);
             }
             else if (RoutePath.TRACKING_SCAN_REQUEST.equals(changeType)) {
                 query = TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.INSERT_KIT_TRACKING);
@@ -183,7 +184,7 @@ public class KitStatusChangeRoute extends RequestHandler {
                         if (kitDDPNotification != null) {
                             EventUtil.triggerDDP(conn, kitDDPNotification);
                         }
-                        KitRequestShipping.exportToES(kitRequestShipping, ddpInstanceDto, "kitLabel", "kitLabel", addValue);
+                        KitRequestShipping.exportToES(kitRequestShipping, ddpInstanceDto, "ddpLabel", "ddpLabel", kit);
                     }
                     else if (RoutePath.TRACKING_SCAN_REQUEST.equals(changeType)) {
                         logger.info("Added tracking for kit w/ kit_label " + kit);
