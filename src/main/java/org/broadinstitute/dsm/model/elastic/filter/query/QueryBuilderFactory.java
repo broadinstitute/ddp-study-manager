@@ -12,6 +12,8 @@ import org.elasticsearch.index.query.ExistsQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.elasticsearch.index.query.RegexpQueryBuilder;
+import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.index.query.WildcardQueryBuilder;
 
 public class QueryBuilderFactory {
@@ -47,7 +49,7 @@ public class QueryBuilderFactory {
                 qb = dateLessQuery;
                 break;
             case IS_NOT_NULL:
-                qb = new ExistsQueryBuilder(payload.getFieldName());
+                qb = buildIsNotNullAndEmpty(payload);
                 break;
             case IS_NULL:
                 qb = buildIsNullQuery(payload);
@@ -63,6 +65,7 @@ public class QueryBuilderFactory {
             case JSON_EXTRACT:
                 Object[] dynamicFieldValues = payload.getValues();
                 JsonExtractSplitter jsonExtractSplitter = (JsonExtractSplitter) splitter;
+//                buildQueryBuilder(jsonExtractSplitter.getOperator());
                 if (!StringUtils.EMPTY.equals(dynamicFieldValues[0])) {
                     if (jsonExtractSplitter.getDecoratedSplitter() instanceof GreaterThanEqualsSplitter) {
                         qb = new RangeQueryBuilder(payload.getFieldName());
@@ -77,7 +80,7 @@ public class QueryBuilderFactory {
                     if (jsonExtractSplitter.getDecoratedSplitter() instanceof IsNullSplitter) {
                         qb = buildIsNullQuery(payload);
                     } else {
-                        qb = new ExistsQueryBuilder(payload.getFieldName());
+                        qb = buildIsNotNullAndEmpty(payload);
                     }
                 }
                 break;
@@ -87,11 +90,18 @@ public class QueryBuilderFactory {
         return qb;
     }
 
+    private static QueryBuilder buildIsNotNullAndEmpty(QueryPayload payload) {
+        BoolQueryBuilder isNotNullAndNotEmpty = new BoolQueryBuilder();
+        isNotNullAndNotEmpty.must(new ExistsQueryBuilder(payload.getFieldName()));
+        isNotNullAndNotEmpty.must(new RegexpQueryBuilder(payload.getFieldName(), DsmAbstractQueryBuilder.ONE_OR_MORE_REGEX));
+        return isNotNullAndNotEmpty;
+    }
+
     private static QueryBuilder buildIsNullQuery(QueryPayload payload) {
         BoolQueryBuilder isNullQuery = new BoolQueryBuilder();
         BoolQueryBuilder existsWithEmpty = new BoolQueryBuilder();
         existsWithEmpty.must(new ExistsQueryBuilder(payload.getFieldName()));
-        existsWithEmpty.mustNot(new WildcardQueryBuilder(payload.getFieldName(), String.valueOf(payload.getValues()[0])));
+        existsWithEmpty.mustNot(new WildcardQueryBuilder(payload.getFieldName(), DsmAbstractQueryBuilder.WILDCARD));
         isNullQuery.should(existsWithEmpty);
         isNullQuery.should(new BoolQueryBuilder().mustNot(new ExistsQueryBuilder(payload.getFieldName())));
         return isNullQuery;
