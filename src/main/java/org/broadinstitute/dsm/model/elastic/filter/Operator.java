@@ -14,6 +14,7 @@ public enum Operator {
     GREATER_THAN_EQUALS(Filter.LARGER_EQUALS_TRIMMED),
     LESS_THAN_EQUALS(Filter.SMALLER_EQUALS_TRIMMED),
     IS_NOT_NULL(Filter.IS_NOT_NULL_TRIMMED),
+    IS_NULL(Filter.IS_NULL_TRIMMED),
     DIAMOND_EQUALS(Filter.DIAMOND_EQUALS),
     MULTIPLE_OPTIONS(Operator.MULTIPLE_OPTIONS_INDICATOR),
     STR_DATE(Filter.DATE_FORMAT),
@@ -24,6 +25,8 @@ public enum Operator {
 
     public static final String MULTIPLE_OPTIONS_INDICATOR = "()";
     public static final String UNKNOWN_OPERATOR = "Unknown operator";
+    public static final List<String> IS_NOT_NULL_LIST = Arrays.asList("IS", "NOT",
+            "NULL");
 
     private String value;
 
@@ -42,12 +45,10 @@ public enum Operator {
         String[] splittedFilter = filter.split(Filter.SPACE);
         if (isMultipleOptions(splittedFilter))
             return MULTIPLE_OPTIONS;
-        else if (isNotNull(splittedFilter))
-            return IS_NOT_NULL;
         Optional<String> maybeOperator = Arrays.stream(splittedFilter)
                 .filter(StringUtils::isNotBlank)
                 .map(Operator::handleSpecialCaseOperators)
-                .filter(word -> Arrays.stream(Operator.values()).anyMatch(op -> op.value.equals(word)))
+                .filter(word -> Arrays.stream(Operator.values()).anyMatch(op -> op.value.equals(word)) || Operator.IS_NOT_NULL_LIST.contains(word))
                 .distinct()
                 .reduce((prev, curr) -> String.join(Filter.SPACE, prev, curr));
         if (maybeOperator.isPresent()) {
@@ -68,6 +69,7 @@ public enum Operator {
                 case "JSON_EXTRACT <=":
                 case "JSON_EXTRACT LIKE":
                 case "JSON_EXTRACT IS NOT NULL":
+                case "JSON_EXTRACT IS NULL":
                     return JSON_EXTRACT;
                 default:
                     return Operator.getOperator(operator);
@@ -81,7 +83,7 @@ public enum Operator {
         String strOperator = StringUtils.EMPTY;
         for (Operator operator : Operator.values()) {
             int startIndex = word.indexOf(operator.value);
-            if (startIndex == -1) continue;
+            if (startIndex == -1 && !Operator.IS_NOT_NULL_LIST.contains(word)) continue;
             if (word.contains(Filter.OPEN_PARENTHESIS)) strOperator = word.substring(startIndex, startIndex + operator.value.length());
             else strOperator = word;
             return strOperator;
@@ -104,12 +106,5 @@ public enum Operator {
                 .filter(StringUtils::isNotBlank)
                 .collect(Collectors.toList())
                 .toArray(new String[] {});
-    }
-
-    private static boolean isNotNull(String[] splittedFilter) {
-        splittedFilter = cleanFromEmptySpaces(splittedFilter);
-        final int BOTTOM_SIZE_OF_IS_NOT_NULL = 4;
-        if (splittedFilter.length < BOTTOM_SIZE_OF_IS_NOT_NULL) return false;
-        return Filter.IS.equals(splittedFilter[1]) && Filter.NOT.equals(splittedFilter[2]) && Filter.NULL.equals(splittedFilter[3]);
     }
 }

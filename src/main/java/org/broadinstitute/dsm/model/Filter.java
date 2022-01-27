@@ -63,6 +63,7 @@ public class Filter {
     public static final String DATE_LESS = SMALLER_EQUALS + DATE_FORMAT;
     public static final char OPEN_PARENTHESIS_CHAR = '(';
     public static final char CLOSE_PARENTHESIS_CHAR = ')';
+    public static final String IS_NULL_TRIMMED = "IS NULL";
 
     public static String TEXT = "TEXT";
     public static String OPTIONS = "OPTIONS";

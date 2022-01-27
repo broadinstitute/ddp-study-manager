@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.elastic.filter.Operator;
 import org.broadinstitute.dsm.model.elastic.filter.splitter.BaseSplitter;
 import org.broadinstitute.dsm.model.elastic.filter.splitter.GreaterThanEqualsSplitter;
+import org.broadinstitute.dsm.model.elastic.filter.splitter.IsNullSplitter;
 import org.broadinstitute.dsm.model.elastic.filter.splitter.JsonExtractSplitter;
 import org.broadinstitute.dsm.model.elastic.filter.splitter.LessThanEqualsSplitter;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -11,6 +12,7 @@ import org.elasticsearch.index.query.ExistsQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.elasticsearch.index.query.WildcardQueryBuilder;
 
 public class QueryBuilderFactory {
     public static QueryBuilder buildQueryBuilder(Operator operator, QueryPayload payload,
@@ -47,6 +49,9 @@ public class QueryBuilderFactory {
             case IS_NOT_NULL:
                 qb = new ExistsQueryBuilder(payload.getFieldName());
                 break;
+            case IS_NULL:
+                qb = buildIsNullQuery(payload);
+                break;
             case MULTIPLE_OPTIONS:
                 BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
                 Object[] values = payload.getValues();
@@ -57,8 +62,8 @@ public class QueryBuilderFactory {
                 break;
             case JSON_EXTRACT:
                 Object[] dynamicFieldValues = payload.getValues();
+                JsonExtractSplitter jsonExtractSplitter = (JsonExtractSplitter) splitter;
                 if (!StringUtils.EMPTY.equals(dynamicFieldValues[0])) {
-                    JsonExtractSplitter jsonExtractSplitter = (JsonExtractSplitter) splitter;
                     if (jsonExtractSplitter.getDecoratedSplitter() instanceof GreaterThanEqualsSplitter) {
                         qb = new RangeQueryBuilder(payload.getFieldName());
                         ((RangeQueryBuilder)qb).gte(dynamicFieldValues[0]);
@@ -69,12 +74,26 @@ public class QueryBuilderFactory {
                         qb = new MatchQueryBuilder(payload.getFieldName(), dynamicFieldValues[0]);
                     }
                 } else {
-                    qb = new ExistsQueryBuilder(payload.getFieldName());
+                    if (jsonExtractSplitter.getDecoratedSplitter() instanceof IsNullSplitter) {
+                        qb = buildIsNullQuery(payload);
+                    } else {
+                        qb = new ExistsQueryBuilder(payload.getFieldName());
+                    }
                 }
                 break;
             default:
                 throw new IllegalArgumentException(Operator.UNKNOWN_OPERATOR);
         }
         return qb;
+    }
+
+    private static QueryBuilder buildIsNullQuery(QueryPayload payload) {
+        BoolQueryBuilder isNullQuery = new BoolQueryBuilder();
+        BoolQueryBuilder existsWithEmpty = new BoolQueryBuilder();
+        existsWithEmpty.must(new ExistsQueryBuilder(payload.getFieldName()));
+        existsWithEmpty.mustNot(new WildcardQueryBuilder(payload.getFieldName(), String.valueOf(payload.getValues()[0])));
+        isNullQuery.should(existsWithEmpty);
+        isNullQuery.should(new BoolQueryBuilder().mustNot(new ExistsQueryBuilder(payload.getFieldName())));
+        return isNullQuery;
     }
 }
