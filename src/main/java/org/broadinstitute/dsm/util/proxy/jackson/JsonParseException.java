@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.elastic.export.generate;
+package org.broadinstitute.dsm.util.proxy.jackson;
 
 public class JsonParseException extends RuntimeException {
 

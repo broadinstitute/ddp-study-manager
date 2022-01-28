@@ -1,12 +1,10 @@
 package org.broadinstitute.dsm.model.elastic.search;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
 import java.util.*;
 
 import org.broadinstitute.dsm.statics.ESObjectConstants;
-import org.broadinstitute.dsm.util.ObjectMapperSingleton;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -1,9 +1,8 @@
-package org.broadinstitute.dsm.util;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.broadinstitute.dsm.model.elastic.export.generate.JsonParseException;
+package org.broadinstitute.dsm.util.proxy.jackson;
 
 import java.io.IOException;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ObjectMapperSingleton {
 
@@ -20,6 +19,14 @@ public class ObjectMapperSingleton {
             throw new JsonParseException(e.getMessage());
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static String writeValueAsString(Object value) {
+        try {
+            return Helper.objectMapperInstance.writeValueAsString(value);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new JsonProcessingException(e.getMessage());
         }
     }
 

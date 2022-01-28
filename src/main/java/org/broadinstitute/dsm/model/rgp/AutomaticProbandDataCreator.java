@@ -17,6 +17,8 @@ import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
 import org.broadinstitute.dsm.model.defaultvalues.Defaultable;
 import org.broadinstitute.dsm.model.elastic.ESActivities;
+import org.broadinstitute.dsm.model.elastic.export.painless.ParamsGenerator;
+import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainless;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
@@ -76,6 +78,8 @@ public class AutomaticProbandDataCreator implements Defaultable {
                     );
                     participantData.addDefaultOptionsValueToData(columnsWithDefaultOptions);
                     participantData.insertParticipantData("SYSTEM");
+                    new ParamsGenerator()
+                    new UpsertPainless();
                     columnsWithDefaultOptionsFilteredByElasticExportWorkflow.forEach((col, val) ->
                             ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(instance, participantId, col, val,
                                     new WorkflowForES.StudySpecificData(probandDataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),

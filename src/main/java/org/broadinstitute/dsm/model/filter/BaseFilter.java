@@ -3,7 +3,6 @@ package org.broadinstitute.dsm.model.filter;
 import java.io.IOException;
 import java.util.Objects;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
@@ -12,7 +11,7 @@ import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.RoutePath;
-import org.broadinstitute.dsm.util.ObjectMapperSingleton;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 import spark.QueryParamsMap;
 
 public class BaseFilter {

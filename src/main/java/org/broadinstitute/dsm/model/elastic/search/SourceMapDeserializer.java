@@ -7,7 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
-import org.broadinstitute.dsm.util.ObjectMapperSingleton;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 
 import java.io.IOException;
 import java.lang.reflect.Field;

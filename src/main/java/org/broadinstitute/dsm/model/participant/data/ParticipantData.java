@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import lombok.Data;
@@ -17,6 +18,7 @@ import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +35,15 @@ public class ParticipantData {
     private String ddpParticipantId;
     private int ddpInstanceId;
     private String fieldTypeId;
-    private Map<String, String> data;
+    private String data;
+
+    public void setData(Map<String, String> data) {
+        this.data = ObjectMapperSingleton.writeValueAsString(data);
+    }
+
+    public Map<String, String> getData() {
+        return ObjectMapperSingleton.readValue(data, Map.class);
+    }
 
     private Dao dataAccess;
 
