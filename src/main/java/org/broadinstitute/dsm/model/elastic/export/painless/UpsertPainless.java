@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.export.painless;
 
 import org.broadinstitute.dsm.model.elastic.export.Exportable;
-import org.broadinstitute.dsm.model.elastic.export.RequestPayload;
 import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.elasticsearch.client.RequestOptions;
@@ -10,15 +9,20 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class UpsertPainless implements Exportable {
 
     private Generator generator;
-    private String index; // index, docId
+    private String index;
     private ScriptBuilder scriptBuilder;
     private QueryBuilder queryBuilder;
+
+    private static final Logger logger = LoggerFactory.getLogger(UpsertPainless.class);
+
 
     public UpsertPainless(Generator generator, String index, ScriptBuilder scriptBuilder, QueryBuilder queryBuilder) {
         this.generator = generator;
@@ -38,6 +42,7 @@ public class UpsertPainless implements Exportable {
         updateByQueryRequest.setRefresh(true);
         try {
             clientInstance.updateByQuery(updateByQueryRequest, RequestOptions.DEFAULT);
+            logger.info(String.format("Successfully updated ES data for %s", generator.getPropertyName()));
         } catch (IOException e) {
             throw new RuntimeException("Error occurred while exporting data to ES", e);
         }
