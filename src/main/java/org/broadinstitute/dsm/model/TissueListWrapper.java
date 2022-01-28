@@ -2,6 +2,8 @@ package org.broadinstitute.dsm.model;
 
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetrics;
+import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetricsTracker;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
@@ -48,6 +50,8 @@ public class TissueListWrapper {
         }
         long timeEnd = System.currentTimeMillis();
         logger.info("Time it took for " + results.size() + " results to match: " + (timeEnd - timeBegin));
+        GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(instance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_TISSUE_LIST,
+                GoogleAnalyticsMetrics.EVENT_TISSUE_LIST_LOAD_TIME, GoogleAnalyticsMetrics.EVENT_TISSUE_LIST_LOAD_TIME,  GoogleAnalyticsMetrics.getTimeDifferenceToNow(timeBegin));
         return results;
     }
 }
