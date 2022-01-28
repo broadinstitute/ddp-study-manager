@@ -78,4 +78,5 @@
     <include file="liquibase/CMI/DDP-6034_SMIDS.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/rgp/DDP-7423_Data-Sharing-Field.xml" relativeToChangelogFile="true"/>
     <include file="liquibase/DDP-7431_kit_upload_permission.xml" relativeToChangelogFile="true"/>
+    <include file="liquibase/rgp/DDP-7458_Sqr-Project-Field.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
