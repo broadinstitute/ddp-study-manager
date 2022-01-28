@@ -16,6 +16,7 @@ import org.broadinstitute.dsm.db.dto.ddp.kitrequest.KitRequestDto;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.at.ReceiveKitRequest;
+import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainlessFacade;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.*;
 import org.broadinstitute.dsm.util.*;
@@ -184,11 +185,12 @@ public class KitStatusChangeRoute extends RequestHandler {
                         if (kitDDPNotification != null) {
                             EventUtil.triggerDDP(conn, kitDDPNotification);
                         }
-                        KitRequestShipping.exportToES(kitRequestShipping, ddpInstanceDto, "ddpLabel", "ddpLabel", kit);
+                        UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, "ddpLabel", "ddpLabel", kit);
                     }
                     else if (RoutePath.TRACKING_SCAN_REQUEST.equals(changeType)) {
                         logger.info("Added tracking for kit w/ kit_label " + kit);
-                        KitRequestShipping.exportToES(kitRequestShipping, ddpInstanceDto, "kitLabel", "kitLabel", addValue);
+                        UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, "kitLabel", "kitLabel", addValue)
+                                        .export();
                     }
                     else if (RoutePath.RECEIVED_KIT_REQUEST.equals(changeType)) {
                         logger.info("Updated kitRequest w/ SM-ID kit_label " + kit);
@@ -239,17 +241,6 @@ public class KitStatusChangeRoute extends RequestHandler {
             }
             else {
                 logger.error("Error something went wrong at the scan pages");
-            }
-        } else {
-            if (Objects.isNull(ddpInstanceDto)) return;
-            if (RoutePath.FINAL_SCAN_REQUEST.equals(changeType) || RoutePath.SENT_KIT_REQUEST.equals(changeType)) {
-                KitRequestShipping.exportToES(kitRequestShipping, ddpInstanceDto, "ddpLabel", "ddpLabel", kit);
-            }
-            else if (RoutePath.TRACKING_SCAN_REQUEST.equals(changeType)) {
-                KitRequestShipping.exportToES(kitRequestShipping, ddpInstanceDto, "kitLabel", "kitLable", kit);
-            }
-            else if (RoutePath.RECEIVED_KIT_REQUEST.equals(changeType)) {
-                //TODO - sm_id
             }
         }
     }

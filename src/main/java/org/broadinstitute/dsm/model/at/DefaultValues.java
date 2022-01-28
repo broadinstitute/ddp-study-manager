@@ -72,7 +72,7 @@ public class DefaultValues {
 
             if (!hasParticipantDataGenomicId(participantDataList) && isSelfOrDependentParticipant(participantDataList)) {
                 ElasticSearchParticipantDto esParticipantData = entry.getValue();
-                String hruid = esParticipantData.getProfile().map(ESProfile::getHruid).orElse("");;
+                String hruid = esParticipantData.getProfile().map(ESProfile::getHruid).orElse("");
                 addedNewParticipantData = getParticipantGenomicFieldData(participantDataList)
                         .map(pData -> insertGenomicIdIfNotExistsInData(ddpParticipantId, hruid, pData))
                         .orElseGet(() -> insertGenomicIdForParticipant(ddpParticipantId, hruid));

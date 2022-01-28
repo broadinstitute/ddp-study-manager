@@ -19,6 +19,7 @@ import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitType;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
+import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainlessFacade;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
 import org.slf4j.Logger;
@@ -511,7 +512,9 @@ public class KitUtil {
         kitRequestShipping.setEasypostShipmentStatus(status);
         kitRequestShipping.setMessage(message);
         kitRequestShipping.setDsmKitId(dsmKitId);
-        KitRequestShipping.exportToES(kitRequestShipping, ddpInstanceDto, "dsmKitId", "dsmKitId", dsmKitId);
+
+        UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, "dsmKitId", "dsmKitId", dsmKitId)
+                        .export();
 
         return dbVals;
     }

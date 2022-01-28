@@ -14,7 +14,9 @@ import org.broadinstitute.dsm.db.dto.kit.BSPKitDto;
 import org.broadinstitute.dsm.db.dto.settings.InstanceSettingsDto;
 import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
 import org.broadinstitute.dsm.model.bsp.BSPKitStatus;
+import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainlessFacade;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchDataUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -150,7 +152,9 @@ public class BSPKit {
         kitRequestShipping.setKitLabel(kitLabel);
 
         DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName(maybeBspKitQueryResult.getInstanceName()).orElseThrow();
-        KitRequestShipping.exportToES(kitRequestShipping, ddpInstanceDto, "kitLabel", "kitLabel", kitLabel);
+
+        UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, "kitLabel", "kitLabel", kitLabel)
+                        .export();
     }
 
     private void writeSampleReceivedToES(DDPInstance ddpInstance, BSPKitDto bspKitInfo) {

@@ -23,10 +23,7 @@ import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.ddp.KitDetail;
 import org.broadinstitute.dsm.model.elastic.export.Exportable;
 import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
-import org.broadinstitute.dsm.model.elastic.export.painless.NestedScriptBuilder;
-import org.broadinstitute.dsm.model.elastic.export.painless.ParamsGenerator;
-import org.broadinstitute.dsm.model.elastic.export.painless.ScriptBuilder;
-import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainless;
+import org.broadinstitute.dsm.model.elastic.export.painless.*;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -785,7 +782,9 @@ public class KitRequestShipping extends KitRequest {
             kitRequestShipping.setDeactivationReason(deactivationReason);
             kitRequestShipping.setDeactivatedDate(deactivatedDate);
 
-            exportToES(kitRequestShipping, ddpInstanceDto, "dsmKitRequestId", "dsmKitRequestId", dsmKitRequestId);
+            UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, "dsmKitRequestId", "dsmKitRequestId", dsmKitRequestId)
+                    .export();
+
         }
         else {
             if (easypostApiKey != null) {
@@ -914,8 +913,9 @@ public class KitRequestShipping extends KitRequest {
             DDPInstanceDto ddpInstanceDto =
                     new DDPInstanceDao().getDDPInstanceByInstanceId(Integer.valueOf(ddpInstance.getDdpInstanceId())).orElseThrow();
 
-            exportToES(kitRequestShipping, ddpInstanceDto, "dsmKitRequestId", "_id", Exportable.getParticipantGuid(ddpParticipantId,
-                    ddpInstance.getParticipantIndexES()));
+            UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, "dsmKitRequestId", "_id", Exportable.getParticipantGuid(ddpParticipantId, ddpInstance.getParticipantIndexES()))
+                    .export();
+
         }
 
         logger.info("Added kitRequest w/ ddpKitRequestId " + ddpKitRequestId);
@@ -1002,7 +1002,8 @@ public class KitRequestShipping extends KitRequest {
             KitRequestShipping kitRequestShipping = new KitRequestShipping(null, dsmKitId, null, null, null, null);
             kitRequestShipping.setLabelDate(labelDate);
 
-            exportToES(kitRequestShipping, ddpInstanceDto, "dsmKitId", "dsmKitId", dsmKitId);
+            UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, "dsmKitId", "dsmKitId", dsmKitId)
+                            .export();
         }
     }
 
@@ -1095,7 +1096,10 @@ public class KitRequestShipping extends KitRequest {
         }
         else {
             logger.info("Updated kit w/ dsm_kit_id " + dsmKitId, results.resultException);
-            exportToES(kitRequestShipping, ddpInstanceDto, "dsmKitId", "dsmKitId", dsmKitId);
+
+            UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, "dsmKitId", "dsmKitId", dsmKitId)
+                            .export();
+
         }
     }
 
@@ -1390,8 +1394,9 @@ public class KitRequestShipping extends KitRequest {
         }
 
         KitRequestShipping kitRequestShipping = new KitRequestShipping(dsmKitRequestId, null, null, null, null, message);
-        exportToES(kitRequestShipping, ddpInstanceDto, "dsmKitRequestId", "dsmKitRequestId", dsmKitRequestId);
 
+        UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, "dsmKitRequestId", "dsmKitRequestId", dsmKitRequestId)
+                        .export();
     }
 
     public static void reactivateKitRequest(@NonNull String kitRequestId, DDPInstanceDto ddpInstanceDto) {
@@ -1437,18 +1442,9 @@ public class KitRequestShipping extends KitRequest {
             long dsmKitId = KitRequestShipping.writeNewKit(dsmKitRequestId, kitRequestShipping.getEasypostAddressId(), message, false);
             kitRequestShipping.setDsmKitId(dsmKitId);
 
-            exportToES(kitRequestShipping, ddpInstanceDto, "dsmKitId", "dsmKitRequestId", dsmKitRequestId);
+            UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, "dsmKitId", "dsmKitRequestId", dsmKitRequestId)
+                            .export();
         }
-    }
-
-    public static void exportToES(Object source, DDPInstanceDto ddpInstanceDto, String uniqueIdentifier,
-                             String fieldName, Object fieldValue) {
-        Generator paramsGenerator = new ParamsGenerator(source, ddpInstanceDto.getInstanceName());
-        ScriptBuilder scriptBuilder = new NestedScriptBuilder(paramsGenerator.getPropertyName(), uniqueIdentifier);
-        MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder(String.join(".",ESObjectConstants.DSM, paramsGenerator.getPropertyName(), fieldName), fieldValue);
-        NestedQueryBuilder nestedQueryBuilder = new NestedQueryBuilder(String.join(".",ESObjectConstants.DSM, paramsGenerator.getPropertyName()), matchQueryBuilder, ScoreMode.Avg);
-        UpsertPainless upsertPainless = new UpsertPainless(paramsGenerator, ddpInstanceDto.getEsParticipantIndex(), scriptBuilder, nestedQueryBuilder);
-        upsertPainless.export();
     }
 
     public static List<KitRequestShipping> findKitRequest(@NonNull String field, @NonNull String value, String[] realms) {

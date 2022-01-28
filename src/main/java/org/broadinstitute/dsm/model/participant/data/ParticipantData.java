@@ -25,11 +25,9 @@ import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
+import org.broadinstitute.dsm.model.elastic.export.Exportable;
 import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
-import org.broadinstitute.dsm.model.elastic.export.painless.NestedScriptBuilder;
-import org.broadinstitute.dsm.model.elastic.export.painless.ParamsGenerator;
-import org.broadinstitute.dsm.model.elastic.export.painless.ScriptBuilder;
-import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainless;
+import org.broadinstitute.dsm.model.elastic.export.painless.*;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
@@ -170,7 +168,11 @@ public class ParticipantData {
         }
         logger.info("Successfully inserted data for participant: " + this.ddpParticipantId);
 
-        exportToES("participantDataId");
+        DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceId(ddpInstanceId).orElseThrow();
+        String participantGuid = Exportable.getParticipantGuid(ddpParticipantId, ddpInstanceDto.getEsParticipantIndex());
+
+        UpsertPainlessFacade.of(DBConstants.DDP_PARTICIPANT_DATA_ALIAS, participantData, ddpInstanceDto, "participantDataId", "_id", participantGuid)
+                .export();
 
         return createdDataKey;
     }
@@ -207,7 +209,10 @@ public class ParticipantData {
 
         int rowsAffected = ((ParticipantDataDao) dataAccess).updateParticipantDataColumn(participantData);
 
-        exportToES(participantDataId, participantData, "participantDataId");
+        DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceId(ddpInstanceId).orElseThrow();
+
+        UpsertPainlessFacade.of(DBConstants.DDP_PARTICIPANT_DATA_ALIAS, participantData, ddpInstanceDto, "participantDataId", "participantDataId", participantDataId)
+                        .export();
 
         return rowsAffected == 1;
     }
