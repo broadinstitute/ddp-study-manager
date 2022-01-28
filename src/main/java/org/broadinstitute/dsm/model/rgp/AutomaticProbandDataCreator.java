@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
@@ -17,7 +18,10 @@ import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
 import org.broadinstitute.dsm.model.defaultvalues.Defaultable;
 import org.broadinstitute.dsm.model.elastic.ESActivities;
+import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
+import org.broadinstitute.dsm.model.elastic.export.painless.NestedScriptBuilder;
 import org.broadinstitute.dsm.model.elastic.export.painless.ParamsGenerator;
+import org.broadinstitute.dsm.model.elastic.export.painless.ScriptBuilder;
 import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainless;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
@@ -26,6 +30,8 @@ import org.broadinstitute.dsm.model.participant.data.ParticipantData;
 import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,8 +84,14 @@ public class AutomaticProbandDataCreator implements Defaultable {
                     );
                     participantData.addDefaultOptionsValueToData(columnsWithDefaultOptions);
                     participantData.insertParticipantData("SYSTEM");
-                    new ParamsGenerator()
-                    new UpsertPainless();
+
+                    Generator generator = new ParamsGenerator(participantData, instance.getName());
+                    ScriptBuilder scriptBuilder = new NestedScriptBuilder("participantData", "_id");
+                    MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder("_id", esProfile.getGuid());
+                    NestedQueryBuilder nestedQueryBuilder = new NestedQueryBuilder(String.join(".", ESObjectConstants.DSM, generator.getPropertyName()), matchQueryBuilder, ScoreMode.Avg);
+                    UpsertPainless upsertPainless = new UpsertPainless(generator, instance.getParticipantIndexES(), scriptBuilder, nestedQueryBuilder);
+                    upsertPainless.export();
+
                     columnsWithDefaultOptionsFilteredByElasticExportWorkflow.forEach((col, val) ->
                             ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(instance, participantId, col, val,
                                     new WorkflowForES.StudySpecificData(probandDataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
