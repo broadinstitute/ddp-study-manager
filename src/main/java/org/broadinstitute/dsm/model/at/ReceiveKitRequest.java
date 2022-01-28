@@ -86,6 +86,7 @@ public class ReceiveKitRequest {
         ParticipantData participantData = new ParticipantData.Builder()
                 .withData(data)
                 .withParticipantDataId((int) participantDataId)
+                .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())
                 .build();
 
         KitRequestShipping.exportToES(participantData, ddpInstanceDto, "participantDataId", "participantDataId", participantDataId);
