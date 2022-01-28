@@ -13,8 +13,7 @@ public class ParamsGeneratorTest {
         KitRequestShipping kitRequestShipping = new KitRequestShipping(1L, 2L, "easyPostIdValue", "easyPostAddressIdValue", true, "msg");
         ParamsGenerator paramsGenerator = new ParamsGenerator(kitRequestShipping, "");
         Map<String, Object> paramsMap = paramsGenerator.generate();
-        Map <String, Object> params = (Map <String, Object>) paramsMap.get(ParamsGenerator.PARAMS);
-        Map <String, Object> dsm = (Map <String, Object>) params.get("dsm");
+        Map <String, Object> dsm = (Map <String, Object>) paramsMap.get("dsm");
         Map <String, Object> kitRequestShippingObj = (Map <String, Object>) dsm.get("kitRequestShipping");
         Assert.assertEquals(1L, kitRequestShippingObj.get("dsmKitRequestId"));
         Assert.assertEquals(2L, kitRequestShippingObj.get("dsmKitId"));
