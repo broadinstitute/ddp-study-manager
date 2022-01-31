@@ -35,33 +35,14 @@ import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AutomaticProbandDataCreator implements Defaultable {
+public class AutomaticProbandDataCreator extends org.broadinstitute.dsm.model.BasicDefaultDataMaker {
 
 
-    private static final Logger logger = LoggerFactory.getLogger(AutomaticProbandDataCreator.class);
     public static final String RGP_FAMILY_ID = "rgp_family_id";
 
-    private final FieldSettings fieldSettings = new FieldSettings();
-    private final BookmarkDao bookmarkDao = new BookmarkDao();
-    private final ParticipantDataDao participantDataDao = new ParticipantDataDao();
-    private final DDPInstanceDao ddpInstanceDao = new DDPInstanceDao();
-    private DDPInstance instance;
-
-    private boolean setDefaultProbandData(Optional<ElasticSearchParticipantDto> maybeParticipantESData) {
-        if (maybeParticipantESData.isEmpty()) {
-            logger.warn("Could not create proband/self data, participant ES data is null");
-            return false;
-        }
-        List<FieldSettingsDto> fieldSettingsDtosByOptionAndInstanceId =
-                FieldSettingsDao.of().getOptionAndRadioFieldSettingsByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
-
-        return maybeParticipantESData
-                .map(elasticSearch -> extractAndInsertProbandFromESData(instance, elasticSearch, fieldSettingsDtosByOptionAndInstanceId))
-                .orElse(false);
-    }
-
-    private boolean extractAndInsertProbandFromESData(DDPInstance instance, ElasticSearchParticipantDto esData,
-                                                   List<FieldSettingsDto> fieldSettingsDtosByOptionAndInstanceId) {
+    @Override
+    protected boolean extractAndInsertProbandFromESData(DDPInstance instance, ElasticSearchParticipantDto esData,
+                                                        List<FieldSettingsDto> fieldSettingsDtosByOptionAndInstanceId) {
 
         return esData.getProfile()
                 .map(esProfile -> {
@@ -166,13 +147,4 @@ public class AutomaticProbandDataCreator implements Defaultable {
         }
     }
 
-    @Override
-    public boolean generateDefaults(String studyGuid, String participantId) {
-        String esParticipantIndex = ddpInstanceDao.getEsParticipantIndexByStudyGuid(studyGuid)
-                .orElse("");
-        Optional<ElasticSearchParticipantDto> maybeParticipantESDataByParticipantId =
-                ElasticSearchUtil.getParticipantESDataByParticipantId(esParticipantIndex, participantId);
-        instance = DDPInstance.getDDPInstance(studyGuid);
-        return setDefaultProbandData(maybeParticipantESDataByParticipantId);
-    }
 }
