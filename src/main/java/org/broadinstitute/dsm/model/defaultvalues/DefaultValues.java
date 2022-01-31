@@ -1,8 +1,7 @@
-package org.broadinstitute.dsm.model.at;
+package org.broadinstitute.dsm.model.defaultvalues;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
-import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.Dao;
@@ -12,7 +11,6 @@ import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
-import org.broadinstitute.dsm.model.defaultvalues.BasicDefaultDataMaker;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.settings.field.FieldSettings;
@@ -125,9 +123,12 @@ public class DefaultValues extends BasicDefaultDataMaker {
                 });
     }
 
-    private boolean isSelfOrDependentParticipant(List<ParticipantData> participantDataList) {
-        if (participantDataList.isEmpty()) return false;
-        return participantDataList.stream()
+    boolean isSelfOrDependentParticipant() {
+
+        if (elasticSearchParticipantDto.getActivities().isEmpty()) return false;
+        
+        if (esDto.isEmpty()) return false;
+        return esDto.stream()
                 .anyMatch(pData -> {
                     Map<String, String> data = GSON.fromJson(pData.getData().orElse(""), new TypeToken<Map<String, String>>() {}.getType());
                     return data.containsKey(REGISTRATION_TYPE) &&
@@ -234,7 +235,7 @@ public class DefaultValues extends BasicDefaultDataMaker {
     }
 
     @Override
-    protected boolean setDefaultData(ElasticSearchParticipantDto esData) {
+    protected boolean setDefaultData() {
         isSelfOrDependentParticipant()
         return esData.getProfile()
                     .map(esProfile -> {

@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.model.defaultvalues;
 
 import org.broadinstitute.dsm.model.Study;
-import org.broadinstitute.dsm.model.defaultvalues.rgp.AutomaticProbandDataCreator;
 
 public class DefaultableMaker {
 
@@ -11,7 +10,7 @@ public class DefaultableMaker {
             case ATCP:
                 break;
             case RGP:
-                defaultable = new AutomaticProbandDataCreator();
+                defaultable = new RgpAutomaticProbandDataCreator();
                 break;
             default:
                 break;

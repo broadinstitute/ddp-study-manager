@@ -1,17 +1,17 @@
-package org.broadinstitute.dsm.model.rgp;
+package org.broadinstitute.dsm.model.defaultvalues;
 
 import static org.broadinstitute.dsm.TestHelper.setupDB;
 
 import java.util.Map;
 
-import org.broadinstitute.dsm.model.defaultvalues.rgp.AutomaticProbandDataCreator;
+import org.broadinstitute.dsm.model.defaultvalues.RgpAutomaticProbandDataCreator;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class AutomaticProbandDataCreatorTest {
+public class RgpAutomaticProbandDataCreatorTest {
 
 
     @BeforeClass
@@ -24,7 +24,7 @@ public class AutomaticProbandDataCreatorTest {
         int familyId = 999;
         String participantId = "S3POBS0P9X0MB41FT1JZ";
         String esIndex = "participants_structured.rgp.rgp";
-        new AutomaticProbandDataCreator().insertFamilyIdToDsmES(esIndex, participantId,
+        new RgpAutomaticProbandDataCreator().insertFamilyIdToDsmES(esIndex, participantId,
                 familyId);
         int familyIdFromEs = 0;
         try {

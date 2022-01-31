@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.defaultvalues.rgp;
+package org.broadinstitute.dsm.model.defaultvalues;
 
 import java.util.List;
 import java.util.Map;
@@ -23,7 +23,7 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 
-public class AutomaticProbandDataCreator extends BasicDefaultDataMaker {
+public class RgpAutomaticProbandDataCreator extends BasicDefaultDataMaker {
 
 
     public static final String RGP_FAMILY_ID = "rgp_family_id";
