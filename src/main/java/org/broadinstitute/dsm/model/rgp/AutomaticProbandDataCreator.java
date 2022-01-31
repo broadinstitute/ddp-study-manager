@@ -41,8 +41,10 @@ public class AutomaticProbandDataCreator extends org.broadinstitute.dsm.model.Ba
     public static final String RGP_FAMILY_ID = "rgp_family_id";
 
     @Override
-    protected boolean extractAndInsertProbandFromESData(DDPInstance instance, ElasticSearchParticipantDto esData,
-                                                        List<FieldSettingsDto> fieldSettingsDtosByOptionAndInstanceId) {
+    protected boolean setDefaultData(ElasticSearchParticipantDto esData) {
+
+        List<FieldSettingsDto> fieldSettingsDtosByOptionAndInstanceId =
+                FieldSettingsDao.of().getOptionAndRadioFieldSettingsByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
 
         return esData.getProfile()
                 .map(esProfile -> {
