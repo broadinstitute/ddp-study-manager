@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.rgp;
+package org.broadinstitute.dsm.model.defaultvalues.rgp;
 
 import java.util.List;
 import java.util.Map;
@@ -6,36 +6,24 @@ import java.util.Optional;
 
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.search.join.ScoreMode;
-import org.apache.lucene.util.automaton.DaciukMihovAutomatonBuilder;
-import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
-import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
-import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
-import org.broadinstitute.dsm.model.defaultvalues.Defaultable;
+import org.broadinstitute.dsm.model.defaultvalues.BasicDefaultDataMaker;
 import org.broadinstitute.dsm.model.elastic.ESActivities;
-import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
 import org.broadinstitute.dsm.model.elastic.export.painless.*;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
 import org.broadinstitute.dsm.model.participant.data.ParticipantData;
-import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
-import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.NestedQueryBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class AutomaticProbandDataCreator extends org.broadinstitute.dsm.model.BasicDefaultDataMaker {
+public class AutomaticProbandDataCreator extends BasicDefaultDataMaker {
 
 
     public static final String RGP_FAMILY_ID = "rgp_family_id";

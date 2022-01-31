@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import com.google.gson.Gson;
 import org.broadinstitute.ddp.handlers.util.Result;
-import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.model.Study;
@@ -13,7 +12,6 @@ import org.broadinstitute.dsm.model.familymember.AddFamilyMember;
 import org.broadinstitute.dsm.model.participant.data.AddFamilyMemberPayload;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
 import org.broadinstitute.dsm.model.participant.data.ParticipantData;
-import org.broadinstitute.dsm.model.rgp.RgpAddFamilyMember;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;

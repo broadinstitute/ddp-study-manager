@@ -23,7 +23,7 @@ import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainlessFacade
 import org.broadinstitute.dsm.model.participant.data.AddFamilyMemberPayload;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
-import org.broadinstitute.dsm.model.rgp.RgpAddFamilyMember;
+import org.broadinstitute.dsm.model.familymember.rgp.RgpAddFamilyMember;
 import org.broadinstitute.dsm.model.settings.field.FieldSettings;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;

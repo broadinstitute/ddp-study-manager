@@ -1,10 +1,10 @@
 package org.broadinstitute.dsm.model.rgp;
 
 import static org.broadinstitute.dsm.TestHelper.setupDB;
-import static org.junit.Assert.*;
 
 import java.util.Map;
 
+import org.broadinstitute.dsm.model.defaultvalues.rgp.AutomaticProbandDataCreator;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.junit.Assert;

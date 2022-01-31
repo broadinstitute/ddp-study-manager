@@ -12,6 +12,7 @@ import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
+import org.broadinstitute.dsm.model.defaultvalues.BasicDefaultDataMaker;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.settings.field.FieldSettings;
@@ -25,7 +26,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class DefaultValues {
+public class DefaultValues extends BasicDefaultDataMaker {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultValues.class);
 
@@ -48,14 +49,15 @@ public class DefaultValues {
     private String queryAddition;
     private ParticipantDataDao participantDataDao;
 
-    public DefaultValues(Map<String, List<ParticipantData>> participantData,
-                         List<ElasticSearchParticipantDto> participantESData, @NonNull DDPInstance instance, String queryAddition) {
-        this.participantData = participantData;
-        this.participantESData = participantESData;
-        this.instance = instance;
-        this.queryAddition = queryAddition;
-        this.participantDataDao = new ParticipantDataDao();
-    }
+//
+//    public DefaultValues(Map<String, List<ParticipantData>> participantData,
+//                         List<ElasticSearchParticipantDto> participantESData, @NonNull DDPInstance instance, String queryAddition) {
+//        this.participantData = participantData;
+//        this.participantESData = participantESData;
+//        this.instance = instance;
+//        this.queryAddition = queryAddition;
+//        this.participantDataDao = new ParticipantDataDao();
+//    }
 
     public Map<String, List<ParticipantData>> addDefaultValues() {
         if (participantESData == null) {
@@ -229,5 +231,20 @@ public class DefaultValues {
 
     private void setDataAccess(Dao dao) {
         this.dataAccess = dao;
+    }
+
+    @Override
+    protected boolean setDefaultData(ElasticSearchParticipantDto esData) {
+        isSelfOrDependentParticipant()
+        return esData.getProfile()
+                    .map(esProfile -> {
+                        return
+                        insertGenomicIdForParticipant(ddpParticipantId, hruid);
+                        insertExitStatusForParticipant(ddpParticipantId);
+                    })
+                    .orElseGet(() -> {
+                        logger.info("Participant does not have ES profile yet...");
+                        return false;
+                    });
     }
 }

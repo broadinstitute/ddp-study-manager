@@ -93,7 +93,7 @@ public class ElasticSearchParticipantDto {
         return getProfile().map(esProfile -> StringUtils.isNotBlank(esProfile.getGuid())
                 ? esProfile.getGuid()
                 : esProfile.getLegacyAltPid())
-                .orElse("");
+                .orElse(StringUtils.EMPTY);
     }
 
     public ElasticSearchParticipantDto() {}
