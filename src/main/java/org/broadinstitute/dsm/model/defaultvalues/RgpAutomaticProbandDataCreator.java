@@ -29,12 +29,12 @@ public class RgpAutomaticProbandDataCreator extends BasicDefaultDataMaker {
     public static final String RGP_FAMILY_ID = "rgp_family_id";
 
     @Override
-    protected boolean setDefaultData(ElasticSearchParticipantDto esData) {
+    protected boolean setDefaultData() {
 
         List<FieldSettingsDto> fieldSettingsDtosByOptionAndInstanceId =
                 FieldSettingsDao.of().getOptionAndRadioFieldSettingsByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
 
-        return esData.getProfile()
+        return elasticSearchParticipantDto.getProfile()
                 .map(esProfile -> {
                     logger.info("Got ES profile of participant: " + esProfile.getGuid());
                     Map<String, String> columnsWithDefaultOptions =
@@ -46,7 +46,7 @@ public class RgpAutomaticProbandDataCreator extends BasicDefaultDataMaker {
                             : esProfile.getGuid();
                     ParticipantData participantData = new ParticipantData(participantDataDao);
                     Optional<BookmarkDto> maybeFamilyIdOfBookmark = bookmarkDao.getBookmarkByInstance(RGP_FAMILY_ID);
-                    Map<String, String> probandDataMap = extractProbandDefaultDataFromParticipantProfile(esData, maybeFamilyIdOfBookmark);
+                    Map<String, String> probandDataMap = extractProbandDefaultDataFromParticipantProfile(maybeFamilyIdOfBookmark);
                     participantData.setData(
                             participantId,
                             Integer.parseInt(instance.getDdpInstanceId()),
@@ -83,11 +83,10 @@ public class RgpAutomaticProbandDataCreator extends BasicDefaultDataMaker {
                 });
     }
 
-    private Map<String, String> extractProbandDefaultDataFromParticipantProfile(@NonNull ElasticSearchParticipantDto esData,
-                                                                                       Optional<BookmarkDto> maybeBookmark) {
-        List<ESActivities> participantActivities = esData.getActivities();
+    private Map<String, String> extractProbandDefaultDataFromParticipantProfile(Optional<BookmarkDto> maybeBookmark) {
+        List<ESActivities> participantActivities = elasticSearchParticipantDto.getActivities();
         String mobilePhone = getPhoneNumberFromActivities(participantActivities);
-        return esData.getProfile()
+        return elasticSearchParticipantDto.getProfile()
             .map(esProfile -> {
                 logger.info("Starting extracting data from participant: " + esProfile.getGuid() + " ES profile");
                 String firstName = esProfile.getFirstName();

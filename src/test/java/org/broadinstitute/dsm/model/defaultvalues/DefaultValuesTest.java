@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.defaultvalues;
 
+import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
 import org.broadinstitute.dsm.model.elastic.ESActivities;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.junit.Assert;
@@ -14,12 +15,16 @@ public class DefaultValuesTest {
         DefaultValues defaultValues = new DefaultValues();
 
         ESActivities esActivities = new ESActivities();
-        esActivities.setActivityCode("PREQUAL");
-        esActivities.setQuestionsAnswers(Collections.singletonList(Map.of("answer", List.of("CHILD_DIAGNOSED"))));
+        esActivities.setActivityCode(DefaultValues.ACTIVITY_CODE_PREQUAL);
+        esActivities.setQuestionsAnswers(Collections.singletonList(Map.of(
+                DDPActivityConstants.DDP_ACTIVITY_STABLE_ID, DefaultValues.PREQUAL_SELF_DESCRIBE,
+                DefaultValues.QUESTION_ANSWER, List.of(DefaultValues.SELF_DESCRIBE_CHILD_DIAGNOSED))));
 
         ESActivities esActivities2 = new ESActivities();
-        esActivities2.setActivityCode("PREQUAL");
-        esActivities2.setQuestionsAnswers(Collections.singletonList(Map.of("answer", List.of("DIAGNOSED"))));
+        esActivities2.setActivityCode(DefaultValues.ACTIVITY_CODE_PREQUAL);
+        esActivities2.setQuestionsAnswers(Collections.singletonList(Map.of(
+                DDPActivityConstants.DDP_ACTIVITY_STABLE_ID, DefaultValues.PREQUAL_SELF_DESCRIBE,
+                DefaultValues.QUESTION_ANSWER, List.of(DefaultValues.SELF_DESCRIBE_CHILD_DIAGNOSED))));
 
         ElasticSearchParticipantDto participantDto = new ElasticSearchParticipantDto.Builder()
                 .withActivities(List.of(esActivities))

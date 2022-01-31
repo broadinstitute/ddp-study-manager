@@ -73,10 +73,10 @@ public class ParticipantWrapper {
                 .orElseGet(() -> {
                     fetchAndPrepareData(ddpInstance);
                     //if study is AT
-                    if ("atcp".equals(ddpInstance.getName())) {
-                        DefaultValues defaultValues = new DefaultValues(participantData, esData.getEsParticipants(), ddpInstance, null);
-                        participantData = defaultValues.addDefaultValues();
-                    }
+//                    if ("atcp".equals(ddpInstance.getName())) {
+//                        DefaultValues defaultValues = new DefaultValues(participantData, esData.getEsParticipants(), ddpInstance, null);
+//                        participantData = defaultValues.addDefaultValues();
+//                    }
                     sortBySelfElseById(participantData.values());
                     return new ParticipantWrapperResult(esData.getTotalCount(), collectData(ddpInstance));
                 });
@@ -98,11 +98,11 @@ public class ParticipantWrapper {
                     participantData = new ParticipantDataDao().getParticipantDataByInstanceIdAndFilterQuery(Integer.parseInt(ddpInstance.getDdpInstanceId()), filters.get(source));
 
                     //if study is AT TODO
-                    if ("atcp".equals(ddpInstance.getName())) {
-                        DefaultValues defaultValues =
-                                new DefaultValues(participantData, esData.getEsParticipants(), ddpInstance, filters.get(source));
-                        participantData = defaultValues.addDefaultValues();
-                    }
+//                    if ("atcp".equals(ddpInstance.getName())) {
+//                        DefaultValues defaultValues =
+//                                new DefaultValues(participantData, esData.getEsParticipants(), ddpInstance, filters.get(source));
+//                        participantData = defaultValues.addDefaultValues();
+//                    }
                 }
                 else if ("ES".equals(source)){
                     //source is not of any study-manager table so it must be ES

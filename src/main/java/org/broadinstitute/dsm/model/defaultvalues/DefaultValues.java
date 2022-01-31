@@ -11,6 +11,8 @@ import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
+import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
+import org.broadinstitute.dsm.model.elastic.ESActivities;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.settings.field.FieldSettings;
@@ -23,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DefaultValues extends BasicDefaultDataMaker {
 
@@ -39,6 +42,11 @@ public class DefaultValues extends BasicDefaultDataMaker {
     private static final Gson GSON = new Gson();
     public static final String AT_PARTICIPANT_EXIT = "AT_PARTICIPANT_EXIT";
     public static final String AT_GENOMIC_ID = "at_genomic_id";
+    public static final String ACTIVITY_CODE_PREQUAL = "PREQUAL";
+    public static final String PREQUAL_SELF_DESCRIBE = "PREQUAL_SELF_DESCRIBE";
+    public static final String QUESTION_ANSWER = "answer";
+    public static final String SELF_DESCRIBE_CHILD_DIAGNOSED = "CHILD_DIAGNOSED";
+    public static final String SELF_DESCRIBE_DIAGNOSED = "DIAGNOSED";
     private Dao dataAccess;
 
     private Map<String, List<ParticipantData>> participantData;
@@ -58,6 +66,7 @@ public class DefaultValues extends BasicDefaultDataMaker {
 //    }
 
     public Map<String, List<ParticipantData>> addDefaultValues() {
+
         if (participantESData == null) {
             logger.warn("Could not update default values, participant ES data is null");
             return participantData;
@@ -69,20 +78,20 @@ public class DefaultValues extends BasicDefaultDataMaker {
             String ddpParticipantId = entry.getKey();
             List<ParticipantData> participantDataList = participantData.get(ddpParticipantId);
             if (participantDataList == null) continue;
-
-            if (!hasParticipantDataGenomicId(participantDataList) && isSelfOrDependentParticipant(participantDataList)) {
-                ElasticSearchParticipantDto esParticipantData = entry.getValue();
-                String hruid = esParticipantData.getProfile().map(ESProfile::getHruid).orElse("");
-                addedNewParticipantData = getParticipantGenomicFieldData(participantDataList)
-                        .map(pData -> insertGenomicIdIfNotExistsInData(ddpParticipantId, hruid, pData))
-                        .orElseGet(() -> insertGenomicIdForParticipant(ddpParticipantId, hruid));
-            }
-
-            if (!hasExitedStatusDefaultValue(participantDataList) && isSelfOrDependentParticipant(participantDataList)) {
-                addedNewParticipantData = getParticipantExitFieldData(participantDataList)
-                        .map(pData -> insertExitStatusIfNotExistsInData(ddpParticipantId, pData))
-                        .orElseGet(() -> insertExitStatusForParticipant(ddpParticipantId));
-            }
+//
+//            if (!hasParticipantDataGenomicId(participantDataList) && isSelfOrDependentParticipant(participantDataList)) {
+//                ElasticSearchParticipantDto esParticipantData = entry.getValue();
+//                String hruid = esParticipantData.getProfile().map(ESProfile::getHruid).orElse("");
+//                addedNewParticipantData = getParticipantGenomicFieldData(participantDataList)
+//                        .map(pData -> insertGenomicIdIfNotExistsInData(ddpParticipantId, hruid, pData))
+//                        .orElseGet(() -> insertGenomicIdForParticipant(ddpParticipantId, hruid));
+//            }
+//
+//            if (!hasExitedStatusDefaultValue(participantDataList) && isSelfOrDependentParticipant(participantDataList)) {
+//                addedNewParticipantData = getParticipantExitFieldData(participantDataList)
+//                        .map(pData -> insertExitStatusIfNotExistsInData(ddpParticipantId, pData))
+//                        .orElseGet(() -> insertExitStatusForParticipant(ddpParticipantId));
+//            }
 
         }
         if (addedNewParticipantData) {
@@ -124,17 +133,17 @@ public class DefaultValues extends BasicDefaultDataMaker {
     }
 
     boolean isSelfOrDependentParticipant() {
-
         if (elasticSearchParticipantDto.getActivities().isEmpty()) return false;
-        
-        if (esDto.isEmpty()) return false;
-        return esDto.stream()
-                .anyMatch(pData -> {
-                    Map<String, String> data = GSON.fromJson(pData.getData().orElse(""), new TypeToken<Map<String, String>>() {}.getType());
-                    return data.containsKey(REGISTRATION_TYPE) &&
-                            (REGISTRATION_TYPE_SELF.equalsIgnoreCase(data.get(REGISTRATION_TYPE))
-                                    || REGISTRATION_TYPE_DEPENDENT.equalsIgnoreCase(data.get(REGISTRATION_TYPE)));
-                });
+        return elasticSearchParticipantDto.getActivities().stream()
+                .anyMatch(this::isPrequalAndSelfOrDependent);
+    }
+
+    private boolean isPrequalAndSelfOrDependent(ESActivities activity) {
+        return ACTIVITY_CODE_PREQUAL.equals(activity.getActivityCode()) &&
+                (activity.getQuestionsAnswers().stream()
+                        .filter(anwers -> PREQUAL_SELF_DESCRIBE.equals(anwers.get(DDPActivityConstants.DDP_ACTIVITY_STABLE_ID)))
+                        .anyMatch(answers -> ((List)answers.get(QUESTION_ANSWER)).stream().anyMatch(answer -> SELF_DESCRIBE_CHILD_DIAGNOSED.equals(answer) ||
+                                SELF_DESCRIBE_DIAGNOSED.equals(answer))));
     }
 
     private boolean hasExitedStatusDefaultValue(List<ParticipantData> participantDataList) {
@@ -236,16 +245,18 @@ public class DefaultValues extends BasicDefaultDataMaker {
 
     @Override
     protected boolean setDefaultData() {
-        isSelfOrDependentParticipant()
-        return esData.getProfile()
-                    .map(esProfile -> {
-                        return
-                        insertGenomicIdForParticipant(ddpParticipantId, hruid);
-                        insertExitStatusForParticipant(ddpParticipantId);
-                    })
-                    .orElseGet(() -> {
-                        logger.info("Participant does not have ES profile yet...");
-                        return false;
-                    });
+//        if (elasticSearchParticipantDto.get)
+//        return elasticSearchParticipantDto.getProfile()
+//                    .map(esProfile -> {
+//                        return
+//                        insertGenomicIdForParticipant(ddpParticipantId, hruid);
+//                        insertExitStatusForParticipant(ddpParticipantId);
+//                        isSelfOrDependentParticipant()
+//                    })
+//                    .orElseGet(() -> {
+//                        logger.info("Participant does not have ES profile yet...");
+//                        return false;
+//                    });
+        return false;
     }
 }
