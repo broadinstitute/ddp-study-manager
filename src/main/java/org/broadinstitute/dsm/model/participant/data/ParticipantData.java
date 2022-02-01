@@ -166,6 +166,7 @@ public class ParticipantData {
         if (createdDataKey < 1) {
             throw new RuntimeException("Could not insert participant data for : " + this.ddpParticipantId);
         }
+        participantData.setParticipantDataId(createdDataKey);
         logger.info("Successfully inserted data for participant: " + this.ddpParticipantId);
 
         DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceId(ddpInstanceId).orElseThrow();

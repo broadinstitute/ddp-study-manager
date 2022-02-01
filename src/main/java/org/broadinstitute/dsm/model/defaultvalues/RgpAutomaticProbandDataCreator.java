@@ -56,14 +56,6 @@ public class RgpAutomaticProbandDataCreator extends BasicDefaultDataMaker {
                     participantData.addDefaultOptionsValueToData(columnsWithDefaultOptions);
                     participantData.insertParticipantData("SYSTEM");
 
-                    DDPInstanceDto ddpInstanceDto = new DDPInstanceDto.Builder()
-                            .withInstanceName(instance.getName())
-                            .withEsParticipantIndex(instance.getParticipantIndexES())
-                            .build();
-
-                    UpsertPainlessFacade.of(DBConstants.DDP_PARTICIPANT_DATA_ALIAS, participantData, ddpInstanceDto,  "participantDataId", "_id", esProfile.getGuid())
-                                    .export();
-
                     columnsWithDefaultOptionsFilteredByElasticExportWorkflow.forEach((col, val) ->
                             ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(instance, participantId, col, val,
                                     new WorkflowForES.StudySpecificData(probandDataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),

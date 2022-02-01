@@ -8,23 +8,23 @@ import org.junit.Test;
 
 import java.util.*;
 
-public class DefaultValuesTest {
+public class ATDefaultValuesTest {
 
     @Test
     public void isSelfOrDependentParticipant() {
-        DefaultValues defaultValues = new DefaultValues();
+        ATDefaultValues defaultValues = new ATDefaultValues();
 
         ESActivities esActivities = new ESActivities();
-        esActivities.setActivityCode(DefaultValues.ACTIVITY_CODE_PREQUAL);
+        esActivities.setActivityCode(ATDefaultValues.ACTIVITY_CODE_PREQUAL);
         esActivities.setQuestionsAnswers(Collections.singletonList(Map.of(
-                DDPActivityConstants.DDP_ACTIVITY_STABLE_ID, DefaultValues.PREQUAL_SELF_DESCRIBE,
-                DefaultValues.QUESTION_ANSWER, List.of(DefaultValues.SELF_DESCRIBE_CHILD_DIAGNOSED))));
+                DDPActivityConstants.DDP_ACTIVITY_STABLE_ID, ATDefaultValues.PREQUAL_SELF_DESCRIBE,
+                ATDefaultValues.QUESTION_ANSWER, List.of(ATDefaultValues.SELF_DESCRIBE_CHILD_DIAGNOSED))));
 
         ESActivities esActivities2 = new ESActivities();
-        esActivities2.setActivityCode(DefaultValues.ACTIVITY_CODE_PREQUAL);
+        esActivities2.setActivityCode(ATDefaultValues.ACTIVITY_CODE_PREQUAL);
         esActivities2.setQuestionsAnswers(Collections.singletonList(Map.of(
-                DDPActivityConstants.DDP_ACTIVITY_STABLE_ID, DefaultValues.PREQUAL_SELF_DESCRIBE,
-                DefaultValues.QUESTION_ANSWER, List.of(DefaultValues.SELF_DESCRIBE_CHILD_DIAGNOSED))));
+                DDPActivityConstants.DDP_ACTIVITY_STABLE_ID, ATDefaultValues.PREQUAL_SELF_DESCRIBE,
+                ATDefaultValues.QUESTION_ANSWER, List.of(ATDefaultValues.SELF_DESCRIBE_CHILD_DIAGNOSED))));
 
         ElasticSearchParticipantDto participantDto = new ElasticSearchParticipantDto.Builder()
                 .withActivities(List.of(esActivities))

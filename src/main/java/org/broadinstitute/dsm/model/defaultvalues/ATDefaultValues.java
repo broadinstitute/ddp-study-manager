@@ -1,6 +1,5 @@
 package org.broadinstitute.dsm.model.defaultvalues;
 
-import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
@@ -20,9 +19,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class DefaultValues extends BasicDefaultDataMaker {
+public class ATDefaultValues extends BasicDefaultDataMaker {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultValues.class);
+    private static final Logger logger = LoggerFactory.getLogger(ATDefaultValues.class);
 
     private static final String GENOME_STUDY_FIELD_TYPE = "AT_GROUP_GENOME_STUDY";
     private static final String GENOME_STUDY_CPT_ID = "GENOME_STUDY_CPT_ID";
@@ -70,8 +69,16 @@ public class DefaultValues extends BasicDefaultDataMaker {
         return ACTIVITY_CODE_PREQUAL.equals(activity.getActivityCode()) &&
                 (activity.getQuestionsAnswers().stream()
                         .filter(anwers -> PREQUAL_SELF_DESCRIBE.equals(anwers.get(DDPActivityConstants.DDP_ACTIVITY_STABLE_ID)))
-                        .anyMatch(answers -> ((List)answers.get(QUESTION_ANSWER)).stream().anyMatch(answer -> SELF_DESCRIBE_CHILD_DIAGNOSED.equals(answer) ||
+                        .anyMatch(answers -> ((List) answers.get(QUESTION_ANSWER)).stream().anyMatch(answer -> SELF_DESCRIBE_CHILD_DIAGNOSED.equals(answer) ||
                                 SELF_DESCRIBE_DIAGNOSED.equals(answer))));
+    }
+
+    private boolean insertGenomicIdForParticipant() {
+        ESProfile esProfile = elasticSearchParticipantDto.getProfile().orElseThrow();
+        String ddpParticipantId = esProfile.getGuid();
+        String hruid = esProfile.getHruid();
+        return insertParticipantData(Map.of(GENOME_STUDY_CPT_ID, PREFIX.concat(getGenomicIdValue(hruid))), ddpParticipantId,
+                GENOME_STUDY_FIELD_TYPE);
     }
 
     private String getGenomicIdValue(String hruid) {
@@ -86,18 +93,22 @@ public class DefaultValues extends BasicDefaultDataMaker {
                 .orElse(hruid);
     }
 
-    private boolean insertGenomicIdForParticipant() {
-        ESProfile esProfile = elasticSearchParticipantDto.getProfile().orElseThrow();
-        String ddpParticipantId = esProfile.getGuid();
-        String hruid = esProfile.getHruid();
-        return insertParticipantData(Map.of(GENOME_STUDY_CPT_ID, PREFIX.concat(getGenomicIdValue(hruid))), ddpParticipantId,
-                GENOME_STUDY_FIELD_TYPE);
-    }
-
     private boolean insertExitStatusForParticipant() {
         String ddpParticipantId = elasticSearchParticipantDto.getProfile().orElseThrow().getGuid();
         String datstatExitReasonDefaultOption = getDefaultExitStatus();
         return insertParticipantData(Map.of(EXIT_STATUS, datstatExitReasonDefaultOption), ddpParticipantId, AT_PARTICIPANT_EXIT);
+    }
+
+    private String getDefaultExitStatus() {
+        this.setDataAccess(FieldSettingsDao.of());
+        Optional<FieldSettingsDto> fieldSettingByColumnNameAndInstanceId = ((FieldSettingsDao) dataAccess)
+                .getFieldSettingByColumnNameAndInstanceId(Integer.parseInt(instance.getDdpInstanceId()), EXIT_STATUS);
+        return fieldSettingByColumnNameAndInstanceId.
+                map(fieldSettingsDto -> {
+                    FieldSettings fieldSettings = new FieldSettings();
+                    return fieldSettings.getDefaultValue(fieldSettingsDto.getPossibleValues());
+                })
+                .orElse(StringUtils.EMPTY);
     }
 
     private boolean insertParticipantData(Map<String, String> data, String ddpParticipantId, String fieldTypeId) {
@@ -113,18 +124,6 @@ public class DefaultValues extends BasicDefaultDataMaker {
         } catch (RuntimeException re) {
             return false;
         }
-    }
-
-    private String getDefaultExitStatus() {
-        this.setDataAccess(FieldSettingsDao.of());
-        Optional<FieldSettingsDto> fieldSettingByColumnNameAndInstanceId = ((FieldSettingsDao) dataAccess)
-                .getFieldSettingByColumnNameAndInstanceId(Integer.parseInt(instance.getDdpInstanceId()), EXIT_STATUS);
-        return fieldSettingByColumnNameAndInstanceId.
-                map(fieldSettingsDto -> {
-                    FieldSettings fieldSettings = new FieldSettings();
-                    return fieldSettings.getDefaultValue(fieldSettingsDto.getPossibleValues());
-                })
-                .orElse(StringUtils.EMPTY);
     }
 
     private void setDataAccess(Dao dao) {

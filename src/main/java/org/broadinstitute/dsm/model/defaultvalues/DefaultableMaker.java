@@ -8,6 +8,7 @@ public class DefaultableMaker {
         Defaultable defaultable = (studyGuid, participantId) -> true;
         switch (study) {
             case ATCP:
+                defaultable = new ATDefaultValues();
                 break;
             case RGP:
                 defaultable = new RgpAutomaticProbandDataCreator();
