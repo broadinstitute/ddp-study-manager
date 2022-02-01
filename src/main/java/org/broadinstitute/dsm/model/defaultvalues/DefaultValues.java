@@ -245,18 +245,26 @@ public class DefaultValues extends BasicDefaultDataMaker {
 
     @Override
     protected boolean setDefaultData() {
-//        if (elasticSearchParticipantDto.get)
-//        return elasticSearchParticipantDto.getProfile()
-//                    .map(esProfile -> {
-//                        return
-//                        insertGenomicIdForParticipant(ddpParticipantId, hruid);
-//                        insertExitStatusForParticipant(ddpParticipantId);
-//                        isSelfOrDependentParticipant()
-//                    })
-//                    .orElseGet(() -> {
-//                        logger.info("Participant does not have ES profile yet...");
-//                        return false;
-//                    });
+
+        if (isParticipantDataInES())
+            return false;
+
+        if (isSelfOrDependentParticipant()) 
+
+        return elasticSearchParticipantDto.getProfile()
+                    .map(esProfile -> {
+
+                        insertGenomicIdForParticipant(ddpParticipantId, hruid);
+                        insertExitStatusForParticipant(ddpParticipantId);
+                    })
+                    .orElseGet(() -> {
+                        return false;
+                    });
         return false;
+    }
+
+    private boolean isParticipantDataInES() {
+        logger.info("Participant does not have profile and activities in ES yet...");
+        return elasticSearchParticipantDto.getProfile().isEmpty() && elasticSearchParticipantDto.getActivities().isEmpty();
     }
 }
