@@ -23,6 +23,7 @@ public class NestedUpsertPainlessFacade extends UpsertPainlessFacade {
     @Override
     protected QueryBuilder buildQueryBuilder() {
         MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder(fieldName, fieldValue);
+        if ("_id".equals(fieldName)) return matchQueryBuilder;
         return new NestedQueryBuilder(String.join(DBConstants.ALIAS_DELIMITER, ESObjectConstants.DSM, generator.getPropertyName(),
                 fieldName), matchQueryBuilder, ScoreMode.Avg);
     }

@@ -155,7 +155,7 @@ public class ParticipantData {
                     .withDdpParticipantId(this.ddpParticipantId)
                     .withDdpInstanceId(this.ddpInstanceId)
                     .withFieldTypeId(this.fieldTypeId)
-                    .withData(GSON.toJson(this.data))
+                    .withData(this.data)
                     .withLastChanged(System.currentTimeMillis())
                     .withChangedBy(userEmail)
                     .build();
@@ -202,7 +202,7 @@ public class ParticipantData {
             .withDdpParticipantId(this.ddpParticipantId)
             .withDdpInstanceId(this.ddpInstanceId)
             .withFieldTypeId(this.fieldTypeId)
-            .withData(GSON.toJson(this.data))
+            .withData(this.data)
             .withLastChanged(System.currentTimeMillis())
             .withChangedBy(changedByUser)
             .build();
