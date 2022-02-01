@@ -17,6 +17,7 @@ import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.slf4j.Logger;
@@ -71,11 +72,6 @@ public class ParticipantWrapper {
                 })
                 .orElseGet(() -> {
                     fetchAndPrepareData(ddpInstance);
-                    //if study is AT
-//                    if ("atcp".equals(ddpInstance.getName())) {
-//                        DefaultValues defaultValues = new DefaultValues(participantData, esData.getEsParticipants(), ddpInstance, null);
-//                        participantData = defaultValues.addDefaultValues();
-//                    }
                     sortBySelfElseById(participantData.values());
                     return new ParticipantWrapperResult(esData.getTotalCount(), collectData(ddpInstance));
                 });
@@ -93,17 +89,7 @@ public class ParticipantWrapper {
                     queryBuilder.setParser(parser);
                     boolQueryBuilder.must(queryBuilder.build());
                 }
-                else if (DBConstants.DDP_PARTICIPANT_DATA_ALIAS.equals(source)) {
-                    participantData = new ParticipantDataDao().getParticipantDataByInstanceIdAndFilterQuery(Integer.parseInt(ddpInstance.getDdpInstanceId()), filters.get(source));
-
-                    //if study is AT TODO
-//                    if ("atcp".equals(ddpInstance.getName())) {
-//                        DefaultValues defaultValues =
-//                                new DefaultValues(participantData, esData.getEsParticipants(), ddpInstance, filters.get(source));
-//                        participantData = defaultValues.addDefaultValues();
-//                    }
-                }
-                else if ("ES".equals(source)){
+                else if (ElasticSearchUtil.ES.equals(source)){
                     //source is not of any study-manager table so it must be ES
                     boolQueryBuilder.must(ElasticSearchUtil.createESQuery(filters.get(source)));
                 }

@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -54,6 +55,10 @@ public class ParticipantData {
 
     private Map<String, String> data;
 
+    public ParticipantData() {
+
+    }
+
     public void setData(Map<String, String> data) {
         this.data = data;
     }
@@ -62,6 +67,7 @@ public class ParticipantData {
         return data;
     }
 
+    @JsonIgnore
     private transient Dao dataAccess;
 
     public ParticipantData(Dao dao) {
