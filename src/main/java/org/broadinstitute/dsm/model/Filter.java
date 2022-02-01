@@ -213,6 +213,16 @@ public class Filter {
                         query += " " + LIKE + " '%#%'";
                         query = query.replaceAll("#", String.valueOf(filter.getFilter1().getValue()));
                     }
+                }else  if (filter.getSelectedOptions() != null && filter.getSelectedOptions().length >0){
+                    String optionQuery = AND + "( ";
+                    for (String selectedOption : filter.getSelectedOptions()) {
+                        query = " JSON_EXTRACT ( " + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " , '$." + filter.getFilter2().getName() + "' ) ";
+                        condition = EQUALS + "'" + selectedOption + "'";
+                        optionQuery = optionQuery + query + condition + OR;
+                    }
+                    optionQuery = optionQuery.substring(0, optionQuery.length() - 4);
+                    optionQuery += " ) ";
+                    query = optionQuery;
                 }
                 finalQuery = notNullQuery + query;
             }
