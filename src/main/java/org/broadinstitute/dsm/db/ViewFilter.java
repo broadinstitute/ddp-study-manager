@@ -594,6 +594,12 @@ public class ViewFilter {
                                 tableName = names[0];
                                 columnName = names[1];
                                 state = 12;
+                                break;
+                            }
+                            else if (word.equals(Filter.JSON_EXTRACT)) {// beginning of an additional fields query
+                            type = Filter.ADDITIONAL_VALUES;
+                            state = 16;
+                            break;
                             }
                             break;
 
@@ -722,6 +728,21 @@ public class ViewFilter {
                             }
                             else if (word.equals(Filter.MINUS_SIGN)) {
                                 state = 26;
+                                break;
+                            }
+                            else if (word.equals(Filter.OR_TRIMMED)){
+                                if(type.equals(Filter.ADDITIONAL_VALUES)){
+                                    if (value != null){
+                                        int first = value.indexOf(Filter.SINGLE_QUOTE);
+                                        int last = value.lastIndexOf(Filter.SINGLE_QUOTE);
+                                        if (first != -1) {
+                                            value = value.substring(first + 1, last);
+                                        }
+                                        selectedOptions.add(value);
+                                        value = "";
+                                    }
+                                }
+                                state = 2;
                                 break;
                             }
                             break;
@@ -979,6 +1000,14 @@ public class ViewFilter {
                 }
                 if (Filter.ADDITIONAL_VALUES.equals(filter.type)) {
                     filter.setParticipantColumn(new ParticipantColumn(path, tableName));
+                    if(selectedOptions.size() != 0){
+                        if(!selectedOptions.contains(value)){
+                            selectedOptions.add(value);
+                            value = null;
+                        }
+                    }
+                    filter.setFilter1(new NameValue(columnName, value));
+                    filter.setFilter2(new NameValue(path, null));
                 }
                 else if (Filter.TEXT.equals(filter.type) || Filter.BOOLEAN.equals(filter.type) || Filter.NUMBER.equals(filter.type)) {
                     if (Filter.NUMBER.equals(filter.type)
