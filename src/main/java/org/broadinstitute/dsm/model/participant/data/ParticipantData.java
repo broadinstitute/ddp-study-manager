@@ -106,19 +106,14 @@ public class ParticipantData {
                 participantData.getDdpParticipantId().orElse(StringUtils.EMPTY),
                 participantData.getDdpInstanceId(),
                 participantData.getFieldTypeId().orElse(StringUtils.EMPTY),
-                GSON.fromJson(participantData.getData().orElse(StringUtils.EMPTY), new TypeToken<Map<String, String>>() {}.getType())
+                ObjectMapperSingleton.readValue(participantData.getData().orElse(StringUtils.EMPTY), new TypeReference<Map<String,
+                        Object>>() {})
         );
     }
 
     public static List<ParticipantData> parseDtoList(@NonNull List<org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData> participantDataList) {
         List<ParticipantData> participantData = new ArrayList<>();
-        participantDataList.forEach(dto -> participantData.add(new ParticipantData(
-                dto.getParticipantDataId(),
-                dto.getDdpParticipantId().orElse(StringUtils.EMPTY),
-                dto.getDdpInstanceId(),
-                dto.getFieldTypeId().orElse(StringUtils.EMPTY),
-                GSON.fromJson(dto.getData().orElse(StringUtils.EMPTY), new TypeToken<Map<String, String>>() {}.getType())
-        )));
+        participantDataList.forEach(dto -> participantData.add(parseDto(dto)));
         return participantData;
     }
 

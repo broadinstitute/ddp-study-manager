@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
 
 public class ObjectMapperSingleton {
 
@@ -14,6 +15,7 @@ public class ObjectMapperSingleton {
     }
 
     public static <T> T readValue(String content, TypeReference<?> typeReference) {
+        content = StringUtils.isBlank(content) ? "{}" : content;
         try {
             return Helper.objectMapperInstance.readValue(content, typeReference);
         } catch (com.fasterxml.jackson.core.JsonParseException e) {
