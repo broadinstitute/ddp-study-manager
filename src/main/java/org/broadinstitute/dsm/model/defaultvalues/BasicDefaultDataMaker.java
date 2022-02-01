@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.model.defaultvalues;
 
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
@@ -30,7 +31,7 @@ public abstract class BasicDefaultDataMaker implements Defaultable {
     @Override
     public boolean generateDefaults(String studyGuid, String participantId) {
         String esParticipantIndex = ddpInstanceDao.getEsParticipantIndexByStudyGuid(studyGuid)
-                .orElse("");
+                .orElse(StringUtils.EMPTY);
         Optional<ElasticSearchParticipantDto> maybeParticipantESDataByParticipantId =
                 ElasticSearchUtil.getParticipantESDataByParticipantId(esParticipantIndex, participantId);
         if (maybeParticipantESDataByParticipantId.isEmpty()) {
