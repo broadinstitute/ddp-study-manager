@@ -38,54 +38,31 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Data
-@TableName(
-        name = DBConstants.DDP_PARTICIPANT_DATA,
-        alias = DBConstants.DDP_PARTICIPANT_DATA_ALIAS,
-        primaryKey = DBConstants.PARTICIPANT_DATA_ID,
-        columnPrefix = "")
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class ParticipantData {
 
     private static final Logger logger = LoggerFactory.getLogger(ParticipantData.class);
 
     public static final String FIELD_TYPE_PARTICIPANTS = "_PARTICIPANTS";
-    public static final Gson GSON = new Gson();
 
-    @ColumnName(DBConstants.PARTICIPANT_DATA_ID)
-    long participantDataId;
+    private long participantDataId;
 
-    @ColumnName(DBConstants.DDP_PARTICIPANT_ID)
-    String ddpParticipantId;
+    private String ddpParticipantId;
 
-    int ddpInstanceId;
+    private int ddpInstanceId;
 
-    @ColumnName(DBConstants.FIELD_TYPE_ID)
-    String fieldTypeId;
+    private String fieldTypeId;
 
-    @ColumnName (DBConstants.DATA)
-    String data;
-
-    @JsonProperty("dynamicFields")
-    public Map<String, Object> getDynamicFields() {
-        try {
-            return ObjectMapperSingleton.readValue(data, new TypeReference<Map<String, Object>>() {});
-        } catch (Exception e) {
-            return Map.of();
-        }
-    }
+    private Map<String, String> data;
 
     public void setData(Map<String, String> data) {
-        this.data = ObjectMapperSingleton.writeValueAsString(data);
+        this.data = data;
     }
 
     public Map<String, String> getData() {
-        return ObjectMapperSingleton.readValue(data, new TypeReference<Map<String, String>>() {});
+        return data;
     }
 
     private transient Dao dataAccess;
-
-    public ParticipantData() {}
 
     public ParticipantData(Dao dao) {
         dataAccess = dao;
@@ -97,25 +74,11 @@ public class ParticipantData {
         this.ddpParticipantId = ddpParticipantId;
         this.ddpInstanceId = ddpInstanceId;
         this.fieldTypeId = fieldTypeId;
-        setData(data);
+        this.data = data;
     }
 
     public static ParticipantData parseDto(@NonNull org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData participantData) {
-
-        class LocalParticipantData extends ParticipantData {
-
-            @JsonProperty("data")
-            private Map<String, String> data;
-
-            public LocalParticipantData(long participantDataId, String ddpParticipantId, int ddpInstanceId, String fieldTypeId, Map<String, String> data) {
-                this.participantDataId = participantDataId;
-                this.ddpParticipantId = ddpParticipantId;
-                this.ddpInstanceId = ddpInstanceId;
-                this.fieldTypeId = fieldTypeId;
-                this.data = data;
-            }
-        }
-        return new LocalParticipantData(
+        return new ParticipantData(
                 participantData.getParticipantDataId(),
                 participantData.getDdpParticipantId().orElse(StringUtils.EMPTY),
                 participantData.getDdpInstanceId(),
@@ -154,7 +117,7 @@ public class ParticipantData {
         this.ddpParticipantId = ddpParticipantId;
         this.ddpInstanceId = ddpInstanceId;
         this.fieldTypeId = fieldTypeId;
-        setData(data);
+        this.data = data;
     }
 
     public long insertParticipantData(String userEmail) {
@@ -164,7 +127,7 @@ public class ParticipantData {
                     .withDdpParticipantId(this.ddpParticipantId)
                     .withDdpInstanceId(this.ddpInstanceId)
                     .withFieldTypeId(this.fieldTypeId)
-                    .withData(this.data)
+                    .withData(ObjectMapperSingleton.writeValueAsString(this.data))
                     .withLastChanged(System.currentTimeMillis())
                     .withChangedBy(userEmail)
                     .build();
@@ -206,42 +169,11 @@ public class ParticipantData {
         return this.getData().getOrDefault(FamilyMemberConstants.RELATIONSHIP_ID, null);
     }
 
-    public boolean updateParticipantData(int participantDataId, String changedByUser) {
-        org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData participantData = new org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData.Builder()
-            .withParticipantDataId(participantDataId)
-            .withDdpParticipantId(this.ddpParticipantId)
-            .withDdpInstanceId(this.ddpInstanceId)
-            .withFieldTypeId(this.fieldTypeId)
-            .withData(this.data)
-            .withLastChanged(System.currentTimeMillis())
-            .withChangedBy(changedByUser)
-            .build();
-
-        int rowsAffected = ((ParticipantDataDao) dataAccess).updateParticipantDataColumn(participantData);
-
-        DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceId(ddpInstanceId).orElseThrow();
-
-        UpsertPainlessFacade.of(DBConstants.DDP_PARTICIPANT_DATA_ALIAS, participantData, ddpInstanceDto, "participantDataId", "participantDataId", participantDataId)
-                        .export();
-
-        return rowsAffected == 1;
-    }
-
-    private void exportToES(int participantDataId, org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData participantData, String uniqueIdentifier) {
-        DDPInstanceDto ddpInstanceDto = ((DDPInstanceDao) setDataAccess(new DDPInstanceDao())).getDDPInstanceByInstanceId(ddpInstanceId).orElseThrow();
-
-        Generator generator = new ParamsGenerator(participantData, ddpInstanceDto.getInstanceName());
-        ScriptBuilder scriptBuilder = new NestedScriptBuilder("participantData", uniqueIdentifier);
-        MatchQueryBuilder matchQueryBuilder = new MatchQueryBuilder("participantDataId", participantDataId);
-        NestedQueryBuilder nestedQueryBuilder = new NestedQueryBuilder(String.join(".", ESObjectConstants.DSM, generator.getPropertyName()), matchQueryBuilder, ScoreMode.Avg);
-        UpsertPainless upsertPainless = new UpsertPainless(generator, ddpInstanceDto.getEsParticipantIndex(), scriptBuilder, nestedQueryBuilder);
-        upsertPainless.export();
-    }
-
     public Optional<org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData> findProband(List<org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData> participantDataList) {
         return Objects.requireNonNull(participantDataList).stream()
                 .filter(participantDataDto -> {
-                    Map<String, String> pDataMap = GSON.fromJson(participantDataDto.getData().orElse(StringUtils.EMPTY), Map.class);
+                    Map<String, String> pDataMap = ObjectMapperSingleton.readValue(participantDataDto.getData().orElse(StringUtils.EMPTY), new TypeReference<Map<String,
+                            Object>>() {});
                     return FamilyMemberConstants.MEMBER_TYPE_SELF.equals(pDataMap.get(FamilyMemberConstants.MEMBER_TYPE));
                 })
                 .findFirst();

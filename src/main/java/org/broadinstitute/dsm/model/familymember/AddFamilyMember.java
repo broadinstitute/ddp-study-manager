@@ -99,10 +99,6 @@ public class AddFamilyMember {
         } else {
             exportDefaultWorkflowsForFamilyMemberToES();
         }
-        DDPInstanceDto ddpInstanceDto = ddpInstanceDao.getDDPInstanceByGuid(studyGuid).orElseThrow();
-        String participantGuid = Exportable.getParticipantGuid(ddpParticipantId, ddpInstanceDto.getEsParticipantIndex());
-        UpsertPainlessFacade.of(DBConstants.DDP_PARTICIPANT_DATA_ALIAS, participantData, ddpInstanceDto, "participantDataId", "_id", participantGuid)
-                .export();
     }
 
     protected void exportProbandDataForFamilyMemberToEs() {
