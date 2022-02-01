@@ -53,18 +53,18 @@ public class ParticipantData {
     public static final Gson GSON = new Gson();
 
     @ColumnName(DBConstants.PARTICIPANT_DATA_ID)
-    private long participantDataId;
+    long participantDataId;
 
     @ColumnName(DBConstants.DDP_PARTICIPANT_ID)
-    private String ddpParticipantId;
+    String ddpParticipantId;
 
-    private int ddpInstanceId;
+    int ddpInstanceId;
 
     @ColumnName(DBConstants.FIELD_TYPE_ID)
-    private String fieldTypeId;
+    String fieldTypeId;
 
     @ColumnName (DBConstants.DATA)
-    private String data;
+    String data;
 
     @JsonProperty("dynamicFields")
     public Map<String, Object> getDynamicFields() {
@@ -83,7 +83,7 @@ public class ParticipantData {
         return ObjectMapperSingleton.readValue(data, new TypeReference<Map<String, String>>() {});
     }
 
-    private Dao dataAccess;
+    private transient Dao dataAccess;
 
     public ParticipantData() {}
 
@@ -101,7 +101,21 @@ public class ParticipantData {
     }
 
     public static ParticipantData parseDto(@NonNull org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData participantData) {
-        return new ParticipantData(
+
+        class LocalParticipantData extends ParticipantData {
+
+            @JsonProperty("data")
+            private Map<String, String> data;
+
+            public LocalParticipantData(long participantDataId, String ddpParticipantId, int ddpInstanceId, String fieldTypeId, Map<String, String> data) {
+                this.participantDataId = participantDataId;
+                this.ddpParticipantId = ddpParticipantId;
+                this.ddpInstanceId = ddpInstanceId;
+                this.fieldTypeId = fieldTypeId;
+                this.data = data;
+            }
+        }
+        return new LocalParticipantData(
                 participantData.getParticipantDataId(),
                 participantData.getDdpParticipantId().orElse(StringUtils.EMPTY),
                 participantData.getDdpInstanceId(),
