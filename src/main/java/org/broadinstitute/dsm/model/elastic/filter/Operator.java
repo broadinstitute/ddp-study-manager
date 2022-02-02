@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -13,6 +14,7 @@ public enum Operator {
     GREATER_THAN_EQUALS(Filter.LARGER_EQUALS_TRIMMED),
     LESS_THAN_EQUALS(Filter.SMALLER_EQUALS_TRIMMED),
     IS_NOT_NULL(Filter.IS_NOT_NULL_TRIMMED),
+    IS_NULL(Filter.IS_NULL_TRIMMED),
     DIAMOND_EQUALS(Filter.DIAMOND_EQUALS),
     MULTIPLE_OPTIONS(Operator.MULTIPLE_OPTIONS_INDICATOR),
     STR_DATE(Filter.DATE_FORMAT),
@@ -65,7 +67,9 @@ public enum Operator {
                 case "JSON_EXTRACT =":
                 case "JSON_EXTRACT >=":
                 case "JSON_EXTRACT <=":
+                case "JSON_EXTRACT LIKE":
                 case "JSON_EXTRACT IS NOT NULL":
+                case "JSON_EXTRACT IS NULL":
                     return JSON_EXTRACT;
                 default:
                     return Operator.getOperator(operator);

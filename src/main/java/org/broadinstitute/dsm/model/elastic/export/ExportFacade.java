@@ -106,7 +106,7 @@ public class ExportFacade {
 
     private void upsertData(Map<String, Object> elasticDataToExport) {
         RequestPayload requestPayload = new RequestPayload(exportFacadePayload.getIndex(), exportFacadePayload.getDocId());
-        logger.info("Built upsert data request payload");
+        logger.info("Built upsert data request payload for the index " + exportFacadePayload.getIndex());
         exportable = new ElasticDataExportAdapter();
         exportable.setRequestPayload(requestPayload);
         exportable.setSource(elasticDataToExport);

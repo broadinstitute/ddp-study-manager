@@ -5,12 +5,7 @@ import java.util.regex.Pattern;
 import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.dsm.model.elastic.filter.FilterParser;
 import org.broadinstitute.dsm.model.elastic.filter.query.CollectionQueryBuilder;
-import org.elasticsearch.index.query.AbstractQueryBuilder;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.ExistsQueryBuilder;
-import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.NestedQueryBuilder;
-import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.elasticsearch.index.query.*;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,11 +43,16 @@ public class CollectionQueryBuilderTest {
         collectionQueryBuilder.setFilter(filter);
         AbstractQueryBuilder actual = collectionQueryBuilder.build();
 
+
+        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        boolQueryBuilder.must(new ExistsQueryBuilder("dsm.participant.participantId"));
+        boolQueryBuilder.must(new RegexpQueryBuilder("dsm.participant.participantId", ".+"));
+
         AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord", new RangeQueryBuilder("dsm.medicalRecord.medicalRecordId").gte("15"), ScoreMode.Avg))
                 .must(new NestedQueryBuilder("dsm.medicalRecord", new MatchQueryBuilder("dsm.medicalRecord.type", "PHYSICIAN"), ScoreMode.Avg))
                 .should(new NestedQueryBuilder("dsm.kitRequestShipping", new MatchQueryBuilder("dsm.kitRequestShipping.bspCollaboratorSampleId", "ASCProject_PZ8GJC_SALIVA"), ScoreMode.Avg))
                 .must(new NestedQueryBuilder("dsm.tissue", new RangeQueryBuilder("dsm.tissue.returnDate").lte("2015-01-01"), ScoreMode.Avg))
-                .must(new NestedQueryBuilder("dsm.participant", new ExistsQueryBuilder("dsm.participant.participantId"), ScoreMode.Avg));
+                .must(new NestedQueryBuilder("dsm.participant", boolQueryBuilder, ScoreMode.Avg));
 
         Assert.assertEquals(expected, actual);
     }
@@ -135,9 +135,14 @@ public class CollectionQueryBuilderTest {
         collectionQueryBuilder.setFilter(filter);
         AbstractQueryBuilder actual = collectionQueryBuilder.build();
 
+
+        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        boolQueryBuilder.must(new ExistsQueryBuilder("dsm.medicalRecord.dynamicFields.tryAgain"));
+        boolQueryBuilder.must(new RegexpQueryBuilder("dsm.medicalRecord.dynamicFields.tryAgain", ".+"));
+
         AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord",
                         new MatchQueryBuilder("dsm.medicalRecord.dynamicFields.seeingIfBugExists", true), ScoreMode.Avg))
-                .must(new NestedQueryBuilder("dsm.medicalRecord", new ExistsQueryBuilder("dsm.medicalRecord.dynamicFields.tryAgain"),ScoreMode.Avg));
+                .must(new NestedQueryBuilder("dsm.medicalRecord", boolQueryBuilder ,ScoreMode.Avg));
 
         Assert.assertEquals(expected, actual);
     }
