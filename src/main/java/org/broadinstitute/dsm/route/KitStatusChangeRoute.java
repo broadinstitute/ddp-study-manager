@@ -185,7 +185,8 @@ public class KitStatusChangeRoute extends RequestHandler {
                         if (kitDDPNotification != null) {
                             EventUtil.triggerDDP(conn, kitDDPNotification);
                         }
-                        UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, "ddpLabel", "ddpLabel", kit);
+                        UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, "ddpLabel", "ddpLabel", kit)
+                                .export();
                     }
                     else if (RoutePath.TRACKING_SCAN_REQUEST.equals(changeType)) {
                         logger.info("Added tracking for kit w/ kit_label " + kit);
