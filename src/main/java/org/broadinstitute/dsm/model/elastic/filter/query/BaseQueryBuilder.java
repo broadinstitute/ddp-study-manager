@@ -13,12 +13,14 @@ import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.RegexpQueryBuilder;
-import org.elasticsearch.index.query.TermQueryBuilder;
-import org.elasticsearch.index.query.WildcardQueryBuilder;
 
-public class QueryBuilderFactory {
-    public static QueryBuilder buildQueryBuilder(Operator operator, QueryPayload payload,
-                                                 BaseSplitter splitter) {
+public abstract class BaseQueryBuilder {
+
+    protected Operator operator;
+    protected QueryPayload payload;
+    protected BaseSplitter splitter;
+
+    protected QueryBuilder buildQueryBuilder() {
         QueryBuilder qb;
         switch (operator) {
             case LIKE:
@@ -26,33 +28,33 @@ public class QueryBuilderFactory {
             case DATE:
             case DIAMOND_EQUALS:
             case STR_DATE:
-                qb = new MatchQueryBuilder(payload.getFieldName(), payload.getValues()[0]);
+                qb = build(new MatchQueryBuilder(payload.getFieldName(), payload.getValues()[0]));
                 break;
             case GREATER_THAN_EQUALS:
                 RangeQueryBuilder greaterRangeQuery = new RangeQueryBuilder(payload.getFieldName());
                 greaterRangeQuery.gte(payload.getValues()[0]);
-                qb = greaterRangeQuery;
+                qb = build(greaterRangeQuery);
                 break;
             case LESS_THAN_EQUALS:
                 RangeQueryBuilder lessRangeQuery = new RangeQueryBuilder(payload.getFieldName());
                 lessRangeQuery.lte(payload.getValues()[0]);
-                qb = lessRangeQuery;
+                qb = build(lessRangeQuery);
                 break;
             case DATE_GREATER:
                 RangeQueryBuilder dateGreaterQuery = new RangeQueryBuilder(payload.getFieldName());
                 dateGreaterQuery.gte(payload.getValues()[0]);
-                qb = dateGreaterQuery;
+                qb = build(dateGreaterQuery);
                 break;
             case DATE_LESS:
                 RangeQueryBuilder dateLessQuery = new RangeQueryBuilder(payload.getFieldName());
                 dateLessQuery.lte(payload.getValues()[0]);
-                qb = dateLessQuery;
+                qb = build(dateLessQuery);
                 break;
             case IS_NOT_NULL:
-                qb = buildIsNotNullAndEmpty(payload);
+                qb = buildIsNotNullAndEmpty();
                 break;
             case IS_NULL:
-                qb = buildIsNullQuery(payload);
+                qb = buildIsNullQuery();
                 break;
             case MULTIPLE_OPTIONS:
                 BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
@@ -60,7 +62,7 @@ public class QueryBuilderFactory {
                 for (Object value : values) {
                     boolQueryBuilder.should(new MatchQueryBuilder(payload.getFieldName(), value));
                 }
-                qb = boolQueryBuilder;
+                qb = build(boolQueryBuilder);
                 break;
             case JSON_EXTRACT:
                 Object[] dynamicFieldValues = payload.getValues();
@@ -78,11 +80,12 @@ public class QueryBuilderFactory {
                     }
                 } else {
                     if (jsonExtractSplitter.getDecoratedSplitter() instanceof IsNullSplitter) {
-                        qb = buildIsNullQuery(payload);
+                        qb = buildIsNullQuery();
                     } else {
-                        qb = buildIsNotNullAndEmpty(payload);
+                        qb = buildIsNotNullAndEmpty();
                     }
                 }
+                qb = build(qb);
                 break;
             default:
                 throw new IllegalArgumentException(Operator.UNKNOWN_OPERATOR);
@@ -90,20 +93,23 @@ public class QueryBuilderFactory {
         return qb;
     }
 
-    private static QueryBuilder buildIsNotNullAndEmpty(QueryPayload payload) {
+    private QueryBuilder buildIsNotNullAndEmpty() {
         BoolQueryBuilder isNotNullAndNotEmpty = new BoolQueryBuilder();
         isNotNullAndNotEmpty.must(new ExistsQueryBuilder(payload.getFieldName()));
         isNotNullAndNotEmpty.must(new RegexpQueryBuilder(payload.getFieldName(), DsmAbstractQueryBuilder.ONE_OR_MORE_REGEX));
         return isNotNullAndNotEmpty;
     }
 
-    private static QueryBuilder buildIsNullQuery(QueryPayload payload) {
-        BoolQueryBuilder isNullQuery = new BoolQueryBuilder();
+    protected abstract QueryBuilder build(QueryBuilder queryBuilder);
+
+    private QueryBuilder buildIsNullQuery() {
         BoolQueryBuilder existsWithEmpty = new BoolQueryBuilder();
-        existsWithEmpty.must(new ExistsQueryBuilder(payload.getFieldName()));
-        existsWithEmpty.mustNot(new WildcardQueryBuilder(payload.getFieldName(), DsmAbstractQueryBuilder.WILDCARD));
-        isNullQuery.should(existsWithEmpty);
-        isNullQuery.should(new BoolQueryBuilder().mustNot(new ExistsQueryBuilder(payload.getFieldName())));
-        return isNullQuery;
+        existsWithEmpty.mustNot(build(new ExistsQueryBuilder(payload.getFieldName())));
+        return existsWithEmpty;
     }
+
+    protected abstract QueryBuilder buildEachQuery(Operator operator,
+                                                   QueryPayload queryPayload,
+                                                   BaseSplitter splitter);
+
 }

@@ -28,6 +28,7 @@ public abstract class DsmAbstractQueryBuilder {
     protected QueryBuilder queryBuilder;
     protected BaseSplitter splitter;
     protected AndOrFilterSeparator filterSeparator;
+    private BaseQueryBuilder baseQueryBuilder;
 
     public DsmAbstractQueryBuilder(String filter, Parser parser) {
         this();
@@ -75,8 +76,9 @@ public abstract class DsmAbstractQueryBuilder {
             splitter = SplitterFactory.createSplitter(operator, filterValue);
             splitter.setFilter(filterValue);
             QueryPayload queryPayload = new QueryPayload(buildPath(), splitter.getInnerProperty(), parser.parse(splitter.getValue()));
-            queryBuilder = QueryBuilderFactory.buildQueryBuilder(operator, queryPayload, splitter);
-            buildEachQuery(filterStrategy);
+//            queryBuilder = BaseQueryBuilder.buildQueryBuilder(operator, queryPayload, splitter);
+            filterStrategy.build(boolQueryBuilder, baseQueryBuilder.buildEachQuery(operator, queryPayload, splitter));
+//            buildEachQuery(filterStrategy);
         }
     }
 
@@ -84,6 +86,6 @@ public abstract class DsmAbstractQueryBuilder {
         return DSM_WITH_DOT + Util.TABLE_ALIAS_MAPPINGS.get(splitter.getAlias()).getPropertyName();
     }
 
-    protected abstract void buildEachQuery(FilterStrategy filterStrategy);
+//    protected abstract void buildEachQuery(FilterStrategy filterStrategy);
 
 }
