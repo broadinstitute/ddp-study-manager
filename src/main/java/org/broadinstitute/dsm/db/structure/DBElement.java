@@ -1,10 +1,8 @@
 package org.broadinstitute.dsm.db.structure;
 
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 import lombok.Data;
 

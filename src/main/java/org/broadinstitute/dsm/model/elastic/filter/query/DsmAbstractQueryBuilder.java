@@ -19,7 +19,9 @@ import org.elasticsearch.index.query.QueryBuilder;
 
 public abstract class DsmAbstractQueryBuilder {
 
+    public static final String ONE_OR_MORE_REGEX = ".+";
     protected static final String DSM_WITH_DOT = ESObjectConstants.DSM + DBConstants.ALIAS_DELIMITER;
+    public static final String WILDCARD = "*";
     protected String filter;
     protected Parser parser;
     protected BoolQueryBuilder boolQueryBuilder;

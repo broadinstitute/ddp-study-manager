@@ -14,14 +14,15 @@ public class ElasticMappingExportAdapter extends BaseExporter {
 
     @Override
     public void export() {
-        logger.info("initialize exporting mapping to ES");
-        PutMappingRequest putMappingRequest = new PutMappingRequest(requestPayload.getIndex());
+        String esIndex = requestPayload.getIndex();
+        logger.info("initialize exporting mapping to ES with index: " + esIndex);
+        PutMappingRequest putMappingRequest = new PutMappingRequest(esIndex);
         putMappingRequest.source(source);
         try {
             ElasticSearchUtil.getClientInstance().indices().putMapping(putMappingRequest, RequestOptions.DEFAULT);
         } catch (IOException e) {
-            throw new RuntimeException("Error occurred while updating mapping to ES", e);
+            throw new RuntimeException("Error occurred while updating mapping to ES with index: " + esIndex, e);
         }
-        logger.info("successfully exported mapping to ES");
+        logger.info("successfully exported mapping to ES with index: " + esIndex);
     }
 }
