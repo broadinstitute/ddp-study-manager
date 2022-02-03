@@ -237,7 +237,7 @@ public class ParticipantWrapper {
 
     void sortBySelfElseById(Collection<List<ParticipantData>> participantDatas) {
         participantDatas.forEach(pDataList -> pDataList.sort((o1, o2) -> {
-            Map<String, String> pData = new Gson().fromJson(o1.getData().orElse(""), new TypeToken<Map<String, String>>() {}.getType());
+            Map<String, String> pData = new Gson().fromJson(o1.getData().orElse(StringUtils.EMPTY), new TypeToken<Map<String, String>>() {}.getType());
             if (Objects.nonNull(pData) && FamilyMemberConstants.MEMBER_TYPE_SELF.equals(pData.get(FamilyMemberConstants.MEMBER_TYPE))) return -1;
             return o1.getParticipantDataId() - o2.getParticipantDataId();
         }));
