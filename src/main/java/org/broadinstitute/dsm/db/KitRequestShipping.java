@@ -1442,7 +1442,8 @@ public class KitRequestShipping extends KitRequest {
             long dsmKitId = KitRequestShipping.writeNewKit(dsmKitRequestId, kitRequestShipping.getEasypostAddressId(), message, false);
             kitRequestShipping.setDsmKitId(dsmKitId);
 
-            UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, "dsmKitId", "dsmKitRequestId", Long.parseLong(dsmKitRequestId))
+            UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, ESObjectConstants.DSM_KIT_ID,
+                            ESObjectConstants.DSM_KIT_REQUEST_ID, Long.parseLong(dsmKitRequestId))
                             .export();
         }
     }

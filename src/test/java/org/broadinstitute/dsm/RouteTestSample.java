@@ -9,6 +9,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.broadinstitute.ddp.util.GoogleBucket;
 import org.broadinstitute.dsm.db.*;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.exception.RateNotAvailableException;
 import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.KitType;
@@ -553,7 +554,7 @@ public class RouteTestSample extends TestHelper {
 
     public static void triggerLabelCreationAndWaitForLabel(String ddp, String kitType, long waitSeconds) {
         // set all kits of the realm to generate a label
-        KitRequestCreateLabel.updateKitLabelRequested(ddp, kitType, "1");
+        KitRequestCreateLabel.updateKitLabelRequested(ddp, kitType, "1", new DDPInstanceDto.Builder().build());
         //start method of label job
         List<KitRequestCreateLabel> kitsLabelTriggered = KitUtil.getListOfKitsLabelTriggered();
         if (!kitsLabelTriggered.isEmpty()) {

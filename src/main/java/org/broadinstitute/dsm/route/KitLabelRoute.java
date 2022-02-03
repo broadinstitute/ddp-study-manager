@@ -51,7 +51,7 @@ public class KitLabelRoute extends RequestHandler {
                 if (queryParams.value(RoutePath.KIT_TYPE) != null) {
                     kitType = queryParams.get(RoutePath.KIT_TYPE).value();
                 }
-                KitRequestCreateLabel.updateKitLabelRequested(realm, kitType, userIdRequest);
+                KitRequestCreateLabel.updateKitLabelRequested(realm, kitType, userIdRequest, ddpInstanceDto);
                 return new Result(200);
             }
             else {

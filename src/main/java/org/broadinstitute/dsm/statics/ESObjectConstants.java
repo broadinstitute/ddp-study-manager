@@ -38,6 +38,9 @@ public class ESObjectConstants {
 
     // kit
     public static final String KIT_REQUEST_SHIPPING = "kitRequestShipping";
+    public static final String DSM_KIT_ID = "dsmKitId";
+    public static final String DSM_KIT_REQUEST_ID = "dsmKitRequestId";
+    public static final String KIT_LABEL = "kitLabel";
 
     //common
     public static final String DDP_PARTICIPANT_ID = "ddpParticipantId";

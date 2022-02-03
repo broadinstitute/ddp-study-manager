@@ -11,6 +11,7 @@ import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.util.DBTestUtil;
 import org.broadinstitute.dsm.util.DDPMedicalRecordDataRequest;
 import org.broadinstitute.dsm.util.MedicalRecordUtil;
+import org.broadinstitute.dsm.util.SystemUtil;
 import org.broadinstitute.dsm.util.TestUtil;
 import org.broadinstitute.dsm.util.tools.util.DBUtil;
 import org.broadinstitute.dsm.util.tools.util.FileUtil;
@@ -117,7 +118,7 @@ public class MedicalRecordMigrationTool {
                                     .withDdpParticipantId(ddpParticipantId)
                                     .withLastVersion(0)
                                     .withLastVersionDate("MIGRATION_TOOL")
-                                    .withChangedBy(MedicalRecordUtil.SYSTEM)
+                                    .withChangedBy(SystemUtil.SYSTEM)
                                     .build();
                             new ParticipantDao().create(participantDto);
                             MedicalRecordUtil.writeNewRecordIntoDb(conn, DDPMedicalRecordDataRequest.SQL_INSERT_ONC_HISTORY,

@@ -77,7 +77,6 @@ public class ParticipantWrapper {
                 });
     }
 
-    //TODO could be better, good place for refactoring for future
     private void fetchAndPrepareDataByFilters(DDPInstance ddpInstance, Map<String, String> filters) {
         FilterParser parser = new FilterParser();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();

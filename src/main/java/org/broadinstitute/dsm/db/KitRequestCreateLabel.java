@@ -81,7 +81,8 @@ public class KitRequestCreateLabel {
      * Select all sample requests without kit per realm
      * optional per kit type
      */
-    public static void updateKitLabelRequested(String realm, String type, @NonNull String userId) {
+    public static void updateKitLabelRequested(String realm, String type, @NonNull String userId,
+                                               DDPInstanceDto ddpInstanceDto) {
         List<KitRequestCreateLabel> kitsNoLabel = new ArrayList<>();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
@@ -111,7 +112,6 @@ public class KitRequestCreateLabel {
             throw new RuntimeException("Error looking up the latestKitRequests ", results.resultException);
         }
         logger.info("Found " + kitsNoLabel.size() + " kit requests which need a label");
-        DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName(realm).orElseThrow();
         if (!kitsNoLabel.isEmpty()) {
             for (KitRequestCreateLabel uploadedKit : kitsNoLabel) {
                 KitRequestShipping.updateKit(Long.parseLong(uploadedKit.getDsmKitId()), userId, ddpInstanceDto);

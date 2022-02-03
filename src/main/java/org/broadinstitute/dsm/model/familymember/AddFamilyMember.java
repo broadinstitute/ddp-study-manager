@@ -82,7 +82,7 @@ public class AddFamilyMember {
         Map<String, String> participantDataData = participantData.getData();
         if (Objects.isNull(participantDataData)) throw new NoSuchElementException();
         List<ParticipantData> participantDataByParticipantId =
-                participantData.getParticipantDataByParticipantId(addFamilyMemberPayload.getParticipantId().orElse(""));
+                participantData.getParticipantDataByParticipantId(addFamilyMemberPayload.getParticipantId().orElse(StringUtils.EMPTY));
         Optional<ParticipantData> maybeProbandData = participantData.findProband(participantDataByParticipantId);
         Optional<org.broadinstitute.dsm.model.participant.data.ParticipantData> maybeParticipantData = maybeProbandData.map(org.broadinstitute.dsm.model.participant.data.ParticipantData::parseDto);
         maybeParticipantData.ifPresent(participantData -> participantData.getData().forEach(participantDataData::putIfAbsent));

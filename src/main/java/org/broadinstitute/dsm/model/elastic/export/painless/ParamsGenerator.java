@@ -9,7 +9,6 @@ import java.util.Map;
 
 public class ParamsGenerator implements Generator {
 
-    static final String PARAMS = "params";
     private Object source;
     private String realm;
 

@@ -22,6 +22,7 @@ import org.broadinstitute.dsm.model.participant.data.ParticipantData;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.broadinstitute.dsm.util.SystemUtil;
 
 public class RgpAutomaticProbandDataCreator extends BasicDefaultDataMaker {
 
@@ -54,7 +55,7 @@ public class RgpAutomaticProbandDataCreator extends BasicDefaultDataMaker {
                             probandDataMap
                     );
                     participantData.addDefaultOptionsValueToData(columnsWithDefaultOptions);
-                    participantData.insertParticipantData("SYSTEM");
+                    participantData.insertParticipantData(SystemUtil.SYSTEM);
 
                     columnsWithDefaultOptionsFilteredByElasticExportWorkflow.forEach((col, val) ->
                             ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(instance, participantId, col, val,
