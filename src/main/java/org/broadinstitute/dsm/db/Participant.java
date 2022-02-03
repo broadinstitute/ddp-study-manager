@@ -205,11 +205,6 @@ public class Participant {
         return getParticipants(realm, null);
     }
 
-    public static List<Participant> getParticipantsByIds(@NonNull String realm, List<String> participantIds) {
-        String queryAddition = " AND p.ddp_participant_id IN (?)".replace("?", DBUtil.participantIdsInClause(participantIds));
-        return new ArrayList<>(getParticipants(realm, queryAddition).values());
-    }
-
     public static Map<String, Participant> getParticipants(@NonNull String realm, String queryAddition) {
         logger.info("Collection participant information");
         Map<String, Participant> participants = new HashMap<>();
