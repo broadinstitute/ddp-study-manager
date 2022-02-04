@@ -285,7 +285,7 @@ public class Filter {
                     lessThan = lessThan.substring(lessThanIndex);
                     query += moreThan + query + lessThan;
                 } else if (filter.isExactMatch()) {
-                    query += EQUALS + "'#'";
+                    query = buildQuery(filter, query);
                     query = query.replaceAll("#", String.valueOf(filter.getFilter1().getValue()));
                 } else {
                     query += " " + LIKE + " '%#%'";
@@ -299,6 +299,16 @@ public class Filter {
             }
         }
         return finalQuery;
+    }
+
+    private static String buildQuery(Filter filter, String query) {
+        try {
+            Long.parseLong(String.valueOf(filter.getFilter1().getValue()));
+            query += EQUALS + "#";
+        } catch (NumberFormatException nfe) {
+            query += EQUALS + "'#'";
+        }
+        return query;
     }
 
     /**

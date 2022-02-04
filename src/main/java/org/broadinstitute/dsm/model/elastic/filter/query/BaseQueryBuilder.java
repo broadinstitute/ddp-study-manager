@@ -60,6 +60,7 @@ public abstract class BaseQueryBuilder {
                     } else {
                         qb = new MatchQueryBuilder(payload.getFieldName(), dynamicFieldValues[0]);
                     }
+                    qb = build(qb);
                 } else {
                     if (jsonExtractSplitter.getDecoratedSplitter() instanceof IsNullSplitter) {
                         qb = buildIsNullQuery();
@@ -67,7 +68,6 @@ public abstract class BaseQueryBuilder {
                         qb = buildIsNotNullAndEmpty();
                     }
                 }
-                qb = build(qb);
                 break;
             default:
                 throw new IllegalArgumentException(Operator.UNKNOWN_OPERATOR);
