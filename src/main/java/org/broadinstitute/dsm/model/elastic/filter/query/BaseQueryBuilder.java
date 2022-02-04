@@ -2,17 +2,8 @@ package org.broadinstitute.dsm.model.elastic.filter.query;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.elastic.filter.Operator;
-import org.broadinstitute.dsm.model.elastic.filter.splitter.BaseSplitter;
-import org.broadinstitute.dsm.model.elastic.filter.splitter.GreaterThanEqualsSplitter;
-import org.broadinstitute.dsm.model.elastic.filter.splitter.IsNullSplitter;
-import org.broadinstitute.dsm.model.elastic.filter.splitter.JsonExtractSplitter;
-import org.broadinstitute.dsm.model.elastic.filter.splitter.LessThanEqualsSplitter;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.ExistsQueryBuilder;
-import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.RangeQueryBuilder;
-import org.elasticsearch.index.query.RegexpQueryBuilder;
+import org.broadinstitute.dsm.model.elastic.filter.splitter.*;
+import org.elasticsearch.index.query.*;
 
 public abstract class BaseQueryBuilder {
 
@@ -31,24 +22,16 @@ public abstract class BaseQueryBuilder {
                 qb = build(new MatchQueryBuilder(payload.getFieldName(), payload.getValues()[0]));
                 break;
             case GREATER_THAN_EQUALS:
+            case DATE_GREATER_THAN_EQUALS:
                 RangeQueryBuilder greaterRangeQuery = new RangeQueryBuilder(payload.getFieldName());
                 greaterRangeQuery.gte(payload.getValues()[0]);
                 qb = build(greaterRangeQuery);
                 break;
             case LESS_THAN_EQUALS:
+            case DATE_LESS_THAN_EQUALS:
                 RangeQueryBuilder lessRangeQuery = new RangeQueryBuilder(payload.getFieldName());
                 lessRangeQuery.lte(payload.getValues()[0]);
                 qb = build(lessRangeQuery);
-                break;
-            case DATE_GREATER:
-                RangeQueryBuilder dateGreaterQuery = new RangeQueryBuilder(payload.getFieldName());
-                dateGreaterQuery.gte(payload.getValues()[0]);
-                qb = build(dateGreaterQuery);
-                break;
-            case DATE_LESS:
-                RangeQueryBuilder dateLessQuery = new RangeQueryBuilder(payload.getFieldName());
-                dateLessQuery.lte(payload.getValues()[0]);
-                qb = build(dateLessQuery);
                 break;
             case IS_NOT_NULL:
                 qb = buildIsNotNullAndEmpty();
@@ -67,7 +50,6 @@ public abstract class BaseQueryBuilder {
             case JSON_EXTRACT:
                 Object[] dynamicFieldValues = payload.getValues();
                 JsonExtractSplitter jsonExtractSplitter = (JsonExtractSplitter) splitter;
-//                buildQueryBuilder(jsonExtractSplitter.getOperator());
                 if (!StringUtils.EMPTY.equals(dynamicFieldValues[0])) {
                     if (jsonExtractSplitter.getDecoratedSplitter() instanceof GreaterThanEqualsSplitter) {
                         qb = new RangeQueryBuilder(payload.getFieldName());
@@ -95,8 +77,7 @@ public abstract class BaseQueryBuilder {
 
     private QueryBuilder buildIsNotNullAndEmpty() {
         BoolQueryBuilder isNotNullAndNotEmpty = new BoolQueryBuilder();
-        isNotNullAndNotEmpty.must(new ExistsQueryBuilder(payload.getFieldName()));
-        isNotNullAndNotEmpty.must(new RegexpQueryBuilder(payload.getFieldName(), DsmAbstractQueryBuilder.ONE_OR_MORE_REGEX));
+        isNotNullAndNotEmpty.must(build(new ExistsQueryBuilder(payload.getFieldName())));
         return isNotNullAndNotEmpty;
     }
 
@@ -108,8 +89,13 @@ public abstract class BaseQueryBuilder {
         return existsWithEmpty;
     }
 
-    protected abstract QueryBuilder buildEachQuery(Operator operator,
+    public QueryBuilder buildEachQuery(Operator operator,
                                                    QueryPayload queryPayload,
-                                                   BaseSplitter splitter);
+                                                   BaseSplitter splitter) {
+        this.operator = operator;
+        this.payload = queryPayload;
+        this.splitter = splitter;
+        return buildQueryBuilder();
+    }
 
 }

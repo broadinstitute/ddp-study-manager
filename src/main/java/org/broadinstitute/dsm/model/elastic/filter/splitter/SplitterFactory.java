@@ -33,10 +33,10 @@ public class SplitterFactory {
             case DATE:
                 splitter = new DateSplitter();
                 break;
-            case DATE_GREATER:
+            case DATE_GREATER_THAN_EQUALS:
                 splitter = new DateGreaterSplitter();
                 break;
-            case DATE_LESS:
+            case DATE_LESS_THAN_EQUALS:
                 splitter = new DateLowerSplitter();
                 break;
             case IS_NOT_NULL:

@@ -112,14 +112,14 @@ public class OperatorTest {
     public void extractGreaterStrToDateOperator() {
         String filter = "m.mr_received  >= STR_TO_DATE('1964-01-14','%Y-%m-%d')";
         Operator operator = Operator.extract(filter);
-        assertEquals(Operator.DATE_GREATER, operator);
+        assertEquals(Operator.DATE_GREATER_THAN_EQUALS, operator);
     }
 
     @Test
     public void extractLessStrToDateOperator() {
         String filter = "m.mr_received  <= STR_TO_DATE('1964-01-14','%Y-%m-%d')";
         Operator operator = Operator.extract(filter);
-        assertEquals(Operator.DATE_LESS, operator);
+        assertEquals(Operator.DATE_LESS_THAN_EQUALS, operator);
     }
 
     @Test

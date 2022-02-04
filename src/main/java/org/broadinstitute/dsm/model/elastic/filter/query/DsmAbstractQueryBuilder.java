@@ -1,8 +1,5 @@
 package org.broadinstitute.dsm.model.elastic.filter.query;
 
-import java.util.List;
-import java.util.Map;
-
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
@@ -17,11 +14,12 @@ import org.elasticsearch.index.query.AbstractQueryBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 
-public abstract class DsmAbstractQueryBuilder {
+import java.util.List;
+import java.util.Map;
 
-    public static final String ONE_OR_MORE_REGEX = ".+";
+public class DsmAbstractQueryBuilder {
+
     protected static final String DSM_WITH_DOT = ESObjectConstants.DSM + DBConstants.ALIAS_DELIMITER;
-    public static final String WILDCARD = "*";
     protected String filter;
     protected Parser parser;
     protected BoolQueryBuilder boolQueryBuilder;
@@ -30,21 +28,15 @@ public abstract class DsmAbstractQueryBuilder {
     protected AndOrFilterSeparator filterSeparator;
     private BaseQueryBuilder baseQueryBuilder;
 
-    public DsmAbstractQueryBuilder(String filter, Parser parser) {
-        this();
-        this.parser = parser;
-        this.filter = filter;
-        this.filterSeparator = new AndOrFilterSeparator(this.filter);
-    }
-
     public static DsmAbstractQueryBuilder of(String alias) {
         boolean isCollection = Util.TABLE_ALIAS_MAPPINGS.get(alias).isCollection();
         return isCollection
-                ? new CollectionQueryBuilder()
-                : new SingleQueryBuilder();
+                ? new DsmAbstractQueryBuilder(new CollectionQueryBuilder())
+                : new DsmAbstractQueryBuilder(new SingleQueryBuilder());
     }
 
-    public DsmAbstractQueryBuilder() {
+    private DsmAbstractQueryBuilder(BaseQueryBuilder baseQueryBuilder) {
+        this.baseQueryBuilder = baseQueryBuilder;
         boolQueryBuilder = new BoolQueryBuilder();
     }
 
@@ -76,9 +68,7 @@ public abstract class DsmAbstractQueryBuilder {
             splitter = SplitterFactory.createSplitter(operator, filterValue);
             splitter.setFilter(filterValue);
             QueryPayload queryPayload = new QueryPayload(buildPath(), splitter.getInnerProperty(), parser.parse(splitter.getValue()));
-//            queryBuilder = BaseQueryBuilder.buildQueryBuilder(operator, queryPayload, splitter);
             filterStrategy.build(boolQueryBuilder, baseQueryBuilder.buildEachQuery(operator, queryPayload, splitter));
-//            buildEachQuery(filterStrategy);
         }
     }
 
@@ -86,6 +76,5 @@ public abstract class DsmAbstractQueryBuilder {
         return DSM_WITH_DOT + Util.TABLE_ALIAS_MAPPINGS.get(splitter.getAlias()).getPropertyName();
     }
 
-//    protected abstract void buildEachQuery(FilterStrategy filterStrategy);
 
 }

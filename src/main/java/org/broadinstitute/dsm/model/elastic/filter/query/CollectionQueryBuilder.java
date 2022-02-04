@@ -15,16 +15,5 @@ public class CollectionQueryBuilder extends BaseQueryBuilder {
     protected QueryBuilder build(QueryBuilder queryBuilder) {
         return new NestedQueryBuilder(payload.getPath(), queryBuilder, ScoreMode.Avg);
     }
-
-    @Override
-    protected QueryBuilder buildEachQuery(Operator operator,
-                                          QueryPayload queryPayload,
-                                          BaseSplitter splitter) {
-        this.operator = operator;
-        this.payload = queryPayload;
-        this.splitter = splitter;
-        return buildQueryBuilder();
-    }
-
 }
 

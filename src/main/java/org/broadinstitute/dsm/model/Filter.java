@@ -191,7 +191,6 @@ public class Filter {
             }
             else {
                 filter = convertFilterDateValues(filter);
-                String notNullQuery = AND + filter.getColumnName(dbElement) + IS_NOT_NULL;
                 String query1 = "";
                 if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue()))) {
                     query1 = generateDateComparisonSql(filter,dbElement, LARGER_EQUALS, filter.getFilter1().getValue(), false);
@@ -200,7 +199,7 @@ public class Filter {
                 if (filter.getFilter2() != null && filter.getFilter2() != null && filter.getFilter2().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue()))) {
                     query2 = generateDateComparisonSql(filter,dbElement, SMALLER_EQUALS,filter.getFilter2().getValue(), true);
                 }
-                finalQuery = query1 + query2 + notNullQuery;
+                finalQuery = query1 + query2;
             }
         }
         else if (ADDITIONAL_VALUES.equals(filter.getType())) {
