@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -88,6 +89,7 @@ public class Filter {
     private NameValue filter2;
     private String[] selectedOptions;
     private ParticipantColumn participantColumn;
+    private String additionalType;
 
     public Filter() {
     }
@@ -285,7 +287,7 @@ public class Filter {
                     lessThan = lessThan.substring(lessThanIndex);
                     query += moreThan + query + lessThan;
                 } else if (filter.isExactMatch()) {
-                    query = buildQuery(filter, query);
+                    query += NUMBER.equals(filter.additionalType) ? EQUALS + "#" : EQUALS + "'#'";
                     query = query.replaceAll("#", String.valueOf(filter.getFilter1().getValue()));
                 } else {
                     query += " " + LIKE + " '%#%'";
@@ -299,16 +301,6 @@ public class Filter {
             }
         }
         return finalQuery;
-    }
-
-    private static String buildQuery(Filter filter, String query) {
-        try {
-            Long.parseLong(String.valueOf(filter.getFilter1().getValue()));
-            query += EQUALS + "#";
-        } catch (NumberFormatException nfe) {
-            query += EQUALS + "'#'";
-        }
-        return query;
     }
 
     /**
@@ -442,5 +434,9 @@ public class Filter {
 
     public void setParticipantColumn(ParticipantColumn participantColumn) {
         this.participantColumn = participantColumn;
+    }
+
+    public void setAdditionalType(String additionalType) {
+        this.additionalType = additionalType;
     }
 }
