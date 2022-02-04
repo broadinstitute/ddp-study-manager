@@ -26,14 +26,14 @@ public class PDFAudit {
                         // ddp with 'standard' consent and release pdfs
                         DDPInstance instance = DDPInstance.getDDPInstanceWithRole(request.getRealm(), DBConstants.PDF_DOWNLOAD_CONSENT); //the role for release will get checked in makePDF
                         if (instance != null && StringUtils.isNotBlank(instance.getBaseUrl()) && instance.isHasRole()) {
-                            DDPRequestUtil.makeStandardPDF(instance, request.getParticipantId(), request.getCreatedBy(), request.getKitTypeName());
+                            DDPRequestUtil.makeStandardPDF(instance, request.getParticipantId(), request.getCreatedBy(), request.getKitType());
                         }
                         else {
                             // ddp without 'standard' consent and release pdfs
                             instance = DDPInstance.getDDPInstanceWithRole(request.getRealm(), DBConstants.PDF_DOWNLOAD); //the role for release will get checked in makePDF
                             if (instance != null && StringUtils.isNotBlank(instance.getBaseUrl()) && StringUtils.isNotBlank(instance.getParticipantIndexES())
                                     && instance.isHasRole()) {
-                                DDPRequestUtil.makeNonStandardPDF(instance, request.getParticipantId(), request.getCreatedBy(), request.getKitTypeName());
+                                DDPRequestUtil.makeNonStandardPDF(instance, request.getParticipantId(), request.getCreatedBy(), request.getKitType());
                             }
                         }
                         newAuditKit = Math.max(newAuditKit, request.getDsmKitRequestId());

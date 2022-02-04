@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.DSMServer;
@@ -22,7 +21,6 @@ import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.ddp.KitDetail;
 import org.broadinstitute.dsm.model.elastic.export.Exportable;
-import org.broadinstitute.dsm.model.elastic.export.generate.Generator;
 import org.broadinstitute.dsm.model.elastic.export.painless.*;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -33,8 +31,6 @@ import org.broadinstitute.dsm.util.EasyPostUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.KitUtil;
 import org.eclipse.jetty.util.StringUtil;
-import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.NestedQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -184,7 +180,7 @@ public class KitRequestShipping extends KitRequest {
     private String realm;
 
     @ColumnName (DBConstants.KIT_TYPE_NAME)
-    private String kitTypeName;
+    private String kitType;
 
     @ColumnName (DBConstants.DEACTIVATION_REASON)
     private String deactivationReason;
@@ -193,7 +189,7 @@ public class KitRequestShipping extends KitRequest {
     private String kitLabel;
 
     @ColumnName (DBConstants.KIT_TEST_RESULT)
-    private String testResult;
+    private String result;
 
     @ColumnName (DBConstants.DSM_SCAN_DATE)
     @DbDateConversion(SqlDateConverter.EPOCH)
@@ -250,13 +246,13 @@ public class KitRequestShipping extends KitRequest {
 
     public KitRequestShipping() {}
 
-    public KitRequestShipping(String collaboratorParticipantId, String kitTypeName, Long dsmKitRequestId, Long scanDate, Boolean error,
-                              Long receiveDate, Long deactivatedDate, String testResult,
+    public KitRequestShipping(String collaboratorParticipantId, String kitType, Long dsmKitRequestId, Long scanDate, Boolean error,
+                              Long receiveDate, Long deactivatedDate, String result,
                               String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus, String externalOrderNumber, Long externalOrderDate, Boolean careEvolve, String uploadReason) {
-        this(null, collaboratorParticipantId, null, null, null, kitTypeName, dsmKitRequestId, null, null, null,
+        this(null, collaboratorParticipantId, null, null, null, kitType, dsmKitRequestId, null, null, null,
                 null, null, null, null, scanDate, error, null, receiveDate,
                 null, deactivatedDate, null, null, null, null, null, null, externalOrderNumber, null, externalOrderStatus, null,
-                testResult,
+                result,
                 upsTrackingStatus, upsReturnStatus, externalOrderDate, careEvolve, uploadReason, null, null, null);
     }
 
@@ -279,19 +275,19 @@ public class KitRequestShipping extends KitRequest {
 
     // shippingId = ddp_label !!!
     public KitRequestShipping(String participantId, String collaboratorParticipantId, String bspCollaboratorSampleId, String shippingId, String realm,
-                              String kitTypeName, Long dsmKitRequestId, Long dsmKitId, String labelUrlTo, String labelUrlReturn,
+                              String kitType, Long dsmKitRequestId, Long dsmKitId, String labelUrlTo, String labelUrlReturn,
                               String trackingNumberTo, String trackingReturnId,
                               String easypostTrackingToUrl, String trackingUrlReturn, Long scanDate, Boolean error, String message,
                               Long receiveDate, String easypostAddressId, Long deactivatedDate, String deactivationReason,
                               String kitLabel, Boolean express, String easypostToId, Long labelDate, String easypostShipmentStatus,
-                              String externalOrderNumber, Boolean noReturn, String externalOrderStatus, String createdBy, String testResult,
+                              String externalOrderNumber, Boolean noReturn, String externalOrderStatus, String createdBy, String result,
                               String upsTrackingStatus, String upsReturnStatus, Long externalOrderDate, Boolean careEvolve, String uploadReason,
                               String receiveDateString, String hruid, String gender) {
         super(dsmKitRequestId, participantId, null, shippingId, externalOrderNumber, null, externalOrderStatus, null, externalOrderDate);
         this.collaboratorParticipantId = collaboratorParticipantId;
         this.bspCollaboratorSampleId = bspCollaboratorSampleId;
         this.realm = realm;
-        this.kitTypeName = kitTypeName;
+        this.kitType = kitType;
         this.dsmKitId = dsmKitId;
         this.labelUrlTo = labelUrlTo;
         this.labelUrlReturn = labelUrlReturn;
@@ -313,7 +309,7 @@ public class KitRequestShipping extends KitRequest {
         this.easypostShipmentStatus = easypostShipmentStatus;
         this.noReturn = noReturn;
         this.createdBy = createdBy;
-        this.testResult = testResult;
+        this.result = result;
         this.upsTrackingStatus = upsTrackingStatus;
         this.upsReturnStatus = upsReturnStatus;
         this.careEvolve = careEvolve;
