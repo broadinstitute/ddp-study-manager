@@ -29,6 +29,7 @@ public class BaseFilter {
     protected DDPInstance ddpInstance;
     protected int from;
     protected int to;
+    protected Filter sortBy;
 
     public BaseFilter(String jsonBody) {
         this.jsonBody = jsonBody;
@@ -45,7 +46,7 @@ public class BaseFilter {
         Filter[] savedFilters = new Gson().fromJson(queryParamsMap.get(RequestParameter.FILTERS).value(), Filter[].class);
         if (!Objects.isNull(jsonBody)) {
 
-            ViewFilter requestForFiltering = null;
+            ViewFilter requestForFiltering;
             try {
                 requestForFiltering = StringUtils.isNotBlank(jsonBody)
                         ? ObjectMapperSingleton.instance().readValue(jsonBody, ViewFilter.class)
@@ -67,6 +68,7 @@ public class BaseFilter {
         }
         this.from = Integer.parseInt(queryParamsMap.get(LIST_RANGE_FROM).value());
         this.to = Integer.parseInt(queryParamsMap.get(LIST_RANGE_TO).value());
+//        this.sortBy = ObjectMapperSingleton.
     }
 
 }

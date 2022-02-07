@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NonNull;
@@ -20,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Filter {
 
     public static final Logger logger = LoggerFactory.getLogger(Filter.class);
