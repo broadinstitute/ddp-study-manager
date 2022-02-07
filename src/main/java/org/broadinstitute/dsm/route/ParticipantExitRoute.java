@@ -62,6 +62,7 @@ public class ParticipantExitRoute extends RequestHandler {
                     List<KitRequestShipping> kitRequests = KitRequestShipping.getKitRequestsByParticipant(realm, ddpParticipantId, true);
                     List<KitDiscard> kitsNeedAction = new ArrayList<>();
                     logger.info("Found " + kitRequests.size() + " kit requests");
+                    Optional<DDPInstanceDto> maybeInstance = new DDPInstanceDao().getDDPInstanceByInstanceName(realm);
                     for (KitRequestShipping kit : kitRequests) {
                         if (kit.getScanDate() != 0 && kit.getReceiveDate() == 0) {
                             String discardId = KitDiscard.addKitToDiscard(kit.getDsmKitRequestId(), KitDiscard.HOLD);
@@ -69,7 +70,6 @@ public class ParticipantExitRoute extends RequestHandler {
                         }
                         else {
                             //refund label of kits which are not sent yet
-                            Optional<DDPInstanceDto> maybeInstance = new DDPInstanceDao().getDDPInstanceByInstanceName(realm);
                             KitRequestShipping.refundKit(kit.getDsmKitRequestId(), DSMServer.getDDPEasypostApiKey(realm), maybeInstance.orElse(null));
                         }
                     }
