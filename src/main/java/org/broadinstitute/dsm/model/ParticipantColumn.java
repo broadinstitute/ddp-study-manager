@@ -9,6 +9,7 @@ public class ParticipantColumn {
 
     public String name;
     public String tableAlias;
+    public String object;
 
     public ParticipantColumn(String name, String tableAlias) {
         this.name = name;

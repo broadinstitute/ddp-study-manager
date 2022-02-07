@@ -29,7 +29,7 @@ public class QuickFilterParticipantList extends BaseFilterParticipantList {
         }
         Filter[] filters = requestForFiltering.getFilters();
         if (filters != null) {
-            participantWrapperResult = filterParticipantList(filters, PatchUtil.getColumnNameMap(), ddpInstance);
+            participantWrapperResult = filterParticipantList(filters, PatchUtil.getColumnNameMap());
         }
         return participantWrapperResult;
     }

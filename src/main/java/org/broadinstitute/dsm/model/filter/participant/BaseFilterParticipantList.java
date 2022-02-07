@@ -46,13 +46,14 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
     }
 
 
-    protected ParticipantWrapperResult filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap, @NonNull DDPInstance instance) {
+    protected ParticipantWrapperResult filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap) {
         Map<String, String> queryConditions = new HashMap<>();
         DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName(realm).orElseThrow();
         ParticipantWrapperPayload.Builder participantWrapperPayload = new ParticipantWrapperPayload.Builder()
                 .withDdpInstanceDto(ddpInstanceDto)
                 .withFrom(from)
-                .withTo(to);
+                .withTo(to)
+                .withSortBy(sortBy);
         ElasticSearch elasticSearch = new ElasticSearch();
         if (filters != null && columnNameMap != null && !columnNameMap.isEmpty()) {
             for (Filter filter : filters) {
@@ -86,6 +87,8 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
                 }
             }
         }
+
+
 
         if (!queryConditions.isEmpty()) {
             // combine queries

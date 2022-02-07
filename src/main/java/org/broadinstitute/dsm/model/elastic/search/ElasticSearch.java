@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.logging.Filter;
 import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
@@ -28,7 +29,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortOrder;
+import org.elasticsearch.search.sort.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +38,7 @@ public class ElasticSearch implements ElasticSearchable {
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearch.class);
     private Deserializer deserializer;
+    private SortBuilder sortBy;
 
     List<ElasticSearchParticipantDto> esParticipants;
     long totalCount;
@@ -52,8 +54,30 @@ public class ElasticSearch implements ElasticSearchable {
         this.totalCount = totalCount;
     }
 
+    @Override
     public void setDeserializer(Deserializer deserializer) {
         this.deserializer = deserializer;
+    }
+
+    @Override
+    public void setSortBy(Filter sortBy) {
+        if (Objects.nonNull(sortBy)) {
+
+            class CustomSortBuilder extends FieldSortBuilder {
+
+                public CustomSortBuilder(Filter sortBy) {
+                    super("");
+                    setNestedSort();
+                }
+
+
+            }
+
+            new CustomSortBuilder(sortBy).setNestedSort();
+
+        } else {
+            this.sortBy = SortBuilders.fieldSort(ElasticSearchUtil.PROFILE_CREATED_AT).order(SortOrder.ASC);
+        }
     }
 
     public List<ElasticSearchParticipantDto> getEsParticipants() {

@@ -1,8 +1,6 @@
 package org.broadinstitute.dsm.model.filter;
 
-import java.io.IOException;
-import java.util.Objects;
-
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
@@ -13,6 +11,9 @@ import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 import spark.QueryParamsMap;
+
+import java.io.IOException;
+import java.util.Objects;
 
 public class BaseFilter {
 
@@ -68,7 +69,8 @@ public class BaseFilter {
         }
         this.from = Integer.parseInt(queryParamsMap.get(LIST_RANGE_FROM).value());
         this.to = Integer.parseInt(queryParamsMap.get(LIST_RANGE_TO).value());
-//        this.sortBy = ObjectMapperSingleton.
+        this.sortBy = ObjectMapperSingleton.readValue(queryParamsMap.get("sortBy").value(), new TypeReference<Filter>() {
+        });
     }
 
 }

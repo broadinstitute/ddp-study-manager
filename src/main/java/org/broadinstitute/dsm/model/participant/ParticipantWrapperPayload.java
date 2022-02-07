@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
+import org.broadinstitute.dsm.model.Filter;
 
 
 public class ParticipantWrapperPayload {
@@ -13,6 +14,7 @@ public class ParticipantWrapperPayload {
     private int userId;
     private int from;
     private int to;
+    private Filter sortBy;
 
     public Optional<DDPInstanceDto> getDdpInstanceDto() {
         return Optional.ofNullable(ddpInstanceDto);
@@ -40,12 +42,14 @@ public class ParticipantWrapperPayload {
         this.userId = builder.userId;
         this.from = builder.from;
         this.to = builder.to;
+        this.sortBy = builder.sortBy;
     }
 
     public static class Builder {
 
         public int from;
         public int to;
+        public Filter sortBy;
         private DDPInstanceDto ddpInstanceDto;
         private Map<String, String> filter;
         private int userId;
@@ -72,6 +76,11 @@ public class ParticipantWrapperPayload {
 
         public Builder withTo(int to) {
             this.to = to;
+            return this;
+        }
+
+        public Builder withSortBy(Filter sortBy) {
+            this.sortBy = sortBy;
             return this;
         }
 
