@@ -180,7 +180,7 @@ public class KitRequestShipping extends KitRequest {
     private String realm;
 
     @ColumnName (DBConstants.KIT_TYPE_NAME)
-    private String kitType;
+    private String kitTypeName;
 
     @ColumnName (DBConstants.DEACTIVATION_REASON)
     private String deactivationReason;
@@ -246,10 +246,10 @@ public class KitRequestShipping extends KitRequest {
 
     public KitRequestShipping() {}
 
-    public KitRequestShipping(String collaboratorParticipantId, String kitType, Long dsmKitRequestId, Long scanDate, Boolean error,
+    public KitRequestShipping(String collaboratorParticipantId, String kitTypeName, Long dsmKitRequestId, Long scanDate, Boolean error,
                               Long receiveDate, Long deactivatedDate, String result,
                               String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus, String externalOrderNumber, Long externalOrderDate, Boolean careEvolve, String uploadReason) {
-        this(null, collaboratorParticipantId, null, null, null, kitType, dsmKitRequestId, null, null, null,
+        this(null, collaboratorParticipantId, null, null, null, kitTypeName, dsmKitRequestId, null, null, null,
                 null, null, null, null, scanDate, error, null, receiveDate,
                 null, deactivatedDate, null, null, null, null, null, null, externalOrderNumber, null, externalOrderStatus, null,
                 result,
@@ -275,7 +275,7 @@ public class KitRequestShipping extends KitRequest {
 
     // shippingId = ddp_label !!!
     public KitRequestShipping(String participantId, String collaboratorParticipantId, String bspCollaboratorSampleId, String shippingId, String realm,
-                              String kitType, Long dsmKitRequestId, Long dsmKitId, String labelUrlTo, String labelUrlReturn,
+                              String kitTypeName, Long dsmKitRequestId, Long dsmKitId, String labelUrlTo, String labelUrlReturn,
                               String trackingNumberTo, String trackingReturnId,
                               String easypostTrackingToUrl, String trackingUrlReturn, Long scanDate, Boolean error, String message,
                               Long receiveDate, String easypostAddressId, Long deactivatedDate, String deactivationReason,
@@ -287,7 +287,7 @@ public class KitRequestShipping extends KitRequest {
         this.collaboratorParticipantId = collaboratorParticipantId;
         this.bspCollaboratorSampleId = bspCollaboratorSampleId;
         this.realm = realm;
-        this.kitType = kitType;
+        this.kitTypeName = kitTypeName;
         this.dsmKitId = dsmKitId;
         this.labelUrlTo = labelUrlTo;
         this.labelUrlReturn = labelUrlReturn;

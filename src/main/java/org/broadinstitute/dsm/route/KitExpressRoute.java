@@ -85,7 +85,7 @@ public class KitExpressRoute extends RequestHandler {
 
         EasyPostUtil easyPostUtil = new EasyPostUtil(kitRequest.getRealm());
         HashMap<String, KitType> kitTypes = org.broadinstitute.dsm.model.KitType.getKitLookup();
-        String key = kitRequest.getKitType() + "_" + ddpInstanceDto.getDdpInstanceId();
+        String key = kitRequest.getKitTypeName() + "_" + ddpInstanceDto.getDdpInstanceId();
         KitType kitType = kitTypes.get(key);
 
         Map<Integer, KitRequestSettings> carrierServiceTypes =
@@ -143,7 +143,7 @@ public class KitExpressRoute extends RequestHandler {
             DDPInstance ddpInstance = DDPInstance.getDDPInstance(kitRequest.getRealm());
 
             HashMap<String, KitType> kitTypes = org.broadinstitute.dsm.model.KitType.getKitLookup();
-            String key = kitRequest.getKitType() + "_" + ddpInstance.getDdpInstanceId();
+            String key = kitRequest.getKitTypeName() + "_" + ddpInstance.getDdpInstanceId();
             KitType kitType = kitTypes.get(key);
 
             Map<Integer, KitRequestSettings> carrierServiceTypes = KitRequestSettings.getKitRequestSettings(ddpInstance.getDdpInstanceId());

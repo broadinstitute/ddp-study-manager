@@ -499,22 +499,22 @@ public class DashboardRoute extends RequestHandler {
                            long start, long end) {
         for (KitRequestShipping kit : kits) {
             if (kit.getScanDate() != 0) {
-                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitType() + ".sent", foundAtPT);
-                incrementCounterPeriod(dashboardValuesPeriodDetailed, "kit." + kit.getKitType() + ".sent", kit.getScanDate(), start, end, foundAtPtPeriod);
+                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitTypeName() + ".sent", foundAtPT);
+                incrementCounterPeriod(dashboardValuesPeriodDetailed, "kit." + kit.getKitTypeName() + ".sent", kit.getScanDate(), start, end, foundAtPtPeriod);
             }
             else if (kit.getDeactivatedDate() == 0) {
-                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitType() + ".waiting", foundAtPT);
+                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitTypeName() + ".waiting", foundAtPT);
             }
             if (kit.getReceiveDate() != 0) {
-                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitType() + ".received", foundAtPT);
-                incrementCounterPeriod(dashboardValuesPeriodDetailed, "kit." + kit.getKitType() + ".received", kit.getReceiveDate(), start, end, foundAtPtPeriod);
+                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitTypeName() + ".received", foundAtPT);
+                incrementCounterPeriod(dashboardValuesPeriodDetailed, "kit." + kit.getKitTypeName() + ".received", kit.getReceiveDate(), start, end, foundAtPtPeriod);
             }
             if (kit.getDeactivatedDate() != 0) {
-                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitType() + ".deactivated", foundAtPT);
-                incrementCounterPeriod(dashboardValuesPeriodDetailed, "kit." + kit.getKitType() + ".deactivated", kit.getDeactivatedDate(), start, end, foundAtPtPeriod);
+                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitTypeName() + ".deactivated", foundAtPT);
+                incrementCounterPeriod(dashboardValuesPeriodDetailed, "kit." + kit.getKitTypeName() + ".deactivated", kit.getDeactivatedDate(), start, end, foundAtPtPeriod);
             }
             if (StringUtils.isNotBlank(kit.getEasypostShipmentStatus())) {
-                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitType() + "." + kit.getEasypostShipmentStatus(), foundAtPT);
+                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitTypeName() + "." + kit.getEasypostShipmentStatus(), foundAtPT);
             }
         }
     }
