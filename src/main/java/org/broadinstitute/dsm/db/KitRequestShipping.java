@@ -4,6 +4,8 @@ import com.easypost.exception.EasyPostException;
 import com.easypost.model.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -30,10 +32,12 @@ import org.broadinstitute.dsm.util.DBUtil;
 import org.broadinstitute.dsm.util.EasyPostUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.KitUtil;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 import org.eclipse.jetty.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.*;
 import java.time.Instant;
 import java.util.*;
@@ -189,7 +193,15 @@ public class KitRequestShipping extends KitRequest {
     private String kitLabel;
 
     @ColumnName (DBConstants.KIT_TEST_RESULT)
-    private String result;
+    private String testResult;
+
+    public List<Map<String, Object>> getTestResult() {
+        try {
+            return ObjectMapperSingleton.instance().readValue(testResult, new TypeReference<List<Map<String, Object>>>() {});
+        } catch (IOException | NullPointerException e) {
+            return Collections.emptyList();
+        }
+    }
 
     @ColumnName (DBConstants.DSM_SCAN_DATE)
     @DbDateConversion(SqlDateConverter.EPOCH)
@@ -247,12 +259,12 @@ public class KitRequestShipping extends KitRequest {
     public KitRequestShipping() {}
 
     public KitRequestShipping(String collaboratorParticipantId, String kitTypeName, Long dsmKitRequestId, Long scanDate, Boolean error,
-                              Long receiveDate, Long deactivatedDate, String result,
+                              Long receiveDate, Long deactivatedDate, String testResult,
                               String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus, String externalOrderNumber, Long externalOrderDate, Boolean careEvolve, String uploadReason) {
         this(null, collaboratorParticipantId, null, null, null, kitTypeName, dsmKitRequestId, null, null, null,
                 null, null, null, null, scanDate, error, null, receiveDate,
                 null, deactivatedDate, null, null, null, null, null, null, externalOrderNumber, null, externalOrderStatus, null,
-                result,
+                testResult,
                 upsTrackingStatus, upsReturnStatus, externalOrderDate, careEvolve, uploadReason, null, null, null);
     }
 
@@ -280,7 +292,7 @@ public class KitRequestShipping extends KitRequest {
                               String easypostTrackingToUrl, String trackingUrlReturn, Long scanDate, Boolean error, String message,
                               Long receiveDate, String easypostAddressId, Long deactivatedDate, String deactivationReason,
                               String kitLabel, Boolean express, String easypostToId, Long labelDate, String easypostShipmentStatus,
-                              String externalOrderNumber, Boolean noReturn, String externalOrderStatus, String createdBy, String result,
+                              String externalOrderNumber, Boolean noReturn, String externalOrderStatus, String createdBy, String testResult,
                               String upsTrackingStatus, String upsReturnStatus, Long externalOrderDate, Boolean careEvolve, String uploadReason,
                               String receiveDateString, String hruid, String gender) {
         super(dsmKitRequestId, participantId, null, shippingId, externalOrderNumber, null, externalOrderStatus, null, externalOrderDate);
@@ -309,7 +321,7 @@ public class KitRequestShipping extends KitRequest {
         this.easypostShipmentStatus = easypostShipmentStatus;
         this.noReturn = noReturn;
         this.createdBy = createdBy;
-        this.result = result;
+        this.testResult = testResult;
         this.upsTrackingStatus = upsTrackingStatus;
         this.upsReturnStatus = upsReturnStatus;
         this.careEvolve = careEvolve;

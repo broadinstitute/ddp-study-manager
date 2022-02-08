@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.Util;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 
@@ -33,7 +34,7 @@ public class SourceMapDeserializer implements Deserializer {
         for (Map.Entry<String, Object> entry : dsmLevel.entrySet()) {
             outerProperty = entry.getKey();
             Object outerPropertyValue = entry.getValue();
-            if (!hasDynamicFields(outerProperty)) continue;
+            if (!hasSpecialCases(outerProperty)) continue;
             if (outerPropertyValue instanceof List) {
                 List<Map<String, Object>> outerPropertyValues = (List<Map<String, Object>>) outerPropertyValue;
                 List<Map<String, Object>> updatedOuterPropertyValues = handleSpecialCases(outerPropertyValues);;
@@ -101,12 +102,12 @@ public class SourceMapDeserializer implements Deserializer {
         return dynamicFields;
     }
 
-    private boolean hasDynamicFields(String outerProperty) {
+    private boolean hasSpecialCases(String outerProperty) {
         try {
             Field property = ESDsm.class.getDeclaredField(outerProperty);
             Class<?> propertyType = Util.getParameterizedType(property.getGenericType());
             Field[] declaredFields = propertyType.getDeclaredFields();
-            return Arrays.stream(declaredFields).anyMatch(this::isDynamicField);
+            return Arrays.stream(declaredFields).anyMatch(field -> isDynamicField(field) || isTestResult(field));
         } catch (NoSuchFieldException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -117,4 +118,10 @@ public class SourceMapDeserializer implements Deserializer {
         if (Objects.isNull(jsonProperty)) return false;
         else return jsonProperty.value().equals(ESObjectConstants.DYNAMIC_FIELDS);
     }
+
+    private boolean isTestResult(Field field) {
+        String fieldName = field.getName();
+        return fieldName.equals(DBConstants.KIT_TEST_RESULT);
+    }
+
 }

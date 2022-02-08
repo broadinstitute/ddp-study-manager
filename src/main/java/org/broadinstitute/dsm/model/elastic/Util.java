@@ -135,6 +135,10 @@ public class Util {
             case "follow_ups":
                 finalResult = new HashMap<>(Map.of(underscoresToCamelCase(fieldName), new Gson().toJson(fieldValue)));
                 break;
+            case "test_result":
+                List<Map<String, Object>> testResult = ObjectMapperSingleton.readValue(String.valueOf(fieldValue), new TypeReference<List<Map<String, Object>>>() {});
+                finalResult = !testResult.isEmpty() ? Map.of(underscoresToCamelCase(fieldName), testResult.get(0)) : Map.of();
+                break;
             case "additional_tissue_value_json":
             case "additional_values_json":
             case "data":
