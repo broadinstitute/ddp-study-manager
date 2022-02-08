@@ -62,6 +62,9 @@ public class SourceMapDeserializer implements Deserializer {
             if (object.containsKey(ESObjectConstants.FOLLOW_UPS)) {
                 clonedMap.put(ESObjectConstants.FOLLOW_UPS, convertFollowUpsJsonToList(clonedMap));
             }
+            if (object.containsKey(ESObjectConstants.KIT_TEST_RESULT)) {
+                clonedMap.put(ESObjectConstants.KIT_TEST_RESULT, convertTestResultValueAsJson(clonedMap));
+            }
             updatedOuterPropertyValues.add(clonedMap);
         }
         return updatedOuterPropertyValues;
@@ -69,14 +72,7 @@ public class SourceMapDeserializer implements Deserializer {
 
     private List<Map<String, Object>> convertFollowUpsJsonToList(Map<String, Object> clonedMap) {
         String followUps = (String) clonedMap.get(ESObjectConstants.FOLLOW_UPS);
-        try {
-            return Objects.isNull(followUps)
-                    ? Collections.emptyList()
-                    : ObjectMapperSingleton.instance().readValue(followUps, new TypeReference<List<Map<String, Object>>>() {
-            });
-        } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-        }
+        return ObjectMapperSingleton.readValue(followUps, new TypeReference<List<Map<String, Object>>>() {});
     }
 
     String getDynamicFieldsValueAsJson(Map<String, Object> clonedMap) {
@@ -84,13 +80,12 @@ public class SourceMapDeserializer implements Deserializer {
         if (ESObjectConstants.PARTICIPANT_DATA.equals(outerProperty)) {
             dynamicFields = convertDynamicFieldsFromCamelCaseToPascalCase(dynamicFields);
         }
-        try {
-            return dynamicFields.isEmpty()
-                    ? StringUtils.EMPTY
-                    : ObjectMapperSingleton.instance().writeValueAsString(dynamicFields);
-        } catch (JsonProcessingException jpe) {
-            throw new RuntimeException(jpe);
-        }
+        return ObjectMapperSingleton.writeValueAsString(dynamicFields);
+    }
+
+    private String convertTestResultValueAsJson(Map<String, Object> clonedMap) {
+        Map<String, Object> testResult = (Map<String, Object>) clonedMap.get(ESObjectConstants.KIT_TEST_RESULT);
+        return ObjectMapperSingleton.writeValueAsString(List.of(testResult));
     }
 
     protected Map<String, Object> convertDynamicFieldsFromCamelCaseToPascalCase(Map<String, Object> dynamicFields) {
@@ -121,7 +116,7 @@ public class SourceMapDeserializer implements Deserializer {
 
     private boolean isTestResult(Field field) {
         String fieldName = field.getName();
-        return fieldName.equals(DBConstants.KIT_TEST_RESULT);
+        return ESObjectConstants.KIT_TEST_RESULT.equals(fieldName);
     }
 
 }
