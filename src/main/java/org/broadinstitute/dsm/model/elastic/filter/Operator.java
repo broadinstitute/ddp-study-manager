@@ -20,6 +20,7 @@ public enum Operator {
     DATE_GREATER_THAN_EQUALS(Filter.DATE_GREATER),
     DATE_LESS_THAN_EQUALS(Filter.DATE_LESS),
     JSON_EXTRACT(Filter.JSON_EXTRACT),
+    JSON_CONTAINS(Filter.JSON_CONTAINS),
     DATE(Filter.DATE);
 
     public static final String MULTIPLE_OPTIONS_INDICATOR = "()";
@@ -63,6 +64,8 @@ public enum Operator {
                     return Operator.DATE;
                 case "NOT <=>":
                     return Operator.DIAMOND_EQUALS;
+                case "JSON_CONTAINS":
+                    return Operator.JSON_CONTAINS;
                 case "JSON_EXTRACT =":
                 case "JSON_EXTRACT >=":
                 case "JSON_EXTRACT <=":
