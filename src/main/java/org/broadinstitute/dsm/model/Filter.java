@@ -208,15 +208,14 @@ public class Filter {
             finalQuery = buildJsonExtract(filter, dbElement);
         }
         else if (JSON_ARRAY.equals(filter.getType())) {
-            query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() ;
+            // filter.getFilter2().getName()
+            query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + DBConstants.ALIAS_DELIMITER + filter.getFilter2().getName();
             if (filter.isEmpty()) {
                 finalQuery = query + IS_NULL + " ";
             }
             else if (filter.isNotEmpty()) {
                 finalQuery = query + IS_NOT_NULL + " ";
-            }
-            else {
-
+            } else {
                 //JSON_CONTAINS ( test_result , JSON_OBJECT ( 'result' , 'INVALID' )
 //                String notNullQuery = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + IS_NOT_NULL;
                 if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue()))) {
@@ -231,7 +230,7 @@ public class Filter {
                         query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " -> '$[*]." + filter.getFilter2().getName() + "' like '%" + filter.getFilter1().getValue() + "%' ";
                     }
                 }
-                finalQuery =  query;
+                finalQuery = query;
             }
         }
         else if (CHECKBOX.equals(filter.getType())) { //1/0
