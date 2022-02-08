@@ -215,7 +215,7 @@ public class Filter {
             else if (filter.isNotEmpty()) {
                 finalQuery = query + IS_NOT_NULL + " ";
             }
-            if (StringUtils.isNotBlank(filter.getFilter1().getValue()+"")) {
+            else {
 
                 //JSON_CONTAINS ( test_result , JSON_OBJECT ( 'result' , 'INVALID' )
 //                String notNullQuery = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + IS_NOT_NULL;
