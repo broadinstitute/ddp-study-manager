@@ -15,7 +15,7 @@ public class CollectionQueryBuilderTest {
 
     @Before
     public void setUp() {
-        dsmAbstractQueryBuilder = DsmAbstractQueryBuilder.of("m");
+        dsmAbstractQueryBuilder = new DsmAbstractQueryBuilder();
         dsmAbstractQueryBuilder.setParser(new FilterParser());
     }
 

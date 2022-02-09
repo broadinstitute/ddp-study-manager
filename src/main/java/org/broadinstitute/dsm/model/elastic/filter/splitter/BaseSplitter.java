@@ -37,7 +37,7 @@ public abstract class BaseSplitter {
         return Util.underscoresToCamelCase(getFieldWithAlias()[1]);
     }
 
-    public String getField() {
+    public String getFieldName() {
         return Util.underscoresToCamelCase(getFieldWithAlias()[1]);
     }
 

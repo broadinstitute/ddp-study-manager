@@ -105,9 +105,10 @@ public class UtilTest {
 
         Map<String, Object> result = Util.convertToMap("test_result", json, StringUtils.EMPTY);
 
-        assertTrue((boolean) ((Map) result.get("testResult")).get("isCorrected"));
-        assertEquals("Negative", ((Map) result.get("testResult")).get("result"));
-        assertEquals("2020-09-03T12:08:21.657Z", ((Map) result.get("testResult")).get("timeCompleted"));
+        Map<String, Object> testResult = (Map) ((List) result.get("testResult")).get(0);
+        assertTrue((boolean) testResult.get("isCorrected"));
+        assertEquals("Negative", testResult.get("result"));
+        assertEquals("2020-09-03T12:08:21.657Z", testResult.get("timeCompleted"));
     }
 
     @Test

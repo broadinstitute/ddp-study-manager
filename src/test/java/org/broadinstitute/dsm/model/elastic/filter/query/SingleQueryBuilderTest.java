@@ -14,7 +14,7 @@ public class SingleQueryBuilderTest {
 
     @Before
     public void setUp() {
-        dsmAbstractQueryBuilder = DsmAbstractQueryBuilder.of("p");
+        dsmAbstractQueryBuilder = new DsmAbstractQueryBuilder();
         dsmAbstractQueryBuilder.setParser(new FilterParser());
     }
 
