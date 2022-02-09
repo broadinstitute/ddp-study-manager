@@ -19,4 +19,8 @@ public class QueryPayload {
     public String getFieldName() {
         return path + DBConstants.ALIAS_DELIMITER + property;
     }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
 }

@@ -1,7 +1,8 @@
 package org.broadinstitute.dsm.model.elastic.filter.splitter;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertEquals;
 
 public class JsonContainsSplitterTest {
 
@@ -33,6 +34,16 @@ public class JsonContainsSplitterTest {
         assertEquals("k", splitter.getFieldWithAlias()[0]);
         assertEquals("test_result", splitter.getFieldWithAlias()[1]);
     }
+
+    @Test
+    public void getField() {
+        BaseSplitter splitter = new JsonContainsSplitter();
+        String filter = "JSON_CONTAINS(k.test_result, JSON_OBJECT('isCorrected', 'true'))";
+        splitter.setFilter(filter);
+        assertEquals("testResult", splitter.getField());
+    }
+
+
 
 
 

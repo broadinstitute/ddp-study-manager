@@ -25,10 +25,9 @@ public class JsonContainsSplitter extends BaseSplitter {
 
     @Override
     public String getInnerProperty() {
-        String nestedProperty = splittedFilter[1]
+        return splittedFilter[1]
                 .split(Util.COMMA_SEPARATOR)[0]
                 .replaceAll(Filter.SINGLE_QUOTE, StringUtils.EMPTY);
-        return String.join(DBConstants.ALIAS_DELIMITER, Util.underscoresToCamelCase(getFieldWithAlias()[1]), nestedProperty);
     }
 
     @Override

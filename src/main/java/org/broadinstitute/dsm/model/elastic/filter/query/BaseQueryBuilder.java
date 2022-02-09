@@ -18,6 +18,7 @@ public abstract class BaseQueryBuilder {
             case EQUALS:
             case DATE:
             case DIAMOND_EQUALS:
+            case JSON_CONTAINS:
             case STR_DATE:
                 qb = build(new MatchQueryBuilder(payload.getFieldName(), payload.getValues()[0]));
                 break;

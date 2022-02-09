@@ -37,6 +37,10 @@ public abstract class BaseSplitter {
         return Util.underscoresToCamelCase(getFieldWithAlias()[1]);
     }
 
+    public String getField() {
+        return Util.underscoresToCamelCase(getFieldWithAlias()[1]);
+    }
+
     protected String[] getFieldWithAlias() {
         return splittedFilter[0].trim().split(ElasticSearchUtil.ESCAPE_CHARACTER_DOT_SEPARATOR);
     }
