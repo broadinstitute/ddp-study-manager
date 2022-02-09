@@ -243,7 +243,8 @@ public class GBFRequestUtil implements ExternalShipper {
                         List<String> dsmKitRequestIds = getDSMKitRequestIds(status.getOrderNumber());
                         if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
                             for (String dsmKitRequestId : dsmKitRequestIds) {
-                                KitRequestExternal.updateKitRequest(conn, status.getOrderStatus(), System.currentTimeMillis(), dsmKitRequestId);// in order to update time for the  next 24 hour check we need this
+                                KitRequestExternal.updateKitRequest(conn, status.getOrderStatus(), System.currentTimeMillis(),
+                                        dsmKitRequestId, instanceId);// in order to update time for the  next 24 hour check we need this
                             }
                         }
                         logger.warn("Kit Request with external order number " + kit.getExternalOrderNumber() + "has not been shipped in the last 24 hours! ");//todo pegah uncomment for production
@@ -280,7 +281,8 @@ public class GBFRequestUtil implements ExternalShipper {
                         List<String> dsmKitRequestIds = getDSMKitRequestIds(status.getOrderNumber());
                         if (dsmKitRequestIds != null && !dsmKitRequestIds.isEmpty()) {
                             for (String dsmKitRequestId : dsmKitRequestIds) {
-                                KitRequestExternal.updateKitRequest(conn, status.getOrderStatus(), System.currentTimeMillis(), dsmKitRequestId);
+                                KitRequestExternal.updateKitRequest(conn, status.getOrderStatus(), System.currentTimeMillis(),
+                                        dsmKitRequestId, instanceId);
                             }
                         }
                     }

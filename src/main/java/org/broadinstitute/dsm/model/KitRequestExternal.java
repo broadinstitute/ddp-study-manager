@@ -1,8 +1,13 @@
 package org.broadinstitute.dsm.model;
 
 import lombok.NonNull;
-import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
+import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainlessFacade;
+import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +35,8 @@ public class KitRequestExternal extends KitRequest {
     }
 
     // update kit request with status and date of external shipper
-    public static void updateKitRequest(Connection conn, String externalOrderStatus, long externalOrderDate, String dsmKitRequestId) {
+    public static void updateKitRequest(Connection conn, String externalOrderStatus, long externalOrderDate, String dsmKitRequestId,
+                                        int instanceId) {
         try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT_REQUEST_EXTERNAL_SHIPPER_STATUS)) {
             stmt.setString(1, externalOrderStatus);
             stmt.setLong(2, externalOrderDate);
@@ -45,6 +51,13 @@ public class KitRequestExternal extends KitRequest {
         catch (Exception e) {
            throw new RuntimeException("Error updating kit request w/ dsm_kit_request_id " + dsmKitRequestId, e);
         }
+        KitRequestShipping kitRequestShipping = new KitRequestShipping();
+        kitRequestShipping.setDsmKitRequestId(Long.valueOf(dsmKitRequestId));
+        kitRequestShipping.setExternalOrderStatus(externalOrderStatus);
+        kitRequestShipping.setExternalOrderDate(externalOrderDate);
+        DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceId(instanceId).orElseThrow();
+        UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, ESObjectConstants.DSM_KIT_REQUEST_ID,
+                ESObjectConstants.DSM_KIT_REQUEST_ID, dsmKitRequestId);
     }
 
     // update kit request with response of external shipper
@@ -82,5 +95,11 @@ public class KitRequestExternal extends KitRequest {
         catch (Exception e) {
             logger.error("Error updating kit w/ dsm_kit_request_id " + dsmKitRequestId, e);
         }
+        KitRequestShipping kitRequestShipping = new KitRequestShipping();
+        kitRequestShipping.setDsmKitRequestId(Long.valueOf(dsmKitRequestId));
+        kitRequestShipping.setTrac(Long.valueOf(dsmKitRequestId));
+        kitRequestShipping.setDsmKitRequestId(Long.valueOf(dsmKitRequestId));
+        kitRequestShipping.setDsmKitRequestId(Long.valueOf(dsmKitRequestId));
+
     }
 }
