@@ -46,8 +46,7 @@ public class SplitterFactory {
                 splitter = new IsNullSplitter();
                 break;
             case JSON_CONTAINS:
-//                splitter = new Json();
-                splitter = null;
+                splitter = new JsonContainsSplitter();
                 break;
             case JSON_EXTRACT:
                 Operator decoratedOperator = Operator.extract(filterValue.replace(Filter.JSON_EXTRACT, StringUtils.EMPTY));

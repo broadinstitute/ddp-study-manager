@@ -11,9 +11,6 @@ public class JsonContainsSplitter extends BaseSplitter {
 
     @Override
     public String[] split() {
-        // k.test_result, JSON_OBJECT'isCorrected', 'true'
-        // ["k.test_result," "'isCorrected', 'true'"]
-        //
         return filter.split(Filter.JSON_CONTAINS)[1]
                 .replace(Filter.OPEN_PARENTHESIS, StringUtils.EMPTY)
                 .replace(Filter.CLOSE_PARENTHESIS,StringUtils.EMPTY)
@@ -28,12 +25,17 @@ public class JsonContainsSplitter extends BaseSplitter {
 
     @Override
     public String getInnerProperty() {
-
-        return super.getInnerProperty();
+        String nestedProperty = splittedFilter[1]
+                .split(Util.COMMA_SEPARATOR)[0]
+                .replaceAll(Filter.SINGLE_QUOTE, StringUtils.EMPTY);
+        return String.join(DBConstants.ALIAS_DELIMITER, Util.underscoresToCamelCase(getFieldWithAlias()[1]), nestedProperty);
     }
 
     @Override
     protected String[] getFieldWithAlias() {
-        return splittedFilter[0].split(ElasticSearchUtil.ESCAPE_CHARACTER_DOT_SEPARATOR);
+        return splittedFilter[0]
+                .replace(Util.COMMA_SEPARATOR, StringUtils.EMPTY)
+                .trim()
+                .split(ElasticSearchUtil.ESCAPE_CHARACTER_DOT_SEPARATOR);
     }
 }

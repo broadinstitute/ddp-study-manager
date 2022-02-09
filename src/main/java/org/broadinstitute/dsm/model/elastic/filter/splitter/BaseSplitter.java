@@ -28,7 +28,6 @@ public abstract class BaseSplitter {
     }
 
     public String getInnerProperty() {
-        //k.test_result.isCompleted
         if (getFieldWithAlias().length > NESTED_FIELD_LEVEL) {
             return Arrays.stream(getFieldWithAlias())
                     .skip(1)
