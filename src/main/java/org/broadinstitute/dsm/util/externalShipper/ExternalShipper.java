@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.util.externalShipper;
 
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.model.KitRequest;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.util.EasyPostUtil;
@@ -18,7 +19,7 @@ public interface ExternalShipper {
      */
     void updateOrderStatusForPendingKitRequests(int instanceId);
 
-    public void orderConfirmation(long startDate, long endDate) throws Exception;
+    void orderConfirmation(long startDate, long endDate, int ddpInstanceId) throws Exception;
 
     public void orderCancellation(ArrayList<KitRequest> kitRequests) throws Exception;
 

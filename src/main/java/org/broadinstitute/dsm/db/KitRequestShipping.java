@@ -4,7 +4,6 @@ import com.easypost.exception.EasyPostException;
 import com.easypost.model.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Data;
 import lombok.NonNull;
@@ -162,7 +161,7 @@ public class KitRequestShipping extends KitRequest {
     private String labelUrlReturn;
 
     @ColumnName (DBConstants.DSM_TRACKING_TO)
-    private String trackingNumberTo;
+    private String trackingToId;
 
     @ColumnName (DBConstants.DSM_TRACKING_RETURN)
     private String trackingReturnId;
@@ -268,9 +267,9 @@ public class KitRequestShipping extends KitRequest {
                 upsTrackingStatus, upsReturnStatus, externalOrderDate, careEvolve, uploadReason, null, null, null);
     }
 
-    public KitRequestShipping(String participantId, String collaboratorParticipantId, String dsmKitId, String realm, String trackingNumberTo, String receiveDateString, String hruid, String gender) {
+    public KitRequestShipping(String participantId, String collaboratorParticipantId, String dsmKitId, String realm, String trackingToId, String receiveDateString, String hruid, String gender) {
         this(participantId, collaboratorParticipantId, null, null, realm, null, null, null, null, null,
-                trackingNumberTo, null, null, null, null, null, null, null,
+                trackingToId, null, null, null, null, null, null, null,
                 null, null, null, dsmKitId, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                 receiveDateString, hruid, gender);
     }
@@ -288,7 +287,7 @@ public class KitRequestShipping extends KitRequest {
     // shippingId = ddp_label !!!
     public KitRequestShipping(String participantId, String collaboratorParticipantId, String bspCollaboratorSampleId, String shippingId, String realm,
                               String kitTypeName, Long dsmKitRequestId, Long dsmKitId, String labelUrlTo, String labelUrlReturn,
-                              String trackingNumberTo, String trackingReturnId,
+                              String trackingToId, String trackingReturnId,
                               String easypostTrackingToUrl, String trackingUrlReturn, Long scanDate, Boolean error, String message,
                               Long receiveDate, String easypostAddressId, Long deactivatedDate, String deactivationReason,
                               String kitLabel, Boolean express, String easypostToId, Long labelDate, String easypostShipmentStatus,
@@ -303,7 +302,7 @@ public class KitRequestShipping extends KitRequest {
         this.dsmKitId = dsmKitId;
         this.labelUrlTo = labelUrlTo;
         this.labelUrlReturn = labelUrlReturn;
-        this.trackingNumberTo = trackingNumberTo;
+        this.trackingToId = trackingToId;
         this.trackingReturnId = trackingReturnId;
         this.easypostTrackingToUrl = easypostTrackingToUrl;
         this.easypostTrackingReturnUrl = trackingUrlReturn;
@@ -377,7 +376,7 @@ public class KitRequestShipping extends KitRequest {
         );
         if (DBUtil.columnExists(rs, DBConstants.UPS_STATUS_DESCRIPTION) && StringUtils.isNotBlank(rs.getString(DBConstants.UPS_STATUS_DESCRIPTION))) {
             String upsPackageTrackingNumber = rs.getString(DBConstants.UPS_PACKAGE_TABLE_ABBR + DBConstants.UPS_TRACKING_NUMBER);
-            if (StringUtils.isNotBlank(upsPackageTrackingNumber) && upsPackageTrackingNumber.equals(kitRequestShipping.getTrackingNumberTo())) {
+            if (StringUtils.isNotBlank(upsPackageTrackingNumber) && upsPackageTrackingNumber.equals(kitRequestShipping.getTrackingToId())) {
                 kitRequestShipping.setUpsTrackingStatus(rs.getString(DBConstants.UPS_STATUS_DESCRIPTION));
 
             }
@@ -1031,7 +1030,7 @@ public class KitRequestShipping extends KitRequest {
                     stmt.setString(7, participantTracker.getPublicUrl());
                     kitRequestShipping.setLabelUrlTo(participantLabel.getLabelUrl());
                     kitRequestShipping.setEasypostToId(participantShipment.getId());
-                    kitRequestShipping.setTrackingNumberTo(participantShipment.getTrackingCode());
+                    kitRequestShipping.setTrackingToId(participantShipment.getTrackingCode());
                     kitRequestShipping.setEasypostTrackingToUrl(participantTracker.getPublicUrl()); //TODO
                 }
                 else {

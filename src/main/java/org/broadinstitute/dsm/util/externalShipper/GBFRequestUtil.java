@@ -297,7 +297,7 @@ public class GBFRequestUtil implements ExternalShipper {
         }
     }
 
-    public static void processingSingleConfirmation(Response gbfResponse, ShippingConfirmation confirmation) throws Exception {
+    public static void processingSingleConfirmation(Response gbfResponse, ShippingConfirmation confirmation, int ddpInstanceId) throws Exception {
         logger.info("Got confirmation for " + confirmation.getOrderNumber());
         Node node = GBFRequestUtil.getXMLNode(gbfResponse.getXML(), XML_NODE_EXPRESSION.replace("%1", confirmation.getOrderNumber()));
         String externalResponse = getStringFromNode(node);
@@ -318,7 +318,7 @@ public class GBFRequestUtil implements ExternalShipper {
                         }
                         KitRequestExternal.updateKitRequestResponse(conn, confirmation.getTracking(), item.getReturnTracking(),
                                 kitLabel, SystemUtil.getLongFromDateString(confirmation.getShipDate()), EXTERNAL_SHIPPER_NAME,
-                                dsmKitRequestId);
+                                dsmKitRequestId, ddpInstanceId);
                         counter++;
                         logger.info("Updated confirmation information for : " + dsmKitRequestId + " " + kitLabel);
                     }
@@ -334,7 +334,7 @@ public class GBFRequestUtil implements ExternalShipper {
 
     // The confirmation, dependent upon level of detail required, is a shipping receipt to prove completion.
     // Confirmation may include order number, client(participant) ID, outbound tracking number, return tracking number(s), line item(s), kit serial number(s), etc.
-    public void orderConfirmation(long startDate, long endDate) throws Exception {
+    public void orderConfirmation(long startDate, long endDate, int ddpInstanceId) throws Exception {
         JSONObject payload = new JSONObject().put("startDate", SystemUtil.getDateFormatted(startDate)).put("endDate", SystemUtil.getDateFormatted(endDate));
         String sendRequest = DSMServer.getBaseUrl(getExternalShipperName()) + CONFIRM_ENDPOINT;
         logger.info("payload: " + payload.toString());
@@ -350,7 +350,7 @@ public class GBFRequestUtil implements ExternalShipper {
                     logger.info("Number of confirmations received: " + confirmationList.size());
                     for (ShippingConfirmation confirmation : confirmationList) {
                         try {
-                            processingSingleConfirmation(gbfResponse, confirmation);
+                            processingSingleConfirmation(gbfResponse, confirmation, ddpInstanceId);
                         }
                         catch (Exception e) {
                             logger.error("Could not process confirmation for " + confirmation.getOrderNumber(), e);

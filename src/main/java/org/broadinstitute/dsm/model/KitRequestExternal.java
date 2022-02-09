@@ -78,7 +78,7 @@ public class KitRequestExternal extends KitRequest {
 
     // update kit request with response of external shipper
     public static void updateKitRequestResponse(@NonNull Connection conn, String trackingIdTo, String trackingIdReturn, String kitLabel, long sentDate,
-                                                String sentBy, String dsmKitRequestId) {
+                                                String sentBy, String dsmKitRequestId, int ddpInstanceId) {
         try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT_EXTERNAL_SHIPPER)) {
             stmt.setString(1, trackingIdTo);
             stmt.setString(2, trackingIdReturn);
@@ -97,9 +97,15 @@ public class KitRequestExternal extends KitRequest {
         }
         KitRequestShipping kitRequestShipping = new KitRequestShipping();
         kitRequestShipping.setDsmKitRequestId(Long.valueOf(dsmKitRequestId));
-        kitRequestShipping.setTrac(Long.valueOf(dsmKitRequestId));
-        kitRequestShipping.setDsmKitRequestId(Long.valueOf(dsmKitRequestId));
-        kitRequestShipping.setDsmKitRequestId(Long.valueOf(dsmKitRequestId));
+        kitRequestShipping.setTrackingToId(trackingIdTo);
+        kitRequestShipping.setTrackingReturnId(trackingIdReturn);
+        kitRequestShipping.setKitLabel(kitLabel);
+        kitRequestShipping.setScanDate(sentDate);
+
+        DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceId(ddpInstanceId).orElseThrow();
+
+        UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, ESObjectConstants.DSM_KIT_REQUEST_ID, ESObjectConstants.DSM_KIT_REQUEST_ID, dsmKitRequestId)
+                .export();
 
     }
 }
