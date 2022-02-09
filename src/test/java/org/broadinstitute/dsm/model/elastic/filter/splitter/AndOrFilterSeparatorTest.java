@@ -21,7 +21,7 @@ public class AndOrFilterSeparatorTest {
                 "AND ( t.tissue = 'review' OR t.tissue = 'no' OR t.tissue = 'bla' ) " +
                 "OR m.medicalRecordName = '213' " +
                 "AND STR_TO_DATE(m.fax_sent,'%Y-%m-%d') = STR_TO_DATE('2021-12-17','%Y-%m-%d') " +
-                "AND  JSON_CONTAINS ( k.test_result , JSON_OBJECT ( 'result' , 'result' ) ) " +
+                "AND JSON_CONTAINS ( k.test_result , JSON_OBJECT ( 'result' , 'result' ) ) " +
                 "OR m.mrNotes = 'MEDICAL_RECORD_NOTESS' " +
                 "AND m.medicalMedical = 'something AND something' " +
                 "AND ( oD.request = 'review' OR oD.request = 'no' OR oD.request = 'bla' ) " +

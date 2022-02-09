@@ -21,7 +21,7 @@ public class JsonContainsSplitterTest {
         BaseSplitter splitter = new JsonContainsSplitter();
         String filter = "JSON_CONTAINS(k.test_result, JSON_OBJECT('isCorrected', 'true'))";
         splitter.setFilter(filter);
-        assertEquals("testResult.isCorrected", splitter.getInnerProperty());
+        assertEquals("isCorrected", splitter.getInnerProperty());
     }
 
     @Test
