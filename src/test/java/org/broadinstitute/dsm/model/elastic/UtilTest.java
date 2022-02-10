@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.lang.reflect.Field;
 import java.util.*;
 
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.Participant;
 import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
@@ -93,6 +94,21 @@ public class UtilTest {
         assertEquals("VALUE", ((Map) result.get("dynamicFields")).get("ddpValue"));
         assertEquals(true, ((Map) result.get("dynamicFields")).get("booleanVal"));
         assertEquals(5L, ((Map) result.get("dynamicFields")).get("longVal"));
+    }
+
+    @Test
+    public void transformArrayJsonToMap() {
+
+        setUp();
+
+        String json = "[{\"isCorrected\": true, \"result\": \"Negative\", \"timeCompleted\": \"2020-09-03T12:08:21.657Z\"}]";
+
+        Map<String, Object> result = Util.convertToMap("test_result", json, StringUtils.EMPTY);
+
+        Map<String, Object> testResult = (Map) ((List) result.get("testResult")).get(0);
+        assertTrue((boolean) testResult.get("isCorrected"));
+        assertEquals("Negative", testResult.get("result"));
+        assertEquals("2020-09-03T12:08:21.657Z", testResult.get("timeCompleted"));
     }
 
     @Test

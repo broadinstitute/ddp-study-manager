@@ -4,6 +4,7 @@ import com.easypost.exception.EasyPostException;
 import com.easypost.model.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -30,10 +31,12 @@ import org.broadinstitute.dsm.util.DBUtil;
 import org.broadinstitute.dsm.util.EasyPostUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.KitUtil;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 import org.eclipse.jetty.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.*;
 import java.time.Instant;
 import java.util.*;
@@ -158,7 +161,7 @@ public class KitRequestShipping extends KitRequest {
     private String labelUrlReturn;
 
     @ColumnName (DBConstants.DSM_TRACKING_TO)
-    private String trackingNumberTo;
+    private String trackingToId;
 
     @ColumnName (DBConstants.DSM_TRACKING_RETURN)
     private String trackingReturnId;
@@ -189,7 +192,15 @@ public class KitRequestShipping extends KitRequest {
     private String kitLabel;
 
     @ColumnName (DBConstants.KIT_TEST_RESULT)
-    private String result;
+    private String testResult;
+
+    public List<Map<String, Object>> getTestResult() {
+        try {
+            return ObjectMapperSingleton.instance().readValue(testResult, new TypeReference<List<Map<String, Object>>>() {});
+        } catch (IOException | NullPointerException e) {
+            return Collections.emptyList();
+        }
+    }
 
     @ColumnName (DBConstants.DSM_SCAN_DATE)
     @DbDateConversion(SqlDateConverter.EPOCH)
@@ -247,18 +258,18 @@ public class KitRequestShipping extends KitRequest {
     public KitRequestShipping() {}
 
     public KitRequestShipping(String collaboratorParticipantId, String kitTypeName, Long dsmKitRequestId, Long scanDate, Boolean error,
-                              Long receiveDate, Long deactivatedDate, String result,
+                              Long receiveDate, Long deactivatedDate, String testResult,
                               String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus, String externalOrderNumber, Long externalOrderDate, Boolean careEvolve, String uploadReason) {
         this(null, collaboratorParticipantId, null, null, null, kitTypeName, dsmKitRequestId, null, null, null,
                 null, null, null, null, scanDate, error, null, receiveDate,
                 null, deactivatedDate, null, null, null, null, null, null, externalOrderNumber, null, externalOrderStatus, null,
-                result,
+                testResult,
                 upsTrackingStatus, upsReturnStatus, externalOrderDate, careEvolve, uploadReason, null, null, null);
     }
 
-    public KitRequestShipping(String participantId, String collaboratorParticipantId, String dsmKitId, String realm, String trackingNumberTo, String receiveDateString, String hruid, String gender) {
+    public KitRequestShipping(String participantId, String collaboratorParticipantId, String dsmKitId, String realm, String trackingToId, String receiveDateString, String hruid, String gender) {
         this(participantId, collaboratorParticipantId, null, null, realm, null, null, null, null, null,
-                trackingNumberTo, null, null, null, null, null, null, null,
+                trackingToId, null, null, null, null, null, null, null,
                 null, null, null, dsmKitId, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                 receiveDateString, hruid, gender);
     }
@@ -276,11 +287,11 @@ public class KitRequestShipping extends KitRequest {
     // shippingId = ddp_label !!!
     public KitRequestShipping(String participantId, String collaboratorParticipantId, String bspCollaboratorSampleId, String shippingId, String realm,
                               String kitTypeName, Long dsmKitRequestId, Long dsmKitId, String labelUrlTo, String labelUrlReturn,
-                              String trackingNumberTo, String trackingReturnId,
+                              String trackingToId, String trackingReturnId,
                               String easypostTrackingToUrl, String trackingUrlReturn, Long scanDate, Boolean error, String message,
                               Long receiveDate, String easypostAddressId, Long deactivatedDate, String deactivationReason,
                               String kitLabel, Boolean express, String easypostToId, Long labelDate, String easypostShipmentStatus,
-                              String externalOrderNumber, Boolean noReturn, String externalOrderStatus, String createdBy, String result,
+                              String externalOrderNumber, Boolean noReturn, String externalOrderStatus, String createdBy, String testResult,
                               String upsTrackingStatus, String upsReturnStatus, Long externalOrderDate, Boolean careEvolve, String uploadReason,
                               String receiveDateString, String hruid, String gender) {
         super(dsmKitRequestId, participantId, null, shippingId, externalOrderNumber, null, externalOrderStatus, null, externalOrderDate);
@@ -291,7 +302,7 @@ public class KitRequestShipping extends KitRequest {
         this.dsmKitId = dsmKitId;
         this.labelUrlTo = labelUrlTo;
         this.labelUrlReturn = labelUrlReturn;
-        this.trackingNumberTo = trackingNumberTo;
+        this.trackingToId = trackingToId;
         this.trackingReturnId = trackingReturnId;
         this.easypostTrackingToUrl = easypostTrackingToUrl;
         this.easypostTrackingReturnUrl = trackingUrlReturn;
@@ -309,7 +320,7 @@ public class KitRequestShipping extends KitRequest {
         this.easypostShipmentStatus = easypostShipmentStatus;
         this.noReturn = noReturn;
         this.createdBy = createdBy;
-        this.result = result;
+        this.testResult = testResult;
         this.upsTrackingStatus = upsTrackingStatus;
         this.upsReturnStatus = upsReturnStatus;
         this.careEvolve = careEvolve;
@@ -365,7 +376,7 @@ public class KitRequestShipping extends KitRequest {
         );
         if (DBUtil.columnExists(rs, DBConstants.UPS_STATUS_DESCRIPTION) && StringUtils.isNotBlank(rs.getString(DBConstants.UPS_STATUS_DESCRIPTION))) {
             String upsPackageTrackingNumber = rs.getString(DBConstants.UPS_PACKAGE_TABLE_ABBR + DBConstants.UPS_TRACKING_NUMBER);
-            if (StringUtils.isNotBlank(upsPackageTrackingNumber) && upsPackageTrackingNumber.equals(kitRequestShipping.getTrackingNumberTo())) {
+            if (StringUtils.isNotBlank(upsPackageTrackingNumber) && upsPackageTrackingNumber.equals(kitRequestShipping.getTrackingToId())) {
                 kitRequestShipping.setUpsTrackingStatus(rs.getString(DBConstants.UPS_STATUS_DESCRIPTION));
 
             }
@@ -1019,7 +1030,7 @@ public class KitRequestShipping extends KitRequest {
                     stmt.setString(7, participantTracker.getPublicUrl());
                     kitRequestShipping.setLabelUrlTo(participantLabel.getLabelUrl());
                     kitRequestShipping.setEasypostToId(participantShipment.getId());
-                    kitRequestShipping.setTrackingNumberTo(participantShipment.getTrackingCode());
+                    kitRequestShipping.setTrackingToId(participantShipment.getTrackingCode());
                     kitRequestShipping.setEasypostTrackingToUrl(participantTracker.getPublicUrl()); //TODO
                 }
                 else {

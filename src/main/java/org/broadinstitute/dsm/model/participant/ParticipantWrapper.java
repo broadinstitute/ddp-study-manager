@@ -94,7 +94,7 @@ public class ParticipantWrapper {
         for (String source : filters.keySet()) {
             if (StringUtils.isNotBlank(filters.get(source))) {
                 if (isUnderDsmKey(source)) {
-                    DsmAbstractQueryBuilder queryBuilder = DsmAbstractQueryBuilder.of(source);
+                    DsmAbstractQueryBuilder queryBuilder = new DsmAbstractQueryBuilder();
                     queryBuilder.setFilter(filters.get(source));
                     queryBuilder.setParser(parser);
                     boolQueryBuilder.must(queryBuilder.build());

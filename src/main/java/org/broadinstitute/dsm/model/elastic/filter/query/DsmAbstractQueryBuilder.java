@@ -28,15 +28,7 @@ public class DsmAbstractQueryBuilder {
     protected AndOrFilterSeparator filterSeparator;
     private BaseQueryBuilder baseQueryBuilder;
 
-    public static DsmAbstractQueryBuilder of(String alias) {
-        boolean isCollection = Util.TABLE_ALIAS_MAPPINGS.get(alias).isCollection();
-        return isCollection
-                ? new DsmAbstractQueryBuilder(new CollectionQueryBuilder())
-                : new DsmAbstractQueryBuilder(new SingleQueryBuilder());
-    }
-
-    private DsmAbstractQueryBuilder(BaseQueryBuilder baseQueryBuilder) {
-        this.baseQueryBuilder = baseQueryBuilder;
+    public DsmAbstractQueryBuilder() {
         boolQueryBuilder = new BoolQueryBuilder();
     }
 
@@ -67,6 +59,7 @@ public class DsmAbstractQueryBuilder {
             Operator operator = Operator.extract(filterValue);
             splitter = SplitterFactory.createSplitter(operator, filterValue);
             splitter.setFilter(filterValue);
+            baseQueryBuilder = BaseQueryBuilder.of(splitter.getAlias(), splitter.getFieldName());
             QueryPayload queryPayload = new QueryPayload(buildPath(), splitter.getInnerProperty(), parser.parse(splitter.getValue()));
             filterStrategy.build(boolQueryBuilder, baseQueryBuilder.buildEachQuery(operator, queryPayload, splitter));
         }

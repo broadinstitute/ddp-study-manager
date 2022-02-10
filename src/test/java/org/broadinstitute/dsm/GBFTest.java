@@ -232,7 +232,7 @@ GBFTest extends TestHelper {
                         for (ShippingConfirmation confirmation : confirmationList) {
                             if (kits.containsKey(confirmation.getOrderNumber())) {
                                 try {
-                                    gbf.processingSingleConfirmation(gbfResponse, confirmation);
+                                    gbf.processingSingleConfirmation(gbfResponse, confirmation, 0);
                                 }
                                 catch (Exception e) {
                                     logger.error("Could not process confirmation for " + confirmation.getOrderNumber(), e);

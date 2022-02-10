@@ -210,30 +210,26 @@ public class Filter {
             finalQuery = buildJsonExtract(filter, dbElement);
         }
         else if (JSON_ARRAY.equals(filter.getType())) {
-            query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() ;
+            // filter.getFilter2().getName()
+            query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + DBConstants.ALIAS_DELIMITER + filter.getFilter2().getName();
             if (filter.isEmpty()) {
                 finalQuery = query + IS_NULL + " ";
             }
             else if (filter.isNotEmpty()) {
                 finalQuery = query + IS_NOT_NULL + " ";
-            }
-            if (StringUtils.isNotBlank(filter.getFilter1().getValue()+"")) {
-
+            } else {
                 //JSON_CONTAINS ( test_result , JSON_OBJECT ( 'result' , 'INVALID' )
-                String notNullQuery = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + IS_NOT_NULL;
+//                String notNullQuery = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + IS_NOT_NULL;
                 if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue()))) {
-                    String quotation = "";
-                    if (StringUtils.isNotBlank(filter.getFilter2().getValue()+"") && "'".equals(filter.getFilter2().getValue())) {
-                        quotation = "'";
-                    }
+                    String quotation = "'";
                     if (filter.isExactMatch()) {
-                        query = AND + " JSON_CONTAINS ( " + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " , JSON_OBJECT ( '" + filter.getFilter2().getName() + "' , "+quotation + filter.getFilter1().getValue() + quotation+" ) ) ";
+                        query = AND + "JSON_CONTAINS ( " + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " , JSON_OBJECT ( '" + filter.getFilter2().getName() + "' , "+quotation + filter.getFilter1().getValue() + quotation+" ) ) ";
                     }
                     else {
                         query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " -> '$[*]." + filter.getFilter2().getName() + "' like '%" + filter.getFilter1().getValue() + "%' ";
                     }
                 }
-                finalQuery =  query + notNullQuery;
+                finalQuery = query;
             }
         }
         else if (CHECKBOX.equals(filter.getType())) { //1/0

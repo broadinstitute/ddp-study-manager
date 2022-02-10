@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.filter.query;
 
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.filter.Operator;
 import org.broadinstitute.dsm.model.elastic.filter.splitter.*;
 import org.elasticsearch.index.query.*;
@@ -18,6 +19,7 @@ public abstract class BaseQueryBuilder {
             case EQUALS:
             case DATE:
             case DIAMOND_EQUALS:
+            case JSON_CONTAINS:
             case STR_DATE:
                 qb = build(new MatchQueryBuilder(payload.getFieldName(), payload.getValues()[0]));
                 break;
@@ -96,6 +98,19 @@ public abstract class BaseQueryBuilder {
         this.payload = queryPayload;
         this.splitter = splitter;
         return buildQueryBuilder();
+    }
+
+    public static BaseQueryBuilder of(String alias, String fieldName) {
+        BaseQueryBuilder queryBuilder;
+        boolean isCollection = Util.TABLE_ALIAS_MAPPINGS.get(alias).isCollection();
+        if (isCollection) {
+            if (TestResultCollectionQueryBuilder.TEST_RESULT.equals(fieldName)) queryBuilder =
+                    new TestResultCollectionQueryBuilder();
+            else queryBuilder = new CollectionQueryBuilder();
+        } else {
+            queryBuilder = new SingleQueryBuilder();
+        }
+        return queryBuilder;
     }
 
 }

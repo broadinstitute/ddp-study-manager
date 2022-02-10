@@ -1,6 +1,8 @@
 package org.broadinstitute.dsm.util.proxy.jackson;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.Objects;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +28,7 @@ public class ObjectMapperSingleton {
     }
 
     public static String writeValueAsString(Object value) {
+        value = Objects.isNull(value) ? Map.of() : value;
         try {
             return Helper.objectMapperInstance.writeValueAsString(value);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
