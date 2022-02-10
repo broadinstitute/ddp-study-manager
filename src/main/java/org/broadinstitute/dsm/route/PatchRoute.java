@@ -7,6 +7,8 @@ import com.google.gson.reflect.TypeToken;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.handlers.util.Result;
+import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetrics;
+import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetricsTracker;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
@@ -42,6 +44,7 @@ import spark.Response;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 //Class needs to be refactored as soon as possible!!!
@@ -132,9 +135,13 @@ public class PatchRoute extends RequestHandler {
                                 }
                             }
                             else {
+                                GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_PATCH_DATA,
+                                        GoogleAnalyticsMetrics.EVENT_ACTION_PATCH_DATA, GoogleAnalyticsMetrics.EVENT_LABEL_PATCH_DATA,  1);
                                 throw new RuntimeException("DBElement not found in ColumnNameMap: " + nameValue.getName());
                             }
                         }
+                        GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_PATCH_DATA,
+                                GoogleAnalyticsMetrics.EVENT_ACTION_PATCH_DATA, GoogleAnalyticsMetrics.EVENT_LABEL_PATCH_DATA,  1);
                         return new Result(200, gson.toJson(nameValues));
                     }
                     else {
@@ -145,10 +152,14 @@ public class PatchRoute extends RequestHandler {
                                 List<NameValue> nameValues = setWorkflowRelatedFields(patch);
                                 writeDSMRecordsToES(patch, ddpInstance);
                                 //return nameValues with nulls
+                                GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_PATCH_DATA,
+                                        GoogleAnalyticsMetrics.EVENT_ACTION_PATCH_DATA, GoogleAnalyticsMetrics.EVENT_LABEL_PATCH_DATA,  1);
                                 return new Result(200, gson.toJson(nameValues));
                             }
                         }
                         else {
+                            GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_PATCH_DATA,
+                                    GoogleAnalyticsMetrics.EVENT_ACTION_PATCH_DATA, GoogleAnalyticsMetrics.EVENT_LABEL_PATCH_DATA,  1);
                             throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
                         }
                     }
@@ -177,6 +188,8 @@ public class PatchRoute extends RequestHandler {
                                 Map<String, String> map = new HashMap<>();
                                 map.put(PRIMARY_KEY_ID, primaryKeyId);
                                 //return map with nulls
+                                GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(null, GoogleAnalyticsMetrics.EVENT_CATEGORY_PATCH_DATA,
+                                        GoogleAnalyticsMetrics.EVENT_ACTION_PATCH_DATA, GoogleAnalyticsMetrics.EVENT_LABEL_PATCH_DATA,  1);
                                 return new Result(200, gson.toJson(map));
                             }
                             else {
@@ -244,6 +257,8 @@ public class PatchRoute extends RequestHandler {
                                 map.put("oncHistoryDetailId", oncHistoryDetailId);
                                 nameValues.add(new NameValue("request", OncHistoryDetail.STATUS_REVIEW));
                                 map.put(NAME_VALUE, gson.toJson(nameValues));
+                                GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(null,GoogleAnalyticsMetrics.EVENT_CATEGORY_PATCH_DATA,
+                                        GoogleAnalyticsMetrics.EVENT_ACTION_PATCH_DATA, GoogleAnalyticsMetrics.EVENT_LABEL_PATCH_DATA,  1);
                                 //return map with nulls
                                 return new Result(200, gson.toJson(map));
                             }
@@ -262,11 +277,10 @@ public class PatchRoute extends RequestHandler {
                                 map.put("tissueId", tissueId);
                                 if (!nameValues.isEmpty()) {
                                     map.put(NAME_VALUE, gson.toJson(nameValues));
-                                    return new Result(200, gson.toJson(map));
                                 }
-                                else {
+                                GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(null, GoogleAnalyticsMetrics.EVENT_CATEGORY_PATCH_DATA,
+                                        GoogleAnalyticsMetrics.EVENT_ACTION_PATCH_DATA, GoogleAnalyticsMetrics.EVENT_LABEL_PATCH_DATA,  1);
                                     return new Result(200, gson.toJson(map));
-                                }
                             }
                         }
                         else {
@@ -301,6 +315,8 @@ public class PatchRoute extends RequestHandler {
                                 }
                             }
                         }
+                        GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_PATCH_DATA,
+                                GoogleAnalyticsMetrics.EVENT_ACTION_PATCH_DATA, GoogleAnalyticsMetrics.EVENT_LABEL_PATCH_DATA,  1);
                         return new Result(200, gson.toJson(map));
                     }
                     else if (Patch.DDP_PARTICIPANT_ID.equals(patch.getParent())) {
@@ -314,20 +330,30 @@ public class PatchRoute extends RequestHandler {
                                 throw new RuntimeException("DBElement not found in ColumnNameMap: " + patch.getNameValue().getName());
                             }
                             Patch.patch(String.valueOf(participantId), patch.getUser(), patch.getNameValue(), dbElement);
+                            GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_PATCH_DATA,
+                                    GoogleAnalyticsMetrics.EVENT_ACTION_PATCH_DATA, GoogleAnalyticsMetrics.EVENT_LABEL_PATCH_DATA,  1);
                             return new Result(200, gson.toJson(Map.of(PARTICIPANT_ID, String.valueOf(participantId))));
                         }
                     }
                 }
+                GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(null, GoogleAnalyticsMetrics.EVENT_CATEGORY_PATCH_DATA,
+                        GoogleAnalyticsMetrics.EVENT_ACTION_PATCH_DATA, GoogleAnalyticsMetrics.EVENT_LABEL_PATCH_DATA,  1);
                 throw new RuntimeException("Id and parentId was null");
             }
             catch (DuplicateException e) {
+                GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(null, GoogleAnalyticsMetrics.EVENT_CATEGORY_PATCH_DATA,
+                        GoogleAnalyticsMetrics.EVENT_ACTION_PATCH_DATA, GoogleAnalyticsMetrics.EVENT_LABEL_PATCH_DATA,  1);
                 return new Result(500, "Duplicate value");
             }
             catch (Exception e) {
+                GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(null, GoogleAnalyticsMetrics.EVENT_CATEGORY_PATCH_DATA,
+                        GoogleAnalyticsMetrics.EVENT_ACTION_PATCH_DATA, GoogleAnalyticsMetrics.EVENT_LABEL_PATCH_DATA,  1);
                 throw new RuntimeException("An error occurred while attempting to patch ", e);
             }
         }
         else {
+            GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(null, GoogleAnalyticsMetrics.EVENT_CATEGORY_PATCH_DATA,
+                    GoogleAnalyticsMetrics.EVENT_ACTION_PATCH_DATA, GoogleAnalyticsMetrics.EVENT_LABEL_PATCH_DATA,  1);
             response.status(500);
             return new Result(500, UserErrorMessages.NO_RIGHTS);
         }

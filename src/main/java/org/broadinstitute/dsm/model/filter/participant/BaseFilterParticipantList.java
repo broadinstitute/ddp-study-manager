@@ -1,15 +1,11 @@
 package org.broadinstitute.dsm.model.filter.participant;
 
-import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-
 import com.google.gson.Gson;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetrics;
+import org.broadinstitute.dsm.analytics.GoogleAnalyticsMetricsTracker;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ViewFilter;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
@@ -19,10 +15,9 @@ import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
-import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
 import org.broadinstitute.dsm.model.filter.BaseFilter;
 import org.broadinstitute.dsm.model.filter.Filterable;
-import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
+import org.broadinstitute.dsm.model.participant.ParticipantWrapper;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperPayload;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperResult;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -30,6 +25,12 @@ import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 public abstract class BaseFilterParticipantList extends BaseFilter implements Filterable<ParticipantWrapperResult> {
 
@@ -57,6 +58,7 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
 
 
     protected ParticipantWrapperResult filterParticipantList(Filter[] filters, Map<String, DBElement> columnNameMap, @NonNull DDPInstance instance) {
+        Long timer = System.currentTimeMillis();
         Map<String, String> queryConditions = new HashMap<>();
         List<ParticipantDataDto> allParticipantData = null;
         DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName(realm).orElseThrow();
@@ -119,9 +121,12 @@ public abstract class BaseFilterParticipantList extends BaseFilter implements Fi
 
             logger.info("Found query conditions for " + mergeConditions.size() + " tables");
             //search bar ptL
-
+            GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_PARTICIPANT_LIST,
+                    GoogleAnalyticsMetrics.EVENT_ACTION_PARTICIPANT_LIST, GoogleAnalyticsMetrics.EVENT_LABEL_PARTICIPANT_LIST,  Math.toIntExact((System.currentTimeMillis() - timer)/1000));
             return new ParticipantWrapper(participantWrapperPayload.withFilter(mergeConditions).build(), elasticSearch).getFilteredList();
         } else {
+            GoogleAnalyticsMetricsTracker.getInstance().sendAnalyticsMetrics(ddpInstance.getName(), GoogleAnalyticsMetrics.EVENT_CATEGORY_PARTICIPANT_LIST,
+                    GoogleAnalyticsMetrics.EVENT_ACTION_PARTICIPANT_LIST, GoogleAnalyticsMetrics.EVENT_LABEL_PARTICIPANT_LIST,  Math.toIntExact((System.currentTimeMillis() - timer)/1000));
             return new ParticipantWrapper(participantWrapperPayload.build(), elasticSearch).getFilteredList();
         }
     }
