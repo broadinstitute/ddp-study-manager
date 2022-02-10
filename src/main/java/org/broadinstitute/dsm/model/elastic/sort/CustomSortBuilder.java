@@ -8,7 +8,7 @@ public class CustomSortBuilder extends FieldSortBuilder {
 
     public CustomSortBuilder(Filter sortBy) {
         super("");
-        setNestedSort();
+//        setNestedSort();
     }
 
 

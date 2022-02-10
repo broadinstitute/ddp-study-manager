@@ -210,7 +210,6 @@ public class Filter {
             finalQuery = buildJsonExtract(filter, dbElement);
         }
         else if (JSON_ARRAY.equals(filter.getType())) {
-            // filter.getFilter2().getName()
             query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + DBConstants.ALIAS_DELIMITER + filter.getFilter2().getName();
             if (filter.isEmpty()) {
                 finalQuery = query + IS_NULL + " ";
@@ -218,8 +217,6 @@ public class Filter {
             else if (filter.isNotEmpty()) {
                 finalQuery = query + IS_NOT_NULL + " ";
             } else {
-                //JSON_CONTAINS ( test_result , JSON_OBJECT ( 'result' , 'INVALID' )
-//                String notNullQuery = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + IS_NOT_NULL;
                 if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue()))) {
                     String quotation = "'";
                     if (filter.isExactMatch()) {
@@ -232,8 +229,7 @@ public class Filter {
                 finalQuery = query;
             }
         }
-        else if (CHECKBOX.equals(filter.getType())) { //1/0
-            //                String notNullQuery = AND + filter.getParentName() + "." + dbElement.getColumnName() + IS_NOT_NULL;
+        else if (CHECKBOX.equals(filter.getType())) {
             if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue())) &&
                     (TRUE.equals(filter.getFilter1().getValue()) || TRUE.equals(String.valueOf(filter.getFilter1().getValue())) || "1".equals(filter.getFilter1().getValue()))) {
                 query = AND + filter.getColumnName(dbElement) + LIKE + "'1'";
@@ -242,7 +238,6 @@ public class Filter {
                     (TRUE.equals(filter.getFilter2().getValue()) || TRUE.equals(String.valueOf(filter.getFilter2().getValue())) || "1".equals(filter.getFilter2().getValue()))){
                 query = AND + NOT + " " + filter.getColumnName(dbElement) + " <=> 1";
             }
-            //                finalQuery = notNullQuery + query;
             finalQuery = query;
         }
         else if (BOOLEAN.equals(filter.getType()) || AGREEMENT.equals(filter.getType())) { //true/false
@@ -254,8 +249,6 @@ public class Filter {
             }
             finalQuery = query;
         }
-
-        //        logger.info(finalQuery);
         return finalQuery;
     }
 

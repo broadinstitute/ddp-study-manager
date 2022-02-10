@@ -69,8 +69,8 @@ public class BaseFilter {
         }
         this.from = Integer.parseInt(queryParamsMap.get(LIST_RANGE_FROM).value());
         this.to = Integer.parseInt(queryParamsMap.get(LIST_RANGE_TO).value());
-        this.sortBy = ObjectMapperSingleton.readValue(queryParamsMap.get("sortBy").value(), new TypeReference<Filter>() {
-        });
+//        this.sortBy = ObjectMapperSingleton.readValue(queryParamsMap.get("sortBy").value(), new TypeReference<Filter>() {
+//        });
     }
 
 }

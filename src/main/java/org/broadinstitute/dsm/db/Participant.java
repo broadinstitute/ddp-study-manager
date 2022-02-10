@@ -73,7 +73,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ONC_HISTORY_CREATED)
-    private String createdOncHistory;
+    private String created;
 
     @TableName (
             name = DBConstants.DDP_ONC_HISTORY,
@@ -81,7 +81,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ONC_HISTORY_REVIEWED)
-    private String reviewedOncHistory;
+    private String reviewed;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_RECORD,
@@ -155,15 +155,15 @@ public class Participant {
     public Participant() {}
 
     public Participant(long participantId, String ddpParticipantId, String assigneeIdMr, String assigneeIdTissue, String instanceName,
-                       String createdOncHistory, String reviewedOncHistory, String crSent, String crReceived, String notes,
+                       String created, String reviewed, String crSent, String crReceived, String notes,
                        boolean minimalMr, boolean abstractionReady, String additionalValuesJson, long exitDate) {
         this.participantId = participantId;
         this.ddpParticipantId = ddpParticipantId;
         this.assigneeIdMr = assigneeIdMr;
         this.assigneeIdTissue = assigneeIdTissue;
         this.realm = instanceName;
-        this.createdOncHistory = createdOncHistory;
-        this.reviewedOncHistory = reviewedOncHistory;
+        this.created = created;
+        this.reviewed = reviewed;
         this.crSent = crSent;
         this.crReceived = crReceived;
         this.notes = notes;

@@ -199,8 +199,8 @@ public class ParticipantWrapper {
                 Participant participant = esDsm.getParticipant().orElse(new Participant());
 
                 esDsm.getOncHistory().ifPresent(oncHistory -> {
-                    participant.setCreatedOncHistory(oncHistory.getCreated());
-                    participant.setReviewedOncHistory(oncHistory.getReviewed());
+                    participant.setCreated(oncHistory.getCreated());
+                    participant.setReviewed(oncHistory.getReviewed());
                 });
 
                 List<MedicalRecord> medicalRecord = esDsm.getMedicalRecord();
