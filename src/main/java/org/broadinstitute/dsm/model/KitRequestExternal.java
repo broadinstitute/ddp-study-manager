@@ -57,7 +57,7 @@ public class KitRequestExternal extends KitRequest {
         kitRequestShipping.setExternalOrderDate(externalOrderDate);
         DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceId(instanceId).orElseThrow();
         UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, ESObjectConstants.DSM_KIT_REQUEST_ID,
-                ESObjectConstants.DSM_KIT_REQUEST_ID, dsmKitRequestId);
+                ESObjectConstants.DSM_KIT_REQUEST_ID, dsmKitRequestId).export();
     }
 
     // update kit request with response of external shipper
