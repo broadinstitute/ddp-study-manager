@@ -3,12 +3,13 @@ package org.broadinstitute.dsm.route;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.db.dao.kit.BSPKitDao;
+import org.broadinstitute.dsm.db.dao.kit.ClinicalKitDao;
 import org.broadinstitute.dsm.db.dto.kit.BSPKitDto;
 import org.broadinstitute.dsm.db.dto.kit.ClinicalKitDto;
-import org.broadinstitute.dsm.model.BSPKit;
-import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
-import org.broadinstitute.dsm.model.bsp.BSPKitStatus;
+import org.broadinstitute.dsm.model.gp.BSPKit;
+import org.broadinstitute.dsm.model.gp.GPReceivedKit;
+import org.broadinstitute.dsm.model.gp.KitInfo;
+import org.broadinstitute.dsm.model.gp.bsp.BSPKitStatus;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.util.NotificationUtil;
 import org.slf4j.Logger;
@@ -39,25 +40,28 @@ public class ClinicalKitsRoute implements Route {
             throw new RuntimeException("Please include a kit label as a path parameter");
         }
         BSPKit bspKit = new BSPKit();
-        if (!bspKit.canReceiveKit(kitLabel)) {
-            Optional<BSPKitStatus> result = bspKit.getKitStatus(kitLabel, notificationUtil);
-            if (result.isEmpty()) {
-                response.status(404);
-                return null;
+        Optional<BSPKitDto> optionalBSPKitDto = bspKit.canReceiveKit(kitLabel);
+
+        //kit found in ddp_kit table
+        if (!optionalBSPKitDto.isEmpty()) {
+            //check if kit is from a pt which is withdrawn
+            Optional<BSPKitStatus> result = bspKit.getKitStatus(optionalBSPKitDto.get(), notificationUtil);
+            if (!result.isEmpty()) {
+                return result.get();
             }
-            return result.get();
         }
-        return getClinicalKit(kitLabel);
+        return getClinicalKit(kitLabel, optionalBSPKitDto);
     }
 
-    private ClinicalKitDto getClinicalKit(String kitLabel) {
+    private ClinicalKitDto getClinicalKit(String kitLabel, Optional<BSPKitDto> optionalBSPKitDto) {
         logger.info("Checking label " + kitLabel);
-        BSPKitDao bspKitDao = new BSPKitDao();
-        // this method already sets the received time, check for exited and deactivation and special behaviour, and triggers DDP, we don't need a new
-        BSPKit bspKit = new BSPKit();
-        ClinicalKitDto clinicalKit = new ClinicalKitDto();
-        Optional<BSPKitInfo> maybeKitInfo = bspKit.receiveBSPKit(kitLabel, notificationUtil);
-        maybeKitInfo.ifPresent(kitInfo -> {
+        if (optionalBSPKitDto.isEmpty()) {
+            //kit not found in ddp_kit table -> check tissue smi-ids
+            return new ClinicalKitDao().getClinicalKitBasedOnSmId(kitLabel);
+        } else {
+            Optional<KitInfo> maybeKitInfo = GPReceivedKit.receiveKit(kitLabel, optionalBSPKitDto.get(), notificationUtil);
+            KitInfo kitInfo = maybeKitInfo.get();
+            ClinicalKitDto clinicalKit = new ClinicalKitDto();
             logger.info("Creating clinical kit to return to GP " + kitLabel);
             clinicalKit.setCollaboratorParticipantId(kitInfo.getCollaboratorParticipantId());
             clinicalKit.setSampleId(kitInfo.getCollaboratorSampleId());
@@ -66,19 +70,10 @@ public class ClinicalKitsRoute implements Route {
             clinicalKit.setSampleType(kitInfo.getKitType());
             clinicalKit.setMfBarcode(kitLabel);
             clinicalKit.setSampleCollection(kitInfo.getSampleCollectionBarcode());
-            Optional<BSPKitDto> bspKitQueryResult = bspKitDao.getBSPKitQueryResult(kitLabel);
-            bspKitQueryResult.orElseThrow(() -> {
-                throw new RuntimeException("kit label was not found " + kitLabel);
-            });
-            BSPKitDto maybeBspKitQueryResult = bspKitQueryResult.get();
-            DDPInstance ddpInstance = DDPInstance.getDDPInstance(maybeBspKitQueryResult.getInstanceName());
-            clinicalKit.setNecessaryParticipantDataToClinicalKit(maybeBspKitQueryResult.getDdpParticipantId(), ddpInstance);
-        });
-        if (maybeKitInfo.isEmpty()) {
-            return clinicalKit.getClinicalKitBasedONSmId(kitLabel);
+            DDPInstance ddpInstance = DDPInstance.getDDPInstance(kitInfo.getRealm());
+            clinicalKit.setNecessaryParticipantDataToClinicalKit(optionalBSPKitDto.get().getDdpParticipantId(), ddpInstance);
+            return clinicalKit;
         }
-        return clinicalKit;
-
     }
 
 }

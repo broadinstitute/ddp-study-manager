@@ -1,12 +1,13 @@
-package org.broadinstitute.dsm.model;
+package org.broadinstitute.dsm.model.gp;
 
 import lombok.Data;
 import org.broadinstitute.dsm.db.dto.kit.ClinicalKitDto;
+
 @Data
 public class ClinicalKitWrapper {
     ClinicalKitDto clinicalKitDto;
-    String ddpParticipantId;
     Integer ddpInstanceId;
+    String ddpParticipantId;
 
     public ClinicalKitWrapper(ClinicalKitDto clinicalKitDto, int ddpInstanceId, String ddpParticipantId) {
         this.clinicalKitDto = clinicalKitDto;

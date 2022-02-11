@@ -243,7 +243,7 @@ public class Tissue {
                 rs.getLong(DBConstants.USS_COUNT),
                 rs.getLong(DBConstants.BLOCKS_COUNT),
                 rs.getLong(DBConstants.H_E_COUNT),
-                null, null, null);
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
         return tissue;
     }
 
@@ -307,6 +307,7 @@ public class Tissue {
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
+            logger.warn( throwables.getMessage());
         }
     }
 

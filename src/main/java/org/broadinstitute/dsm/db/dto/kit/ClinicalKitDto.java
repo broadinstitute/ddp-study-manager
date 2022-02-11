@@ -6,8 +6,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.OncHistoryDetail;
-import org.broadinstitute.dsm.db.dao.kit.ClinicalKitDao;
-import org.broadinstitute.dsm.model.ClinicalKitWrapper;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
 import org.broadinstitute.dsm.model.elastic.ESActivities;
 import org.broadinstitute.dsm.model.elastic.ESDsm;
@@ -113,21 +111,6 @@ public class ClinicalKitDto {
         }
     }
 
-    public ClinicalKitDto getClinicalKitBasedONSmId(String smIdValue) {
-        logger.info("Checking the kit for SM Id value " + smIdValue);
-        ClinicalKitDao clinicalKitDao = new ClinicalKitDao();
-        Optional<ClinicalKitWrapper> maybeClinicalKitWrapper = clinicalKitDao.getClinicalKitFromSMId(smIdValue);
-        maybeClinicalKitWrapper.orElseThrow();
-        ClinicalKitWrapper clinicalKitWrapper = maybeClinicalKitWrapper.get();
-        ClinicalKitDto clinicalKitDto = clinicalKitWrapper.getClinicalKitDto();
-        DDPInstance ddpInstance = DDPInstance.getDDPInstanceById(clinicalKitWrapper.getDdpInstanceId());
-        clinicalKitDto.setNecessaryParticipantDataToClinicalKit(clinicalKitWrapper.getDdpParticipantId(), ddpInstance);
-        if (StringUtils.isNotBlank(clinicalKitDto.getAccessionNumber())) {
-            return clinicalKitDto;
-        }
-        throw new RuntimeException("The kit doesn't have an accession number! SM ID is: " + smIdValue);
-    }
-
     public void setNecessaryParticipantDataToClinicalKit(String ddpParticipantId, DDPInstance ddpInstance) {
         Optional<ElasticSearchParticipantDto> maybeParticipantESDataByParticipantId =
                 ElasticSearchUtil.getParticipantESDataByParticipantId(ddpInstance.getParticipantIndexES(), ddpParticipantId);
@@ -145,7 +128,7 @@ public class ClinicalKitDto {
                     ddpInstance.getCollaboratorIdPrefix(), ddpParticipantId, shortId, null);
             this.setCollaboratorParticipantId(collaboratorParticipantId);
         } catch (Exception e) {
-            throw new RuntimeException("Participant doesn't exist / is not valid for kit ");
+            throw new RuntimeException("Participant doesn't exist / is not valid for kit " + e.getMessage());
         }
     }
 
