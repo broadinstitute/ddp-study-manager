@@ -1,13 +1,11 @@
 package org.broadinstitute.dsm.model.elastic.filter.query;
 
-import org.broadinstitute.dsm.model.elastic.filter.FilterStrategy;
+import org.elasticsearch.index.query.QueryBuilder;
 
-public class SingleQueryBuilder extends DsmAbstractQueryBuilder {
-
-    public SingleQueryBuilder() {}
+public class SingleQueryBuilder extends BaseQueryBuilder {
 
     @Override
-    protected void buildEachQuery(FilterStrategy filterStrategy) {
-        filterStrategy.build(boolQueryBuilder, queryBuilder);
+    protected QueryBuilder build(QueryBuilder queryBuilder) {
+        return queryBuilder;
     }
 }

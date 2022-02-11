@@ -38,6 +38,10 @@ public class ESObjectConstants {
 
     // kit
     public static final String KIT_REQUEST_SHIPPING = "kitRequestShipping";
+    public static final String DSM_KIT_ID = "dsmKitId";
+    public static final String DSM_KIT_REQUEST_ID = "dsmKitRequestId";
+    public static final String KIT_LABEL = "kitLabel";
+    public static final String KIT_TEST_RESULT = "testResult";
 
     //common
     public static final String DDP_PARTICIPANT_ID = "ddpParticipantId";
@@ -76,4 +80,5 @@ public class ESObjectConstants {
     public static final String PARTICIPANT_RECORD = "participantRecord";
     public static final String PARTICIPANT = "participant";
     public static final String DYNAMIC_FIELDS = "dynamicFields";
+    public static final String DOC_ID = "_id";
 }

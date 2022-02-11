@@ -8,9 +8,7 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -18,7 +16,7 @@ import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.util.ObjectMapperSingleton;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 
 @TableName(
         name = DBConstants.DDP_PARTICIPANT_DATA,
@@ -27,7 +25,7 @@ import org.broadinstitute.dsm.util.ObjectMapperSingleton;
         columnPrefix = "")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Setter
-public class ParticipantDataDto {
+public class ParticipantData {
 
     private static final Gson gson = new Gson();
 
@@ -76,7 +74,7 @@ public class ParticipantDataDto {
         }
     }
 
-    public ParticipantDataDto() {}
+    public ParticipantData() {}
 
     @JsonIgnore
     private long lastChanged;
@@ -134,7 +132,7 @@ public class ParticipantDataDto {
         return Optional.ofNullable(changedBy);
     }
 
-    private ParticipantDataDto(Builder builder) {
+    private ParticipantData(Builder builder) {
         this.participantDataId = builder.participantDataId;
         this.ddpParticipantId = builder.ddpParticipantId;
         this.ddpInstanceId = builder.ddpInstanceId;
@@ -188,8 +186,8 @@ public class ParticipantDataDto {
             return this;
         }
 
-        public ParticipantDataDto build() {
-            return new ParticipantDataDto(this);
+        public ParticipantData build() {
+            return new ParticipantData(this);
         }
         
         

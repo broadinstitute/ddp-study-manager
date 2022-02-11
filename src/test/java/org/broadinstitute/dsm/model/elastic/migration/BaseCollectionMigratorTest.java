@@ -7,8 +7,7 @@ import java.util.Map;
 
 import org.broadinstitute.dsm.db.OncHistoryDetail;
 import org.broadinstitute.dsm.db.Tissue;
-import org.broadinstitute.dsm.model.elastic.export.generate.GeneratorPayload;
-import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -17,34 +16,42 @@ public class BaseCollectionMigratorTest {
     @Test
     public void transformObject() {
         BaseCollectionMigrator baseCollectionMigrator = new MockBaseCollectionMigrator("index", "realm", "object");
-        baseCollectionMigrator.transformObject(mockData());
+        baseCollectionMigrator.transformObject(mockOncHistoryDetail());
         Map<String, Object> objectMap = baseCollectionMigrator.transformedList.get(0);
-        Object primaryId = objectMap.get("id");
-        Assert.assertEquals("23", primaryId);
-        Map<String, Object> tissue = (Map<String, Object>) ((List) objectMap.get("tissues")).get(0);
-        Object tissuePrimaryId = tissue.get("id");
-        Assert.assertEquals("11", tissuePrimaryId);
-        Assert.assertEquals(tissuePrimaryId, tissue.get("tissueId"));
+        Object primaryId = objectMap.get("oncHistoryDetailId");
+        Assert.assertEquals(23L, primaryId);
+
+        baseCollectionMigrator.transformObject(mockTissues());
+        Map<String, Object> stringObjectMap = baseCollectionMigrator.transformedList.get(0);
+        Assert.assertEquals(11L, stringObjectMap.get("tissueId"));
+        Assert.assertEquals("notes", stringObjectMap.get("notes"));
     }
 
-    private List mockData() {
-        List<Tissue> fieldValue = new ArrayList<>(List.of(new Tissue(11, 22,
-                null, null, null, "awdwadawdawdawd", null, null, null, null, null, null,
-                null, null, "Awdawd", null, null, null, null, null, null, null,
-                null, 0, 0, 0, 0), new  Tissue(555, 777,
-                null, null, null, null, null, null, null, "awdawd", null, null,
-                null, null, "awdawddwa", null, null, null, null, null, null, null,
-                null, 0, 0, 0, 0)));
+    private List mockOncHistoryDetail() {
         OncHistoryDetail oncHistoryDetail =
                 new OncHistoryDetail(23, 0, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                        null, null, null, null, null, null, null, null, null, fieldValue, null, null, false);
+                        null, null, null, null, null, null, null, null, null, mockTissues(), null, null, false);
         return Collections.singletonList(oncHistoryDetail);
+    }
+
+    private List<Tissue> mockTissues() {
+        List<Tissue> fieldValue = new ArrayList<>(List.of(new Tissue(11, 22,
+                "notes", 0, null, "awdwadawdawdawd", null, null, null, null, null, null,
+                null, null, "Awdawd", null, null, null, null, null, null, null,
+                null, 0, 0, 0, 0), new  Tissue(555, 777,
+                null, 0, null, null, null, null, null, "awdawd", null, null,
+                null, null, "awdawddwa", null, null, null, null, null, null, null,
+                null, 0, 0, 0, 0)));
+        return fieldValue;
     }
 
     static class MockBaseCollectionMigrator extends BaseCollectionMigrator {
 
+        protected RestHighLevelClient clientInstance;
+
         public MockBaseCollectionMigrator(String index, String realm, String object) {
             super(index, realm, object);
+
         }
 
         @Override

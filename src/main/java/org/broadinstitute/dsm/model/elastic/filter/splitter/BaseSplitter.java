@@ -1,11 +1,16 @@
 package org.broadinstitute.dsm.model.elastic.filter.splitter;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.elastic.Util;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 
 public abstract class BaseSplitter {
 
+    public static final int NESTED_FIELD_LEVEL = 2;
     protected String filter;
     protected String[] splittedFilter;
 
@@ -23,6 +28,16 @@ public abstract class BaseSplitter {
     }
 
     public String getInnerProperty() {
+        if (getFieldWithAlias().length > NESTED_FIELD_LEVEL) {
+            return Arrays.stream(getFieldWithAlias())
+                    .skip(1)
+                    .map(Util::underscoresToCamelCase)
+                    .collect(Collectors.joining(DBConstants.ALIAS_DELIMITER));
+        }
+        return Util.underscoresToCamelCase(getFieldWithAlias()[1]);
+    }
+
+    public String getFieldName() {
         return Util.underscoresToCamelCase(getFieldWithAlias()[1]);
     }
 

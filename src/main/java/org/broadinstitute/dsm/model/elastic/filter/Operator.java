@@ -1,7 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.filter;
 
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -18,9 +17,10 @@ public enum Operator {
     DIAMOND_EQUALS(Filter.DIAMOND_EQUALS),
     MULTIPLE_OPTIONS(Operator.MULTIPLE_OPTIONS_INDICATOR),
     STR_DATE(Filter.DATE_FORMAT),
-    DATE_GREATER(Filter.DATE_GREATER),
-    DATE_LESS(Filter.DATE_LESS),
+    DATE_GREATER_THAN_EQUALS(Filter.DATE_GREATER),
+    DATE_LESS_THAN_EQUALS(Filter.DATE_LESS),
     JSON_EXTRACT(Filter.JSON_EXTRACT),
+    JSON_CONTAINS(Filter.JSON_CONTAINS),
     DATE(Filter.DATE);
 
     public static final String MULTIPLE_OPTIONS_INDICATOR = "()";
@@ -57,13 +57,15 @@ public enum Operator {
                 case "STR_TO_DATE =":
                     return Operator.STR_DATE;
                 case "STR_TO_DATE <=":
-                    return Operator.DATE_LESS;
+                    return Operator.DATE_LESS_THAN_EQUALS;
                 case "STR_TO_DATE >=":
-                    return Operator.DATE_GREATER;
+                    return Operator.DATE_GREATER_THAN_EQUALS;
                 case "DATE =":
                     return Operator.DATE;
                 case "NOT <=>":
                     return Operator.DIAMOND_EQUALS;
+                case "JSON_CONTAINS":
+                    return Operator.JSON_CONTAINS;
                 case "JSON_EXTRACT =":
                 case "JSON_EXTRACT >=":
                 case "JSON_EXTRACT <=":

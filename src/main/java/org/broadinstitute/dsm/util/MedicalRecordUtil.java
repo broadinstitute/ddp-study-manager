@@ -29,7 +29,6 @@ public class MedicalRecordUtil {
     private static final String SQL_SELECT_MEDICAL_RECORD_ID_AND_TYPE_FOR_PARTICIPANT = "SELECT rec.medical_record_id, inst.type FROM ddp_institution inst, ddp_participant part, ddp_medical_record rec " +
             "WHERE part.participant_id = inst.participant_id AND rec.institution_id = inst.institution_id AND NOT rec.deleted <=> 1 AND part.participant_id = ? AND inst.type = ?";
 
-    public static final String SYSTEM = "SYSTEM";
     public static final String NOT_SPECIFIED = "NOT_SPECIFIED";
     public static final String OTHER = "OTHER";
 
@@ -38,7 +37,7 @@ public class MedicalRecordUtil {
             try (PreparedStatement insertNewRecord = conn.prepareStatement(query)) {
                 insertNewRecord.setString(1, id);
                 insertNewRecord.setLong(2, System.currentTimeMillis());
-                insertNewRecord.setString(3, SYSTEM);
+                insertNewRecord.setString(3, SystemUtil.SYSTEM);
                 int result = insertNewRecord.executeUpdate();
                 if (result > 1) { // 0 or 1 is good
                     throw new RuntimeException("Error updating row");
@@ -61,9 +60,9 @@ public class MedicalRecordUtil {
                 insertNewRecord.setString(1, id);
                 insertNewRecord.setString(2, instanceId);
                 insertNewRecord.setLong(3, currentMilli);
-                insertNewRecord.setString(4, SYSTEM);
+                insertNewRecord.setString(4, SystemUtil.SYSTEM);
                 insertNewRecord.setLong(5, currentMilli);
-                insertNewRecord.setString(6, SYSTEM);
+                insertNewRecord.setString(6, SystemUtil.SYSTEM);
                 int result = insertNewRecord.executeUpdate();
                 // 1 (inserted) or 2 (updated) is good
                 if (result == 2) {

@@ -14,10 +14,9 @@ import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.broadinstitute.dsm.model.participant.data.AddFamilyMemberPayload;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
-import org.broadinstitute.dsm.model.participant.data.ParticipantData;
 import org.broadinstitute.dsm.util.DBTestUtil;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -76,16 +75,16 @@ public class AddFamilyMemberRouteTest {
     }
 
     private static void createProbandTestParticipantData() {
-        ParticipantDataDto probandParticipantDataDto =
-                new ParticipantDataDto.Builder()
+        ParticipantData probandParticipantData =
+                new ParticipantData.Builder()
                     .withDdpParticipantId(participantId)
                     .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())
-                    .withFieldTypeId(ParticipantData.FIELD_TYPE_PARTICIPANTS)
+                    .withFieldTypeId(org.broadinstitute.dsm.model.participant.data.ParticipantData.FIELD_TYPE_PARTICIPANTS)
                     .withData(gson.toJson(probandData))
                     .withLastChanged(System.currentTimeMillis())
                     .withChangedBy(userDto.getEmail().orElse("SYSTEM"))
                     .build();
-        ddpExistingProbandParticipantDataId = participantDataDao.create(probandParticipantDataDto);
+        ddpExistingProbandParticipantDataId = participantDataDao.create(probandParticipantData);
     }
 
 
@@ -153,9 +152,9 @@ public class AddFamilyMemberRouteTest {
     public void relationshipIdAlreadyExists() {
         String payload = payloadFactory(participantId, ddpInstanceDto.getInstanceName(), probandData, userDto.getId());
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
-        ParticipantData participantData = new ParticipantData(participantDataDao);
+        org.broadinstitute.dsm.model.participant.data.ParticipantData participantData = new org.broadinstitute.dsm.model.participant.data.ParticipantData(participantDataDao);
         participantData.setData(addFamilyMemberPayload.getParticipantId().get(), ddpInstanceDto.getDdpInstanceId(),
-                ddpInstanceDto.getInstanceName() + ParticipantData.FIELD_TYPE_PARTICIPANTS, probandData);
+                ddpInstanceDto.getInstanceName() + org.broadinstitute.dsm.model.participant.data.ParticipantData.FIELD_TYPE_PARTICIPANTS, probandData);
         Assert.assertTrue(participantData.isRelationshipIdExists());
     }
 
@@ -165,16 +164,16 @@ public class AddFamilyMemberRouteTest {
         Result result = new Result(200);
         AddFamilyMemberPayload addFamilyMemberPayload = gson.fromJson(payload, AddFamilyMemberPayload.class);
         try {
-            ParticipantDataDto participantDataDto =
-                    new ParticipantDataDto.Builder()
+            ParticipantData participantData =
+                    new ParticipantData.Builder()
                         .withDdpParticipantId(addFamilyMemberPayload.getParticipantId().get())
                         .withDdpInstanceId(ddpInstanceDto.getDdpInstanceId())
-                        .withFieldTypeId(ddpInstanceDto.getInstanceName() + ParticipantData.FIELD_TYPE_PARTICIPANTS)
+                        .withFieldTypeId(ddpInstanceDto.getInstanceName() + org.broadinstitute.dsm.model.participant.data.ParticipantData.FIELD_TYPE_PARTICIPANTS)
                         .withData(gson.toJson(addFamilyMemberPayload.getData().get()))
                         .withLastChanged(System.currentTimeMillis())
                         .withChangedBy(userDto.getEmail().orElse("SYSTEM"))
                         .build();
-            ddpFamilyMemberParticipantDataId = participantDataDao.create(participantDataDto);
+            ddpFamilyMemberParticipantDataId = participantDataDao.create(participantData);
         } catch (Exception e) {
             result = new Result(500);
         }

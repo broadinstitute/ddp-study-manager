@@ -8,11 +8,11 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.structure.DBElement;
-import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.model.NameValue;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.Parser;
-import org.broadinstitute.dsm.util.ObjectMapperSingleton;
+import org.broadinstitute.dsm.util.proxy.jackson.JsonParseException;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +69,7 @@ public abstract class BaseGenerator implements Generator, Collector, GeneratorHe
         return getOuterPropertyByAlias().getPrimaryKey();
     }
 
+    @Override
     public String getPropertyName() {
         return getOuterPropertyByAlias().getPropertyName();
     }
@@ -132,8 +133,7 @@ public abstract class BaseGenerator implements Generator, Collector, GeneratorHe
         }
 
         public String getPrimaryKey() {
-            TableName tableName = Objects.requireNonNull(propertyClass.getAnnotation(TableName.class));
-            return Util.underscoresToCamelCase(tableName.primaryKey());
+            return Util.getPrimaryKeyFromClass(propertyClass);
         }
 
         public boolean isCollection() {

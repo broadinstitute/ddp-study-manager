@@ -2,12 +2,8 @@ package org.broadinstitute.dsm.model.elastic.filter;
 
 import static org.junit.Assert.*;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.broadinstitute.dsm.model.Filter;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class OperatorTest {
@@ -25,7 +21,7 @@ public class OperatorTest {
             assertEquals(Operator.EQUALS, equals);
             assertEquals(Operator.GREATER_THAN_EQUALS, larger);
             assertEquals(Operator.LESS_THAN_EQUALS, smaller);
-            assertEquals(Operator.IS_NOT_NULL, isNotNull);
+            assertEquals(Operator.IS_NOT_NULL_LIST, isNotNull);
         } catch (IllegalArgumentException iae) {
             Assert.assertTrue(true);
         }
@@ -116,14 +112,14 @@ public class OperatorTest {
     public void extractGreaterStrToDateOperator() {
         String filter = "m.mr_received  >= STR_TO_DATE('1964-01-14','%Y-%m-%d')";
         Operator operator = Operator.extract(filter);
-        assertEquals(Operator.DATE_GREATER, operator);
+        assertEquals(Operator.DATE_GREATER_THAN_EQUALS, operator);
     }
 
     @Test
     public void extractLessStrToDateOperator() {
         String filter = "m.mr_received  <= STR_TO_DATE('1964-01-14','%Y-%m-%d')";
         Operator operator = Operator.extract(filter);
-        assertEquals(Operator.DATE_LESS, operator);
+        assertEquals(Operator.DATE_LESS_THAN_EQUALS, operator);
     }
 
     @Test

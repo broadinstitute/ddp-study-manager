@@ -6,8 +6,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.elastic.ESDsm;
 import org.broadinstitute.dsm.model.elastic.Util;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
-import org.broadinstitute.dsm.util.ObjectMapperSingleton;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -33,7 +34,7 @@ public class SourceMapDeserializer implements Deserializer {
         for (Map.Entry<String, Object> entry : dsmLevel.entrySet()) {
             outerProperty = entry.getKey();
             Object outerPropertyValue = entry.getValue();
-            if (!hasDynamicFields(outerProperty)) continue;
+            if (!hasSpecialCases(outerProperty)) continue;
             if (outerPropertyValue instanceof List) {
                 List<Map<String, Object>> outerPropertyValues = (List<Map<String, Object>>) outerPropertyValue;
                 List<Map<String, Object>> updatedOuterPropertyValues = handleSpecialCases(outerPropertyValues);;
@@ -61,6 +62,9 @@ public class SourceMapDeserializer implements Deserializer {
             if (object.containsKey(ESObjectConstants.FOLLOW_UPS)) {
                 clonedMap.put(ESObjectConstants.FOLLOW_UPS, convertFollowUpsJsonToList(clonedMap));
             }
+            if (object.containsKey(ESObjectConstants.KIT_TEST_RESULT)) {
+                clonedMap.put(ESObjectConstants.KIT_TEST_RESULT, convertTestResultValueAsJson(clonedMap));
+            }
             updatedOuterPropertyValues.add(clonedMap);
         }
         return updatedOuterPropertyValues;
@@ -68,14 +72,7 @@ public class SourceMapDeserializer implements Deserializer {
 
     private List<Map<String, Object>> convertFollowUpsJsonToList(Map<String, Object> clonedMap) {
         String followUps = (String) clonedMap.get(ESObjectConstants.FOLLOW_UPS);
-        try {
-            return Objects.isNull(followUps)
-                    ? Collections.emptyList()
-                    : ObjectMapperSingleton.instance().readValue(followUps, new TypeReference<List<Map<String, Object>>>() {
-            });
-        } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-        }
+        return ObjectMapperSingleton.readValue(followUps, new TypeReference<List<Map<String, Object>>>() {});
     }
 
     String getDynamicFieldsValueAsJson(Map<String, Object> clonedMap) {
@@ -83,13 +80,11 @@ public class SourceMapDeserializer implements Deserializer {
         if (ESObjectConstants.PARTICIPANT_DATA.equals(outerProperty)) {
             dynamicFields = convertDynamicFieldsFromCamelCaseToPascalCase(dynamicFields);
         }
-        try {
-            return dynamicFields.isEmpty()
-                    ? StringUtils.EMPTY
-                    : ObjectMapperSingleton.instance().writeValueAsString(dynamicFields);
-        } catch (JsonProcessingException jpe) {
-            throw new RuntimeException(jpe);
-        }
+        return ObjectMapperSingleton.writeValueAsString(dynamicFields);
+    }
+
+    String convertTestResultValueAsJson(Map<String, Object> clonedMap) {
+        return ObjectMapperSingleton.writeValueAsString(clonedMap.get(ESObjectConstants.KIT_TEST_RESULT));
     }
 
     protected Map<String, Object> convertDynamicFieldsFromCamelCaseToPascalCase(Map<String, Object> dynamicFields) {
@@ -101,12 +96,12 @@ public class SourceMapDeserializer implements Deserializer {
         return dynamicFields;
     }
 
-    private boolean hasDynamicFields(String outerProperty) {
+    private boolean hasSpecialCases(String outerProperty) {
         try {
             Field property = ESDsm.class.getDeclaredField(outerProperty);
             Class<?> propertyType = Util.getParameterizedType(property.getGenericType());
             Field[] declaredFields = propertyType.getDeclaredFields();
-            return Arrays.stream(declaredFields).anyMatch(this::isDynamicField);
+            return Arrays.stream(declaredFields).anyMatch(field -> isDynamicField(field) || isTestResult(field));
         } catch (NoSuchFieldException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -117,4 +112,10 @@ public class SourceMapDeserializer implements Deserializer {
         if (Objects.isNull(jsonProperty)) return false;
         else return jsonProperty.value().equals(ESObjectConstants.DYNAMIC_FIELDS);
     }
+
+    private boolean isTestResult(Field field) {
+        String fieldName = field.getName();
+        return ESObjectConstants.KIT_TEST_RESULT.equals(fieldName);
+    }
+
 }

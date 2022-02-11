@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.rgp;
+package org.broadinstitute.dsm.model.defaultvalues;
 
 import java.util.List;
 import java.util.Map;
@@ -6,56 +6,36 @@ import java.util.Optional;
 
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.db.DDPInstance;
-import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
-import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
-import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.bookmark.BookmarkDto;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
-import org.broadinstitute.dsm.model.defaultvalues.Defaultable;
+import org.broadinstitute.dsm.model.defaultvalues.BasicDefaultDataMaker;
 import org.broadinstitute.dsm.model.elastic.ESActivities;
+import org.broadinstitute.dsm.model.elastic.export.painless.*;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
 import org.broadinstitute.dsm.model.participant.data.ParticipantData;
-import org.broadinstitute.dsm.model.settings.field.FieldSettings;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.broadinstitute.dsm.util.SystemUtil;
 
-public class AutomaticProbandDataCreator implements Defaultable {
+public class RgpAutomaticProbandDataCreator extends BasicDefaultDataMaker {
 
 
-    private static final Logger logger = LoggerFactory.getLogger(AutomaticProbandDataCreator.class);
     public static final String RGP_FAMILY_ID = "rgp_family_id";
 
-    private final FieldSettings fieldSettings = new FieldSettings();
-    private final BookmarkDao bookmarkDao = new BookmarkDao();
-    private final ParticipantDataDao participantDataDao = new ParticipantDataDao();
-    private final DDPInstanceDao ddpInstanceDao = new DDPInstanceDao();
-    private DDPInstance instance;
+    @Override
+    protected boolean setDefaultData() {
 
-    private boolean setDefaultProbandData(Optional<ElasticSearchParticipantDto> maybeParticipantESData) {
-        if (maybeParticipantESData.isEmpty()) {
-            logger.warn("Could not create proband/self data, participant ES data is null");
-            return false;
-        }
         List<FieldSettingsDto> fieldSettingsDtosByOptionAndInstanceId =
                 FieldSettingsDao.of().getOptionAndRadioFieldSettingsByInstanceId(Integer.parseInt(instance.getDdpInstanceId()));
 
-        return maybeParticipantESData
-                .map(elasticSearch -> extractAndInsertProbandFromESData(instance, elasticSearch, fieldSettingsDtosByOptionAndInstanceId))
-                .orElse(false);
-    }
-
-    private boolean extractAndInsertProbandFromESData(DDPInstance instance, ElasticSearchParticipantDto esData,
-                                                   List<FieldSettingsDto> fieldSettingsDtosByOptionAndInstanceId) {
-
-        return esData.getProfile()
+        return elasticSearchParticipantDto.getProfile()
                 .map(esProfile -> {
                     logger.info("Got ES profile of participant: " + esProfile.getGuid());
                     Map<String, String> columnsWithDefaultOptions =
@@ -67,7 +47,7 @@ public class AutomaticProbandDataCreator implements Defaultable {
                             : esProfile.getGuid();
                     ParticipantData participantData = new ParticipantData(participantDataDao);
                     Optional<BookmarkDto> maybeFamilyIdOfBookmark = bookmarkDao.getBookmarkByInstance(RGP_FAMILY_ID);
-                    Map<String, String> probandDataMap = extractProbandDefaultDataFromParticipantProfile(esData, maybeFamilyIdOfBookmark);
+                    Map<String, String> probandDataMap = extractProbandDefaultDataFromParticipantProfile(maybeFamilyIdOfBookmark);
                     participantData.setData(
                             participantId,
                             Integer.parseInt(instance.getDdpInstanceId()),
@@ -75,7 +55,8 @@ public class AutomaticProbandDataCreator implements Defaultable {
                             probandDataMap
                     );
                     participantData.addDefaultOptionsValueToData(columnsWithDefaultOptions);
-                    participantData.insertParticipantData("SYSTEM");
+                    participantData.insertParticipantData(SystemUtil.SYSTEM);
+
                     columnsWithDefaultOptionsFilteredByElasticExportWorkflow.forEach((col, val) ->
                             ElasticSearchUtil.writeWorkflow(WorkflowForES.createInstanceWithStudySpecificData(instance, participantId, col, val,
                                     new WorkflowForES.StudySpecificData(probandDataMap.get(FamilyMemberConstants.COLLABORATOR_PARTICIPANT_ID),
@@ -95,11 +76,10 @@ public class AutomaticProbandDataCreator implements Defaultable {
                 });
     }
 
-    private Map<String, String> extractProbandDefaultDataFromParticipantProfile(@NonNull ElasticSearchParticipantDto esData,
-                                                                                       Optional<BookmarkDto> maybeBookmark) {
-        List<ESActivities> participantActivities = esData.getActivities();
+    private Map<String, String> extractProbandDefaultDataFromParticipantProfile(Optional<BookmarkDto> maybeBookmark) {
+        List<ESActivities> participantActivities = elasticSearchParticipantDto.getActivities();
         String mobilePhone = getPhoneNumberFromActivities(participantActivities);
-        return esData.getProfile()
+        return elasticSearchParticipantDto.getProfile()
             .map(esProfile -> {
                 logger.info("Starting extracting data from participant: " + esProfile.getGuid() + " ES profile");
                 String firstName = esProfile.getFirstName();
@@ -149,13 +129,4 @@ public class AutomaticProbandDataCreator implements Defaultable {
         }
     }
 
-    @Override
-    public boolean generateDefaults(String studyGuid, String participantId) {
-        String esParticipantIndex = ddpInstanceDao.getEsParticipantIndexByStudyGuid(studyGuid)
-                .orElse("");
-        Optional<ElasticSearchParticipantDto> maybeParticipantESDataByParticipantId =
-                ElasticSearchUtil.getParticipantESDataByParticipantId(esParticipantIndex, participantId);
-        instance = DDPInstance.getDDPInstance(studyGuid);
-        return setDefaultProbandData(maybeParticipantESDataByParticipantId);
-    }
 }

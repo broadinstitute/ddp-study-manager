@@ -4,12 +4,15 @@ import com.easypost.exception.EasyPostException;
 import com.easypost.model.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.DSMServer;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
 import org.broadinstitute.dsm.db.structure.SqlDateConverter;
@@ -18,17 +21,22 @@ import org.broadinstitute.dsm.model.KitType;
 import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.model.ddp.KitDetail;
+import org.broadinstitute.dsm.model.elastic.export.Exportable;
+import org.broadinstitute.dsm.model.elastic.export.painless.*;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
 import org.broadinstitute.dsm.util.DBUtil;
 import org.broadinstitute.dsm.util.EasyPostUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.KitUtil;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 import org.eclipse.jetty.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.*;
 import java.time.Instant;
 import java.util.*;
@@ -123,7 +131,6 @@ public class KitRequestShipping extends KitRequest {
 
     private static final String QUEUE = "queue";
 
-    @ColumnName(DBConstants.ERROR)
     private static final String ERROR = "error";
     private static final String SENT = "sent";
     private static final String RECEIVED = "received";
@@ -145,7 +152,7 @@ public class KitRequestShipping extends KitRequest {
     private static final String SEARCH_MF_BAR = "MF_BAR";
 
     @ColumnName(DBConstants.DSM_KIT_ID)
-    private long dsmKitId;
+    private Long dsmKitId;
 
     @ColumnName(DBConstants.LABEL_URL_TO)
     private String labelUrlTo;
@@ -154,15 +161,20 @@ public class KitRequestShipping extends KitRequest {
     private String labelUrlReturn;
 
     @ColumnName (DBConstants.DSM_TRACKING_TO)
-    private String trackingNumberTo;
+    private String trackingToId;
 
     @ColumnName (DBConstants.DSM_TRACKING_RETURN)
-    private String trackingNumberReturn;
+    private String trackingReturnId;
 
     @ColumnName (DBConstants.TRACKING_ID)
-    private String scannedTrackingNumber;
-    private String trackingUrlTo;
-    private String trackingUrlReturn;
+    private String trackingId;
+
+    @ColumnName(DBConstants.DSM_TRACKING_URL_TO)
+    private String easypostTrackingToUrl;
+
+    @ColumnName(DBConstants.DSM_TRACKING_URL_RETURN)
+    private String easypostTrackingReturnUrl;
+
     private String collaboratorParticipantId;
 
     @ColumnName (DBConstants.BSP_COLLABORATOR_PARTICIPANT_ID)
@@ -182,30 +194,39 @@ public class KitRequestShipping extends KitRequest {
     @ColumnName (DBConstants.KIT_TEST_RESULT)
     private String testResult;
 
+    public List<Map<String, Object>> getTestResult() {
+        try {
+            return ObjectMapperSingleton.instance().readValue(testResult, new TypeReference<List<Map<String, Object>>>() {});
+        } catch (IOException | NullPointerException e) {
+            return Collections.emptyList();
+        }
+    }
+
     @ColumnName (DBConstants.DSM_SCAN_DATE)
     @DbDateConversion(SqlDateConverter.EPOCH)
-    private long scanDate;
+    private Long scanDate;
 
     @ColumnName (DBConstants.DSM_RECEIVE_DATE)
     @DbDateConversion(SqlDateConverter.EPOCH)
-    private long receiveDate;
+    private Long receiveDate;
 
     @ColumnName (DBConstants.DSM_DEACTIVATED_DATE)
     @DbDateConversion(SqlDateConverter.EPOCH)
-    private long deactivatedDate;
+    private Long deactivatedDate;
 
     @ColumnName (DBConstants.EXPRESS)
-    private boolean express;
+    private Boolean express;
 
     @ColumnName (DBConstants.EASYPOST_TO_ID)
     private String easypostToId;
-    private long labelTriggeredDate;
+    @ColumnName (DBConstants.LABEL_TRIGGERED_DATE)
+    private Long labelDate;
 
     @ColumnName (DBConstants.NO_RETURN)
-    private boolean noReturn;
+    private Boolean noReturn;
 
     @ColumnName (DBConstants.ERROR)
-    private boolean error;
+    private Boolean error;
 
     @ColumnName(DBConstants.MESSAGE)
     private String message;
@@ -229,46 +250,49 @@ public class KitRequestShipping extends KitRequest {
     private String upsReturnStatus;
 
     @ColumnName (DBConstants.CARE_EVOLVE)
-    private boolean careEvolve;
+    private Boolean careEvolve;
 
     @ColumnName (DBConstants.UPLOAD_REASON)
     private String uploadReason;
 
     public KitRequestShipping() {}
 
-    public KitRequestShipping(String collaboratorParticipantId, String kitTypeName, long dsmKitRequestId, long scanDate, boolean error,
-                              long receiveDate, long deactivatedDate, String testResult,
-                              String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus, String externalOrderNumber, long externalOrderDate, boolean careEvolve, String uploadReason) {
-        this(null, collaboratorParticipantId, null, null, null, kitTypeName, dsmKitRequestId, 0, null, null,
+    public KitRequestShipping(String collaboratorParticipantId, String kitTypeName, Long dsmKitRequestId, Long scanDate, Boolean error,
+                              Long receiveDate, Long deactivatedDate, String testResult,
+                              String upsTrackingStatus, String upsReturnStatus, String externalOrderStatus, String externalOrderNumber, Long externalOrderDate, Boolean careEvolve, String uploadReason) {
+        this(null, collaboratorParticipantId, null, null, null, kitTypeName, dsmKitRequestId, null, null, null,
                 null, null, null, null, scanDate, error, null, receiveDate,
-                null, deactivatedDate, null, null, false, null, 0, null, externalOrderNumber, false, externalOrderStatus, null, testResult,
-                upsTrackingStatus, upsReturnStatus, externalOrderDate, false, uploadReason, null, null, null);
+                null, deactivatedDate, null, null, null, null, null, null, externalOrderNumber, null, externalOrderStatus, null,
+                testResult,
+                upsTrackingStatus, upsReturnStatus, externalOrderDate, careEvolve, uploadReason, null, null, null);
     }
 
-    public KitRequestShipping(String participantId, String collaboratorParticipantId, String dsmKitId, String realm, String trackingNumberTo, String receiveDateString, String hruid, String gender) {
-        this(participantId, collaboratorParticipantId, null, null, realm, null, 0, 0, null, null,
-                trackingNumberTo, null, null, null, 0, false, null, 0,
-                null, 0, null, dsmKitId, false, null, 0, null, null, false, null, null, null, null, null, 0, false, null,
+    public KitRequestShipping(String participantId, String collaboratorParticipantId, String dsmKitId, String realm, String trackingToId, String receiveDateString, String hruid, String gender) {
+        this(participantId, collaboratorParticipantId, null, null, realm, null, null, null, null, null,
+                trackingToId, null, null, null, null, null, null, null,
+                null, null, null, dsmKitId, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                 receiveDateString, hruid, gender);
     }
 
-    public KitRequestShipping(long dsmKitRequestId, long dsmKitId, String easypostToId, String easypostAddressId, boolean error,
+    public KitRequestShipping(Long dsmKitRequestId, Long dsmKitId, String easypostToId, String easypostAddressId, Boolean error,
                               String message) {
         this(null, null, null, null, null, null, dsmKitRequestId, dsmKitId, null, null,
-                null, null, null, null, 0, error, message, 0,
-                easypostAddressId, 0, null, null, false, easypostToId, 0, null, null, false, null, null, null, null, null, 0, false, null,
+                null, null, null, null, null, error, message, null,
+                easypostAddressId, null, null, null, null, easypostToId, null, null, null, null, null, null, null, null, null, null,
+                null,
+                null,
                 null, null, null);
     }
 
     // shippingId = ddp_label !!!
     public KitRequestShipping(String participantId, String collaboratorParticipantId, String bspCollaboratorSampleId, String shippingId, String realm,
-                              String kitTypeName, long dsmKitRequestId, long dsmKitId, String labelUrlTo, String labelUrlReturn,
-                              String trackingNumberTo, String trackingNumberReturn,
-                              String trackingUrlTo, String trackingUrlReturn, long scanDate, boolean error, String message,
-                              long receiveDate, String easypostAddressId, long deactivatedDate, String deactivationReason,
-                              String kitLabel, boolean express, String easypostToId, long labelTriggeredDate, String easypostShipmentStatus,
-                              String externalOrderNumber, boolean noReturn, String externalOrderStatus, String createdBy, String testResult,
-                              String upsTrackingStatus, String upsReturnStatus, long externalOrderDate, boolean careEvolve, String uploadReason,
+                              String kitTypeName, Long dsmKitRequestId, Long dsmKitId, String labelUrlTo, String labelUrlReturn,
+                              String trackingToId, String trackingReturnId,
+                              String easypostTrackingToUrl, String trackingUrlReturn, Long scanDate, Boolean error, String message,
+                              Long receiveDate, String easypostAddressId, Long deactivatedDate, String deactivationReason,
+                              String kitLabel, Boolean express, String easypostToId, Long labelDate, String easypostShipmentStatus,
+                              String externalOrderNumber, Boolean noReturn, String externalOrderStatus, String createdBy, String testResult,
+                              String upsTrackingStatus, String upsReturnStatus, Long externalOrderDate, Boolean careEvolve, String uploadReason,
                               String receiveDateString, String hruid, String gender) {
         super(dsmKitRequestId, participantId, null, shippingId, externalOrderNumber, null, externalOrderStatus, null, externalOrderDate);
         this.collaboratorParticipantId = collaboratorParticipantId;
@@ -278,10 +302,10 @@ public class KitRequestShipping extends KitRequest {
         this.dsmKitId = dsmKitId;
         this.labelUrlTo = labelUrlTo;
         this.labelUrlReturn = labelUrlReturn;
-        this.trackingNumberTo = trackingNumberTo;
-        this.trackingNumberReturn = trackingNumberReturn;
-        this.trackingUrlTo = trackingUrlTo;
-        this.trackingUrlReturn = trackingUrlReturn;
+        this.trackingToId = trackingToId;
+        this.trackingReturnId = trackingReturnId;
+        this.easypostTrackingToUrl = easypostTrackingToUrl;
+        this.easypostTrackingReturnUrl = trackingUrlReturn;
         this.scanDate = scanDate;
         this.error = error;
         this.message = message;
@@ -292,7 +316,7 @@ public class KitRequestShipping extends KitRequest {
         this.kitLabel = kitLabel;
         this.express = express;
         this.easypostToId = easypostToId;
-        this.labelTriggeredDate = labelTriggeredDate;
+        this.labelDate = labelDate;
         this.easypostShipmentStatus = easypostShipmentStatus;
         this.noReturn = noReturn;
         this.createdBy = createdBy;
@@ -352,11 +376,11 @@ public class KitRequestShipping extends KitRequest {
         );
         if (DBUtil.columnExists(rs, DBConstants.UPS_STATUS_DESCRIPTION) && StringUtils.isNotBlank(rs.getString(DBConstants.UPS_STATUS_DESCRIPTION))) {
             String upsPackageTrackingNumber = rs.getString(DBConstants.UPS_PACKAGE_TABLE_ABBR + DBConstants.UPS_TRACKING_NUMBER);
-            if (StringUtils.isNotBlank(upsPackageTrackingNumber) && upsPackageTrackingNumber.equals(kitRequestShipping.getTrackingNumberTo())) {
+            if (StringUtils.isNotBlank(upsPackageTrackingNumber) && upsPackageTrackingNumber.equals(kitRequestShipping.getTrackingToId())) {
                 kitRequestShipping.setUpsTrackingStatus(rs.getString(DBConstants.UPS_STATUS_DESCRIPTION));
 
             }
-            else if (StringUtils.isNotBlank(upsPackageTrackingNumber) && upsPackageTrackingNumber.equals(kitRequestShipping.getTrackingNumberReturn())) {
+            else if (StringUtils.isNotBlank(upsPackageTrackingNumber) && upsPackageTrackingNumber.equals(kitRequestShipping.getTrackingReturnId())) {
                 kitRequestShipping.setUpsReturnStatus(rs.getString(DBConstants.UPS_STATUS_DESCRIPTION));
             }
 
@@ -730,21 +754,23 @@ public class KitRequestShipping extends KitRequest {
         }
     }
 
-    public static void deactivateKitRequest(@NonNull long kitRequestId, @NonNull String reason, String easypostApiKey,
-                                            @NonNull String userId) {
+    public static void deactivateKitRequest(long dsmKitRequestId, @NonNull String deactivationReason, String easypostApiKey,
+                                            @NonNull String userId,
+                                            DDPInstanceDto ddpInstanceDto) {
+        long deactivatedDate = System.currentTimeMillis();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(UPDATE_KIT_DEACTIVATION)) {
-                stmt.setLong(1, System.currentTimeMillis());
-                stmt.setString(2, reason);
+                stmt.setLong(1, deactivatedDate);
+                stmt.setString(2, deactivationReason);
                 stmt.setString(3, userId);
-                stmt.setLong(4, kitRequestId);
+                stmt.setLong(4, dsmKitRequestId);
                 int result = stmt.executeUpdate();
                 if (result == 1) {
-                    logger.info("Deactivated kitRequest w/ dsm_kit_request_id " + kitRequestId);
+                    logger.info("Deactivated kitRequest w/ dsm_kit_request_id " + dsmKitRequestId);
                 }
                 else {
-                    throw new RuntimeException("Error setting kitRequest " + kitRequestId + " to deactivated. It was updating " + result + " rows");
+                    throw new RuntimeException("Error setting kitRequest " + dsmKitRequestId + " to deactivated. It was updating " + result + " rows");
                 }
             }
             catch (SQLException ex) {
@@ -754,11 +780,22 @@ public class KitRequestShipping extends KitRequest {
         });
 
         if (results.resultException != null) {
-            throw new RuntimeException("Error setting kitRequest to deactivated w/ dsm_kit_request_id " + kitRequestId, results.resultException);
+            throw new RuntimeException("Error setting kitRequest to deactivated w/ dsm_kit_request_id " + dsmKitRequestId, results.resultException);
+        }
+        if (Objects.nonNull(ddpInstanceDto)) {
+
+            KitRequestShipping kitRequestShipping = new KitRequestShipping();
+            kitRequestShipping.setDsmKitRequestId(dsmKitRequestId);
+            kitRequestShipping.setDeactivationReason(deactivationReason);
+            kitRequestShipping.setDeactivatedDate(deactivatedDate);
+
+            UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, ESObjectConstants.DSM_KIT_REQUEST_ID, ESObjectConstants.DSM_KIT_REQUEST_ID, dsmKitRequestId)
+                    .export();
+
         }
         else {
             if (easypostApiKey != null) {
-                KitRequestShipping.refundKit(kitRequestId, easypostApiKey);
+                KitRequestShipping.refundKit(dsmKitRequestId, easypostApiKey, ddpInstanceDto);
             }
         }
     }
@@ -793,15 +830,15 @@ public class KitRequestShipping extends KitRequest {
 
     //adding kit request to db (called by hourly job to add kits into DSM)
     public static void addKitRequests(@NonNull String instanceId, @NonNull KitDetail kitDetail, @NonNull int kitTypeId,
-                                      @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, String externalOrderNumber, String uploadReason) {
+                                      @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, String externalOrderNumber, String uploadReason, DDPInstance ddpInstance) {
         addKitRequests(instanceId, kitDetail.getKitType(), kitDetail.getParticipantId(), kitDetail.getKitRequestId(), kitTypeId, kitRequestSettings,
-                collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber, uploadReason);
+                collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber, uploadReason, ddpInstance);
     }
 
     //adding kit request to db (called by hourly job to add kits into DSM)
     public static void addKitRequests(@NonNull String instanceId, @NonNull String kitType, @NonNull String participantId, @NonNull String kitRequestId,
                                       @NonNull int kitTypeId, @NonNull KitRequestSettings kitRequestSettings, String collaboratorParticipantId, boolean needsApproval, String externalOrderNumber,
-                                      String uploadReason) {
+                                      String uploadReason, DDPInstance ddpInstance) {
         inTransaction((conn) -> {
             String errorMessage = "";
             String collaboratorSampleId = null;
@@ -819,7 +856,7 @@ public class KitRequestShipping extends KitRequest {
                 }
             }
             writeRequest(instanceId, kitRequestId, kitTypeId, participantId, collaboratorParticipantId, collaboratorSampleId,
-                    "SYSTEM", null, errorMessage, externalOrderNumber, needsApproval, uploadReason);
+                    "SYSTEM", null, errorMessage, externalOrderNumber, needsApproval, uploadReason, ddpInstance);
             return null;
         });
     }
@@ -828,9 +865,9 @@ public class KitRequestShipping extends KitRequest {
     // called by
     // 1. hourly job to add kit requests into db
     // 2. kit upload
-    public static String writeRequest(@NonNull String instanceId, @NonNull String ddpKitRequestId, @NonNull int kitTypeId,
+    public static String writeRequest(@NonNull String instanceId, @NonNull String ddpKitRequestId, int kitTypeId,
                                       @NonNull String ddpParticipantId, String collaboratorPatientId, String collaboratorSampleId,
-                                      @NonNull String createdBy, String addressIdTo, String errorMessage, String externalOrderNumber, boolean needsApproval, String uploadReason) {
+                                      @NonNull String createdBy, String addressIdTo, String errorMessage, String externalOrderNumber, boolean needsApproval, String uploadReason, DDPInstance ddpInstance) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult(0);
             try (PreparedStatement insertKitRequest = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.INSERT_KIT_REQUEST), Statement.RETURN_GENERATED_KEYS)) {
@@ -864,8 +901,28 @@ public class KitRequestShipping extends KitRequest {
             return dbVals;
         });
 
+
         if (results.resultException != null) {
             throw new RuntimeException("Error adding kit request  w/ ddpKitRequestId " + ddpKitRequestId, results.resultException);
+        }
+
+        if (Objects.nonNull(ddpInstance)) {
+            KitRequestShipping kitRequestShipping = new KitRequestShipping();
+            kitRequestShipping.setParticipantId(ddpParticipantId);
+            kitRequestShipping.setCollaboratorParticipantId(collaboratorPatientId);
+            kitRequestShipping.setBspCollaboratorSampleId(collaboratorSampleId);
+            kitRequestShipping.setDsmKitRequestId(Long.parseLong(String.valueOf(results.resultValue)));
+            kitRequestShipping.setMessage(errorMessage);
+            kitRequestShipping.setExternalOrderNumber(externalOrderNumber);
+            kitRequestShipping.setCreatedBy(createdBy);
+            kitRequestShipping.setUploadReason(uploadReason);
+
+            DDPInstanceDto ddpInstanceDto =
+                    new DDPInstanceDao().getDDPInstanceByInstanceId(Integer.valueOf(ddpInstance.getDdpInstanceId())).orElseThrow();
+
+            UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, ESObjectConstants.DSM_KIT_REQUEST_ID, ESObjectConstants.DOC_ID, Exportable.getParticipantGuid(ddpParticipantId, ddpInstance.getParticipantIndexES()))
+                    .export();
+
         }
 
         logger.info("Added kitRequest w/ ddpKitRequestId " + ddpKitRequestId);
@@ -874,7 +931,7 @@ public class KitRequestShipping extends KitRequest {
 
     private static SimpleResult writeNewKit(Connection conn, String kitRequestId, String addressIdTo, String errorMessage, boolean needsApproval) {
         SimpleResult dbVals = new SimpleResult();
-        try (PreparedStatement insertKit = conn.prepareStatement(INSERT_KIT)) {
+        try (PreparedStatement insertKit = conn.prepareStatement(INSERT_KIT, Statement.RETURN_GENERATED_KEYS)) {
             insertKit.setString(1, kitRequestId);
             if (StringUtils.isNotBlank(addressIdTo)) {
                 insertKit.setString(2, addressIdTo);
@@ -891,6 +948,14 @@ public class KitRequestShipping extends KitRequest {
             insertKit.setObject(4, errorMessage);
             insertKit.setBoolean(5, needsApproval);
             insertKit.executeUpdate();
+            try (ResultSet rs = insertKit.getGeneratedKeys()) {
+                if (rs.next()) {
+                    dbVals.resultValue = rs.getString(1);
+                }
+            }
+            catch (Exception e) {
+                throw new RuntimeException("Error getting id of new kit request ", e);
+            }
         }
         catch (SQLException e) {
             dbVals.resultException = e;
@@ -899,10 +964,8 @@ public class KitRequestShipping extends KitRequest {
     }
 
     // called by reactivation of a deactivated kit
-    public static void writeNewKit(String kitRequestId, String addressIdTo, String errorMessage, boolean needsApproval) {
-        SimpleResult results = inTransaction((conn) -> {
-            return writeNewKit(conn, kitRequestId, addressIdTo, errorMessage, needsApproval);
-        });
+    public static long writeNewKit(String kitRequestId, String addressIdTo, String errorMessage, boolean needsApproval) {
+        SimpleResult results = inTransaction((conn) -> writeNewKit(conn, kitRequestId, addressIdTo, errorMessage, needsApproval));
 
         if (results.resultException != null) {
             logger.error("Error writing new kit w/ dsm_kit_id " + kitRequestId, results.resultException);
@@ -910,15 +973,17 @@ public class KitRequestShipping extends KitRequest {
         else {
             logger.info("Wrote new kit w/ dsm_kit_id " + kitRequestId, results.resultException);
         }
+        return Long.parseLong(String.valueOf(results.resultValue));
     }
 
     // update kit with label trigger user and date
-    public static void updateKit(long dsmKitId, String userId) {
+    public static void updateKit(long dsmKitId, String userId, DDPInstanceDto ddpInstanceDto) {
+        long labelDate = System.currentTimeMillis();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT)) {
                 stmt.setString(1, userId);
-                stmt.setLong(2, System.currentTimeMillis());
+                stmt.setLong(2, labelDate);
                 stmt.setLong(3, dsmKitId);
 
                 int result = stmt.executeUpdate();
@@ -940,12 +1005,19 @@ public class KitRequestShipping extends KitRequest {
         }
         else {
             logger.info("Updated kit w/ kit_id " + dsmKitId, results.resultException);
+
+            KitRequestShipping kitRequestShipping = new KitRequestShipping(null, dsmKitId, null, null, null, null);
+            kitRequestShipping.setLabelDate(labelDate);
+
+            UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, ESObjectConstants.DSM_KIT_ID, ESObjectConstants.DSM_KIT_ID, dsmKitId)
+                            .export();
         }
     }
 
     // update kit with label information
-    public static void updateKit(String kitRequestId, Shipment participantShipment, Shipment returnShipment,
-                                 String errorMessage, Address toAddress, boolean isExpress) {
+    public static void updateKit(String dsmKitId, Shipment participantShipment, Shipment returnShipment,
+                                 String errorMessage, Address toAddress, boolean isExpress, DDPInstanceDto ddpInstanceDto) {
+        KitRequestShipping kitRequestShipping = new KitRequestShipping();
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(UPDATE_KIT)) {
@@ -956,6 +1028,10 @@ public class KitRequestShipping extends KitRequest {
                     stmt.setString(3, participantShipment.getId());
                     stmt.setString(5, participantShipment.getTrackingCode());
                     stmt.setString(7, participantTracker.getPublicUrl());
+                    kitRequestShipping.setLabelUrlTo(participantLabel.getLabelUrl());
+                    kitRequestShipping.setEasypostToId(participantShipment.getId());
+                    kitRequestShipping.setTrackingToId(participantShipment.getTrackingCode());
+                    kitRequestShipping.setEasypostTrackingToUrl(participantTracker.getPublicUrl()); //TODO
                 }
                 else {
                     stmt.setString(1, null);
@@ -970,6 +1046,9 @@ public class KitRequestShipping extends KitRequest {
                     stmt.setString(4, returnShipment.getId());
                     stmt.setString(6, returnShipment.getTrackingCode());
                     stmt.setString(8, returnTracker.getPublicUrl());
+                    kitRequestShipping.setLabelUrlReturn(returnLabel.getLabelUrl());
+                    kitRequestShipping.setTrackingReturnId(returnShipment.getTrackingCode());
+                    kitRequestShipping.setEasypostTrackingReturnUrl(returnTracker.getPublicUrl());
                 }
                 else {
                     stmt.setString(2, null);
@@ -981,29 +1060,36 @@ public class KitRequestShipping extends KitRequest {
                 if (StringUtils.isNotBlank(errorMessage)) {
                     stmt.setInt(9, 1);
                     stmt.setString(10, errorMessage);
+                    kitRequestShipping.setError(true);
+                    kitRequestShipping.setMessage(errorMessage);
                     logger.info("Added kit request with error message " + errorMessage);
                 }
                 else {
                     stmt.setInt(9, 0);
                     stmt.setString(10, null);
+                    kitRequestShipping.setError(false);
                 }
 
                 if (toAddress != null) {
                     stmt.setString(11, toAddress.getId());
+                    kitRequestShipping.setEasypostAddressId(toAddress.getId());
                 }
                 else {
                     stmt.setString(11, null);
                 }
                 if (isExpress) {
                     stmt.setInt(12, 1);
+                    kitRequestShipping.setExpress(true);
                 }
                 else {
                     stmt.setInt(12, 0);
+                    kitRequestShipping.setExpress(false);
                 }
-                stmt.setString(13, kitRequestId);
+                stmt.setString(13, dsmKitId);
+                kitRequestShipping.setDsmKitId(Long.valueOf(dsmKitId));
                 int result = stmt.executeUpdate();
                 if (result != 1) {
-                    throw new RuntimeException("Error updating kit " + kitRequestId + " it was updating " + result + " rows");
+                    throw new RuntimeException("Error updating kit " + dsmKitId + " it was updating " + result + " rows");
                 }
             }
             catch (Exception e) {
@@ -1013,10 +1099,14 @@ public class KitRequestShipping extends KitRequest {
         });
 
         if (results.resultException != null) {
-            logger.error("Error updating kit w/ dsm_kit_id " + kitRequestId, results.resultException);
+            logger.error("Error updating kit w/ dsm_kit_id " + dsmKitId, results.resultException);
         }
         else {
-            logger.info("Updated kit w/ dsm_kit_id " + kitRequestId, results.resultException);
+            logger.info("Updated kit w/ dsm_kit_id " + dsmKitId, results.resultException);
+
+            UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, ESObjectConstants.DSM_KIT_ID, ESObjectConstants.DSM_KIT_ID, dsmKitId)
+                            .export();
+
         }
     }
 
@@ -1255,7 +1345,7 @@ public class KitRequestShipping extends KitRequest {
         return null;
     }
 
-    public static void refundKit(@NonNull long kitRequestId, @NonNull String easypostApiKey) {
+    public static void refundKit(long kitRequestId, @NonNull String easypostApiKey, DDPInstanceDto ddpInstanceDto) {
         KitShippingIds shippingIds = KitShippingIds.getKitShippingIds(kitRequestId, easypostApiKey);
         if (shippingIds != null) {
             String message = "";
@@ -1280,24 +1370,24 @@ public class KitRequestShipping extends KitRequest {
                 }
             }
             if (StringUtils.isNotBlank(message)) {
-                updateKitError(kitRequestId, message);
+                updateKitError(kitRequestId, message, ddpInstanceDto);
             }
         }
     }
 
-    public static void updateKitError(@NonNull long kitRequestId, @NonNull String message) {
+    public static void updateKitError(@NonNull long dsmKitRequestId, @NonNull String message, DDPInstanceDto ddpInstanceDto) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(TransactionWrapper.getSqlFromConfig(ApplicationConfigConstants.UPDATE_KIT_ERROR))) {
                 stmt.setInt(1, 1);
                 stmt.setString(2, message);
-                stmt.setLong(3, kitRequestId);
+                stmt.setLong(3, dsmKitRequestId);
                 int result = stmt.executeUpdate();
                 if (result == 1) {
-                    logger.info("Updated error/message for kit request w/ dsm_kit_request_id " + kitRequestId);
+                    logger.info("Updated error/message for kit request w/ dsm_kit_request_id " + dsmKitRequestId);
                 }
                 else {
-                    throw new RuntimeException("Error updating error/message of kitRequest " + kitRequestId + ". It was updating " + result + " rows");
+                    throw new RuntimeException("Error updating error/message of kitRequest " + dsmKitRequestId + ". It was updating " + result + " rows");
                 }
             }
             catch (SQLException ex) {
@@ -1307,26 +1397,31 @@ public class KitRequestShipping extends KitRequest {
         });
 
         if (results.resultException != null) {
-            throw new RuntimeException("Error updating error/message of kitRequest w/ dsm_kit_request_id " + kitRequestId, results.resultException);
+            throw new RuntimeException("Error updating error/message of kitRequest w/ dsm_kit_request_id " + dsmKitRequestId, results.resultException);
         }
+
+        KitRequestShipping kitRequestShipping = new KitRequestShipping(dsmKitRequestId, null, null, null, null, message);
+
+        UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, ESObjectConstants.DSM_KIT_REQUEST_ID, ESObjectConstants.DSM_KIT_REQUEST_ID, dsmKitRequestId)
+                        .export();
     }
 
-    public static void reactivateKitRequest(@NonNull String kitRequestId) {
-        reactivateKitRequest(kitRequestId, null);
+    public static void reactivateKitRequest(@NonNull String kitRequestId, DDPInstanceDto ddpInstanceDto) {
+        reactivateKitRequest(kitRequestId, null, ddpInstanceDto);
     }
 
-    public static void reactivateKitRequest(@NonNull String kitRequestId, String message) {
+    public static void reactivateKitRequest(@NonNull String dsmKitRequestId, String message, DDPInstanceDto ddpInstanceDto) {
         SimpleResult results = inTransaction((conn) -> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_KIT + QueryExtension.KIT_DEACTIVATED,
                     ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
-                stmt.setString(1, kitRequestId);
+                stmt.setString(1, dsmKitRequestId);
                 try (ResultSet rs = stmt.executeQuery()) {
                     rs.last();
                     int count = rs.getRow();
                     rs.beforeFirst();
                     if (count != 1) {
-                        throw new RuntimeException("Couldn't find kit w/ dsm_kit_request_id " + kitRequestId + ". Rowcount: " + count);
+                        throw new RuntimeException("Couldn't find kit w/ dsm_kit_request_id " + dsmKitRequestId + ". Rowcount: " + count);
                     }
                     if (rs.next()) {
                         dbVals.resultValue = new KitRequestShipping(
@@ -1346,11 +1441,17 @@ public class KitRequestShipping extends KitRequest {
         });
 
         if (results.resultException != null) {
-            throw new RuntimeException("Error reactivating kit request w/ dsm_kit_request_id " + kitRequestId, results.resultException);
+            throw new RuntimeException("Error reactivating kit request w/ dsm_kit_request_id " + dsmKitRequestId, results.resultException);
         }
         if (results.resultValue != null) {
             KitRequestShipping kitRequestShipping = (KitRequestShipping) results.resultValue;
-            KitRequestShipping.writeNewKit(kitRequestId, kitRequestShipping.getEasypostAddressId(), message, false);
+
+            long dsmKitId = KitRequestShipping.writeNewKit(dsmKitRequestId, kitRequestShipping.getEasypostAddressId(), message, false);
+            kitRequestShipping.setDsmKitId(dsmKitId);
+
+            UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, ESObjectConstants.DSM_KIT_ID,
+                            ESObjectConstants.DSM_KIT_REQUEST_ID, Long.parseLong(dsmKitRequestId))
+                            .export();
         }
     }
 

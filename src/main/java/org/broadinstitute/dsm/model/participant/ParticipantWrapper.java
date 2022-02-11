@@ -1,30 +1,41 @@
 package org.broadinstitute.dsm.model.participant;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.db.*;
+import org.broadinstitute.dsm.db.AbstractionActivity;
+import org.broadinstitute.dsm.db.AbstractionGroup;
+import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.MedicalRecord;
+import org.broadinstitute.dsm.db.OncHistoryDetail;
+import org.broadinstitute.dsm.db.Participant;
+import org.broadinstitute.dsm.db.Tissue;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
-import org.broadinstitute.dsm.db.dao.ddp.participant.ParticipantDataDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
-import org.broadinstitute.dsm.model.elastic.filter.query.DsmAbstractQueryBuilder;
 import org.broadinstitute.dsm.model.elastic.filter.FilterParser;
+import org.broadinstitute.dsm.model.elastic.filter.query.DsmAbstractQueryBuilder;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
-import org.broadinstitute.dsm.model.at.DefaultValues;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Data
 public class ParticipantWrapper {
@@ -46,7 +57,7 @@ public class ParticipantWrapper {
     private Map<String, List<AbstractionActivity>> abstractionActivities = new HashMap<>();
     private Map<String, List<AbstractionGroup>> abstractionSummary = new HashMap<>();
     private Map<String, List<ElasticSearchParticipantDto>> proxiesByParticipantIds = new HashMap<>();
-    private Map<String, List<ParticipantDataDto>> participantData = new HashMap<>();
+    private Map<String, List<ParticipantData>> participantData = new HashMap<>();
 
     public ParticipantWrapper(ParticipantWrapperPayload participantWrapperPayload, ElasticSearchable elasticSearchable) {
         this.participantWrapperPayload = Objects.requireNonNull(participantWrapperPayload);
@@ -72,39 +83,23 @@ public class ParticipantWrapper {
                 })
                 .orElseGet(() -> {
                     fetchAndPrepareData(ddpInstance);
-                    //if study is AT
-                    if ("atcp".equals(ddpInstance.getName())) {
-                        DefaultValues defaultValues = new DefaultValues(participantData, esData.getEsParticipants(), ddpInstance, null);
-                        participantData = defaultValues.addDefaultValues();
-                    }
                     sortBySelfElseById(participantData.values());
                     return new ParticipantWrapperResult(esData.getTotalCount(), collectData(ddpInstance));
                 });
     }
 
-    //TODO could be better, good place for refactoring for future
     private void fetchAndPrepareDataByFilters(DDPInstance ddpInstance, Map<String, String> filters) {
         FilterParser parser = new FilterParser();
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         for (String source : filters.keySet()) {
             if (StringUtils.isNotBlank(filters.get(source))) {
                 if (isUnderDsmKey(source)) {
-                    DsmAbstractQueryBuilder queryBuilder = DsmAbstractQueryBuilder.of(source);
+                    DsmAbstractQueryBuilder queryBuilder = new DsmAbstractQueryBuilder();
                     queryBuilder.setFilter(filters.get(source));
                     queryBuilder.setParser(parser);
                     boolQueryBuilder.must(queryBuilder.build());
                 }
-                else if (DBConstants.DDP_PARTICIPANT_DATA_ALIAS.equals(source)) {
-                    participantData = new ParticipantDataDao().getParticipantDataByInstanceIdAndFilterQuery(Integer.parseInt(ddpInstance.getDdpInstanceId()), filters.get(source));
-
-                    //if study is AT TODO
-                    if ("atcp".equals(ddpInstance.getName())) {
-                        DefaultValues defaultValues =
-                                new DefaultValues(participantData, esData.getEsParticipants(), ddpInstance, filters.get(source));
-                        participantData = defaultValues.addDefaultValues();
-                    }
-                }
-                else if ("ES".equals(source)){
+                else if (ElasticSearchUtil.ES.equals(source)){
                     //source is not of any study-manager table so it must be ES
                     boolQueryBuilder.must(ElasticSearchUtil.createESQuery(filters.get(source)));
                 }
@@ -142,8 +137,8 @@ public class ParticipantWrapper {
         participantData = getParticipantDataFromEsData();
     }
 
-    private Map<String, List<ParticipantDataDto>> getParticipantDataFromEsData() {
-        Map<String, List<ParticipantDataDto>> participantDataByParticipantId = new HashMap<>();
+    private Map<String, List<ParticipantData>> getParticipantDataFromEsData() {
+        Map<String, List<ParticipantData>> participantDataByParticipantId = new HashMap<>();
         for (ElasticSearchParticipantDto elasticSearchParticipantDto: esData.getEsParticipants()) {
             String participantId = elasticSearchParticipantDto.getParticipantId();
             elasticSearchParticipantDto.getDsm().ifPresent(esDsm -> participantDataByParticipantId.put(participantId, esDsm.getParticipantData()));
@@ -221,7 +216,7 @@ public class ParticipantWrapper {
                 ElasticSearch participantsByIds = elasticSearchable.getParticipantsByIds(usersIndexES, proxyGuids);
                 List<ElasticSearchParticipantDto> proxies = participantsByIds.getEsParticipants();
 
-                List<ParticipantDataDto> participantData = esDsm.getParticipantData();
+                List<ParticipantData> participantData = esDsm.getParticipantData();
 
                 ParticipantWrapperDto participantWrapperDto = new ParticipantWrapperDto();
                 participantWrapperDto.setEsData(elasticSearchParticipantDto);
@@ -251,9 +246,9 @@ public class ParticipantWrapper {
         }
     }
 
-    void sortBySelfElseById(Collection<List<ParticipantDataDto>> participantDatas) {
+    void sortBySelfElseById(Collection<List<ParticipantData>> participantDatas) {
         participantDatas.forEach(pDataList -> pDataList.sort((o1, o2) -> {
-            Map<String, String> pData = new Gson().fromJson(o1.getData().orElse(""), new TypeToken<Map<String, String>>() {}.getType());
+            Map<String, String> pData = new Gson().fromJson(o1.getData().orElse(StringUtils.EMPTY), new TypeToken<Map<String, String>>() {}.getType());
             if (Objects.nonNull(pData) && FamilyMemberConstants.MEMBER_TYPE_SELF.equals(pData.get(FamilyMemberConstants.MEMBER_TYPE))) return -1;
             return o1.getParticipantDataId() - o2.getParticipantDataId();
         }));

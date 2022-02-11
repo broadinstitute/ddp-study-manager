@@ -3,7 +3,7 @@ package org.broadinstitute.dsm.util;
 import com.google.gson.Gson;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
@@ -48,9 +48,9 @@ public class ParticipantUtil {
         return applicantEmail.equalsIgnoreCase(currentParticipantEmail);
     }
 
-    public static boolean matchesApplicantEmail(String collaboratorParticipantId, List<ParticipantDataDto> participantDatas) {
+    public static boolean matchesApplicantEmail(String collaboratorParticipantId, List<ParticipantData> participantDatas) {
         String applicantEmail = null, currentParticipantEmail = null;
-        for (ParticipantDataDto participantData: participantDatas) {
+        for (ParticipantData participantData: participantDatas) {
             Map<String, String> dataMap = participantData.getDataMap();
             if (dataMap == null) {
                 continue;
@@ -91,10 +91,10 @@ public class ParticipantUtil {
         return email.toString();
     }
 
-    public static ParticipantDataDto findApplicantData(String ddpParticipantId, List<ParticipantDataDto> participantDataDtos) {
-        ParticipantDataDto applicantData = null;
-        for (ParticipantDataDto participantDataDto : participantDataDtos) {
-            Map<String, String> dataMap = participantDataDto.getDataMap();
+    public static ParticipantData findApplicantData(String ddpParticipantId, List<ParticipantData> participantsDatas) {
+        ParticipantData applicantData = null;
+        for (ParticipantData participantData : participantsDatas) {
+            Map<String, String> dataMap = participantData.getDataMap();
             if (dataMap == null) {
                 continue;
             }
@@ -103,7 +103,7 @@ public class ParticipantUtil {
             boolean isNewApplicant = dataMap.containsKey(FamilyMemberConstants.IS_APPLICANT)
                     && TRUE.equals(dataMap.get(FamilyMemberConstants.IS_APPLICANT));
             if (isOldApplicant || isNewApplicant) {
-                applicantData = participantDataDto;
+                applicantData = participantData;
                 break;
             }
         }

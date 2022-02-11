@@ -34,6 +34,7 @@ public class SystemUtil {
 
     public static final long MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
     public static final long MILLIS_PER_HOUR = 1000 * 60 * 60;
+    public static final String SYSTEM = "SYSTEM";
 
     private static final String LINEBREAK_UNIVERSAL = "\n";
     private static final String LINEBREAK = "\r";

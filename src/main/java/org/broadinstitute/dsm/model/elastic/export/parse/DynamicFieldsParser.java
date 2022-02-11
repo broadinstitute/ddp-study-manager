@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
-import org.broadinstitute.dsm.util.ObjectMapperSingleton;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 
 import java.util.List;
 import java.util.Map;
@@ -18,7 +18,7 @@ public class DynamicFieldsParser extends BaseParser {
     public static final String CHECKBOX_TYPE = "CHECKBOX";
     public static final String ACTIVITY_STAFF_TYPE = "ACTIVITY_STAFF";
     public static final String ACTIVITY_TYPE = "ACTIVITY";
-    private String displayType;
+    protected String displayType;
     private String possibleValuesJson;
     private BaseParser parser;
     public FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
@@ -73,7 +73,7 @@ public class DynamicFieldsParser extends BaseParser {
         return parsedValue;
     }
 
-    private void getProperDisplayTypeWithPossibleValues() {
+    protected void getProperDisplayTypeWithPossibleValues() {
         Optional<FieldSettingsDto> fieldSettingsByInstanceNameAndColumnName =
                 fieldSettingsDao.getFieldSettingsByInstanceNameAndColumnName(realm, super.fieldName);
         if (fieldSettingsByInstanceNameAndColumnName.isPresent()) {

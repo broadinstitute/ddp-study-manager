@@ -8,13 +8,35 @@ import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.Participant;
 import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.model.FollowUp;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 public class UtilTest {
+
+    @Before
+    public void setUp() {
+        class FieldSettingsDaoMock extends FieldSettingsDao {
+
+            @Override
+            public Optional<FieldSettingsDto> getFieldSettingsByInstanceNameAndColumnName(String instanceName, String columnName) {
+                FieldSettingsDto.Builder builder = new FieldSettingsDto.Builder(0);
+                if ("BOOLEAN_VAL".equals(columnName)) {
+                    builder.withDisplayType("CHECKBOX");
+                } else if ("LONG_VAL".equals(columnName)) {
+                    builder.withDisplayType("NUMBER");
+                }
+                return Optional.of(builder.build());
+            }
+        }
+
+        FieldSettingsDaoMock fieldSettingsDaoMock = new FieldSettingsDaoMock();
+
+        FieldSettingsDao.setInstance(fieldSettingsDaoMock);
+    }
 
     @Test
     public void underscoresToCamelCase() {
@@ -45,7 +67,7 @@ public class UtilTest {
                 "ptNotes", true, true,
                 "additionalValuesJson", 1934283746283L);
         Map<String, Object> transformedObject = Util.transformObjectToMap(participant, "angio");
-        assertEquals("1", transformedObject.get("participantId"));
+        assertEquals(1L, transformedObject.get("participantId"));
         assertEquals("QWERTY", transformedObject.get("ddpParticipantId"));
         assertEquals("2020-10-28", transformedObject.get("created"));
         assertEquals(true, transformedObject.get("minimalMr"));
@@ -55,27 +77,11 @@ public class UtilTest {
     @Test
     public void transformJsonToMap() {
 
-        class FieldSettingsDaoMock extends FieldSettingsDao {
-
-            @Override
-            public Optional<FieldSettingsDto> getFieldSettingsByInstanceNameAndColumnName(String instanceName, String columnName) {
-                FieldSettingsDto.Builder builder = new FieldSettingsDto.Builder(0);
-                if ("BOOLEAN_VAL".equals(columnName)) {
-                    builder.withDisplayType("CHECKBOX");
-                } else if ("LONG_VAL".equals(columnName)) {
-                    builder.withDisplayType("NUMBER");
-                }
-                return Optional.of(builder.build());
-            }
-        }
-
-        FieldSettingsDaoMock fieldSettingsDaoMock = new FieldSettingsDaoMock();
-
-        FieldSettingsDao.setInstance(fieldSettingsDaoMock);
+        setUp();
 
         String json = "{\"DDP_INSTANCE\": \"TEST\", \"DDP_VALUE\": \"VALUE\", \"BOOLEAN_VAL\": \"true\", \"LONG_VAL\": \"5\"}";
 
-        ParticipantDataDto participantDataDto = new ParticipantDataDto.Builder()
+        ParticipantData participantData = new ParticipantData.Builder()
                 .withParticipantDataId(10)
                 .withDdpParticipantId("123")
                 .withDdpInstanceId(55)
@@ -83,11 +89,26 @@ public class UtilTest {
                 .withData(json)
                 .build();
 
-        Map<String, Object> result = Util.transformObjectToMap(participantDataDto, "angio");
+        Map<String, Object> result = Util.transformObjectToMap(participantData, "angio");
         assertEquals("TEST", ((Map) result.get("dynamicFields")).get("ddpInstance"));
         assertEquals("VALUE", ((Map) result.get("dynamicFields")).get("ddpValue"));
         assertEquals(true, ((Map) result.get("dynamicFields")).get("booleanVal"));
         assertEquals(5L, ((Map) result.get("dynamicFields")).get("longVal"));
+    }
+
+    @Test
+    public void transformArrayJsonToMap() {
+
+        setUp();
+
+        String json = "[{\"isCorrected\": true, \"result\": \"Negative\", \"timeCompleted\": \"2020-09-03T12:08:21.657Z\"}]";
+
+        Map<String, Object> result = Util.convertToMap("test_result", json, StringUtils.EMPTY);
+
+        Map<String, Object> testResult = (Map) ((List) result.get("testResult")).get(0);
+        assertTrue((boolean) testResult.get("isCorrected"));
+        assertEquals("Negative", testResult.get("result"));
+        assertEquals("2020-09-03T12:08:21.657Z", testResult.get("timeCompleted"));
     }
 
     @Test

@@ -4,25 +4,19 @@ import java.util.regex.Pattern;
 
 import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.dsm.model.elastic.filter.FilterParser;
-import org.broadinstitute.dsm.model.elastic.filter.query.CollectionQueryBuilder;
-import org.elasticsearch.index.query.AbstractQueryBuilder;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.ExistsQueryBuilder;
-import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.query.NestedQueryBuilder;
-import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.elasticsearch.index.query.*;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 public class CollectionQueryBuilderTest {
 
-    CollectionQueryBuilder collectionQueryBuilder;
+    DsmAbstractQueryBuilder dsmAbstractQueryBuilder;
 
     @Before
     public void setUp() {
-        collectionQueryBuilder = new CollectionQueryBuilder();
-        collectionQueryBuilder.setParser(new FilterParser());
+        dsmAbstractQueryBuilder = new DsmAbstractQueryBuilder();
+        dsmAbstractQueryBuilder.setParser(new FilterParser());
     }
 
     @Test
@@ -30,8 +24,8 @@ public class CollectionQueryBuilderTest {
 
         String filter = "AND m.medicalRecordId = '15' AND m.type = 'PHYSICIAN' OR k.bspCollaboratorSampleId = 'ASCProject_PZ8GJC_SALIVA'";
 
-        collectionQueryBuilder.setFilter(filter);
-        AbstractQueryBuilder actual = collectionQueryBuilder.build();
+        dsmAbstractQueryBuilder.setFilter(filter);
+        AbstractQueryBuilder actual = dsmAbstractQueryBuilder.build();
 
         AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord", new MatchQueryBuilder("dsm.medicalRecord.medicalRecordId", "15"), ScoreMode.Avg))
                 .must(new NestedQueryBuilder("dsm.medicalRecord", new MatchQueryBuilder("dsm.medicalRecord.type", "PHYSICIAN"), ScoreMode.Avg))
@@ -45,14 +39,18 @@ public class CollectionQueryBuilderTest {
 
         String filter = "AND m.medicalRecordId >= '15' AND m.type LIKE 'PHYSICIAN' OR k.bspCollaboratorSampleId = 'ASCProject_PZ8GJC_SALIVA' AND t.returnDate <= '2015-01-01' AND p.participantId IS NOT NULL";
 
-        collectionQueryBuilder.setFilter(filter);
-        AbstractQueryBuilder actual = collectionQueryBuilder.build();
+        dsmAbstractQueryBuilder.setFilter(filter);
+        AbstractQueryBuilder actual = dsmAbstractQueryBuilder.build();
+
+
+        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        boolQueryBuilder.must(new ExistsQueryBuilder("dsm.participant.participantId"));
 
         AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord", new RangeQueryBuilder("dsm.medicalRecord.medicalRecordId").gte("15"), ScoreMode.Avg))
                 .must(new NestedQueryBuilder("dsm.medicalRecord", new MatchQueryBuilder("dsm.medicalRecord.type", "PHYSICIAN"), ScoreMode.Avg))
                 .should(new NestedQueryBuilder("dsm.kitRequestShipping", new MatchQueryBuilder("dsm.kitRequestShipping.bspCollaboratorSampleId", "ASCProject_PZ8GJC_SALIVA"), ScoreMode.Avg))
                 .must(new NestedQueryBuilder("dsm.tissue", new RangeQueryBuilder("dsm.tissue.returnDate").lte("2015-01-01"), ScoreMode.Avg))
-                .must(new NestedQueryBuilder("dsm.participant", new ExistsQueryBuilder("dsm.participant.participantId"), ScoreMode.Avg));
+                .must(boolQueryBuilder);
 
         Assert.assertEquals(expected, actual);
     }
@@ -62,8 +60,8 @@ public class CollectionQueryBuilderTest {
 
         String filter = "AND m.age >= '15' AND m.age <= '30'";
 
-        collectionQueryBuilder.setFilter(filter);
-        AbstractQueryBuilder actual = collectionQueryBuilder.build();
+        dsmAbstractQueryBuilder.setFilter(filter);
+        AbstractQueryBuilder actual = dsmAbstractQueryBuilder.build();
 
         AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord",
                         new RangeQueryBuilder("dsm.medicalRecord.age").gte("15"), ScoreMode.Avg))
@@ -78,8 +76,8 @@ public class CollectionQueryBuilderTest {
 
         String filter = "AND m.followUp LIKE '1'";
 
-        collectionQueryBuilder.setFilter(filter);
-        AbstractQueryBuilder actual = collectionQueryBuilder.build();
+        dsmAbstractQueryBuilder.setFilter(filter);
+        AbstractQueryBuilder actual = dsmAbstractQueryBuilder.build();
 
         AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord",
                         new MatchQueryBuilder("dsm.medicalRecord.followUp", true), ScoreMode.Avg));
@@ -92,8 +90,8 @@ public class CollectionQueryBuilderTest {
 
         String filter = "AND ( oD.request = 'review' OR oD.request = 'no' OR oD.request = 'hold' OR oD.request = 'request' OR oD.request = 'unable To Obtain' OR oD.request = 'sent' OR oD.request = 'received' OR oD.request = 'returned' )";
 
-        collectionQueryBuilder.setFilter(filter);
-        AbstractQueryBuilder actual = collectionQueryBuilder.build();
+        dsmAbstractQueryBuilder.setFilter(filter);
+        AbstractQueryBuilder actual = dsmAbstractQueryBuilder.build();
 
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         boolQueryBuilder.should(new MatchQueryBuilder("dsm.oncHistoryDetail.request", "review"));
@@ -116,8 +114,8 @@ public class CollectionQueryBuilderTest {
 
         String filter = "AND m.received >= STR_TO_DATE('2012-01-01', %yyyy-%MM-%dd) AND m.received <= STR_TO_DATE('2015-01-01', %yyyy-%MM-%dd)";
 
-        collectionQueryBuilder.setFilter(filter);
-        AbstractQueryBuilder actual = collectionQueryBuilder.build();
+        dsmAbstractQueryBuilder.setFilter(filter);
+        AbstractQueryBuilder actual = dsmAbstractQueryBuilder.build();
 
         AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord",
                         new RangeQueryBuilder("dsm.medicalRecord.received").gte("2012-01-01"), ScoreMode.Avg))
@@ -132,12 +130,14 @@ public class CollectionQueryBuilderTest {
 
         String filter = "AND JSON_EXTRACT ( m.additional_values_json , '$.seeingIfBugExists' ) = 'true' AND JSON_EXTRACT ( m.additional_values_json , '$.tryAgain' ) IS NOT NULL";
 
-        collectionQueryBuilder.setFilter(filter);
-        AbstractQueryBuilder actual = collectionQueryBuilder.build();
+        dsmAbstractQueryBuilder.setFilter(filter);
+        AbstractQueryBuilder actual = dsmAbstractQueryBuilder.build();
+
+        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        boolQueryBuilder.must(new NestedQueryBuilder("dsm.medicalRecord", new ExistsQueryBuilder("dsm.medicalRecord.dynamicFields.tryAgain"), ScoreMode.Avg));
 
         AbstractQueryBuilder<BoolQueryBuilder> expected = new BoolQueryBuilder().must(new NestedQueryBuilder("dsm.medicalRecord",
-                        new MatchQueryBuilder("dsm.medicalRecord.dynamicFields.seeingIfBugExists", true), ScoreMode.Avg))
-                .must(new NestedQueryBuilder("dsm.medicalRecord", new ExistsQueryBuilder("dsm.medicalRecord.dynamicFields.tryAgain"),ScoreMode.Avg));
+                        new MatchQueryBuilder("dsm.medicalRecord.dynamicFields.seeingIfBugExists", true), ScoreMode.Avg)).must(boolQueryBuilder);
 
         Assert.assertEquals(expected, actual);
     }

@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
@@ -71,7 +71,7 @@ public class ParticipantWrapperTest {
         Random random = new Random();
         String[] memberTypes = new String[] {"SISTER", "COUSIN", "SELF", "BROTHER"};
         AtomicInteger i = new AtomicInteger(0);
-        List<ParticipantDataDto> pDatas = Stream.generate(() -> new ParticipantDataDto.Builder()
+        List<ParticipantData> pDatas = Stream.generate(() -> new ParticipantData.Builder()
                 .withData(String.format("{\"MEMTER_TYPE\":\"%s\"}", memberTypes[i.getAndIncrement()]))
                 .withParticipantDataId(random.nextInt(100))
                 .build()).limit(4).collect(Collectors.toList());

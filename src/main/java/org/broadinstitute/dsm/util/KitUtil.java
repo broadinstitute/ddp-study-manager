@@ -13,11 +13,15 @@ import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
 import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.KitRequestCreateLabel;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.model.KitRequestSettings;
 import org.broadinstitute.dsm.model.KitType;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
+import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainlessFacade;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,13 +126,21 @@ public class KitUtil {
 
     public static void createLabel(List<KitRequestCreateLabel> kitsLabelTriggered) {
         DBUtil.updateBookmark(System.currentTimeMillis(), BOOKMARK_LABEL_CREATION_RUNNING);
+        DDPInstanceDto ddpInstanceDto = null;
 
         for (KitRequestCreateLabel kitLabelTriggered : kitsLabelTriggered) {
             EasyPostUtil easyPostUtil = new EasyPostUtil(kitLabelTriggered.getInstanceName());
             Address toAddress = null;
             try {
                 if (StringUtils.isBlank(kitLabelTriggered.getAddressIdTo())) {
+
                     DDPInstance ddpInstance = DDPInstance.getDDPInstance(kitLabelTriggered.getInstanceName());
+
+                    //TODO -> before we finally switch to ddpInstanceDao/ddpInstanceDto pair
+                    ddpInstanceDto = new DDPInstanceDto.Builder()
+                            .withInstanceName(ddpInstance.getName())
+                            .withEsParticipantIndex(ddpInstance.getParticipantIndexES())
+                            .build();
 
                     Map<String, Map<String, Object>> participantESData = ElasticSearchUtil.getFilteredDDPParticipantsFromES(ddpInstance,
                             ElasticSearchUtil.BY_GUID + kitLabelTriggered.getDdpParticipantId());
@@ -143,7 +155,7 @@ public class KitUtil {
                     else {
                         KitRequestShipping.deactivateKitRequest(Long.parseLong(kitLabelTriggered.getDsmKitRequestId()), "Participant not found",
                                 null,
-                                "System");
+                                SystemUtil.SYSTEM, ddpInstanceDto);
                         logger.error("Didn't find participant " + kitLabelTriggered.getDdpParticipantId());
                     }
                 }
@@ -191,7 +203,7 @@ public class KitUtil {
             }
             if (toAddress != null) {
                 buyShipmentForKit(easyPostUtil, kitLabelTriggered.getDsmKitId(), kitLabelTriggered.getKitRequestSettings(),
-                        kitLabelTriggered.getKitTyp(), toAddress.getId(), kitLabelTriggered.getBillingReference());
+                        kitLabelTriggered.getKitTyp(), toAddress.getId(), kitLabelTriggered.getBillingReference(), ddpInstanceDto);
             }
         }
 
@@ -252,7 +264,7 @@ public class KitUtil {
     }
 
     private static void buyShipmentForKit(@NonNull EasyPostUtil easyPostUtil, @NonNull String dsmKitId, @NonNull KitRequestSettings kitRequestSettings,
-                                          @NonNull KitType kitType, @NonNull String addressIdTo, String billingReference) {
+                                          @NonNull KitType kitType, @NonNull String addressIdTo, String billingReference, DDPInstanceDto ddpInstanceDto) {
         String errorMessage = "";
         Shipment participantShipment = null;
         Shipment returnShipment = null;
@@ -271,7 +283,7 @@ public class KitUtil {
         catch (Exception e) {
             errorMessage += "Return: " + e.getMessage();
         }
-        KitRequestShipping.updateKit(dsmKitId, participantShipment, returnShipment, errorMessage, toAddress, false);
+        KitRequestShipping.updateKit(dsmKitId, participantShipment, returnShipment, errorMessage, toAddress, false, ddpInstanceDto);
     }
 
     public static String getKitCollaboratorId(@NonNull String ddpParticipantId, @NonNull String realmId) {
@@ -380,6 +392,11 @@ public class KitUtil {
                 EasyPostUtil easyPostUtil = new EasyPostUtil(ddpInstance.getName());
                 SimpleResult results = inTransaction((conn) -> {
 
+                    DDPInstanceDto ddpInstanceDto = new DDPInstanceDto.Builder()
+                            .withInstanceName(ddpInstance.getName())
+                            .withEsParticipantIndex(ddpInstance.getParticipantIndexES())
+                            .build();
+
                     for (KitRequestShipping kitRequest : kitRequestShippingList) {
                         if (StringUtils.isNotBlank(kitRequest.getEasypostToId()) && kitRequest.getEasypostToId().startsWith("shp_")) {
                             try {
@@ -418,7 +435,8 @@ public class KitUtil {
                                                     kitMessage = message;
                                                 }
                                             }
-                                            SimpleResult result = updateKit(conn, status, deliveredDate, kitMessage, kitRequest.getDsmKitId());
+                                            SimpleResult result = updateKit(conn, status, deliveredDate, kitMessage,
+                                                    kitRequest.getDsmKitId(), ddpInstanceDto);
                                             if (result.resultException != null) {
                                                 logger.error("Error updating kit for kit request " + kitRequest.getDsmKitRequestId() + " of realm " + ddpInstance.getName(), result.resultException);
                                             }
@@ -474,7 +492,7 @@ public class KitUtil {
 
     // update kit with label trigger user and date
     private static SimpleResult updateKit(@NonNull Connection conn, String status, Long date, String message,
-                                          long dsmKitId) {
+                                          long dsmKitId, DDPInstanceDto ddpInstanceDto) {
         SimpleResult dbVals = new SimpleResult();
         try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT)) {
             stmt.setString(1, status);
@@ -490,6 +508,15 @@ public class KitUtil {
         catch (Exception e) {
             dbVals.resultException = e;
         }
+
+        KitRequestShipping kitRequestShipping = new KitRequestShipping();
+        kitRequestShipping.setEasypostShipmentStatus(status);
+        kitRequestShipping.setMessage(message);
+        kitRequestShipping.setDsmKitId(dsmKitId);
+
+        UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, ESObjectConstants.DSM_KIT_ID, ESObjectConstants.DSM_KIT_ID, dsmKitId)
+                        .export();
+
         return dbVals;
     }
 
@@ -525,7 +552,8 @@ public class KitUtil {
                                         boolean specialBehavior = InstanceSettings.shouldKitBehaveDifferently(participant, uploaded);
                                         if (specialBehavior) {
                                             KitRequestShipping.deactivateKitRequest(kit.getDsmKitRequestId(), SYSTEM_AUTOMATICALLY_DEACTIVATED + ": " + uploaded.getValue(),
-                                                    DSMServer.getDDPEasypostApiKey(ddpInstance.getName()), "System");
+                                                    DSMServer.getDDPEasypostApiKey(ddpInstance.getName()), SystemUtil.SYSTEM,
+                                                    new DDPInstanceDao().getDDPInstanceByInstanceName(ddpInstance.getName()).orElseThrow());
                                             if (InstanceSettings.TYPE_NOTIFICATION.equals(uploaded.getType())) {
                                                 String message = kitType.getName() + " kit for participant " + kit.getParticipantId() + " (<b>" + kit.getCollaboratorParticipantId()
                                                         + "</b>) was deactivated per background job <br>. " + uploaded.getValue();

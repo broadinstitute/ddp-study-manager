@@ -1,12 +1,11 @@
 package org.broadinstitute.dsm.model.elastic.search;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.*;
 
 import org.broadinstitute.dsm.statics.ESObjectConstants;
-import org.broadinstitute.dsm.util.ObjectMapperSingleton;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -24,7 +23,6 @@ public class SourceMapDeserializerTest {
                 ESObjectConstants.DYNAMIC_FIELDS, dynamicFields
         );
 
-
         SourceMapDeserializer sourceMapDeserializer = new SourceMapDeserializer();
         sourceMapDeserializer.outerProperty = ESObjectConstants.PARTICIPANT_DATA;
         try {
@@ -38,35 +36,21 @@ public class SourceMapDeserializerTest {
     }
 
     @Test
-    public void convertSeveralDynamicFields() {
+    public void testResultToJson() {
 
-        Map<String, String> dynamicFields1 = new HashMap<>(Map.of(
-                "registrationType", "Self",
-                "registrationStatus", "Registered"
-        ));
+        SourceMapDeserializer sourceMapDeserializer = new SourceMapDeserializer();
 
-        Map<String, String> dynamicFields2 = new HashMap<>(Map.of(
-                "registrationType", "Self",
-                "registrationStatus", "Registered"
-        ));
+        Map<Object, Object> testResultInner = new LinkedHashMap<>();
+        testResultInner.put("isCorrected", true);
+        testResultInner.put("timeCompleted", "2020-01-01");
+        testResultInner.put("result", "Positive");
 
-        Map<String, Object> outerProperties1 = new HashMap<>(Map.of(
-                "ddpInstanceId", 12,
-                ESObjectConstants.DYNAMIC_FIELDS, dynamicFields1
-        ));
+        Map<String, Object> testResult = Map.of("testResult", testResultInner);
 
-        Map<String, Object> outerProperties2 = new HashMap<>(Map.of(
-                "ddpInstanceId", 13,
-                ESObjectConstants.DYNAMIC_FIELDS, dynamicFields2
-        ));
+        String testResultValueAsJson = sourceMapDeserializer.convertTestResultValueAsJson(testResult);
 
-        Map<String, Object> participantData = new HashMap<>(Map.of("participantData", new ArrayList<>(Arrays.asList(outerProperties1, outerProperties2))));
-        Map<String, Object> dsm = new HashMap<>(Map.of("dsm", participantData));
+        String expected = "[{\"isCorrected\":true,\"timeCompleted\":\"2020-01-01\",\"result\":\"Positive\"}]";
 
-        Optional<ElasticSearchParticipantDto> des = new SourceMapDeserializer().deserialize(dsm);
-
-        System.out.println(des);
-
-
+        Assert.assertEquals(expected, testResultValueAsJson);
     }
 }

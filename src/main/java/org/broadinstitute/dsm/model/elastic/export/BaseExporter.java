@@ -6,7 +6,6 @@ import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.elasticsearch.client.RestHighLevelClient;
 
 public abstract class BaseExporter implements Exportable, ExportableHelper {
-    protected RestHighLevelClient clientInstance = ElasticSearchUtil.getClientInstance();
 
     protected RequestPayload requestPayload;
     protected Map<String, Object> source;

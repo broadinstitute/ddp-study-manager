@@ -15,7 +15,7 @@ import org.broadinstitute.dsm.db.structure.SqlDateConverter;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.DBUtil;
-import org.broadinstitute.dsm.util.ObjectMapperSingleton;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -203,11 +203,6 @@ public class Participant {
 
     public static Map<String, Participant> getParticipants(@NonNull String realm) {
         return getParticipants(realm, null);
-    }
-
-    public static List<Participant> getParticipantsByIds(@NonNull String realm, List<String> participantIds) {
-        String queryAddition = " AND p.ddp_participant_id IN (?)".replace("?", DBUtil.participantIdsInClause(participantIds));
-        return new ArrayList<>(getParticipants(realm, queryAddition).values());
     }
 
     public static Map<String, Participant> getParticipants(@NonNull String realm, String queryAddition) {

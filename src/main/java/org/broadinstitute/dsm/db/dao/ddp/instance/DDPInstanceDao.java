@@ -93,6 +93,9 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
     private static final String SQL_SELECT_DDP_INSTANCE_BY_INSTANCE_NAME = SQL_BASE_SELECT +
             "WHERE instance_name = ? ";
 
+    private static final String SQL_SELECT_DDP_INSTANCE_BY_INSTANCE_ID = SQL_BASE_SELECT +
+            "WHERE ddp_instance_id = ? ";
+
 
 
     public static final String DDP_INSTANCE_ID = "ddp_instance_id";
@@ -162,7 +165,7 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
                 stmt.setObject(11, ddpInstanceDto.getMrAttentionFlagD());
                 stmt.setObject(12, ddpInstanceDto.getTissueAttentionFlagD());
                 stmt.setBoolean(13, ddpInstanceDto.getAuth0Token());
-                stmt.setString(14, ddpInstanceDto.getNotificationRecipients());
+                stmt.setString(14, getNotificationsAsSequence(ddpInstanceDto));
                 stmt.setBoolean(15, ddpInstanceDto.getMigratedDdp());
                 stmt.setString(16, ddpInstanceDto.getBillingReference());
                 stmt.setString(17, ddpInstanceDto.getEsParticipantIndex());
@@ -183,6 +186,10 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
             throw new RuntimeException("Error inserting ddp instance ", simpleResult.resultException);
         }
         return (int) simpleResult.resultValue;
+    }
+
+    private String getNotificationsAsSequence(DDPInstanceDto ddpInstanceDto) {
+        return ddpInstanceDto.getNotificationRecipients().toString().replace("[", "").replace("]", "").replace("\\s", "");
     }
 
     @Override
@@ -389,5 +396,31 @@ public class DDPInstanceDao implements Dao<DDPInstanceDto> {
             throw new RuntimeException("Couldn't get collaborator id prefix with study guid: " + studyGuid, results.resultException);
         }
         return Optional.ofNullable((String) results.resultValue);
+    }
+
+    public Optional<DDPInstanceDto> getDDPInstanceByInstanceId(Integer ddpInstanceId) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(SQL_SELECT_DDP_INSTANCE_BY_INSTANCE_ID)) {
+                stmt.setInt(1, ddpInstanceId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        dbVals.resultValue = getDdpInstanceDtoFromResultSet(rs);
+                    }
+                }
+                catch (SQLException e) {
+                    throw new RuntimeException("Error getting ddp instance for " + ddpInstanceId, e);
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+
+        if (results.resultException != null) {
+            throw new RuntimeException("Couldn't get ddp instance for " + ddpInstanceId, results.resultException);
+        }
+        return Optional.ofNullable((DDPInstanceDto) results.resultValue);
     }
 }

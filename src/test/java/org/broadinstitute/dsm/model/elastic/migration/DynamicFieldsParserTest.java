@@ -18,6 +18,7 @@ public class DynamicFieldsParserTest {
         DynamicFieldsParser dynamicFieldsParser = new DynamicFieldsParser();
         dynamicFieldsParser.setDisplayType(displayType);
         dynamicFieldsParser.setPossibleValuesJson(possibleValuesJson);
+        dynamicFieldsParser.setParser(new TypeParser());
         Map<String, Object> mapping = (Map<String, Object>) dynamicFieldsParser.parse(displayType);
         Object date = mapping.get(MappingGenerator.TYPE);
         assertEquals(TypeParser.DATE, date);

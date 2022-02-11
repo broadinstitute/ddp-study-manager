@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.rgp;
+package org.broadinstitute.dsm.model.familymember.rgp;
 
 import org.broadinstitute.dsm.model.familymember.AddFamilyMember;
 import org.broadinstitute.dsm.model.participant.data.AddFamilyMemberPayload;

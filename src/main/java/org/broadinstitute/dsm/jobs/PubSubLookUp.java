@@ -6,10 +6,14 @@ import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.model.KitDDPNotification;
 import org.broadinstitute.dsm.model.birch.DSMTestResult;
 import org.broadinstitute.dsm.model.birch.TestBostonResult;
+import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainlessFacade;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.EventUtil;
 import org.broadinstitute.dsm.util.NotificationUtil;
 import org.slf4j.Logger;
@@ -39,7 +43,7 @@ public class PubSubLookUp {
             if(ddpInstance.isHasRole()) {
                 logger.info("Processing test results for " + testBostonResult.getSampleId());
                 if (shouldWriteResultIntoDB(testBostonResult)) {
-                    writeResultsIntoDB(testBostonResult);
+                    writeResultsIntoDB(testBostonResult, ddpInstance);
                     tellPepperAboutTheNewResults(conn, testBostonResult);// notify pepper if we update DB
                     notifyPIs(ddpInstance, testBostonResult, notificationUtil);
                 }
@@ -139,7 +143,7 @@ public class PubSubLookUp {
         return dsmTestResult;
     }
 
-    public static void writeResultsIntoDB(TestBostonResult testBostonResult) {
+    public static void writeResultsIntoDB(TestBostonResult testBostonResult, DDPInstance ddpInstance) {
         DSMTestResult[] dsmTestResultArray = getLatestKitTestResults(testBostonResult);
         DSMTestResult[] array = null;
         DSMTestResult newDsmTestResult = new DSMTestResult(testBostonResult.getResult(), testBostonResult.getTimeCompleted(), testBostonResult.isCorrected());
@@ -179,8 +183,19 @@ public class PubSubLookUp {
             throw new RuntimeException("Couldn't update the test results for kit label" + testBostonResult.getSampleId(), results.resultException);
         }
         else {
+            KitRequestShipping kitRequestShipping = new KitRequestShipping();
+            kitRequestShipping.setTestResult(finalArray);
+            kitRequestShipping.setKitLabel(testBostonResult.getSampleId());
+
+            DDPInstanceDto ddpInstanceDto = new DDPInstanceDto.Builder()
+                    .withEsParticipantIndex(ddpInstance.getParticipantIndexES())
+                    .withInstanceName(ddpInstance.getName())
+                    .build();
+
+            UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, ESObjectConstants.KIT_LABEL, ESObjectConstants.KIT_LABEL, testBostonResult.getSampleId())
+                    .export();
+
             logger.info("Updated test result for kit with external id " + testBostonResult.getSampleId());
         }
-
     }
 }

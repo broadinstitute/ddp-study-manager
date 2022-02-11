@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -88,6 +89,7 @@ public class Filter {
     private NameValue filter2;
     private String[] selectedOptions;
     private ParticipantColumn participantColumn;
+    private String additionalType;
 
     public Filter() {
     }
@@ -191,7 +193,6 @@ public class Filter {
             }
             else {
                 filter = convertFilterDateValues(filter);
-                String notNullQuery = AND + filter.getColumnName(dbElement) + IS_NOT_NULL;
                 String query1 = "";
                 if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue()))) {
                     query1 = generateDateComparisonSql(filter,dbElement, LARGER_EQUALS, filter.getFilter1().getValue(), false);
@@ -200,37 +201,33 @@ public class Filter {
                 if (filter.getFilter2() != null && filter.getFilter2() != null && filter.getFilter2().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter2().getValue()))) {
                     query2 = generateDateComparisonSql(filter,dbElement, SMALLER_EQUALS,filter.getFilter2().getValue(), true);
                 }
-                finalQuery = query1 + query2 + notNullQuery;
+                finalQuery = query1 + query2;
             }
         }
         else if (ADDITIONAL_VALUES.equals(filter.getType())) {
             finalQuery = buildJsonExtract(filter, dbElement);
         }
         else if (JSON_ARRAY.equals(filter.getType())) {
-            query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() ;
+            // filter.getFilter2().getName()
+            query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + DBConstants.ALIAS_DELIMITER + filter.getFilter2().getName();
             if (filter.isEmpty()) {
                 finalQuery = query + IS_NULL + " ";
             }
             else if (filter.isNotEmpty()) {
                 finalQuery = query + IS_NOT_NULL + " ";
-            }
-            if (StringUtils.isNotBlank(filter.getFilter1().getValue()+"")) {
-
+            } else {
                 //JSON_CONTAINS ( test_result , JSON_OBJECT ( 'result' , 'INVALID' )
-                String notNullQuery = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + IS_NOT_NULL;
+//                String notNullQuery = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + IS_NOT_NULL;
                 if (filter.getFilter1() != null && filter.getFilter1().getValue() != null && StringUtils.isNotBlank(String.valueOf(filter.getFilter1().getValue()))) {
-                    String quotation = "";
-                    if (StringUtils.isNotBlank(filter.getFilter2().getValue()+"") && "'".equals(filter.getFilter2().getValue())) {
-                        quotation = "'";
-                    }
+                    String quotation = "'";
                     if (filter.isExactMatch()) {
-                        query = AND + " JSON_CONTAINS ( " + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " , JSON_OBJECT ( '" + filter.getFilter2().getName() + "' , "+quotation + filter.getFilter1().getValue() + quotation+" ) ) ";
+                        query = AND + "JSON_CONTAINS ( " + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " , JSON_OBJECT ( '" + filter.getFilter2().getName() + "' , "+quotation + filter.getFilter1().getValue() + quotation+" ) ) ";
                     }
                     else {
                         query = AND + filter.getParentName() + DBConstants.ALIAS_DELIMITER + dbElement.getColumnName() + " -> '$[*]." + filter.getFilter2().getName() + "' like '%" + filter.getFilter1().getValue() + "%' ";
                     }
                 }
-                finalQuery =  query + notNullQuery;
+                finalQuery = query;
             }
         }
         else if (CHECKBOX.equals(filter.getType())) { //1/0
@@ -286,7 +283,7 @@ public class Filter {
                     lessThan = lessThan.substring(lessThanIndex);
                     query += moreThan + query + lessThan;
                 } else if (filter.isExactMatch()) {
-                    query += EQUALS + "'#'";
+                    query += NUMBER.equals(filter.additionalType) ? EQUALS + "#" : EQUALS + "'#'";
                     query = query.replaceAll("#", String.valueOf(filter.getFilter1().getValue()));
                 } else {
                     query += " " + LIKE + " '%#%'";
@@ -433,5 +430,9 @@ public class Filter {
 
     public void setParticipantColumn(ParticipantColumn participantColumn) {
         this.participantColumn = participantColumn;
+    }
+
+    public void setAdditionalType(String additionalType) {
+        this.additionalType = additionalType;
     }
 }

@@ -13,12 +13,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
+import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.model.elastic.export.generate.BaseGenerator;
 import org.broadinstitute.dsm.model.elastic.export.parse.DynamicFieldsParser;
 import org.broadinstitute.dsm.model.elastic.export.parse.ValueParser;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
-import org.broadinstitute.dsm.util.ObjectMapperSingleton;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.broadinstitute.dsm.util.PatchUtil;
 
@@ -87,6 +88,11 @@ public class Util {
         return CAMEL_CASE_REGEX.matcher(word).matches() ? word : word.toLowerCase();
     }
 
+    public static String getPrimaryKeyFromClass(Class<?> clazz) {
+        TableName tableName = Objects.requireNonNull(clazz.getAnnotation(TableName.class));
+        return underscoresToCamelCase(tableName.primaryKey());
+    }
+
     private static boolean hasNoUnderscores(String[] splittedWords) {
         return splittedWords.length < 2;
     }
@@ -128,6 +134,10 @@ public class Util {
         switch (fieldName) {
             case "follow_ups":
                 finalResult = new HashMap<>(Map.of(underscoresToCamelCase(fieldName), new Gson().toJson(fieldValue)));
+                break;
+            case "test_result":
+                List<Map<String, Object>> testResult = ObjectMapperSingleton.readValue(String.valueOf(fieldValue), new TypeReference<List<Map<String, Object>>>() {});
+                finalResult = !testResult.isEmpty() ? Map.of(underscoresToCamelCase(fieldName), testResult) : Map.of();
                 break;
             case "additional_tissue_value_json":
             case "additional_values_json":
