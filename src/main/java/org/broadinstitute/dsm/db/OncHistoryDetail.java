@@ -362,7 +362,9 @@ public class OncHistoryDetail {
                         if (tissueSmId != null) {
                             tissue.setSmIdBasedOnType(tissueSmId, rs);
                         }
-                        tissues.put(tissue.getTissueId(), tissue);
+                        if (tissue != null) {
+                            tissues.put(tissue.getTissueId(), tissue);
+                        }
 
                         if (!oncHistoryMap.containsKey(oncHistoryDetailId)) {
                             OncHistoryDetail oncHistoryDetail = getOncHistoryDetail(rs);

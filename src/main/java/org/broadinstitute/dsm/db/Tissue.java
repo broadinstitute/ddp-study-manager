@@ -307,7 +307,6 @@ public class Tissue {
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
-            logger.warn( throwables.getMessage());
         }
     }
 
