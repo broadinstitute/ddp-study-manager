@@ -51,6 +51,7 @@ public class DBConstants {
     public static final String DSM_KIT_ID = "dsm_kit_id";
     public static final String KIT_TYPE_NAME = "kit_type_name";
     public static final String DSM_LABEL = "ddp_label";
+    public static final String LABEL_URL_TO = "label_url_to";
     public static final String KIT_TYPE_ID = "kit_type_id";
     public static final String LAST_KIT = "last_kit";
     public static final String DSM_KIT_REQUEST_ID = "dsm_kit_request_id";
@@ -132,6 +133,9 @@ public class DBConstants {
     public static final String CARE_EVOLVE = "CE_order";
     public static final String DDP_KIT_TABLE_ABBR = "kit.";
 
+    public static final String ONC_HISTORY_ID = "onc_history_id";
+
+
     //carrier service
     public static final String CARRIER = "carrier";
 
@@ -206,13 +210,12 @@ public class DBConstants {
     public static final String ACCESSION_NUMBER = "accession_number";
     public static final String FACILITY = "facility";
     public static final String REQUEST = "request";
-    public static final String ADDITIONAL_VALUES = "additional_values_json";
+    public static final String ADDITIONAL_VALUES_JSON = "additional_values_json";
     public static final String COLUMN_NAME = "column_name";
     public static final String COLUMN_DISPLAY = "column_display";
     public static final String TISSUE_RECEIVED = "tissue_received";
     public static final String TISSUE_PROBLEM_OPTION = "tissue_problem_option" ;
     public static final String GENDER = "gender";
-    public static final String TDELETED = "tDeleted";
     public static final String DESTRUCTION_POLICY = "destruction_policy";
     public static final String UNABLE_OBTAIN_TISSUE = "unable_obtain_tissue";
 
@@ -483,5 +486,7 @@ public class DBConstants {
     public static final String PHONE_NUMBER = "phone_number";
 
 
+    public static final String LABEL_URL_RETURN = "label_url_return";
 
+    public static final String PARTICIPANT_RECORD_ID = "participant_record_id";
 }

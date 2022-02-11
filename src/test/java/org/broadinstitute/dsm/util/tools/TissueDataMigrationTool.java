@@ -18,6 +18,7 @@ import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.DBTestUtil;
 import org.broadinstitute.dsm.util.MedicalRecordUtil;
 import org.broadinstitute.dsm.util.PatchUtil;
+import org.broadinstitute.dsm.util.SystemUtil;
 import org.broadinstitute.dsm.util.TestUtil;
 import org.broadinstitute.dsm.util.tools.util.DBUtil;
 import org.broadinstitute.dsm.util.tools.util.FileUtil;
@@ -335,7 +336,7 @@ public class TissueDataMigrationTool {
                                 .withDdpParticipantId(ddpParticipantId)
                                 .withLastVersion(0)
                                 .withLastVersionDate("TISSUE_MIGRATION_TOOL")
-                                .withChangedBy(MedicalRecordUtil.SYSTEM)
+                                .withChangedBy(SystemUtil.SYSTEM)
                                 .build();
                         new ParticipantDao().create(participantDto);
                     }

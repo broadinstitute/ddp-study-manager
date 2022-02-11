@@ -9,20 +9,23 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.dto.user.UserDto;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.settings.FieldSettingsDao;
 import org.broadinstitute.dsm.db.dao.user.UserDao;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.broadinstitute.dsm.db.dto.settings.FieldSettingsDto;
 import org.broadinstitute.dsm.export.WorkflowForES;
 import org.broadinstitute.dsm.model.Study;
+import org.broadinstitute.dsm.model.elastic.export.Exportable;
+import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainlessFacade;
 import org.broadinstitute.dsm.model.participant.data.AddFamilyMemberPayload;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberDetails;
-import org.broadinstitute.dsm.model.participant.data.ParticipantData;
-import org.broadinstitute.dsm.model.rgp.RgpAddFamilyMember;
+import org.broadinstitute.dsm.model.familymember.rgp.RgpAddFamilyMember;
 import org.broadinstitute.dsm.model.settings.field.FieldSettings;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.slf4j.Logger;
@@ -33,7 +36,7 @@ public class AddFamilyMember {
     private static final Logger logger = LoggerFactory.getLogger(AddFamilyMember.class);
 
     protected AddFamilyMemberPayload addFamilyMemberPayload;
-    protected ParticipantData participantData;
+    protected org.broadinstitute.dsm.model.participant.data.ParticipantData participantData;
     protected int ddpInstanceId;
     protected DDPInstanceDao ddpInstanceDao;
     protected String studyGuid;
@@ -41,7 +44,7 @@ public class AddFamilyMember {
 
     protected AddFamilyMember(AddFamilyMemberPayload addFamilyMemberPayload) {
         this.addFamilyMemberPayload = Objects.requireNonNull(addFamilyMemberPayload);
-        this.participantData = new ParticipantData();
+        this.participantData = new org.broadinstitute.dsm.model.participant.data.ParticipantData();
         ddpInstanceDao = new DDPInstanceDao();
         studyGuid = addFamilyMemberPayload.getRealm().orElseThrow();
         ddpParticipantId = addFamilyMemberPayload.getParticipantId().orElseThrow();
@@ -60,7 +63,7 @@ public class AddFamilyMember {
 
     protected void prepareFamilyMemberData() {
         FamilyMemberDetails familyMemberDetails = addFamilyMemberPayload.getData().orElseThrow();
-        String fieldTypeId =  studyGuid + ParticipantData.FIELD_TYPE;
+        String fieldTypeId =  studyGuid + org.broadinstitute.dsm.model.participant.data.ParticipantData.FIELD_TYPE_PARTICIPANTS;
         participantData.setDdpParticipantId(ddpParticipantId);
         participantData.setDdpInstanceId(ddpInstanceId);
         participantData.setFieldTypeId(fieldTypeId);
@@ -78,10 +81,10 @@ public class AddFamilyMember {
         if (!isCopyProband || StringUtils.isBlank(addFamilyMemberPayload.getParticipantId().orElse(""))) return;
         Map<String, String> participantDataData = participantData.getData();
         if (Objects.isNull(participantDataData)) throw new NoSuchElementException();
-        List<ParticipantDataDto> participantDataByParticipantId =
-                participantData.getParticipantDataByParticipantId(addFamilyMemberPayload.getParticipantId().orElse(""));
-        Optional<ParticipantDataDto> maybeProbandData = participantData.findProband(participantDataByParticipantId);
-        Optional<ParticipantData> maybeParticipantData = maybeProbandData.map(ParticipantData::parseDto);
+        List<ParticipantData> participantDataByParticipantId =
+                participantData.getParticipantDataByParticipantId(addFamilyMemberPayload.getParticipantId().orElse(StringUtils.EMPTY));
+        Optional<ParticipantData> maybeProbandData = participantData.findProband(participantDataByParticipantId);
+        Optional<org.broadinstitute.dsm.model.participant.data.ParticipantData> maybeParticipantData = maybeProbandData.map(org.broadinstitute.dsm.model.participant.data.ParticipantData::parseDto);
         maybeParticipantData.ifPresent(participantData -> participantData.getData().forEach(participantDataData::putIfAbsent));
     }
 

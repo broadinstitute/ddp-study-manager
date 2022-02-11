@@ -5,13 +5,18 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.InstanceSettings;
+import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dao.ddp.kitrequest.KitRequestDao;
 import org.broadinstitute.dsm.db.dao.kit.BSPKitDao;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.dto.kit.BSPKitDto;
 import org.broadinstitute.dsm.db.dto.settings.InstanceSettingsDto;
 import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
 import org.broadinstitute.dsm.model.bsp.BSPKitStatus;
+import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainlessFacade;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
+import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchDataUtil;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
@@ -106,10 +111,10 @@ public class BSPKit {
                                 logger.error("Instance settings behavior for kit was not known " + received.getType());
                             }
                         }
-                        bspKitDao.setKitReceivedAndTriggerDDP(kitLabel, triggerDDP, maybeBspKitQueryResult);
+                        updateKitAndExport(kitLabel, bspKitDao, maybeBspKitQueryResult, triggerDDP);
                     }
                 }, () -> {
-                    bspKitDao.setKitReceivedAndTriggerDDP(kitLabel, true, maybeBspKitQueryResult);
+                    updateKitAndExport(kitLabel, bspKitDao, maybeBspKitQueryResult, true);
                 });
 
         String bspParticipantId = maybeBspKitQueryResult.getBspParticipantId();
@@ -136,6 +141,21 @@ public class BSPKit {
                 ddpInstance.getName(),
                 maybeBspKitQueryResult.getKitTypeName()));
 
+    }
+
+    private void updateKitAndExport(String kitLabel, BSPKitDao bspKitDao, BSPKitDto maybeBspKitQueryResult, boolean triggerDDP) {
+        long receivedDate = System.currentTimeMillis();
+        bspKitDao.setKitReceivedAndTriggerDDP(kitLabel, triggerDDP, maybeBspKitQueryResult);
+
+        KitRequestShipping kitRequestShipping = new KitRequestShipping();
+        kitRequestShipping.setReceiveDate(receivedDate);
+        kitRequestShipping.setKitLabel(kitLabel);
+
+        DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceName(maybeBspKitQueryResult.getInstanceName()).orElseThrow();
+
+        UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, ESObjectConstants.KIT_LABEL
+                        , ESObjectConstants.KIT_LABEL, kitLabel)
+                        .export();
     }
 
     private void writeSampleReceivedToES(DDPInstance ddpInstance, BSPKitDto bspKitInfo) {

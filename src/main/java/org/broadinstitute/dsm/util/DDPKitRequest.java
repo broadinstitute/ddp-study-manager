@@ -74,10 +74,10 @@ public class DDPKitRequest {
 
                                                             if (kitHasSubKits) {
                                                                 List<KitSubKits> subKits = kitRequestSettings.getSubKits();
-                                                                addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID(), null);
+                                                                addSubKits(subKits, kitDetail, collaboratorParticipantId, kitRequestSettings, latestKit.getInstanceID(), null, ddpInstance);
                                                             } else {
                                                                 KitRequestShipping.addKitRequests(latestKit.getInstanceID(), kitDetail, kitType.getKitTypeId(),
-                                                                        kitRequestSettings, collaboratorParticipantId, null, null);
+                                                                        kitRequestSettings, collaboratorParticipantId, null, null, ddpInstance);
                                                             }
                                                         } else {
                                                             logger.error("ES profile data was empty for participant with ddp_kit_request_id " + kitDetail.getKitRequestId());
@@ -120,7 +120,7 @@ public class DDPKitRequest {
     }
 
     private String addSubKits(@NonNull List<KitSubKits> subKits, @NonNull KitDetail kitDetail, @NonNull String collaboratorParticipantId,
-                              @NonNull KitRequestSettings kitRequestSettings, @NonNull String instanceId, String uploadReason) {
+                              @NonNull KitRequestSettings kitRequestSettings, @NonNull String instanceId, String uploadReason, DDPInstance ddpInstance) {
         int subCounter = 0;
         String externalOrderNumber = null;
         if (StringUtils.isNotBlank(kitRequestSettings.getExternalShipper())) {
@@ -131,7 +131,7 @@ public class DDPKitRequest {
                 //kitRequestId needs to stay unique -> add `_[SUB_COUNTER]` to it
                 KitRequestShipping.addKitRequests(instanceId, subKit.getKitName(), kitDetail.getParticipantId(),
                         subCounter == 0 ? kitDetail.getKitRequestId() : kitDetail.getKitRequestId() + "_" + subCounter, subKit.getKitTypeId(), kitRequestSettings,
-                        collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber,  uploadReason);
+                        collaboratorParticipantId, kitDetail.isNeedsApproval(), externalOrderNumber,  uploadReason, ddpInstance);
                 subCounter = subCounter + 1;
             }
         }

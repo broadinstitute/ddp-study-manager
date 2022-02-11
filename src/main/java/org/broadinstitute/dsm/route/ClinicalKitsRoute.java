@@ -11,7 +11,11 @@ import org.broadinstitute.dsm.model.BSPKit;
 import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
 import org.broadinstitute.dsm.model.bsp.BSPKitStatus;
 import org.broadinstitute.dsm.model.ddp.DDPActivityConstants;
-import org.broadinstitute.dsm.model.elasticsearch.*;
+import org.broadinstitute.dsm.model.elastic.ESActivities;
+import org.broadinstitute.dsm.model.elastic.ESDsm;
+import org.broadinstitute.dsm.model.elastic.ESProfile;
+import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
+import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.util.NotificationUtil;
 import org.slf4j.Logger;
@@ -78,7 +82,7 @@ public class ClinicalKitsRoute implements Route {
                 hruid = maybeBspKitQueryResult.getBspParticipantId().substring(maybeBspKitQueryResult.getBspParticipantId().lastIndexOf('_') + 1);
             }
             ElasticSearchParticipantDto participantByShortId =
-                    new ElasticSearch().getParticipantByShortId(ddpInstance.getParticipantIndexES(), hruid);
+                    new ElasticSearch().getParticipantById(ddpInstance.getParticipantIndexES(), hruid);
             setNecessaryParticipantDataToClinicalKit(clinicalKit, participantByShortId, kitInfo.getRealm());
         });
         maybeKitInfo.orElseThrow();
@@ -113,9 +117,9 @@ public class ClinicalKitsRoute implements Route {
             }
         }
         //if gender is not set on tissue page get answer from "ABOUT_YOU.ASSIGNED_SEX"
-        return participantByShortId.getActivities()
-                .map(this::getGenderFromActivities)
-                .orElse("U");
+        return participantByShortId.getActivities().size() > 0
+                ? getGenderFromActivities(participantByShortId.getActivities())
+                : "U";
     }
 
     private String getGenderFromActivities(List<ESActivities> activities) {

@@ -6,8 +6,8 @@ import org.broadinstitute.dsm.db.KitRequestShipping;
 import org.broadinstitute.dsm.db.KitType;
 import org.broadinstitute.dsm.db.dao.bookmark.BookmarkDao;
 import org.broadinstitute.dsm.db.dao.kit.BSPDummyKitDao;
-import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
-import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
+import org.broadinstitute.dsm.model.elastic.ESProfile;
+import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.slf4j.Logger;
@@ -57,7 +57,7 @@ public class CreateClinicalDummyKitRoute implements Route {
                 //if instance not null
                 String dsmKitRequestId = KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), kitRequestId, desiredKitType.getKitId(),
                         ddpParticipantId, participantCollaboratorId, collaboratorSampleId,
-                        USER_ID, "", "", "", false, "");
+                        USER_ID, "", "", "", false, "", ddpInstance);
                 new BSPDummyKitDao().updateKitLabel(kitLabel, dsmKitRequestId);
 
             }, () -> {

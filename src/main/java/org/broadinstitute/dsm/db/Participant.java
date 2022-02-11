@@ -1,25 +1,35 @@
 package org.broadinstitute.dsm.db;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.structure.ColumnName;
+import org.broadinstitute.dsm.db.structure.DbDateConversion;
+import org.broadinstitute.dsm.db.structure.SqlDateConverter;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.DBUtil;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Participant {
 
     private static final Logger logger = LoggerFactory.getLogger(Participant.class);
@@ -34,8 +44,11 @@ public class Participant {
             "LEFT JOIN ddp_participant_exit ex on (p.ddp_participant_id = ex.ddp_participant_id AND p.ddp_instance_id = ex.ddp_instance_id) " +
             "WHERE realm.instance_name = ? ";
 
-    private final String participantId;
-    private final String ddpParticipantId;
+    @ColumnName(DBConstants.PARTICIPANT_ID)
+    private long participantId;
+
+    @ColumnName(DBConstants.DDP_PARTICIPANT_ID)
+    private String ddpParticipantId;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT,
@@ -43,7 +56,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ASSIGNEE_ID_MR)
-    private final String assigneeMr;
+    private String assigneeIdMr;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT,
@@ -51,8 +64,8 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ASSIGNEE_ID_TISSUE)
-    private final String assigneeTissue;
-    private final String realm;
+    private String assigneeIdTissue;
+    private String realm;
 
     @TableName (
             name = DBConstants.DDP_ONC_HISTORY,
@@ -60,7 +73,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ONC_HISTORY_CREATED)
-    private final String createdOncHistory;
+    private String createdOncHistory;
 
     @TableName (
             name = DBConstants.DDP_ONC_HISTORY,
@@ -68,7 +81,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ONC_HISTORY_REVIEWED)
-    private final String reviewedOncHistory;
+    private String reviewedOncHistory;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_RECORD,
@@ -76,7 +89,8 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.CR_SENT)
-    private final String paperCRSent;
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
+    private String crSent;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_RECORD,
@@ -84,7 +98,8 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.CR_RECEIVED)
-    private final String paperCRReceived;
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
+    private String crReceived;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_RECORD,
@@ -92,7 +107,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.NOTES)
-    private final String ptNotes;
+    private String notes;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_RECORD,
@@ -100,7 +115,7 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.MINIMAL_MR)
-    private final boolean minimalMR;
+    private boolean minimalMr;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_RECORD,
@@ -108,15 +123,26 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.ABSTRACTION_READY)
-    private final boolean abstractionReady;
+    private boolean abstractionReady;
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_RECORD,
             alias = DBConstants.DDP_PARTICIPANT_RECORD_ALIAS,
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
-    @ColumnName (DBConstants.ADDITIONAL_VALUES)
-    private final String additionalValues;
+    @ColumnName (DBConstants.ADDITIONAL_VALUES_JSON)
+    @JsonProperty("dynamicFields")
+    @SerializedName("dynamicFields")
+    private String additionalValuesJson;
+
+    @JsonProperty("dynamicFields")
+    public Map<String, Object> getDynamicFields() {
+        try {
+            return ObjectMapperSingleton.instance().readValue(additionalValuesJson, new TypeReference<Map<String, Object>>() {});
+        } catch (IOException | NullPointerException e) {
+            return Map.of();
+        }
+    }
 
     @TableName (
             name = DBConstants.DDP_PARTICIPANT_EXIT,
@@ -124,24 +150,26 @@ public class Participant {
             primaryKey = DBConstants.PARTICIPANT_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.EXIT_DATE)
-    private final long exitDate;
+    private long exitDate;
 
-    public Participant(String participantId, String ddpParticipantId, String assigneeMr, String assigneeTissue, String instanceName,
-                       String createdOncHistory, String reviewedOncHistory, String paperCRSent, String paperCRReceived, String ptNotes,
-                       boolean minimalMR, boolean abstractionReady, String additionalValues, long exitDate) {
+    public Participant() {}
+
+    public Participant(long participantId, String ddpParticipantId, String assigneeIdMr, String assigneeIdTissue, String instanceName,
+                       String createdOncHistory, String reviewedOncHistory, String crSent, String crReceived, String notes,
+                       boolean minimalMr, boolean abstractionReady, String additionalValuesJson, long exitDate) {
         this.participantId = participantId;
         this.ddpParticipantId = ddpParticipantId;
-        this.assigneeMr = assigneeMr;
-        this.assigneeTissue = assigneeTissue;
+        this.assigneeIdMr = assigneeIdMr;
+        this.assigneeIdTissue = assigneeIdTissue;
         this.realm = instanceName;
         this.createdOncHistory = createdOncHistory;
         this.reviewedOncHistory = reviewedOncHistory;
-        this.paperCRSent = paperCRSent;
-        this.paperCRReceived = paperCRReceived;
-        this.ptNotes = ptNotes;
-        this.minimalMR = minimalMR;
+        this.crSent = crSent;
+        this.crReceived = crReceived;
+        this.notes = notes;
+        this.minimalMr = minimalMr;
         this.abstractionReady = abstractionReady;
-        this.additionalValues = additionalValues;
+        this.additionalValuesJson = additionalValuesJson;
         this.exitDate = exitDate;
     }
 
@@ -158,7 +186,7 @@ public class Participant {
                 assigneeTissue = assignees.get(assigneeIdTissue).getName();
             }
         }
-        Participant participant = new Participant(rs.getString(DBConstants.PARTICIPANT_ID),
+        Participant participant = new Participant(rs.getLong(DBConstants.PARTICIPANT_ID),
                 rs.getString(DBConstants.DDP_PARTICIPANT_ID),
                 assigneeMR, assigneeTissue, realm,
                 rs.getString(DBConstants.ONC_HISTORY_CREATED),
@@ -168,18 +196,13 @@ public class Participant {
                 rs.getString(DBConstants.DDP_PARTICIPANT_RECORD_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.NOTES),
                 rs.getBoolean(DBConstants.DDP_PARTICIPANT_RECORD_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.MINIMAL_MR),
                 rs.getBoolean(DBConstants.DDP_PARTICIPANT_RECORD_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.ABSTRACTION_READY),
-                rs.getString(DBConstants.DDP_PARTICIPANT_RECORD_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.ADDITIONAL_VALUES),
+                rs.getString(DBConstants.DDP_PARTICIPANT_RECORD_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.ADDITIONAL_VALUES_JSON),
                 rs.getLong(DBConstants.EXIT_DATE));
         return participant;
     }
 
     public static Map<String, Participant> getParticipants(@NonNull String realm) {
         return getParticipants(realm, null);
-    }
-
-    public static List<Participant> getParticipantsByIds(@NonNull String realm, List<String> participantIds) {
-        String queryAddition = " AND p.ddp_participant_id IN (?)".replace("?", DBUtil.participantIdsInClause(participantIds));
-        return new ArrayList<>(getParticipants(realm, queryAddition).values());
     }
 
     public static Map<String, Participant> getParticipants(@NonNull String realm, String queryAddition) {

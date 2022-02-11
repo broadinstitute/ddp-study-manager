@@ -1,5 +1,10 @@
 package org.broadinstitute.dsm.db;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.NonNull;
 import org.broadinstitute.ddp.db.SimpleResult;
@@ -7,9 +12,11 @@ import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.DBUtil;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -27,6 +34,8 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
         alias = DBConstants.DDP_PARTICIPANT_DATA_ALIAS,
         primaryKey = DBConstants.PARTICIPANT_DATA_ID,
         columnPrefix = "")
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ParticipantData {
 
     private static final Logger logger = LoggerFactory.getLogger(ParticipantData.class);
@@ -40,23 +49,41 @@ public class ParticipantData {
             "ddp_participant_id = ?, ddp_instance_id = ?, field_type_id = ?, data = ?, last_changed = ?, changed_by = ? ";
 
     @ColumnName(DBConstants.PARTICIPANT_DATA_ID)
-    private final String dataId;
+    private long participantDataId;
+
+    @ColumnName(DBConstants.DDP_PARTICIPANT_ID)
+    private long ddpParticipantId;
 
     @ColumnName(DBConstants.FIELD_TYPE_ID)
-    private final String fieldTypeId;
+    private String fieldTypeId;
 
     @ColumnName (DBConstants.DATA)
-    private final String data;
+    @JsonProperty("dynamicFields")
+    @SerializedName("dynamicFields")
+    private String data;
 
-    public ParticipantData(String dataId, String fieldTypeId, String data) {
-        this.dataId = dataId;
+    @JsonProperty("dynamicFields")
+    public Map<String, Object> getDynamicFields() {
+        try {
+            return ObjectMapperSingleton.instance().readValue(data, new TypeReference<Map<String, Object>>() {});
+        } catch (IOException | NullPointerException e) {
+            return Map.of();
+        }
+    }
+
+    public ParticipantData() {
+
+    }
+
+    public ParticipantData(long dataId, String fieldTypeId, String data) {
+        this.participantDataId = dataId;
         this.fieldTypeId = fieldTypeId;
         this.data = data;
     }
 
     public static ParticipantData getParticipantDataObject(@NonNull ResultSet rs) throws SQLException {
         ParticipantData participantData = new ParticipantData(
-                rs.getString(DBConstants.PARTICIPANT_DATA_ID),
+                rs.getLong(DBConstants.PARTICIPANT_DATA_ID),
                 rs.getString(DBConstants.FIELD_TYPE_ID),
                 rs.getString(DBConstants.DATA)
         );

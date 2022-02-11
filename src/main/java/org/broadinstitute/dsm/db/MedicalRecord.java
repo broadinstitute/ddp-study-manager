@@ -1,31 +1,49 @@
 package org.broadinstitute.dsm.db;
 
+import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
+
+import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.NonNull;
-import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.ddp.handlers.util.InstitutionDetail;
 import org.broadinstitute.ddp.handlers.util.MedicalInfo;
-import org.broadinstitute.dsm.DSMServer;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
 import org.broadinstitute.dsm.db.structure.SqlDateConverter;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.model.FollowUp;
-import org.broadinstitute.dsm.statics.*;
+import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.QueryExtension;
+import org.broadinstitute.dsm.statics.RequestParameter;
+import org.broadinstitute.dsm.statics.RoutePath;
 import org.broadinstitute.dsm.util.DBUtil;
 import org.broadinstitute.dsm.util.DDPRequestUtil;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.sql.*;
-import java.util.*;
-
-import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
-
+@TableName (
+        name = DBConstants.DDP_MEDICAL_RECORD,
+        alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+        primaryKey = DBConstants.MEDICAL_RECORD_ID,
+        columnPrefix = "")
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MedicalRecord {
 
     private static final Logger logger = LoggerFactory.getLogger(MedicalRecord.class);
@@ -45,9 +63,36 @@ public class MedicalRecord {
             "LEFT JOIN ddp_medical_record as m on (m.institution_id = inst.institution_id) WHERE p.participant_id = ?";
     public static final String SQL_ORDER_BY = " ORDER BY p.ddp_participant_id, inst.ddp_institution_id ASC";
 
-    private final String medicalRecordId;
-    private String institutionId;
+    @TableName (
+            name = DBConstants.DDP_MEDICAL_RECORD,
+            alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
+            primaryKey = DBConstants.MEDICAL_RECORD_ID,
+            columnPrefix = "")
+    @ColumnName (DBConstants.MEDICAL_RECORD_ID)
+    private long medicalRecordId;
+
+    @TableName (
+            name = DBConstants.DDP_INSTITUTION,
+            alias = DBConstants.DDP_INSTITUTION_ALIAS,
+            primaryKey = DBConstants.INSTITUTION_ID,
+            columnPrefix = "")
+    @ColumnName (DBConstants.INSTITUTION_ID)
+    private long institutionId;
+
+    @TableName (
+            name = DBConstants.DDP_INSTITUTION,
+            alias = DBConstants.DDP_INSTITUTION_ALIAS,
+            primaryKey = DBConstants.DDP_INSTITUTION_ID,
+            columnPrefix = "")
+    @ColumnName (DBConstants.DDP_INSTITUTION_ID)
     private String ddpInstitutionId;
+
+    @TableName (
+            name = DBConstants.DDP_PARTICIPANT,
+            alias = DBConstants.DDP_PARTICIPANT_ALIAS,
+            primaryKey = DBConstants.DDP_PARTICIPANT_ID,
+            columnPrefix = "")
+    @ColumnName (DBConstants.DDP_PARTICIPANT_ID)
     private String ddpParticipantId;
 
     @TableName (
@@ -223,7 +268,7 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.MR_UNABLE_OBTAIN_TEXT)
-    private String mrUnableToObtainText;
+    private String unableObtainText;
 
     @TableName (
             name = DBConstants.DDP_MEDICAL_RECORD,
@@ -231,7 +276,12 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.FOLLOWUP_REQUIRED)
-    private boolean followUpRequired;
+    private boolean followupRequired;
+
+    @JsonProperty("followupRequired")
+    public boolean isFollowupRequired() {
+        return followupRequired;
+    }
 
     @TableName (
             name = DBConstants.DDP_MEDICAL_RECORD,
@@ -239,7 +289,10 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.FOLLOWUP_REQUIRED_TEXT)
-    private String followUpRequiredText;
+    private String followupRequiredText;
+
+    @JsonProperty("followupRequiredText")
+    public String getFollowupRequiredText() { return followupRequiredText; }
 
     @TableName (
             name = DBConstants.DDP_MEDICAL_RECORD,
@@ -271,7 +324,7 @@ public class MedicalRecord {
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
     @ColumnName (DBConstants.NOTES)
-    private String mrNotes;
+    private String notes;
 
     @TableName (
             name = DBConstants.DDP_MEDICAL_RECORD,
@@ -286,8 +339,19 @@ public class MedicalRecord {
             alias = DBConstants.DDP_MEDICAL_RECORD_ALIAS,
             primaryKey = DBConstants.MEDICAL_RECORD_ID,
             columnPrefix = "")
-    @ColumnName (DBConstants.ADDITIONAL_VALUES)
-    private String additionalValues;
+    @ColumnName (DBConstants.ADDITIONAL_VALUES_JSON)
+    @JsonProperty("dynamicFields")
+    @SerializedName("dynamicFields")
+    private String additionalValuesJson;
+
+    @JsonProperty("dynamicFields")
+    public Map<String, Object> getDynamicFields() {
+        try {
+            return ObjectMapperSingleton.instance().readValue(additionalValuesJson, new TypeReference<Map<String, Object>>() {});
+        } catch (IOException | NullPointerException e) {
+            return Map.of();
+        }
+    }
 
     private boolean reviewMedicalRecord;
 
@@ -299,14 +363,16 @@ public class MedicalRecord {
     @ColumnName (DBConstants.PATHOLOGY_PRESENT)
     private String pathologyPresent;
 
-    public MedicalRecord(String medicalRecordId, String institutionId, String ddpInstitutionId, String type) {
+    public MedicalRecord(long medicalRecordId, long institutionId, String ddpInstitutionId, String type) {
         this.medicalRecordId = medicalRecordId;
         this.institutionId = institutionId;
         this.ddpInstitutionId = ddpInstitutionId;
         this.type = type;
     }
 
-    public MedicalRecord(String medicalRecordId, String institutionId, String ddpInstitutionId, String type,
+    public MedicalRecord() {}
+
+    public MedicalRecord(long medicalRecordId, long institutionId, String ddpInstitutionId, String type,
                          String name, String contact, String phone, String fax,
                          String faxSent, String faxSentBy, String faxConfirmed,
                          String faxSent2, String faxSent2By, String faxConfirmed2,
@@ -314,8 +380,8 @@ public class MedicalRecord {
                          String mrReceived, String mrDocument, String mrDocumentFileNames, boolean mrProblem,
                          String mrProblemText, boolean unableObtain, boolean duplicate, boolean international, boolean crRequired,
                          String pathologyPresent, String mrNotes, boolean reviewMedicalRecord,
-                         FollowUp[] followUps, boolean followUpRequired, String followUpRequiredText, String additionalValues,
-                         String mrUnableToObtainText, String ddpParticipantId) {
+                         FollowUp[] followUps, boolean followUpRequired, String followupRequiredText, String additionalValuesJson,
+                         String unableObtainText, String ddpParticipantId) {
         this.medicalRecordId = medicalRecordId;
         this.institutionId = institutionId;
         this.ddpInstitutionId = ddpInstitutionId;
@@ -343,20 +409,20 @@ public class MedicalRecord {
         this.international = international;
         this.crRequired = crRequired;
         this.pathologyPresent = pathologyPresent;
-        this.mrNotes = mrNotes;
+        this.notes = mrNotes;
         this.reviewMedicalRecord = reviewMedicalRecord;
         this.followUps = followUps;
-        this.followUpRequired = followUpRequired;
-        this.followUpRequiredText = followUpRequiredText;
-        this.additionalValues = additionalValues;
-        this.mrUnableToObtainText = mrUnableToObtainText;
+        this.followupRequired = followUpRequired;
+        this.followupRequiredText = followupRequiredText;
+        this.additionalValuesJson = additionalValuesJson;
+        this.unableObtainText = unableObtainText;
         this.ddpParticipantId = ddpParticipantId;
     }
 
     public static MedicalRecord getMedicalRecord(@NonNull ResultSet rs) throws SQLException {
         MedicalRecord medicalRecord = new MedicalRecord(
-                rs.getString(DBConstants.MEDICAL_RECORD_ID),
-                rs.getString(DBConstants.INSTITUTION_ID),
+                rs.getLong(DBConstants.MEDICAL_RECORD_ID),
+                rs.getLong(DBConstants.INSTITUTION_ID),
                 rs.getString(DBConstants.DDP_INSTITUTION_ID),
                 rs.getString(DBConstants.TYPE),
                 rs.getString(DBConstants.NAME),
@@ -387,7 +453,7 @@ public class MedicalRecord {
                 new Gson().fromJson(rs.getString(DBConstants.FOLLOW_UP_REQUESTS), FollowUp[].class),
                 rs.getBoolean(DBConstants.FOLLOWUP_REQUIRED),
                 rs.getString(DBConstants.FOLLOWUP_REQUIRED_TEXT),
-                rs.getString(DBConstants.ADDITIONAL_VALUES),
+                rs.getString(DBConstants.ADDITIONAL_VALUES_JSON),
                 rs.getString(DBConstants.MR_UNABLE_OBTAIN_TEXT),
                 rs.getString(DBConstants.DDP_PARTICIPANT_ID)
         );
@@ -484,8 +550,8 @@ public class MedicalRecord {
                 try (ResultSet rs = stmt.executeQuery()) {
                     while (rs.next()) {
                         medicalRecords.add(new MedicalRecord(
-                                rs.getString(DBConstants.MEDICAL_RECORD_ID),
-                                rs.getString(DBConstants.INSTITUTION_ID),
+                                rs.getLong(DBConstants.MEDICAL_RECORD_ID),
+                                rs.getLong(DBConstants.INSTITUTION_ID),
                                 rs.getString(DBConstants.DDP_INSTITUTION_ID),
                                 rs.getString(DBConstants.TYPE)));
                     }

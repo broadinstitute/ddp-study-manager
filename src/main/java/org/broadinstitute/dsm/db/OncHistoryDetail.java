@@ -1,5 +1,10 @@
 package org.broadinstitute.dsm.db;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
@@ -8,13 +13,15 @@ import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
 import org.broadinstitute.dsm.db.structure.SqlDateConverter;
 import org.broadinstitute.dsm.db.structure.TableName;
-import org.broadinstitute.dsm.model.Patch;
+import org.broadinstitute.dsm.model.patch.Patch;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.QueryExtension;
 import org.broadinstitute.dsm.util.DBUtil;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,6 +36,8 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
         alias = DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS,
         primaryKey = DBConstants.ONC_HISTORY_DETAIL_ID,
         columnPrefix = "")
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class OncHistoryDetail {
 
     private static final Logger logger = LoggerFactory.getLogger(OncHistoryDetail.class);
@@ -76,17 +85,21 @@ public class OncHistoryDetail {
     public static final String PROBLEM_OTHER = "other";
     public static final String PROBLEM_OTHER_OLD = "Other";
 
-    private String oncHistoryDetailId;
-    private final String medicalRecordId;
+    @ColumnName(DBConstants.ONC_HISTORY_DETAIL_ID)
+    private long oncHistoryDetailId;
+
+    @ColumnName(DBConstants.MEDICAL_RECORD_ID)
+    private long medicalRecordId;
 
     @ColumnName (DBConstants.DATE_PX)
-    private String datePX;
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
+    private String datePx;
 
     @ColumnName (DBConstants.TYPE_PX)
-    private String typePX;
+    private String typePx;
 
     @ColumnName (DBConstants.LOCATION_PX)
-    private String locationPX;
+    private String locationPx;
 
     @ColumnName (DBConstants.HISTOLOGY)
     private String histology;
@@ -98,49 +111,49 @@ public class OncHistoryDetail {
     private String facility;
 
     @ColumnName (DBConstants.PHONE)
-    private String fPhone;
+    private String phone;
 
     @ColumnName (DBConstants.FAX)
-    private String fFax;
+    private String fax;
 
     @ColumnName (DBConstants.NOTES)
-    private String oncHisNotes;
+    private String notes;
 
     @ColumnName (DBConstants.REQUEST)
     private String request;
 
     @ColumnName (DBConstants.FAX_SENT)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private String tFaxSent;
+    private String faxSent;
 
     @ColumnName (DBConstants.FAX_SENT_BY)
-    private String tFaxSentBy;
+    private String faxSentBy;
 
     @ColumnName (DBConstants.FAX_CONFIRMED)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private String tFaxConfirmed;
+    private String faxConfirmed;
 
     @ColumnName (DBConstants.FAX_SENT_2)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private String tFaxSent2;
+    private String faxSent2;
 
     @ColumnName (DBConstants.FAX_SENT_2_BY)
-    private String tFaxSent2By;
+    private String faxSent2By;
 
     @ColumnName (DBConstants.FAX_CONFIRMED_2)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private String tFaxConfirmed2;
+    private String faxConfirmed2;
 
     @ColumnName (DBConstants.FAX_SENT_3)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private String tFaxSent3;
+    private String faxSent3;
 
     @ColumnName (DBConstants.FAX_SENT_3_BY)
-    private String tFaxSent3By;
+    private String faxSent3By;
 
     @ColumnName (DBConstants.FAX_CONFIRMED_3)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private String tFaxConfirmed3;
+    private String faxConfirmed3;
 
     @ColumnName (DBConstants.TISSUE_RECEIVED)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
@@ -152,8 +165,19 @@ public class OncHistoryDetail {
     @ColumnName (DBConstants.GENDER)
     private String gender;
 
-    @ColumnName (DBConstants.ADDITIONAL_VALUES)
-    private String additionalValues;
+    @ColumnName (DBConstants.ADDITIONAL_VALUES_JSON)
+    @JsonProperty("dynamicFields")
+    @SerializedName("dynamicFields")
+    private String additionalValuesJson;
+
+    @JsonProperty("dynamicFields")
+    public Map<String, Object> getDynamicFields() {
+        try {
+            return ObjectMapperSingleton.instance().readValue(additionalValuesJson, new TypeReference<Map<String, Object>>() {});
+        } catch (IOException | NullPointerException e) {
+            return Map.of();
+        }
+    }
 
     @ColumnName (DBConstants.DESTRUCTION_POLICY)
     private String destructionPolicy;
@@ -164,94 +188,95 @@ public class OncHistoryDetail {
     private boolean deleted;
 
     @ColumnName (DBConstants.UNABLE_OBTAIN_TISSUE)
-    private boolean unableToObtain;
+    private boolean unableObtainTissue;
 
     private String participantId;
 
-
     private List<Tissue> tissues;
 
-    public OncHistoryDetail(String oncHistoryDetailId, String medicalRecordId, String datePX, String typePX,
-                            String locationPX, String histology, String accessionNumber, String facility, String fPhone,
-                            String fFax, String oncHisNotes, String request, String tFaxSent,
-                            String tFaxSentBy, String tFaxConfirmed,
-                            String tFaxSent2, String tFaxSent2By, String tFaxConfirmed2,
-                            String tFaxSent3, String tFaxSent3By, String tFaxConfirmed3,
-                            String tissueReceived, String gender, String additionalValues,
-                            String tissueProblemOption, String destructionPolicy, boolean unableToObtain) {
+    public OncHistoryDetail() {}
+
+    public OncHistoryDetail(long oncHistoryDetailId, long medicalRecordId, String datePx, String typePx,
+                            String locationPx, String histology, String accessionNumber, String facility, String phone,
+                            String fax, String notes, String request, String faxSent,
+                            String faxSentBy, String faxConfirmed,
+                            String faxSent2, String faxSent2By, String faxConfirmed2,
+                            String faxSent3, String faxSent3By, String faxConfirmed3,
+                            String tissueReceived, String gender, String additionalValuesJson,
+                            String tissueProblemOption, String destructionPolicy, boolean unableObtainTissue) {
         this.oncHistoryDetailId = oncHistoryDetailId;
         this.medicalRecordId = medicalRecordId;
-        this.datePX = datePX;
-        this.typePX = typePX;
-        this.locationPX = locationPX;
+        this.datePx = datePx;
+        this.typePx = typePx;
+        this.locationPx = locationPx;
         this.histology = histology;
         this.accessionNumber = accessionNumber;
         this.facility = facility;
-        this.fPhone = fPhone;
-        this.fFax = fFax;
-        this.oncHisNotes = oncHisNotes;
+        this.phone = phone;
+        this.fax = fax;
+        this.notes = notes;
         this.request = request;
-        this.tFaxSent = tFaxSent;
-        this.tFaxSentBy = tFaxSentBy;
-        this.tFaxConfirmed = tFaxConfirmed;
-        this.tFaxSent2 = tFaxSent2;
-        this.tFaxSent2By = tFaxSent2By;
-        this.tFaxConfirmed2 = tFaxConfirmed2;
-        this.tFaxSent3 = tFaxSent3;
-        this.tFaxSent3By = tFaxSent3By;
-        this.tFaxConfirmed3 = tFaxConfirmed3;
+        this.faxSent = faxSent;
+        this.faxSentBy = faxSentBy;
+        this.faxConfirmed = faxConfirmed;
+        this.faxSent2 = faxSent2;
+        this.faxSent2By = faxSent2By;
+        this.faxConfirmed2 = faxConfirmed2;
+        this.faxSent3 = faxSent3;
+        this.faxSent3By = faxSent3By;
+        this.faxConfirmed3 = faxConfirmed3;
         this.tissueReceived = tissueReceived;
         this.gender = gender;
-        this.additionalValues = additionalValues;
+        this.additionalValuesJson = additionalValuesJson;
         this.tissues = new ArrayList<>();
         this.tissueProblemOption = tissueProblemOption;
         this.destructionPolicy = destructionPolicy;
-        this.unableToObtain = unableToObtain;
+        this.unableObtainTissue = unableObtainTissue;
     }
 
-    public OncHistoryDetail(String oncHistoryDetailId, String medicalRecordId, String datePX, String typePX,
-                            String locationPX, String histology, String accessionNumber, String facility, String fPhone,
-                            String fFax, String oncHisNotes, String request, String tFaxSent,
-                            String tFaxSentBy, String tFaxConfirmed,
-                            String tFaxSent2, String tFaxSent2By, String tFaxConfirmed2,
-                            String tFaxSent3, String tFaxSent3By, String tFaxConfirmed3,
-                            String tissueReceived, String gender, String additionalValues, List<Tissue> tissues,
-                            String tissueProblemOption, String destructionPolicy, boolean unableToObtain) {
+    public OncHistoryDetail(long oncHistoryDetailId, long medicalRecordId, String datePx, String typePx,
+                            String locationPx, String histology, String accessionNumber, String facility, String phone,
+                            String fax, String notes, String request, String faxSent,
+                            String faxSentBy, String faxConfirmed,
+                            String faxSent2, String faxSent2By, String faxConfirmed2,
+                            String faxSent3, String faxSent3By, String faxConfirmed3,
+                            String tissueReceived, String gender, String additionalValuesJson, List<Tissue> tissues,
+                            String tissueProblemOption, String destructionPolicy, boolean unableObtainTissue) {
         this.oncHistoryDetailId = oncHistoryDetailId;
         this.medicalRecordId = medicalRecordId;
-        this.datePX = datePX;
-        this.typePX = typePX;
-        this.locationPX = locationPX;
+        this.datePx = datePx;
+        this.typePx = typePx;
+        this.locationPx = locationPx;
         this.histology = histology;
         this.accessionNumber = accessionNumber;
         this.facility = facility;
-        this.fPhone = fPhone;
-        this.fFax = fFax;
-        this.oncHisNotes = oncHisNotes;
+        this.phone = phone;
+        this.fax = fax;
+        this.notes = notes;
         this.request = request;
-        this.tFaxSent = tFaxSent;
-        this.tFaxSentBy = tFaxSentBy;
-        this.tFaxConfirmed = tFaxConfirmed;
-        this.tFaxSent2 = tFaxSent2;
-        this.tFaxSent2By = tFaxSent2By;
-        this.tFaxConfirmed2 = tFaxConfirmed2;
-        this.tFaxSent3 = tFaxSent3;
-        this.tFaxSent3By = tFaxSent3By;
-        this.tFaxConfirmed3 = tFaxConfirmed3;
+        this.faxSent = faxSent;
+        this.faxSentBy = faxSentBy;
+        this.faxConfirmed = faxConfirmed;
+        this.faxSent2 = faxSent2;
+        this.faxSent2By = faxSent2By;
+        this.faxConfirmed2 = faxConfirmed2;
+        this.faxSent3 = faxSent3;
+        this.faxSent3By = faxSent3By;
+        this.faxConfirmed3 = faxConfirmed3;
         this.tissueReceived = tissueReceived;
         this.gender = gender;
-        this.additionalValues = additionalValues;
+        this.additionalValuesJson = additionalValuesJson;
         this.tissues = tissues;
         this.tissueProblemOption = tissueProblemOption;
         this.destructionPolicy = destructionPolicy;
-        this.unableToObtain = unableToObtain;
+        this.unableObtainTissue = unableObtainTissue;
     }
 
     public static OncHistoryDetail getOncHistoryDetail(@NonNull ResultSet rs) throws SQLException {
         List tissues = new ArrayList<>();
         OncHistoryDetail oncHistoryDetail = new OncHistoryDetail(
-                rs.getString(DBConstants.ONC_HISTORY_DETAIL_ID),
-                rs.getString(DBConstants.MEDICAL_RECORD_ID),
+                rs.getLong(DBConstants.ONC_HISTORY_DETAIL_ID),
+                rs.getLong(DBConstants.MEDICAL_RECORD_ID),
                 rs.getString(DBConstants.DATE_PX),
                 rs.getString(DBConstants.TYPE_PX),
                 rs.getString(DBConstants.LOCATION_PX),
@@ -273,7 +298,7 @@ public class OncHistoryDetail {
                 rs.getString(DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.FAX_CONFIRMED_3),
                 rs.getString(DBConstants.TISSUE_RECEIVED),
                 rs.getString(DBConstants.GENDER),
-                rs.getString(DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.ADDITIONAL_VALUES), tissues,
+                rs.getString(DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.ADDITIONAL_VALUES_JSON), tissues,
                 rs.getString(DBConstants.TISSUE_PROBLEM_OPTION),
                 rs.getString(DBConstants.DESTRUCTION_POLICY),
                 rs.getBoolean(DBConstants.UNABLE_OBTAIN_TISSUE)
@@ -286,6 +311,13 @@ public class OncHistoryDetail {
         if (tissues != null) {
             tissues.add(tissue);
         }
+    }
+
+    public List<Tissue> getTissues() {
+        if (tissues == null) {
+            tissues = new ArrayList<>();
+        }
+        return tissues;
     }
 
     public static Map<String, List<OncHistoryDetail>> getOncHistoryDetails(@NonNull String realm) {
@@ -325,11 +357,13 @@ public class OncHistoryDetail {
                         OncHistoryDetail oncHistoryDetail = null;
                         if (oncHistoryMap.containsKey(oncHistoryDetailId)) {
                             oncHistoryDetail = oncHistoryMap.get(oncHistoryDetailId);
-                            oncHistoryDetail.addTissue(tissue);
+                            if (tissue != null)
+                                oncHistoryDetail.addTissue(tissue);
                         }
                         else {
                             oncHistoryDetail = getOncHistoryDetail(rs);
-                            oncHistoryDetail.addTissue(tissue);
+                            if (tissue != null)
+                                oncHistoryDetail.addTissue(tissue);
                             oncHistoryDataList.add(oncHistoryDetail);
                         }
                         oncHistoryMap.put(oncHistoryDetailId, oncHistoryDetail);

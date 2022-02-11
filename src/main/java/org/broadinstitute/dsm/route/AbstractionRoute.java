@@ -7,6 +7,7 @@ import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.model.*;
+import org.broadinstitute.dsm.model.patch.Patch;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;

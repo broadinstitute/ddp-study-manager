@@ -9,7 +9,7 @@ import org.broadinstitute.ddp.handlers.util.Result;
 import org.broadinstitute.dsm.db.KitType;
 import org.broadinstitute.dsm.db.*;
 import org.broadinstitute.dsm.model.*;
-import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
+import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.*;
@@ -301,7 +301,7 @@ public class DashboardRoute extends RequestHandler {
             }
 
             if (wrapper.getParticipant() != null) {
-                if (wrapper.getParticipant().isMinimalMR()) {
+                if (wrapper.getParticipant().isMinimalMr()) {
                     incrementCounter(dashboardValues, "minimalMR");
                 }
             }
@@ -359,7 +359,7 @@ public class DashboardRoute extends RequestHandler {
                 incrementCounter(dashboardValuesDetailed, "unableToObtainMedicalRecord");
                 foundAtPT.add("unableToObtainMedicalRecord");
             }
-            if (medicalRecord.isFollowUpRequired()) {
+            if (medicalRecord.isFollowupRequired()) {
                 incrementCounter(dashboardValuesDetailed, "followupRequiredMedicalRecord");
                 foundAtPT.add("followupRequiredMedicalRecord");
                 if (medicalRecord.getFollowUps() == null || medicalRecord.getFollowUps().length == 0) {
@@ -412,7 +412,7 @@ public class DashboardRoute extends RequestHandler {
                                      long start, long end) {
 
         for (OncHistoryDetail oncHistoryDetail : oncHistoryDetailList) {
-            if (oncHistoryDetail.isUnableToObtain()) {
+            if (oncHistoryDetail.isUnableObtainTissue()) {
                 incrementCounter(dashboardValuesDetailed, "unableToObtainTissue");
                 foundAtPT.add("unableToObtainTissue");
             }
@@ -445,7 +445,7 @@ public class DashboardRoute extends RequestHandler {
                     incrementCounter(dashboardValuesDetailed, "request.request");
                     foundAtPT.add("request.request");
                     //count where tissue request is set to request but fax is not sent out yet
-                    if (StringUtils.isBlank(oncHistoryDetail.getTFaxSent())) {
+                    if (StringUtils.isBlank(oncHistoryDetail.getFaxSent())) {
                         incrementCounter(dashboardValuesDetailed, "tFaxNotSent");
                         foundAtPT.add("tFaxNotSent");
                     }
@@ -488,8 +488,8 @@ public class DashboardRoute extends RequestHandler {
                     foundAtPT.add("tissueProblemOption.other");
                 }
             }
-            countRequestsReceive(dashboardValuesDetailed, dashboardValuesPeriodDetailed, foundAtPT, foundAtPtPeriod, oncHistoryDetail.getTFaxSent3(),
-                    oncHistoryDetail.getTFaxSent2(), oncHistoryDetail.getTFaxSent(), oncHistoryDetail.getTissueReceived(),
+            countRequestsReceive(dashboardValuesDetailed, dashboardValuesPeriodDetailed, foundAtPT, foundAtPtPeriod, oncHistoryDetail.getFaxSent3(),
+                    oncHistoryDetail.getFaxSent2(), oncHistoryDetail.getFaxSent(), oncHistoryDetail.getTissueReceived(),
                     start, end, null, "tFaxSent", "tissueReceived", false);
         }
     }
@@ -499,22 +499,22 @@ public class DashboardRoute extends RequestHandler {
                            long start, long end) {
         for (KitRequestShipping kit : kits) {
             if (kit.getScanDate() != 0) {
-                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitType() + ".sent", foundAtPT);
-                incrementCounterPeriod(dashboardValuesPeriodDetailed, "kit." + kit.getKitType() + ".sent", kit.getScanDate(), start, end, foundAtPtPeriod);
+                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitTypeName() + ".sent", foundAtPT);
+                incrementCounterPeriod(dashboardValuesPeriodDetailed, "kit." + kit.getKitTypeName() + ".sent", kit.getScanDate(), start, end, foundAtPtPeriod);
             }
             else if (kit.getDeactivatedDate() == 0) {
-                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitType() + ".waiting", foundAtPT);
+                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitTypeName() + ".waiting", foundAtPT);
             }
             if (kit.getReceiveDate() != 0) {
-                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitType() + ".received", foundAtPT);
-                incrementCounterPeriod(dashboardValuesPeriodDetailed, "kit." + kit.getKitType() + ".received", kit.getReceiveDate(), start, end, foundAtPtPeriod);
+                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitTypeName() + ".received", foundAtPT);
+                incrementCounterPeriod(dashboardValuesPeriodDetailed, "kit." + kit.getKitTypeName() + ".received", kit.getReceiveDate(), start, end, foundAtPtPeriod);
             }
             if (kit.getDeactivatedDate() != 0) {
-                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitType() + ".deactivated", foundAtPT);
-                incrementCounterPeriod(dashboardValuesPeriodDetailed, "kit." + kit.getKitType() + ".deactivated", kit.getDeactivatedDate(), start, end, foundAtPtPeriod);
+                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitTypeName() + ".deactivated", foundAtPT);
+                incrementCounterPeriod(dashboardValuesPeriodDetailed, "kit." + kit.getKitTypeName() + ".deactivated", kit.getDeactivatedDate(), start, end, foundAtPtPeriod);
             }
             if (StringUtils.isNotBlank(kit.getEasypostShipmentStatus())) {
-                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitType() + "." + kit.getEasypostShipmentStatus(), foundAtPT);
+                incrementCounter(dashboardValuesDetailed, "kit." + kit.getKitTypeName() + "." + kit.getEasypostShipmentStatus(), foundAtPT);
             }
         }
     }

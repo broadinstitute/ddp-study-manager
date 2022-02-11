@@ -1,5 +1,16 @@
 package org.broadinstitute.dsm.model;
 
+import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 import com.google.gson.Gson;
 import lombok.Data;
 import lombok.NonNull;
@@ -8,18 +19,11 @@ import org.broadinstitute.dsm.db.AbstractionActivity;
 import org.broadinstitute.dsm.db.AbstractionFinal;
 import org.broadinstitute.dsm.db.AbstractionGroup;
 import org.broadinstitute.dsm.db.structure.DBElement;
+import org.broadinstitute.dsm.model.patch.Patch;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.util.AbstractionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.*;
-
-import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
 @Data
 public class AbstractionWrapper {

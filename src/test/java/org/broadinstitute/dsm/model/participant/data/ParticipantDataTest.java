@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.Random;
 
 import com.google.gson.Gson;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -16,30 +16,30 @@ public class ParticipantDataTest {
 
     private static final String[] MEMBER_TYPES = {"SELF", "SISTER", "SON", "MOTHER", "FATHER", "COUSIN"};
     private static final Gson GSON = new Gson();
-    private static ParticipantData participantData;
+    private static org.broadinstitute.dsm.model.participant.data.ParticipantData participantData;
 
     @BeforeClass
     public static void setUp() {
-        participantData = new ParticipantData();
+        participantData = new org.broadinstitute.dsm.model.participant.data.ParticipantData();
     }
 
     @Test
     public void testFindProband() {
-        List<ParticipantDataDto> participantDataDtoList = generateParticipantData();
-        Optional<ParticipantDataDto> maybeProbandData = participantData.findProband(participantDataDtoList);
-        Map<String, String> map = GSON.fromJson(maybeProbandData.flatMap(ParticipantDataDto::getData).orElse(""), Map.class);
+        List<ParticipantData> participantDataList = generateParticipantData();
+        Optional<ParticipantData> maybeProbandData = participantData.findProband(participantDataList);
+        Map<String, String> map = GSON.fromJson(maybeProbandData.flatMap(ParticipantData::getData).orElse(""), Map.class);
         Assert.assertEquals("SELF", map.get("MEMBER_TYPE"));
     }
 
     @Test
     public void testGetFamilyId() {
-        List<ParticipantDataDto> participantDataDtoList = generateParticipantData();
-        ParticipantDataDto maybeProbandData = participantData.findProband(participantDataDtoList).get();
+        List<ParticipantData> participantDataList = generateParticipantData();
+        ParticipantData maybeProbandData = participantData.findProband(participantDataList).get();
         maybeProbandData.setData("{\"FAMILY_ID\":\"2005\"}");
         AddFamilyMemberPayload addFamilyMemberPayload = new AddFamilyMemberPayload.Builder("", "").build();
         long familyId = 0;
         try {
-            familyId = addFamilyMemberPayload.getFamilyId(participantDataDtoList);
+            familyId = addFamilyMemberPayload.getFamilyId(participantDataList);
         } catch (NoSuchFieldException e) {
             Assert.fail();
         }
@@ -48,13 +48,13 @@ public class ParticipantDataTest {
 
     @Test
     public void testFamilyMemberHasNotApplicantEmail() {
-        ParticipantData participantData = new ParticipantData(0, "", 0, "", Map.of(FamilyMemberConstants.EMAIL, "familymember@mail.com"));
+        org.broadinstitute.dsm.model.participant.data.ParticipantData participantData = new org.broadinstitute.dsm.model.participant.data.ParticipantData(0, "", 0, "", Map.of(FamilyMemberConstants.EMAIL, "familymember@mail.com"));
         Assert.assertFalse(participantData.hasFamilyMemberApplicantEmail());
     }
 
-    private List<ParticipantDataDto> generateParticipantData() {
+    private List<ParticipantData> generateParticipantData() {
         Random random = new Random();
-        List<ParticipantDataDto> participantDataDtoList = new ArrayList<>();
+        List<ParticipantData> participantDataList = new ArrayList<>();
         for (int i = 0; i < MEMBER_TYPES.length; i++) {
             String memberType = MEMBER_TYPES[i];
             int randomGeneratedFamilyId = random.nextInt();
@@ -69,8 +69,8 @@ public class ParticipantDataTest {
                     collaboratorParticipantId);
             familyMemberDetails.setEmail(email);
             String data = GSON.toJson(familyMemberDetails);
-            ParticipantDataDto participantDataDto =
-                    new ParticipantDataDto.Builder()
+            ParticipantData participantData =
+                    new ParticipantData.Builder()
                         .withDdpParticipantId(collaboratorParticipantId)
                         .withDdpInstanceId(i)
                         .withFieldTypeId("")
@@ -78,9 +78,9 @@ public class ParticipantDataTest {
                         .withLastChanged(System.currentTimeMillis())
                         .withChangedBy("SYSTEM")
                         .build();
-            participantDataDtoList.add(participantDataDto);
+            participantDataList.add(participantData);
         }
-        return participantDataDtoList;
+        return participantDataList;
     }
 
 

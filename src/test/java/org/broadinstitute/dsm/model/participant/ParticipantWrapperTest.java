@@ -4,19 +4,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.gson.Gson;
-import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantDataDto;
-import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
-import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
-import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
-import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchable;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
+import org.broadinstitute.dsm.model.elastic.ESProfile;
+import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
+import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
+import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
+import org.elasticsearch.index.query.AbstractQueryBuilder;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -72,7 +71,7 @@ public class ParticipantWrapperTest {
         Random random = new Random();
         String[] memberTypes = new String[] {"SISTER", "COUSIN", "SELF", "BROTHER"};
         AtomicInteger i = new AtomicInteger(0);
-        List<ParticipantDataDto> pDatas = Stream.generate(() -> new ParticipantDataDto.Builder()
+        List<ParticipantData> pDatas = Stream.generate(() -> new ParticipantData.Builder()
                 .withData(String.format("{\"MEMTER_TYPE\":\"%s\"}", memberTypes[i.getAndIncrement()]))
                 .withParticipantDataId(random.nextInt(100))
                 .build()).limit(4).collect(Collectors.toList());
@@ -89,7 +88,7 @@ public class ParticipantWrapperTest {
         public ElasticSearch getParticipantsWithinRange(String esParticipantsIndex, int from, int to) {
             List<ElasticSearchParticipantDto> result = Stream.generate(() -> {
                         ESProfile esProfile = new ESProfile();
-                        esProfile.setParticipantGuid(randomGuidGenerator());
+                        esProfile.setGuid(randomGuidGenerator());
                         return new ElasticSearchParticipantDto.Builder()
                                 .withProfile(esProfile)
                                 .withProxies(generateProxies())
@@ -106,7 +105,7 @@ public class ParticipantWrapperTest {
             List<ElasticSearchParticipantDto> result = new ArrayList<>();
             participantIds.forEach(pId -> {
                 ESProfile esProfile = new ESProfile();
-                esProfile.setParticipantGuid(pId);
+                esProfile.setGuid(pId);
                 result.add(
                         new ElasticSearchParticipantDto.Builder()
                                 .withProfile(esProfile)
@@ -123,7 +122,7 @@ public class ParticipantWrapperTest {
         }
 
         @Override
-        public ElasticSearch getParticipantsByRangeAndFilter(String esParticipantsIndex, int from, int to, String filter) {
+        public ElasticSearch getParticipantsByRangeAndFilter(String esParticipantsIndex, int from, int to, AbstractQueryBuilder queryBuilder) {
             return null;
         }
 
@@ -133,7 +132,7 @@ public class ParticipantWrapperTest {
         }
 
         @Override
-        public ElasticSearchParticipantDto getParticipantByShortId(String esParticipantsIndex, String shortId) {
+        public ElasticSearchParticipantDto getParticipantById(String esParticipantsIndex, String id) {
             return null;
         }
 

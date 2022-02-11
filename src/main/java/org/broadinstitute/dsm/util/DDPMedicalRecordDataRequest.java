@@ -94,7 +94,7 @@ public class DDPMedicalRecordDataRequest {
         if (MedicalRecordUtil.isParticipantInDB(conn, institutionRequest.getParticipantId(), instanceId)) {
             //participant already exists
             if (MedicalRecordUtil.updateParticipant(conn, institutionRequest.getParticipantId(), instanceId,
-                    institutionRequest.getId(), institutionRequest.getLastUpdated(), MedicalRecordUtil.SYSTEM)) {
+                    institutionRequest.getId(), institutionRequest.getLastUpdated(), SystemUtil.SYSTEM)) {
                 writeInstitutionInfo(conn, institutionRequest, instanceId);
                 //participant lastVersion changed
                 Collection<Number> medicalRecordIds = getMedicalRecordIds(conn, institutionRequest.getParticipantId(), instanceId);
@@ -111,7 +111,7 @@ public class DDPMedicalRecordDataRequest {
                     .withDdpParticipantId(institutionRequest.getParticipantId())
                     .withLastVersion(institutionRequest.getId())
                     .withLastVersionDate(institutionRequest.getLastUpdated())
-                    .withChangedBy(MedicalRecordUtil.SYSTEM)
+                    .withChangedBy(SystemUtil.SYSTEM)
                     .build();
             new ParticipantDao().create(participantDto);
             writeInstitutionInfo(conn, institutionRequest, instanceId);
@@ -126,7 +126,7 @@ public class DDPMedicalRecordDataRequest {
                     .withDdpParticipantId(participantId)
                     .withLastVersion(0)
                     .withLastVersionDate(ptLastUpdated)
-                    .withChangedBy(MedicalRecordUtil.SYSTEM)
+                    .withChangedBy(SystemUtil.SYSTEM)
                     .build();
             new ParticipantDao().create(participantDto);
             MedicalRecordUtil.writeNewRecordIntoDb(conn, SQL_INSERT_ONC_HISTORY, participantId, instanceId);
@@ -136,7 +136,7 @@ public class DDPMedicalRecordDataRequest {
             //pt already exists
             Number lastVersion = MedicalRecordUtil.getParticipantLastVersion(conn, participantId, instanceId);
             long newVersion = lastVersion.longValue() + 1;
-            MedicalRecordUtil.updateParticipant(conn, participantId, instanceId, newVersion, ptLastUpdated, MedicalRecordUtil.SYSTEM);
+            MedicalRecordUtil.updateParticipant(conn, participantId, instanceId, newVersion, ptLastUpdated, SystemUtil.SYSTEM);
         }
         //new physician/institution
         Number medicalRecordId = MedicalRecordUtil.isInstitutionInDB(conn, participantId, institutionId, instanceId, type);

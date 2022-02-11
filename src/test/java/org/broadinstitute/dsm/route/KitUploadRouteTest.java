@@ -4,9 +4,8 @@ import com.typesafe.config.Config;
 import org.broadinstitute.dsm.TestHelper;
 import org.broadinstitute.dsm.exception.FileColumnMissing;
 import org.broadinstitute.dsm.exception.UploadLineException;
-import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
-import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
-import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
+import org.broadinstitute.dsm.model.elastic.ESProfile;
+import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.participant.ParticipantWrapperDto;
 import org.broadinstitute.dsm.util.NotificationUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
@@ -117,7 +116,7 @@ public class KitUploadRouteTest {
         if (ParticipantUtil.isHruid(shortId)) {
             esProfile.setHruid(shortId);
         } else {
-            esProfile.setParticipantLegacyAltPid(shortId);
+            esProfile.setLegacyAltPid(shortId);
         }
 
         ElasticSearchParticipantDto elasticSearchParticipantDto = new ElasticSearchParticipantDto.Builder()

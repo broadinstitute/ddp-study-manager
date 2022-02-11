@@ -6,9 +6,8 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.export.WorkflowForES;
-import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
-import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
-import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
+import org.broadinstitute.dsm.model.elastic.ESProfile;
+import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.statics.ApplicationConfigConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.DBTestUtil;
@@ -414,7 +413,7 @@ public class ElasticSearchTest extends TestHelper {
                     ElasticSearchUtil.fetchESDataByParticipantId("participants_structured.rgp.rgp", pIdToFilter, client);
             fetchedPid = esObject.orElse(new ElasticSearchParticipantDto.Builder().build())
                     .getProfile()
-                    .map(ESProfile::getParticipantLegacyAltPid)
+                    .map(ESProfile::getLegacyAltPid)
                     .orElse("");
         } catch (IOException e) {
             Assert.fail();
@@ -431,7 +430,7 @@ public class ElasticSearchTest extends TestHelper {
             ElasticSearchParticipantDto esObject =
                     ElasticSearchUtil.fetchESDataByAltpid("participants_structured.atcp.atcp", altpid, client);
             fetchedPid = esObject.getProfile()
-                    .map(ESProfile::getParticipantLegacyAltPid)
+                    .map(ESProfile::getLegacyAltPid)
                     .orElse("");
         } catch (IOException e) {
             Assert.fail();

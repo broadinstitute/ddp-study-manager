@@ -18,9 +18,9 @@ import org.broadinstitute.dsm.exception.FileColumnMissing;
 import org.broadinstitute.dsm.exception.FileWrongSeparator;
 import org.broadinstitute.dsm.exception.UploadLineException;
 import org.broadinstitute.dsm.model.*;
-import org.broadinstitute.dsm.model.elasticsearch.ESProfile;
-import org.broadinstitute.dsm.model.elasticsearch.ElasticSearch;
-import org.broadinstitute.dsm.model.elasticsearch.ElasticSearchParticipantDto;
+import org.broadinstitute.dsm.model.elastic.ESProfile;
+import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
+import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.security.RequestHandler;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RoutePath;
@@ -216,9 +216,9 @@ public class KitUploadRoute extends RequestHandler {
                 //if kit has ddpParticipantId use that (RGP!)
                 if (StringUtils.isBlank(kit.getParticipantId())) {
                     ElasticSearchParticipantDto participantByShortId =
-                            elasticSearch.getParticipantByShortId(ddpInstance.getParticipantIndexES(), kit.getShortId());
-                    participantGuid = participantByShortId.getProfile().map(ESProfile::getParticipantGuid).orElse("");
-                    participantLegacyAltPid = participantByShortId.getProfile().map(ESProfile::getParticipantLegacyAltPid).orElse("");
+                            elasticSearch.getParticipantById(ddpInstance.getParticipantIndexES(), kit.getShortId());
+                    participantGuid = participantByShortId.getProfile().map(ESProfile::getGuid).orElse("");
+                    participantLegacyAltPid = participantByShortId.getProfile().map(ESProfile::getLegacyAltPid).orElse("");
                     kit.setParticipantId(!participantGuid.isEmpty() ? participantGuid : participantLegacyAltPid);
                 }
                 else {
@@ -334,8 +334,8 @@ public class KitUploadRoute extends RequestHandler {
             }
         }
         else {
-            String participantGuid = elasticSearch.getParticipantByShortId(ddpInstance.getParticipantIndexES(), kit.getShortId()).getProfile().map(ESProfile::getParticipantGuid).orElse("");
-            String participantLegacyAltPid = elasticSearch.getParticipantByShortId(ddpInstance.getParticipantIndexES(), kit.getShortId()).getProfile().map(ESProfile::getParticipantLegacyAltPid).orElse("");
+            String participantGuid = elasticSearch.getParticipantById(ddpInstance.getParticipantIndexES(), kit.getShortId()).getProfile().map(ESProfile::getGuid).orElse("");
+            String participantLegacyAltPid = elasticSearch.getParticipantById(ddpInstance.getParticipantIndexES(), kit.getShortId()).getProfile().map(ESProfile::getLegacyAltPid).orElse("");
             if (checkAndSetParticipantIdIfKitExists(ddpInstance, conn, kit, participantGuid, participantLegacyAltPid, kitType.getKitTypeId()) && !uploadAnyway) {
                 duplicateKitList.add(kit);
             }
@@ -369,8 +369,8 @@ public class KitUploadRoute extends RequestHandler {
             KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), shippingId,
                     kitTypeId, kit.getParticipantId().trim(), collaboratorParticipantId,
                     collaboratorSampleId, userId, addressId,
-                    errorMessage, externalOrderNumber, false, uploadReason);
-            kit.setShippingId(shippingId);
+                    errorMessage, externalOrderNumber, false, uploadReason, ddpInstance);
+            kit.setDdpLabel(shippingId);
             kit.setExternalOrderNumber(externalOrderNumber);
         }
         else {
@@ -390,8 +390,8 @@ public class KitUploadRoute extends RequestHandler {
             KitRequestShipping.writeRequest(ddpInstance.getDdpInstanceId(), shippingId,
                     kitTypeId, kit.getParticipantId().trim(), collaboratorParticipantId,
                     collaboratorSampleId, userId, addressId,
-                    errorMessage, kit.getExternalOrderNumber(), false, uploadReason);
-            kit.setShippingId(shippingId);
+                    errorMessage, kit.getExternalOrderNumber(), false, uploadReason, ddpInstance);
+            kit.setDdpLabel(shippingId);
         }
     }
 
@@ -504,7 +504,7 @@ public class KitUploadRoute extends RequestHandler {
 
         ElasticSearchParticipantDto participantByShortId;
         try {
-            participantByShortId = elasticSearch.getParticipantByShortId(ddpInstanceByRealm.getParticipantIndexES(), participantIdFromDoc);
+            participantByShortId = elasticSearch.getParticipantById(ddpInstanceByRealm.getParticipantIndexES(), participantIdFromDoc);
         } catch (Exception e) {
             throw new RuntimeException("Participant " + participantIdFromDoc + " does not belong to this study", e);
         }

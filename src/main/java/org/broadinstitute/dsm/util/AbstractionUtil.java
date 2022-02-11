@@ -8,7 +8,7 @@ import org.broadinstitute.dsm.db.AbstractionField;
 import org.broadinstitute.dsm.db.AbstractionFieldValue;
 import org.broadinstitute.dsm.db.AbstractionGroup;
 import org.broadinstitute.dsm.model.AbstractionQCWrapper;
-import org.broadinstitute.dsm.model.Patch;
+import org.broadinstitute.dsm.model.patch.Patch;
 import org.broadinstitute.dsm.model.Value;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.json.JSONArray;

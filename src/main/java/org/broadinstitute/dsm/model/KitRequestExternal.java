@@ -1,8 +1,13 @@
 package org.broadinstitute.dsm.model;
 
 import lombok.NonNull;
-import org.broadinstitute.ddp.db.SimpleResult;
+import org.broadinstitute.dsm.db.KitRequestShipping;
+import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
+import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
+import org.broadinstitute.dsm.model.elastic.export.painless.UpsertPainlessFacade;
+import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,13 +28,15 @@ public class KitRequestExternal extends KitRequest {
     private static final String SQL_UPDATE_KIT_REQUEST_EXTERNAL_SHIPPER_STATUS = "UPDATE ddp_kit_request SET external_order_status = ?, external_order_date = ? WHERE dsm_kit_request_id = ? AND NOT external_order_status <=> ?";
     private static final String SQL_UPDATE_KIT_REQUEST_EXTERNAL_SHIPPER_RESPONSE = "UPDATE ddp_kit_request SET external_response = ? WHERE dsm_kit_request_id = ?";
 
-    public KitRequestExternal(String dsmKitRequestId, String participantId, String shortId, String shippingId, String externalOrderNumber, DDPParticipant participant,
+    public KitRequestExternal(long dsmKitRequestId, String participantId, String shortId, String shippingId, String externalOrderNumber,
+                              DDPParticipant participant,
                               String externalOrderStatus, String externalKitName) {
         super(dsmKitRequestId, participantId, shortId, shippingId, externalOrderNumber, participant, externalOrderStatus, externalKitName, null);
     }
 
     // update kit request with status and date of external shipper
-    public static void updateKitRequest(Connection conn, String externalOrderStatus, long externalOrderDate, String dsmKitRequestId) {
+    public static void updateKitRequest(Connection conn, String externalOrderStatus, long externalOrderDate, String dsmKitRequestId,
+                                        int instanceId) {
         try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT_REQUEST_EXTERNAL_SHIPPER_STATUS)) {
             stmt.setString(1, externalOrderStatus);
             stmt.setLong(2, externalOrderDate);
@@ -44,6 +51,13 @@ public class KitRequestExternal extends KitRequest {
         catch (Exception e) {
            throw new RuntimeException("Error updating kit request w/ dsm_kit_request_id " + dsmKitRequestId, e);
         }
+        KitRequestShipping kitRequestShipping = new KitRequestShipping();
+        kitRequestShipping.setDsmKitRequestId(Long.valueOf(dsmKitRequestId));
+        kitRequestShipping.setExternalOrderStatus(externalOrderStatus);
+        kitRequestShipping.setExternalOrderDate(externalOrderDate);
+        DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceId(instanceId).orElseThrow();
+        UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, ESObjectConstants.DSM_KIT_REQUEST_ID,
+                ESObjectConstants.DSM_KIT_REQUEST_ID, dsmKitRequestId).export();
     }
 
     // update kit request with response of external shipper
@@ -64,7 +78,7 @@ public class KitRequestExternal extends KitRequest {
 
     // update kit request with response of external shipper
     public static void updateKitRequestResponse(@NonNull Connection conn, String trackingIdTo, String trackingIdReturn, String kitLabel, long sentDate,
-                                                String sentBy, String dsmKitRequestId) {
+                                                String sentBy, String dsmKitRequestId, int ddpInstanceId) {
         try (PreparedStatement stmt = conn.prepareStatement(SQL_UPDATE_KIT_EXTERNAL_SHIPPER)) {
             stmt.setString(1, trackingIdTo);
             stmt.setString(2, trackingIdReturn);
@@ -81,5 +95,17 @@ public class KitRequestExternal extends KitRequest {
         catch (Exception e) {
             logger.error("Error updating kit w/ dsm_kit_request_id " + dsmKitRequestId, e);
         }
+        KitRequestShipping kitRequestShipping = new KitRequestShipping();
+        kitRequestShipping.setDsmKitRequestId(Long.valueOf(dsmKitRequestId));
+        kitRequestShipping.setTrackingToId(trackingIdTo);
+        kitRequestShipping.setTrackingReturnId(trackingIdReturn);
+        kitRequestShipping.setKitLabel(kitLabel);
+        kitRequestShipping.setScanDate(sentDate);
+
+        DDPInstanceDto ddpInstanceDto = new DDPInstanceDao().getDDPInstanceByInstanceId(ddpInstanceId).orElseThrow();
+
+        UpsertPainlessFacade.of(DBConstants.DDP_KIT_REQUEST_ALIAS, kitRequestShipping, ddpInstanceDto, ESObjectConstants.DSM_KIT_REQUEST_ID, ESObjectConstants.DSM_KIT_REQUEST_ID, dsmKitRequestId)
+                .export();
+
     }
 }

@@ -1,19 +1,28 @@
 package org.broadinstitute.dsm.db;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
 import org.broadinstitute.dsm.db.structure.SqlDateConverter;
 import org.broadinstitute.dsm.db.structure.TableName;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.util.proxy.jackson.ObjectMapperSingleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
 
@@ -23,6 +32,8 @@ import static org.broadinstitute.ddp.db.TransactionWrapper.inTransaction;
         alias = DBConstants.DDP_TISSUE_ALIAS,
         primaryKey = DBConstants.TISSUE_ID,
         columnPrefix = "")
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Tissue {
 
     private static final Logger logger = LoggerFactory.getLogger(Tissue.class);
@@ -37,103 +48,129 @@ public class Tissue {
             "LEFT JOIN ddp_medical_record as m on (m.institution_id = inst.institution_id AND NOT m.deleted <=> 1) LEFT JOIN ddp_onc_history_detail as oD on (m.medical_record_id = oD.medical_record_id) " +
             "LEFT JOIN ddp_tissue as t on (t.onc_history_detail_id = oD.onc_history_detail_id) WHERE p.participant_id = ?";
 
-    private String tissueId;
-    private final String oncHistoryDetailId;
+    @TableName (
+            name = DBConstants.DDP_TISSUE,
+            alias = DBConstants.DDP_TISSUE_ALIAS,
+            primaryKey = DBConstants.TISSUE_ID,
+            columnPrefix = "")
+    @ColumnName(DBConstants.TISSUE_ID)
+    private long tissueId;
+
+    @ColumnName(DBConstants.ONC_HISTORY_DETAIL_ID)
+    private long oncHistoryDetailId;
 
     @ColumnName (DBConstants.NOTES)
-    private final String tNotes;
+    private String notes;
 
     @ColumnName (DBConstants.COUNT_RECEIVED)
-    private final Integer countReceived;
+    private long countReceived;
 
     @ColumnName (DBConstants.TISSUE_TYPE)
-    private final String tissueType;
+    private String tissueType;
 
     @ColumnName (DBConstants.TISSUE_SITE)
-    private final String tissueSite;
+    private String tissueSite;
 
     @ColumnName (DBConstants.TUMOR_TYPE)
-    private final String tumorType;
+    private String tumorType;
 
     @ColumnName (DBConstants.H_E)
-    private final String hE;
+    private String hE;
 
     @ColumnName (DBConstants.PATHOLOGY_REPORT)
-    private final String pathologyReport;
+    private String pathologyReport;
 
     @ColumnName (DBConstants.COLLABORATOR_SAMPLE_ID)
-    private final String collaboratorSampleId;
+    private String collaboratorSampleId;
 
     @ColumnName (DBConstants.BLOCK_SENT)
-    private final String blockSent;
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
+    private String blockSent;
 
     @ColumnName (DBConstants.SHL_WORK_NUMBER)
-    private final String shlWorkNumber;
+    private String shlWorkNumber;
 
     @ColumnName (DBConstants.SCROLLS_RECEIVED)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private final String scrollsReceived;
+    private String scrollsReceived;
 
     @ColumnName (DBConstants.SK_ID)
-    private final String skId;
+    private String skId;
 
     @ColumnName (DBConstants.SM_ID)
-    private final String smId;
+    private String smId;
 
     @ColumnName (DBConstants.SENT_GP)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private final String sentGp;
+    private String sentGp;
 
     private String changedBy;
 
-    @ColumnName (DBConstants.TDELETED)
-    private boolean tDeleted;
+    @ColumnName (DBConstants.DELETED)
+    private boolean deleted;
 
     @ColumnName (DBConstants.FIRST_SM_ID)
     private String firstSmId;
 
     @ColumnName (DBConstants.ADDITIONAL_TISSUE_VALUES)
-    private String additionalValues;
+    @JsonProperty("dynamicFields")
+    @SerializedName("dynamicFields")
+    private String additionalValuesJson;
+
+    @JsonProperty("dynamicFields")
+    public Map<String, Object> getDynamicFields() {
+        try {
+            return ObjectMapperSingleton.instance().readValue(additionalValuesJson, new TypeReference<Map<String, Object>>() {});
+        } catch (IOException | NullPointerException e) {
+            return Map.of();
+        }
+    }
 
     @ColumnName (DBConstants.TISSUE_RETURN_DATE)
     @DbDateConversion(SqlDateConverter.STRING_DAY)
-    private String tissueReturnDate;
-    //
+    private String returnDate;
+
     @ColumnName (DBConstants.RETURN_FEDEX_ID)
     private String returnFedexId;
 
     @ColumnName (DBConstants.EXPECTED_RETURN)
+    @DbDateConversion(SqlDateConverter.STRING_DAY)
     private String expectedReturn;
 
     @ColumnName (DBConstants.TUMOR_PERCENTAGE)
     private String tumorPercentage;
 
     @ColumnName (DBConstants.TISSUE_SEQUENCE)
-    private String sequenceResults;
+    private String tissueSequence;
 
     @ColumnName (DBConstants.SCROLLS_COUNT)
-    private Integer scrollsCount;
+    private long scrollsCount;
 
     @ColumnName (DBConstants.USS_COUNT)
-    private Integer ussCount;
+    private long ussCount;
 
     @ColumnName (DBConstants.BLOCKS_COUNT)
-    private Integer blocksCount;
+    private long blocksCount;
 
     @ColumnName (DBConstants.H_E_COUNT)
-    private Integer hECount;
+    private long hECount;
 
+    @JsonProperty("hECount")
+    public long gethECount() {
+        return hECount;
+    }
 
+    public Tissue() {}
 
-    public Tissue(String tissueId, String oncHistoryDetailId, String tNotes, Integer countReceived, String tissueType,
+    public Tissue(long tissueId, long oncHistoryDetailId, String notes, long countReceived, String tissueType,
                   String tissueSite, String tumorType, String hE, String pathologyReport, String collaboratorSampleId,
                   String blockSent, String scrollsReceived, String skId, String smId, String sentGp, String firstSmId,
-                  String additionalValues, String expectedReturn, String tissueReturnDate,
-                  String returnFedexId, String shlWorkNumber, String tumorPercentage, String sequenceResults, Integer scrollsCount,
-                  Integer ussCount, Integer blocksCount, Integer hECount) {
+                  String additionalValuesJson, String expectedReturn, String returnDate,
+                  String returnFedexId, String shlWorkNumber, String tumorPercentage, String tissueSequence, long scrollsCount,
+                  long ussCount, long blocksCount, long hECount) {
         this.tissueId = tissueId;
         this.oncHistoryDetailId = oncHistoryDetailId;
-        this.tNotes = tNotes;
+        this.notes = notes;
         this.countReceived = countReceived;
         this.tissueType = tissueType;
         this.tissueSite = tissueSite;
@@ -147,13 +184,13 @@ public class Tissue {
         this.smId = smId;
         this.sentGp = sentGp;
         this.firstSmId = firstSmId;
-        this.additionalValues = additionalValues;
+        this.additionalValuesJson = additionalValuesJson;
         this.expectedReturn = expectedReturn;
-        this.tissueReturnDate = tissueReturnDate;
+        this.returnDate = returnDate;
         this.returnFedexId = returnFedexId;
         this.shlWorkNumber = shlWorkNumber;
         this.tumorPercentage = tumorPercentage;
-        this.sequenceResults = sequenceResults;
+        this.tissueSequence = tissueSequence;
         this.scrollsCount = scrollsCount;
         this.hECount = hECount;
         this.blocksCount = blocksCount;
@@ -161,9 +198,12 @@ public class Tissue {
     }
 
     public static Tissue getTissue(@NonNull ResultSet rs) throws SQLException {
+        String tissueId = rs.getString(DBConstants.TISSUE_ID);
+        if (StringUtils.isBlank(tissueId))
+            return null;
         Tissue tissue = new Tissue(
-                rs.getString(DBConstants.TISSUE_ID),
-                rs.getString(DBConstants.ONC_HISTORY_DETAIL_ID),
+                rs.getLong(DBConstants.TISSUE_ID),
+                rs.getLong(DBConstants.ONC_HISTORY_DETAIL_ID),
                 rs.getString(DBConstants.DDP_TISSUE_ALIAS + DBConstants.ALIAS_DELIMITER + DBConstants.NOTES),
                 rs.getInt(DBConstants.COUNT_RECEIVED),
                 rs.getString(DBConstants.TISSUE_TYPE),
@@ -185,10 +225,10 @@ public class Tissue {
                 rs.getString(DBConstants.SHL_WORK_NUMBER),
                 rs.getString(DBConstants.TUMOR_PERCENTAGE),
                 rs.getString(DBConstants.TISSUE_SEQUENCE),
-                rs.getInt(DBConstants.SCROLLS_COUNT),
-                rs.getInt(DBConstants.USS_COUNT),
-                rs.getInt(DBConstants.BLOCKS_COUNT),
-                rs.getInt(DBConstants.H_E_COUNT));
+                rs.getLong(DBConstants.SCROLLS_COUNT),
+                rs.getLong(DBConstants.USS_COUNT),
+                rs.getLong(DBConstants.BLOCKS_COUNT),
+                rs.getLong(DBConstants.H_E_COUNT));
         return tissue;
     }
 

@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.*;
+import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantRecordDto;
 import org.broadinstitute.dsm.db.structure.ColumnName;
 import org.broadinstitute.dsm.db.structure.DBElement;
 import org.broadinstitute.dsm.db.structure.DbDateConversion;
@@ -25,7 +26,7 @@ public class PatchUtil {
     private static Map<String, String> dataBaseMap;
     private static Set<String> tableAliases = new HashSet<>();
 
-    public PatchUtil() {
+    static {
         columnNameMap = new HashMap<>();
         dataBaseMap = new HashMap<>();
         getColumnNames(Participant.class);
@@ -41,7 +42,11 @@ public class PatchUtil {
         getColumnNames(KitRequest.class);
         getColumnNames(Drug.class);
         getColumnNames(ParticipantData.class);
+        getColumnNames(ParticipantRecordDto.class);
         logger.info("Loaded patch utils");
+    }
+    
+    public PatchUtil() {
     }
 
     public static Map<String, DBElement> getColumnNameMap() {
@@ -65,7 +70,7 @@ public class PatchUtil {
         return null;
     }
 
-    private void getColumnNames(Class<?> obj) {
+    private static void getColumnNames(Class<?> obj) {
         String tableName = null;
         String tableAlias = null;
         String primaryKey = null;

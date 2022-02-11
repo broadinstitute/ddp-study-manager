@@ -91,6 +91,10 @@ public class ViewFilter {
     public String parent;
     public String filterQuery;
 
+    public ViewFilter() {
+
+    }
+
     public ViewFilter(String filterName, String parent) {
         this(filterName, null, null, null, null, null, null, parent, null,
                 null, null, null, null);
@@ -253,11 +257,14 @@ public class ViewFilter {
     public static void addQueryCondition(@NonNull Map<String, String> queryConditions, DBElement dbElement, Filter filter) {
         if (dbElement != null) {
             String queryCondition = "";
-            String tmp = StringUtils.isNotBlank(filter.getParentName()) ? filter.getParentName() : filter.getParticipantColumn().getTableAlias();
-            if (queryConditions.containsKey(tmp)) {
-                queryCondition = queryConditions.get(tmp);
+//            String propertyName = StringUtils.isNotBlank(filter.getParentName()) ? filter.getParentName() : filter.getParticipantColumn().getTableAlias();
+            String propertyName = StringUtils.isNotBlank(filter.getParticipantColumn().getTableAlias())
+                    ? filter.getParticipantColumn().getTableAlias()
+                    : filter.getParentName();
+            if (queryConditions.containsKey(propertyName)) {
+                queryCondition = queryConditions.get(propertyName);
             }
-            queryConditions.put(tmp, queryCondition.concat(Filter.getQueryStringForFiltering(filter, dbElement)));
+            queryConditions.put(propertyName, queryCondition.concat(Filter.getQueryStringForFiltering(filter, dbElement)));
         }
         else {
             String queryCondition = "";
@@ -366,7 +373,7 @@ public class ViewFilter {
         loop:
         for (TissueList tissueList : views) {
             if (tissueList.getOncHistoryDetails() != null) {
-                String dateString = tissueList.getOncHistoryDetails().getDatePX();
+                String dateString = tissueList.getOncHistoryDetails().getDatePx();
                 int len = dateString.length();
                 int destructionPolicy = 1000;
                 if (!tissueList.getOncHistoryDetails().getDestructionPolicy().equals("indefinitely")) {
@@ -526,6 +533,7 @@ public class ViewFilter {
                             if (word.equals(Filter.EQUALS_TRIMMED)) { // exact match selected in the frontend
                                 exact = true;
                                 range = false;
+                                f1 = true;
                                 state = 3;
                                 break;
                             }
