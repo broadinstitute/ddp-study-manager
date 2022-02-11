@@ -1,27 +1,27 @@
-package org.broadinstitute.dsm.model.bsp;
+package org.broadinstitute.dsm.model.gp;
 
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Getter
-public class BSPKitInfo {
+public class KitInfo {
 
-    private static final Logger logger = LoggerFactory.getLogger(BSPKitInfo.class);
+    private static final Logger logger = LoggerFactory.getLogger(KitInfo.class);
 
     private String collaboratorParticipantId, collaboratorSampleId, sampleCollectionBarcode, gender, materialInfo, receptacleName,
-            accessionNumber,  realm, kitTypeName;
+            accessionNumber, realm, kitTypeName;
     private final int organismClassificationId;
 
-    public BSPKitInfo(String sampleCollectionBarcode,
-                      int organismClassificationId,
-                      String gender,
-                      String bspParticipantId,
-                      String bspSampleId,
-                      String materialInfo,
-                      String receptacleName,
-                      String realm,
-                      String kitTypeName) {
+    public KitInfo(String sampleCollectionBarcode,
+                   int organismClassificationId,
+                   String gender,
+                   String bspParticipantId,
+                   String bspSampleId,
+                   String materialInfo,
+                   String receptacleName,
+                   String realm,
+                   String kitTypeName) {
         this.sampleCollectionBarcode = sampleCollectionBarcode;
         // note that organism is bsp's internal organismClassificationId, as per Damien
         this.organismClassificationId = organismClassificationId;

@@ -5,7 +5,7 @@ import org.broadinstitute.ddp.db.SimpleResult;
 import org.broadinstitute.ddp.db.TransactionWrapper;
 import org.broadinstitute.dsm.db.dao.Dao;
 import org.broadinstitute.dsm.db.dto.kit.BSPKitDto;
-import org.broadinstitute.dsm.model.BSPKit;
+import org.broadinstitute.dsm.model.gp.BSPKit;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

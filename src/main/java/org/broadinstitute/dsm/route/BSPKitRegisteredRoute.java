@@ -2,7 +2,7 @@ package org.broadinstitute.dsm.route;
 
 import com.google.gson.Gson;
 import org.broadinstitute.ddp.db.SimpleResult;
-import org.broadinstitute.dsm.model.bsp.BSPKitRegistration;
+import org.broadinstitute.dsm.model.gp.bsp.BSPKitRegistration;
 import org.broadinstitute.dsm.statics.DBConstants;
 import spark.Request;
 import spark.Response;

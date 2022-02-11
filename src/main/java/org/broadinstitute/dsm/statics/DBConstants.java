@@ -27,6 +27,7 @@ public class DBConstants {
     public static final String DDP_ONC_HISTORY_ALIAS = "o";
     public static final String DDP_ONC_HISTORY_DETAIL_ALIAS = "oD";
     public static final String DDP_TISSUE_ALIAS = "t";
+    public static final String SM_ID_ALIAS = "sm";
     public static final String DDP_KIT_REQUEST_ALIAS = "k";
     public static final String DDP_ABSTRACTION_ALIAS = "a";
     public static final String DRUG_ALIAS = "d";
@@ -46,6 +47,8 @@ public class DBConstants {
     public static final String CARRIER_USERNAME = "carrier_username";
     public static final String CARRIER_PASSWORD= "carrier_password";
     public static final String CARRIER_ACCESSKEY = "carrier_accesskey";
+    public static final String BSP_COLLECTION = "bsp_collection";
+    public static final String BSP_ORGANISM = "bsp_organism";
 
     //kit request
     public static final String DSM_KIT_ID = "dsm_kit_id";
@@ -62,9 +65,8 @@ public class DBConstants {
     public static final String UPS_RETURN_DATE = "ups_return_date";
     public static final String SAMPLE_TYPE = "sample_type";
     public static final String DDP_KIT_REQUEST_TABLE_ABBR = "req.";
-
-
-
+    public static final String BSP_MATERIAL_TYPE = "bsp_material_type";
+    public static final String BSP_RECEPTABLE_TYPE = "bsp_receptacle_type";
     public static final String DSM_LABEL_TO = "label_url_to";
     public static final String DSM_LABEL_RETURN = "label_url_return";
     public static final String DSM_CARRIER_TO = "carrierTo";
@@ -246,7 +248,9 @@ public class DBConstants {
     public static final String SCROLLS_COUNT = "scrolls_count";
     public static final String H_E_COUNT = "h_e_count";
     public static final String BLOCKS_COUNT = "blocks_count";
-
+    public static final String USS_SMIDS = "uss_sm_ids";
+    public static final String SCROLL_SMIDS = "scrolls_sm_ids";
+    public static final String HE_SMIDS = "he_sm_ids";
 
     //field_settings
     public static final String FIELD_SETTING_ID = "field_settings_id";
@@ -485,6 +489,18 @@ public class DBConstants {
     //access_user
     public static final String PHONE_NUMBER = "phone_number";
 
+    //sm_id table
+    public static final String SM_ID_TABLE = "sm_id";
+    public static final String SM_ID_TABLE_ALIAS = "sm";
+    public static final String SM_ID_PK = "sm_id_pk";
+    public static final String SM_ID_TYPE_ID = "sm_id_type_id";
+    public static final String SM_ID_VALUE = "sm_id_value";
+    public static final String SM_ID_TISSUE_ID = "tissue_id";
+
+    //sm_id_type table
+    public static final String SM_ID_TYPE_TABLE = "sm_id_type";
+    public static final String SM_ID_TYPE_TABLE_ALIAS = "smt";
+    public static final String SM_ID_TYPE = "sm_id_type";
 
     public static final String LABEL_URL_RETURN = "label_url_return";
 
