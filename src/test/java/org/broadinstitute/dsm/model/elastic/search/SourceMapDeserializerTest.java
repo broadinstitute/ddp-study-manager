@@ -45,7 +45,7 @@ public class SourceMapDeserializerTest {
         testResultInner.put("timeCompleted", "2020-01-01");
         testResultInner.put("result", "Positive");
 
-        Map<String, Object> testResult = Map.of("testResult", testResultInner);
+        Map<String, Object> testResult = Map.of("testResult", List.of(testResultInner));
 
         String testResultValueAsJson = sourceMapDeserializer.convertTestResultValueAsJson(testResult);
 

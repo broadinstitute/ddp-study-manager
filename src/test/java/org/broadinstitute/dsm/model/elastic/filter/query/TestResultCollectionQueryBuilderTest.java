@@ -17,7 +17,7 @@ public class TestResultCollectionQueryBuilderTest {
     public void build() {
         BaseQueryBuilder queryBuilder = new TestResultCollectionQueryBuilder();
         QueryPayload queryPayload =
-                new QueryPayload("dsm.kitRequestShipping", "isCorrected", new FilterParser().parse(new String[] {"'true'"}));
+                new QueryPayload("dsm.kitRequestShipping", "testResult.isCorrected", new FilterParser().parse(new String[] {"'true'"}));
         String filter = "JSON_CONTAINS(k.test_result, JSON_OBJECT('isCorrected', 'true'))";
         JsonContainsSplitter splitter = new JsonContainsSplitter();
         splitter.setFilter(filter);
