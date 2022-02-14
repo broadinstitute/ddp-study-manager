@@ -13,9 +13,9 @@ import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.exception.RateNotAvailableException;
 import org.broadinstitute.dsm.model.*;
 import org.broadinstitute.dsm.model.KitType;
-import org.broadinstitute.dsm.model.bsp.BSPKitInfo;
-import org.broadinstitute.dsm.model.bsp.BSPKitRegistration;
-import org.broadinstitute.dsm.model.bsp.BSPKitStatus;
+import org.broadinstitute.dsm.model.gp.KitInfo;
+import org.broadinstitute.dsm.model.gp.bsp.BSPKitRegistration;
+import org.broadinstitute.dsm.model.gp.bsp.BSPKitStatus;
 import org.broadinstitute.dsm.model.ddp.DDPParticipant;
 import org.broadinstitute.dsm.route.KitStatusChangeRoute;
 import org.broadinstitute.dsm.statics.DBConstants;
@@ -643,7 +643,7 @@ public class RouteTestSample extends TestHelper {
 
         HttpResponse response = bspKit("FAKE_SPK_UUID_tt4");
         Gson gson = new GsonBuilder().create();
-        BSPKitInfo bspMetaData = gson.fromJson(DDPRequestUtil.getContentAsString(response), BSPKitInfo.class);
+        KitInfo bspMetaData = gson.fromJson(DDPRequestUtil.getContentAsString(response), KitInfo.class);
         Assert.assertEquals("FAKE_BSP_COLL_ID_tt4", bspMetaData.getCollaboratorParticipantId());
         Assert.assertEquals("FAKE_BSP_SAM_ID_tt4", bspMetaData.getCollaboratorSampleId());
         Assert.assertEquals("U", bspMetaData.getGender());
@@ -659,7 +659,7 @@ public class RouteTestSample extends TestHelper {
     public void bspNormalKit() throws Exception {
         HttpResponse response = bspKit("testing123");
         Gson gson = new GsonBuilder().create();
-        BSPKitInfo bspMetaData = gson.fromJson(DDPRequestUtil.getContentAsString(response), BSPKitInfo.class);
+        KitInfo bspMetaData = gson.fromJson(DDPRequestUtil.getContentAsString(response), KitInfo.class);
         Assert.assertEquals("JJGUNZLLAY6HK9AAFWZQ", bspMetaData.getCollaboratorParticipantId());
         Assert.assertEquals("VTLI45RTA3VGZRJBssfQ7", bspMetaData.getCollaboratorSampleId());
         Assert.assertEquals("U", bspMetaData.getGender());
@@ -1174,7 +1174,7 @@ public class RouteTestSample extends TestHelper {
         Assert.assertNotNull(DDPRequestUtil.getContentAsString(response));
 
         Gson gson = new GsonBuilder().create();
-        BSPKitInfo bspKitInfo = gson.fromJson(DDPRequestUtil.getContentAsString(response), BSPKitInfo.class);
+        KitInfo bspKitInfo = gson.fromJson(DDPRequestUtil.getContentAsString(response), KitInfo.class);
 
         Assert.assertEquals(1, bspKitInfo.getOrganismClassificationId()); //human
         Assert.assertEquals("FAKE_BSP_COLL_ID" + suffix, bspKitInfo.getCollaboratorParticipantId());

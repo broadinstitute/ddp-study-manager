@@ -1,4 +1,4 @@
-package org.broadinstitute.dsm.model.bsp;
+package org.broadinstitute.dsm.model.gp.bsp;
 
 import lombok.Getter;
 

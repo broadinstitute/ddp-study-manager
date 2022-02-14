@@ -84,8 +84,7 @@ public class SourceMapDeserializer implements Deserializer {
     }
 
     String convertTestResultValueAsJson(Map<String, Object> clonedMap) {
-        Map<String, Object> testResult = (Map<String, Object>) clonedMap.get(ESObjectConstants.KIT_TEST_RESULT);
-        return ObjectMapperSingleton.writeValueAsString(List.of(testResult));
+        return ObjectMapperSingleton.writeValueAsString(clonedMap.get(ESObjectConstants.KIT_TEST_RESULT));
     }
 
     protected Map<String, Object> convertDynamicFieldsFromCamelCaseToPascalCase(Map<String, Object> dynamicFields) {

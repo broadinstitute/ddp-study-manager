@@ -185,6 +185,7 @@ public class PubSubLookUp {
         else {
             KitRequestShipping kitRequestShipping = new KitRequestShipping();
             kitRequestShipping.setTestResult(finalArray);
+            kitRequestShipping.setKitLabel(testBostonResult.getSampleId());
 
             DDPInstanceDto ddpInstanceDto = new DDPInstanceDto.Builder()
                     .withEsParticipantIndex(ddpInstance.getParticipantIndexES())

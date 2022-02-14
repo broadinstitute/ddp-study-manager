@@ -192,13 +192,7 @@ public class DSMServer extends BasicServer {
         before("*", new LoggingFilter());
         afterAfter((req, res) -> MDC.clear());
 
-        before(API_ROOT + RoutePath.BSP_KIT_QUERY_PATH, (req, res) -> {
-            if (!new JWTRouteFilter(bspSecret, null).isAccessAllowed(req)) {
-                halt(404);
-            }
-            res.header(HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
-        });
-        before(API_ROOT + RoutePath.CLINICAL_KIT_ENDPOINT, (req, res) -> {
+        before(API_ROOT + "*", (req, res) -> {
             if (!new JWTRouteFilter(bspSecret, null).isAccessAllowed(req)) {
                 halt(404);
             }
