@@ -79,4 +79,35 @@ public class SortTest {
         String nestedPath = sort.buildNestedPath();
         assertEquals("dsm.kitRequestShipping.testResult", nestedPath);
     }
+
+    @Test
+    public void handleOuterPropertySpecialCase() {
+        SortBy sortBy = new SortBy.Builder()
+                .withType("RADIO")
+                .withOrder("ASC")
+                .withInnerProperty("REGISTRATION_STATUS")
+                .withTableAlias("participantData")
+                .withOuterProperty("AT_GROUP_MISCELLANEOUS")
+                .build();
+        Sort sort = new Sort(sortBy);
+        String outerProperty = sort.handleOuterPropertySpecialCase();
+        assertEquals("dynamicFields", outerProperty);
+    }
+
+    @Test
+    public void buildParticipantDataFieldName() {
+        SortBy sortBy = new SortBy.Builder()
+                .withType("RADIO")
+                .withOrder("ASC")
+                .withInnerProperty("REGISTRATION_STATUS")
+                .withTableAlias("participantData")
+                .withOuterProperty("AT_GROUP_MISCELLANEOUS")
+                .build();
+        Sort sort = new Sort(sortBy);
+        String outerProperty = sort.buildFieldName();
+        assertEquals("dsm.participantData.dynamicFields.registrationStatus", outerProperty);
+    }
+
+
+
 }

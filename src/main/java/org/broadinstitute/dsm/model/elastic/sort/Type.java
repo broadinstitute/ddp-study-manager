@@ -7,10 +7,15 @@ import org.broadinstitute.dsm.statics.ESObjectConstants;
 @Getter
 public enum Type {
 
+    NUMBER(StringUtils.EMPTY),
     TEXT(StringUtils.EMPTY),
+    OPTIONS(StringUtils.EMPTY),
+    CHECKBOX(StringUtils.EMPTY),
+    TEXTAREA(StringUtils.EMPTY),
+    DATE(StringUtils.EMPTY),
+    RADIO(StringUtils.EMPTY),
     ADDITIONALVALUE(ESObjectConstants.DYNAMIC_FIELDS),
-    JSONARRAY(StringUtils.EMPTY),
-    CHECKBOX(StringUtils.EMPTY);
+    JSONARRAY(StringUtils.EMPTY);
 
     private String value;
 

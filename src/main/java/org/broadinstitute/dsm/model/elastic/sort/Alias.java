@@ -13,6 +13,7 @@ public enum Alias {
     P(ESObjectConstants.PARTICIPANT,false),
     O(ESObjectConstants.ONC_HISTORY,false),
     D(ESObjectConstants.PARTICIPANT_DATA,true),
+    PARTICIPANTDATA(ESObjectConstants.PARTICIPANT_DATA,true),
     T(ESObjectConstants.TISSUE,true),
     R(ESObjectConstants.PARTICIPANT,false),
     STATUS(ESObjectConstants.STATUS,false),

@@ -1,8 +1,10 @@
 package org.broadinstitute.dsm.model.elastic.sort;
 
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 public class SortBy {
 
     public static final String SORT_BY = "sortBy";

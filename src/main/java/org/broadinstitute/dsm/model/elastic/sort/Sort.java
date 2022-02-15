@@ -1,6 +1,7 @@
 package org.broadinstitute.dsm.model.elastic.sort;
 
 import org.apache.commons.lang3.StringUtils;
+import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
@@ -13,19 +14,20 @@ public class Sort {
     private SortBy sortBy;
 
     public Sort(SortBy sortBy) {
+        sortBy.setInnerProperty(Util.underscoresToCamelCase(sortBy.getInnerProperty()));
         this.sortBy = sortBy;
     }
     
-    public boolean isNestedSort() {
+    boolean isNestedSort() {
         return Alias.of(sortBy.getTableAlias()).isCollection();
     }
 
-    public String buildFieldName() {
+    String buildFieldName() {
         
         Alias alias = Alias.of(sortBy.getTableAlias());
         Type type = Type.valueOf(sortBy.getType());
 
-        String outerProperty = sortBy.getOuterProperty();
+        String outerProperty = handleOuterPropertySpecialCase();
         String innerProperty = sortBy.getInnerProperty();
 
         switch (type) {
@@ -39,6 +41,9 @@ public class Sort {
                 innerProperty += getKeywordIfText(jsonArrayInnerType); 
                 break;
             case TEXT:
+            case TEXTAREA:
+            case RADIO:
+            case OPTIONS:
                 innerProperty += getKeywordIfText(type); 
                 break;
         }
@@ -58,7 +63,7 @@ public class Sort {
         return StringUtils.EMPTY;
     }
 
-    public String buildNestedPath() {
+    String buildNestedPath() {
         if (isNestedSort()) {
             Type type = Type.valueOf(sortBy.getType());
             if (type == Type.JSONARRAY) {
@@ -67,5 +72,13 @@ public class Sort {
             return buildPath(ESObjectConstants.DSM, Alias.of(sortBy.getTableAlias()).getValue());
         }
         throw new UnsupportedOperationException("Building nested path on non-nested objects is unsupported");
+    }
+
+    String handleOuterPropertySpecialCase() {
+        Alias alias = Alias.of(sortBy.getTableAlias());
+        if (alias.equals(Alias.PARTICIPANTDATA)) {
+            return ESObjectConstants.DYNAMIC_FIELDS;
+        }
+        return sortBy.getOuterProperty();
     }
 }
