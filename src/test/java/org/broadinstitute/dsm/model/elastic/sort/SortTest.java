@@ -105,7 +105,7 @@ public class SortTest {
                 .build();
         Sort sort = new Sort(sortBy);
         String outerProperty = sort.buildFieldName();
-        assertEquals("dsm.participantData.dynamicFields.registrationStatus", outerProperty);
+        assertEquals("dsm.participantData.dynamicFields.registrationStatus.keyword", outerProperty);
     }
 
 

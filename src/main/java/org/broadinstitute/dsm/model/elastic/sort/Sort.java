@@ -40,11 +40,8 @@ public class Sort {
                 Type jsonArrayInnerType = Type.valueOf(sortBy.getAdditionalType());
                 innerProperty += getKeywordIfText(jsonArrayInnerType); 
                 break;
-            case TEXT:
-            case TEXTAREA:
-            case RADIO:
-            case OPTIONS:
-                innerProperty += getKeywordIfText(type); 
+            default:
+                innerProperty += getKeywordIfText(type);
                 break;
         }
         return buildPath(ESObjectConstants.DSM, alias.getValue(), outerProperty, innerProperty);
@@ -57,10 +54,14 @@ public class Sort {
     }
 
     private String getKeywordIfText(Type innerType) {
-        if (innerType == Type.TEXT) {
+        if (isTextContent(innerType)) {
             return DBConstants.ALIAS_DELIMITER + TypeParser.KEYWORD;
         }
         return StringUtils.EMPTY;
+    }
+
+    private boolean isTextContent(Type innerType) {
+        return innerType == Type.TEXT || innerType == Type.TEXTAREA || innerType == Type.RADIO || innerType == Type.OPTIONS;
     }
 
     String buildNestedPath() {
