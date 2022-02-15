@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.model.Filter;
+import org.broadinstitute.dsm.model.elastic.sort.SortBy;
 
 
 public class ParticipantWrapperPayload {
@@ -14,7 +15,7 @@ public class ParticipantWrapperPayload {
     private int userId;
     private int from;
     private int to;
-    private Filter sortBy;
+    private SortBy sortBy;
 
     public Optional<DDPInstanceDto> getDdpInstanceDto() {
         return Optional.ofNullable(ddpInstanceDto);
@@ -49,7 +50,7 @@ public class ParticipantWrapperPayload {
 
         public int from;
         public int to;
-        public Filter sortBy;
+        public SortBy sortBy;
         private DDPInstanceDto ddpInstanceDto;
         private Map<String, String> filter;
         private int userId;
@@ -79,7 +80,7 @@ public class ParticipantWrapperPayload {
             return this;
         }
 
-        public Builder withSortBy(Filter sortBy) {
+        public Builder withSortBy(SortBy sortBy) {
             this.sortBy = sortBy;
             return this;
         }

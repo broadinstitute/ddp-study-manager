@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.db.DDPInstance;
 import org.broadinstitute.dsm.db.ViewFilter;
 import org.broadinstitute.dsm.model.Filter;
+import org.broadinstitute.dsm.model.elastic.sort.SortBy;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.RequestParameter;
 import org.broadinstitute.dsm.statics.RoutePath;
@@ -30,7 +31,7 @@ public class BaseFilter {
     protected DDPInstance ddpInstance;
     protected int from;
     protected int to;
-    protected Filter sortBy;
+    protected SortBy sortBy;
 
     public BaseFilter(String jsonBody) {
         this.jsonBody = jsonBody;
@@ -69,8 +70,8 @@ public class BaseFilter {
         }
         this.from = Integer.parseInt(queryParamsMap.get(LIST_RANGE_FROM).value());
         this.to = Integer.parseInt(queryParamsMap.get(LIST_RANGE_TO).value());
-//        this.sortBy = ObjectMapperSingleton.readValue(queryParamsMap.get("sortBy").value(), new TypeReference<Filter>() {
-//        });
+        this.sortBy = ObjectMapperSingleton.readValue(queryParamsMap.get(SortBy.SORT_BY).value(), new TypeReference<SortBy>() {
+        });
     }
 
 }

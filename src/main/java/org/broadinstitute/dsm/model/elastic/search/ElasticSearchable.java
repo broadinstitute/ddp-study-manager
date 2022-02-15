@@ -1,5 +1,6 @@
 package org.broadinstitute.dsm.model.elastic.search;
 
+import org.broadinstitute.dsm.model.elastic.sort.SortBy;
 import org.elasticsearch.index.query.AbstractQueryBuilder;
 
 import java.util.List;
@@ -26,7 +27,7 @@ public interface ElasticSearchable {
 
     }
 
-    default void setSortBy(Filter sortBy) {
+    default void setSortBy(SortBy sortBy) {
 
     }
 

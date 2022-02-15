@@ -17,6 +17,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.sort.CustomSortBuilder;
+import org.broadinstitute.dsm.model.elastic.sort.SortBy;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.elasticsearch.action.search.SearchRequest;
@@ -61,7 +62,7 @@ public class ElasticSearch implements ElasticSearchable {
     }
 
     @Override
-    public void setSortBy(Filter sortBy) {
+    public void setSortBy(SortBy sortBy) {
         if (Objects.nonNull(sortBy)) {
 
 //            new CustomSortBuilder(sortBy).setNestedSort();
