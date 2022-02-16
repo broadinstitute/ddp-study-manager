@@ -8,8 +8,10 @@ public class AliasTest {
 
     @Test
     public void valueOf() {
-        assertEquals(Alias.M, Alias.of("m"));
-        assertEquals(Alias.ACTIVITIES, Alias.of("unknown"));
+        SortBy.Builder sortByBuilder = new SortBy.Builder()
+                .withTableAlias("m");
+        assertEquals(Alias.M, Alias.of(sortByBuilder.build()));
+        assertEquals(Alias.ACTIVITIES, Alias.of(sortByBuilder.withTableAlias("unknown").build()));
     }
 
 }

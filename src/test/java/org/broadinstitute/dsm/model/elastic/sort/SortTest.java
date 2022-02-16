@@ -108,6 +108,73 @@ public class SortTest {
         assertEquals("dsm.participantData.dynamicFields.registrationStatus.keyword", outerProperty);
     }
 
+    @Test
+    public void buildNonDsmFieldName() {
+        SortBy sortBy = new SortBy.Builder()
+                .withType("TEXT")
+                .withOrder("ASC")
+                .withInnerProperty("country")
+                .withTableAlias("data")
+                .withOuterProperty("address")
+                .build();
+        Sort sort = new Sort(sortBy);
+        String outerProperty = sort.buildFieldName();
+        assertEquals("address.country.keyword", outerProperty);
+    }
+
+    @Test
+    public void buildNonDsmStatusFieldName() {
+        SortBy sortBy = new SortBy.Builder()
+                .withType("OPTIONS")
+                .withOrder("ASC")
+                .withInnerProperty("status")
+                .withTableAlias("data")
+                .build();
+        Sort sort = new Sort(sortBy);
+        String outerProperty = sort.buildFieldName();
+        assertEquals("status.keyword", outerProperty);
+    }
+
+    @Test
+    public void buildNonDsmProfileCreatedAtFieldName() {
+        SortBy sortBy = new SortBy.Builder()
+                .withType("DATE")
+                .withOrder("ASC")
+                .withInnerProperty("createdAt")
+                .withTableAlias("data")
+                .withOuterProperty("profile")
+                .build();
+        Sort sort = new Sort(sortBy);
+        String outerProperty = sort.buildFieldName();
+        assertEquals("profile.createdAt", outerProperty);
+    }
+
+    @Test
+    public void buildNonDsmInvitationsAcceptedAtFieldName() {
+        SortBy sortBy = new SortBy.Builder()
+                .withType("DATE")
+                .withOrder("ASC")
+                .withInnerProperty("acceptedAt")
+                .withTableAlias("invitations")
+                .build();
+        Sort sort = new Sort(sortBy);
+        String outerProperty = sort.buildFieldName();
+        assertEquals("invitations.acceptedAt", outerProperty);
+    }
+
+    @Test
+    public void buildNonDsmProxytFieldName() {
+        SortBy sortBy = new SortBy.Builder()
+                .withType("TEXT")
+                .withOrder("ASC")
+                .withInnerProperty("email")
+                .withTableAlias("proxy")
+                .build();
+        Sort sort = new Sort(sortBy);
+        String outerProperty = sort.buildFieldName();
+        assertEquals("profile.email.keyword", outerProperty);
+    }
+
 
 
 }

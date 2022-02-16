@@ -19,12 +19,12 @@ public class Sort {
     }
     
     boolean isNestedSort() {
-        return Alias.of(sortBy.getTableAlias()).isCollection();
+        return Alias.of(sortBy).isCollection();
     }
 
     String buildFieldName() {
         
-        Alias alias = Alias.of(sortBy.getTableAlias());
+        Alias alias = Alias.of(sortBy);
         Type type = Type.valueOf(sortBy.getType());
 
         String outerProperty = handleOuterPropertySpecialCase();
@@ -44,7 +44,7 @@ public class Sort {
                 innerProperty += getKeywordIfText(type);
                 break;
         }
-        return buildPath(ESObjectConstants.DSM, alias.getValue(), outerProperty, innerProperty);
+        return buildPath(alias.getValue(), outerProperty, innerProperty);
     }
 
     private String buildPath(String... args) {
@@ -68,15 +68,15 @@ public class Sort {
         if (isNestedSort()) {
             Type type = Type.valueOf(sortBy.getType());
             if (type == Type.JSONARRAY) {
-                return buildPath(ESObjectConstants.DSM, Alias.of(sortBy.getTableAlias()).getValue(), sortBy.getOuterProperty());
+                return buildPath(Alias.of(sortBy).getValue(), sortBy.getOuterProperty());
             }
-            return buildPath(ESObjectConstants.DSM, Alias.of(sortBy.getTableAlias()).getValue());
+            return buildPath(Alias.of(sortBy).getValue());
         }
         throw new UnsupportedOperationException("Building nested path on non-nested objects is unsupported");
     }
 
     String handleOuterPropertySpecialCase() {
-        Alias alias = Alias.of(sortBy.getTableAlias());
+        Alias alias = Alias.of(sortBy);
         if (alias.equals(Alias.PARTICIPANTDATA)) {
             return ESObjectConstants.DYNAMIC_FIELDS;
         }
