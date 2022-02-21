@@ -24,7 +24,7 @@ public enum Alias {
     ADDRESS(StringUtils.EMPTY,false),
     INVITATIONS(ElasticSearchUtil.INVITATIONS, true),
     PROXY(ElasticSearchUtil.PROFILE,true),
-    ACTIVITIES(StringUtils.EMPTY, true);
+    ACTIVITIES(ElasticSearchUtil.ACTIVITIES, true);
 
     Alias(String value, boolean isCollection) {
         this.value = value;

@@ -175,6 +175,34 @@ public class SortTest {
         assertEquals("profile.email.keyword", outerProperty);
     }
 
+    @Test
+    public void buildQuestionsAnswersFieldName() {
+        SortBy sortBy = new SortBy.Builder()
+                .withType("TEXT")
+                .withOrder("ASC")
+                .withInnerProperty("YEARS")
+                .withOuterProperty("questionsAnswers")
+                .withTableAlias("MEDICAL_HISTORY")
+                .build();
+        Sort sort = new Sort(sortBy);
+        String outerProperty = sort.buildFieldName();
+        assertEquals("activities.questionsAnswers.YEARS.keyword", outerProperty);
+    }
+
+    @Test
+    public void handleInnerPropertySpecialCase() {
+        SortBy sortBy = new SortBy.Builder()
+                .withType("TEXT")
+                .withOrder("ASC")
+                .withInnerProperty("YEARS")
+                .withOuterProperty("questionsAnswers")
+                .withTableAlias("MEDICAL_HISTORY")
+                .build();
+        Sort sort = new Sort(sortBy);
+        String innerProperty = sort.handleInnerPropertySpecialCase();
+        assertEquals("YEARS", innerProperty);
+    }
+
 
 
 }

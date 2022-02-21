@@ -82,4 +82,11 @@ public class Sort {
         }
         return sortBy.getOuterProperty();
     }
+
+    public String handleInnerPropertySpecialCase() {
+        if (Alias.ACTIVITIES == Alias.of(sortBy)) {
+            return sortBy.getInnerProperty();
+        }
+        return null;
+    }
 }
