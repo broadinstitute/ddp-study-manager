@@ -3,20 +3,24 @@ package org.broadinstitute.dsm.model.elastic.sort;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
+import org.broadinstitute.dsm.model.elastic.mapping.TypeExtractor;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.elasticsearch.search.sort.SortOrder;
 
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Sort {
 
     private SortBy sortBy;
+    private TypeExtractor<Map<String, String>> fieldTypeExtractor;
 
-    public Sort(SortBy sortBy) {
+    public Sort(SortBy sortBy, TypeExtractor<Map<String, String>> fieldTypeExtractor) {
         this.sortBy = sortBy;
+        this.fieldTypeExtractor = fieldTypeExtractor;
     }
     
     boolean isNestedSort() {
