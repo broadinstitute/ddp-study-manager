@@ -24,14 +24,17 @@ import org.broadinstitute.dsm.db.Tissue;
 import org.broadinstitute.dsm.db.dao.ddp.instance.DDPInstanceDao;
 import org.broadinstitute.dsm.db.dto.ddp.instance.DDPInstanceDto;
 import org.broadinstitute.dsm.db.dto.ddp.participant.ParticipantData;
+import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
 import org.broadinstitute.dsm.model.elastic.filter.FilterParser;
 import org.broadinstitute.dsm.model.elastic.filter.query.DsmAbstractQueryBuilder;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
+import org.broadinstitute.dsm.model.elastic.sort.SortBy;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
+import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.slf4j.Logger;
@@ -276,6 +279,14 @@ public class ParticipantWrapper {
                                                                                      Map<String, List<String>> proxiesIdsByParticipantIds) {
         Map<String, List<ElasticSearchParticipantDto>> proxiesByParticipantIds = new HashMap<>();
         List<String> proxiesIds = proxiesIdsByParticipantIds.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+        SortBy profileCreatedAt = new SortBy.Builder()
+                .withType(Filter.NUMBER)
+                .withOrder("asc")
+                .withInnerProperty(ElasticSearchUtil.CREATED_AT)
+                .withOuterProperty(ElasticSearchUtil.PROFILE)
+                .withTableAlias(ElasticSearchUtil.DATA)
+                .build();
+        elasticSearchable.setSortBy(profileCreatedAt);
         List<ElasticSearchParticipantDto> participantsByIds = elasticSearchable.getParticipantsByIds(esUsersIndex, proxiesIds).getEsParticipants();
         participantsByIds.forEach(elasticSearchParticipantDto -> {
             String proxyId = elasticSearchParticipantDto.getParticipantId();

@@ -70,7 +70,8 @@ public class BaseFilter {
         }
         this.from = Integer.parseInt(queryParamsMap.get(LIST_RANGE_FROM).value());
         this.to = Integer.parseInt(queryParamsMap.get(LIST_RANGE_TO).value());
-        this.sortBy = ObjectMapperSingleton.readValue(queryParamsMap.get(SortBy.SORT_BY).value(), new TypeReference<SortBy>() {});
+        if (queryParamsMap.hasKey(SortBy.SORT_BY))
+            this.sortBy = ObjectMapperSingleton.readValue(queryParamsMap.get(SortBy.SORT_BY).value(), new TypeReference<SortBy>() {});
     }
 
 }
