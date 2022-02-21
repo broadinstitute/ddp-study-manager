@@ -176,6 +176,20 @@ public class SortTest {
     }
 
     @Test
+    public void handleInnerPropertySpecialCase() {
+        SortBy sortBy = new SortBy.Builder()
+                .withType("TEXT")
+                .withOrder("ASC")
+                .withInnerProperty("YEARS")
+                .withOuterProperty("questionsAnswers")
+                .withTableAlias("MEDICAL_HISTORY")
+                .build();
+        Sort sort = new Sort(sortBy);
+        String innerProperty = sort.handleInnerPropertySpecialCase();
+        assertEquals("YEARS", innerProperty);
+    }
+
+    @Test
     public void buildQuestionsAnswersFieldName() {
         SortBy sortBy = new SortBy.Builder()
                 .withType("TEXT")
@@ -190,17 +204,31 @@ public class SortTest {
     }
 
     @Test
-    public void handleInnerPropertySpecialCase() {
+    public void buildQuestionsAnswersFieldNameForNumberType() {
         SortBy sortBy = new SortBy.Builder()
-                .withType("TEXT")
+                .withType("NUMBER")
                 .withOrder("ASC")
                 .withInnerProperty("YEARS")
                 .withOuterProperty("questionsAnswers")
                 .withTableAlias("MEDICAL_HISTORY")
                 .build();
         Sort sort = new Sort(sortBy);
-        String innerProperty = sort.handleInnerPropertySpecialCase();
-        assertEquals("YEARS", innerProperty);
+        String outerProperty = sort.buildFieldName();
+        assertEquals("activities.questionsAnswers.YEARS", outerProperty);
+    }
+
+    @Test
+    public void buildNestedPath() {
+        SortBy sortBy = new SortBy.Builder()
+                .withType("NUMBER")
+                .withOrder("ASC")
+                .withInnerProperty("YEARS")
+                .withOuterProperty("questionsAnswers")
+                .withTableAlias("MEDICAL_HISTORY")
+                .build();
+        Sort sort = new Sort(sortBy);
+        String actual = sort.buildNestedPath();
+        assertEquals("activities.questionsAnswers", actual);
     }
 
 

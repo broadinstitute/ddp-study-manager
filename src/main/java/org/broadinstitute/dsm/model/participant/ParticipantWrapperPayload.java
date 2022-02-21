@@ -25,6 +25,8 @@ public class ParticipantWrapperPayload {
         return Optional.ofNullable(filter);
     }
 
+    public Optional<SortBy> getSortBy() { return Optional.ofNullable(sortBy); }
+
     public int getUserId() {
         return userId;
     }

@@ -5,6 +5,8 @@ import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.export.parse.TypeParser;
 import org.broadinstitute.dsm.statics.DBConstants;
 import org.broadinstitute.dsm.statics.ESObjectConstants;
+import org.broadinstitute.dsm.util.ElasticSearchUtil;
+import org.elasticsearch.search.sort.SortOrder;
 
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -14,7 +16,6 @@ public class Sort {
     private SortBy sortBy;
 
     public Sort(SortBy sortBy) {
-        sortBy.setInnerProperty(Util.underscoresToCamelCase(sortBy.getInnerProperty()));
         this.sortBy = sortBy;
     }
     
@@ -28,7 +29,7 @@ public class Sort {
         Type type = Type.valueOf(sortBy.getType());
 
         String outerProperty = handleOuterPropertySpecialCase();
-        String innerProperty = sortBy.getInnerProperty();
+        String innerProperty = handleInnerPropertySpecialCase();
 
         switch (type) {
             case ADDITIONALVALUE:
@@ -67,12 +68,17 @@ public class Sort {
     String buildNestedPath() {
         if (isNestedSort()) {
             Type type = Type.valueOf(sortBy.getType());
-            if (type == Type.JSONARRAY) {
+            Alias alias = Alias.of(sortBy);
+            if (isDoubleNested(type, alias)) {
                 return buildPath(Alias.of(sortBy).getValue(), sortBy.getOuterProperty());
             }
             return buildPath(Alias.of(sortBy).getValue());
         }
         throw new UnsupportedOperationException("Building nested path on non-nested objects is unsupported");
+    }
+
+    private boolean isDoubleNested(Type type, Alias alias) {
+        return type == Type.JSONARRAY || (alias == Alias.ACTIVITIES && ElasticSearchUtil.QUESTIONS_ANSWER.equals(sortBy.getOuterProperty()));
     }
 
     String handleOuterPropertySpecialCase() {
@@ -87,6 +93,10 @@ public class Sort {
         if (Alias.ACTIVITIES == Alias.of(sortBy)) {
             return sortBy.getInnerProperty();
         }
-        return null;
+        return Util.underscoresToCamelCase(sortBy.getInnerProperty());
+    }
+
+    public SortOrder getOrder() {
+        return SortOrder.valueOf(sortBy.getOrder().toUpperCase());
     }
 }

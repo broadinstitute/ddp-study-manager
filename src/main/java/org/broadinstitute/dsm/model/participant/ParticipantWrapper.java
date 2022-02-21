@@ -62,6 +62,7 @@ public class ParticipantWrapper {
     public ParticipantWrapper(ParticipantWrapperPayload participantWrapperPayload, ElasticSearchable elasticSearchable) {
         this.participantWrapperPayload = Objects.requireNonNull(participantWrapperPayload);
         this.elasticSearchable = Objects.requireNonNull(elasticSearchable);
+        participantWrapperPayload.getSortBy().ifPresent(elasticSearchable::setSortBy);
     }
 
     public ParticipantWrapperResult getFilteredList() {

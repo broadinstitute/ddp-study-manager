@@ -24,6 +24,7 @@ public class EmptyFilterParticipantList extends BaseFilterParticipantList {
                 .withDdpInstanceDto(ddpInstanceByGuid)
                 .withFrom(from)
                 .withTo(to)
+                .withSortBy(sortBy)
                 .build();
         ElasticSearch elasticSearch = new ElasticSearch();
         return new ParticipantWrapper(participantWrapperPayload, elasticSearch).getFilteredList();

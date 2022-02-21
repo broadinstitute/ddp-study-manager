@@ -17,6 +17,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.elastic.Util;
 import org.broadinstitute.dsm.model.elastic.sort.CustomSortBuilder;
+import org.broadinstitute.dsm.model.elastic.sort.Sort;
 import org.broadinstitute.dsm.model.elastic.sort.SortBy;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
@@ -47,6 +48,7 @@ public class ElasticSearch implements ElasticSearchable {
 
 
     public ElasticSearch() {
+        this.sortBy = SortBuilders.fieldSort(ElasticSearchUtil.PROFILE_CREATED_AT).order(SortOrder.ASC);
         this.deserializer = new SourceMapDeserializer();
     }
 
@@ -64,11 +66,7 @@ public class ElasticSearch implements ElasticSearchable {
     @Override
     public void setSortBy(SortBy sortBy) {
         if (Objects.nonNull(sortBy)) {
-
-//            new CustomSortBuilder(sortBy).setNestedSort();
-
-        } else {
-            this.sortBy = SortBuilders.fieldSort(ElasticSearchUtil.PROFILE_CREATED_AT).order(SortOrder.ASC);
+            this.sortBy = new CustomSortBuilder(new Sort(sortBy));
         }
     }
 
@@ -126,7 +124,7 @@ public class ElasticSearch implements ElasticSearchable {
             int scrollSize = to - from;
             SearchRequest searchRequest = new SearchRequest(esParticipantsIndex);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+            searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(sortBy);
             searchSourceBuilder.size(scrollSize);
             searchSourceBuilder.from(from);
             searchRequest.source(searchSourceBuilder);
@@ -145,7 +143,7 @@ public class ElasticSearch implements ElasticSearchable {
         if (Objects.isNull(esIndex)) return new ElasticSearch();
         SearchRequest searchRequest = new SearchRequest(Objects.requireNonNull(esIndex));
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(getBoolQueryOfParticipantsId(participantIds)).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+        searchSourceBuilder.query(getBoolQueryOfParticipantsId(participantIds)).sort(sortBy);
         searchSourceBuilder.size(participantIds.size());
         searchSourceBuilder.from(0);
         searchRequest.source(searchSourceBuilder);
@@ -185,7 +183,7 @@ public class ElasticSearch implements ElasticSearchable {
             int scrollSize = to - from;
             SearchRequest searchRequest = new SearchRequest(Objects.requireNonNull(esParticipantsIndex));
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(queryBuilder).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+            searchSourceBuilder.query(queryBuilder).sort(sortBy);
             searchSourceBuilder.size(scrollSize);
             searchSourceBuilder.from(from);
             searchRequest.source(searchSourceBuilder);
@@ -203,7 +201,7 @@ public class ElasticSearch implements ElasticSearchable {
     public ElasticSearch getParticipantsByRangeAndIds(String participantIndexES, int from, int to, List<String> participantIds) {
         SearchRequest searchRequest = new SearchRequest(Objects.requireNonNull(participantIndexES));
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(getBoolQueryOfParticipantsId(participantIds)).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+        searchSourceBuilder.query(getBoolQueryOfParticipantsId(participantIds)).sort(sortBy);
         searchSourceBuilder.size(to - from);
         searchSourceBuilder.from(from);
         searchRequest.source(searchSourceBuilder);
@@ -246,7 +244,7 @@ public class ElasticSearch implements ElasticSearchable {
         long participantsSize = getParticipantsSize(Objects.requireNonNull(esParticipantsIndex));
         SearchRequest searchRequest = new SearchRequest(esParticipantsIndex);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(ElasticSearchUtil.PROFILE_CREATED_AT, SortOrder.ASC);
+        searchSourceBuilder.query(QueryBuilders.matchAllQuery()).sort(sortBy);
         searchSourceBuilder.from(0);
         searchSourceBuilder.size((int) participantsSize);
         searchRequest.source(searchSourceBuilder);

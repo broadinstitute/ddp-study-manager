@@ -8,7 +8,8 @@ public class CustomSortBuilder extends FieldSortBuilder {
     public CustomSortBuilder(Sort sort) {
         super(sort.buildFieldName());
         if (sort.isNestedSort())
-            setNestedSort(new NestedSortBuilder("dsm.kitRequestShipping.testResult"));
+            setNestedSort(new NestedSortBuilder(sort.buildNestedPath()));
+        this.order(sort.getOrder());
     }
 
 }
