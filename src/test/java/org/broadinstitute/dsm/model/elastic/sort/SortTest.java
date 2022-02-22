@@ -1,13 +1,11 @@
 package org.broadinstitute.dsm.model.elastic.sort;
 
 import org.broadinstitute.dsm.model.elastic.MockFieldTypeExtractor;
-import org.broadinstitute.dsm.model.elastic.mapping.TypeExtractor;
-import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
 
 
 public class SortTest {
@@ -110,7 +108,7 @@ public class SortTest {
                 .withTableAlias("participantData")
                 .withOuterProperty("AT_GROUP_MISCELLANEOUS")
                 .build();
-        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("REGISTRATION_STATUS", ""));
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("registrationStatus", "text"));
         String outerProperty = sort.buildFieldName();
         assertEquals("dsm.participantData.dynamicFields.registrationStatus.keyword", outerProperty);
     }
@@ -137,7 +135,7 @@ public class SortTest {
                 .withInnerProperty("status")
                 .withTableAlias("data")
                 .build();
-        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("status", ""));
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("status", "text"));
         String outerProperty = sort.buildFieldName();
         assertEquals("status.keyword", outerProperty);
     }

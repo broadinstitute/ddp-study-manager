@@ -27,8 +27,8 @@ public class CustomSortBuilder extends FieldSortBuilder {
             boolQueryBuilder.must(new TermQueryBuilder(String.join(DBConstants.ALIAS_DELIMITER, sort.getAlias().getValue(),
                     ElasticSearchUtil.ACTIVITY_CODE),
                     sort.getRawAlias()));
-            boolQueryBuilder.must(new TermQueryBuilder(String.join(DBConstants.ALIAS_DELIMITER, sort.getAlias().getValue(),
-                            ElasticSearchUtil.ACTIVITY_VERSION), sort.getActivityVersion()));
+            boolQueryBuilder.must(new TermsQueryBuilder(String.join(DBConstants.ALIAS_DELIMITER, sort.getAlias().getValue(),
+                            ElasticSearchUtil.ACTIVITY_VERSION), sort.getActivityVersions()));
             nestedSortBuilder.setFilter(boolQueryBuilder);
         }
         return nestedSortBuilder;

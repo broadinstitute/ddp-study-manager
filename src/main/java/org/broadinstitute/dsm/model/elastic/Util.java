@@ -25,7 +25,7 @@ import org.broadinstitute.dsm.util.PatchUtil;
 
 public class Util {
 
-    public static final Map<String, BaseGenerator.PropertyInfo> TABLE_ALIAS_MAPPINGS = Map.of(
+    public static final Map<String, BaseGenerator.PropertyInfo> TABLE_ALIAS_MAPPINGS = new HashMap<>(Map.of(
             DBConstants.DDP_MEDICAL_RECORD_ALIAS, new BaseGenerator.PropertyInfo(MedicalRecord.class, true),
             DBConstants.DDP_TISSUE_ALIAS, new BaseGenerator.PropertyInfo(Tissue.class, true),
             DBConstants.DDP_ONC_HISTORY_DETAIL_ALIAS, new BaseGenerator.PropertyInfo(OncHistoryDetail.class, true),
@@ -34,7 +34,7 @@ public class Util {
             DBConstants.DDP_PARTICIPANT_ALIAS, new BaseGenerator.PropertyInfo(Participant.class, false),
             DBConstants.DDP_ONC_HISTORY_ALIAS, new BaseGenerator.PropertyInfo(OncHistory.class, false),
             DBConstants.DDP_KIT_REQUEST_ALIAS, new BaseGenerator.PropertyInfo(KitRequestShipping.class, true)
-    );
+    ));
     public static final int FIRST_ELEMENT_INDEX = 0;
     public static final String UNDERSCORE_SEPARATOR = "_";
     public static final String COMMA_SEPARATOR = ",";

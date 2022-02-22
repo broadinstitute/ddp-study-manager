@@ -118,7 +118,7 @@ public class Sort {
         return sortBy.getTableAlias();
     }
 
-    public String getActivityVersion() {
-        return sortBy.getActivityVersion();
+    public String[] getActivityVersions() {
+        return sortBy.getActivityVersions();
     }
 }

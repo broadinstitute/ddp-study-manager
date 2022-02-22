@@ -3,6 +3,7 @@ package org.broadinstitute.dsm.model.elastic.sort;
 import org.broadinstitute.dsm.model.elastic.MockFieldTypeExtractor;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
+import org.elasticsearch.index.query.TermsQueryBuilder;
 import org.elasticsearch.search.sort.NestedSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.junit.Assert;
@@ -61,7 +62,7 @@ public class CustomSortBuilderTest {
                 .withOrder("ASC")
                 .withInnerProperty("completedAt")
                 .withTableAlias("MEDICAL_HISTORY")
-                .withActivityVersion("v1")
+                .withActivityVersions(new String[] {"v1", "v2"})
                 .build();
 
         Sort sort = new Sort(sortBy, new MockFieldTypeExtractor());
@@ -70,9 +71,10 @@ public class CustomSortBuilderTest {
 
         NestedSortBuilder actualNestedSortPath = customSortBuilder.getNestedSort();
         NestedSortBuilder expectedNestedSortPath = new NestedSortBuilder("activities");
+
         BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
         boolQueryBuilder.must(new TermQueryBuilder("activities.activityCode", "MEDICAL_HISTORY"));
-        boolQueryBuilder.must(new TermQueryBuilder("activities.activityVersion", "v1"));
+        boolQueryBuilder.must(new TermsQueryBuilder("activities.activityVersion", "v1", "v2"));
         expectedNestedSortPath.setFilter(boolQueryBuilder);
 
         Assert.assertEquals(expectedNestedSortPath, actualNestedSortPath);
