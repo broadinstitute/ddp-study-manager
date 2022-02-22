@@ -16,11 +16,12 @@ import java.util.stream.Stream;
 public class Sort {
 
     private SortBy sortBy;
-    private TypeExtractor<Map<String, String>> fieldTypeExtractor;
+    private TypeExtractor<Map<String, String>> typeExtractor;
 
-    public Sort(SortBy sortBy, TypeExtractor<Map<String, String>> fieldTypeExtractor) {
+    public Sort(SortBy sortBy,
+                TypeExtractor<Map<String, String>> typeExtractor) {
+        this.typeExtractor = typeExtractor;
         this.sortBy = sortBy;
-        this.fieldTypeExtractor = fieldTypeExtractor;
     }
     
     boolean isNestedSort() {
@@ -59,10 +60,15 @@ public class Sort {
     }
 
     private String getKeywordIfText(Type innerType) {
-        if (isTextContent(innerType)) {
+        if (isTextContent(innerType) && isFieldTextType()) {
             return DBConstants.ALIAS_DELIMITER + TypeParser.KEYWORD;
         }
         return StringUtils.EMPTY;
+    }
+
+    private boolean isFieldTextType() {
+        this.typeExtractor.setFields(buildPath(Alias.of(sortBy).getValue(), handleOuterPropertySpecialCase(), handleInnerPropertySpecialCase()));
+        return TypeParser.TEXT.equals(typeExtractor.extract().get(handleInnerPropertySpecialCase()));
     }
 
     private boolean isTextContent(Type innerType) {
@@ -102,5 +108,17 @@ public class Sort {
 
     public SortOrder getOrder() {
         return SortOrder.valueOf(sortBy.getOrder().toUpperCase());
+    }
+
+    public Alias getAlias() {
+        return Alias.of(sortBy);
+    }
+
+    public String getRawAlias() {
+        return sortBy.getTableAlias();
+    }
+
+    public String getActivityVersion() {
+        return sortBy.getActivityVersion();
     }
 }

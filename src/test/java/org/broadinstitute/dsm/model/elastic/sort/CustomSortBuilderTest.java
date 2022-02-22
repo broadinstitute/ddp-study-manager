@@ -1,5 +1,8 @@
 package org.broadinstitute.dsm.model.elastic.sort;
 
+import org.broadinstitute.dsm.model.elastic.MockFieldTypeExtractor;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.sort.NestedSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.junit.Assert;
@@ -19,7 +22,7 @@ public class CustomSortBuilderTest {
                 .withTableAlias("k")
                 .build();
 
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, new MockFieldTypeExtractor());
 
         CustomSortBuilder customSortBuilder = new CustomSortBuilder(sort);
 
@@ -40,7 +43,7 @@ public class CustomSortBuilderTest {
                 .withTableAlias("MEDICAL_HISTORY")
                 .build();
 
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, new MockFieldTypeExtractor());
 
         CustomSortBuilder customSortBuilder = new CustomSortBuilder(sort);
 
@@ -58,14 +61,19 @@ public class CustomSortBuilderTest {
                 .withOrder("ASC")
                 .withInnerProperty("completedAt")
                 .withTableAlias("MEDICAL_HISTORY")
+                .withActivityVersion("v1")
                 .build();
 
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, new MockFieldTypeExtractor());
 
         CustomSortBuilder customSortBuilder = new CustomSortBuilder(sort);
 
         NestedSortBuilder actualNestedSortPath = customSortBuilder.getNestedSort();
         NestedSortBuilder expectedNestedSortPath = new NestedSortBuilder("activities");
+        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        boolQueryBuilder.must(new TermQueryBuilder("activities.activityCode", "MEDICAL_HISTORY"));
+        boolQueryBuilder.must(new TermQueryBuilder("activities.activityVersion", "v1"));
+        expectedNestedSortPath.setFilter(boolQueryBuilder);
 
         Assert.assertEquals(expectedNestedSortPath, actualNestedSortPath);
         Assert.assertEquals(SortOrder.ASC, customSortBuilder.order());

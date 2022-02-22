@@ -1,8 +1,13 @@
 package org.broadinstitute.dsm.model.elastic.sort;
 
+import org.broadinstitute.dsm.model.elastic.MockFieldTypeExtractor;
+import org.broadinstitute.dsm.model.elastic.mapping.TypeExtractor;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+
+import java.util.Map;
 
 
 public class SortTest {
@@ -19,7 +24,7 @@ public class SortTest {
                 .withTableAlias("k")
                 .build();
 
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("isCorrected", ""));
         String fieldName = sort.buildFieldName();
 
         assertEquals("dsm.kitRequestShipping.testResult.isCorrected", fieldName);
@@ -35,7 +40,7 @@ public class SortTest {
                 .withTableAlias("m")
                 .build();
 
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("hello", "text"));
         String fieldName = sort.buildFieldName();
         assertEquals("dsm.medicalRecord.dynamicFields.hello.keyword", fieldName);
     }
@@ -48,10 +53,12 @@ public class SortTest {
                 .withInnerProperty("notes")
                 .withTableAlias("m")
                 .build();
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("notes", "text"));
         String fieldName = sort.buildFieldName();
         assertEquals("dsm.medicalRecord.notes.keyword", fieldName);
     }
+
+
 
     @Test
     public void buildOneLevelNestedPath() {
@@ -61,7 +68,7 @@ public class SortTest {
                 .withInnerProperty("notes")
                 .withTableAlias("m")
                 .build();
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("notes", "text"));
         String nestedPath = sort.buildNestedPath();
         assertEquals("dsm.medicalRecord", nestedPath);
     }
@@ -75,7 +82,7 @@ public class SortTest {
                 .withTableAlias("k")
                 .withOuterProperty("testResult")
                 .build();
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("result", "text"));
         String nestedPath = sort.buildNestedPath();
         assertEquals("dsm.kitRequestShipping.testResult", nestedPath);
     }
@@ -89,7 +96,7 @@ public class SortTest {
                 .withTableAlias("participantData")
                 .withOuterProperty("AT_GROUP_MISCELLANEOUS")
                 .build();
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("REGISTRATION_STATUS", ""));
         String outerProperty = sort.handleOuterPropertySpecialCase();
         assertEquals("dynamicFields", outerProperty);
     }
@@ -103,7 +110,7 @@ public class SortTest {
                 .withTableAlias("participantData")
                 .withOuterProperty("AT_GROUP_MISCELLANEOUS")
                 .build();
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("REGISTRATION_STATUS", ""));
         String outerProperty = sort.buildFieldName();
         assertEquals("dsm.participantData.dynamicFields.registrationStatus.keyword", outerProperty);
     }
@@ -117,7 +124,7 @@ public class SortTest {
                 .withTableAlias("data")
                 .withOuterProperty("address")
                 .build();
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("country", "text"));
         String outerProperty = sort.buildFieldName();
         assertEquals("address.country.keyword", outerProperty);
     }
@@ -130,7 +137,7 @@ public class SortTest {
                 .withInnerProperty("status")
                 .withTableAlias("data")
                 .build();
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("status", ""));
         String outerProperty = sort.buildFieldName();
         assertEquals("status.keyword", outerProperty);
     }
@@ -144,7 +151,7 @@ public class SortTest {
                 .withTableAlias("data")
                 .withOuterProperty("profile")
                 .build();
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("createdAt", ""));
         String outerProperty = sort.buildFieldName();
         assertEquals("profile.createdAt", outerProperty);
     }
@@ -157,7 +164,7 @@ public class SortTest {
                 .withInnerProperty("acceptedAt")
                 .withTableAlias("invitations")
                 .build();
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("acceptedAt", ""));
         String outerProperty = sort.buildFieldName();
         assertEquals("invitations.acceptedAt", outerProperty);
     }
@@ -170,7 +177,7 @@ public class SortTest {
                 .withInnerProperty("email")
                 .withTableAlias("proxy")
                 .build();
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("email", "text"));
         String outerProperty = sort.buildFieldName();
         assertEquals("profile.email.keyword", outerProperty);
     }
@@ -184,7 +191,7 @@ public class SortTest {
                 .withOuterProperty("questionsAnswers")
                 .withTableAlias("MEDICAL_HISTORY")
                 .build();
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("YEARS", "text"));
         String innerProperty = sort.handleInnerPropertySpecialCase();
         assertEquals("YEARS", innerProperty);
     }
@@ -198,7 +205,7 @@ public class SortTest {
                 .withOuterProperty("questionsAnswers")
                 .withTableAlias("MEDICAL_HISTORY")
                 .build();
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("YEARS", "text"));
         String outerProperty = sort.buildFieldName();
         assertEquals("activities.questionsAnswers.YEARS.keyword", outerProperty);
     }
@@ -212,7 +219,7 @@ public class SortTest {
                 .withOuterProperty("questionsAnswers")
                 .withTableAlias("MEDICAL_HISTORY")
                 .build();
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("YEARS", ""));
         String outerProperty = sort.buildFieldName();
         assertEquals("activities.questionsAnswers.YEARS", outerProperty);
     }
@@ -226,11 +233,18 @@ public class SortTest {
                 .withOuterProperty("questionsAnswers")
                 .withTableAlias("MEDICAL_HISTORY")
                 .build();
-        Sort sort = new Sort(sortBy);
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("YEARS", ""));
         String actual = sort.buildNestedPath();
         assertEquals("activities.questionsAnswers", actual);
     }
 
 
-
+    private MockFieldTypeExtractor mockFieldTypeExractorByFieldAndType(String fieldName, String fieldType) {
+        return new MockFieldTypeExtractor() {
+            @Override
+            public Map<String, String> extract() {
+                return Map.of(fieldName, fieldType);
+            }
+        };
+    }
 }

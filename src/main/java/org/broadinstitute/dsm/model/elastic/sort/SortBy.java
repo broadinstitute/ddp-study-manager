@@ -15,6 +15,7 @@ public class SortBy {
     private String outerProperty;
     private String innerProperty;
     private String order;
+    private String activityVersion;
 
     private SortBy() {}
 
@@ -25,6 +26,7 @@ public class SortBy {
         this.outerProperty = builder.outerProperty;
         this.innerProperty = builder.innerProperty;
         this.order = builder.order;
+        this.activityVersion = builder.activityVersion;
     }
 
     public static class Builder {
@@ -35,6 +37,7 @@ public class SortBy {
         private String outerProperty;
         private String innerProperty;
         private String order;
+        private String activityVersion;
 
         public Builder() {}
 
@@ -65,6 +68,11 @@ public class SortBy {
 
         public Builder withOrder(String order) {
             this.order = order;
+            return this;
+        }
+
+        public Builder withActivityVersion(String activityVersion) {
+            this.activityVersion = activityVersion;
             return this;
         }
 

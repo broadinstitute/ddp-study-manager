@@ -28,13 +28,14 @@ import org.broadinstitute.dsm.model.Filter;
 import org.broadinstitute.dsm.model.elastic.ESProfile;
 import org.broadinstitute.dsm.model.elastic.filter.FilterParser;
 import org.broadinstitute.dsm.model.elastic.filter.query.DsmAbstractQueryBuilder;
+import org.broadinstitute.dsm.model.elastic.mapping.FieldTypeExtractor;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearch;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchParticipantDto;
 import org.broadinstitute.dsm.model.elastic.search.ElasticSearchable;
+import org.broadinstitute.dsm.model.elastic.sort.Sort;
 import org.broadinstitute.dsm.model.elastic.sort.SortBy;
 import org.broadinstitute.dsm.model.participant.data.FamilyMemberConstants;
 import org.broadinstitute.dsm.statics.DBConstants;
-import org.broadinstitute.dsm.statics.ESObjectConstants;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.slf4j.Logger;
@@ -65,7 +66,12 @@ public class ParticipantWrapper {
     public ParticipantWrapper(ParticipantWrapperPayload participantWrapperPayload, ElasticSearchable elasticSearchable) {
         this.participantWrapperPayload = Objects.requireNonNull(participantWrapperPayload);
         this.elasticSearchable = Objects.requireNonNull(elasticSearchable);
-        participantWrapperPayload.getSortBy().ifPresent(elasticSearchable::setSortBy);
+        participantWrapperPayload.getSortBy().ifPresent(sortBy -> {
+            FieldTypeExtractor fieldTypeExtractor = new FieldTypeExtractor();
+            fieldTypeExtractor.setIndex(participantWrapperPayload.getDdpInstanceDto().orElseThrow().getEsParticipantIndex());
+            Sort sort = new Sort(sortBy, fieldTypeExtractor);
+            elasticSearchable.setSortBy(sort);
+        });
     }
 
     public ParticipantWrapperResult getFilteredList() {
@@ -286,7 +292,10 @@ public class ParticipantWrapper {
                 .withOuterProperty(ElasticSearchUtil.PROFILE)
                 .withTableAlias(ElasticSearchUtil.DATA)
                 .build();
-        elasticSearchable.setSortBy(profileCreatedAt);
+        FieldTypeExtractor fieldTypeExtractor = new FieldTypeExtractor();
+        fieldTypeExtractor.setIndex(esUsersIndex);
+        Sort sort = new Sort(profileCreatedAt, fieldTypeExtractor);
+        elasticSearchable.setSortBy(sort);
         List<ElasticSearchParticipantDto> participantsByIds = elasticSearchable.getParticipantsByIds(esUsersIndex, proxiesIds).getEsParticipants();
         participantsByIds.forEach(elasticSearchParticipantDto -> {
             String proxyId = elasticSearchParticipantDto.getParticipantId();

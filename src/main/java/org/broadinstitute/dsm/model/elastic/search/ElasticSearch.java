@@ -9,16 +9,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.logging.Filter;
 import java.util.stream.Collectors;
 
-import com.google.gson.Gson;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.broadinstitute.dsm.model.elastic.Util;
+import org.broadinstitute.dsm.model.elastic.mapping.FieldTypeExtractor;
 import org.broadinstitute.dsm.model.elastic.sort.CustomSortBuilder;
 import org.broadinstitute.dsm.model.elastic.sort.Sort;
-import org.broadinstitute.dsm.model.elastic.sort.SortBy;
 import org.broadinstitute.dsm.util.ElasticSearchUtil;
 import org.broadinstitute.dsm.util.ParticipantUtil;
 import org.elasticsearch.action.search.SearchRequest;
@@ -64,9 +62,9 @@ public class ElasticSearch implements ElasticSearchable {
     }
 
     @Override
-    public void setSortBy(SortBy sortBy) {
-        if (Objects.nonNull(sortBy)) {
-            this.sortBy = new CustomSortBuilder(new Sort(sortBy));
+    public void setSortBy(Sort sort) {
+        if (Objects.nonNull(sort)) {
+            this.sortBy = new CustomSortBuilder(sort);
         }
     }
 
