@@ -69,7 +69,7 @@ public class ParticipantWrapper {
         participantWrapperPayload.getSortBy().ifPresent(sortBy -> {
             FieldTypeExtractor fieldTypeExtractor = new FieldTypeExtractor();
             fieldTypeExtractor.setIndex(participantWrapperPayload.getDdpInstanceDto().orElseThrow().getEsParticipantIndex());
-            Sort sort = new Sort(sortBy, fieldTypeExtractor);
+            Sort sort = Sort.of(sortBy, fieldTypeExtractor);
             elasticSearchable.setSortBy(sort);
         });
     }
@@ -294,7 +294,7 @@ public class ParticipantWrapper {
                 .build();
         FieldTypeExtractor fieldTypeExtractor = new FieldTypeExtractor();
         fieldTypeExtractor.setIndex(esUsersIndex);
-        Sort sort = new Sort(profileCreatedAt, fieldTypeExtractor);
+        Sort sort = Sort.of(profileCreatedAt, fieldTypeExtractor);
         elasticSearchable.setSortBy(sort);
         List<ElasticSearchParticipantDto> participantsByIds = elasticSearchable.getParticipantsByIds(esUsersIndex, proxiesIds).getEsParticipants();
         participantsByIds.forEach(elasticSearchParticipantDto -> {

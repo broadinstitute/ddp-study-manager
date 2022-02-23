@@ -251,7 +251,7 @@ public class SortTest {
     }
 
 
-    private MockFieldTypeExtractor mockFieldTypeExractorByFieldAndType(String fieldName, String fieldType) {
+    static MockFieldTypeExtractor mockFieldTypeExractorByFieldAndType(String fieldName, String fieldType) {
         return new MockFieldTypeExtractor() {
             @Override
             public Map<String, String> extract() {

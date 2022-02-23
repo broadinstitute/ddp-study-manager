@@ -64,7 +64,11 @@ public class Sort {
 //                innerProperty += getKeywordIfText(type);
 //                break;
 //        }
-        return buildPath(alias.getValue(), outerProperty, innerProperty);
+        return buildPath(getAliasValue(alias), outerProperty, innerProperty);
+    }
+
+    String getAliasValue(Alias alias) {
+        return alias.getValue();
     }
 
     private String buildPath(String... args) {
@@ -81,7 +85,7 @@ public class Sort {
     }
 
     private boolean isFieldTextType() {
-        this.typeExtractor.setFields(buildPath(Alias.of(sortBy).getValue(), handleOuterPropertySpecialCase(), handleInnerPropertySpecialCase()));
+        this.typeExtractor.setFields(buildPath(getAliasValue(Alias.of(sortBy)), handleOuterPropertySpecialCase(), handleInnerPropertySpecialCase()));
         return TypeParser.TEXT.equals(typeExtractor.extract().get(handleInnerPropertySpecialCase()));
     }
 
@@ -94,9 +98,9 @@ public class Sort {
             Type type = Type.valueOf(sortBy.getType());
             Alias alias = Alias.of(sortBy);
             if (isDoubleNested(type, alias)) {
-                return buildPath(Alias.of(sortBy).getValue(), sortBy.getOuterProperty());
+                return buildPath(getAliasValue(Alias.of(sortBy)), sortBy.getOuterProperty());
             }
-            return buildPath(Alias.of(sortBy).getValue());
+            return buildPath(getAliasValue(Alias.of(sortBy)));
         }
         throw new UnsupportedOperationException("Building nested path on non-nested objects is unsupported");
     }
