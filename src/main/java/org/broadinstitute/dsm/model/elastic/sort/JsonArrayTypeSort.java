@@ -4,15 +4,10 @@ import org.broadinstitute.dsm.model.elastic.mapping.TypeExtractor;
 
 import java.util.Map;
 
-public class AdditionalValueTypeSort extends Sort {
+public class JsonArrayTypeSort extends Sort {
 
-    AdditionalValueTypeSort(SortBy sortBy, TypeExtractor<Map<String, String>> typeExtractor) {
+    JsonArrayTypeSort(SortBy sortBy, TypeExtractor<Map<String, String>> typeExtractor) {
         super(sortBy, typeExtractor);
-    }
-
-    @Override
-    String handleOuterPropertySpecialCase() {
-        return Type.ADDITIONALVALUE.getValue();
     }
 
     @Override

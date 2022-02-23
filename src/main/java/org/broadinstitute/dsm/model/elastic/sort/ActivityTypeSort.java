@@ -44,6 +44,11 @@ public class ActivityTypeSort extends Sort {
         return innerProperty;
     }
 
+    @Override
+    String handleOuterPropertySpecialCase() {
+        return sortBy.getOuterProperty();
+    }
+
     private String getFieldNameToSortBy(List<Map<String, String>> possibleValues) {
         return possibleValues.stream()
                 .findFirst()

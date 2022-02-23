@@ -29,6 +29,10 @@ public class Sort {
         switch (type) {
             case ACTIVITY:
                 return new ActivityTypeSort(sortBy, typeExtractor);
+            case ADDITIONALVALUE:
+                return new AdditionalValueTypeSort(sortBy, typeExtractor);
+            case JSONARRAY:
+                return new JsonArrayTypeSort(sortBy, typeExtractor);
             default:
                 return new Sort(sortBy, typeExtractor);
         }
@@ -109,10 +113,10 @@ public class Sort {
     }
 
     String handleOuterPropertySpecialCase() {
-//        Alias alias = Alias.of(sortBy);
-//        if (alias.equals(Alias.PARTICIPANTDATA)) {
-//            return ESObjectConstants.DYNAMIC_FIELDS;
-//        }
+        Alias alias = Alias.of(sortBy);
+        if (alias.equals(Alias.PARTICIPANTDATA)) {
+            return ESObjectConstants.DYNAMIC_FIELDS;
+        }
         return sortBy.getOuterProperty();
     }
 

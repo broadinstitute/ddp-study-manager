@@ -22,10 +22,28 @@ public class SortTest {
                 .withTableAlias("k")
                 .build();
 
-        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("isCorrected", ""));
+        Sort sort = Sort.of(sortBy, mockFieldTypeExractorByFieldAndType("isCorrected", ""));
         String fieldName = sort.buildFieldName();
 
         assertEquals("dsm.kitRequestShipping.testResult.isCorrected", fieldName);
+    }
+
+    @Test
+    public void buildJsonArrayFieldNameWithKeyword() {
+
+        SortBy sortBy = new SortBy.Builder()
+                .withType("JSONARRAY")
+                .withAdditionalType("TEXT")
+                .withOrder("ASC")
+                .withOuterProperty("testResult")
+                .withInnerProperty("isCorrected")
+                .withTableAlias("k")
+                .build();
+
+        Sort sort = Sort.of(sortBy, mockFieldTypeExractorByFieldAndType("isCorrected", "text"));
+        String fieldName = sort.buildFieldName();
+
+        assertEquals("dsm.kitRequestShipping.testResult.isCorrected.keyword", fieldName);
     }
 
     @Test
@@ -38,7 +56,7 @@ public class SortTest {
                 .withTableAlias("m")
                 .build();
 
-        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("hello", "text"));
+        Sort sort = Sort.of(sortBy, mockFieldTypeExractorByFieldAndType("hello", "text"));
         String fieldName = sort.buildFieldName();
         assertEquals("dsm.medicalRecord.dynamicFields.hello.keyword", fieldName);
     }
@@ -80,7 +98,7 @@ public class SortTest {
                 .withTableAlias("k")
                 .withOuterProperty("testResult")
                 .build();
-        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("result", "text"));
+        Sort sort = Sort.of(sortBy, mockFieldTypeExractorByFieldAndType("result", "text"));
         String nestedPath = sort.buildNestedPath();
         assertEquals("dsm.kitRequestShipping.testResult", nestedPath);
     }
@@ -94,7 +112,7 @@ public class SortTest {
                 .withTableAlias("participantData")
                 .withOuterProperty("AT_GROUP_MISCELLANEOUS")
                 .build();
-        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("REGISTRATION_STATUS", ""));
+        Sort sort = Sort.of(sortBy, mockFieldTypeExractorByFieldAndType("REGISTRATION_STATUS", ""));
         String outerProperty = sort.handleOuterPropertySpecialCase();
         assertEquals("dynamicFields", outerProperty);
     }
