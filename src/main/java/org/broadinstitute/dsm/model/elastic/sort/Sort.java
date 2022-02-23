@@ -39,8 +39,7 @@ public class Sort {
     }
 
     String buildFieldName() {
-        
-        Alias alias = Alias.of(sortBy);
+
         Type type = Type.valueOf(sortBy.getType());
 
         String outerProperty = handleOuterPropertySpecialCase();
@@ -64,7 +63,7 @@ public class Sort {
 //                innerProperty += getKeywordIfText(type);
 //                break;
 //        }
-        return buildPath(getAliasValue(alias), outerProperty, innerProperty, getKeywordIfText(type));
+        return buildPath(getAliasValue(Alias.of(sortBy)), outerProperty, innerProperty, getKeywordIfText(type));
     }
 
     String getAliasValue(Alias alias) {

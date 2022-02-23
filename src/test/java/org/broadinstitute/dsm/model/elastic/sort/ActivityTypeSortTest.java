@@ -19,7 +19,7 @@ public class ActivityTypeSortTest {
 
 
     @Test
-    public void handleInnerPropertySpecialCase() {
+    public void buildActivityTypeFieldName() {
         SortBy sortBy = new SortBy.Builder()
                 .withType("ACTIVITY")
                 .withOrder("ASC")
@@ -30,6 +30,20 @@ public class ActivityTypeSortTest {
         Sort sort = new ActivityTypeSort(sortBy, SortTest.mockFieldTypeExractorByFieldAndType("REGISTRATION_GENDER", "text"));
         String fieldName = sort.buildFieldName();
         assertEquals("activities.questionsAnswers.REGISTRATION_GENDER.keyword", fieldName);
+    }
+
+    @Test
+    public void buildActivityTypeNestedPath() {
+        SortBy sortBy = new SortBy.Builder()
+                .withType("ACTIVITY")
+                .withOrder("ASC")
+                .withInnerProperty("DATSTAT_GENDER")
+                .withOuterProperty("AT_PARTICIPANT_INFO")
+                .withTableAlias("participantData")
+                .build();
+        Sort sort = new ActivityTypeSort(sortBy, SortTest.mockFieldTypeExractorByFieldAndType("REGISTRATION_GENDER", "text"));
+        String nestedPath = sort.buildNestedPath();
+        assertEquals("activities.questionsAnswers", nestedPath);
     }
 }
 

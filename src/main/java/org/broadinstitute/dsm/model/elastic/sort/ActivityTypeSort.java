@@ -16,33 +16,32 @@ import java.util.Optional;
 
 public class ActivityTypeSort extends Sort {
 
+    private String originalOuterProperty;
+    private String originalInnerProperty;
+
     ActivityTypeSort(SortBy sortBy, TypeExtractor<Map<String, String>> typeExtractor) {
         super(sortBy, typeExtractor);
-    }
-
-    @Override
-    String handleOuterPropertySpecialCase() {
-        return String.join(DBConstants.ALIAS_DELIMITER, ElasticSearchUtil.ACTIVITIES, ElasticSearchUtil.QUESTIONS_ANSWER);
+        this.originalOuterProperty = sortBy.getOuterProperty();
+        this.originalInnerProperty = sortBy.getInnerProperty();
+        sortBy.setTableAlias(ElasticSearchUtil.ACTIVITIES);
+        sortBy.setOuterProperty(ElasticSearchUtil.QUESTIONS_ANSWER);
     }
 
     @Override
     public String handleInnerPropertySpecialCase() {
         FieldSettingsDao fieldSettingsDao = FieldSettingsDao.of();
-        Optional<FieldSettingsDto> maybeFieldSettings = fieldSettingsDao.getFieldSettingsByFieldTypeAndColumnName(sortBy.getOuterProperty(), sortBy.getInnerProperty());
+        Optional<FieldSettingsDto> maybeFieldSettings = fieldSettingsDao.getFieldSettingsByFieldTypeAndColumnName(originalOuterProperty,
+                originalInnerProperty);
         Optional<String> maybePossibleValues = maybeFieldSettings
                 .map(FieldSettingsDto::getPossibleValues);
+        String innerProperty = StringUtils.EMPTY;
         if (maybePossibleValues.isPresent()) {
             String possibleValuesString = maybePossibleValues.get();
             List<Map<String, String>> possibleValues = ObjectMapperSingleton.readValue(possibleValuesString,
                     new TypeReference<List<Map<String, String>>>() {});
-            return getFieldNameToSortBy(possibleValues);
+            innerProperty = getFieldNameToSortBy(possibleValues);
         }
-        return StringUtils.EMPTY;
-    }
-
-    @Override
-    String getAliasValue(Alias alias) {
-        return StringUtils.EMPTY;
+        return innerProperty;
     }
 
     private String getFieldNameToSortBy(List<Map<String, String>> possibleValues) {
