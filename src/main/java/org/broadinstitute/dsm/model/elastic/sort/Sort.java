@@ -64,7 +64,7 @@ public class Sort {
 //                innerProperty += getKeywordIfText(type);
 //                break;
 //        }
-        return buildPath(getAliasValue(alias), outerProperty, innerProperty);
+        return buildPath(getAliasValue(alias), outerProperty, innerProperty, getKeywordIfText(type));
     }
 
     String getAliasValue(Alias alias) {
@@ -77,9 +77,9 @@ public class Sort {
                 .collect(Collectors.joining(DBConstants.ALIAS_DELIMITER));
     }
 
-    private String getKeywordIfText(Type innerType) {
+    protected String getKeywordIfText(Type innerType) {
         if (isTextContent(innerType) && isFieldTextType()) {
-            return DBConstants.ALIAS_DELIMITER + TypeParser.KEYWORD;
+            return buildPath(TypeParser.KEYWORD);
         }
         return StringUtils.EMPTY;
     }

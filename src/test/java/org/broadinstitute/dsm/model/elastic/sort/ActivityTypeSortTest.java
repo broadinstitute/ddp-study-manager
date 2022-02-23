@@ -27,9 +27,9 @@ public class ActivityTypeSortTest {
                 .withOuterProperty("AT_PARTICIPANT_INFO")
                 .withTableAlias("participantData")
                 .build();
-        Sort sort = new ActivityTypeSort(sortBy, SortTest.mockFieldTypeExractorByFieldAndType("REGISTRATION_GENDER", ""));
+        Sort sort = new ActivityTypeSort(sortBy, SortTest.mockFieldTypeExractorByFieldAndType("REGISTRATION_GENDER", "text"));
         String fieldName = sort.buildFieldName();
-        assertEquals("activities.questionsAnswers.REGISTRATION_GENDER", fieldName);
+        assertEquals("activities.questionsAnswers.REGISTRATION_GENDER.keyword", fieldName);
     }
 }
 
