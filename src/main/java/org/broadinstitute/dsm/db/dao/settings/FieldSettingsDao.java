@@ -73,6 +73,7 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
             " WHERE ddp_instance_id = (select ddp_instance_id from ddp_instance where instance_name = ?) AND column_name = ?";
 
     private static final String BY_INSTANCE_ID = " WHERE ddp_instance_id = ?";
+    private static final String BY_FIELD_TYPE = " WHERE field_type = ?";
     private static final String AND_BY_COLUMN_NAME = " AND column_name = ?";
     private static final String AND_BY_COLUMN_NAMES = " AND column_name IN (?)";
 
@@ -284,6 +285,29 @@ public class FieldSettingsDao implements Dao<FieldSettingsDto> {
             SimpleResult dbVals = new SimpleResult();
             try (PreparedStatement stmt = conn.prepareStatement(GET_FIELD_SETTINGS + BY_INSTANCE_ID + AND_BY_COLUMN_NAME)) {
                 stmt.setInt(1, instanceId);
+                stmt.setString(2, columnName);
+                try(ResultSet fieldSettingsByColumnNameRs = stmt.executeQuery()) {
+                    if (fieldSettingsByColumnNameRs.next()) {
+                        dbVals.resultValue = buildFieldSettingsFromResultSet(fieldSettingsByColumnNameRs);
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                dbVals.resultException = ex;
+            }
+            return dbVals;
+        });
+        if (results.resultException != null) {
+            throw new RuntimeException("Error getting fieldSettings ", results.resultException);
+        }
+        return Optional.ofNullable( (FieldSettingsDto) results.resultValue);
+    }
+
+    public Optional<FieldSettingsDto> getFieldSettingsByFieldTypeAndColumnName(String fieldType, String columnName) {
+        SimpleResult results = inTransaction((conn) -> {
+            SimpleResult dbVals = new SimpleResult();
+            try (PreparedStatement stmt = conn.prepareStatement(GET_FIELD_SETTINGS + BY_FIELD_TYPE + AND_BY_COLUMN_NAME)) {
+                stmt.setString(1, fieldType);
                 stmt.setString(2, columnName);
                 try(ResultSet fieldSettingsByColumnNameRs = stmt.executeQuery()) {
                     if (fieldSettingsByColumnNameRs.next()) {

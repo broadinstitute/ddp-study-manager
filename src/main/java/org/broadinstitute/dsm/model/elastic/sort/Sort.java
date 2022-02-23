@@ -15,13 +15,23 @@ import java.util.stream.Stream;
 
 public class Sort {
 
-    private SortBy sortBy;
-    private TypeExtractor<Map<String, String>> typeExtractor;
+    SortBy sortBy;
+    TypeExtractor<Map<String, String>> typeExtractor;
 
-    public Sort(SortBy sortBy,
+    Sort(SortBy sortBy,
                 TypeExtractor<Map<String, String>> typeExtractor) {
         this.typeExtractor = typeExtractor;
         this.sortBy = sortBy;
+    }
+
+    public static Sort of(SortBy sortBy, TypeExtractor<Map<String, String>> typeExtractor) {
+        Type type = Type.valueOf(sortBy.getType());
+        switch (type) {
+            case ACTIVITY:
+                return new ActivityTypeSort(sortBy, typeExtractor);
+            default:
+                return new Sort(sortBy, typeExtractor);
+        }
     }
     
     boolean isNestedSort() {
@@ -36,24 +46,24 @@ public class Sort {
         String outerProperty = handleOuterPropertySpecialCase();
         String innerProperty = handleInnerPropertySpecialCase();
 
-        switch (type) {
-            case ACTIVITY:
-                outerProperty = Type.ACTIVITY.getValue();
-                innerProperty += getKeywordIfText(type);
-                break;
-            case ADDITIONALVALUE:
-                Type additionalValueInnerType = Type.valueOf(sortBy.getAdditionalType());
-                outerProperty = Type.ADDITIONALVALUE.getValue(); 
-                innerProperty += getKeywordIfText(additionalValueInnerType);
-                break;
-            case JSONARRAY:
-                Type jsonArrayInnerType = Type.valueOf(sortBy.getAdditionalType());
-                innerProperty += getKeywordIfText(jsonArrayInnerType); 
-                break;
-            default:
-                innerProperty += getKeywordIfText(type);
-                break;
-        }
+//        switch (type) {
+//            case ACTIVITY:
+//                outerProperty = Type.ACTIVITY.getValue();
+//                innerProperty += getKeywordIfText(type);
+//                break;
+//            case ADDITIONALVALUE:
+//                Type additionalValueInnerType = Type.valueOf(sortBy.getAdditionalType());
+//                outerProperty = Type.ADDITIONALVALUE.getValue();
+//                innerProperty += getKeywordIfText(additionalValueInnerType);
+//                break;
+//            case JSONARRAY:
+//                Type jsonArrayInnerType = Type.valueOf(sortBy.getAdditionalType());
+//                innerProperty += getKeywordIfText(jsonArrayInnerType);
+//                break;
+//            default:
+//                innerProperty += getKeywordIfText(type);
+//                break;
+//        }
         return buildPath(alias.getValue(), outerProperty, innerProperty);
     }
 
@@ -96,10 +106,10 @@ public class Sort {
     }
 
     String handleOuterPropertySpecialCase() {
-        Alias alias = Alias.of(sortBy);
-        if (alias.equals(Alias.PARTICIPANTDATA)) {
-            return ESObjectConstants.DYNAMIC_FIELDS;
-        }
+//        Alias alias = Alias.of(sortBy);
+//        if (alias.equals(Alias.PARTICIPANTDATA)) {
+//            return ESObjectConstants.DYNAMIC_FIELDS;
+//        }
         return sortBy.getOuterProperty();
     }
 
