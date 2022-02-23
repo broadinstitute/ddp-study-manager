@@ -20,15 +20,20 @@ public class FieldTypeExtractor implements TypeExtractor<Map<String, String>> {
         Map<String, GetFieldMappingsResponse.FieldMappingMetaData> mapping = getMapping().get(index);
         Map<String, String> fieldTypeMapping = new HashMap<>();
         for (Map.Entry<String, GetFieldMappingsResponse.FieldMappingMetaData> entry : mapping.entrySet()) {
-            fieldTypeMapping.put(entry.getKey(), extractType(entry.getKey(), entry.getValue()));
+            fieldTypeMapping.put(getRightMostFieldName(entry.getKey()), extractType(entry.getKey(), entry.getValue()));
         }
         return fieldTypeMapping;
     }
 
     private String extractType(String fullFieldName, GetFieldMappingsResponse.FieldMappingMetaData value) {
+        String key = getRightMostFieldName(fullFieldName);
+        return (String) ((Map<String, Object>) value.sourceAsMap().get(key)).get(MappingGenerator.TYPE);
+    }
+
+    private String getRightMostFieldName(String fullFieldName) {
         String[] splittedFieldName = fullFieldName.split(ElasticSearchUtil.ESCAPE_CHARACTER_DOT_SEPARATOR);
         String key = splittedFieldName[splittedFieldName.length - 1];
-        return (String) ((Map<String, Object>) value.sourceAsMap().get(key)).get(MappingGenerator.TYPE);
+        return key;
     }
 
     private Map<String, Map<String, GetFieldMappingsResponse.FieldMappingMetaData>> getMapping() {

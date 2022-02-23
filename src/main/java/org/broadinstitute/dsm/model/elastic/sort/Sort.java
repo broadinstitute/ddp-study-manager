@@ -37,6 +37,10 @@ public class Sort {
         String innerProperty = handleInnerPropertySpecialCase();
 
         switch (type) {
+            case ACTIVITY:
+                outerProperty = Type.ACTIVITY.getValue();
+                innerProperty += getKeywordIfText(type);
+                break;
             case ADDITIONALVALUE:
                 Type additionalValueInnerType = Type.valueOf(sortBy.getAdditionalType());
                 outerProperty = Type.ADDITIONALVALUE.getValue(); 
@@ -72,7 +76,7 @@ public class Sort {
     }
 
     private boolean isTextContent(Type innerType) {
-        return innerType == Type.TEXT || innerType == Type.TEXTAREA || innerType == Type.RADIO || innerType == Type.OPTIONS;
+        return innerType == Type.TEXT || innerType == Type.TEXTAREA || innerType == Type.RADIO || innerType == Type.OPTIONS || innerType == Type.ACTIVITY;
     }
 
     String buildNestedPath() {

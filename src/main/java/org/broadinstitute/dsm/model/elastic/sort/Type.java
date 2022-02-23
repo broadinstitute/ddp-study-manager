@@ -15,6 +15,7 @@ public enum Type {
     DATE(StringUtils.EMPTY),
     RADIO(StringUtils.EMPTY),
     ADDITIONALVALUE(ESObjectConstants.DYNAMIC_FIELDS),
+    ACTIVITY(StringUtils.EMPTY),
     JSONARRAY(StringUtils.EMPTY);
 
     private String value;

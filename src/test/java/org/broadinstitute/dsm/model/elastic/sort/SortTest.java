@@ -236,6 +236,20 @@ public class SortTest {
         assertEquals("activities.questionsAnswers", actual);
     }
 
+    @Test
+    public void buildActivityFieldName() {
+        SortBy sortBy = new SortBy.Builder()
+                .withType("ACTIVITY")
+                .withOrder("ASC")
+                .withInnerProperty("DATSTAT_GENDER")
+                .withOuterProperty("AT_PARTICIPANT_INFO")
+                .withTableAlias("participantData")
+                .build();
+        Sort sort = new Sort(sortBy, mockFieldTypeExractorByFieldAndType("REGISTRATION_GENDER", ""));
+        String actual = sort.buildFieldName();
+        assertEquals("activities.questionsAnswers.REGISTRATION_GENDER", actual);
+    }
+
 
     private MockFieldTypeExtractor mockFieldTypeExractorByFieldAndType(String fieldName, String fieldType) {
         return new MockFieldTypeExtractor() {
