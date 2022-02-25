@@ -49,24 +49,6 @@ public class Sort {
         String outerProperty = handleOuterPropertySpecialCase();
         String innerProperty = handleInnerPropertySpecialCase();
 
-//        switch (type) {
-//            case ACTIVITY:
-//                outerProperty = Type.ACTIVITY.getValue();
-//                innerProperty += getKeywordIfText(type);
-//                break;
-//            case ADDITIONALVALUE:
-//                Type additionalValueInnerType = Type.valueOf(sortBy.getAdditionalType());
-//                outerProperty = Type.ADDITIONALVALUE.getValue();
-//                innerProperty += getKeywordIfText(additionalValueInnerType);
-//                break;
-//            case JSONARRAY:
-//                Type jsonArrayInnerType = Type.valueOf(sortBy.getAdditionalType());
-//                innerProperty += getKeywordIfText(jsonArrayInnerType);
-//                break;
-//            default:
-//                innerProperty += getKeywordIfText(type);
-//                break;
-//        }
         return buildPath(getAliasValue(Alias.of(sortBy)), outerProperty, innerProperty, getKeywordIfText(type));
     }
 

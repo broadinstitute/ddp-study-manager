@@ -22,11 +22,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DSMtasksSubscription {
 
@@ -36,6 +39,8 @@ public class DSMtasksSubscription {
     public static final String UPDATE_CUSTOM_WORKFLOW = "UPDATE_CUSTOM_WORKFLOW";
     public static final String ELASTIC_EXPORT = "ELASTIC_EXPORT";
     public static final String PARTICIPANT_REGISTERED = "PARTICIPANT_REGISTERED";
+    public static final int MAX_RETRY = 5;
+    private static Map<String, Integer> retryPerParticipant = new ConcurrentHashMap<>();
 
     public static void subscribeDSMtasks(String projectId, String subscriptionId) {
         // Instantiate an asynchronous message receiver.
@@ -80,7 +85,6 @@ public class DSMtasksSubscription {
                         }
                     }
                 };
-
         Subscriber subscriber = null;
         ProjectSubscriptionName resultSubName = ProjectSubscriptionName.of(projectId, subscriptionId);
         ExecutorProvider resultsSubExecProvider = InstantiatingExecutorProvider.newBuilder().setExecutorThreadCount(1).build();
@@ -131,7 +135,14 @@ public class DSMtasksSubscription {
                     Defaultable defaultable = DefaultableMaker
                             .makeDefaultable(study);
                     boolean result = defaultable.generateDefaults(studyGuid, participantGuid);
-                    if (!result) consumer.nack();
+                    if (!result) {
+                        retryPerParticipant.merge(participantGuid, 1, Integer::sum);
+                        if (retryPerParticipant.get(participantGuid) == MAX_RETRY) {
+                            retryPerParticipant.put(participantGuid, 0);
+                            consumer.ack();
+                        }
+                        else consumer.nack();
+                    }
                     else consumer.ack();
                 }, consumer::ack);
     }
