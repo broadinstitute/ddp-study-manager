@@ -2,6 +2,7 @@ package org.broadinstitute.dsm.util.externalShipper;
 
 import com.google.api.client.http.HttpStatusCodes;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import lombok.NonNull;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
@@ -117,15 +118,17 @@ public class GBFRequestUtil implements ExternalShipper {
 
     private static Executor blindTrustEverythingExecutor;
 
-    public GBFRequestUtil() {
+    static {
+        initTrust();
+    }
+
+    private static synchronized void initTrust() {
         try {
             if (blindTrustEverythingExecutor == null) {
                 blindTrustEverythingExecutor = Executor.newInstance(SecurityUtil.buildHttpClient());
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Starting up the blindTrustEverythingExecutor ", e);
-            System.exit(-3);
         }
     }
 
@@ -653,5 +656,24 @@ public class GBFRequestUtil implements ExternalShipper {
         }
 
     }
+
+    public static CancelResponse cancelOrder(String orderNumber, String cancelUrl, String apiKey) throws Exception {
+        Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
+        CancelRequest cancelRequest = new CancelRequest(orderNumber);
+        logger.info("About to cancel GBF order {}", orderNumber);
+        CancelResponse cancelResponse = executePost(CancelResponse.class, cancelUrl, gson.toJson(cancelRequest), apiKey);
+
+        if (cancelResponse != null) {
+            if (cancelResponse.wasSuccessful()) {
+                logger.info("Cancelled GBF order {}", orderNumber);
+            } else {
+                logger.error("Could not cancel GBF order " + orderNumber + " due to " + cancelResponse.getErrorMessage());
+            }
+        } else {
+            logger.error("Got no response after cancelling GBF order " + orderNumber);
+        }
+        return cancelResponse;
+    }
+
 
 }
